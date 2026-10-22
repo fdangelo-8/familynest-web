@@ -31,3 +31,6 @@ playwright/.cache/
 *.pem
 .vercel
 src/types/database.ts.tmp
+
+# Copie di lavoro isolate degli agenti (git worktree), mai da committare
+.claude/worktrees/

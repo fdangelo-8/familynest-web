@@ -69,7 +69,18 @@ function api(path, { method = "GET", body, accept, paginate = false } = {}) {
   const all = [];
   for (let page = 1; page <= 50; page++) {
     const sep = path.includes("?") ? "&" : "?";
-    const chunk = JSON.parse(call(`${path}${sep}page=${page}`) || "[]");
+    let chunk = JSON.parse(call(`${path}${sep}page=${page}`) || "[]");
+    // The session proxy occasionally answers a list with an empty page.
+    // An empty first page is retried before being trusted, so an agent never
+    // concludes "there are no issues" (and creates duplicates) by mistake.
+    for (
+      let retry = 0;
+      page === 1 && chunk.length === 0 && retry < 2;
+      retry++
+    ) {
+      execFileSync("sleep", ["3"]);
+      chunk = JSON.parse(call(`${path}${sep}page=${page}`) || "[]");
+    }
     all.push(...chunk);
     if (chunk.length < 100) break;
   }
@@ -167,7 +178,10 @@ switch (cmd) {
       console.log(
         `#${i.number}\t${i.state}\t[${labelsOf(i)}]\t${i.title}\t(agg. ${day(i.updated_at)})`,
       );
-    if (!items.length) console.log("Nessuna issue.");
+    if (!items.length)
+      console.log(
+        "Nessuna issue. (Prima di creare issue nuove, ricontrolla con lo stesso comando: non creare mai doppioni.)",
+      );
     break;
   }
   case "issue": {
