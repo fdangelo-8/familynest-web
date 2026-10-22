@@ -366,22 +366,6 @@
   gap: var(--space-2);
 }
 
-.pagina-desktop {
-  flex: 1;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-6);
-  align-content: start;
-  padding: var(--space-8) var(--grid-margine-desktop);
-  width: 100%;
-  max-width: calc(var(--grid-contenuto-max) + 2 * var(--grid-margine-desktop));
-}
-.pagina-desktop--centrata {
-  max-width: calc(
-    var(--grid-colonna-stretta) + 2 * var(--grid-margine-desktop)
-  );
-  margin: var(--space-0) auto;
-}
 .colonne {
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
@@ -3782,6 +3766,115 @@ button.riga-lista {
   }
 }
 
+/* =========================================================
+   CORNICE DELL'APP (fondamenta layout e navigazione, #10)
+   Il mockup mette tutto dentro una cornice fissa: qui le regole
+   che servono perche' la pagina intera faccia da cornice.
+   ========================================================= */
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+.barra {
+  position: sticky;
+  top: var(--space-0);
+  z-index: var(--z-nav);
+  background: var(--color-carta);
+  padding-top: calc(var(--space-3) + env(safe-area-inset-top));
+}
+.nav-alto {
+  position: sticky;
+  top: var(--space-0);
+  z-index: var(--z-nav);
+}
+.nav-basso {
+  padding-bottom: calc(var(--space-6) + env(safe-area-inset-bottom));
+}
+.barra,
+.pagina,
+.nav-basso {
+  padding-left: max(var(--grid-margine-mobile), env(safe-area-inset-left));
+  padding-right: max(var(--grid-margine-mobile), env(safe-area-inset-right));
+}
+.schermo-notte {
+  padding-top: calc(var(--space-4) + env(safe-area-inset-top));
+  padding-bottom: calc(var(--space-6) + env(safe-area-inset-bottom));
+}
+
+/* Stati di passaggio e premuto della navigazione */
+@media (hover: hover) {
+  .quadrato-nest,
+  .menu-laterale__voce {
+    transition:
+      background var(--durata-rapida) var(--curva),
+      color var(--durata-rapida) var(--curva);
+  }
+  .quadrato-nest:not(.quadrato-nest--notte):hover {
+    background: var(--color-carta);
+  }
+  .menu-laterale__voce:not(.is-attiva):hover {
+    background: var(--color-carta-2);
+    color: var(--color-inchiostro);
+  }
+}
+.quadrato-nest:not(.quadrato-nest--notte):active {
+  background: var(--color-carta);
+}
+.menu-laterale__voce:not(.is-attiva):active {
+  background: var(--color-carta-2);
+  color: var(--color-inchiostro);
+}
+.nav-basso__voce:not(.is-attiva):active,
+.nav-alto__voce:not(.is-attiva):active {
+  color: var(--color-inchiostro);
+}
+
+/* ---------- Mobile e tablet (fino a 1023 px) ---------- */
+@media (max-width: 1023px) {
+  .nav-alto,
+  .intestazione-desktop,
+  .menu-laterale {
+    display: none;
+  }
+  .colonne,
+  .colonne--tre,
+  .colonne--due,
+  .colonne--menu,
+  .colonne--pannello {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---------- Tablet (da 768 px): colonna stretta centrata ---------- */
+@media (min-width: 768px) {
+  .barra,
+  .pagina,
+  .nav-basso {
+    width: 100%;
+    max-width: var(--grid-colonna-stretta);
+    margin-inline: auto;
+  }
+  .toast {
+    left: max(
+      var(--grid-margine-mobile),
+      calc(
+        (100% - var(--grid-colonna-stretta)) / 2 + var(--grid-margine-mobile)
+      )
+    );
+    right: max(
+      var(--grid-margine-mobile),
+      calc(
+        (100% - var(--grid-colonna-stretta)) / 2 + var(--grid-margine-mobile)
+      )
+    );
+  }
+  .foglio {
+    left: max(var(--space-0), calc((100% - var(--grid-colonna-stretta)) / 2));
+    right: max(var(--space-0), calc((100% - var(--grid-colonna-stretta)) / 2));
+  }
+}
+
 /* ---------- Mobile (fino a 1023 px): regole .frame-mobile del mockup ---------- */
 @media (max-width: 1023px) {
   .foglio .selettore__voce .icona {
@@ -3791,6 +3884,34 @@ button.riga-lista {
 
 /* ---------- Desktop (da 1024 px): regole .frame-desktop del mockup ---------- */
 @media (min-width: 1024px) {
+  .barra,
+  .nav-basso {
+    display: none;
+  }
+  .nav-alto {
+    padding-inline: max(
+      var(--grid-margine-desktop),
+      calc((100% - var(--grid-contenuto-max)) / 2)
+    );
+  }
+  .pagina-desktop {
+    flex: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-6);
+    align-content: start;
+    padding: var(--space-8) var(--grid-margine-desktop);
+    width: 100%;
+    max-width: calc(
+      var(--grid-contenuto-max) + 2 * var(--grid-margine-desktop)
+    );
+    margin-inline: auto;
+  }
+  .pagina-desktop--centrata {
+    max-width: calc(
+      var(--grid-colonna-stretta) + 2 * var(--grid-margine-desktop)
+    );
+  }
   .t-display {
     font-size: var(--text-display-desktop-size);
     line-height: var(--text-display-desktop-line);
