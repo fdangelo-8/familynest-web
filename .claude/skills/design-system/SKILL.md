@@ -23,24 +23,24 @@ description: Design system di FamilyNest Web - token di colore, tipografia, spaz
 ### Colori
 
 | Variabile | Valore | Uso |
-|---|---|---|
+| --------- | ------ | --- |
 
 ### Tipografia
 
 | Variabile | Valore | Uso |
-|---|---|---|
+| --------- | ------ | --- |
 
 ### Spaziature, raggi, ombre
 
 | Variabile | Valore | Uso |
-|---|---|---|
+| --------- | ------ | --- |
 
 ### Breakpoint
 
-| Nome | Larghezza |
-|---|---|
-| mobile | fino a 767 px |
-| desktop | da 1024 px |
+| Nome    | Larghezza     |
+| ------- | ------------- |
+| mobile  | fino a 767 px |
+| desktop | da 1024 px    |
 
 ## Componenti
 
@@ -53,4 +53,4 @@ description: Design system di FamilyNest Web - token di colore, tipografia, spaz
 ## Registro delle modifiche
 
 | Data | Modifica | Issue |
-|---|---|---|
+| ---- | -------- | ----- |

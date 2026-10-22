@@ -24,9 +24,9 @@ Next.js (App Router) · TypeScript strict · CSS proprio con variabili (niente T
 
 ## Comandi utili
 
-| Comando | Uso |
-|---|---|
-| `npm run check` | lint + tipi + formattazione (prima di ogni commit) |
-| `npm run build` | build di produzione |
-| `npm run test` | tutte le suite Playwright |
+| Comando                      | Uso                                                         |
+| ---------------------------- | ----------------------------------------------------------- |
+| `npm run check`              | lint + tipi + formattazione (prima di ogni commit)          |
+| `npm run build`              | build di produzione                                         |
+| `npm run test`               | tutte le suite Playwright                                   |
 | `npm run test:visual:update` | rigenera gli screenshot di riferimento (solo tester visivo) |

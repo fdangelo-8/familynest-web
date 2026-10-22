@@ -54,6 +54,7 @@ $$;
 ## Test pgTAP (`supabase/tests/*.sql`)
 
 Per ogni tabella almeno:
+
 1. Utente del nucleo A legge i propri dati.
 2. Utente del nucleo B **non** vede i dati del nucleo A (0 righe).
 3. Utente del nucleo B non può inserire, modificare o cancellare dati del nucleo A.

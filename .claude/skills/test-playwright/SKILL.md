@@ -43,7 +43,11 @@ Prima di creare i riferimenti, confronta lo screenshot della pagina con il mocku
 
 ```ts
 const results = await new AxeBuilder({ page }).analyze();
-expect(results.violations.filter(v => ['serious','critical'].includes(v.impact ?? ''))).toEqual([]);
+expect(
+  results.violations.filter((v) =>
+    ["serious", "critical"].includes(v.impact ?? ""),
+  ),
+).toEqual([]);
 ```
 
 Più controlli manuali: navigazione completa da tastiera, focus visibile, etichette dei campi, area di tocco di almeno 44×44 px su mobile.

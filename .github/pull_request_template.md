@@ -11,8 +11,8 @@ Closes #
 ## Screenshot
 
 | Desktop (1280) | Mobile (390) |
-|---|---|
-|  |  |
+| -------------- | ------------ |
+|                |              |
 
 ## Definizione di fatto
 

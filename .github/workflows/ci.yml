@@ -26,6 +26,7 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      - run: npm run hooks:test
       - run: npm run check
 
   build:
@@ -56,6 +57,11 @@ jobs:
       - run: npm run test
         env:
           CI: "true"
+          # Optional: empty when the secrets are not set; current tests do not need them.
+          TEST_USER_A_EMAIL: ${{ secrets.TEST_USER_A_EMAIL }}
+          TEST_USER_A_PASSWORD: ${{ secrets.TEST_USER_A_PASSWORD }}
+          TEST_USER_B_EMAIL: ${{ secrets.TEST_USER_B_EMAIL }}
+          TEST_USER_B_PASSWORD: ${{ secrets.TEST_USER_B_PASSWORD }}
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

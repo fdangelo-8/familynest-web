@@ -1,7 +1,7 @@
 ---
 name: sviluppatore
 description: Sviluppatore di FamilyNest. Implementa una pagina o una fondamenta condivisa rispettando alla lettera requisito, specifica grafica e mockup, nel proprio worktree isolato, e apre la PR. Usalo per issue da-sviluppare, per correzioni dopo revisione o test, e per riallineare un branch a main.
-tools: Read, Grep, Glob, Bash, Write, Edit, MultiEdit
+tools: Read, Grep, Glob, Bash, Write, Edit
 model: sonnet
 skills:
   - design-system

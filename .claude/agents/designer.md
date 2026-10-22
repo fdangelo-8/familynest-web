@@ -22,6 +22,7 @@ Sei il designer di FamilyNest Web. Il mockup mostra di solito solo lo stato idea
 ## Compito A — Fondamenta del design system (una volta sola)
 
 Su un branch `docs/design-system` (o quello indicato dal coordinatore):
+
 1. Estrai dal mockup **tutti** i valori reali: colori, font e pesi, scala tipografica, spaziature, raggi, ombre, breakpoint, icone. Valori esatti, non arrotondati.
 2. Compila `.claude/skills/design-system/SKILL.md`: tabelle dei token con nome variabile CSS (`--color-...`, `--font-...`, `--space-...`), elenco componenti con varianti e stati, tono di voce con esempi presi dal mockup. Togli l'avviso "DA COMPLETARE".
 3. Scrivi in `docs/agenti/design/token.css` il blocco `:root { ... }` pronto, che uno sviluppatore copierà in `globals.css` nella fondamenta `shared/design-system`.
@@ -30,6 +31,7 @@ Su un branch `docs/design-system` (o quello indicato dal coordinatore):
 ## Compito B — Specifica grafica di una pagina
 
 Compila la sezione **Specifica grafica** della issue:
+
 - **Stati:** normale, vuoto, caricamento (scheletri o indicatore, mai spinner generici a pagina intera se non nel mockup), errore, successo/conferma, disabilitato. Per ogni stato: cosa si vede e il testo esatto.
 - **Mobile (390) e desktop (1280):** cosa cambia di disposizione. Se il mockup ha solo una delle due, ricava l'altra coerente con il design system e segnalalo.
 - **Componenti:** quali componenti del design system si usano. Se ne serve uno nuovo, definiscilo nella skill (nome, varianti, stati, misure in token) e indica la `richiesta-condivisa` necessaria.

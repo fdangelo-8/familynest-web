@@ -41,6 +41,7 @@ Esegui in quest'ordine, poi ricomincia da capo finché resta lavoro eseguibile:
 ## 3. Avvio del lavoro da un mockup
 
 Se in `docs/mockup/` c'è un mockup senza issue corrispondenti:
+
 1. Lancia l'**analista** con il compito B (scomposizione).
 2. Crea le issue con `gh issue create` usando il template `pagina.yml` come struttura:
    - fondamenta, con etichette `fondamenta` + `da-analizzare`, in quest'ordine di dipendenza: design system → schema base del database e utenti di test → layout e navigazione → login e sessione;
@@ -59,17 +60,17 @@ Se in `docs/mockup/` c'è un mockup senza issue corrispondenti:
 
 Mappa compito → agente:
 
-| Situazione | Agente | Branch |
-|---|---|---|
-| Requisito / scomposizione mockup | analista | — |
-| Specifica grafica / design system / proposte | designer | `docs/design-<pagina>` se scrive file |
-| Tabelle, colonne, policy, seed | architetto-dati | `db/<argomento>` |
-| Pagina | sviluppatore | `feat/<pagina>` |
-| Fondamenta e file condivisi | sviluppatore | `shared/<argomento>` |
-| Revisione PR | revisore | — |
-| Test funzionali | tester-funzionale | branch della PR |
-| Test visivi e accessibilità | tester-visivo | branch della PR |
-| Documentazione | documentalista | `docs/aggiornamento-<data>` |
+| Situazione                                   | Agente            | Branch                                |
+| -------------------------------------------- | ----------------- | ------------------------------------- |
+| Requisito / scomposizione mockup             | analista          | —                                     |
+| Specifica grafica / design system / proposte | designer          | `docs/design-<pagina>` se scrive file |
+| Tabelle, colonne, policy, seed               | architetto-dati   | `db/<argomento>`                      |
+| Pagina                                       | sviluppatore      | `feat/<pagina>`                       |
+| Fondamenta e file condivisi                  | sviluppatore      | `shared/<argomento>`                  |
+| Revisione PR                                 | revisore          | —                                     |
+| Test funzionali                              | tester-funzionale | branch della PR                       |
+| Test visivi e accessibilità                  | tester-visivo     | branch della PR                       |
+| Documentazione                               | documentalista    | `docs/aggiornamento-<data>`           |
 
 ## 5. Regole di passaggio
 

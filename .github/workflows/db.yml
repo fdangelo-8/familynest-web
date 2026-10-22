@@ -53,8 +53,10 @@ jobs:
       - name: Check generated types are up to date
         if: steps.mig.outputs.count != '0'
         run: |
-          npx supabase gen types typescript --local --schema public > /tmp/database.ts
-          npx prettier --write /tmp/database.ts >/dev/null 2>&1 || true
+          set -o pipefail
+          # Same output as `npm run db:types:local`: Prettier resolves the project config from the real path.
+          npx supabase gen types typescript --local --schema public \
+            | npx prettier --stdin-filepath src/types/database.ts > /tmp/database.ts
           if ! diff -u src/types/database.ts /tmp/database.ts > /tmp/types.diff; then
             echo "::error::src/types/database.ts non corrisponde allo schema. Scarica l'artifact 'expected-database-types' e sostituisci il file."
             cat /tmp/types.diff | head -200

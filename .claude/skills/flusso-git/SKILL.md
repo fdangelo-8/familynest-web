@@ -7,13 +7,13 @@ description: Regole FamilyNest per branch, worktree, commit, allineamento a main
 
 ## Branch
 
-| Tipo | Nome | Chi |
-|---|---|---|
-| Pagina o funzione | `feat/<pagina>` (es. `feat/calendario`) | Sviluppatore |
+| Tipo                        | Nome                                              | Chi                                     |
+| --------------------------- | ------------------------------------------------- | --------------------------------------- |
+| Pagina o funzione           | `feat/<pagina>` (es. `feat/calendario`)           | Sviluppatore                            |
 | Fondamenta e file condivisi | `shared/<argomento>` (es. `shared/design-system`) | Sviluppatore assegnato dal coordinatore |
-| Database | `db/<argomento>` (es. `db/households`) | Solo architetto dati |
-| Correzione | `fix/<argomento>` | Sviluppatore |
-| Documentazione agenti | `docs/<argomento>` | Documentalista |
+| Database                    | `db/<argomento>` (es. `db/households`)            | Solo architetto dati                    |
+| Correzione                  | `fix/<argomento>`                                 | Sviluppatore                            |
+| Documentazione agenti       | `docs/<argomento>`                                | Documentalista                          |
 
 - Si parte sempre dall'ultimo `main`: `git fetch origin && git switch -c <branch> origin/main`.
 - Se lavori in un worktree isolato, crea il tuo branch dentro il worktree con il nome corretto prima del primo commit.

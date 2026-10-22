@@ -16,7 +16,9 @@
     "test:a11y": "playwright test tests/a11y",
     "test": "npm run test:e2e && npm run test:visual && npm run test:a11y",
     "check": "npm run lint && npm run typecheck && npm run format:check",
-    "db:types": "supabase gen types typescript --project-id yksosqvugiempsldejyt --schema public > src/types/database.ts.tmp && mv src/types/database.ts.tmp src/types/database.ts"
+    "db:types": "npm run db:types:local",
+    "db:types:local": "supabase gen types typescript --local --schema public > src/types/database.ts.tmp && mv src/types/database.ts.tmp src/types/database.ts && prettier --write src/types/database.ts",
+    "hooks:test": "node .claude/hooks/test-hooks.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
