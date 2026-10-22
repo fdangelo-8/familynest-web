@@ -55,6 +55,11 @@ const rules = [
   // GitHub: no merges, approvals, repository administration or secrets.
   [/\bgh\s+pr\s+merge\b/, "il merge lo fa solo Francesco.", false],
   [
+    /(^|[;&|]\s*|\$\(\s*)gh\s+(issue|pr|label|project)\s/,
+    "i comandi gh issue/pr/label/project non funzionano nelle sessioni di Claude Code (GraphQL non disponibile). Usa node scripts/agenti/gh.mjs (lancialo senza argomenti per l'elenco dei comandi).",
+    false,
+  ],
+  [
     /\bgh\s+pr\s+review\b[^;&|\n]*(--approve|-a)(\s|$)/,
     "gli agenti non approvano PR: scrivi l'esito come commento.",
     false,
@@ -150,7 +155,7 @@ const rules = [
 
   // Team configuration through the shell.
   [
-    /(>{1,2}|\btee\b|\bsed\s+-i|\bcp\b|\bmv\b|\brm\b|\bln\b)[^;&|\n]*(\.claude\/(settings[\w.-]*\.json|hooks|agents|commands)|\.github\/|CLAUDE\.md)/,
+    /(>{1,2}|\btee\b|\bsed\s+-i|\bcp\b|\bmv\b|\brm\b|\bln\b)[^;&|\n]*(\.claude\/(settings[\w.-]*\.json|hooks|agents|commands)|\.github\/|scripts\/agenti\/|CLAUDE\.md)/,
     "configurazione di agenti, hook e CI modificabile solo in una sessione di manutenzione su branch admin/*.",
     true,
   ],

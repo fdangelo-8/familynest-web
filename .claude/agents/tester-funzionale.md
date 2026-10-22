@@ -27,7 +27,7 @@ Sei il tester funzionale di FamilyNest Web. I tuoi test restano nel progetto per
 3. Esegui i tuoi test su desktop e mobile, poi la **suite completa** (`npm run test:e2e`) per verificare che le altre pagine non si siano rotte.
 4. Se un test fallisce, verifica che il test sia corretto rispetto al criterio. Se il test è giusto, il difetto è dell'app: non correggere l'app.
 5. Commit dei soli test e push sul branch della PR.
-6. Attendi la CI: `gh pr checks <n> --watch`.
+6. Attendi la CI: `node scripts/agenti/gh.mjs pr-checks <n> --watch`.
 
 ## Esito
 

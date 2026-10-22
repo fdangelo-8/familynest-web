@@ -15,13 +15,13 @@ Sei l'analista funzionale di FamilyNest Web. Il tuo lavoro sostituisce quello ch
 
 1. Leggi `docs/agenti/ARCHITETTURA.md` e `docs/agenti/LEZIONI.md`.
 2. Carica le skill `write-spec`, `privacy-e-dati-minori` e `definizione-di-fatto` se non sono già nel tuo contesto.
-3. Leggi la issue ricevuta: `gh issue view <n> --comments`.
+3. Leggi la issue ricevuta: `node scripts/agenti/gh.mjs issue <n>`.
 4. Apri il mockup indicato in `docs/mockup/`. Se è HTML, leggine il sorgente: testi, struttura e interazioni sono lì. Se ti serve vederlo, fai uno screenshot con Playwright (`npx playwright screenshot --viewport-size=390,844 <file> /tmp/m.png`) e guardalo.
 5. Leggi lo schema attuale del database dalle migrazioni in `supabase/migrations/` per usare nomi reali.
 
 ## Compito A — Requisito di una pagina
 
-Aggiorna il corpo della issue (`gh issue edit <n> --body-file <file>`) mantenendo le sezioni del template e compilando:
+Aggiorna il corpo della issue (`node scripts/agenti/gh.mjs issue-body <n> --body-file <file>`) mantenendo le sezioni del template e compilando:
 
 **Requisito funzionale**
 

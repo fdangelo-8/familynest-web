@@ -72,7 +72,45 @@ expect(
 );
 expect("gh pr merge", B, bash("gh pr merge 3 --squash"), true);
 expect("gh approve", B, bash("gh pr review 3 --approve"), true);
-expect("gh comment ok", B, bash('gh pr comment 3 --body "APPROVATA"'), false);
+expect(
+  "gh pr comment rimandato allo script",
+  B,
+  bash('gh pr comment 3 --body "APPROVATA"'),
+  true,
+);
+expect(
+  "gh issue list rimandato allo script",
+  B,
+  bash("gh issue list --label stato"),
+  true,
+);
+expect("gh dentro una pipeline", B, bash("echo x | gh pr view 3"), true);
+expect(
+  "script gh ok",
+  B,
+  bash("node scripts/agenti/gh.mjs comment 3 --body-file -"),
+  false,
+);
+expect(
+  "script labels ok",
+  B,
+  bash(
+    "node scripts/agenti/gh.mjs labels 4 --add in-test --remove in-revisione",
+  ),
+  false,
+);
+expect(
+  "gh run ok",
+  B,
+  bash("gh run list --workflow visual-baseline.yml --limit 1"),
+  false,
+);
+expect(
+  "scrive lo script via shell",
+  B,
+  bash("echo x > scripts/agenti/gh.mjs"),
+  true,
+);
 expect("gh secret", B, bash("gh secret set X"), true);
 expect(
   "gh api protection",
@@ -81,10 +119,10 @@ expect(
   true,
 );
 expect(
-  "gh issue edit ok",
+  "gh issue edit rimandato allo script",
   B,
   bash("gh issue edit 4 --add-label in-test --remove-label in-revisione"),
-  false,
+  true,
 );
 expect(
   "gh workflow run ok",
@@ -260,6 +298,18 @@ expect(
 );
 expect("workflow su feat", F, write(".github/workflows/ci.yml"), true);
 expect("CLAUDE.md su feat", F, write("CLAUDE.md"), true);
+expect(
+  "script agenti su feat",
+  F,
+  write("scripts/agenti/gh.mjs", "sviluppatore"),
+  true,
+);
+expect(
+  "seed su db da architetto ok",
+  F,
+  write("scripts/seed-test-users.ts", "architetto-dati"),
+  false,
+);
 expect("revisore scrive", F, write("src/app/x.ts", "revisore"), true);
 expect("revisore scrive docs", F, write("docs/x.md", "revisore"), true);
 expect("analista docs ok", F, write("docs/agenti/x.md", "analista"), false);
@@ -371,6 +421,7 @@ expect(
 );
 on("admin/setup-squadra");
 expect("admin: agents ok", F, write(".claude/agents/x.md"), false);
+expect("admin: script agenti ok", F, write("scripts/agenti/gh.mjs"), false);
 expect("admin: workflow ok", F, write(".github/workflows/ci.yml"), false);
 expect(
   "admin: subagente su config",

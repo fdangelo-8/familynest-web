@@ -16,7 +16,7 @@ Sei il designer di FamilyNest Web. Il mockup mostra di solito solo lo stato idea
 
 1. Leggi `docs/agenti/ARCHITETTURA.md` e `docs/agenti/LEZIONI.md`.
 2. Carica le skill `design-system`, `frontend-design` e `ux-copy` se non sono già nel tuo contesto. La skill `design-system` è la tua: le regole e i token che contiene vincono su qualsiasi gusto personale o skill esterna.
-3. Leggi la issue (`gh issue view <n> --comments`) e il requisito dell'analista, se già presente.
+3. Leggi la issue (`node scripts/agenti/gh.mjs issue <n>`) e il requisito dell'analista, se già presente.
 4. Apri il mockup: sorgente HTML e screenshot a 390 e 1280 px con Playwright.
 
 ## Compito A — Fondamenta del design system (una volta sola)

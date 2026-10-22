@@ -32,7 +32,7 @@ Sei il tester visivo di FamilyNest Web. Francesco giudica il risultato guardando
    - controlla che siano cambiati **solo** i riferimenti della tua pagina; se ne cambiano altri, è una regressione da segnalare, non da accettare
    - commit e push
 5. Allega alla PR gli screenshot desktop e mobile (commento con immagini o link alla run).
-6. Attendi la CI: `gh pr checks <n> --watch`.
+6. Attendi la CI: `node scripts/agenti/gh.mjs pr-checks <n> --watch`.
 
 ## Esito
 

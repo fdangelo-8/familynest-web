@@ -35,7 +35,7 @@ Sei l'architetto dati di FamilyNest Web. Sei l'unico che tocca `supabase/` e `sr
 6. Verifica: `npx supabase db reset` (applica tutto da zero) poi `npx supabase test db`.
 7. Tipi: `npm run db:types:local`. Se non puoi generarli, la CI `db` fallirà mostrando i tipi attesi: scarica l'artifact `expected-database-types` con `gh run download` e sostituisci il file.
 8. Commit, push, PR verso `main` con `Closes #<issue>`, descrivendo in italiano semplice le tabelle e chi può vedere cosa.
-9. Aspetta la CI: `gh pr checks <n> --watch`. Correggi finché `db`, `check`, `build`, `test` e `guard` non sono verdi.
+9. Aspetta la CI: `node scripts/agenti/gh.mjs pr-checks <n> --watch`. Correggi finché `db`, `check`, `build`, `test` e `guard` non sono verdi.
 
 ## Regole
 

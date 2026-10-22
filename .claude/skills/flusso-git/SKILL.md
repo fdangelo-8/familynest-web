@@ -53,13 +53,19 @@ Se il `pull --rebase` dà conflitti su file non tuoi, fermati e chiudi con `BLOC
 - Le PR si aprono verso `main`. Nessun agente fa merge, approva o chiude PR altrui.
 - Gli esiti di revisori e tester si scrivono come commenti sulla PR, iniziando con l'esito in maiuscolo (`APPROVATA`, `DA CORREGGERE`, `SUPERATO`, `NON SUPERATO`).
 
-## Comandi utili con `gh`
+## Comandi GitHub
+
+Nelle sessioni di Claude Code la maggior parte dei comandi `gh issue …` e `gh pr …` **non funziona** (GitHub GraphQL non è disponibile). Usa sempre lo script del progetto, che passa dall'API REST:
 
 ```bash
-gh pr create --base main --title "..." --body-file body.md
-gh pr view <n> --comments
-gh pr checks <n> --watch
-gh pr comment <n> --body-file esito.md
-gh issue view <n> --comments
-gh issue edit <n> --add-label in-test --remove-label in-revisione   # solo coordinatore
+node scripts/agenti/gh.mjs                                   # elenco comandi
+node scripts/agenti/gh.mjs issue <n>                         # issue con commenti
+node scripts/agenti/gh.mjs pr <n>                            # PR: descrizione, file, controlli, commenti
+node scripts/agenti/gh.mjs pr-diff <n>                       # diff completo
+node scripts/agenti/gh.mjs pr-checks <n> --watch             # aspetta la CI; exit 0 = tutto verde
+node scripts/agenti/gh.mjs pr-create --head <branch> --title "..." --body-file body.md
+node scripts/agenti/gh.mjs comment <n> --body-file esito.md  # commento su issue o PR (- = stdin)
+node scripts/agenti/gh.mjs labels <n> --add in-test --remove in-revisione   # solo coordinatore
 ```
+
+`gh run …` e `gh workflow run …` funzionano normalmente. Un'etichetta appena aggiunta può comparire nei filtri con qualche secondo di ritardo.

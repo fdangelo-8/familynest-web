@@ -32,7 +32,7 @@ if (branch === "main" || branch === "master")
 // 3. Team configuration: only Francesco's maintenance sessions (main session on an admin/* branch).
 if (
   is(
-    /^(\.claude\/(settings[^/]*\.json|hooks\/|agents\/|commands\/)|\.github\/|CLAUDE\.md$)/,
+    /^(\.claude\/(settings[^/]*\.json|hooks\/|agents\/|commands\/)|\.github\/|scripts\/agenti\/|CLAUDE\.md$)/,
   )
 ) {
   if (agent || !onBranch("admin/"))
