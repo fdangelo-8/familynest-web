@@ -24,7 +24,9 @@ jobs:
       - name: Move the card to the column of its status label
         env:
           GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
-          OWNER: ${{ github.repository_owner }}
+          # The project belongs to the token owner: "@me" avoids gh guessing user vs organisation
+          # (which fails with "unknown owner type" for some tokens).
+          OWNER: "@me"
           NUMBER: ${{ vars.PROJECT_NUMBER }}
           ISSUE_URL: ${{ github.event.issue.html_url }}
           STATE: ${{ github.event.issue.state }}
@@ -35,6 +37,16 @@ jobs:
             echo "::warning::PROJECT_TOKEN o PROJECT_NUMBER mancanti: bacheca non aggiornata."
             exit 0
           fi
+
+          # Runs a gh command; on failure prints its message as an annotation readable from the API.
+          run() {
+            local out
+            if ! out=$("$@" 2>&1); then
+              echo "::error title=project-board::$(echo "$out" | tr '\n' ' ' | cut -c1-500)" >&2
+              exit 1
+            fi
+            printf '%s' "$out"
+          }
 
           has() { echo "$LABELS" | jq -e --arg l "$1" 'index($l) != null' >/dev/null; }
 
@@ -50,15 +62,15 @@ jobs:
           elif has da-analizzare; then column="Da analizzare"
           fi
 
-          item=$(gh project item-add "$NUMBER" --owner "$OWNER" --url "$ISSUE_URL" --format json --jq '.id')
+          item=$(run gh project item-add "$NUMBER" --owner "$OWNER" --url "$ISSUE_URL" --format json --jq '.id')
           echo "Scheda: $item"
           if [ -z "$column" ]; then
             echo "Nessuna etichetta di stato: scheda aggiunta senza colonna."
             exit 0
           fi
 
-          project=$(gh project view "$NUMBER" --owner "$OWNER" --format json --jq '.id')
-          fields=$(gh project field-list "$NUMBER" --owner "$OWNER" --format json)
+          project=$(run gh project view "$NUMBER" --owner "$OWNER" --format json --jq '.id')
+          fields=$(run gh project field-list "$NUMBER" --owner "$OWNER" --format json)
           field=$(echo "$fields" | jq -r '.fields[] | select(.name == "Status") | .id')
           option=$(echo "$fields" | jq -r --arg c "$column" '.fields[] | select(.name == "Status") | .options[] | select(.name == $c) | .id')
           if [ -z "$field" ] || [ -z "$option" ]; then
@@ -66,5 +78,5 @@ jobs:
             exit 1
           fi
 
-          gh project item-edit --id "$item" --project-id "$project" --field-id "$field" --single-select-option-id "$option"
+          run gh project item-edit --id "$item" --project-id "$project" --field-id "$field" --single-select-option-id "$option"
           echo "Spostata in: $column"
