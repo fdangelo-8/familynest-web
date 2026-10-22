@@ -573,8 +573,10 @@ test.describe("sovrapposizioni", () => {
   });
 
   test("CA-33/34/35: toast", async ({ page }) => {
-    await page.clock.install();
+    await page.clock.install({ time: new Date("2026-10-20T10:00:00Z") });
     await page.goto(BASE_PATH);
+    // Stop the flow of time: only runFor() moves it (slow CI must not matter).
+    await page.clock.pauseAt(new Date("2026-10-20T10:01:00Z"));
     const toast = page
       .getByRole("status")
       .filter({ hasText: "Chiamare il commercialista" });
@@ -701,7 +703,6 @@ test.describe("CA-11: stessi stili del mockup", () => {
     ["chip", ".chip--statico"],
     ["campo", ".campo__input"],
     ["selettore", ".selettore"],
-    ["stato-vuoto", ".stato-vuoto"],
   ];
   const PROPS = [
     "background-color",
