@@ -23,6 +23,9 @@ Errori già commessi (in questo progetto o in quelli precedenti dell'ecosistema)
 - La protezione di `main` non è applicata sul piano GitHub gratuito → nessun agente conta su GitHub per bloccare un merge: si dichiara pronta solo una PR con `node scripts/agenti/gh.mjs pr-checks <n>` tutto verde.
 - `gh issue …` e `gh pr …` falliscono con "GitHub GraphQL is not available" → usare `node scripts/agenti/gh.mjs`, che usa l'API REST.
 
+- Una lista di issue o PR può tornare vuota per un istante (proxy della sessione) → prima di creare issue nuove ricontrollare; lo script riprova da solo la prima pagina vuota.
+- `.claude/worktrees/` sono le copie di lavoro degli agenti, ignorate da git → non si committano e non vanno "sistemate" quando un hook dell'ambiente segnala file non tracciati.
+
 ## Test
 
 - Falsi errori di insert in locale per saturazione del pool di connessioni → verificare sulla preview prima di dichiarare un bug.
