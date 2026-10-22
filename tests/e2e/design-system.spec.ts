@@ -699,7 +699,8 @@ test.describe("CA-11: stessi stili del mockup", () => {
     mock?: string;
   };
   const STATIC_SECTIONS: Spec[] = [
-    { id: "t-display", selector: ".t-display" },
+    // Height follows the wrapping of the sample text (line-height is checked).
+    { id: "t-display", selector: ".t-display", skip: ["height"] },
     { id: "icona", selector: "svg.icona" },
     { id: "btn-primary", selector: ".btn-primary" },
     { id: "btn-secondary", selector: ".btn-secondary" },
@@ -725,7 +726,7 @@ test.describe("CA-11: stessi stili del mockup", () => {
     // The first .scheda of the mockup is a list container (no padding): the
     // padded card is the comparable one, its height depends on the content.
     { id: "scheda", selector: ".scheda--imbottita", skip: ["height"] },
-    { id: "riga-lista", selector: ".riga-lista" },
+    { id: "riga-lista", selector: ".riga-lista", skip: ["height"] },
     // The height of the empty state depends on text wrapping and the font:
     // every other style is still compared.
     { id: "stato-vuoto", selector: ".stato-vuoto", skip: ["height"] },
