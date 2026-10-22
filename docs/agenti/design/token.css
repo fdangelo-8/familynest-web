@@ -57,12 +57,8 @@
   --color-ombra: rgba(23, 24, 28, 0.06);
   --color-ombra-forte: rgba(23, 24, 28, 0.3);
   --color-ombra-adesivo: rgba(0, 0, 0, 0.25);
-  --color-avatar-su-colore: rgba(
-    255,
-    255,
-    255,
-    0.55
-  ); /* cerchio dentro gli adesivi */
+  /* cerchio dentro gli adesivi */
+  --color-avatar-su-colore: rgba(255, 255, 255, 0.55);
 
   /* ---------- Font ---------- */
   --font-titoli:
