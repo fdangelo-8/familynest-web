@@ -688,21 +688,65 @@ test.describe("isolamento", () => {
 });
 
 test.describe("CA-11: stessi stili del mockup", () => {
-  const SECTIONS: Array<[string, string]> = [
-    ["btn-primary", ".btn-primary"],
-    ["btn-secondary", ".btn-secondary"],
-    ["btn-tenue", ".btn-tenue"],
-    ["btn-tratteggiato", ".btn-tratteggiato"],
-    ["btn-pericolo", ".btn-pericolo"],
-    ["btn-pericolo-pieno", ".btn-pericolo-pieno"],
-    ["btn-icona", ".btn-icona"],
-    ["casella", ".casella"],
-    ["toggle", ".toggle"],
-    ["etichetta", ".etichetta"],
-    ["avatar", '.avatar:not([class*="avatar--"])'],
-    ["chip", ".chip--statico"],
-    ["campo", ".campo__input"],
-    ["selettore", ".selettore"],
+  // Section id, selector of the first element with the root class and the
+  // properties to skip. `ours` is a document-wide selector for components
+  // that the gallery renders outside of the section (open overlays).
+  type Spec = {
+    id: string;
+    selector: string;
+    skip?: string[];
+    ours?: string;
+    mock?: string;
+  };
+  const STATIC_SECTIONS: Spec[] = [
+    { id: "t-display", selector: ".t-display" },
+    { id: "icona", selector: "svg.icona" },
+    { id: "btn-primary", selector: ".btn-primary" },
+    { id: "btn-secondary", selector: ".btn-secondary" },
+    { id: "btn-chiaro", selector: ".btn-chiaro" },
+    { id: "btn-tenue", selector: ".btn-tenue" },
+    { id: "btn-tratteggiato", selector: ".btn-tratteggiato" },
+    // The first .btn-link of the mockup sits on a dark (tema-notte) frame, the
+    // gallery shows it on paper: the secondary link is on paper in both.
+    { id: "btn-link", selector: ".btn-link--secondario" },
+    { id: "btn-pericolo", selector: ".btn-pericolo" },
+    { id: "btn-pericolo-pieno", selector: ".btn-pericolo-pieno" },
+    { id: "btn-icona", selector: ".btn-icona" },
+    // The mockup shows the spinner only on the dark frame, the gallery on
+    // paper: the inherited text color is context, not the component.
+    { id: "spinner", selector: ".spinner", skip: ["color"] },
+    { id: "campo", selector: ".campo__input" },
+    { id: "casella", selector: ".casella" },
+    { id: "toggle", selector: ".toggle" },
+    { id: "selettore", selector: ".selettore" },
+    { id: "chip", selector: ".chip--statico" },
+    { id: "avatar", selector: '.avatar:not([class*="avatar--"])' },
+    { id: "etichetta", selector: ".etichetta" },
+    // The first .scheda of the mockup is a list container (no padding): the
+    // padded card is the comparable one, its height depends on the content.
+    { id: "scheda", selector: ".scheda--imbottita", skip: ["height"] },
+    { id: "riga-lista", selector: ".riga-lista" },
+    // The height of the empty state depends on text wrapping and the font:
+    // every other style is still compared.
+    { id: "stato-vuoto", selector: ".stato-vuoto", skip: ["height"] },
+    { id: "stato-vuoto", selector: ".stato-vuoto__titolo", skip: ["height"] },
+    // The first skeletons of the mockup are on the dark frame: the large one
+    // is on paper in both.
+    { id: "skeleton", selector: ".skeleton--grande" },
+    // One per variant; the height depends on how the text wraps.
+    // The mockup shows the error one on the dark frame: the inherited text
+    // color (and the border color that follows it) is context there.
+    {
+      id: "avviso",
+      selector: ".avviso--errore",
+      skip: ["height", "color", "border"],
+    },
+    ...[".avviso--avviso", ".avviso--info", ".avviso--ok"].map((selector) => ({
+      id: "avviso",
+      selector,
+      skip: ["height"],
+    })),
+    { id: "errore-pagina", selector: ".errore-pagina", skip: ["height"] },
   ];
   const PROPS = [
     "background-color",
@@ -718,39 +762,131 @@ test.describe("CA-11: stessi stili del mockup", () => {
     "border",
   ];
 
-  async function read(page: Page) {
+  async function read(page: Page, selectors: string[]) {
     return page.evaluate(
-      ({ sections, props }) =>
-        Object.fromEntries(
-          sections.map(([id, selector]) => {
-            const element = document.querySelector(`#${id} ${selector}`);
-            const style = element ? getComputedStyle(element) : null;
-            return [
-              id,
-              style
-                ? Object.fromEntries(
-                    props.map((p) => [p, style.getPropertyValue(p)]),
-                  )
-                : null,
-            ];
-          }),
-        ),
-      { sections: SECTIONS, props: PROPS },
+      ({ list, props }) =>
+        list.map((selector) => {
+          const element = document.querySelector(selector);
+          if (!element) return null;
+          const style = getComputedStyle(element);
+          return Object.fromEntries(
+            props.map((p) => [p, style.getPropertyValue(p)]),
+          );
+        }),
+      { list: selectors, props: PROPS },
     );
   }
 
-  test("i componenti hanno gli stessi valori del mockup a 390 px", async ({
+  async function compare(
+    page: Page,
+    width: number,
+    specs: Spec[],
+    prepare: () => Promise<void>,
+  ) {
+    await page.setViewportSize({ width, height: 844 });
+    await page.goto(BASE_PATH);
+    await prepare();
+    const ours = await read(
+      page,
+      specs.map((spec) => spec.ours ?? `#${spec.id} ${spec.selector}`),
+    );
+    await page.goto(`file://${process.cwd()}/docs/mockup/design-system.html`);
+    const theirs = await read(
+      page,
+      specs.map((spec) => spec.mock ?? `#${spec.id} ${spec.selector}`),
+    );
+    specs.forEach((spec, index) => {
+      const label = `${spec.id} ${spec.selector}`;
+      expect(theirs[index], `${label} nel mockup`).not.toBeNull();
+      expect(ours[index], `${label} nell'app`).not.toBeNull();
+      const drop = (values: Record<string, string> | null) =>
+        Object.fromEntries(
+          Object.entries(values ?? {}).filter(
+            ([key]) => !(spec.skip ?? []).includes(key),
+          ),
+        );
+      expect(drop(ours[index]!), label).toEqual(drop(theirs[index]!));
+    });
+  }
+
+  test("i componenti hanno gli stessi stili del mockup a 390 px", async ({
     page,
   }) => {
-    await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto(BASE_PATH);
-    const ours = await read(page);
-    await page.goto(`file://${process.cwd()}/docs/mockup/design-system.html`);
-    const theirs = await read(page);
-    for (const [id] of SECTIONS) {
-      expect(theirs[id], `${id} nel mockup`).not.toBeNull();
-      expect(ours[id], id).toEqual(theirs[id]);
-    }
+    await compare(page, 390, STATIC_SECTIONS, async () => {});
+  });
+
+  test("foglio aperto: stessi stili del mockup a 390 px", async ({ page }) => {
+    await compare(
+      page,
+      390,
+      [
+        {
+          id: "foglio",
+          selector: ".foglio",
+          ours: ".foglio",
+          skip: ["height"],
+        },
+      ],
+      async () => {
+        await page.getByRole("button", { name: "Apri foglio" }).click();
+        await expect(
+          page.getByRole("dialog", { name: "Aggiungi" }),
+        ).toBeVisible();
+      },
+    );
+  });
+
+  test("modale aperta: stessi stili del mockup a 1280 px", async ({ page }) => {
+    await compare(
+      page,
+      1280,
+      [
+        {
+          id: "modale",
+          selector: ".modale",
+          ours: ".modale",
+          skip: ["height"],
+        },
+      ],
+      async () => {
+        await page.getByRole("button", { name: "Apri foglio" }).click();
+        await expect(
+          page.getByRole("dialog", { name: "Aggiungi" }),
+        ).toBeVisible();
+      },
+    );
+  });
+
+  test("dialogo aperto: stessi stili del mockup a 390 px", async ({ page }) => {
+    await compare(
+      page,
+      390,
+      [
+        {
+          id: "dialogo",
+          selector: ".dialogo",
+          ours: ".dialogo",
+          skip: ["height"],
+        },
+      ],
+      async () => {
+        await page.getByTestId("dialogo-apri").click();
+        await expect(page.getByRole("alertdialog")).toBeVisible();
+      },
+    );
+  });
+
+  test("toast visibile: stessi stili del mockup a 390 px", async ({ page }) => {
+    // The first toast of the mockup is the one without «Annulla».
+    await compare(
+      page,
+      390,
+      [{ id: "toast", selector: ".toast", ours: ".toast", skip: ["height"] }],
+      async () => {
+        await page.getByTestId("toast-mostra-altro").click();
+        await expect(page.locator(".toast")).toBeVisible();
+      },
+    );
   });
 });
 
