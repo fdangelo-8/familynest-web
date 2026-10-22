@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Read",
+      "Glob",
+      "Grep",
+      "Edit",
+      "Write",
+      "MultiEdit",
+      "TodoWrite",
+      "Bash(npm ci)",
+      "Bash(npm install)",
+      "Bash(npm run *)",
+      "Bash(npx playwright *)",
+      "Bash(npx supabase start)",
+      "Bash(npx supabase stop *)",
+      "Bash(npx supabase status *)",
+      "Bash(npx supabase db start)",
+      "Bash(npx supabase db reset *)",
+      "Bash(npx supabase test db *)",
+      "Bash(npx supabase migration new *)",
+      "Bash(npx supabase migration list *)",
+      "Bash(npx supabase gen types *)",
+      "Bash(npx prettier *)",
+      "Bash(npx eslint *)",
+      "Bash(npx tsc *)",
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git show *)",
+      "Bash(git branch *)",
+      "Bash(git fetch *)",
+      "Bash(git switch *)",
+      "Bash(git checkout *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(git pull *)",
+      "Bash(git rebase *)",
+      "Bash(git merge origin/main)",
+      "Bash(git stash *)",
+      "Bash(git worktree *)",
+      "Bash(git rev-parse *)",
+      "Bash(gh issue *)",
+      "Bash(gh pr *)",
+      "Bash(gh label *)",
+      "Bash(gh run *)",
+      "Bash(gh api *)",
+      "Bash(ls *)",
+      "Bash(cat *)",
+      "Bash(mkdir *)",
+      "Bash(node *)",
+      "WebFetch(domain:code.claude.com)",
+      "WebFetch(domain:docs.claude.com)",
+      "WebFetch(domain:supabase.com)",
+      "WebFetch(domain:nextjs.org)",
+      "WebFetch(domain:playwright.dev)",
+      "WebFetch(domain:developer.mozilla.org)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.local)",
+      "Read(./.env.*.local)",
+      "Read(./.env.production)",
+      "Read(./.env.development)",
+      "Bash(gh pr merge *)",
+      "Bash(gh secret *)",
+      "Bash(gh repo delete *)",
+      "Bash(npx supabase login *)",
+      "Bash(npx supabase link *)",
+      "Bash(npx supabase db push *)",
+      "Bash(supabase login *)",
+      "Bash(supabase link *)",
+      "Bash(supabase db push *)",
+      "Bash(sudo *)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.mjs\"", "timeout": 600 }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-bash.mjs\"", "timeout": 20 }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit",
+        "hooks": [
+          { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-files.mjs\"", "timeout": 20 }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/stop-check.mjs\"", "timeout": 300 }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "sviluppatore|tester-funzionale|tester-visivo|architetto-dati",
+        "hooks": [
+          { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/stop-check.mjs\"", "timeout": 300 }
+        ]
+      }
+    ]
+  }
+}

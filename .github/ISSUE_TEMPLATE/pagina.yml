@@ -1,0 +1,48 @@
+name: Pagina o funzione
+description: Una pagina dell'app da sviluppare a partire dal mockup
+title: "[Pagina] "
+labels: ["da-analizzare"]
+body:
+  - type: input
+    id: mockup
+    attributes:
+      label: Mockup di riferimento
+      description: File in docs/mockup/ e, se serve, la sezione (es. docs/mockup/familynest.html#calendario)
+    validations:
+      required: true
+  - type: textarea
+    id: obiettivo
+    attributes:
+      label: Obiettivo
+      description: Cosa deve permettere di fare questa pagina, in due righe (lo scrive Francesco o il coordinatore)
+    validations:
+      required: true
+  - type: textarea
+    id: requisito
+    attributes:
+      label: Requisito funzionale
+      description: Compilato dall'analista
+      value: "_Da compilare dall'analista._"
+  - type: textarea
+    id: criteri
+    attributes:
+      label: Criteri di accettazione
+      description: "Numerati CA-1, CA-2, ... Ognuno verificabile con un test. Compilati dall'analista."
+      value: "_Da compilare dall'analista._"
+  - type: textarea
+    id: specifica
+    attributes:
+      label: Specifica grafica
+      description: Stati, mobile/desktop, testi, componenti. Compilata dal designer.
+      value: "_Da compilare dal designer._"
+  - type: textarea
+    id: dati
+    attributes:
+      label: Dati e dipendenze
+      description: Tabelle lette/scritte, richieste-db o richieste-condivise collegate
+      value: "_Da compilare dall'analista._"
+  - type: textarea
+    id: domande
+    attributes:
+      label: Domande aperte
+      value: "Nessuna."

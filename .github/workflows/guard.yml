@@ -1,0 +1,94 @@
+# Enforces the team rules on every pull request.
+# Runs with pull_request_target so the rules always come from `main`
+# and a pull request cannot weaken them by editing this file.
+# It never checks out or executes code from the pull request.
+name: guard
+
+on:
+  pull_request_target:
+    types: [opened, edited, synchronize, reopened, ready_for_review]
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: guard-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check branch, files and description
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          BRANCH: ${{ github.event.pull_request.head.ref }}
+          BODY: ${{ github.event.pull_request.body }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+        run: |
+          set -euo pipefail
+          errors=()
+
+          if [ "$HEAD_REPO" != "$REPO" ]; then
+            errors+=("Le pull request devono partire da un branch di questo repository.")
+          fi
+
+          gh api --paginate "repos/$REPO/pulls/$PR/files" --jq '.[].filename' > files.txt
+          echo "File modificati:"; cat files.txt
+
+          case "$BRANCH" in
+            admin/*|db/*|feat/*|shared/*|fix/*|docs/*|chore/*) ;;
+            *) errors+=("Nome branch '$BRANCH' non ammesso. Usa admin/, db/, feat/, shared/, fix/, docs/ o chore/.") ;;
+          esac
+
+          # Database: only from db/* branches (or admin/* for maintenance).
+          if grep -Eq '^(supabase/|src/types/database\.ts$)' files.txt; then
+            case "$BRANCH" in
+              db/*|admin/*) ;;
+              *) errors+=("Modifiche a supabase/ o src/types/database.ts ammesse solo da branch db/* (agente architetto-dati).") ;;
+            esac
+          fi
+
+          # db/* branches may only touch the database area and docs.
+          if [[ "$BRANCH" == db/* ]]; then
+            if grep -Ev '^(supabase/|src/types/database\.ts$|docs/)' files.txt | grep -q .; then
+              errors+=("Un branch db/* può modificare solo supabase/, src/types/database.ts e docs/.")
+            fi
+          fi
+
+          # Team configuration: only from admin/* branches (Francesco's maintenance sessions).
+          if grep -Eq '^(\.github/|\.claude/(settings[^/]*\.json|hooks/|agents/|commands/)|CLAUDE\.md$)' files.txt; then
+            case "$BRANCH" in
+              admin/*) ;;
+              *) errors+=("Modifiche a .github/, .claude/ (configurazione agenti) o CLAUDE.md ammesse solo da branch admin/*.") ;;
+            esac
+          fi
+
+          # Shared foundations: only from shared/* branches (or admin/*).
+          shared_re='^(src/app/globals\.css$|src/app/layout\.tsx$|src/app/\([^/]+\)/layout\.tsx$|src/components/ui/|src/lib/|package\.json$|package-lock\.json$|next\.config\.|tsconfig\.json$|playwright\.config\.|eslint\.config\.|\.prettierrc)'
+          if grep -Eq "$shared_re" files.txt; then
+            case "$BRANCH" in
+              shared/*|admin/*) ;;
+              *) errors+=("File condivisi (stili globali, layout, componenti ui, lib, dipendenze, configurazione) modificabili solo da branch shared/*: $(grep -E "$shared_re" files.txt | tr '\n' ' ')") ;;
+            esac
+          fi
+
+          # Every work pull request must close its issue.
+          case "$BRANCH" in
+            feat/*|shared/*|fix/*|db/*)
+              if ! printf '%s' "$BODY" | grep -Eiq '(close[sd]?|fix(e[sd])?|resolve[sd]?) #[0-9]+'; then
+                errors+=("La descrizione deve contenere 'Closes #<numero issue>'.")
+              fi ;;
+          esac
+
+          if [ ${#errors[@]} -gt 0 ]; then
+            echo "::group::Regole violate"
+            for e in "${errors[@]}"; do echo "::error::$e"; done
+            echo "::endgroup::"
+            exit 1
+          fi
+          echo "Tutte le regole rispettate."

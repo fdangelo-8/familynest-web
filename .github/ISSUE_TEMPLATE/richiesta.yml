@@ -1,0 +1,32 @@
+name: Richiesta database o file condiviso
+description: Modifica a database, componenti comuni, stili globali o layout, richiesta da una pagina
+title: "[Richiesta] "
+body:
+  - type: dropdown
+    id: tipo
+    attributes:
+      label: Tipo
+      options:
+        - richiesta-db
+        - richiesta-condivisa
+    validations:
+      required: true
+  - type: input
+    id: origine
+    attributes:
+      label: Issue che la richiede
+      description: "Es. #12"
+    validations:
+      required: true
+  - type: textarea
+    id: cosa
+    attributes:
+      label: Cosa serve
+      description: Tabelle, colonne, policy, componenti o stili necessari, con il motivo
+    validations:
+      required: true
+  - type: textarea
+    id: impatto
+    attributes:
+      label: Altre pagine coinvolte
+      value: "Nessuna."
