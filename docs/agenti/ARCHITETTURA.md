@@ -11,7 +11,7 @@ Versione approvata da Francesco il 21/10/2026. Copia operativa per gli agenti: i
 5. **Tutto è tracciato.** Lo stato vive su GitHub: etichette, PR e la issue "Stato del lavoro" (etichetta `stato`), aggiornata dal coordinatore e leggibile da Francesco anche dal telefono.
 6. **Nel dubbio, ci si ferma.** Un agente che non sa decidere apre una domanda, non inventa.
 
-**Gerarchia delle regole** (vince la più alta): decisioni esplicite di Francesco → questo documento → skill di progetto → istruzioni del singolo agente → skill esterne.
+**Gerarchia delle regole** (vince la più alta): decisioni esplicite di Francesco (comprese quelle scritte in `docs/mockup/DECISIONI.md`, da leggere sempre insieme al mockup) → questo documento → skill di progetto → istruzioni del singolo agente → skill esterne.
 
 **Decide solo Francesco:** merge su `main`, proposte del designer, domande aperte bloccanti, cambi di perimetro funzionale.
 
