@@ -4,7 +4,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(26);
+select plan(28);
 
 -- ---------------------------------------------------------------------------
 -- A (admin) sees the invitation of Laura; secrets are never writable.
@@ -103,7 +103,7 @@ select lives_ok(
 select lives_ok(
   $$ insert into public.invitations (household_id, member_id)
      values ('22222222-2222-4222-8222-222222222222', 'b1000000-0000-4000-8000-000000000004') $$,
-  'CA-23: B creates an invitation for Anna'
+  'CA-23 (#49 CA-1): B creates an invitation for Anna without short_code, token or expiry'
 );
 select ok(
   (select i.token ~ '^[0-9a-f]{64}$' from public.invitations i
@@ -162,13 +162,6 @@ select is(
   3,
   'every invitation has its own token'
 );
-select throws_ok(
-  $$ insert into public.invitations (household_id, member_id, short_code)
-     values ('22222222-2222-4222-8222-222222222222', 'b1000000-0000-4000-8000-000000000004', '4821') $$,
-  '23505',
-  'short code already used by a valid invitation',
-  'a short code already used by a valid invitation is refused'
-);
 select is(
   (select count(*)::integer from public.invitations i
    where i.short_code = '7305' and i.status = 'revoked'),
@@ -179,6 +172,23 @@ select ok(
   (select i.invited_by_member_id = 'b1000000-0000-4000-8000-000000000001' from public.invitations i
    where i.member_id = 'b1000000-0000-4000-8000-000000000004' and i.status = 'pending'),
   'the inviter is recorded automatically'
+);
+
+-- Issue #49 CA-1: the short code has a server default, so the app never sends it
+-- (optional in the generated Insert types). A code already used by a valid
+-- invitation is redrawn.
+select col_has_default('public', 'invitations', 'short_code', 'short_code has a server default');
+update public.invitations set status = 'revoked'
+where member_id = 'b1000000-0000-4000-8000-000000000004' and status = 'pending';
+select lives_ok(
+  $$ insert into public.invitations (household_id, member_id, short_code)
+     values ('22222222-2222-4222-8222-222222222222', 'b1000000-0000-4000-8000-000000000004', '4821') $$,
+  'an invitation with a code already in use is still created'
+);
+select ok(
+  (select i.short_code ~ '^[0-9]{4}$' and i.short_code <> '4821' from public.invitations i
+   where i.member_id = 'b1000000-0000-4000-8000-000000000004' and i.status = 'pending'),
+  'the code in use (4821, Laura) is replaced by another 4 digit code'
 );
 
 select * from finish();

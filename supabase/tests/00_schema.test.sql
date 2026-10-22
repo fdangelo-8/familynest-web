@@ -2,7 +2,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(31);
+select plan(37);
 
 -- CA-1: the four tables exist with RLS enabled.
 select has_table('public', 'households', 'CA-1: households exists');
@@ -84,11 +84,27 @@ select is_empty(
     select p.proname
     from pg_proc p
     join pg_namespace n on n.oid = p.pronamespace
-    where n.nspname = 'public'
+    where n.nspname in ('public', 'private')
       and p.prosecdef
       and not coalesce(p.proconfig @> array['search_path=""'], false)
   $$,
   'every security definer function sets search_path to empty'
+);
+
+-- Issue #49 CA-3: membership checks are in the private schema, not exposed by the API.
+select has_function('private', 'is_household_member', array['uuid'], 'is_household_member exists in private');
+select has_function('private', 'is_household_admin', array['uuid'], 'is_household_admin exists in private');
+select hasnt_function('public', 'is_household_member', array['uuid'], 'no public is_household_member (not callable as RPC)');
+select hasnt_function('public', 'is_household_admin', array['uuid'], 'no public is_household_admin (not callable as RPC)');
+select ok(
+  not has_schema_privilege('anon', 'private', 'usage'),
+  'anon has no access to the private schema'
+);
+
+-- Issue #49 CA-4: every account has a profile.
+select is_empty(
+  $$ select u.id from auth.users u where not exists (select 1 from public.profiles p where p.id = u.id) $$,
+  'every account in auth.users has a profile'
 );
 
 -- Anonymous users cannot call the operations.
