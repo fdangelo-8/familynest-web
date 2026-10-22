@@ -3596,8 +3596,7 @@ button.riga-lista {
   .btn-primary:hover:not(:disabled, [aria-disabled="true"]),
   .btn-aggiungi:hover:not(:disabled),
   .selettore__voce[aria-pressed="true"]:hover:not(:disabled),
-  .nav-alto__voce.is-attiva:hover,
-  .chip[aria-pressed="true"]:hover:not(:disabled) {
+  .nav-alto__voce.is-attiva:hover {
     background: var(--color-notte-2);
   }
   .btn-secondary:hover:not(:disabled, [aria-disabled="true"]),

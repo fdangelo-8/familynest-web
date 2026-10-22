@@ -6,7 +6,7 @@
    (--font-parkinsans, --font-host-grotesk, vedi skill design-system,
    sezione "Caricamento dei font"). La pila di riserva resta identica.
    Prettier scrive gli esadecimali in minuscolo e lo zero prima dei
-   decimali (#F1F2EE = #f1f2ee, .5 = 0.5): i valori non cambiano.
+   decimali: i valori non cambiano.
    Se tokens.css del mockup cambia, si aggiorna prima questo file.
    ========================================================= */
 :root {
