@@ -1,0 +1,70 @@
+# Keeps the GitHub Project board in sync with the issue status labels.
+# The coordinator only changes labels; this workflow moves the card to the matching column.
+# Needs: secret PROJECT_TOKEN (classic token, scopes: project, repo) and variable PROJECT_NUMBER.
+# Issue events always run the workflow file from `main`, so pull requests cannot change it.
+name: project-board
+
+on:
+  issues:
+    types: [opened, reopened, labeled, unlabeled, closed]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: project-board-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: ${{ !contains(github.event.issue.labels.*.name, 'stato') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Move the card to the column of its status label
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+          NUMBER: ${{ vars.PROJECT_NUMBER }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+          STATE: ${{ github.event.issue.state }}
+          LABELS: ${{ toJSON(github.event.issue.labels.*.name) }}
+        run: |
+          set -euo pipefail
+          if [ -z "${GH_TOKEN}" ] || [ -z "${NUMBER}" ]; then
+            echo "::warning::PROJECT_TOKEN o PROJECT_NUMBER mancanti: bacheca non aggiornata."
+            exit 0
+          fi
+
+          has() { echo "$LABELS" | jq -e --arg l "$1" 'index($l) != null' >/dev/null; }
+
+          column=""
+          if [ "$STATE" = "closed" ]; then column="Fatto"
+          elif has bloccata; then column="Bloccata"
+          elif has pronta-per-francesco; then column="Pronta per Francesco"
+          elif has in-test; then column="In test"
+          elif has in-revisione; then column="In revisione"
+          elif has in-sviluppo; then column="In sviluppo"
+          elif has da-sviluppare; then column="Da sviluppare"
+          elif has in-specifica; then column="In specifica"
+          elif has da-analizzare; then column="Da analizzare"
+          fi
+
+          item=$(gh project item-add "$NUMBER" --owner "$OWNER" --url "$ISSUE_URL" --format json --jq '.id')
+          echo "Scheda: $item"
+          if [ -z "$column" ]; then
+            echo "Nessuna etichetta di stato: scheda aggiunta senza colonna."
+            exit 0
+          fi
+
+          project=$(gh project view "$NUMBER" --owner "$OWNER" --format json --jq '.id')
+          fields=$(gh project field-list "$NUMBER" --owner "$OWNER" --format json)
+          field=$(echo "$fields" | jq -r '.fields[] | select(.name == "Status") | .id')
+          option=$(echo "$fields" | jq -r --arg c "$column" '.fields[] | select(.name == "Status") | .options[] | select(.name == $c) | .id')
+          if [ -z "$field" ] || [ -z "$option" ]; then
+            echo "::error::Nella bacheca manca il campo Status o la colonna '$column'. Controlla i nomi delle colonne."
+            exit 1
+          fi
+
+          gh project item-edit --id "$item" --project-id "$project" --field-id "$field" --single-select-option-id "$option"
+          echo "Spostata in: $column"

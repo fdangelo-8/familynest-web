@@ -20,7 +20,8 @@ Errori già commessi (in questo progetto o in quelli precedenti dell'ecosistema)
 
 ## Processo
 
-- La protezione di `main` non è applicata sul piano GitHub gratuito → nessun agente conta su GitHub per bloccare un merge: si dichiara pronta solo una PR con `gh pr checks` tutto verde.
+- La protezione di `main` non è applicata sul piano GitHub gratuito → nessun agente conta su GitHub per bloccare un merge: si dichiara pronta solo una PR con `node scripts/agenti/gh.mjs pr-checks <n>` tutto verde.
+- `gh issue …` e `gh pr …` falliscono con "GitHub GraphQL is not available" → usare `node scripts/agenti/gh.mjs`, che usa l'API REST.
 
 ## Test
 

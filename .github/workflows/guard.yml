@@ -61,10 +61,10 @@ jobs:
           fi
 
           # Team configuration: only from admin/* branches (Francesco's maintenance sessions).
-          if grep -Eq '^(\.github/|\.claude/(settings[^/]*\.json|hooks/|agents/|commands/)|CLAUDE\.md$)' files.txt; then
+          if grep -Eq '^(\.github/|\.claude/(settings[^/]*\.json|hooks/|agents/|commands/)|scripts/agenti/|CLAUDE\.md$)' files.txt; then
             case "$BRANCH" in
               admin/*) ;;
-              *) errors+=("Modifiche a .github/, .claude/ (configurazione agenti) o CLAUDE.md ammesse solo da branch admin/*.") ;;
+              *) errors+=("Modifiche a .github/, .claude/ (configurazione agenti), scripts/agenti/ o CLAUDE.md ammesse solo da branch admin/*.") ;;
             esac
           fi
 

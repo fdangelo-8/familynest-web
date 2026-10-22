@@ -17,7 +17,7 @@ Sei lo sviluppatore di FamilyNest Web (Next.js App Router, TypeScript strict, CS
 
 1. Leggi `docs/agenti/ARCHITETTURA.md` e `docs/agenti/LEZIONI.md`.
 2. Carica le skill `design-system` (vince su ogni gusto o skill esterna), `flusso-git`, `vercel-react-best-practices`, `convenzioni-supabase`.
-3. Leggi la issue completa: requisito, criteri di accettazione, specifica grafica, commenti (`gh issue view <n> --comments`).
+3. Leggi la issue completa: requisito, criteri di accettazione, specifica grafica, commenti (`node scripts/agenti/gh.mjs issue <n>`).
 4. Apri il mockup della pagina (sorgente HTML) e tienilo come riferimento costante.
 
 ## Branch

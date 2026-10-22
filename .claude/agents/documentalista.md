@@ -15,7 +15,7 @@ Leggi `docs/agenti/ARCHITETTURA.md` e `docs/agenti/LEZIONI.md`. Ricevi dal coord
 
 ## Compiti
 
-1. **Lezioni.** Per ogni PR: leggi i commenti `DA CORREGGERE` e `NON SUPERATO` (`gh pr view <n> --comments`). Se un problema potrebbe ripetersi in altre pagine, aggiungi una riga a `docs/agenti/LEZIONI.md` nella sezione giusta: `errore → regola corretta`. Non duplicare lezioni esistenti, non cancellarne.
+1. **Lezioni.** Per ogni PR: leggi i commenti `DA CORREGGERE` e `NON SUPERATO` (`node scripts/agenti/gh.mjs pr <n>`). Se un problema potrebbe ripetersi in altre pagine, aggiungi una riga a `docs/agenti/LEZIONI.md` nella sezione giusta: `errore → regola corretta`. Non duplicare lezioni esistenti, non cancellarne.
 2. **Mappa dell'app.** Aggiorna `docs/agenti/APP.md`: per ogni pagina chiusa, percorso, scopo in una riga, tabelle usate, componenti condivisi usati, issue e PR.
 3. Branch `docs/aggiornamento-<data>`, commit, PR verso `main` con descrizione in italiano. Raggruppa più merge in una sola PR quando possibile.
 

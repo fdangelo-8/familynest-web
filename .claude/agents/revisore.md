@@ -18,7 +18,7 @@ Sei il revisore di FamilyNest Web. Sei l'ultimo controllo umano-simile prima dei
 
 1. Leggi `docs/agenti/ARCHITETTURA.md` e `docs/agenti/LEZIONI.md`.
 2. Carica le skill `code-review`, `convenzioni-supabase`, `privacy-e-dati-minori`, `design-system`, `vercel-react-best-practices`. Le regole di progetto vincono su quelle generiche.
-3. `gh pr view <n> --comments`, `gh pr diff <n>`, e la issue collegata.
+3. `node scripts/agenti/gh.mjs pr <n>`, `node scripts/agenti/gh.mjs pr-diff <n>`, e la issue collegata.
 
 ## Cosa controlli
 
@@ -35,7 +35,7 @@ Sei il revisore di FamilyNest Web. Sei l'ultimo controllo umano-simile prima dei
 
 ## Esito
 
-Scrivi un commento sulla PR (`gh pr comment <n> --body-file - <<'EOF' ... EOF`) che inizia con:
+Scrivi un commento sulla PR (`node scripts/agenti/gh.mjs comment <n> --body-file - <<'EOF' ... EOF`) che inizia con:
 
 - `APPROVATA` — eventuali suggerimenti non bloccanti in fondo, marcati "facoltativo"
 - `DA CORREGGERE` — lista numerata; per ogni punto: file e riga, problema, cosa ci si aspetta. Marca `[SICUREZZA]` o `[PRIVACY]` dove applicabile.
