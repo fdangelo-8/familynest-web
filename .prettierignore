@@ -1,0 +1,10 @@
+node_modules
+.next
+out
+build
+coverage
+playwright-report
+test-results
+package-lock.json
+src/types/database.ts
+supabase/config.toml
