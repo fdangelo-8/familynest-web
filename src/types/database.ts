@@ -110,7 +110,7 @@ export type Database = {
           invited_by_member_id?: string | null;
           member_id: string;
           message?: string | null;
-          short_code: string;
+          short_code?: string;
           status?: Database["public"]["Enums"]["invitation_status"];
           token?: string;
           updated_at?: string;
@@ -194,8 +194,6 @@ export type Database = {
         Args: Record<PropertyKey, never>;
         Returns: string;
       };
-      is_household_admin: { Args: { target: string }; Returns: boolean };
-      is_household_member: { Args: { target: string }; Returns: boolean };
     };
     Enums: {
       household_type:

@@ -8,6 +8,9 @@
 --    are never writable from the app.
 -- 2. RLS policies: which rows. Policies are `to authenticated` only: anon has no
 --    policy, so it reads 0 rows and cannot write anything.
+-- Membership of the caller's own household is checked with
+-- `household_id = (select public.current_household_id())`: one account belongs to at
+-- most one household, and the subquery is evaluated once per statement.
 -- An operation without a policy is denied for every row (e.g. deleting a household:
 -- a household disappears only when its last adult with an account leaves).
 
@@ -53,11 +56,14 @@ revoke execute on function public.invitations_guard_update() from public, anon, 
 revoke execute on function public.profiles_normalize() from public, anon, authenticated;
 revoke execute on function public.handle_new_user() from public, anon, authenticated;
 
--- Membership checks: used by policies and guard triggers, evaluated as the caller.
-revoke execute on function public.is_household_member(uuid) from public, anon;
-revoke execute on function public.is_household_admin(uuid) from public, anon;
-grant execute on function public.is_household_member(uuid) to authenticated;
-grant execute on function public.is_household_admin(uuid) to authenticated;
+-- Membership checks (schema "private", not exposed by the Data API): used by policies
+-- and guard triggers, evaluated as the caller.
+revoke all on schema private from public, anon;
+grant usage on schema private to authenticated;
+revoke execute on function private.is_household_member(uuid) from public, anon;
+revoke execute on function private.is_household_admin(uuid) from public, anon;
+grant execute on function private.is_household_member(uuid) to authenticated;
+grant execute on function private.is_household_admin(uuid) to authenticated;
 
 -- Operations for signed-in users only.
 revoke execute on function public.current_household_id() from public, anon;
@@ -74,15 +80,15 @@ grant execute on function public.accept_invitation(text) to authenticated;
 drop policy if exists households_select on public.households;
 create policy households_select on public.households
   for select to authenticated
-  using (public.is_household_member(id));
+  using (id = (select public.current_household_id()));
 
 -- No insert policy: households are created only by create_household().
 
 drop policy if exists households_update on public.households;
 create policy households_update on public.households
   for update to authenticated
-  using (public.is_household_admin(id))
-  with check (public.is_household_admin(id));
+  using (private.is_household_admin(id))
+  with check (private.is_household_admin(id));
 
 -- No delete policy (see header).
 
@@ -93,7 +99,7 @@ create policy households_update on public.households
 drop policy if exists household_members_select on public.household_members;
 create policy household_members_select on public.household_members
   for select to authenticated
-  using (public.is_household_member(household_id));
+  using (household_id = (select public.current_household_id()));
 
 -- Every adult adds children and pets; only administrators add adults.
 -- New members never have an account nor the administrator role.
@@ -101,10 +107,10 @@ drop policy if exists household_members_insert on public.household_members;
 create policy household_members_insert on public.household_members
   for insert to authenticated
   with check (
-    public.is_household_member(household_id)
+    household_id = (select public.current_household_id())
     and user_id is null
     and not is_admin
-    and (kind <> 'adult' or public.is_household_admin(household_id))
+    and (kind <> 'adult' or private.is_household_admin(household_id))
   );
 
 -- Administrators change every member; other adults change themselves, children and pets.
@@ -113,16 +119,16 @@ drop policy if exists household_members_update on public.household_members;
 create policy household_members_update on public.household_members
   for update to authenticated
   using (
-    public.is_household_admin(household_id)
+    private.is_household_admin(household_id)
     or (
-      public.is_household_member(household_id)
+      household_id = (select public.current_household_id())
       and (user_id = (select auth.uid()) or kind <> 'adult')
     )
   )
   with check (
-    public.is_household_admin(household_id)
+    private.is_household_admin(household_id)
     or (
-      public.is_household_member(household_id)
+      household_id = (select public.current_household_id())
       and (user_id = (select auth.uid()) or kind <> 'adult')
     )
   );
@@ -132,7 +138,7 @@ drop policy if exists household_members_delete on public.household_members;
 create policy household_members_delete on public.household_members
   for delete to authenticated
   using (
-    public.is_household_admin(household_id)
+    private.is_household_admin(household_id)
     or user_id = (select auth.uid())
   );
 
@@ -143,19 +149,19 @@ create policy household_members_delete on public.household_members
 drop policy if exists invitations_select on public.invitations;
 create policy invitations_select on public.invitations
   for select to authenticated
-  using (public.is_household_admin(household_id));
+  using (private.is_household_admin(household_id));
 
 drop policy if exists invitations_insert on public.invitations;
 create policy invitations_insert on public.invitations
   for insert to authenticated
-  with check (public.is_household_admin(household_id));
+  with check (private.is_household_admin(household_id));
 
 -- Only revocation is possible (column grant + invitations_guard_update trigger).
 drop policy if exists invitations_update on public.invitations;
 create policy invitations_update on public.invitations
   for update to authenticated
-  using (public.is_household_admin(household_id))
-  with check (public.is_household_admin(household_id));
+  using (private.is_household_admin(household_id))
+  with check (private.is_household_admin(household_id));
 
 -- No delete policy (see header).
 

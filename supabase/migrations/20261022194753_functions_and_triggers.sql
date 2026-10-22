@@ -28,9 +28,13 @@ $$;
 
 -- ---------------------------------------------------------------------------
 -- Membership checks used by the RLS policies (no recursion between policies).
+-- They live in the "private" schema, which the Data API does not expose: they are
+-- not callable as RPC and do not appear in the generated types.
 -- ---------------------------------------------------------------------------
 
-create or replace function public.is_household_member(target uuid)
+create schema if not exists private;
+
+create or replace function private.is_household_member(target uuid)
 returns boolean
 language sql
 stable
@@ -45,7 +49,7 @@ as $$
   );
 $$;
 
-create or replace function public.is_household_admin(target uuid)
+create or replace function private.is_household_admin(target uuid)
 returns boolean
 language sql
 stable
@@ -140,7 +144,7 @@ begin
     end if;
 
     if new.is_admin is distinct from old.is_admin
-       and not public.is_household_admin(old.household_id) then
+       and not private.is_household_admin(old.household_id) then
       raise exception 'only administrators can change roles' using errcode = '42501';
     end if;
   end if;
@@ -232,7 +236,7 @@ create trigger household_members_after_delete
 -- invitations
 -- ---------------------------------------------------------------------------
 
--- Validates a new invitation and generates its short code.
+-- Validates a new invitation and makes its short code unique among valid invitations.
 -- Security definer: the short code must be unique among the valid invitations of
 -- every household, which the caller cannot see.
 create or replace function public.invitations_before_insert()
@@ -244,11 +248,10 @@ as $$
 declare
   v_uid uuid := (select auth.uid());
   v_member public.household_members%rowtype;
-  v_code text;
   v_attempts integer := 0;
 begin
   -- Same answer as RLS for non administrators: nothing about other households leaks.
-  if v_uid is not null and not public.is_household_admin(new.household_id) then
+  if v_uid is not null and not private.is_household_admin(new.household_id) then
     raise exception 'permission denied for table invitations' using errcode = '42501';
   end if;
 
@@ -285,35 +288,25 @@ begin
   -- Serialise short code assignment across all households.
   perform pg_advisory_xact_lock(hashtextextended('public.invitations.short_code', 0));
 
-  if new.short_code is null then
-    loop
-      v_attempts := v_attempts + 1;
-      v_code := lpad(
-        ((('x' || encode(extensions.gen_random_bytes(2), 'hex'))::bit(16)::integer) % 10000)::text,
-        4,
-        '0'
-      );
-      exit when not exists (
-        select 1
-        from public.invitations i
-        where i.short_code = v_code
-          and i.status = 'pending'
-          and i.expires_at > now()
-      );
-      if v_attempts >= 50 then
-        raise exception 'no short code available' using errcode = 'P0001';
-      end if;
-    end loop;
-    new.short_code := v_code;
-  elsif exists (
+  -- The column default draws a random code; while it is used by a valid invitation,
+  -- draw another one.
+  while new.short_code is null or exists (
     select 1
     from public.invitations i
     where i.short_code = new.short_code
       and i.status = 'pending'
       and i.expires_at > now()
-  ) then
-    raise exception 'short code already used by a valid invitation' using errcode = '23505';
-  end if;
+  ) loop
+    v_attempts := v_attempts + 1;
+    if v_attempts > 50 then
+      raise exception 'no short code available' using errcode = 'P0001';
+    end if;
+    new.short_code := lpad(
+      ((('x' || encode(extensions.gen_random_bytes(2), 'hex'))::bit(16)::integer) % 10000)::text,
+      4,
+      '0'
+    );
+  end loop;
 
   return new;
 end;
