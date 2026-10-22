@@ -1,0 +1,105 @@
+# Database pipeline.
+# - On every pull request: start a throwaway local Postgres, apply ALL migrations
+#   from scratch, run pgTAP tests, and check generated types are committed.
+# - On push to main: apply new migrations to the FamilyNest Supabase project.
+#   The connection string lives only in the SUPABASE_DB_URL GitHub secret:
+#   no agent ever holds database credentials.
+name: db
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: db-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  db:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+
+      - name: Count migrations
+        id: mig
+        run: echo "count=$(find supabase/migrations -name '*.sql' 2>/dev/null | wc -l | tr -d ' ')" >> "$GITHUB_OUTPUT"
+
+      - name: Start local database and apply all migrations
+        if: steps.mig.outputs.count != '0'
+        run: npx supabase db start
+
+      - name: Run pgTAP tests
+        if: steps.mig.outputs.count != '0'
+        run: |
+          if find supabase/tests -name '*.sql' 2>/dev/null | grep -q .; then
+            npx supabase test db
+          else
+            echo "::error::Ci sono migrazioni ma nessun test pgTAP in supabase/tests/. Ogni tabella richiede test di isolamento RLS."
+            exit 1
+          fi
+
+      - name: Check generated types are up to date
+        if: steps.mig.outputs.count != '0'
+        run: |
+          set -o pipefail
+          # Same output as `npm run db:types:local`: Prettier resolves the project config from the real path.
+          npx supabase gen types typescript --local --schema public \
+            | npx prettier --stdin-filepath src/types/database.ts > /tmp/database.ts
+          if ! diff -u src/types/database.ts /tmp/database.ts > /tmp/types.diff; then
+            echo "::error::src/types/database.ts non corrisponde allo schema. Scarica l'artifact 'expected-database-types' e sostituisci il file."
+            cat /tmp/types.diff | head -200
+            exit 1
+          fi
+
+      - name: Upload expected types
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: expected-database-types
+          path: /tmp/database.ts
+          if-no-files-found: ignore
+
+      - name: No migrations yet
+        if: steps.mig.outputs.count == '0'
+        run: |
+          echo "Nessuna migrazione ancora presente, controlli database saltati."
+
+  deploy:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Apply migrations to yksosqvugiempsldejyt
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          if ! find supabase/migrations -name '*.sql' 2>/dev/null | grep -q .; then
+            echo "Nessuna migrazione da applicare."; exit 0
+          fi
+          if [ -z "${SUPABASE_DB_URL:-}" ]; then
+            echo "::error::Secret SUPABASE_DB_URL mancante: le migrazioni non sono state applicate."
+            exit 1
+          fi
+          case "$SUPABASE_DB_URL" in
+            *yksosqvugiempsldejyt*) ;;
+            *) echo "::error::SUPABASE_DB_URL non punta al progetto yksosqvugiempsldejyt."; exit 1 ;;
+          esac
+          npx supabase db push --db-url "$SUPABASE_DB_URL" --include-all

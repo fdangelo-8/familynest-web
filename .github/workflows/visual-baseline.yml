@@ -1,0 +1,45 @@
+# Generates visual baseline screenshots in the same Playwright container used by CI,
+# so pixels match. Triggered manually (or by the visual tester agent) on a work branch.
+# It never commits: it uploads the screenshots as an artifact that the agent reviews and commits.
+name: visual-baseline
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  baseline:
+    if: github.ref != 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - name: Read pinned Playwright version
+        id: pw
+        run: echo "version=$(node -p "require('./package.json').devDependencies['@playwright/test']")" >> "$GITHUB_OUTPUT"
+      - name: Update snapshots inside the official Playwright container
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          TEST_USER_A_EMAIL: ${{ secrets.TEST_USER_A_EMAIL }}
+          TEST_USER_A_PASSWORD: ${{ secrets.TEST_USER_A_PASSWORD }}
+          TEST_USER_B_EMAIL: ${{ secrets.TEST_USER_B_EMAIL }}
+          TEST_USER_B_PASSWORD: ${{ secrets.TEST_USER_B_PASSWORD }}
+        run: |
+          docker run --rm --ipc=host -v "$PWD":/work -w /work \
+            -e CI=true \
+            -e NEXT_PUBLIC_SUPABASE_URL -e NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY -e SUPABASE_SECRET_KEY \
+            -e TEST_USER_A_EMAIL -e TEST_USER_A_PASSWORD -e TEST_USER_B_EMAIL -e TEST_USER_B_PASSWORD \
+            "mcr.microsoft.com/playwright:v${{ steps.pw.outputs.version }}-noble" \
+            bash -c "npm ci && npx playwright test tests/visual --update-snapshots"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: visual-baselines
+          path: tests/visual/__screenshots__/
+          if-no-files-found: error
