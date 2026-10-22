@@ -1,5 +1,6 @@
 import "server-only";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import type { NestMember } from "@/lib/nest-types";
 
@@ -17,6 +18,8 @@ const FAILED: NestFrameData = { nestName: null, members: [], failed: true };
  * No valid session -> /accesso, no Nest -> /onboarding (redirects throw).
  */
 export async function loadNestFrame(): Promise<NestFrameData> {
+  // Request-time data: never prerendered, even when env variables are missing.
+  await connection();
   const supabase = await createClient();
 
   // Verifies the token with the auth server, not only the cookie.
