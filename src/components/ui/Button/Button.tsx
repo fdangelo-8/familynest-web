@@ -1,0 +1,125 @@
+import Link from "next/link";
+import type { MouseEvent, ReactNode } from "react";
+import { cx } from "../cx";
+import { Icon, type IconName } from "../Icon/Icon";
+import { Spinner } from "../Spinner/Spinner";
+
+export type ButtonVariant =
+  | "primary"
+  | "secondary"
+  | "chiaro"
+  | "tenue"
+  | "tratteggiato"
+  | "link"
+  | "link-secondario"
+  | "pericolo"
+  | "pericolo-pieno";
+
+const VARIANT_CLASS: Record<ButtonVariant, string> = {
+  primary: "btn-primary",
+  secondary: "btn-secondary",
+  chiaro: "btn-chiaro",
+  tenue: "btn-tenue",
+  tratteggiato: "btn-tratteggiato",
+  link: "btn-link",
+  "link-secondario": "btn-link btn-link--secondario",
+  pericolo: "btn-pericolo",
+  "pericolo-pieno": "btn-pericolo-pieno",
+};
+
+export type ButtonProps = {
+  variant?: ButtonVariant;
+  /** Full width (`.btn--pieno`) */
+  full?: boolean;
+  /** Smaller button (`.btn--piccolo`) */
+  small?: boolean;
+  /** Primary button with the arrow box on the right (`.btn-primary--freccia`) */
+  arrow?: boolean;
+  /** Optional icon on the left */
+  icon?: IconName;
+  loading?: boolean;
+  disabled?: boolean;
+  /** With `href` the button is a link */
+  href?: string;
+  type?: "button" | "submit";
+  onClick?: (event: MouseEvent<HTMLElement>) => void;
+  className?: string;
+  children: ReactNode;
+  "data-testid"?: string;
+};
+
+export function Button({
+  variant = "primary",
+  full,
+  small,
+  arrow,
+  icon,
+  loading = false,
+  disabled = false,
+  href,
+  type = "button",
+  onClick,
+  className,
+  children,
+  "data-testid": testId,
+}: ButtonProps) {
+  const inactive = disabled || loading;
+  const classes = cx(
+    VARIANT_CLASS[variant],
+    full && "btn--pieno",
+    small && "btn--piccolo",
+    arrow && "btn-primary--freccia",
+    loading && "is-caricamento",
+    className,
+  );
+
+  const content = (
+    <>
+      {loading && !arrow ? <Spinner /> : icon ? <Icon name={icon} /> : null}
+      <span className="btn__testo">{children}</span>
+      {arrow ? (
+        <span className="btn__icona-box">
+          {loading ? <Spinner /> : <Icon name="arrow-right" />}
+        </span>
+      ) : null}
+    </>
+  );
+
+  const handleClick = (event: MouseEvent<HTMLElement>) => {
+    if (inactive) {
+      event.preventDefault();
+      return;
+    }
+    onClick?.(event);
+  };
+
+  if (href !== undefined) {
+    return (
+      <Link
+        href={href}
+        className={classes}
+        aria-busy={loading || undefined}
+        aria-disabled={inactive || undefined}
+        tabIndex={disabled ? -1 : undefined}
+        onClick={handleClick}
+        data-testid={testId}
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <button
+      type={type}
+      className={classes}
+      disabled={disabled}
+      aria-busy={loading || undefined}
+      aria-disabled={loading || undefined}
+      onClick={handleClick}
+      data-testid={testId}
+    >
+      {content}
+    </button>
+  );
+}
