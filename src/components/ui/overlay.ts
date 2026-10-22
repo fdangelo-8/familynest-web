@@ -30,6 +30,9 @@ export function useIsDesktop(): boolean {
   return useMediaQuery("(min-width: 1024px)");
 }
 
+/** Open dialogs, last one on top. Only the top one handles Escape and Tab. */
+const overlayStack: symbol[] = [];
+
 function prefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
@@ -75,6 +78,8 @@ export function useDialogFocus(
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
+    const token = Symbol("overlay");
+    overlayStack.push(token);
     const opener = document.activeElement as HTMLElement | null;
 
     const focusables = () =>
@@ -91,6 +96,7 @@ export function useDialogFocus(
     (target ?? focusables()[0] ?? container).focus();
 
     const onKeyDown = (event: KeyboardEvent) => {
+      if (overlayStack[overlayStack.length - 1] !== token) return;
       if (event.key === "Escape") {
         event.preventDefault();
         onEscapeRef.current();
@@ -120,6 +126,8 @@ export function useDialogFocus(
     document.addEventListener("keydown", onKeyDown);
     return () => {
       document.removeEventListener("keydown", onKeyDown);
+      const index = overlayStack.indexOf(token);
+      if (index >= 0) overlayStack.splice(index, 1);
       if (opener && document.contains(opener)) opener.focus();
     };
   }, [containerRef, initialFocus]);

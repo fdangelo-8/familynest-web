@@ -61,15 +61,22 @@ function capitalize(text: string): string {
   return text.charAt(0).toLocaleUpperCase(LOCALE) + text.slice(1);
 }
 
+const formatterCache = new Map<string, Intl.DateTimeFormat>();
+
 function textPart(
   value: Instant,
   options: Intl.DateTimeFormatOptions,
   type: Intl.DateTimeFormatPartTypes,
 ): string {
-  const formatter = new Intl.DateTimeFormat(LOCALE, {
-    timeZone: TIME_ZONE,
-    ...options,
-  });
+  const key = JSON.stringify(options);
+  let formatter = formatterCache.get(key);
+  if (!formatter) {
+    formatter = new Intl.DateTimeFormat(LOCALE, {
+      timeZone: TIME_ZONE,
+      ...options,
+    });
+    formatterCache.set(key, formatter);
+  }
   return (
     formatter.formatToParts(toDate(value)).find((p) => p.type === type)
       ?.value ?? ""

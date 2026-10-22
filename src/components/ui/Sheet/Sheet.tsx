@@ -69,14 +69,14 @@ function SheetContent({
     const dialog = dialogRef.current;
     if (dialog) {
       dialog.classList.remove("is-rientro");
-      dialog.classList.add("is-arrastato");
+      dialog.classList.add("is-trascinato");
     }
   };
 
   const onHandleMove = (event: PointerEvent<HTMLDivElement>) => {
     if (dragStart.current === null) return;
     const delta = Math.max(0, event.clientY - dragStart.current);
-    dialogRef.current?.style.setProperty("--arrasto", `${delta}px`);
+    dialogRef.current?.style.setProperty("--trascinamento", `${delta}px`);
   };
 
   const onHandleUp = (event: PointerEvent<HTMLDivElement>) => {
@@ -85,12 +85,12 @@ function SheetContent({
     dragStart.current = null;
     const dialog = dialogRef.current;
     if (!dialog) return;
-    dialog.classList.remove("is-arrastato");
+    dialog.classList.remove("is-trascinato");
     if (delta > dialog.offsetHeight * DRAG_CLOSE_RATIO) {
       requestClose();
     } else {
       dialog.classList.add("is-rientro");
-      dialog.style.removeProperty("--arrasto");
+      dialog.style.removeProperty("--trascinamento");
     }
   };
 
@@ -102,46 +102,23 @@ function SheetContent({
         aria-hidden="true"
         data-testid="velo"
       />
-      {desktop ? (
-        <div
-          ref={dialogRef}
-          className={cx(
-            "modale",
-            !side && "modale--singola",
-            closing && "is-uscita",
-            className,
-          )}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby={titleId}
-          data-testid={testId}
-        >
-          <div className="modale__corpo">
-            <div className="foglio__testa">
-              <h2 className="foglio__titolo" id={titleId}>
-                {title}
-              </h2>
-              {closeButton}
-            </div>
-            {children}
-            {footer ? <div className="modale__piede">{footer}</div> : null}
-          </div>
-          {side ? <aside className="modale__lato">{side}</aside> : null}
-        </div>
-      ) : (
-        <div
-          ref={dialogRef}
-          className={cx(
-            "foglio",
-            tall && "foglio--alto",
-            closing && "is-uscita",
-            className,
-          )}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby={titleId}
-          data-testid={testId}
-        >
+      {/* One tree for both shapes: crossing 1024 px only changes classes, so
+          the content (and what the user typed) is never remounted. */}
+      <div
+        ref={dialogRef}
+        className={cx(
+          desktop ? "modale" : "foglio",
+          desktop && !side && "modale--singola",
+          !desktop && tall && "foglio--alto",
+          closing && "is-uscita",
+          className,
+        )}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        data-testid={testId}
+      >
+        {desktop ? null : (
           <div
             className="foglio__maniglia"
             onPointerDown={onHandleDown}
@@ -150,6 +127,8 @@ function SheetContent({
             onPointerCancel={onHandleUp}
             data-testid="sheet-maniglia"
           />
+        )}
+        <div className={desktop ? "modale__corpo" : "foglio__corpo"}>
           <div className="foglio__testa">
             <h2 className="foglio__titolo" id={titleId}>
               {title}
@@ -157,9 +136,16 @@ function SheetContent({
             {closeButton}
           </div>
           {children}
-          {footer}
+          {footer ? (
+            <div className={desktop ? "modale__piede" : "foglio__piede"}>
+              {footer}
+            </div>
+          ) : null}
         </div>
-      )}
+        {desktop && side ? (
+          <aside className="modale__lato">{side}</aside>
+        ) : null}
+      </div>
     </>
   );
 }

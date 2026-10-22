@@ -84,15 +84,15 @@ test.describe("token e base", () => {
     const actual = await rootValues(page, ["--font-titoli", "--font-testo"]);
     expect(actual["--font-titoli"]).toContain("Parkinsans");
     expect(actual["--font-testo"]).toContain("Host Grotesk");
-    // Same fallback families, same order.
+    // Same fallback families as tokens.css, same order.
     const fallbacks = (value: string) =>
       value
         .split(",")
-        .map((part) => part.trim())
-        .filter((part) => !/Parkinsans|Host Grotesk/.test(part))
-        .slice(-4);
-    expect(fallbacks(actual["--font-titoli"]!).pop()).toBe("sans-serif");
-    expect(fallbacks(tokens["--font-titoli"]!).pop()).toBe("sans-serif");
+        .map((part) => part.trim().replace(/['"]/g, ""))
+        .filter((part) => !/Parkinsans|Host Grotesk/.test(part));
+    for (const name of ["--font-titoli", "--font-testo"]) {
+      expect(fallbacks(actual[name]!), name).toEqual(fallbacks(tokens[name]!));
+    }
   });
 
   test("CA-3: stile del body", async ({ page }) => {
@@ -266,6 +266,11 @@ test.describe("bottoni", () => {
     await expect(button.locator(".spinner")).toHaveCount(1);
     await button.click({ force: true });
     await expect(page.getByTestId("btn-primary-clic")).toHaveText("Clic: 0");
+    // Keyboard: the button is still focusable, Enter must not run the handler.
+    await button.focus();
+    await page.keyboard.press("Enter");
+    await page.keyboard.press("Space");
+    await expect(page.getByTestId("btn-primary-clic")).toHaveText("Clic: 0");
   });
 
   test("CA-15: disabilitato", async ({ page }) => {
@@ -389,6 +394,8 @@ test.describe("campi e controlli", () => {
     const chips = page.getByTestId("chip-predefinito").getByRole("button");
     await chips.nth(0).click();
     await chips.nth(1).click();
+    // The pointer must not hover a chip: hover has its own color.
+    await page.mouse.move(0, 0);
     for (const index of [0, 1]) {
       await expect(chips.nth(index)).toHaveAttribute("aria-pressed", "true");
       await expect(chips.nth(index)).toHaveCSS(
@@ -396,6 +403,8 @@ test.describe("campi e controlli", () => {
         "rgb(23, 24, 28)",
       );
     }
+    await chips.nth(0).hover();
+    await expect(chips.nth(0)).toHaveCSS("background-color", "rgb(42, 41, 37)");
     const statico = page.getByTestId("chip-statico");
     expect(await statico.evaluate((node) => node.tagName)).not.toBe("BUTTON");
     await expect(statico).not.toHaveAttribute("aria-pressed", /.*/);
@@ -673,5 +682,133 @@ test.describe("isolamento", () => {
         document.documentElement.clientWidth,
     );
     expect(overflow).toBeLessThanOrEqual(0);
+  });
+});
+
+test.describe("CA-11: stessi stili del mockup", () => {
+  const SECTIONS: Array<[string, string]> = [
+    ["btn-primary", ".btn-primary"],
+    ["btn-secondary", ".btn-secondary"],
+    ["btn-tenue", ".btn-tenue"],
+    ["btn-tratteggiato", ".btn-tratteggiato"],
+    ["btn-pericolo", ".btn-pericolo"],
+    ["btn-pericolo-pieno", ".btn-pericolo-pieno"],
+    ["btn-icona", ".btn-icona"],
+    ["casella", ".casella"],
+    ["toggle", ".toggle"],
+    ["etichetta", ".etichetta"],
+    ["avatar", '.avatar:not([class*="avatar--"])'],
+    ["chip", ".chip--statico"],
+    ["campo", ".campo__input"],
+    ["selettore", ".selettore"],
+    ["stato-vuoto", ".stato-vuoto"],
+  ];
+  const PROPS = [
+    "background-color",
+    "color",
+    "border-top-left-radius",
+    "height",
+    "padding",
+    "font-size",
+    "font-weight",
+    "line-height",
+    "letter-spacing",
+    "box-shadow",
+    "border",
+  ];
+
+  async function read(page: Page) {
+    return page.evaluate(
+      ({ sections, props }) =>
+        Object.fromEntries(
+          sections.map(([id, selector]) => {
+            const element = document.querySelector(`#${id} ${selector}`);
+            const style = element ? getComputedStyle(element) : null;
+            return [
+              id,
+              style
+                ? Object.fromEntries(
+                    props.map((p) => [p, style.getPropertyValue(p)]),
+                  )
+                : null,
+            ];
+          }),
+        ),
+      { sections: SECTIONS, props: PROPS },
+    );
+  }
+
+  test("i componenti hanno gli stessi valori del mockup a 390 px", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(BASE_PATH);
+    const ours = await read(page);
+    await page.goto(`file://${process.cwd()}/docs/mockup/design-system.html`);
+    const theirs = await read(page);
+    for (const [id] of SECTIONS) {
+      expect(theirs[id], `${id} nel mockup`).not.toBeNull();
+      expect(ours[id], id).toEqual(theirs[id]);
+    }
+  });
+});
+
+test.describe("sovrapposizioni: casi composti", () => {
+  test("il contenuto del foglio sopravvive al cambio di larghezza", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.getByRole("button", { name: "Apri foglio" }).click();
+    const dialog = page.getByRole("dialog", { name: "Aggiungi" });
+    await page.getByLabel("Titolo").fill("Nuoto Sofia");
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await expect(dialog).toHaveClass(/modale/);
+    await expect(page.getByLabel("Titolo")).toHaveValue("Nuoto Sofia");
+    await page.getByLabel("Titolo").focus();
+    for (let i = 0; i < 12; i += 1) {
+      await page.keyboard.press("Tab");
+      expect(
+        await dialog.evaluate((node) => node.contains(document.activeElement)),
+      ).toBe(true);
+    }
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(dialog).toHaveClass(/foglio/);
+    await expect(page.getByLabel("Titolo")).toHaveValue("Nuoto Sofia");
+  });
+
+  test("Esc e Tab agiscono solo sul dialogo in cima", async ({ page }) => {
+    await page.getByRole("button", { name: "Apri foglio" }).click();
+    const sheet = page.getByRole("dialog", { name: "Aggiungi" });
+    const opener = page.getByTestId("foglio-elimina");
+    await opener.click();
+    const confirm = page.getByRole("alertdialog");
+    await expect(confirm).toBeVisible();
+    for (let i = 0; i < 6; i += 1) {
+      await page.keyboard.press("Tab");
+      expect(
+        await confirm.evaluate((node) => node.contains(document.activeElement)),
+      ).toBe(true);
+    }
+    await page.keyboard.press("Escape");
+    await expect(confirm).toHaveCount(0);
+    await expect(sheet).toBeVisible();
+    await expect(opener).toBeFocused();
+    await page.keyboard.press("Escape");
+    await expect(sheet).toHaveCount(0);
+  });
+
+  test("durante l'uscita le azioni non si eseguono due volte", async ({
+    page,
+  }) => {
+    await page.getByTestId("dialogo-apri").click();
+    const action = page
+      .getByRole("alertdialog")
+      .getByRole("button", { name: "Elimina solo questo" });
+    await action.dispatchEvent("click");
+    await action.dispatchEvent("click");
+    await expect(page.getByRole("alertdialog")).toHaveCount(0);
+    await expect(page.getByTestId("dialogo-conteggio")).toHaveText(
+      "Eliminazioni: 1",
+    );
   });
 });

@@ -755,6 +755,8 @@ function OverlaysSection() {
   const toast = useToast();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [nestedOpen, setNestedOpen] = useState(false);
+  const [nestedDeleted, setNestedDeleted] = useState(0);
   const [confirmed, setConfirmed] = useState(0);
   const [undone, setUndone] = useState(0);
 
@@ -793,7 +795,31 @@ function OverlaysSection() {
               />
               <TimeField label="Ora" name="ora-foglio" defaultValue="17:00" />
             </FieldPair>
+            <Button
+              variant="pericolo"
+              onClick={() => setNestedOpen(true)}
+              data-testid="foglio-elimina"
+            >
+              Elimina impegno
+            </Button>
+            <span className={styles.contatore} data-testid="foglio-eliminati">
+              Eliminati: {nestedDeleted}
+            </span>
           </Sheet>
+          <ConfirmDialog
+            open={nestedOpen}
+            onClose={() => setNestedOpen(false)}
+            title="Eliminare «Nuoto Sofia»?"
+            text="Laura e Sofia non lo vedranno più nel calendario."
+            actions={[
+              {
+                label: "Elimina impegno",
+                variant: "pericolo-pieno",
+                onClick: () => setNestedDeleted((n) => n + 1),
+              },
+            ]}
+            data-testid="dialogo-annidato"
+          />
         </Example>
       </Section>
       <Section id="modale" title="Modale">

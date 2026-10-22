@@ -76,6 +76,7 @@ function ConfirmContent({
               variant={action.variant ?? "secondary"}
               full
               onClick={() => {
+                if (closing) return;
                 action.onClick();
                 requestClose();
               }}

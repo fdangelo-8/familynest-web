@@ -2054,7 +2054,7 @@ button.riga-lista {
 }
 .foglio {
   transition: transform var(--durata-normale) var(--curva);
-  transform: translateY(var(--arrasto, 0));
+  transform: translateY(var(--trascinamento, 0));
   max-height: calc(100dvh - var(--size-barra));
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -3595,7 +3595,9 @@ button.riga-lista {
   }
   .btn-primary:hover:not(:disabled, [aria-disabled="true"]),
   .btn-aggiungi:hover:not(:disabled),
-  .selettore__voce[aria-pressed="true"]:hover:not(:disabled),
+  .selettore:not(.selettore--carta)
+    .selettore__voce[aria-pressed="true"]:hover:not(:disabled),
+  .chip:not(.chip--persona)[aria-pressed="true"]:hover:not(:disabled),
   .nav-alto__voce.is-attiva:hover {
     background: var(--color-notte-2);
   }
@@ -3651,6 +3653,40 @@ button.riga-lista {
 .btn-chiaro:active:not(:disabled, [aria-disabled="true"]) {
   background: var(--color-latte-2);
 }
+.selettore:not(.selettore--carta)
+  .selettore__voce[aria-pressed="true"]:active:not(:disabled),
+.chip:not(.chip--persona)[aria-pressed="true"]:active:not(:disabled) {
+  background: var(--color-notte-2);
+}
+.chip:active:not(:disabled, [aria-pressed="true"], .chip--statico) {
+  background: var(--color-carta);
+}
+.selettore__voce:active:not([aria-pressed="true"], :disabled),
+.riga-lista--cliccabile:active:not(:disabled) {
+  background: var(--color-carta-2);
+}
+.scheda .riga-lista--cliccabile:active:not(:disabled),
+.lista .riga-lista--cliccabile:active:not(:disabled),
+.selettore:not(.selettore--carta)
+  .selettore__voce:active:not([aria-pressed="true"], :disabled) {
+  background: var(--color-carta);
+}
+
+/* Dialoghi in chiusura: nessun altro clic */
+.is-uscita {
+  pointer-events: none;
+}
+
+/* Foglio: contenuto nello stesso contenitore della modale */
+.foglio__corpo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  align-content: start;
+}
+.foglio__piede {
+  display: contents;
+}
 
 /* Campo su più righe */
 textarea.campo__input {
@@ -3667,7 +3703,7 @@ textarea.campo__input {
 .foglio.is-uscita {
   animation: foglio-esce var(--durata-rapida) var(--curva) forwards;
 }
-.foglio.is-arrastato {
+.foglio.is-trascinato {
   transition: none;
 }
 .foglio.is-rientro {
