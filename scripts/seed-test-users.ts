@@ -6,10 +6,18 @@
 //
 // Idempotent: users are created or updated, the Nests of the test users are
 // deleted and rebuilt. Nothing else is touched. Secrets are never printed.
+//
+// Safety: test accounts carry app_metadata.familynest_test_user = true. All
+// checks run before the first write; an account without the marker, or a Nest
+// shared with non-test accounts, stops the script with nothing written.
+//
+// Not transactional: if it stops after the cleanup, the test data stays
+// incomplete until the script is run again.
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "../src/types/database";
 
 const ALLOWED_PROJECT_REF = "yksosqvugiempsldejyt";
+const TEST_MARKER = "familynest_test_user";
 const DAY_MS = 24 * 60 * 60 * 1000;
 const MINUTE_MS = 60 * 1000;
 
@@ -85,8 +93,12 @@ async function main() {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  // 1. Accounts: create or update, confirmed, with the given password.
-  const existing = new Map<string, string>();
+  const HOME_A = "11111111-1111-4111-8111-111111111111";
+  const HOME_B = "22222222-2222-4222-8222-222222222222";
+  const fixedHouseholds = [HOME_A, HOME_B];
+
+  // 1. Read-only checks. Nothing is written until every check has passed.
+  const existing = new Map<string, { id: string; marked: boolean }>();
   for (let page = 1; ; page += 1) {
     const { data, error } = await supabase.auth.admin.listUsers({
       page,
@@ -94,11 +106,70 @@ async function main() {
     });
     if (error) fail(`cannot list accounts (${error.message}).`);
     for (const u of data.users) {
-      if (u.email) existing.set(u.email.toLowerCase(), u.id);
+      if (u.email) {
+        existing.set(u.email.toLowerCase(), {
+          id: u.id,
+          marked: u.app_metadata?.[TEST_MARKER] === true,
+        });
+      }
     }
     if (data.users.length < 200) break;
   }
 
+  const found = config.users.flatMap((u) => {
+    const account = existing.get(u.email);
+    return account ? [{ key: u.key, ...account }] : [];
+  });
+  const testIds = new Set(found.map((f) => f.id));
+
+  const memberships: { household_id: string; user_id: string | null }[] = [];
+  if (found.length > 0) {
+    const { data, error } = await supabase
+      .from("household_members")
+      .select("household_id, user_id")
+      .in("user_id", [...testIds]);
+    if (error) fail(`cannot read memberships (${error.message}).`);
+    memberships.push(...(data ?? []));
+  }
+
+  // An existing account without the marker is accepted only if it is in no Nest
+  // or only in the two fixed test Nests.
+  for (const f of found) {
+    if (f.marked) continue;
+    const outside = memberships.some(
+      (m) => m.user_id === f.id && !fixedHouseholds.includes(m.household_id),
+    );
+    if (outside) {
+      fail(
+        `test user ${f.key} is not marked as a test account. Nothing was written.`,
+      );
+    }
+  }
+
+  // A Nest other than the fixed ones is deleted only if every account in it
+  // is a test user.
+  const otherHouseholds = [
+    ...new Set(
+      memberships
+        .map((m) => m.household_id)
+        .filter((id) => !fixedHouseholds.includes(id)),
+    ),
+  ];
+  if (otherHouseholds.length > 0) {
+    const { data, error } = await supabase
+      .from("household_members")
+      .select("user_id")
+      .in("household_id", otherHouseholds)
+      .not("user_id", "is", null);
+    if (error) fail(`cannot read memberships (${error.message}).`);
+    if ((data ?? []).some((m) => !m.user_id || !testIds.has(m.user_id))) {
+      fail(
+        "a test user belongs to a Nest with other accounts. Nothing was written.",
+      );
+    }
+  }
+
+  // 2. Accounts: create or update, confirmed, marked, with the given password.
   const ids = {} as Record<TestUserKey, string>;
   for (const u of config.users) {
     const attributes = {
@@ -106,15 +177,26 @@ async function main() {
       password: u.password,
       email_confirm: true,
       user_metadata: { full_name: FULL_NAMES[u.key] },
+      app_metadata: { [TEST_MARKER]: true },
     };
-    const knownId = existing.get(u.email);
-    if (knownId) {
+    const known = existing.get(u.email);
+    if (known) {
       const { error } = await supabase.auth.admin.updateUserById(
-        knownId,
+        known.id,
         attributes,
       );
       if (error) fail(`cannot update test user ${u.key} (${error.message}).`);
-      ids[u.key] = knownId;
+      // The profile name is written by a trigger only at creation.
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({ display_name: FULL_NAMES[u.key] })
+        .eq("id", known.id);
+      if (profileError) {
+        fail(
+          `cannot update profile of test user ${u.key} (${profileError.message}).`,
+        );
+      }
+      ids[u.key] = known.id;
     } else {
       const { data, error } = await supabase.auth.admin.createUser(attributes);
       if (error || !data.user) {
@@ -126,35 +208,18 @@ async function main() {
     }
   }
 
-  // 2. Start clean: delete only the Nests of the test users (members and
-  // invitations go with them by cascade). Deleting the Nest directly avoids the
-  // household_members_after_delete trigger, which would delete it anyway when
-  // the last adult with an account leaves.
-  const { data: memberships, error: membershipsError } = await supabase
-    .from("household_members")
-    .select("household_id")
-    .in("user_id", Object.values(ids));
-  if (membershipsError) {
-    fail(`cannot read memberships (${membershipsError.message}).`);
-  }
-  const HOME_A = "11111111-1111-4111-8111-111111111111";
-  const HOME_B = "22222222-2222-4222-8222-222222222222";
-  const oldHouseholds = [
-    ...new Set([
-      HOME_A,
-      HOME_B,
-      ...(memberships ?? []).map((m) => m.household_id),
-    ]),
-  ];
+  // 3. Start clean: delete the two fixed Nests and the checked Nests of the
+  // test users (members and invitations go with them by cascade). Deleting the
+  // Nest directly avoids the household_members_after_delete trigger.
   {
     const { error } = await supabase
       .from("households")
       .delete()
-      .in("id", oldHouseholds);
+      .in("id", [...fixedHouseholds, ...otherHouseholds]);
     if (error) fail(`cannot remove old test Nests (${error.message}).`);
   }
 
-  // 3. Nests, with the same ids and order as supabase/seed.sql.
+  // 4. Nests, with the same ids and order as supabase/seed.sql.
   const now = Date.now();
   const ago = (ms: number) => new Date(now - ms).toISOString();
   const thirtyDays = 30 * DAY_MS;
@@ -176,7 +241,7 @@ async function main() {
     if (error) fail(`cannot create Nests (${error.message}).`);
   }
 
-  // 4. Members, created_at one minute apart.
+  // 5. Members, created_at one minute apart.
   type Member = Database["public"]["Tables"]["household_members"]["Insert"];
   const at = (minutes: number) => ago(thirtyDays - minutes * MINUTE_MS);
   const base = {
@@ -284,7 +349,7 @@ async function main() {
     if (error) fail(`cannot create members (${error.message}).`);
   }
 
-  // 5. Invitations through the admin client (the trigger skips the
+  // 6. Invitations through the admin client (the trigger skips the
   // administrator check for it). Laura's is valid, Anna's is pending but expired.
   {
     const { error } = await supabase.from("invitations").insert([
