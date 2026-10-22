@@ -18,14 +18,17 @@ FamilyNest tratta dati di famiglie con bambini piccoli. Un errore qui non è un 
 ## Profili dei figli: campi ammessi
 
 - Nome o soprannome, data di nascita (o solo anno), colore/avatar, note libere brevi.
-- **Non** si raccolgono: codice fiscale, documenti, indirizzo della scuola, dati sanitari (allergie, diagnosi, farmaci), foto del volto per impostazione predefinita, posizione.
+- Scuola: nome della scuola, classe, orario; maestra: nome, materia, telefono (decisione D1 di Francesco).
+- Taglie (scarpe, vestiti, pigiama).
+- **Non** si raccolgono: codice fiscale, documenti, indirizzo della scuola, **qualsiasi dato sanitario** (pediatra, certificati medici, allergie, diagnosi, farmaci, vaccini), foto del volto per impostazione predefinita, posizione.
+- Le decisioni di Francesco in `docs/mockup/DECISIONI.md` prevalgono sul mockup: la sezione Salute del profilo figlio e il campo Pediatra non si sviluppano.
 - Se un requisito chiede uno di questi dati, l'analista lo segnala come domanda bloccante a Francesco.
 
 ## Condivisione
 
 - Invitare qualcuno nel nucleo è un'azione esplicita, con conferma e chiara indicazione di cosa vedrà.
 - Gli inviti scadono e si possono revocare.
-- Nessun contenuto del nucleo è pubblico o accessibile tramite link senza login.
+- Nessun contenuto del nucleo è pubblico o accessibile tramite link senza login, **con un'unica eccezione**: la lista desideri pubblica, alle condizioni della decisione D2 in `docs/mockup/DECISIONI.md` (codice casuale ≥128 bit, scadenza e disattivazione, solo nome del figlio, occasione e idee regalo, `noindex`). Nessun'altra pagina pubblica senza nuova decisione di Francesco.
 
 ## Log, errori e analytics
 
@@ -45,3 +48,5 @@ FamilyNest tratta dati di famiglie con bambini piccoli. Un errore qui non è un 
 - [ ] Nessun dato personale in log, errori, analytics, URL o query string
 - [ ] Nessun dato di minori oltre ai campi ammessi
 - [ ] Azioni di condivisione esplicite e reversibili
+- [ ] Nessun dato sanitario di minori, in nessuna forma
+- [ ] Pagina pubblica della lista desideri conforme a tutte le condizioni D2

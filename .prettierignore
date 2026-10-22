@@ -7,3 +7,6 @@ playwright-report
 test-results
 package-lock.json
 supabase/config.toml
+
+# Mockup approvato: file di riferimento, non si formattano
+docs/mockup
