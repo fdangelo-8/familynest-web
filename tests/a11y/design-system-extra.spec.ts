@@ -62,11 +62,10 @@ test("focus da tastiera: ogni controllo raggiunto con Tab ha un anello visibile"
   expect(bad).toEqual([]);
 });
 
-// Mockup controls are 40 px (--size-controllo); the segmented-control items are
-// 32 px tall. Both are reported in the PR. Here we guard the controls the design
-// system explicitly widens to 44 px (small icon button, checkbox, switch, chip)
-// and block anything below 40 px except the segmented-control items and inline
-// links inside running text (exempt).
+// Touch targets are checked against the sizes drawn in the mockup (issue #43,
+// proposal 7 covers raising them): general controls 40 px, segmented-control
+// items 32 px tall, round tick 22 px. Controls the design system explicitly
+// widens (small icon button, checkbox, switch, chip) must reach 44 px.
 test("aree di tocco dei controlli (mobile)", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "mobile", "solo mobile");
   await page.goto("/design-system");
@@ -85,11 +84,29 @@ test("aree di tocco dei controlli (mobile)", async ({ page }, testInfo) => {
         [...(el.parentElement?.childNodes ?? [])].some(
           (n) => n.nodeType === 3 && (n.textContent ?? "").trim() !== "",
         );
-      const segmented = el.classList.contains("selettore__voce");
-      if (!inline && !segmented && ((w < 43.5 && w < 39.5) || h < 39.5)) {
+      if (inline) continue;
+      const cl = el.classList;
+      let minW = 40;
+      let minH = 40;
+      if (cl.contains("selettore__voce")) {
+        minW = 0;
+        minH = 32;
+      } else if (cl.contains("tondo-spunta")) {
+        minW = 22;
+        minH = 22;
+      } else if (
+        cl.contains("btn-icona--piccolo") ||
+        cl.contains("casella") ||
+        cl.contains("toggle") ||
+        (cl.contains("chip") && !cl.contains("chip--statico"))
+      ) {
+        minW = 44;
+        minH = 44;
+      }
+      if (w < minW - 0.5 || h < minH - 0.5) {
         const label = el.getAttribute("aria-label") || el.textContent || "";
         out.push(
-          `${el.className || el.tagName} ${Math.round(w)}x${Math.round(h)} "${label.trim().slice(0, 25)}"`,
+          `${el.className || el.tagName} ${Math.round(w)}x${Math.round(h)} (min ${minW}x${minH}) "${label.trim().slice(0, 25)}"`,
         );
       }
     }
