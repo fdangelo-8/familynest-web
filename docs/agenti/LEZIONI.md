@@ -18,6 +18,10 @@ Errori già commessi (in questo progetto o in quelli precedenti dell'ecosistema)
 - Date mostrate nel giorno sbagliato per il fuso orario → le date si salvano in UTC e si mostrano nel fuso `Europe/Rome` con funzioni centralizzate.
 - Selettori di data che ricadevano sull'interfaccia nativa del browser → usare il componente del design system.
 
+## Processo
+
+- La protezione di `main` non è applicata sul piano GitHub gratuito → nessun agente conta su GitHub per bloccare un merge: si dichiara pronta solo una PR con `gh pr checks` tutto verde.
+
 ## Test
 
 - Falsi errori di insert in locale per saturazione del pool di connessioni → verificare sulla preview prima di dichiarare un bug.

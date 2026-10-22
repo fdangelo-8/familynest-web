@@ -117,7 +117,7 @@ Tutte in `.claude/skills/`. Le skill di progetto vincono su quelle esterne (es. 
 | Hook | `.claude/settings.json`, `.claude/hooks/` | Bloccano: push/merge su `main`, force push, comandi distruttivi, altri progetti Supabase, operazioni Supabase remote, lettura e stampa di segreti, gestione del repo. Impongono chi scrive cosa: database solo `architetto-dati` su `db/*`; file condivisi solo su `shared/*`; configurazione agenti e CI solo su `admin/*`; revisore nessun file, tester solo `tests/`, analista e documentalista solo `docs/`, designer `docs/` e skill design-system. A fine lavoro eseguono `npm run check` e rimandano l'agente a correggere |
 | Permessi | `.claude/settings.json` | Comandi consentiti e negati |
 | CI | `.github/workflows/ci.yml`, `db.yml`, `guard.yml`, `visual-baseline.yml` | Lint, tipi, build, test; database da zero e applicazione al merge; regole su branch, file e PR; screenshot di riferimento nello stesso container della CI |
-| Protezione di `main` | GitHub | Merge solo via PR con controlli verdi, solo Francesco |
+| Protezione di `main` | GitHub (ruleset `protezione-main`) | Configurata ma **non applicata** finché il repo privato resta sul piano GitHub gratuito. Quindi: il coordinatore etichetta `pronta-per-francesco` solo PR con tutti i controlli verdi, e Francesco fa merge solo se vede tutto verde |
 
 Modifiche a `.claude/` (configurazione), `.github/` e `CLAUDE.md` si fanno solo in una sessione di manutenzione avviata da Francesco su un branch `admin/*`; `guard.yml` rifiuta le PR che le contengono da altri branch.
 
