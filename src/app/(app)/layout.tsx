@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { AppBar } from "@/components/ui/AppFrame/AppBar";
 import { BottomNav } from "@/components/ui/AppFrame/BottomNav";
 import { FrameError } from "@/components/ui/AppFrame/FrameError";
@@ -7,11 +8,8 @@ import { TopNav } from "@/components/ui/AppFrame/TopNav";
 import { loadNestFrame } from "@/lib/nest-frame";
 
 // The session is checked on the server on every request (no middleware).
-export const dynamic = "force-dynamic";
-
-export default async function AppLayout({
-  children,
-}: Readonly<{ children: React.ReactNode }>) {
+// Reading the session is request-time data, so it sits inside <Suspense>.
+async function AppFrame({ children }: { children: React.ReactNode }) {
   // Redirects to /accesso or /onboarding when the user cannot see the frame.
   const frame = await loadNestFrame();
 
@@ -23,5 +21,15 @@ export default async function AppLayout({
       {frame.failed ? <FrameError /> : children}
       <BottomNav />
     </NestProvider>
+  );
+}
+
+export default function AppLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
+  return (
+    <Suspense fallback={null}>
+      <AppFrame>{children}</AppFrame>
+    </Suspense>
   );
 }

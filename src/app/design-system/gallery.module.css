@@ -1,5 +1,6 @@
 .pagina {
   display: grid;
+  width: 100%;
   gap: var(--space-12);
   max-width: calc(var(--grid-contenuto-max) + 2 * var(--grid-margine-desktop));
   margin: var(--space-0) auto;

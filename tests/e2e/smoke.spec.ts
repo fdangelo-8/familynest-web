@@ -1,7 +1,12 @@
 import { expect, test } from "@playwright/test";
 
-test("la home risponde e mostra FamilyNest", async ({ page }) => {
+test("la home porta chi non ha fatto l'accesso alla pagina di accesso", async ({
+  page,
+}) => {
   const response = await page.goto("/");
   expect(response?.ok()).toBe(true);
-  await expect(page.getByRole("heading", { name: /FamilyNest/ })).toBeVisible();
+  await expect(page).toHaveURL(/\/accesso$/);
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Accesso" }),
+  ).toBeVisible();
 });
