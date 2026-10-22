@@ -84,12 +84,49 @@ function TypographySection() {
       <Section id="t-display" title="Testo">
         <Example caption="t-display">
           <p className="t-display" data-testid="t-display-esempio">
-            17:00
+            Buon pomeriggio
           </p>
         </Example>
         <Example caption="t-titolo-pagina">
           <p className="t-titolo-pagina" data-testid="t-titolo-pagina-esempio">
-            Buon pomeriggio, Marco
+            Calendari collegati
+          </p>
+        </Example>
+        <Example caption="t-titolo-scheda">
+          <p className="t-titolo-scheda">Completa il profilo di Sofia</p>
+        </Example>
+        <Example caption="t-frase">
+          <p className="t-frase">Stasera siete liberi insieme dalle 21:30.</p>
+        </Example>
+        <Example caption="t-numero">
+          <p className="t-numero">14</p>
+        </Example>
+        <Example caption="t-sezione">
+          <p className="t-sezione">Questa settimana</p>
+        </Example>
+        <Example caption="t-corpo-forte">
+          <p className="t-corpo-forte">Nuoto Sofia</p>
+        </Example>
+        <Example caption="t-corpo">
+          <p className="t-corpo">Piscina comunale, la porta Laura</p>
+        </Example>
+        <Example caption="t-controllo">
+          <p className="t-controllo">Aggiungi</p>
+        </Example>
+        <Example caption="t-nota">
+          <p className="t-nota">Entro giovedì</p>
+        </Example>
+        <Example caption="t-etichetta">
+          <p className="t-etichetta">OUTLOOK</p>
+        </Example>
+        <Example caption="t-micro">
+          <p className="t-micro">Lun</p>
+        </Example>
+        <Example caption="t-secondario · t-forte · t-allerta">
+          <p className="t-corpo">
+            <span className="t-secondario">Secondario</span> ·{" "}
+            <span className="t-forte">Forte</span> ·{" "}
+            <span className="t-allerta">Scade il 3 novembre</span>
           </p>
         </Example>
       </Section>
@@ -198,6 +235,31 @@ function ButtonsSection() {
             Clic: {secondaryClicks}
           </p>
         </Example>
+        <Example caption="btn-secondary · normale">
+          <Button variant="secondary" icon="check">
+            Salva
+          </Button>
+        </Example>
+        <Example caption="btn-secondary · caricamento">
+          <Button variant="secondary" loading full>
+            Accesso con Google in corso
+          </Button>
+        </Example>
+        <Example caption="btn-secondary · disabilitato, pieno">
+          <Button variant="secondary" icon="apple" disabled full>
+            Entra con Apple
+          </Button>
+        </Example>
+        <Example caption="btn-secondary · btn--piccolo">
+          <Button variant="secondary" small icon="rotate-cw">
+            Riprova
+          </Button>
+        </Example>
+        <Example caption="btn-secondary · btn--pieno">
+          <Button variant="secondary" full>
+            Continua
+          </Button>
+        </Example>
       </Section>
 
       <Section id="btn-chiaro" title="Bottone chiaro">
@@ -207,6 +269,54 @@ function ButtonsSection() {
               <Button variant="chiaro" data-testid="btn-chiaro-predefinito">
                 Entra in Casa D&apos;Angelo
               </Button>
+            </div>
+          </div>
+        </Example>
+        <Example caption="btn-chiaro · pieno, disabilitato, caricamento">
+          <div className="tema-notte">
+            <div className={styles.notte}>
+              <div className={styles.colonna}>
+                <Button variant="chiaro" icon="apple" full>
+                  Continua con Apple
+                </Button>
+                <Button variant="chiaro" icon="apple" full disabled>
+                  Continua con Apple
+                </Button>
+                <Button variant="chiaro" full loading>
+                  Accesso con Google in corso
+                </Button>
+              </div>
+            </div>
+          </div>
+        </Example>
+        <Example caption="btn-chiaro · normale, disabilitato, caricamento">
+          <div className="tema-notte">
+            <div className={styles.notte}>
+              <div className={styles.riga}>
+                <Button variant="chiaro" icon="check">
+                  Salva
+                </Button>
+                <Button variant="chiaro" icon="check" disabled>
+                  Salva
+                </Button>
+                <Button variant="chiaro" loading>
+                  Salvataggio
+                </Button>
+              </div>
+            </div>
+          </div>
+        </Example>
+        <Example caption="btn-chiaro · btn--piccolo, btn--pieno">
+          <div className="tema-notte">
+            <div className={styles.notte}>
+              <div className={styles.colonna}>
+                <Button variant="chiaro" small icon="rotate-cw">
+                  Riprova
+                </Button>
+                <Button variant="chiaro" full>
+                  Continua
+                </Button>
+              </div>
             </div>
           </div>
         </Example>
@@ -307,6 +417,14 @@ function ButtonsSection() {
             dot
             aria-label="Notifiche, 3 nuove"
             data-testid="btn-icona-punto"
+          />
+        </Example>
+        <Example caption="btn-icona · scelto">
+          <IconButton
+            icon="pin"
+            pressed
+            aria-label="Togli A tavola da Oggi"
+            data-testid="btn-icona-scelto"
           />
         </Example>
       </Section>
@@ -561,6 +679,11 @@ function ControlsSection() {
         <Example caption="chip · disabilitato">
           <Chip disabled>Solo adulti</Chip>
         </Example>
+        <Example caption="chip · con chip__valore">
+          <Chip static>
+            Scarpe <span className="chip__valore">33</span>
+          </Chip>
+        </Example>
       </Section>
     </>
   );
@@ -593,6 +716,18 @@ function PeopleSection() {
           <span data-testid="avatar-punto">
             <Avatar name="Sofia" color="salvia" dot />
           </span>
+        </Example>
+        <Example caption="avatar--vuoto">
+          <div className="tema-notte">
+            <div className={styles.notte}>
+              <span
+                className="avatar avatar--xl avatar--vuoto"
+                aria-hidden="true"
+              >
+                ?
+              </span>
+            </div>
+          </div>
         </Example>
         <Example caption="avatar · cobalto, senza nome accanto">
           <span data-testid="avatar-cobalto">
@@ -678,6 +813,21 @@ function ListSection() {
             <p className="t-nota t-secondario">Qui andrà il prossimo impegno</p>
           </Card>
         </Example>
+        <Example caption="scheda--imbottita">
+          <Card padded data-testid="scheda-taglie">
+            <div className="gruppo-chip">
+              <Chip static>
+                Scarpe <span className="chip__valore">33</span>
+              </Chip>
+              <Chip static>
+                Vestiti <span className="chip__valore">9–10</span>
+              </Chip>
+              <Chip static>
+                Pigiama <span className="chip__valore">140</span>
+              </Chip>
+            </div>
+          </Card>
+        </Example>
       </Section>
 
       <Section id="riga-lista" title="Riga di lista">
@@ -745,6 +895,95 @@ function ListSection() {
               </List>
             </div>
           </div>
+        </Example>
+        <Example caption="riga-lista--fatto">
+          <List className="scheda">
+            <ListRow modifier="riga-lista--fatto">
+              <Checkbox
+                checked
+                onChange={() => undefined}
+                aria-label="Segna come fatto: Chiamare il commercialista"
+              />
+              <span className="riga-lista__testo">
+                <span className="riga-lista__titolo">
+                  Chiamare il commercialista
+                </span>
+                <span className="riga-lista__info">Entro domani, solo tu</span>
+              </span>
+              <span className="riga-lista__lucchetto">
+                <Icon name="lock" size="s" />
+              </span>
+            </ListRow>
+          </List>
+        </Example>
+        <Example caption="riga-lista--preso">
+          <List className="scheda">
+            <ListRow modifier="riga-lista--preso">
+              <button
+                type="button"
+                className="tondo-spunta"
+                role="checkbox"
+                aria-checked="true"
+                aria-label="Rimetti in lista: Uova"
+              >
+                <Icon name="check" size="s" />
+              </button>
+              <span className="riga-lista__testo">
+                <span className="riga-lista__titolo">Uova</span>
+              </span>
+              <span className="riga-lista__valore">
+                <span className="riga-lista__quantita">6</span>
+                <Avatar name="Marco" color="pomodoro" nameShown />
+              </span>
+            </ListRow>
+          </List>
+        </Example>
+        <Example caption="riga-lista--senza-inizio">
+          <div className="riga-lista riga-lista--senza-inizio">
+            <span className="riga-lista__testo">
+              <span className="riga-lista__titolo">Sofia</span>
+              <span className="riga-lista__info">
+                Impegno di Sofia, creato da Laura
+              </span>
+            </span>
+            <Avatar name="Sofia" color="salvia" size="l" nameShown />
+          </div>
+        </Example>
+        <Example caption="riga-lista · selezionata">
+          <List>
+            <ListRow href="/design-system" modifier="is-selezionata">
+              <span className="riga-lista__ora">Oggi</span>
+              <span className="riga-lista__testo">
+                <span className="riga-lista__titolo">
+                  <mark className="evidenzia">Nuoto</mark> Sofia
+                </span>
+                <span className="riga-lista__info">
+                  17:00 – 18:30, piscina comunale
+                </span>
+              </span>
+              <kbd className="kbd">↵</kbd>
+            </ListRow>
+          </List>
+        </Example>
+        <Example caption="riga-lista · con riga-lista__info--allerta">
+          <List className="scheda">
+            <ListRow>
+              <Checkbox
+                checked={false}
+                onChange={() => undefined}
+                aria-label="Segna come fatto: Firmare autorizzazione gita"
+              />
+              <span className="riga-lista__testo">
+                <span className="riga-lista__titolo">
+                  Firmare autorizzazione gita
+                </span>
+                <span className="riga-lista__info riga-lista__info--allerta">
+                  Per Sofia, entro venerdì
+                </span>
+              </span>
+              <Avatar name="Marco" color="pomodoro" nameShown />
+            </ListRow>
+          </List>
         </Example>
       </Section>
     </>
@@ -950,6 +1189,19 @@ function StatesSection() {
           <Skeleton shape="scheda" />
           <Skeleton shape="grande" />
         </Example>
+        <Example caption="skeleton--testo">
+          <Skeleton shape="testo" />
+        </Example>
+        <Example caption="skeleton--titolo">
+          <Skeleton shape="titolo" />
+        </Example>
+        <Example caption="skeleton--notte">
+          <div className="tema-notte">
+            <div className={styles.notte}>
+              <Skeleton shape="cerchio" night />
+            </div>
+          </div>
+        </Example>
       </Section>
       <Section id="gruppo-skeleton" title="Gruppo di scheletri">
         <Example caption="gruppo-skeleton · predefinito">
@@ -994,6 +1246,11 @@ function StatesSection() {
         </Example>
         <Example caption="avviso--info">
           <Alert variant="info" data-testid="avviso-info">
+            Tutti riceveranno un avviso se cambi l&apos;orario.
+          </Alert>
+        </Example>
+        <Example caption="avviso--senza-azione">
+          <Alert variant="info" data-testid="avviso-senza-azione">
             Tutti riceveranno un avviso se cambi l&apos;orario.
           </Alert>
         </Example>

@@ -13,6 +13,8 @@ export type IconButtonProps = {
   /** Shows the red dot (`.btn-icona__punto`) */
   dot?: boolean;
   disabled?: boolean;
+  /** Toggle state, for example a pinned item */
+  pressed?: boolean;
   type?: "button" | "submit";
   onClick?: (event: MouseEvent<HTMLButtonElement>) => void;
   className?: string;
@@ -25,6 +27,7 @@ export function IconButton({
   small,
   dot,
   disabled,
+  pressed,
   type = "button",
   onClick,
   className,
@@ -42,6 +45,7 @@ export function IconButton({
       )}
       aria-label={ariaLabel}
       disabled={disabled}
+      aria-pressed={pressed}
       onClick={onClick}
       data-testid={testId}
     >

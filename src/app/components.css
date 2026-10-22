@@ -3672,6 +3672,12 @@ button.riga-lista {
   background: var(--color-carta);
 }
 
+/* Caricamento: il bottone è inattivo (aria-disabled) ma non sembra disabilitato */
+.is-caricamento[aria-disabled="true"] {
+  opacity: 1;
+  cursor: default;
+}
+
 /* Dialoghi in chiusura: nessun altro clic */
 .is-uscita {
   pointer-events: none;
