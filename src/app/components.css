@@ -3536,13 +3536,16 @@ button.riga-lista {
 }
 
 /* Schermate notte e passi nella fascia 768-1023 px: il fondo resta a tutta
-   larghezza, il contenuto si centra sulla colonna stretta (#11) */
+   larghezza, il contenuto ha la larghezza delle pagine della fondamenta #10 (#11) */
 @media (min-width: 768px) {
-  .schermo-notte > *,
-  .passo-onboarding > * {
-    width: 100%;
-    max-width: var(--grid-colonna-stretta);
-    margin-inline: auto;
+  .schermo-notte,
+  .passo-onboarding {
+    padding-inline: max(
+      var(--grid-margine-mobile),
+      calc(
+        (100% - var(--grid-colonna-stretta)) / 2 + var(--grid-margine-mobile)
+      )
+    );
   }
 }
 

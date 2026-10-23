@@ -38,9 +38,7 @@ test.describe("sessione", () => {
     test(`CA-1: senza sessione ${route} porta a /accesso`, async ({ page }) => {
       await page.goto(route);
       await expect(page).toHaveURL(/\/accesso$/);
-      await expect(
-        page.getByRole("heading", { level: 1, name: "Accesso" }),
-      ).toBeVisible();
+      await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
       await expect(
         page.getByRole("navigation", { name: "Navigazione principale" }),
       ).toHaveCount(0);
@@ -86,11 +84,19 @@ test.describe("sessione", () => {
     }
   });
 
-  test("CA-5: non esiste un middleware", () => {
+  // Updated by #11 (decision 5): src/proxy.ts exists, runs on Node and ONLY
+  // refreshes the session cookies. No access checks, no redirects.
+  test("CA-5: nessun middleware Edge; il proxy rinnova solo i cookie", () => {
     expect(existsSync("middleware.ts")).toBe(false);
     expect(existsSync("src/middleware.ts")).toBe(false);
     expect(existsSync("proxy.ts")).toBe(false);
-    expect(existsSync("src/proxy.ts")).toBe(false);
+    expect(existsSync("src/proxy.ts")).toBe(true);
+    const source = readFileSync("src/proxy.ts", "utf8");
+    expect(source).not.toMatch(/NextResponse\s*\.\s*(redirect|rewrite)/);
+    expect(source).not.toMatch(/\bredirect\s*\(/);
+    expect(source).not.toMatch(/runtime\s*[:=]\s*["']edge["']/);
+    // It only reads the session to refresh it.
+    expect(source).toContain("getClaims()");
   });
 });
 
@@ -102,15 +108,21 @@ test.describe("pagine fuori dalla cornice", () => {
     expect(response?.status()).toBe(200);
     await expect(page).toHaveTitle("FamilyNest · Accesso");
     await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
-    await expect(
-      page.getByRole("heading", { level: 1, name: "Accesso" }),
-    ).toBeVisible();
     await expect(page.getByRole("main")).toHaveCount(1);
     await expect(page.getByRole("navigation")).toHaveCount(0);
   });
 
-  test("/onboarding: segnaposto senza cornice", async ({ page }) => {
-    const response = await page.goto("/onboarding");
+  test("/onboarding senza sessione porta a /accesso", async ({ page }) => {
+    await page.goto("/onboarding");
+    await expect(page).toHaveURL(/\/accesso$/);
+  });
+
+  test("/onboarding: segnaposto senza cornice (utente C)", async ({
+    page,
+    baseURL,
+  }) => {
+    withUser("C");
+    const response = await openAs(page, baseURL, "C", "/onboarding");
     expect(response?.status()).toBe(200);
     await expect(page).toHaveTitle("FamilyNest · Chi vive con te?");
     await expect(

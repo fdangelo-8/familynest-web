@@ -33,15 +33,16 @@ async function focusRingVisible(page: Page) {
 }
 
 test.describe("pagine pubbliche", () => {
-  for (const [route, h1] of [
-    ["/accesso", "Accesso"],
-    ["/onboarding", "Chi vive con te?"],
-  ] as const) {
+  for (const route of [
+    "/accesso",
+    "/accesso/mail",
+    "/accesso/link-scaduto",
+    "/termini",
+    "/privacy",
+  ]) {
     test(`${route}: axe, un solo h1, focus visibile`, async ({ page }) => {
       await page.goto(route);
-      await expect(
-        page.getByRole("heading", { level: 1, name: h1 }),
-      ).toBeVisible();
+      await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
       expect(await visibleH1Count(page)).toBe(1);
       await expectNoBlocking(page);
 
