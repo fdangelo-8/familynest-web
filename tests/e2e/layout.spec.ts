@@ -117,7 +117,7 @@ test.describe("pagine fuori dalla cornice", () => {
     await expect(page).toHaveURL(/\/accesso$/);
   });
 
-  test("/onboarding: segnaposto senza cornice (utente C)", async ({
+  test("/onboarding: pagina senza cornice (utente C)", async ({
     page,
     baseURL,
   }) => {
@@ -130,7 +130,8 @@ test.describe("pagine fuori dalla cornice", () => {
     ).toBeVisible();
     await expect(page.getByRole("main")).toHaveCount(1);
     await expect(page.getByRole("navigation")).toHaveCount(0);
-    await expect(page.getByText("In arrivo")).toBeVisible();
+    // The placeholder is gone: the real step 1 (#12) has no "In arrivo".
+    await expect(page.getByText("In arrivo")).toHaveCount(0);
   });
 });
 
