@@ -12,7 +12,7 @@ export default function AppError({ retry }: { retry: () => void }) {
       retrying={retrying}
       onRetry={() => {
         setRetrying(true);
-        // Re-fetches the data and re-renders (reset() would not re-fetch).
+        // Re-fetches the data and re-renders (the older reset prop would not re-fetch).
         retry();
       }}
     />
