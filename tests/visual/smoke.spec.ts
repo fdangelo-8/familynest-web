@@ -16,21 +16,29 @@ test.beforeEach(async ({ page }) => {
 
 test("screenshot della pagina di accesso (arrivando da /)", async ({
   page,
-}) => {
+}, info) => {
   await page.goto("/");
   await expect(page).toHaveURL(/\/accesso$/);
-  await expect(
-    page.getByRole("heading", { level: 1, name: "Accesso" }),
-  ).toBeVisible();
+  await expect(page.locator("h1:visible")).toHaveText(
+    info.project.name === "mobile"
+      ? /La casa,\s*in un posto solo\./
+      : "Entra in FamilyNest",
+  );
   await page.evaluate(() => document.fonts.ready);
   await expect(page).toHaveScreenshot("accesso.png");
 });
 
-test("screenshot della pagina di onboarding", async ({ page }) => {
+// Without a session /onboarding sends to /accesso (#11).
+test("screenshot di /onboarding senza accesso (porta ad /accesso)", async ({
+  page,
+}, info) => {
   await page.goto("/onboarding");
-  await expect(
-    page.getByRole("heading", { level: 1, name: "Chi vive con te?" }),
-  ).toBeVisible();
+  await expect(page).toHaveURL(/\/accesso$/);
+  await expect(page.locator("h1:visible")).toHaveText(
+    info.project.name === "mobile"
+      ? /La casa,\s*in un posto solo\./
+      : "Entra in FamilyNest",
+  );
   await page.evaluate(() => document.fonts.ready);
   await expect(page).toHaveScreenshot("onboarding.png");
 });

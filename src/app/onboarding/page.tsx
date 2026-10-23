@@ -1,12 +1,19 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
+import { FrameError } from "@/components/ui/AppFrame/FrameError";
 import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
+import { requireUser } from "@/lib/auth/require-user";
 
 export const metadata: Metadata = {
   title: "FamilyNest · Chi vive con te?",
 };
 
 // Placeholder until the real onboarding (#12). No app frame.
-export default function OnboardingPage() {
+async function Onboarding() {
+  // Needs a session, not a Nest: no session -> /accesso.
+  const { failed } = await requireUser();
+  // Auth did not answer: page-wide error with "Riprova", not the page.
+  if (failed) return <FrameError />;
   return (
     <main className="pagina pagina-desktop pagina-desktop--centrata">
       <div className="intestazione">
@@ -22,5 +29,14 @@ export default function OnboardingPage() {
         actions={null}
       />
     </main>
+  );
+}
+
+// Reading the session is request-time data, so it sits inside <Suspense>.
+export default function OnboardingPage() {
+  return (
+    <Suspense fallback={null}>
+      <Onboarding />
+    </Suspense>
   );
 }
