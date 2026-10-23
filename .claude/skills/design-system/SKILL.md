@@ -10,7 +10,7 @@ description: Design system di FamilyNest Web - token di colore, tipografia, spaz
 ## Fonti e precedenza
 
 1. Decisioni di Francesco in `docs/mockup/DECISIONI.md` (vincono sul mockup).
-2. Valori: `docs/mockup/tokens.css` (202 variabili), più 2 colori approvati da Francesco dopo il mockup (`--color-filo-campo`, `--color-allerta-scuro`, #43 punti 2 e 4, issue #52). Il blocco pronto da copiare in `src/app/globals.css` è `docs/agenti/design/token.css` (identico, cambia solo l'aggancio dei font a `next/font`).
+2. Valori: `docs/mockup/tokens.css` (202 variabili), più 2 colori approvati da Francesco dopo il mockup (`--color-filo-campo`, `--color-allerta-scuro`, #43 punti 2 e 4, issue #52). Il blocco pronto da copiare in `src/app/globals.css` è `docs/agenti/design/token.css` (uguale a `tokens.css` tranne l'aggancio dei font a `next/font` e i 2 colori aggiunti con la #52).
 3. Aspetto dei componenti: `docs/mockup/components.css`, portato nell'app **con gli stessi nomi di classe** (decisione D-2).
 4. Comportamento e accessibilità di ogni componente: `docs/mockup/design-system.md` §7–§11.
 5. Questa skill: regole d'uso, stati che il mockup non disegna, componenti React, tono di voce. Dove il mockup e questa skill sembrano in contrasto, vale il mockup e si apre una domanda nella issue.
@@ -391,7 +391,7 @@ Tabella completa in `docs/mockup/design-system.md` §2. Coppie da ricordare:
 | Testo o segno          | Fondo                   | Rapporto | Uso                                                                             |
 | ---------------------- | ----------------------- | -------- | ------------------------------------------------------------------------------- |
 | `--color-inchiostro`   | `--color-carta`         | 15,78:1  | testo principale                                                                |
-| `--color-inchiostro-2` | `--color-carta`         | 5,86:1   | testo secondario sulle pagine                                                   |
+| `--color-inchiostro-2` | `--color-carta`         | 5,86:1   | testo secondario sulle pagine; numeri dei giorni fuori dal mese (#52)           |
 | `--color-inchiostro-2` | `--color-superficie`    | 6,59:1   | testo secondario nelle schede                                                   |
 | `--color-latte`        | `--color-inchiostro`    | 15,85:1  | bottoni principali, voci scelte                                                 |
 | `--color-latte`        | `--color-notte`         | 15,55:1  | toast, schede scure, schermate notte                                            |
@@ -400,7 +400,6 @@ Tabella completa in `docs/mockup/design-system.md` §2. Coppie da ricordare:
 | `--color-bianco`       | `--color-allerta-scuro` | 6,94:1   | bottone pericoloso pieno, passaggio e premuto (#52)                             |
 | `--color-filo-campo`   | `--color-superficie`    | 3,70:1   | bordo del campo contro il suo fondo bianco (#52, minimo non testuale 3:1)       |
 | `--color-filo-campo`   | `--color-carta`         | 3,29:1   | bordo del campo contro la pagina (#52)                                          |
-| `--color-inchiostro-2` | `--color-carta`         | 5,86:1   | numeri dei giorni fuori dal mese (#52; 6,59:1 sulla cella scelta bianca)        |
 | `--color-info`         | `--color-carta`         | 5,64:1   | anello di focus su fondo chiaro                                                 |
 | `--color-info`         | `--color-notte`         | 2,74:1   | **insufficiente**: su fondo scuro l'anello di focus è `--color-latte` (15,55:1) |
 
@@ -423,7 +422,7 @@ Tabella completa in `docs/mockup/design-system.md` §2. Coppie da ricordare:
 
 ## Stati comuni a tutti i controlli
 
-Il mockup disegna focus, disabilitato, errore e caricamento; **non disegna il passaggio del mouse né il «premuto»** (citato come stato ma senza stile). Qui sotto li completa il designer usando solo token esistenti: nessun colore nuovo. Si scrivono come regole aggiuntive sulle classi del mockup (es. `.btn-primary:hover`), senza toccare le regole copiate.
+Il mockup disegna focus, disabilitato, errore e caricamento; **non disegna il passaggio del mouse né il «premuto»** (citato come stato ma senza stile). Qui sotto li completa il designer con i token del sistema. L'unico colore aggiunto per questi stati è `--color-allerta-scuro`, per `.btn-pericolo-pieno`, approvato da Francesco nella #52. Si scrivono come regole aggiuntive sulle classi del mockup (es. `.btn-primary:hover`), senza toccare le regole copiate.
 
 | Stato               | Regola                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
