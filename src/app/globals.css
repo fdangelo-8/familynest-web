@@ -18,7 +18,8 @@
   --color-inchiostro-2: #5a5d64; /* testo secondario */
   --color-inchiostro-3: #8a8d93; /* solo elementi non testuali (tacche, segni) */
   --color-filo: #dfe0da; /* bordi e divisori */
-  --color-filo-2: #cfd1ca; /* bordi dei campi, bordi tratteggiati */
+  --color-filo-2: #cfd1ca; /* bordi tratteggiati, cornici di selezione */
+  --color-filo-campo: #82858b; /* bordo dei campi a riposo */
   --color-notte: #1b1a17; /* blocchi scuri: porte, piano, onboarding */
   --color-notte-2: #2a2925; /* elementi sopra notte */
   --color-latte: #f4f2ec; /* testo e superfici chiare su inchiostro e notte */
@@ -37,6 +38,7 @@
   --color-ok: #237a4b;
   --color-avviso: #a15c07;
   --color-allerta: #c8322f;
+  --color-allerta-scuro: #a82a27; /* passaggio del mouse e premuto del bottone rosso pieno */
   --color-info: #3355cc;
   --color-bianco: #ffffff;
 
