@@ -41,6 +41,8 @@ test.describe("pagine pubbliche", () => {
     "/privacy",
   ]) {
     test(`${route}: axe, un solo h1, focus visibile`, async ({ page }) => {
+      // The stickers fade in on /accesso: axe must not read half-transparent colors.
+      await page.emulateMedia({ reducedMotion: "reduce" });
       await page.goto(route);
       await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
       expect(await visibleH1Count(page)).toBe(1);
@@ -69,7 +71,7 @@ test.describe("pagine pubbliche", () => {
   }) => {
     await page.goto("/casa/pippo");
     await expect(page).toHaveURL(/\/accesso$/);
-    expect(await visibleH1Count(page)).toBe(1);
+    await expect(page.locator("h1:visible")).toHaveCount(1);
   });
 });
 

@@ -247,7 +247,10 @@ test.describe("Apple e Google", () => {
       await page.goto("/accesso");
       await clickUntil(
         page.getByRole("button", { name: `Continua con ${label}` }),
-        () => expect(authorize.urls.length).toBeGreaterThan(0),
+        () =>
+          expect
+            .poll(() => authorize.urls.length, { timeout: 2000 })
+            .toBeGreaterThan(0),
       );
       const url = new URL(authorize.urls[0]!);
       expect(url.searchParams.get("provider")).toBe(provider);
