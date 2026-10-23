@@ -18,6 +18,7 @@
     "check": "npm run lint && npm run typecheck && npm run format:check",
     "db:types": "npm run db:types:local",
     "db:types:local": "supabase gen types typescript --local --schema public > src/types/database.ts.tmp && mv src/types/database.ts.tmp src/types/database.ts && prettier --write src/types/database.ts",
+    "seed:test-users": "node scripts/seed-test-users.ts",
     "hooks:test": "node .claude/hooks/test-hooks.mjs"
   },
   "dependencies": {
