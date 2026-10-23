@@ -8,19 +8,6 @@ import { NextResponse, type NextRequest } from "next/server";
 // the layouts and pages (`requireNest()`, `requireUser()`), see LEZIONI.md.
 // Whatever happens here, the request always goes on.
 export async function proxy(request: NextRequest) {
-  // The one exception to "never redirect": a native submit of the mail form
-  // (before the scripts load) is a POST to this page, which a page cannot
-  // answer. The person goes back to the page itself, nothing is read or sent:
-  // the address never reaches the URL or the server.
-  if (
-    request.method === "POST" &&
-    request.nextUrl.pathname === "/accesso/mail"
-  ) {
-    return new NextResponse(null, {
-      status: 303,
-      headers: { Location: new URL("/accesso/mail", request.url).toString() },
-    });
-  }
   let response = NextResponse.next({ request });
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
