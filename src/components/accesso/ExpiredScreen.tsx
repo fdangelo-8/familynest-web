@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/Button/Button";
+import Link from "next/link";
 import styles from "./accesso.module.css";
 import { Brand } from "./parts";
 
@@ -29,13 +29,13 @@ export function ExpiredScreen() {
           <p className="citazione">{CITATION}</p>
         </div>
         <div className="dialogo__azioni">
-          <Button variant="chiaro" full href="/accesso/mail">
-            Mandami un nuovo link
-          </Button>
+          <Link href="/accesso/mail" className="btn-chiaro btn--pieno">
+            <span className="btn__testo">Mandami un nuovo link</span>
+          </Link>
           <div className="gruppo-chip">
-            <Button variant="link" href="/accesso">
-              Torna all&apos;accesso
-            </Button>
+            <Link href="/accesso" className="btn-link">
+              <span className="btn__testo">Torna all&apos;accesso</span>
+            </Link>
           </div>
         </div>
       </div>
@@ -59,13 +59,13 @@ export function ExpiredScreen() {
               </h1>
             </div>
             <div className="dialogo__azioni">
-              <Button variant="secondary" href="/accesso/mail">
-                Mandami un nuovo link
-              </Button>
+              <Link href="/accesso/mail" className="btn-secondary">
+                <span className="btn__testo">Mandami un nuovo link</span>
+              </Link>
               <div className="gruppo-chip">
-                <Button variant="link" href="/accesso">
-                  Torna all&apos;accesso
-                </Button>
+                <Link href="/accesso" className="btn-link">
+                  <span className="btn__testo">Torna all&apos;accesso</span>
+                </Link>
               </div>
             </div>
           </div>

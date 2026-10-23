@@ -1,6 +1,6 @@
-import { Button } from "@/components/ui/Button/Button";
+import Link from "next/link";
 import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
-import type { IconName } from "@/components/ui/Icon/Icon";
+import { Icon, type IconName } from "@/components/ui/Icon/Icon";
 
 /**
  * Text-only legal page (terms, privacy), without the app frame. Until
@@ -18,9 +18,10 @@ export function LegalPage({
   return (
     <main className="pagina pagina-desktop pagina-desktop--centrata">
       <div>
-        <Button variant="link-secondario" href="/accesso" icon="arrow-left">
-          Torna all&apos;accesso
-        </Button>
+        <Link href="/accesso" className="btn-link btn-link--secondario">
+          <Icon name="arrow-left" />
+          <span className="btn__testo">Torna all&apos;accesso</span>
+        </Link>
       </div>
       <div className="intestazione">
         <p className="intestazione__sopra">FamilyNest</p>

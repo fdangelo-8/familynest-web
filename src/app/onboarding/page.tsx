@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
 import { requireUser } from "@/lib/auth/require-user";
 
@@ -7,7 +8,7 @@ export const metadata: Metadata = {
 };
 
 // Placeholder until the real onboarding (#12). No app frame.
-export default async function OnboardingPage() {
+async function Onboarding() {
   // Needs a session, not a Nest: no session -> /accesso.
   await requireUser();
   return (
@@ -25,5 +26,14 @@ export default async function OnboardingPage() {
         actions={null}
       />
     </main>
+  );
+}
+
+// Reading the session is request-time data, so it sits inside <Suspense>.
+export default function OnboardingPage() {
+  return (
+    <Suspense fallback={null}>
+      <Onboarding />
+    </Suspense>
   );
 }
