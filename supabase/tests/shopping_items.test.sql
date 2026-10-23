@@ -6,7 +6,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(105);
+select plan(106);
 
 -- ---------------------------------------------------------------------------
 -- Schema (CA-DB-1, CA-DB-2)
@@ -60,6 +60,11 @@ select results_eq(
   $$ select j.schedule, j.command, j.active from cron.job j where j.jobname = 'purge-removed-shopping-items' $$,
   $$ values ('*/10 * * * *'::text, 'select private.purge_removed_shopping_items();'::text, true) $$,
   'CA-DB-25: one active job cleans the items kept for Annulla every 10 minutes'
+);
+select ok(
+  not has_schema_privilege('anon', 'cron', 'usage')
+  and not has_schema_privilege('authenticated', 'cron', 'usage'),
+  'CA-DB-25: the app has no access to the cron schema'
 );
 select ok(
   has_column_privilege('authenticated', 'public.shopping_items', 'checked_at', 'update')
