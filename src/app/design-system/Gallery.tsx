@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { Alert } from "@/components/ui/Alert/Alert";
 import { Avatar } from "@/components/ui/Avatar/Avatar";
@@ -1153,7 +1154,7 @@ function StatesSection() {
             icon="calendar"
             title="Giornata libera, per ora"
             text="Collega il calendario o"
-            actions={<a href="/design-system">aggiungi un impegno</a>}
+            actions={<Link href="/design-system">aggiungi un impegno</Link>}
             after="."
             data-testid="stato-vuoto-predefinito"
           />

@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import {
   PLACEHOLDERS,
@@ -70,9 +70,20 @@ test.describe("sessione", () => {
     await expect(page).toHaveURL(/\/accesso$/);
   });
 
+  test("un indirizzo inesistente senza sessione porta a /accesso", async ({
+    page,
+  }) => {
+    for (const route of ["/pippo", "/oggi/pippo"]) {
+      await page.goto(route);
+      await expect(page).toHaveURL(/\/accesso$/);
+    }
+  });
+
   test("CA-5: non esiste un middleware", () => {
     expect(existsSync("middleware.ts")).toBe(false);
     expect(existsSync("src/middleware.ts")).toBe(false);
+    expect(existsSync("proxy.ts")).toBe(false);
+    expect(existsSync("src/proxy.ts")).toBe(false);
   });
 });
 
@@ -213,6 +224,35 @@ test.describe("regole di navigazione (funzioni pure)", () => {
           ? "FamilyNest · Casa · Spesa"
           : `FamilyNest · ${def.title}`,
       );
+    }
+  });
+});
+
+test.describe("controlli statici del codice", () => {
+  test("«Riprova» dell'errore di pagina rilegge i dati con retry()", () => {
+    const source = readFileSync("src/app/(app)/error.tsx", "utf8");
+    expect(source).toMatch(/\bretry\b/);
+    expect(source).not.toMatch(/\breset\b/);
+  });
+
+  test("ogni pagina dell'area (app) chiama requireNest()", () => {
+    const pages = [
+      "oggi",
+      "aggiungi",
+      "calendario",
+      "casa/spesa",
+      "nest",
+      "notifiche",
+      "ricerca",
+      "profilo",
+      "calendari-collegati",
+      "impostazioni",
+      "membri",
+      "[...rest]",
+    ];
+    for (const page of pages) {
+      const source = readFileSync(`src/app/(app)/${page}/page.tsx`, "utf8");
+      expect(source, page).toContain("await requireNest()");
     }
   });
 });

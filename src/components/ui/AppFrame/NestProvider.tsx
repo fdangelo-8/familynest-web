@@ -10,12 +10,13 @@ import {
   type MutableRefObject,
   type ReactNode,
 } from "react";
-import type { NestMember } from "@/lib/nest-types";
+import type { NestMember, NestSelf } from "@/lib/nest-types";
 
 type NestContextValue = {
   /** null when the Nest data could not be read */
   nestName: string | null;
   members: NestMember[];
+  me: NestSelf | null;
   /** True once the user moved to another page of the app in this tab */
   hasPreviousPage: MutableRefObject<boolean>;
 };
@@ -32,10 +33,12 @@ export function useNest(): NestContextValue {
 export function NestProvider({
   nestName,
   members,
+  me,
   children,
 }: {
   nestName: string | null;
   members: NestMember[];
+  me: NestSelf | null;
   children: ReactNode;
 }) {
   const pathname = usePathname();
@@ -51,8 +54,8 @@ export function NestProvider({
   }, [pathname]);
 
   const value = useMemo(
-    () => ({ nestName, members, hasPreviousPage }),
-    [nestName, members],
+    () => ({ nestName, members, me, hasPreviousPage }),
+    [nestName, members, me],
   );
   return <NestContext.Provider value={value}>{children}</NestContext.Provider>;
 }

@@ -24,9 +24,8 @@ export function useLens(): [LensValue, (lens: LensValue) => void] {
 
 /** "Io / Nest" point-of-view switch (`.selettore.lente`). */
 export function Lens({ className }: { className?: string }) {
-  const { members } = useNest();
+  const { members, me } = useNest();
   const [lens, changeLens] = useLens();
-  const me = members.find((member) => member.isMe);
   const firstThree = members.slice(0, 3);
 
   return (
@@ -58,12 +57,14 @@ export function Lens({ className }: { className?: string }) {
           <span
             className="avatar-gruppo"
             role="img"
-            aria-label={firstThree.map((member) => member.name).join(", ")}
+            aria-label={firstThree
+              .map((member) => member.name ?? "")
+              .join(", ")}
           >
             {firstThree.map((member, index) => (
               <Avatar
                 key={index}
-                name={member.name}
+                name={member.name ?? ""}
                 color={member.color}
                 size="xs"
                 nameShown

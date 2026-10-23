@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { startTransition, useState } from "react";
-import { PageError } from "../PageError/PageError";
+import { ErrorMain } from "./ErrorMain";
 
 /** Page-wide error shown inside the frame when the Nest data could not be read. */
 export function FrameError() {
@@ -17,14 +17,5 @@ export function FrameError() {
     });
   };
 
-  return (
-    <main className="pagina pagina-desktop pagina-desktop--centrata">
-      <PageError
-        headingLevel={1}
-        icon="circle-alert"
-        retrying={retrying}
-        onRetry={retry}
-      />
-    </main>
-  );
+  return <ErrorMain retrying={retrying} onRetry={retry} />;
 }

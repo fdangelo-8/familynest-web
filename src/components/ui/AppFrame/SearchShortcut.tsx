@@ -15,7 +15,7 @@ export function SearchShortcut() {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key.toLowerCase() !== "k") return;
+      if (event.key?.toLowerCase() !== "k") return;
       if (!(event.ctrlKey || event.metaKey)) return;
       if (event.altKey || event.shiftKey) return;
       if (isTypingTarget(event.target)) return;
