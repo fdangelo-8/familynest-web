@@ -1,10 +1,14 @@
+import type { Database } from "@/types/database";
+
+type MemberColor = Database["public"]["Enums"]["member_color"];
+
 export type Living = "solo" | "coppia" | "famiglia" | "coinquilini";
 
 export type Choice = {
   value: Living;
   title: string;
   info: string;
-  circles: { color: string; small?: boolean }[];
+  circles: { color: MemberColor; small?: boolean }[];
 };
 
 export const CHOICES: readonly Choice[] = [

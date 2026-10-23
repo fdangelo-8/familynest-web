@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useRef, useState, type KeyboardEvent } from "react";
 import { createNest } from "@/app/onboarding/actions";
 import { Brand, Claim, Stickers } from "@/components/accesso/parts";
@@ -17,7 +18,6 @@ const FAILURE_TEXT: Record<Failure, string> = {
     "Non siamo riusciti a creare il tuo Nest per un problema nostro. Riprova tra qualche minuto.",
 };
 
-const HELP_ID = "onboarding-help";
 const SIGN_OUT_FORM = "onboarding-signout";
 
 function ChoiceGroup({
@@ -148,30 +148,37 @@ export function OnboardingStep({ greeting }: { greeting: string }) {
   const [sending, setSending] = useState(false);
   const [failure, setFailure] = useState<Failure | null>(null);
   const busy = useRef(false);
+  const router = useRouter();
 
   async function submit() {
     if (!value || busy.current) return;
     busy.current = true;
     setSending(true);
     setFailure(null);
+    let result: Awaited<ReturnType<typeof createNest>> | null = null;
     try {
-      // On success (or if a Nest already exists) the action redirects.
-      const result = await createNest(value);
-      if (result?.status === "error") throw new Error("server");
-    } catch (error) {
-      const isServer = error instanceof Error && error.message === "server";
-      busy.current = false;
-      setSending(false);
-      setFailure(isServer ? "server" : "network");
+      result = await createNest(value);
+    } catch {
+      result = null;
     }
+    if (result?.status === "ok") {
+      // Stays in loading until the page changes.
+      router.replace(result.destination);
+      return;
+    }
+    busy.current = false;
+    setSending(false);
+    setFailure(result ? "server" : "network");
   }
 
-  const describedBy = value ? undefined : HELP_ID;
-  const help = value ? null : (
-    <p className="campo__aiuto" id={HELP_ID}>
-      Scegli una risposta per continuare.
-    </p>
-  );
+  const help = (prefix: string) =>
+    value ? null : (
+      <p className="campo__aiuto" id={`${prefix}-aiuto`}>
+        Scegli una risposta per continuare.
+      </p>
+    );
+  const describedBy = (prefix: string) =>
+    value ? undefined : `${prefix}-aiuto`;
   const notice = failure ? (
     <div className="avviso avviso--errore" role="alert">
       <Icon name={failure === "network" ? "wifi-off" : "circle-alert"} />
@@ -206,10 +213,10 @@ export function OnboardingStep({ greeting }: { greeting: string }) {
             prefix="m"
             value={value}
             disabled={sending}
-            describedBy={describedBy}
+            describedBy={describedBy("m")}
             onChoose={setValue}
           />
-          {help}
+          {help("m")}
           {notice}
         </div>
         <div className="dialogo__azioni">
@@ -238,10 +245,10 @@ export function OnboardingStep({ greeting }: { greeting: string }) {
               prefix="d"
               value={value}
               disabled={sending}
-              describedBy={describedBy}
+              describedBy={describedBy("d")}
               onChoose={setValue}
             />
-            {help}
+            {help("d")}
             {notice}
           </div>
           <div className="modale__piede">

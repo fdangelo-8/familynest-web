@@ -1,3 +1,6 @@
+import { randomUUID } from "node:crypto";
+import { createServerClient } from "@supabase/ssr";
+import { createClient } from "@supabase/supabase-js";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, skipReason, usersConfigured } from "../fixtures/auth";
 import {
@@ -99,6 +102,11 @@ for (const width of [390, 1280]) {
       ).toBeVisible();
       await expect(page).toHaveURL(/\/onboarding$/);
 
+      // No id is repeated in the DOM (one help paragraph per layout).
+      const ids = await page
+        .locator("[id]")
+        .evaluateAll((els) => els.map((el) => el.id));
+      expect(new Set(ids).size).toBe(ids.length);
       expect(await page.locator("main").innerText()).not.toMatch(/Pediatra/i);
       expect(await page.locator("main").textContent()).not.toMatch(/Pediatra/i);
     });
@@ -178,4 +186,79 @@ test("CA-2: chi ha già un Nest va a /oggi", async ({ page, baseURL }) => {
   await signInAs(page.context(), baseURL as string, "A");
   await page.goto("/onboarding");
   await expect(page).toHaveURL(/\/oggi$/);
+});
+
+// Throwaway user (marked as a test user, deleted at the end) for the tests
+// that press "Continua". Skipped without the administrative key.
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+const secretKey = process.env.SUPABASE_SECRET_KEY;
+
+test("dopo il successo non compare nessun avviso e si arriva a /oggi", async ({
+  page,
+  baseURL,
+}) => {
+  test.skip(
+    !supabaseUrl || !publishableKey || !secretKey,
+    "Chiavi Supabase non impostate",
+  );
+  const admin = createClient(supabaseUrl!, secretKey!, {
+    auth: { persistSession: false },
+  });
+  const email = `onboarding-${randomUUID()}@example.test`;
+  const password = randomUUID();
+  const { data, error } = await admin.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    user_metadata: { full_name: "Ilaria De Santis" },
+    app_metadata: { familynest_test_user: true },
+  });
+  if (error || !data.user) throw new Error("Utente usa e getta non creato");
+  try {
+    const jar = new Map<string, string>();
+    const client = createServerClient(supabaseUrl!, publishableKey!, {
+      cookies: {
+        getAll: () => [...jar].map(([name, value]) => ({ name, value })),
+        setAll(cookies) {
+          for (const { name, value } of cookies) {
+            if (value) jar.set(name, value);
+            else jar.delete(name);
+          }
+        },
+      },
+    });
+    const { error: signInError } = await client.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (signInError) throw new Error("Accesso usa e getta fallito");
+    await page.context().addCookies(
+      [...jar].map(([name, value]) => ({
+        name,
+        value,
+        url: baseURL as string,
+      })),
+    );
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/onboarding");
+    const radio = page.getByRole("radio", { name: "Vivo da solo" });
+    await expect(async () => {
+      await radio.click();
+      await expect(radio).toHaveAttribute("aria-checked", "true", {
+        timeout: 1000,
+      });
+    }).toPass();
+    // The Next route announcer is also an alert: only ours is checked.
+    const notice = page
+      .getByRole("alert")
+      .filter({ hasText: "Non siamo riusciti" });
+    await page.getByRole("button", { name: "Continua" }).click();
+    // No error notice at any moment before the page changes.
+    await expect(notice).toHaveCount(0);
+    await expect(page).toHaveURL(/\/oggi$/);
+    await expect(notice).toHaveCount(0);
+  } finally {
+    await admin.auth.admin.deleteUser(data.user.id);
+  }
 });
