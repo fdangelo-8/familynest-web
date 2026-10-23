@@ -46,3 +46,33 @@ create index shopping_items_to_buy_name_idx
   where checked_at is null;
 
 alter table public.shopping_items enable row level security;
+
+-- ---------------------------------------------------------------------------
+-- private.removed_shopping_items: items removed by the last "strappo", kept only
+-- for the short "Annulla" window (10 minutes, see private.shopping_items_undo_window()
+-- in the functions migration), then deleted. The "private" schema is not exposed by
+-- the Data API and the app has no privilege on this table: only the security
+-- definer functions clear_checked_shopping_items() and restore_shopping_items()
+-- read and write it. Same columns as public.shopping_items, plus removed_at.
+-- ---------------------------------------------------------------------------
+create table private.removed_shopping_items (
+  id uuid primary key,
+  household_id uuid not null references public.households (id) on delete cascade,
+  name text not null,
+  quantity text,
+  added_by_member_id uuid references public.household_members (id) on delete set null,
+  checked_at timestamptz not null,
+  created_at timestamptz not null,
+  removed_at timestamptz not null default now()
+);
+
+create index removed_shopping_items_household_id_idx
+  on private.removed_shopping_items (household_id);
+create index removed_shopping_items_added_by_member_id_idx
+  on private.removed_shopping_items (added_by_member_id);
+-- Cleanup of expired rows.
+create index removed_shopping_items_removed_at_idx
+  on private.removed_shopping_items (removed_at);
+
+-- No policy: even with a privilege, an API role would read and write 0 rows.
+alter table private.removed_shopping_items enable row level security;

@@ -262,7 +262,25 @@ export type Database = {
         Args: Record<PropertyKey, never>;
         Returns: string;
       };
-      restore_shopping_items: { Args: { items: Json }; Returns: number };
+      restore_shopping_items: {
+        Args: { item_ids: string[] };
+        Returns: {
+          added_by_member_id: string | null;
+          checked_at: string | null;
+          created_at: string;
+          household_id: string;
+          id: string;
+          name: string;
+          quantity: string | null;
+          updated_at: string;
+        }[];
+        SetofOptions: {
+          from: "*";
+          to: "shopping_items";
+          isOneToOne: false;
+          isSetofReturn: true;
+        };
+      };
     };
     Enums: {
       household_type:

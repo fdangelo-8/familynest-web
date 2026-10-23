@@ -55,7 +55,11 @@ begin
   -- The same name may be among the taken items. Unchecking an item ("Rimetti in lista")
   -- is not an insert and is never refused.
   if new.checked_at is null then
-    -- Serialise inserts in the same shopping list.
+    -- Serialise inserts in the same shopping list. The lock lasts until the end of the
+    -- transaction. The check below then sees the rows committed by the transaction that
+    -- held the lock only in `read committed` (a new snapshot per statement), which is
+    -- the isolation level of the Data API (PostgREST); under `repeatable read` or
+    -- `serializable` two concurrent inserts of the same name could both pass.
     perform pg_advisory_xact_lock(hashtextextended('public.shopping_items:' || new.household_id::text, 0));
     if exists (
       select 1
@@ -117,23 +121,80 @@ create trigger shopping_items_set_updated_at
   for each row execute function public.set_updated_at();
 
 -- ---------------------------------------------------------------------------
--- RPC: "strappo". Removes the given taken items, all or none, and returns them
--- (the app keeps them only in memory, for "Annulla").
--- Security invoker: RLS decides which rows the caller can delete (own household,
--- taken items only). If one of the items is no longer taken or no longer visible
--- (unchecked or already removed by someone else), nothing is removed.
+-- "Annulla" window: items removed by a strappo can be put back for 10 minutes
+-- (the toast lasts 5 seconds; the margin covers the offline queue of page #21 and
+-- slow networks). Expired rows cannot be restored and are deleted (see below).
+-- ---------------------------------------------------------------------------
+create or replace function private.shopping_items_undo_window()
+returns interval
+language sql
+immutable
+set search_path = ''
+as $$
+  select interval '10 minutes';
+$$;
+
+-- Deletes the removed items older than the Annulla window, in every household.
+-- Called by clear_checked_shopping_items(), restore_shopping_items() and after every
+-- write on public.shopping_items (statement trigger below), so expired rows disappear
+-- at the next change of any shopping list. Rows locked by a running restore are
+-- skipped (no waits, no deadlocks) and deleted at a later call.
+create or replace function private.purge_removed_shopping_items()
+returns void
+language sql
+volatile
+security definer
+set search_path = ''
+as $$
+  delete from private.removed_shopping_items r
+  where r.id in (
+    select x.id
+    from private.removed_shopping_items x
+    where x.removed_at < now() - private.shopping_items_undo_window()
+    for update skip locked
+  );
+$$;
+
+create or replace function private.shopping_items_after_write()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  perform private.purge_removed_shopping_items();
+  return null;
+end;
+$$;
+
+create trigger shopping_items_after_write
+  after insert or update or delete on public.shopping_items
+  for each statement execute function private.shopping_items_after_write();
+
+-- ---------------------------------------------------------------------------
+-- RPC: "strappo". Removes the given taken items of the caller's household, all or
+-- none, and returns them. The removed rows are moved to
+-- private.removed_shopping_items for the Annulla window.
+-- Security definer (the app has no privilege on the private table): the same rules
+-- as the RLS delete policy are applied explicitly (caller's household, taken items
+-- only). If one of the items is unknown, of another household, no longer taken or
+-- already removed by someone else, nothing is removed (same error in every case).
 -- ---------------------------------------------------------------------------
 create or replace function public.clear_checked_shopping_items(item_ids uuid[])
 returns setof public.shopping_items
 language plpgsql
 volatile
-security invoker
+security definer
 set search_path = ''
 as $$
 declare
+  v_household_id uuid := (select public.current_household_id());
   v_expected integer;
   v_deleted integer;
 begin
+  if (select auth.uid()) is null or v_household_id is null then
+    raise exception 'permission denied for function clear_checked_shopping_items' using errcode = '42501';
+  end if;
   if item_ids is null or cardinality(item_ids) = 0 then
     return;
   end if;
@@ -144,14 +205,24 @@ begin
     raise exception 'item ids cannot be null' using errcode = '22004';
   end if;
 
+  perform private.purge_removed_shopping_items();
+
   select count(distinct x) into v_expected from unnest(item_ids) as x;
 
   return query
     with removed as (
       delete from public.shopping_items i
       where i.id = any (item_ids)
+        and i.household_id = v_household_id
         and i.checked_at is not null
       returning i.*
+    ),
+    kept as (
+      insert into private.removed_shopping_items (
+        id, household_id, name, quantity, added_by_member_id, checked_at, created_at
+      )
+      select r.id, r.household_id, r.name, r.quantity, r.added_by_member_id, r.checked_at, r.created_at
+      from removed r
     )
     select r.* from removed r order by r.checked_at desc, r.id;
 
@@ -164,19 +235,16 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------------
--- RPC: "Annulla" of the strappo. Puts back the items returned by
--- clear_checked_shopping_items(), with their original id, name, quantity, author,
--- creation and check times. All or none.
--- Nothing is kept by the database after a strappo: the removed items exist only in
--- the memory of the app that removed them, so no removed item is stored beyond the
--- Annulla window (privacy: no soft delete).
--- Security definer: the API cannot insert taken items or choose authors and times.
--- Checks: the caller has a household; items always go into the caller's household
--- (any household_id in the input is ignored); the author is kept only if still a
--- member of that household; times are coherent and not in the future.
+-- RPC: "Annulla" of the strappo. Puts back, by id, items removed by
+-- clear_checked_shopping_items() from the caller's household less than the Annulla
+-- window ago, with their original name, quantity, author (null if the author has
+-- left), creation and check times: the data come only from
+-- private.removed_shopping_items, never from the app. All or none: an id never
+-- removed, removed from another household, expired or already restored gives the
+-- same error and nothing is restored. Returns the restored items.
 -- ---------------------------------------------------------------------------
-create or replace function public.restore_shopping_items(items jsonb)
-returns integer
+create or replace function public.restore_shopping_items(item_ids uuid[])
+returns setof public.shopping_items
 language plpgsql
 volatile
 security definer
@@ -184,56 +252,48 @@ set search_path = ''
 as $$
 declare
   v_household_id uuid := (select public.current_household_id());
-  v_count integer;
+  v_expected integer;
+  v_restored integer;
 begin
   if (select auth.uid()) is null or v_household_id is null then
     raise exception 'permission denied for function restore_shopping_items' using errcode = '42501';
   end if;
-
-  if items is null or jsonb_typeof(items) <> 'array' or jsonb_array_length(items) = 0 then
-    raise exception 'items must be a non empty array' using errcode = '22023';
+  if item_ids is null or cardinality(item_ids) = 0 then
+    return;
   end if;
-  if jsonb_array_length(items) > 1000 then
+  if cardinality(item_ids) > 1000 then
     raise exception 'too many items' using errcode = '22023';
   end if;
-
-  if exists (
-    select 1
-    from jsonb_to_recordset(items) as r (
-      id uuid, name text, checked_at timestamptz, created_at timestamptz
-    )
-    where r.id is null
-       or r.name is null
-       or r.checked_at is null
-       or r.created_at is null
-       or r.checked_at > now()
-       or r.created_at > r.checked_at
-  ) then
-    raise exception 'invalid items' using errcode = '23514';
+  if array_position(item_ids, null) is not null then
+    raise exception 'item ids cannot be null' using errcode = '22004';
   end if;
 
-  insert into public.shopping_items (
-    id, household_id, name, quantity, added_by_member_id, checked_at, created_at
-  )
-  select
-    r.id,
-    v_household_id,
-    r.name,
-    r.quantity,
-    (
-      select m.id
-      from public.household_members m
-      where m.id = r.added_by_member_id
-        and m.household_id = v_household_id
-    ),
-    r.checked_at,
-    r.created_at
-  from jsonb_to_recordset(items) as r (
-    id uuid, name text, quantity text, added_by_member_id uuid,
-    checked_at timestamptz, created_at timestamptz
-  );
+  perform private.purge_removed_shopping_items();
 
-  get diagnostics v_count = row_count;
-  return v_count;
+  select count(distinct x) into v_expected from unnest(item_ids) as x;
+
+  return query
+    with taken_back as (
+      delete from private.removed_shopping_items r
+      where r.id = any (item_ids)
+        and r.household_id = v_household_id
+        and r.removed_at >= now() - private.shopping_items_undo_window()
+      returning r.*
+    ),
+    restored as (
+      insert into public.shopping_items (
+        id, household_id, name, quantity, added_by_member_id, checked_at, created_at
+      )
+      select t.id, t.household_id, t.name, t.quantity, t.added_by_member_id, t.checked_at, t.created_at
+      from taken_back t
+      returning *
+    )
+    select s.* from restored s order by s.checked_at desc, s.id;
+
+  get diagnostics v_restored = row_count;
+
+  if v_restored <> v_expected then
+    raise exception 'some items cannot be restored' using errcode = 'P0001';
+  end if;
 end;
 $$;

@@ -6,7 +6,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(84);
+select plan(98);
 
 -- ---------------------------------------------------------------------------
 -- Schema (CA-DB-1, CA-DB-2)
@@ -57,8 +57,21 @@ select ok(
 );
 select ok(
   not has_function_privilege('anon', 'public.clear_checked_shopping_items(uuid[])', 'execute')
-  and not has_function_privilege('anon', 'public.restore_shopping_items(jsonb)', 'execute'),
+  and not has_function_privilege('anon', 'public.restore_shopping_items(uuid[])', 'execute'),
   'CA-DB-3: anon cannot call the shopping list functions'
+);
+select ok(
+  not has_table_privilege('authenticated', 'private.removed_shopping_items', 'select, insert, update, delete')
+  and not has_table_privilege('anon', 'private.removed_shopping_items', 'select, insert, update, delete'),
+  'CA-DB-16: the app has no privilege on the items kept for Annulla'
+);
+select ok(
+  (select c.relrowsecurity from pg_class c where c.oid = 'private.removed_shopping_items'::regclass),
+  'CA-DB-16: RLS enabled (no policy) on private.removed_shopping_items'
+);
+select ok(
+  not has_function_privilege('authenticated', 'private.purge_removed_shopping_items()', 'execute'),
+  'CA-DB-24: the app cannot call the cleanup directly'
 );
 
 -- ---------------------------------------------------------------------------
@@ -199,11 +212,21 @@ select results_eq(
   $$ values (now()) $$,
   'CA-DB-12: A checks Pane, the check time is the server time'
 );
+-- Detersivo piatti was taken yesterday (seed): checking it again keeps that time.
+select set_config(
+  'test.detersivo_checked_at',
+  (select i.checked_at::text from public.shopping_items i where i.id = 'a3000000-0000-4000-8000-000000000004'),
+  true
+);
+select ok(
+  current_setting('test.detersivo_checked_at')::timestamptz < now() - interval '23 hours',
+  'CA-DB-12: Detersivo piatti was taken yesterday'
+);
 select results_eq(
-  $$ update public.shopping_items set checked_at = now() + interval '1 day'
-     where id = 'a3000000-0000-4000-8000-000000000002' returning checked_at $$,
-  $$ values (now()) $$,
-  'CA-DB-12: checking again keeps the first check time'
+  $$ update public.shopping_items set checked_at = now()
+     where id = 'a3000000-0000-4000-8000-000000000004' returning checked_at $$,
+  $$ values (current_setting('test.detersivo_checked_at')::timestamptz) $$,
+  'CA-DB-12: checking again an item already taken keeps the first check time'
 );
 select throws_ok(
   $$ update public.shopping_items set name = 'Pane integrale' where id = 'a3000000-0000-4000-8000-000000000002' $$,
@@ -287,10 +310,18 @@ select is_empty(
   $$ select 1 from public.shopping_items i where i.checked_at is not null $$,
   'CA-DB-15: no taken item left'
 );
-select is(
-  public.restore_shopping_items(current_setting('test.taken')::jsonb),
-  2,
-  'CA-DB-16: Annulla puts back 2 items'
+select throws_ok(
+  $$ select * from private.removed_shopping_items $$,
+  '42501', null,
+  'CA-DB-16: the app cannot read the items kept for Annulla'
+);
+select results_eq(
+  $$ select r.name from public.restore_shopping_items(array[
+       'a3000000-0000-4000-8000-000000000002',
+       'a3000000-0000-4000-8000-000000000004'
+     ]::uuid[]) r $$,
+  $$ values ('Pane'), ('Detersivo piatti') $$,
+  'CA-DB-16: Annulla puts back the 2 items, last taken first'
 );
 select results_eq(
   $$ select to_jsonb(i) - 'updated_at' from public.shopping_items i
@@ -299,45 +330,37 @@ select results_eq(
   'CA-DB-16: restored items keep id, name, quantity, author, household and times'
 );
 select throws_ok(
-  $$ select public.restore_shopping_items(current_setting('test.taken')::jsonb) $$,
-  '23505', null,
-  'CA-DB-16: an item cannot be restored twice'
+  $$ select * from public.restore_shopping_items(array['a3000000-0000-4000-8000-000000000002']::uuid[]) $$,
+  'P0001', 'some items cannot be restored',
+  'CA-DB-17: double Annulla is refused'
 );
 select throws_ok(
-  $$ select public.restore_shopping_items('[{"id":"a3000000-0000-4000-8000-0000000000aa","name":"Sale","created_at":"2026-01-01T00:00:00Z"}]') $$,
-  '23514', null,
-  'CA-DB-17: Annulla cannot add an item to buy'
+  $$ select * from public.restore_shopping_items(array['a3000000-0000-4000-8000-000000000003']::uuid[]) $$,
+  'P0001', 'some items cannot be restored',
+  'CA-DB-17: an item never removed (Mele, to buy) cannot be restored'
 );
 select throws_ok(
-  format(
-    $$ select public.restore_shopping_items('[{"id":"a3000000-0000-4000-8000-0000000000ab","name":"Sale","created_at":"%s","checked_at":"%s"}]') $$,
-    now(), now() + interval '1 hour'
-  ),
-  '23514', null,
-  'CA-DB-17: Annulla refuses a check time in the future'
+  $$ select * from public.restore_shopping_items(array[gen_random_uuid()]) $$,
+  'P0001', 'some items cannot be restored',
+  'CA-DB-17: an unknown id cannot be restored'
 );
-select throws_ok(
-  $$ select public.restore_shopping_items('{"id":"a3000000-0000-4000-8000-0000000000ac"}') $$,
-  '22023', null,
-  'CA-DB-17: Annulla needs an array'
-);
-select is(
-  public.restore_shopping_items(format(
-    '[{"id":"a3000000-0000-4000-8000-0000000000ad","name":"Sale","household_id":"22222222-2222-4222-8222-222222222222","added_by_member_id":"b1000000-0000-4000-8000-000000000001","created_at":"%s","checked_at":"%s"}]',
-    now() - interval '1 hour', now() - interval '1 minute'
-  )::jsonb),
-  1,
-  'CA-DB-17: Annulla with foreign household and author is accepted...'
-);
+
+-- Pane removed again: kept for Annulla.
 select results_eq(
-  $$ select i.household_id, i.added_by_member_id from public.shopping_items i
-     where i.id = 'a3000000-0000-4000-8000-0000000000ad' $$,
-  $$ values ('11111111-1111-4111-8111-111111111111'::uuid, null::uuid) $$,
-  'CA-DB-17: ...but the item goes into the caller''s household, without the foreign author'
+  $$ select r.name from public.clear_checked_shopping_items(array['a3000000-0000-4000-8000-000000000002']::uuid[]) r $$,
+  $$ values ('Pane') $$,
+  'CA-DB-15: A removes Pane again'
 );
-select lives_ok(
-  $$ delete from public.shopping_items where id = 'a3000000-0000-4000-8000-0000000000ad' $$,
-  'A deletes the taken item Sale'
+select throws_ok(
+  $$ select * from public.restore_shopping_items(array[
+       'a3000000-0000-4000-8000-000000000002'::uuid, gen_random_uuid()
+     ]) $$,
+  'P0001', 'some items cannot be restored',
+  'CA-DB-17: Annulla is all or none (one valid id, one unknown)'
+);
+select is_empty(
+  $$ select 1 from public.shopping_items i where i.id = 'a3000000-0000-4000-8000-000000000002' $$,
+  'CA-DB-17: after the refused Annulla, Pane is not back'
 );
 
 -- ---------------------------------------------------------------------------
@@ -385,9 +408,14 @@ select throws_ok(
   'CA-DB-18: B cannot strappare items of Casa D''Angelo'
 );
 select throws_ok(
-  $$ select public.restore_shopping_items(current_setting('test.taken')::jsonb) $$,
-  '23505', null,
-  'CA-DB-18: B cannot overwrite items of Casa D''Angelo with Annulla'
+  $$ select * from public.restore_shopping_items(array['a3000000-0000-4000-8000-000000000002']::uuid[]) $$,
+  'P0001', 'some items cannot be restored',
+  'CA-DB-18: B cannot restore an item removed from Casa D''Angelo...'
+);
+select throws_ok(
+  $$ select * from public.restore_shopping_items(array[gen_random_uuid()]) $$,
+  'P0001', 'some items cannot be restored',
+  'CA-DB-18: ...and gets the same answer as for an unknown id'
 );
 select lives_ok(
   $$ insert into public.shopping_items (name) values ('Latte') $$,
@@ -421,9 +449,14 @@ select throws_ok(
   'CA-DB-20: C cannot add an item'
 );
 select throws_ok(
-  $$ select public.restore_shopping_items(current_setting('test.taken')::jsonb) $$,
+  $$ select * from public.restore_shopping_items(array['a3000000-0000-4000-8000-000000000002']::uuid[]) $$,
   '42501', null,
   'CA-DB-20: C cannot call Annulla'
+);
+select throws_ok(
+  $$ select * from public.clear_checked_shopping_items(array['a3000000-0000-4000-8000-000000000004']::uuid[]) $$,
+  '42501', null,
+  'CA-DB-20: C cannot call the strappo'
 );
 
 -- ---------------------------------------------------------------------------
@@ -453,8 +486,58 @@ select results_eq(
   $$ select i.name from public.shopping_items i
      where i.household_id = '11111111-1111-4111-8111-111111111111' and i.checked_at is not null
      order by i.checked_at desc $$,
-  $$ values ('Pane'), ('Detersivo piatti') $$,
+  $$ values ('Detersivo piatti') $$,
   'CA-DB-18: the taken items of Casa D''Angelo survived every attempt of B'
+);
+select results_eq(
+  $$ select r.id, r.household_id from private.removed_shopping_items r order by r.id $$,
+  $$ values
+       ('a3000000-0000-4000-8000-000000000002'::uuid, '11111111-1111-4111-8111-111111111111'::uuid),
+       ('b3000000-0000-4000-8000-000000000001'::uuid, '22222222-2222-4222-8222-222222222222'::uuid),
+       ('b3000000-0000-4000-8000-000000000003'::uuid, '22222222-2222-4222-8222-222222222222'::uuid) $$,
+  'CA-DB-16: the removed items are kept server side with their household (Pane not taken by B)'
+);
+
+-- ---------------------------------------------------------------------------
+-- Annulla window and cleanup (CA-DB-23, CA-DB-24)
+-- ---------------------------------------------------------------------------
+select is(
+  private.shopping_items_undo_window(),
+  interval '10 minutes',
+  'CA-DB-23: the Annulla window is 10 minutes'
+);
+update private.removed_shopping_items
+set removed_at = now() - interval '11 minutes'
+where id = 'a3000000-0000-4000-8000-000000000002';
+
+set local role authenticated;
+set local request.jwt.claims to '{"sub":"aaaaaaaa-0000-4000-8000-000000000001","role":"authenticated"}';
+select throws_ok(
+  $$ select * from public.restore_shopping_items(array['a3000000-0000-4000-8000-000000000002']::uuid[]) $$,
+  'P0001', 'some items cannot be restored',
+  'CA-DB-23: after the window Pane cannot be restored'
+);
+select lives_ok(
+  $$ insert into public.shopping_items (name) values ('Sale') $$,
+  'CA-DB-24: any change of a shopping list...'
+);
+reset role;
+select results_eq(
+  $$ select r.id from private.removed_shopping_items r order by r.id $$,
+  $$ values ('b3000000-0000-4000-8000-000000000001'::uuid), ('b3000000-0000-4000-8000-000000000003'::uuid) $$,
+  'CA-DB-24: ...deletes the expired removed items (Pane), and keeps the recent ones'
+);
+update private.removed_shopping_items
+set removed_at = now() - interval '25 hours'
+where id = 'b3000000-0000-4000-8000-000000000001';
+select lives_ok(
+  $$ select private.purge_removed_shopping_items() $$,
+  'CA-DB-24: cleanup runs'
+);
+select results_eq(
+  $$ select r.id from private.removed_shopping_items r $$,
+  $$ values ('b3000000-0000-4000-8000-000000000003'::uuid) $$,
+  'CA-DB-24: nothing older than the window is kept'
 );
 select is(
   (select count(*)::integer from public.shopping_items i where i.household_id = '22222222-2222-4222-8222-222222222222'),
@@ -482,6 +565,10 @@ delete from public.households where id = '22222222-2222-4222-8222-222222222222';
 select is_empty(
   $$ select 1 from public.shopping_items i where i.household_id = '22222222-2222-4222-8222-222222222222' $$,
   'CA-DB-22: the list of a deleted household is deleted'
+);
+select is_empty(
+  $$ select 1 from private.removed_shopping_items r where r.household_id = '22222222-2222-4222-8222-222222222222' $$,
+  'CA-DB-22: the items kept for Annulla of a deleted household are deleted'
 );
 
 select * from finish();
