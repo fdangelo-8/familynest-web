@@ -3511,7 +3511,6 @@ button.riga-lista {
 .tema-notte .avviso {
   color: var(--color-inchiostro);
 }
-.tema-notte .avviso:focus-visible,
 .tema-notte .avviso :focus-visible {
   outline-color: var(--color-info);
 }

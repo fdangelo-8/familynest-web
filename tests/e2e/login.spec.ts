@@ -616,6 +616,20 @@ test.describe("uscita e termini", () => {
   }
 });
 
+test.describe("invio prima dell'idratazione", () => {
+  test("un invio nativo non mette la mail nell'indirizzo", async ({ page }) => {
+    // The page is served but never hydrated (scripts blocked), as when a
+    // person taps before the scripts have loaded: the form submits natively.
+    await page.route("**/_next/static/**/*.js", (route) => route.abort());
+    await page.goto("/accesso/mail");
+    await mailInput(page).fill(MAIL);
+    await sendButton(page).click();
+    await page.waitForTimeout(800);
+    expect(decodeURIComponent(page.url())).not.toContain("marco");
+    expect(page.url()).not.toContain("@");
+  });
+});
+
 test.describe("parametro next (funzione pura)", () => {
   test("accetta solo percorsi interni sicuri", () => {
     expect(safeNextPath("/calendario")).toBe("/calendario");
@@ -628,6 +642,12 @@ test.describe("parametro next (funzione pura)", () => {
       "/\\esempio.invalid",
       "/a\\b",
       "/auth/signout",
+      "/.//esempio.invalid",
+      "/./accesso",
+      "/a/../auth/signout",
+      "/a/../../accesso/mail",
+      "/%2e%2e/auth/signout",
+      "/a/%2e%2e/accesso",
       "/accesso",
       "/accesso/mail",
       "calendario",

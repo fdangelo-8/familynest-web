@@ -295,7 +295,7 @@ export function MailScreen() {
           id={inputId}
           className="campo__input"
           type="email"
-          name="email"
+          // No `name`: a native submit before hydration must not put the address in the URL.
           autoComplete="email"
           inputMode="email"
           autoCapitalize="none"
@@ -435,6 +435,7 @@ export function MailScreen() {
           <>
             {formIntro}
             <form
+              method="post"
               id={formId("m")}
               className="sezione"
               noValidate
@@ -476,6 +477,7 @@ export function MailScreen() {
                 {formIntro}
                 {formNotice}
                 <form
+                  method="post"
                   id={formId("d")}
                   className="sezione"
                   noValidate
