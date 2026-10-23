@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { PLACEHOLDERS, type PlaceholderKey } from "@/lib/app-routes";
 import { SettingsMenu } from "../AppFrame/SettingsMenu";
 import { EmptyState } from "../EmptyState/EmptyState";
@@ -20,7 +21,14 @@ const WITH_SETTINGS_MENU: ReadonlyArray<PlaceholderKey> = [
  * "In arrivo" page for sections that are not built yet. Each real page
  * replaces its placeholder and keeps the same route.
  */
-export function PlaceholderPage({ pageKey }: { pageKey: PlaceholderKey }) {
+export function PlaceholderPage({
+  pageKey,
+  extra,
+}: {
+  pageKey: PlaceholderKey;
+  /** Optional content after the "In arrivo" state (e.g. the "Esci" button) */
+  extra?: ReactNode;
+}) {
   const def = PLACEHOLDERS[pageKey];
   const isCasa = pageKey === "casa";
 
@@ -50,6 +58,7 @@ export function PlaceholderPage({ pageKey }: { pageKey: PlaceholderKey }) {
           def.backToToday ? <Link href="/oggi">Torna a Oggi</Link> : null
         }
       />
+      {extra}
     </div>
   );
 

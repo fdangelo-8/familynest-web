@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
 import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
+import { requireUser } from "@/lib/auth/require-user";
 
 export const metadata: Metadata = {
   title: "FamilyNest · Chi vive con te?",
 };
 
 // Placeholder until the real onboarding (#12). No app frame.
-export default function OnboardingPage() {
+export default async function OnboardingPage() {
+  // Needs a session, not a Nest: no session -> /accesso.
+  await requireUser();
   return (
     <main className="pagina pagina-desktop pagina-desktop--centrata">
       <div className="intestazione">

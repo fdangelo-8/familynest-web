@@ -1,0 +1,29 @@
+/* Two layouts in one <main>: only one is displayed at a time (from 1024 px the
+   split screen, below it the mobile one), so there is a single visible h1. */
+.root {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.root > .mobile,
+.root > .desktop {
+  flex: 1;
+}
+
+@media (min-width: 1024px) {
+  .root > .mobile {
+    display: none;
+  }
+}
+
+@media (max-width: 1023px) {
+  .root > .desktop {
+    display: none;
+  }
+}
+
+/* The mail address is shown as written: it wraps where needed. */
+.address {
+  overflow-wrap: anywhere;
+}

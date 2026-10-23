@@ -3506,6 +3506,46 @@ button.riga-lista {
   bottom: calc(var(--space-6) + env(safe-area-inset-bottom));
 }
 
+/* Avviso su fondo notte (#11): nel mockup il testo eredita il latte e su bianco
+   arriva a 1,12:1. Il disegno (riquadro bianco, filo e icona rossi) non cambia. */
+.tema-notte .avviso {
+  color: var(--color-inchiostro);
+}
+.tema-notte .avviso:focus-visible,
+.tema-notte .avviso :focus-visible {
+  outline-color: var(--color-info);
+}
+
+/* Link sottolineati dentro la frase legale (#11) */
+.legale__link {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: var(--border-sottile);
+  text-underline-offset: var(--space-half);
+}
+
+/* Entrata degli adesivi su mobile, uno alla volta (regola del mockup 01, #11) */
+.schermo-notte .adesivo {
+  animation: appare var(--durata-ampia) var(--curva) both;
+}
+.schermo-notte .adesivo:nth-child(2) {
+  animation-delay: var(--durata-rapida);
+}
+.schermo-notte .adesivo:nth-child(3) {
+  animation-delay: calc(2 * var(--durata-rapida));
+}
+
+/* Schermate notte e passi nella fascia 768-1023 px: il fondo resta a tutta
+   larghezza, il contenuto si centra sulla colonna stretta (#11) */
+@media (min-width: 768px) {
+  .schermo-notte > *,
+  .passo-onboarding > * {
+    width: 100%;
+    max-width: var(--grid-colonna-stretta);
+    margin-inline: auto;
+  }
+}
+
 /* Anello di focus chiaro sui fondi scuri (il blu su notte non arriva a 3:1) */
 :is(
     .tema-notte,
