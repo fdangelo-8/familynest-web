@@ -86,10 +86,11 @@ test("bottone rosso pieno al passaggio: bianco su rosso scuro >= 4,5:1", async (
   await page.goto("/design-system");
   const btn = page.getByTestId("btn-pericolo-pieno-predefinito");
   await btn.hover();
-  const bg = rgb(
-    await btn.evaluate((el) => getComputedStyle(el).backgroundColor),
-  );
-  expect(bg).toEqual([168, 42, 39]);
+  const read = async () =>
+    rgb(await btn.evaluate((el) => getComputedStyle(el).backgroundColor));
+  // Wait for the 200 ms background transition to finish.
+  await expect.poll(read).toEqual([168, 42, 39]);
+  const bg = await read();
   expect(contrast(WHITE, bg)).toBeGreaterThanOrEqual(4.5);
 });
 
