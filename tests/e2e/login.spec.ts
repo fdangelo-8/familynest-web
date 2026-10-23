@@ -640,55 +640,35 @@ test.describe("invio prima dell'idratazione", () => {
     await mailInput(page).fill(MAIL);
     await sendButton(page).click();
     await page.waitForLoadState("load");
-    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    // A normal page, not a blank one: the complete mail page, empty field.
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Qual è la tua mail?" }),
+    ).toBeVisible();
+    await expect(mailInput(page)).toBeVisible();
+    const url = new URL(page.url());
+    expect(url.pathname).toBe("/accesso/mail");
+    expect(url.search).toBe("");
     expect(decodeURIComponent(page.url())).not.toContain("marco");
     expect(page.url()).not.toContain("@");
   });
-});
 
-test.describe("invio nativo con JavaScript disattivato", () => {
-  test.use({ javaScriptEnabled: false });
-
-  test("POST del form /accesso/mail: pagina servita, mail non nell'indirizzo", async ({
+  test("POST diretto alla destinazione del form: 303 verso /accesso/mail, nessuna mail", async ({
     page,
-    baseURL,
-  }) => {
-    const origin = new URL(baseURL!).origin;
-    const seen: string[] = [];
-    page.on("request", (request) => {
-      if (request.url().startsWith(origin)) seen.push(request.url());
-    });
-    await page.goto("/accesso/mail");
-    await mailInput(page).fill(MAIL);
-    const [response] = await Promise.all([
-      page.waitForResponse((r) => r.request().method() === "POST"),
-      sendButton(page).click(),
-    ]);
-    // The page is returned, not an error page.
-    expect(response.status()).toBeLessThan(400);
-    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-    await expect(page.getByText("Application error")).toHaveCount(0);
-    expect(decodeURIComponent(page.url())).not.toContain("marco");
-    expect(page.url()).not.toContain("@");
-    expect(decodeURIComponent(seen.join("\n"))).not.toContain(MAIL);
-    expect(decodeURIComponent(seen.join("\n"))).not.toContain("marco%40");
-  });
-});
-
-test.describe("POST nativo senza browser", () => {
-  test("POST /accesso/mail: restituisce la pagina intera, senza la mail", async ({
     request,
   }) => {
-    const response = await request.post("/accesso/mail", {
+    await page.goto("/accesso/mail");
+    const action =
+      (await page.locator("form").first().getAttribute("action")) ??
+      "/accesso/mail";
+    const response = await request.post(action, {
       form: { email: MAIL },
+      maxRedirects: 0,
     });
-    expect(response.status()).toBeLessThan(400);
-    expect(response.url()).not.toContain("marco");
-    const body = await response.text();
-    // A whole document (not a bare script payload) with the page's h1.
-    expect(body.toLowerCase()).toContain("<!doctype html");
-    expect(body).toContain("<h1");
-    expect(body).not.toContain(MAIL);
+    expect(response.status()).toBe(303);
+    const location = new URL(response.headers()["location"]!, page.url());
+    expect(location.pathname).toBe("/accesso/mail");
+    expect(location.search).toBe("");
+    expect(await response.text()).not.toContain(MAIL);
   });
 });
 
