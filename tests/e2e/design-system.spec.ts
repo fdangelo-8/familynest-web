@@ -130,7 +130,7 @@ test.describe("token e base", () => {
   test("CA-5: nessuna richiesta a Google Fonts", async ({ page }) => {
     const hosts: string[] = [];
     page.on("request", (request) => hosts.push(new URL(request.url()).host));
-    await page.goto("/");
+    await page.goto("/accesso");
     await page.goto(BASE_PATH);
     expect(
       hosts.filter((host) => /fonts\.g(oogleapis|static)\.com/.test(host)),

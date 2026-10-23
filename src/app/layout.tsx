@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Host_Grotesk, Parkinsans } from "next/font/google";
 import { IconSprite } from "@/components/ui/Icon/IconSprite";
 import { ToastProvider } from "@/components/ui/Toast/ToastProvider";
@@ -22,6 +22,13 @@ const hostGrotesk = Host_Grotesk({
 export const metadata: Metadata = {
   title: "FamilyNest",
   description: "FamilyNest — l'organizer per la tua famiglia",
+};
+
+// viewport-fit=cover lets the bars use the safe areas of phones.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
