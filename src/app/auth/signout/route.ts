@@ -7,6 +7,11 @@ const SESSION_COOKIE =
   /^sb-.+-auth-token(\.\d+)?$|^sb-.+-auth-token-code-verifier$/;
 
 export async function POST(request: NextRequest) {
+  // A form posted from another site is refused.
+  const origin = request.headers.get("origin");
+  if (origin && origin !== request.nextUrl.origin) {
+    return new NextResponse(null, { status: 403 });
+  }
   const response = NextResponse.redirect(
     new URL("/accesso", request.nextUrl.origin),
     303,

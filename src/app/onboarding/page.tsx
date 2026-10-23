@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { FrameError } from "@/components/ui/AppFrame/FrameError";
 import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
 import { requireUser } from "@/lib/auth/require-user";
 
@@ -10,7 +11,9 @@ export const metadata: Metadata = {
 // Placeholder until the real onboarding (#12). No app frame.
 async function Onboarding() {
   // Needs a session, not a Nest: no session -> /accesso.
-  await requireUser();
+  const { failed } = await requireUser();
+  // Auth did not answer: page-wide error with "Riprova", not the page.
+  if (failed) return <FrameError />;
   return (
     <main className="pagina pagina-desktop pagina-desktop--centrata">
       <div className="intestazione">
