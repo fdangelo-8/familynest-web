@@ -1387,7 +1387,7 @@ Ogni componente ha la stessa classe qui, in `components.css`, in `design-system.
 - **Misure (token):** `--grid-margine-mobile`, `--z-foglio`, `--radius-xl`, `--color-superficie`, `--shadow-modale`, `--space-6`, `--space-4`, `--size-dialogo`, `--font-titoli`, `--weight-normale`, `--text-titolo-scheda-size`, `--text-titolo-scheda-line`, `--text-titolo-scheda-tracking`, `--text-corpo-size`, `--text-corpo-line`, `--color-inchiostro-2`, `--space-2`
 - **Varianti:** nessuna
 - **Stati:** Aperto.
-- **Comportamento:** Su mobile in basso, su desktop al centro.
+- **Comportamento:** Al centro dello schermo a ogni larghezza: su mobile largo quanto lo schermo meno i margini laterali, su desktop largo `--size-dialogo`.
 - **Accessibilità:** role="alertdialog"; il focus parte da «Annulla».
 - **Dove si usa:** `01-accesso`, `02-onboarding-chi-vive-con-te`, `03-onboarding-persone`, `04-onboarding-calendario`, `05-onboarding-invito`, `06-onboarding-pronto`, `07-invito-benvenuto`, `08-invito-colore`, `11-dettaglio-impegno`, `27-profilo`, `28-impostazioni-nest`, `29-membro`
 
