@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { matchesPrefix } from "@/lib/app-routes";
+import { isCasaRoute } from "@/lib/app-routes";
 import { PageError } from "../PageError/PageError";
 
 /**
@@ -17,7 +17,7 @@ export function ErrorMain({
   retrying: boolean;
 }) {
   const pathname = usePathname();
-  const isCasa = matchesPrefix(pathname, "/casa");
+  const isCasa = isCasaRoute(pathname);
 
   return (
     <main className="pagina pagina-desktop pagina-desktop--centrata">

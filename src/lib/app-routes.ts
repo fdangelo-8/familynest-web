@@ -26,13 +26,20 @@ function matchesAny(pathname: string, bases: readonly string[]): boolean {
   return bases.some((base) => matchesPrefix(pathname, base));
 }
 
+const CASA_ROUTES = ["/casa/spesa", "/casa/da-fare", "/casa/scadenze"];
+
+/** Known Casa pages only: an unknown address under /casa is a 404, not Casa. */
+export function isCasaRoute(pathname: string): boolean {
+  return matchesAny(pathname, CASA_ROUTES);
+}
+
 /** Entry highlighted in the bottom (mobile) or top (desktop) navigation. */
 export function getActiveNavItem(
   pathname: string,
   viewport: Viewport,
 ): NavItem | null {
   if (matchesAny(pathname, ["/calendario", "/impegni"])) return "calendario";
-  if (matchesPrefix(pathname, "/casa")) return "casa";
+  if (isCasaRoute(pathname)) return "casa";
   if (matchesAny(pathname, ["/oggi", "/aggiungi"])) return "oggi";
   if (viewport === "mobile") {
     if (matchesAny(pathname, ["/esplora", "/figli", "/notifiche"])) {
@@ -85,7 +92,7 @@ export function getBarConfig(pathname: string): BarConfig {
   if (matchesPrefix(pathname, "/calendario")) {
     return { kind: "section", center: "lens", right: "search" };
   }
-  if (matchesPrefix(pathname, "/casa")) {
+  if (isCasaRoute(pathname)) {
     return { kind: "section", center: "title", right: "search" };
   }
   if (matchesPrefix(pathname, "/nest")) {

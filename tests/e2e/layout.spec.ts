@@ -390,10 +390,6 @@ test.describe("sessione con utenti", () => {
     baseURL,
   }, testInfo) => {
     test.skip(testInfo.project.name !== "mobile", "Caso a 390 px");
-    test.fail(
-      true,
-      "Difetto noto (revisione PR #56, facoltativo): su /casa/pippo la barra resta quella di Casa, due h1 visibili e voce Casa attiva; la specifica §11 chiede barra di dettaglio e nessuna voce attiva",
-    );
     withUser("A");
     await openAs(page, baseURL, "A", "/casa/pippo");
     await expect(
