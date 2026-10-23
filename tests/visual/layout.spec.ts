@@ -37,7 +37,8 @@ const PAGES = [
 test.beforeEach(async ({ page, context, baseURL }) => {
   test.skip(!hasTestUser("A"), "TEST_USER_A_* non impostati");
   await page.clock.setFixedTime(new Date("2026-10-20T15:00:00+02:00"));
-  await signInAs(context, baseURL!, "A");
+  const signedIn = await signInAs(context, baseURL!, "A");
+  test.skip(!signedIn, "utente di test A non ancora creato (#55)");
 });
 
 async function open(page: import("@playwright/test").Page, route: string) {

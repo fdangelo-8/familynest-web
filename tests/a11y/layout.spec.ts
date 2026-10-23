@@ -91,7 +91,8 @@ const APP_ROUTES = [
 test.describe("pagine dell'app (utente A)", () => {
   test.beforeEach(async ({ context, baseURL }) => {
     test.skip(!hasTestUser("A"), "TEST_USER_A_* non impostati");
-    await signInAs(context, baseURL!, "A");
+    const signedIn = await signInAs(context, baseURL!, "A");
+    test.skip(!signedIn, "utente di test A non ancora creato (#55)");
   });
 
   for (const route of APP_ROUTES) {
