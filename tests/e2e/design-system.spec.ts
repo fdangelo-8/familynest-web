@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 
@@ -59,7 +60,16 @@ async function rootValues(page: Page, names: string[]) {
 }
 
 test.describe("token e base", () => {
-  test("CA-1: i token coincidono con tokens.css", async ({ page }) => {
+  // Differences approved by Francesco (#52, proposals 2 and 4 of #43): tokens
+  // that exist in the app and not in docs/mockup/tokens.css.
+  const APPROVED_TOKENS_52: Record<string, string> = {
+    "--color-filo-campo": "#82858b",
+    "--color-allerta-scuro": "#a82a27",
+  };
+
+  test("CA-1: i token coincidono con tokens.css, più le differenze approvate (#52)", async ({
+    page,
+  }) => {
     const tokens = tokensFromMockup();
     const names = Object.keys(tokens);
     expect(names).toHaveLength(202);
@@ -76,6 +86,36 @@ test.describe("token e base", () => {
       }
       const wanted = normalize(source);
       expect(normalize(actual[name]!), name).toBe(wanted);
+    }
+
+    // Every custom property declared in a :root rule of the loaded stylesheets.
+    const declared = await page.evaluate(() => {
+      const found = new Set<string>();
+      const visit = (rules: CSSRuleList) => {
+        for (const rule of Array.from(rules)) {
+          if (rule instanceof CSSStyleRule && rule.selectorText === ":root") {
+            for (const name of Array.from(rule.style)) {
+              if (name.startsWith("--")) found.add(name);
+            }
+          } else if ("cssRules" in rule) {
+            visit((rule as CSSGroupingRule).cssRules);
+          }
+        }
+      };
+      for (const sheet of Array.from(document.styleSheets)) {
+        try {
+          visit(sheet.cssRules);
+        } catch {
+          // cross-origin sheet: not ours
+        }
+      }
+      return [...found];
+    });
+    const extra = declared.filter((name) => !names.includes(name));
+    expect(extra.sort()).toEqual(Object.keys(APPROVED_TOKENS_52).sort());
+    const added = await rootValues(page, Object.keys(APPROVED_TOKENS_52));
+    for (const [name, value] of Object.entries(APPROVED_TOKENS_52)) {
+      expect(normalize(added[name]!), name).toBe(normalize(value));
     }
   });
 
@@ -697,6 +737,9 @@ test.describe("CA-11: stessi stili del mockup", () => {
     skip?: string[];
     ours?: string;
     mock?: string;
+    // Approved difference (#52): only the color of the box-shadow may differ.
+    // Both colors are asserted separately by the compare function.
+    shadowColor?: { ours: string; mock: string };
   };
   const STATIC_SECTIONS: Spec[] = [
     // Height follows the wrapping of the sample text (line-height is checked).
@@ -716,7 +759,13 @@ test.describe("CA-11: stessi stili del mockup", () => {
     // The mockup shows the spinner only on the dark frame, the gallery on
     // paper: the inherited text color is context, not the component.
     { id: "spinner", selector: ".spinner", skip: ["color"] },
-    { id: "campo", selector: ".campo__input" },
+    // #52: the only approved difference from the mockup is the resting border
+    // color of the fields (--color-filo-campo instead of --color-filo-2).
+    {
+      id: "campo",
+      selector: ".campo__input",
+      shadowColor: { ours: "rgb(130,133,139)", mock: "rgb(207,209,202)" },
+    },
     { id: "casella", selector: ".casella" },
     { id: "toggle", selector: ".toggle" },
     { id: "selettore", selector: ".selettore" },
@@ -806,7 +855,28 @@ test.describe("CA-11: stessi stili del mockup", () => {
             ([key]) => !(spec.skip ?? []).includes(key),
           ),
         );
-      expect(drop(ours[index]!), label).toEqual(drop(theirs[index]!));
+      const split = (values: Record<string, string> | null) => {
+        const rest = drop(values);
+        if (!spec.shadowColor) return { rest, color: "" };
+        const shadow = rest["box-shadow"] ?? "";
+        const match = shadow.match(/^(rgba?\([^)]*\))\s*(.*)$/);
+        expect(match, `${label}: box-shadow ${shadow}`).not.toBeNull();
+        return {
+          rest: { ...rest, "box-shadow": match![2]! },
+          color: normalize(match![1]!),
+        };
+      };
+      const mine = split(ours[index]!);
+      const other = split(theirs[index]!);
+      expect(mine.rest, label).toEqual(other.rest);
+      if (spec.shadowColor) {
+        expect(mine.color, `${label}: colore del bordo nell'app`).toBe(
+          normalize(spec.shadowColor.ours),
+        );
+        expect(other.color, `${label}: colore del bordo nel mockup`).toBe(
+          normalize(spec.shadowColor.mock),
+        );
+      }
     });
   }
 
@@ -948,5 +1018,480 @@ test.describe("sovrapposizioni: casi composti", () => {
     await expect(page.getByTestId("dialogo-conteggio")).toHaveText(
       "Eliminazioni: 1",
     );
+  });
+});
+
+// Corrections approved by Francesco (#52, proposals 2-5 of #43).
+test.describe("correzioni approvate (#52)", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+  });
+
+  type Rgb = [number, number, number];
+
+  const hex = (value: string): Rgb => {
+    const m = value.trim().match(/^#([0-9a-f]{6})$/i);
+    if (!m) throw new Error(`not a #rrggbb color: ${value}`);
+    const n = parseInt(m[1]!, 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  };
+
+  /** Computed color ("rgb(r, g, b)") or "#rrggbb" to a number triple. */
+  const rgb = (value: string): Rgb => {
+    if (value.startsWith("#")) return hex(value);
+    const m = value.match(/rgba?\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)/);
+    if (!m) throw new Error(`not an rgb color: ${value}`);
+    return [Number(m[1]), Number(m[2]), Number(m[3])];
+  };
+
+  const luminance = ([r, g, b]: Rgb) => {
+    const lin = (c: number) => {
+      const s = c / 255;
+      return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+    };
+    return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+  };
+
+  /** WCAG 2.x contrast ratio, truncated to two decimals as in the issue. */
+  const contrast = (a: string, b: string) => {
+    const [x, y] = [luminance(rgb(a)), luminance(rgb(b))];
+    const ratio = (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
+    return Math.floor(ratio * 100) / 100;
+  };
+
+  /** The ratio quoted in the issue, which rounds some values and truncates others. */
+  const expectRatio = (a: string, b: string, quoted: number) =>
+    expect(Math.abs(contrast(a, b) - quoted)).toBeLessThanOrEqual(0.011);
+
+  const sameColor = (actual: string, wanted: string) =>
+    expect(rgb(actual)).toEqual(hex(wanted));
+
+  /** "rgb(…) 0px 0px 0px 1px inset" to its parts. */
+  const shadow = (value: string) => {
+    const m = value.match(/^(rgba?\([^)]*\))\s+0px 0px 0px ([\d.]+)px inset$/);
+    expect(m, `box-shadow inatteso: ${value}`).not.toBeNull();
+    return { color: m![1]!, width: Number(m![2]) };
+  };
+
+  const rootToken = (page: Page, name: string) =>
+    page.evaluate(
+      (n) =>
+        getComputedStyle(document.documentElement)
+          .getPropertyValue(n)
+          .trim()
+          .toLowerCase(),
+      name,
+    );
+
+  const style = (page: Page, selector: string, property: string) =>
+    page
+      .locator(selector)
+      .first()
+      .evaluate((el, p) => getComputedStyle(el).getPropertyValue(p), property);
+
+  /** Adds month grid cells (not in the gallery) to the page. */
+  async function addCells(page: Page, classes: string[]) {
+    await page.evaluate((list) => {
+      const grid = document.createElement("div");
+      grid.className = "griglia-mese";
+      grid.id = "griglia-test";
+      list.forEach((cls, i) => {
+        const cell = document.createElement("button");
+        cell.type = "button";
+        cell.className = `griglia-mese__cella ${cls}`;
+        cell.setAttribute("aria-label", `cella ${i}`);
+        cell.dataset.testid = `cella-${i}`;
+        const number = document.createElement("span");
+        number.className = "griglia-mese__numero";
+        number.textContent = "28";
+        cell.append(number);
+        grid.append(cell);
+      });
+      document.body.append(grid);
+    }, classes);
+  }
+
+  async function addQuickField(page: Page) {
+    await page.evaluate(() => {
+      const wrap = document.createElement("div");
+      wrap.className = "campo-rapido";
+      wrap.id = "campo-rapido-test";
+      const input = document.createElement("input");
+      input.className = "campo-rapido__input";
+      input.setAttribute("aria-label", "Aggiungi");
+      input.placeholder = "Aggiungi";
+      wrap.append(input);
+      document.body.append(wrap);
+    });
+  }
+
+  /** Style rules of every loaded sheet, flattened, with their media chain. */
+  async function allRules(page: Page) {
+    return page.evaluate(() => {
+      const out: {
+        selector: string;
+        background: string;
+        color: string;
+        inHover: boolean;
+      }[] = [];
+      const visit = (rules: CSSRuleList, inHover: boolean) => {
+        for (const rule of Array.from(rules)) {
+          if (rule instanceof CSSStyleRule) {
+            out.push({
+              selector: rule.selectorText,
+              background:
+                rule.style.getPropertyValue("background") ||
+                rule.style.getPropertyValue("background-color"),
+              color: rule.style.getPropertyValue("color"),
+              inHover,
+            });
+          } else if (rule instanceof CSSMediaRule) {
+            visit(
+              rule.cssRules,
+              inHover || /hover:\s*hover/.test(rule.conditionText),
+            );
+          } else if ("cssRules" in rule) {
+            visit((rule as CSSGroupingRule).cssRules, inHover);
+          }
+        }
+      };
+      for (const sheet of Array.from(document.styleSheets)) {
+        try {
+          visit(sheet.cssRules, false);
+        } catch {
+          // cross-origin sheet: not ours
+        }
+      }
+      return out;
+    });
+  }
+
+  // ---- Punto 2: bordo dei campi ----
+
+  test("CA-1 (#52): --color-filo-campo vale #82858B con contrasto >= 3:1", async ({
+    page,
+  }) => {
+    expect(await rootToken(page, "--color-filo-campo")).toBe("#82858b");
+    expect(contrast("#82858B", "#FFFFFF")).toBeGreaterThanOrEqual(3);
+    expect(contrast("#82858B", "#F1F2EE")).toBeGreaterThanOrEqual(3);
+    expectRatio("#82858B", "#FFFFFF", 3.69);
+    expectRatio("#82858B", "#F1F2EE", 3.29);
+  });
+
+  test("CA-2 (#52): il campo vuoto ha il bordo a riposo #82858B", async ({
+    page,
+  }) => {
+    const input = page.locator("#campo .campo__input").first();
+    await input.fill("");
+    await input.blur();
+    await expect(input).toHaveValue("");
+    const value = shadow(
+      await style(page, "#campo .campo__input", "box-shadow"),
+    );
+    expect(value.width).toBe(1);
+    sameColor(value.color, "#82858b");
+  });
+
+  test("CA-3 (#52): il campo rapido ha il bordo a riposo #82858B", async ({
+    page,
+  }) => {
+    await addQuickField(page);
+    const value = shadow(await style(page, "#campo-rapido-test", "box-shadow"));
+    expect(value.width).toBe(1);
+    sameColor(value.color, "#82858b");
+  });
+
+  test("CA-4 (#52): il focus con Tab mostra l'anello inchiostro", async ({
+    page,
+  }) => {
+    const input = page.locator("#campo .campo__input").first();
+    await input.focus();
+    await page.keyboard.press("Shift+Tab");
+    await page.keyboard.press("Tab");
+    await expect(input).toBeFocused();
+    const value = shadow(
+      await style(page, "#campo .campo__input", "box-shadow"),
+    );
+    // --border-medio (1.5px in tokens.css), thicker than the resting 1px.
+    expect(value.width).toBeGreaterThan(1);
+    sameColor(value.color, "#17181c");
+  });
+
+  test("CA-5 (#52): il campo in errore ha l'anello allerta", async ({
+    page,
+  }) => {
+    const gallery = shadow(
+      await style(page, "[data-testid=campo-errore]", "box-shadow"),
+    );
+    expect(gallery.width).toBeGreaterThan(1);
+    sameColor(gallery.color, "#c8322f");
+
+    await page.evaluate(() => {
+      const wrap = document.createElement("div");
+      wrap.className = "campo campo--errore";
+      const input = document.createElement("input");
+      input.className = "campo__input";
+      input.id = "errore-test";
+      input.setAttribute("aria-label", "Errore");
+      wrap.append(input);
+      document.body.append(wrap);
+    });
+    const created = shadow(await style(page, "#errore-test", "box-shadow"));
+    expect(created.width).toBeGreaterThan(1);
+    sameColor(created.color, "#c8322f");
+  });
+
+  test("CA-6 (#52): --color-filo-2 e i suoi usi non cambiano", async ({
+    page,
+  }) => {
+    expect(await rootToken(page, "--color-filo-2")).toBe("#cfd1ca");
+    const secondary = await page
+      .locator("#btn-secondary .btn-secondary")
+      .first()
+      .evaluate((el) => {
+        const s = getComputedStyle(el);
+        return `${s.boxShadow} | ${s.borderTopColor}`;
+      });
+    expect(secondary).toContain("rgb(207, 209, 202)");
+    const dashed = await page
+      .locator("#btn-tratteggiato .btn-tratteggiato")
+      .first()
+      .evaluate((el) => {
+        const s = getComputedStyle(el);
+        return `${s.boxShadow} | ${s.borderTopColor}`;
+      });
+    expect(dashed).toContain("rgb(207, 209, 202)");
+    const toggleOff = page
+      .locator("#toggle .toggle:not([aria-checked='true'])")
+      .first();
+    sameColor(
+      await toggleOff.evaluate((el) => getComputedStyle(el).backgroundColor),
+      "#cfd1ca",
+    );
+  });
+
+  // ---- Punto 3: giorni fuori dal mese ----
+
+  test("CA-7 (#52): il numero fuori mese è #5A5D64, contrasto >= 4,5:1", async ({
+    page,
+  }) => {
+    await addCells(page, ["griglia-mese__cella--fuori"]);
+    const color = await style(
+      page,
+      "#griglia-test .griglia-mese__numero",
+      "color",
+    );
+    sameColor(color, "#5a5d64");
+    expect(contrast("#5A5D64", "#F1F2EE")).toBeGreaterThanOrEqual(4.5);
+    expect(contrast("#5A5D64", "#FFFFFF")).toBeGreaterThanOrEqual(4.5);
+    expectRatio("#5A5D64", "#F1F2EE", 5.86);
+    expectRatio("#5A5D64", "#FFFFFF", 6.59);
+  });
+
+  test("CA-8 (#52): il numero fuori mese è visibile, opaco, con testo 28", async ({
+    page,
+  }) => {
+    await addCells(page, ["griglia-mese__cella--fuori"]);
+    const number = page.locator("#griglia-test .griglia-mese__numero");
+    await expect(number).toBeVisible();
+    await expect(number).toHaveCSS("opacity", "1");
+    await expect(number).toHaveText("28");
+    await expect(page.getByRole("button", { name: "cella 0" })).toBeVisible();
+  });
+
+  test("CA-9 (#52): le combinazioni di colore dei numeri", async ({ page }) => {
+    await addCells(page, [
+      "griglia-mese__cella--fuori griglia-mese__cella--festa",
+      "griglia-mese__cella--weekend",
+      "griglia-mese__cella--oggi",
+      "",
+    ]);
+    const read = (i: number) =>
+      page
+        .getByTestId(`cella-${i}`)
+        .locator(".griglia-mese__numero")
+        .evaluate((el) => {
+          const s = getComputedStyle(el);
+          return { color: s.color, background: s.backgroundColor };
+        });
+    sameColor((await read(0)).color, "#c8322f");
+    sameColor((await read(1)).color, "#5a5d64");
+    const today = await read(2);
+    sameColor(today.color, "#f4f2ec");
+    sameColor(today.background, "#17181c");
+    sameColor((await read(3)).color, "#17181c");
+  });
+
+  test("CA-10 (#52): la regola fuori mese non usa più inchiostro-3", async ({
+    page,
+  }) => {
+    const rules = (await allRules(page)).filter((r) =>
+      r.selector
+        .split(",")
+        .map((part) => part.trim())
+        .includes(".griglia-mese__cella--fuori .griglia-mese__numero"),
+    );
+    expect(rules.length).toBeGreaterThan(0);
+    for (const rule of rules) {
+      expect(rule.color).not.toBe("");
+      expect(rule.color.toLowerCase()).not.toMatch(/8a8d93|138,\s*141,\s*147/);
+      expect(rule.color).not.toContain("--color-inchiostro-3");
+      expect(rule.color.toLowerCase()).toMatch(
+        /--color-inchiostro-2|5a5d64|90,\s*93,\s*100/,
+      );
+    }
+  });
+
+  // ---- Punto 4: bottone rosso pieno ----
+
+  const danger = "[data-testid=btn-pericolo-pieno-predefinito]";
+
+  test("CA-11 (#52): --color-allerta-scuro vale #A82A27 ed è leggibile", async ({
+    page,
+  }) => {
+    expect(await rootToken(page, "--color-allerta-scuro")).toBe("#a82a27");
+    expect(luminance(hex("#A82A27"))).toBeLessThan(luminance(hex("#C8322F")));
+    expect(contrast("#A82A27", "#FFFFFF")).toBeGreaterThanOrEqual(4.5);
+    expectRatio("#A82A27", "#FFFFFF", 6.94);
+  });
+
+  test("CA-12 (#52): passaggio del mouse sul bottone rosso (desktop)", async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "solo con un puntatore");
+    const button = page.locator(danger);
+    await expect(button).toHaveCSS("background-color", "rgb(200, 50, 47)");
+    await button.hover();
+    await expect(button).toHaveCSS("background-color", "rgb(168, 42, 39)");
+    await expect(button).toHaveCSS("color", "rgb(255, 255, 255)");
+    await page.mouse.move(1, 1);
+    await expect(button).toHaveCSS("background-color", "rgb(200, 50, 47)");
+  });
+
+  for (const how of ["disabled", "aria-disabled"] as const) {
+    test(`CA-13 (#52): bottone rosso con ${how}, nessun cambio di fondo`, async ({
+      page,
+    }) => {
+      const button = page.locator(danger);
+      await button.evaluate((el, mode) => {
+        if (mode === "disabled") el.setAttribute("disabled", "");
+        else el.setAttribute("aria-disabled", "true");
+      }, how);
+      await button.scrollIntoViewIfNeeded();
+      const box = (await button.boundingBox())!;
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+      // The pointer really is over the button, so :hover applies.
+      expect(await button.evaluate((el) => el.matches(":hover"))).toBe(true);
+      await expect(button).toHaveCSS("background-color", "rgb(200, 50, 47)");
+      await page.mouse.down();
+      try {
+        await expect(button).toHaveCSS("background-color", "rgb(200, 50, 47)");
+      } finally {
+        await page.mouse.up();
+      }
+    });
+  }
+
+  test("CA-14 (#52): le regole :hover del bottone rosso stanno in hover: hover", async ({
+    page,
+  }) => {
+    const rules = await allRules(page);
+    const forDanger = rules.filter((r) =>
+      /\.btn-pericolo-pieno[^,]*:hover/.test(r.selector),
+    );
+    const darker = forDanger.filter((r) =>
+      /a82a27|168,\s*42,\s*39|--color-allerta-scuro/i.test(r.background),
+    );
+    expect(darker.length).toBeGreaterThan(0);
+    expect(forDanger.filter((r) => !r.inHover)).toEqual([]);
+    // The red link does not change on hover.
+    const link = rules.filter(
+      (r) =>
+        /\.btn-pericolo(?![-\w])[^,]*:hover/.test(r.selector) &&
+        (r.background !== "" || r.color !== ""),
+    );
+    expect(link).toEqual([]);
+  });
+
+  test("CA-15 (#52): tenendo premuto il bottone rosso il fondo è #A82A27", async ({
+    page,
+  }) => {
+    const button = page.locator(danger);
+    await button.scrollIntoViewIfNeeded();
+    const box = (await button.boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    try {
+      expect(await button.evaluate((el) => el.matches(":active"))).toBe(true);
+      await expect(button).toHaveCSS("background-color", "rgb(168, 42, 39)");
+    } finally {
+      await page.mouse.up();
+    }
+  });
+
+  // ---- Punto 5: dialogo al centro ----
+
+  test("CA-16 (#52): il dialogo è al centro dello schermo", async ({
+    page,
+  }) => {
+    await page.getByTestId("dialogo-apri").click();
+    const dialog = page.getByRole("alertdialog");
+    await expect(dialog).toBeVisible();
+    const view = page.viewportSize()!;
+    // Poll: the box settles once the entrance animation is over.
+    await expect
+      .poll(async () => {
+        const b = (await dialog.boundingBox())!;
+        return Math.abs(b.y + b.height / 2 - view.height / 2) <= 1;
+      })
+      .toBe(true);
+    const b = (await dialog.boundingBox())!;
+    expect(view.height - (b.y + b.height)).toBeGreaterThanOrEqual(16);
+  });
+
+  test("CA-17 (#52): la guida non dice più «Su mobile in basso»", () => {
+    for (const file of ["design-system.md", "design-system.html"]) {
+      const text = readFileSync(`docs/mockup/${file}`, "utf8");
+      expect(text, file).not.toContain("Su mobile in basso");
+      expect(text, file).toContain("Al centro dello schermo a ogni larghezza");
+    }
+  });
+
+  // Only meaningful on the branch of #52: on any other branch the list of
+  // changed files says nothing about this issue.
+  test("CA-22 (#52): il ramo non tocca database, tipi e mockup CSS", async () => {
+    const branch = (
+      process.env.GITHUB_HEAD_REF ||
+      execFileSync("git", ["rev-parse", "--abbrev-ref", "HEAD"], {
+        encoding: "utf8",
+      })
+    ).trim();
+    test.skip(
+      !/correzioni-design-system$/.test(branch),
+      "vale solo sul ramo della #52",
+    );
+    let changed: string[];
+    try {
+      changed = execFileSync(
+        "git",
+        ["diff", "--name-only", "origin/main...HEAD"],
+        { encoding: "utf8" },
+      )
+        .split("\n")
+        .filter(Boolean);
+    } catch {
+      test.skip(true, "origin/main non disponibile in questo checkout");
+      return;
+    }
+    expect(changed.length).toBeGreaterThan(0);
+    expect(
+      changed.filter(
+        (f) =>
+          f.startsWith("supabase/") ||
+          f === "src/types/database.ts" ||
+          f === "docs/mockup/tokens.css" ||
+          f === "docs/mockup/components.css",
+      ),
+    ).toEqual([]);
   });
 });
