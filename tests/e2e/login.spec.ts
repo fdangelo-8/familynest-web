@@ -128,6 +128,21 @@ async function interceptOtp(page: Page, mode: OtpMode) {
   return { bodies, release: () => held.forEach((r) => void r.abort()) };
 }
 
+/**
+ * Lets a possible (unwanted) second request leave the page: waits for two
+ * animation frames in the browser, with no fixed delay.
+ */
+async function settle(page: Page) {
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => setTimeout(resolve, 0)),
+        ),
+      ),
+  );
+}
+
 function mailInput(page: Page) {
   return page.getByRole("textbox", { name: "La tua mail" });
 }
@@ -287,7 +302,7 @@ test.describe("Apple e Google", () => {
         ]),
       );
     await clickVisibleButton(page, "Accesso con Google in corso");
-    await page.waitForTimeout(300);
+    await settle(page);
     expect(authorize.urls.length).toBe(1);
     authorize.release();
   });
@@ -487,7 +502,7 @@ test.describe("link via mail: invio", () => {
     await expect(busy).toHaveAttribute("aria-busy", "true");
     // A second tap on the busy button must not send a second request.
     await clickVisibleButton(page, "Invio del link in corso");
-    await page.waitForTimeout(300);
+    await settle(page);
     expect(otp.bodies).toHaveLength(1);
   });
 
@@ -624,9 +639,56 @@ test.describe("invio prima dell'idratazione", () => {
     await page.goto("/accesso/mail");
     await mailInput(page).fill(MAIL);
     await sendButton(page).click();
-    await page.waitForTimeout(800);
+    await page.waitForLoadState("load");
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     expect(decodeURIComponent(page.url())).not.toContain("marco");
     expect(page.url()).not.toContain("@");
+  });
+});
+
+test.describe("invio nativo con JavaScript disattivato", () => {
+  test.use({ javaScriptEnabled: false });
+
+  test("POST del form /accesso/mail: pagina servita, mail non nell'indirizzo", async ({
+    page,
+    baseURL,
+  }) => {
+    const origin = new URL(baseURL!).origin;
+    const seen: string[] = [];
+    page.on("request", (request) => {
+      if (request.url().startsWith(origin)) seen.push(request.url());
+    });
+    await page.goto("/accesso/mail");
+    await mailInput(page).fill(MAIL);
+    const [response] = await Promise.all([
+      page.waitForResponse((r) => r.request().method() === "POST"),
+      sendButton(page).click(),
+    ]);
+    // The page is returned, not an error page.
+    expect(response.status()).toBeLessThan(400);
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    await expect(page.getByText("Application error")).toHaveCount(0);
+    expect(decodeURIComponent(page.url())).not.toContain("marco");
+    expect(page.url()).not.toContain("@");
+    expect(decodeURIComponent(seen.join("\n"))).not.toContain(MAIL);
+    expect(decodeURIComponent(seen.join("\n"))).not.toContain("marco%40");
+  });
+});
+
+test.describe("POST nativo senza browser", () => {
+  test("POST /accesso/mail: restituisce la pagina intera, senza la mail", async ({
+    request,
+  }) => {
+    const response = await request.post("/accesso/mail", {
+      form: { email: MAIL },
+    });
+    expect(response.status()).toBeLessThan(400);
+    expect(response.url()).not.toContain("marco");
+    const body = await response.text();
+    // A whole document (not a bare script payload) with the page's h1.
+    expect(body.toLowerCase()).toContain("<!doctype html");
+    expect(body).toContain("<h1");
+    expect(body).not.toContain(MAIL);
   });
 });
 
@@ -827,9 +889,22 @@ test.describe("[CI-utenti] ritorno e sessione", () => {
     const response = await page.goto("/oggi");
     await expect(page).toHaveURL(/\/oggi$/);
     expect(response?.status()).toBe(200);
-    expect(
-      (await cookieNames(context)).some((n) => n.includes("auth-token")),
-    ).toBe(true);
+    // The response renews the session cookie: it sets a new auth cookie whose
+    // expiry is in the future again.
+    const renewed = await context.cookies();
+    const renewedSession = renewed
+      .filter((c) => /^sb-.+-auth-token(\.\d+)?$/.test(c.name))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    expect(renewedSession.length).toBeGreaterThan(0);
+    const renewedJoined = renewedSession.map((c) => c.value).join("");
+    expect(renewedJoined).not.toBe(encoded);
+    const renewedRaw = renewedJoined.startsWith("base64-")
+      ? Buffer.from(renewedJoined.slice(7), "base64url").toString("utf8")
+      : decodeURIComponent(renewedJoined);
+    const renewedParsed = JSON.parse(renewedRaw) as Record<string, unknown>;
+    expect(Number(renewedParsed["expires_at"])).toBeGreaterThan(
+      Math.floor(Date.now() / 1000),
+    );
     await page.goto("/calendario");
     await expect(page).toHaveURL(/\/calendario$/);
   });
