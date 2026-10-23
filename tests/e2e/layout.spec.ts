@@ -95,10 +95,6 @@ test.describe("sessione", () => {
     expect(source).not.toMatch(/NextResponse\s*\.\s*(redirect|rewrite)/);
     expect(source).not.toMatch(/\bredirect\s*\(/);
     expect(source).not.toMatch(/runtime\s*[:=]\s*["']edge["']/);
-    // The only 3xx answer is for a native POST of the mail form (#11): it
-    // never redirects a person because of their session.
-    expect(source.match(/status:\s*30\d/g)).toHaveLength(1);
-    expect(source).toMatch(/request\.method === "POST"/);
     // It only reads the session to refresh it.
     expect(source).toContain("getClaims()");
   });

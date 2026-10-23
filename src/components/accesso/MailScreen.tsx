@@ -436,6 +436,7 @@ export function MailScreen() {
             {formIntro}
             <form
               method="post"
+              action="/accesso/mail/invio"
               id={formId("m")}
               className="sezione"
               noValidate
@@ -478,6 +479,7 @@ export function MailScreen() {
                 {formNotice}
                 <form
                   method="post"
+                  action="/accesso/mail/invio"
                   id={formId("d")}
                   className="sezione"
                   noValidate
