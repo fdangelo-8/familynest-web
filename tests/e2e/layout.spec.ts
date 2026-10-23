@@ -131,7 +131,7 @@ test.describe("regole di navigazione (funzioni pure)", () => {
     expect(mobile("/calendario/mese")).toBe("calendario");
     expect(mobile("/impegni/abc")).toBe("calendario");
     expect(mobile("/casa/spesa")).toBe("casa");
-    expect(mobile("/casa/scadenze")).toBe("casa");
+    expect(mobile("/casa/scadenze")).toBeNull();
     expect(mobile("/notifiche")).toBe("oggi");
     expect(mobile("/esplora/palestra")).toBe("oggi");
     expect(mobile("/figli/sofia")).toBe("oggi");
@@ -392,6 +392,19 @@ test.describe("sessione con utenti", () => {
     test.skip(testInfo.project.name !== "mobile", "Caso a 390 px");
     withUser("A");
     await openAs(page, baseURL, "A", "/casa/pippo");
+    await expect(
+      page.getByRole("heading", { name: NOT_FOUND_TITLE }),
+    ).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+    await expect(mainNav(page).locator('[aria-current="page"]')).toHaveCount(0);
+  });
+  test("/casa/da-fare non esiste ancora: un solo h1 e nessuna voce attiva", async ({
+    page,
+    baseURL,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== "mobile", "Caso a 390 px");
+    withUser("A");
+    await openAs(page, baseURL, "A", "/casa/da-fare");
     await expect(
       page.getByRole("heading", { name: NOT_FOUND_TITLE }),
     ).toBeVisible();

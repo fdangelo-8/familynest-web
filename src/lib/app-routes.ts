@@ -26,7 +26,9 @@ function matchesAny(pathname: string, bases: readonly string[]): boolean {
   return bases.some((base) => matchesPrefix(pathname, base));
 }
 
-const CASA_ROUTES = ["/casa/spesa", "/casa/da-fare", "/casa/scadenze"];
+// Only the pages that exist. When the "Da fare" (/casa/da-fare) and
+// "Scadenze" (/casa/scadenze) pages are built they must be added here.
+const CASA_ROUTES = ["/casa/spesa"];
 
 /** Known Casa pages only: an unknown address under /casa is a 404, not Casa. */
 export function isCasaRoute(pathname: string): boolean {
