@@ -25,21 +25,33 @@ function credentials(key: TestUserKey) {
   };
 }
 
-/** True when the Supabase variables and the users' credentials are set. */
+/**
+ * True when the Supabase variables and the credentials are set AND the
+ * database is seeded. As in tests/e2e/utenti-di-test.spec.ts, the variables of
+ * B2 and C are the sign that the seed has been run: while only A and B are set
+ * (remote project not seeded yet, #55) the tests are skipped.
+ */
 export function usersConfigured(...keys: TestUserKey[]): boolean {
+  const required = [...new Set([...keys, "C"])] as TestUserKey[];
+  const hasCredentials = (email: string, password: string) =>
+    !!email && !!password;
   return (
     !!supabaseUrl &&
     !!publishableKey &&
-    keys.every((key) => {
+    hasCredentials(
+      process.env.TEST_USER_B2_EMAIL ?? "",
+      process.env.TEST_USER_B2_PASSWORD ?? "",
+    ) &&
+    required.every((key) => {
       const c = credentials(key);
-      return !!c.email && !!c.password;
+      return hasCredentials(c.email, c.password);
     })
   );
 }
 
 /** Reason for `test.skip` when the users are not available. */
 export function skipReason(...keys: TestUserKey[]): string {
-  return `Utenti di test non configurati (#55): servono le variabili Supabase e TEST_USER_${keys.join(", TEST_USER_")}_*`;
+  return `Utenti di test non configurati (#55): servono le variabili Supabase e TEST_USER_${keys.join(", TEST_USER_")}_*, TEST_USER_B2_* e TEST_USER_C_* (segno che il seed è stato eseguito)`;
 }
 
 // One sign-in per user in each worker: the session is reused by every test.
