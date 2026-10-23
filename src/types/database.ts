@@ -175,12 +175,80 @@ export type Database = {
         };
         Relationships: [];
       };
+      shopping_items: {
+        Row: {
+          added_by_member_id: string | null;
+          checked_at: string | null;
+          created_at: string;
+          household_id: string;
+          id: string;
+          name: string;
+          quantity: string | null;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          added_by_member_id?: string | null;
+          checked_at?: string | null;
+          created_at?: string;
+          household_id?: string;
+          id?: string;
+          name: string;
+          quantity?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          added_by_member_id?: string | null;
+          checked_at?: string | null;
+          created_at?: string;
+          household_id?: string;
+          id?: string;
+          name?: string;
+          quantity?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "shopping_items_added_by_member_id_fkey";
+            columns: ["added_by_member_id"];
+            isOneToOne: false;
+            referencedRelation: "household_members";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "shopping_items_household_id_fkey";
+            columns: ["household_id"];
+            isOneToOne: false;
+            referencedRelation: "households";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
     };
     Functions: {
       accept_invitation: { Args: { token: string }; Returns: string };
+      clear_checked_shopping_items: {
+        Args: { item_ids: string[] };
+        Returns: {
+          added_by_member_id: string | null;
+          checked_at: string | null;
+          created_at: string;
+          household_id: string;
+          id: string;
+          name: string;
+          quantity: string | null;
+          updated_at: string;
+        }[];
+        SetofOptions: {
+          from: "*";
+          to: "shopping_items";
+          isOneToOne: false;
+          isSetofReturn: true;
+        };
+      };
       create_household: {
         Args: {
           color: Database["public"]["Enums"]["member_color"];
@@ -194,6 +262,7 @@ export type Database = {
         Args: Record<PropertyKey, never>;
         Returns: string;
       };
+      restore_shopping_items: { Args: { items: Json }; Returns: number };
     };
     Enums: {
       household_type:

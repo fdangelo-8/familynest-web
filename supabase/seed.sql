@@ -75,3 +75,26 @@ values
   ('b2000000-0000-4000-8000-000000000001', '22222222-2222-4222-8222-222222222222',
    'b1000000-0000-4000-8000-000000000004', 'b1000000-0000-4000-8000-000000000001', '7305', 'pending',
    now() - interval '10 days', now() - interval '10 days' + interval '7 days');
+
+-- Shopping list (issue #62): a few example items per household. Invented items, no
+-- personal data. Page tests start from an empty list and must clear these first.
+--   Casa D'Angelo: to buy Latte (2 l), Pane, Mele (1 kg); taken Detersivo piatti.
+--   Casa Bianchi:  to buy Yogurt (added by Paolo), Biscotti; taken Caffè.
+insert into public.shopping_items (
+  id, household_id, name, quantity, added_by_member_id, checked_at, created_at
+)
+values
+  ('a3000000-0000-4000-8000-000000000001', '11111111-1111-4111-8111-111111111111', 'Latte', '2 l',
+   'a1000000-0000-4000-8000-000000000001', null, now() - interval '2 days'),
+  ('a3000000-0000-4000-8000-000000000002', '11111111-1111-4111-8111-111111111111', 'Pane', null,
+   'a1000000-0000-4000-8000-000000000001', null, now() - interval '2 days' + interval '1 minute'),
+  ('a3000000-0000-4000-8000-000000000003', '11111111-1111-4111-8111-111111111111', 'Mele', '1 kg',
+   'a1000000-0000-4000-8000-000000000001', null, now() - interval '2 days' + interval '2 minutes'),
+  ('a3000000-0000-4000-8000-000000000004', '11111111-1111-4111-8111-111111111111', 'Detersivo piatti', null,
+   'a1000000-0000-4000-8000-000000000001', now() - interval '1 day', now() - interval '2 days' + interval '3 minutes'),
+  ('b3000000-0000-4000-8000-000000000001', '22222222-2222-4222-8222-222222222222', 'Yogurt', '4',
+   'b1000000-0000-4000-8000-000000000002', null, now() - interval '2 days'),
+  ('b3000000-0000-4000-8000-000000000002', '22222222-2222-4222-8222-222222222222', 'Biscotti', null,
+   'b1000000-0000-4000-8000-000000000001', null, now() - interval '2 days' + interval '1 minute'),
+  ('b3000000-0000-4000-8000-000000000003', '22222222-2222-4222-8222-222222222222', 'Caffè', null,
+   'b1000000-0000-4000-8000-000000000001', now() - interval '1 day', now() - interval '2 days' + interval '2 minutes');
