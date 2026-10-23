@@ -135,10 +135,11 @@ as $$
 $$;
 
 -- Deletes the removed items older than the Annulla window, in every household.
--- Called by clear_checked_shopping_items(), restore_shopping_items() and after every
--- write on public.shopping_items (statement trigger below), so expired rows disappear
--- at the next change of any shopping list. Rows locked by a running restore are
--- skipped (no waits, no deadlocks) and deleted at a later call.
+-- Called by clear_checked_shopping_items(), restore_shopping_items() and every
+-- 10 minutes by the pg_cron job "purge-removed-shopping-items" (migration
+-- schedule_removed_shopping_items_purge), so expired rows disappear even when nobody
+-- uses the shopping list. Rows locked by a running restore are skipped (no waits, no
+-- deadlocks) and deleted at a later call.
 create or replace function private.purge_removed_shopping_items()
 returns void
 language sql
@@ -154,22 +155,6 @@ as $$
     for update skip locked
   );
 $$;
-
-create or replace function private.shopping_items_after_write()
-returns trigger
-language plpgsql
-security definer
-set search_path = ''
-as $$
-begin
-  perform private.purge_removed_shopping_items();
-  return null;
-end;
-$$;
-
-create trigger shopping_items_after_write
-  after insert or update or delete on public.shopping_items
-  for each statement execute function private.shopping_items_after_write();
 
 -- ---------------------------------------------------------------------------
 -- RPC: "strappo". Removes the given taken items of the caller's household, all or

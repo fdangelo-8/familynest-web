@@ -1,7 +1,7 @@
 -- Issue #62: privileges and RLS policies of the shopping list.
 --
 -- Two layers, as in the base schema:
--- 1. Privileges: the app inserts only id, household_id, name and quantity, and updates
+-- 1. Privileges: the app inserts only household_id, name and quantity, and updates
 --    only checked_at. Author, times and the household of an existing item are set by
 --    the database. anon has no privilege at all.
 -- 2. RLS policies, `to authenticated` only: every adult with an account of the household
@@ -17,7 +17,9 @@
 
 revoke all on table public.shopping_items from anon, authenticated;
 grant select on table public.shopping_items to authenticated;
-grant insert (id, household_id, name, quantity) on table public.shopping_items to authenticated;
+-- No id: the database generates it, so an id seen elsewhere (for example in a realtime
+-- DELETE event of another household) can never be reused to block an Annulla.
+grant insert (household_id, name, quantity) on table public.shopping_items to authenticated;
 grant update (checked_at) on table public.shopping_items to authenticated;
 grant delete on table public.shopping_items to authenticated;
 
@@ -32,7 +34,6 @@ revoke all on table private.removed_shopping_items from public, anon, authentica
 -- Trigger and internal functions are never called directly.
 revoke execute on function private.shopping_items_before_insert() from public, anon, authenticated;
 revoke execute on function private.shopping_items_before_update() from public, anon, authenticated;
-revoke execute on function private.shopping_items_after_write() from public, anon, authenticated;
 revoke execute on function private.purge_removed_shopping_items() from public, anon, authenticated;
 revoke execute on function private.shopping_items_undo_window() from public, anon, authenticated;
 
