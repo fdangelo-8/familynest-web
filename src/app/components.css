@@ -1703,7 +1703,7 @@ button.riga-lista {
   border: 0;
   border-radius: var(--radius-m);
   background: var(--color-superficie);
-  box-shadow: inset 0 0 0 var(--border-sottile) var(--color-filo-2);
+  box-shadow: inset 0 0 0 var(--border-sottile) var(--color-filo-campo); /* #52 */
   padding: var(--space-0) var(--space-4);
   font-size: var(--text-corpo-size);
   color: var(--color-inchiostro);
@@ -1784,7 +1784,7 @@ button.riga-lista {
   padding: var(--space-0) var(--space-2);
   border-radius: var(--radius-l);
   background: var(--color-superficie);
-  box-shadow: inset 0 0 0 var(--border-sottile) var(--color-filo-2);
+  box-shadow: inset 0 0 0 var(--border-sottile) var(--color-filo-campo); /* #52 */
 }
 .campo-rapido__piu {
   width: var(--size-bottone-icona);
@@ -2547,7 +2547,7 @@ button.riga-lista {
   margin-left: calc(-1 * var(--space-half));
 }
 .griglia-mese__cella--fuori .griglia-mese__numero {
-  color: var(--color-inchiostro-3);
+  color: var(--color-inchiostro-2); /* #52 */
 }
 .griglia-mese__cella--weekend .griglia-mese__numero {
   color: var(--color-inchiostro-2);
@@ -3614,10 +3614,14 @@ button.riga-lista {
   .scelta,
   .selettore__voce,
   .btn-tratteggiato,
+  .btn-pericolo-pieno, /* #52 */
   .riga-lista--cliccabile {
     transition:
       background var(--durata-rapida) var(--curva),
       color var(--durata-rapida) var(--curva);
+  }
+  .btn-pericolo-pieno:hover:not(:disabled, [aria-disabled="true"]) {
+    background: var(--color-allerta-scuro); /* #52 */
   }
   .btn-primary:hover:not(:disabled, [aria-disabled="true"]),
   .btn-aggiungi:hover:not(:disabled),
@@ -3678,6 +3682,9 @@ button.riga-lista {
 }
 .btn-chiaro:active:not(:disabled, [aria-disabled="true"]) {
   background: var(--color-latte-2);
+}
+.btn-pericolo-pieno:active:not(:disabled, [aria-disabled="true"]) {
+  background: var(--color-allerta-scuro); /* #52 */
 }
 .selettore:not(.selettore--carta)
   .selettore__voce[aria-pressed="true"]:active:not(:disabled),
