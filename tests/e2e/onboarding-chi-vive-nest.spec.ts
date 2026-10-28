@@ -451,3 +451,98 @@ test("CA-21: isolamento: A e U vedono solo il proprio Nest", async ({
     expect(membersU).toEqual([{ user_id: user.id }]);
   });
 });
+
+// Corrections of #69 (CA-2, CA-9, CA-13 of that issue; the names carry the
+// issue number because #12 already has criteria with the same codes).
+test.describe("correzioni #69: «Solo io»", () => {
+  const bar = (page: Page, total: 3 | 4) =>
+    page.getByRole("progressbar", { name: `Passo 1 di ${total}` });
+
+  test("#69 CA-2: «Solo io» crea «Casa De Santis» di tipo single con il solo membro «Ilaria»", async ({
+    page,
+    baseURL,
+  }) => {
+    test.skip(!throwawayConfigured(), throwawaySkipReason);
+    await withUser("Ilaria De Santis", async (user) => {
+      await openAs(page, user, baseURL, 390);
+      await choose(page, "Solo io");
+      await continua(page).click();
+      await expect(page).toHaveURL(/\/oggi$/);
+      const nests = await readNests(user.client);
+      expect(nests).toHaveLength(1);
+      expect(nests[0]!.name).toBe("Casa De Santis");
+      expect(nests[0]!.household_type).toBe("single");
+      expect(nests[0]!.household_members).toHaveLength(1);
+      expect(nests[0]!.household_members[0]!.name).toBe("Ilaria");
+    });
+  });
+
+  test("#69 CA-9: durante l'invio e dopo l'errore la barra resta «Passo 1 di 3»", async ({
+    page,
+    baseURL,
+  }) => {
+    test.skip(!throwawayConfigured(), throwawaySkipReason);
+    await withUser("Ilaria De Santis", async (user) => {
+      await openAs(page, user, baseURL, 390);
+      await page.route("**/onboarding", async (route) => {
+        if (!isSave(route)) return route.continue();
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        await route.abort();
+      });
+      await choose(page, "Solo io");
+      await continua(page).click();
+      await expect(continua(page)).toHaveAttribute("aria-busy", "true");
+      await expect(bar(page, 3)).toBeVisible();
+      await expect(bar(page, 4)).toHaveCount(0);
+
+      const notice = page
+        .getByRole("alert")
+        .filter({ hasText: "Non siamo riusciti" });
+      await expect(notice).toBeVisible();
+      await expect(
+        notice.getByRole("button", { name: "Riprova" }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("radio", { name: "Solo io" }),
+      ).toHaveAttribute("aria-checked", "true");
+      await expect(bar(page, 3)).toBeVisible();
+      await expect(bar(page, 3)).toHaveAttribute("aria-valuemax", "3");
+      await expect(bar(page, 4)).toHaveCount(0);
+      await expect(page).toHaveURL(/\/onboarding$/);
+      expect(await user.nestCount()).toBe(0);
+    });
+  });
+
+  test("#69 CA-13: isolamento: il Nest creato con «Solo io» è visibile solo a U", async ({
+    page,
+    baseURL,
+  }) => {
+    test.skip(!usersConfigured("A"), skipReason("A"));
+    test.skip(!throwawayConfigured(), throwawaySkipReason);
+    await withUser("Ilaria De Santis", async (user) => {
+      await openAs(page, user, baseURL, 390);
+      await choose(page, "Solo io");
+      await continua(page).click();
+      await expect(page).toHaveURL(/\/oggi$/);
+
+      const clientA = await clientFor("A");
+      const asA = await readNests(clientA);
+      expect(asA.map((n) => n.name)).toEqual(["Casa D'Angelo"]);
+      expect(asA[0]!.household_members).toHaveLength(5);
+      const { data: membersA } = await clientA
+        .from("household_members")
+        .select("user_id");
+      expect(membersA).toHaveLength(5);
+      expect(membersA!.some((m) => m.user_id === user.id)).toBe(false);
+
+      const asU = await readNests(user.client);
+      expect(asU.map((n) => n.name)).toEqual(["Casa De Santis"]);
+      expect(asU[0]!.household_type).toBe("single");
+      expect(asU[0]!.household_members).toHaveLength(1);
+      const { data: membersU } = await user.client
+        .from("household_members")
+        .select("user_id");
+      expect(membersU).toEqual([{ user_id: user.id }]);
+    });
+  });
+});

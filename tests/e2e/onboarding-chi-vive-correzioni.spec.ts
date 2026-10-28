@@ -1,5 +1,7 @@
-import { execSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+import { createClient } from "@supabase/supabase-js";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, skipReason, usersConfigured } from "../fixtures/auth";
 
@@ -10,6 +12,23 @@ async function openAsC(page: Page, baseURL: string | undefined, width: number) {
   await page.setViewportSize({ width, height: width === 390 ? 844 : 800 });
   await signInAs(page.context(), baseURL as string, "C");
   await page.goto("/onboarding");
+}
+
+/** Number of Nests C can read (RLS applies): must stay 0, C never continues. */
+async function nestsOfC(): Promise<number> {
+  const client = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "",
+    { auth: { persistSession: false, autoRefreshToken: false } },
+  );
+  const { error: signInError } = await client.auth.signInWithPassword({
+    email: process.env.TEST_USER_C_EMAIL ?? "",
+    password: process.env.TEST_USER_C_PASSWORD ?? "",
+  });
+  if (signInError) throw new Error("Accesso di prova fallito per C");
+  const { data, error } = await client.from("households").select("id");
+  if (error) throw new Error("Lettura dei Nest fallita");
+  return data.length;
 }
 
 async function expectSteps(page: Page, total: 3 | 4) {
@@ -44,6 +63,15 @@ for (const width of [390, 1280]) {
       await expect(radios.first()).toHaveAccessibleDescription(
         "Per organizzare le tue cose",
       );
+      for (const radio of await radios.all()) {
+        await expect(radio).not.toHaveAttribute("aria-checked", "true");
+      }
+      await expect(radios).toHaveText([
+        /Solo io/,
+        /In coppia/,
+        /In famiglia, con figli/,
+        /Con coinquilini/,
+      ]);
       expect(await page.locator("main").innerText()).not.toMatch(
         /Vivo da solo/i,
       );
@@ -66,6 +94,9 @@ for (const width of [390, 1280]) {
       await pick("Solo io");
       await expectSteps(page, 3);
       await expect(page).toHaveURL(/\/onboarding$/);
+      await expect(
+        page.getByRole("progressbar", { name: "Passo 1 di 4" }),
+      ).toHaveCount(0);
       const sequence: [string, 3 | 4][] = [
         ["In coppia", 4],
         ["Solo io", 3],
@@ -88,6 +119,15 @@ for (const width of [390, 1280]) {
       await expectSteps(page, 3);
       await page.reload();
       await expectSteps(page, 4);
+      for (const radio of await page.getByRole("radio").all()) {
+        await expect(radio).not.toHaveAttribute("aria-checked", "true");
+      }
+      // C never presses "Continua": still no Nest, session still valid.
+      await expect(page).toHaveURL(/\/onboarding$/);
+      await expect(
+        page.getByRole("button", { name: "Continua" }),
+      ).toBeVisible();
+      expect(await nestsOfC()).toBe(0);
     });
   });
 }
@@ -132,6 +172,12 @@ test.describe("con C a 390 px", () => {
 
 test.describe("controlli statici (punto 17)", () => {
   const read = (path: string) => readFileSync(path, "utf8");
+  const filesIn = (dir: string): string[] =>
+    readdirSync(dir, { withFileTypes: true }).flatMap((entry) =>
+      entry.isDirectory()
+        ? filesIn(join(dir, entry.name))
+        : [join(dir, entry.name)],
+    );
 
   test("CA-10: la pagina usa l'errore dell'onboarding", () => {
     const page = read("src/app/onboarding/page.tsx");
@@ -145,26 +191,43 @@ test.describe("controlli statici (punto 17)", () => {
     expect(code).toContain('text="Controlla la connessione e riprova."');
     expect(code).toContain("headingLevel={1}");
     expect(code).toContain("router.refresh()");
-    for (const file of [
-      "src/app/onboarding/page.tsx",
-      "src/components/onboarding/OnboardingError.tsx",
-      "src/components/onboarding/OnboardingStep.tsx",
-    ]) {
+    const files = [
+      ...filesIn("src/app/onboarding"),
+      ...filesIn("src/components/onboarding"),
+    ];
+    // Guard against an empty walk: the known files must all be there.
+    for (const known of ["page.tsx", "OnboardingStep.tsx", "choices.ts"]) {
+      expect(
+        files.some((f) => f.endsWith(known)),
+        known,
+      ).toBe(true);
+    }
+    for (const file of files) {
       const text = read(file);
-      expect(text).not.toMatch(/torna a oggi/i);
-      expect(text).not.toContain('href="/oggi"');
+      expect(text, file).not.toMatch(/torna a oggi/i);
+      expect(text, file).not.toContain('href="/oggi"');
     }
   });
 
   test("CA-12: nessun file condiviso modificato", () => {
-    let diff = "";
+    const run = (...args: string[]) =>
+      execFileSync("git", args, { encoding: "utf8", stdio: "pipe" });
+    // The CI checkout is shallow and has no origin/main: fetch what is needed
+    // instead of skipping the test.
     try {
-      diff = execSync("git diff --name-only origin/main...HEAD", {
-        encoding: "utf8",
-      });
+      run("merge-base", "origin/main", "HEAD");
     } catch {
-      test.skip(true, "origin/main non disponibile");
+      if (run("rev-parse", "--is-shallow-repository").trim() === "true") {
+        run("fetch", "--no-tags", "--unshallow", "origin");
+      }
+      run(
+        "fetch",
+        "--no-tags",
+        "origin",
+        "+refs/heads/main:refs/remotes/origin/main",
+      );
     }
+    const diff = run("diff", "--name-only", "origin/main...HEAD");
     for (const file of diff.split("\n").filter(Boolean)) {
       expect(file).not.toMatch(
         /^(src\/components\/ui\/|src\/lib\/|src\/app\/\(app\)\/|supabase\/|src\/app\/components\.css$|src\/app\/globals\.css$)/,
