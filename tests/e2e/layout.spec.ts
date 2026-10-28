@@ -240,11 +240,14 @@ test.describe("regole di navigazione (funzioni pure)", () => {
   });
 
   test("ogni segnaposto ha titolo e titolo del browser", () => {
-    for (const def of Object.values(PLACEHOLDERS)) {
+    const casaTitles: Record<string, string> = {
+      casa: "FamilyNest · Casa · Spesa",
+      "casa-da-fare": "FamilyNest · Casa · Da fare",
+      "casa-scadenze": "FamilyNest · Casa · Scadenze",
+    };
+    for (const [key, def] of Object.entries(PLACEHOLDERS)) {
       expect(def.browserTitle).toBe(
-        def.title === "Casa"
-          ? "FamilyNest · Casa · Spesa"
-          : `FamilyNest · ${def.title}`,
+        casaTitles[key] ?? `FamilyNest · ${def.title}`,
       );
     }
   });
@@ -263,6 +266,8 @@ test.describe("controlli statici del codice", () => {
       "aggiungi",
       "calendario",
       "casa/spesa",
+      "casa/da-fare",
+      "casa/scadenze",
       "nest",
       "notifiche",
       "ricerca",
