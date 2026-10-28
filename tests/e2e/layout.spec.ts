@@ -24,6 +24,8 @@ const PROTECTED_ROUTES = [
   "/aggiungi",
   "/calendario",
   "/casa/spesa",
+  "/casa/da-fare",
+  "/casa/scadenze",
   "/nest",
   "/notifiche",
   "/ricerca",
@@ -144,7 +146,7 @@ test.describe("regole di navigazione (funzioni pure)", () => {
     expect(mobile("/calendario/mese")).toBe("calendario");
     expect(mobile("/impegni/abc")).toBe("calendario");
     expect(mobile("/casa/spesa")).toBe("casa");
-    expect(mobile("/casa/scadenze")).toBeNull();
+    expect(mobile("/casa/scadenze")).toBe("casa");
     expect(mobile("/notifiche")).toBe("oggi");
     expect(mobile("/esplora/palestra")).toBe("oggi");
     expect(mobile("/figli/sofia")).toBe("oggi");
@@ -296,6 +298,8 @@ const SCREENS: [route: string, h1: string, title: string][] = [
   ["/aggiungi", "Aggiungi", "FamilyNest · Aggiungi"],
   ["/calendario", "Calendario", "FamilyNest · Calendario"],
   ["/casa/spesa", "Casa", "FamilyNest · Casa · Spesa"],
+  ["/casa/da-fare", "Casa", "FamilyNest · Casa · Da fare"],
+  ["/casa/scadenze", "Casa", "FamilyNest · Casa · Scadenze"],
   ["/nest", "Il tuo Nest", "FamilyNest · Il tuo Nest"],
   ["/notifiche", "Notifiche", "FamilyNest · Notifiche"],
   ["/ricerca", "Ricerca", "FamilyNest · Ricerca"],
@@ -411,18 +415,18 @@ test.describe("sessione con utenti", () => {
     await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
     await expect(mainNav(page).locator('[aria-current="page"]')).toHaveCount(0);
   });
-  test("/casa/da-fare non esiste ancora: un solo h1 e nessuna voce attiva", async ({
+  test("/casa/da-fare è «In arrivo»: un solo h1 e Casa attiva", async ({
     page,
     baseURL,
   }, testInfo) => {
     test.skip(testInfo.project.name !== "mobile", "Caso a 390 px");
     withUser("A");
     await openAs(page, baseURL, "A", "/casa/da-fare");
-    await expect(
-      page.getByRole("heading", { name: NOT_FOUND_TITLE }),
-    ).toBeVisible();
+    await expect(page.getByText("In arrivo")).toBeVisible();
     await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
-    await expect(mainNav(page).locator('[aria-current="page"]')).toHaveCount(0);
+    await expect(mainNav(page).locator('[aria-current="page"]')).toHaveText(
+      /Casa/,
+    );
   });
 });
 

@@ -3563,12 +3563,16 @@ button.riga-lista {
 /* Area di tocco di almeno 44 x 44 senza cambiare il disegno */
 .btn-icona--piccolo,
 .casella,
+.tondo-spunta,
+.selettore__voce,
 .toggle,
 .chip {
   position: relative;
 }
 .btn-icona--piccolo::before,
 .casella::before,
+.tondo-spunta::before,
+.selettore__voce::before,
 .toggle::before,
 .chip::before {
   content: "";
@@ -3580,9 +3584,54 @@ button.riga-lista {
   transform: translate(-50%, -50%);
 }
 
+/* Voce del selettore: il taglio passa da overflow a clip-path, così l'area di
+   tocco di 44 px (6 px sopra e sotto la voce) non viene tagliata. Ai lati il
+   taglio sta a 4 px, per l'anello di focus. */
+.selettore__voce {
+  overflow: visible;
+  clip-path: inset(
+    calc((100% - var(--size-tocco)) / 2) calc(-1 * var(--space-1))
+  );
+}
+
+/* Conteggio leggibile sulle voci non scelte (#43 punto 18) */
+.selettore__voce:not([aria-pressed="true"], [aria-selected="true"])
+  .selettore__conteggio,
+.selettore--carta .selettore__voce .selettore__conteggio {
+  opacity: 1;
+}
+
+/* Campo rapido: con il fuoco nel campo ha l'aspetto attivo */
+.campo-rapido:focus-within {
+  box-shadow: inset 0 0 0 var(--border-medio) var(--color-inchiostro);
+}
+.campo-rapido:focus-within .campo-rapido__piu {
+  background: var(--color-inchiostro);
+  color: var(--color-latte);
+}
+
+/* Strappo: la lama segue --strappo-avanzamento, impostata dalla pagina */
+.strappo__lama {
+  transform: translateX(var(--strappo-avanzamento, 0));
+  transition: transform var(--durata-rapida) var(--curva);
+}
+.strappo.is-trascinato .strappo__lama {
+  transition: none;
+  cursor: grabbing;
+}
+@media (hover: hover) {
+  .strappo__lama:hover {
+    background: var(--color-notte-2);
+  }
+}
+.strappo__lama:active {
+  background: var(--color-notte-2);
+}
+
 /* Disabilitato esteso a tutti i controlli */
 .chip:disabled,
 .casella:disabled,
+.tondo-spunta:disabled,
 .selettore__voce:disabled,
 .btn-icona:disabled,
 .btn-tenue:disabled,

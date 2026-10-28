@@ -5,6 +5,11 @@ import { SettingsMenu } from "../AppFrame/SettingsMenu";
 import { EmptyState } from "../EmptyState/EmptyState";
 import { Lens } from "../Lens/Lens";
 
+const CASA_KEYS: ReadonlyArray<PlaceholderKey> = [
+  "casa",
+  "casa-da-fare",
+  "casa-scadenze",
+];
 const WITH_LENS: ReadonlyArray<PlaceholderKey> = [
   "oggi",
   "aggiungi",
@@ -30,7 +35,7 @@ export function PlaceholderPage({
   extra?: ReactNode;
 }) {
   const def = PLACEHOLDERS[pageKey];
-  const isCasa = pageKey === "casa";
+  const isCasa = CASA_KEYS.includes(pageKey);
 
   const content = (
     <div className="colonna" data-testid="pagina-segnaposto">
