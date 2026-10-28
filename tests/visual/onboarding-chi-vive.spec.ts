@@ -74,6 +74,23 @@ test.describe("onboarding · chi vive con te", () => {
     await expect(page).toHaveScreenshot("scelta-fatta.png", { fullPage: true });
   });
 
+  test("Solo io scelto · Passo 1 di 3", async ({ page, baseURL }) => {
+    await openAsC(page, baseURL);
+    await choose(page, "Solo io");
+    await expect(
+      page
+        .getByRole("progressbar", { name: "Passo 1 di 3" })
+        .filter({ visible: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Continua" }).filter({ visible: true }),
+    ).toBeEnabled();
+    await settle(page);
+    await expect(page).toHaveScreenshot("solo-io-scelto.png", {
+      fullPage: true,
+    });
+  });
+
   test("invio in corso", async ({ page, baseURL }) => {
     await openAsC(page, baseURL);
     // The request is held until the end of the test, then dropped.
