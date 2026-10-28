@@ -49,3 +49,39 @@ test("CA-48: toast con Annulla", async ({ page }) => {
   ).toBeVisible();
   await expect(page).toHaveScreenshot("toast.png");
 });
+
+// #63 / PR #71: shared Casa components, one reference per state.
+for (const id of ["tondo-spunta", "campo-rapido", "strappo"]) {
+  test(`#63: sezione ${id}`, async ({ page }) => {
+    await expect(page.locator(`#${id}`)).toHaveScreenshot(`sezione-${id}.png`);
+  });
+}
+
+test("#63: selettore con voci-link", async ({ page }) => {
+  await expect(page.getByTestId("selettore-link")).toHaveScreenshot(
+    "selettore-link.png",
+  );
+});
+
+test("#63: campo rapido con il fuoco", async ({ page }) => {
+  await page.getByTestId("campo-rapido-normale").getByRole("textbox").focus();
+  await expect(page.getByTestId("campo-rapido-normale")).toHaveScreenshot(
+    "campo-rapido-fuoco.png",
+  );
+});
+
+test("#63: toast con grassetto all'inizio e icona", async ({ page }) => {
+  await page.getByTestId("toast-mostra-inizio").click();
+  await expect(
+    page.getByRole("status").filter({ hasText: "3 cose" }),
+  ).toBeVisible();
+  await expect(page).toHaveScreenshot("toast-inizio.png");
+});
+
+test("#63: toast senza icona", async ({ page }) => {
+  await page.getByTestId("toast-mostra-senza-icona").click();
+  await expect(
+    page.getByRole("status").filter({ hasText: "Latte" }),
+  ).toBeVisible();
+  await expect(page).toHaveScreenshot("toast-senza-icona.png");
+});
