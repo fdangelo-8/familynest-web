@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
+import { OnboardingError } from "@/components/onboarding/OnboardingError";
 import { OnboardingStep } from "@/components/onboarding/OnboardingStep";
 import { greeting } from "@/components/onboarding/names";
-import { FrameError } from "@/components/ui/AppFrame/FrameError";
 import { requireUser } from "@/lib/auth/require-user";
 import { createClient } from "@/lib/supabase/server";
 
@@ -15,7 +15,7 @@ async function Onboarding() {
   // Needs a session, not a Nest: no session -> /accesso.
   const { userId, failed } = await requireUser();
   // Auth did not answer: page-wide error with "Riprova".
-  if (failed || !userId) return <FrameError />;
+  if (failed || !userId) return <OnboardingError />;
 
   const supabase = await createClient();
   const [household, profile] = await Promise.all([
@@ -26,7 +26,7 @@ async function Onboarding() {
       .eq("id", userId)
       .maybeSingle(),
   ]);
-  if (household.error || profile.error) return <FrameError />;
+  if (household.error || profile.error) return <OnboardingError />;
   // Someone who already has a Nest never sees this page.
   if (household.data) redirect("/oggi");
 

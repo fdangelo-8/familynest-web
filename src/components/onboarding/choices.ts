@@ -14,7 +14,7 @@ export type Choice = {
 export const CHOICES: readonly Choice[] = [
   {
     value: "solo",
-    title: "Vivo da solo",
+    title: "Solo io",
     info: "Per organizzare le tue cose",
     circles: [{ color: "pomodoro" }],
   },

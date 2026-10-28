@@ -23,7 +23,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
 type Answer =
-  "Vivo da solo" | "In coppia" | "In famiglia, con figli" | "Con coinquilini";
+  "Solo io" | "In coppia" | "In famiglia, con figli" | "Con coinquilini";
 
 /** Runs `body` with a throwaway user and always deletes it. */
 async function withUser(
@@ -158,7 +158,7 @@ test.describe("creazione del Nest", () => {
   });
 
   const TYPES: [Answer, string][] = [
-    ["Vivo da solo", "single"],
+    ["Solo io", "single"],
     ["In coppia", "couple"],
     ["In famiglia, con figli", "family_with_children"],
     ["Con coinquilini", "roommates"],
@@ -188,7 +188,7 @@ test.describe("creazione del Nest", () => {
       await expect(
         page.locator("main .intestazione__sopra:visible"),
       ).toHaveText("Ciao Ilaria");
-      await choose(page, "Vivo da solo");
+      await choose(page, "Solo io");
       await continua(page).click();
       await expect(page).toHaveURL(/\/oggi$/);
       const nests = await readNests(user.client);
@@ -208,7 +208,7 @@ test.describe("creazione del Nest", () => {
       await openAs(page, user, baseURL);
       const greeting = page.locator("main .intestazione__sopra:visible");
       await expect(greeting).toHaveText("Ciao");
-      await choose(page, "Vivo da solo");
+      await choose(page, "Solo io");
       await continua(page).click();
       await expect(page).toHaveURL(/\/oggi$/);
       const nests = await readNests(user.client);
@@ -271,7 +271,7 @@ test.describe("creazione del Nest", () => {
         await new Promise((resolve) => setTimeout(resolve, 2000));
         await route.continue();
       });
-      await choose(page, "Vivo da solo");
+      await choose(page, "Solo io");
       await continua(page).click();
       await expect(continua(page)).toHaveAttribute("aria-busy", "true");
       // Second click and another answer while waiting: no effect.
@@ -280,7 +280,7 @@ test.describe("creazione del Nest", () => {
         .getByRole("radio", { name: "In coppia" })
         .click({ force: true });
       await expect(
-        page.getByRole("radio", { name: "Vivo da solo" }),
+        page.getByRole("radio", { name: "Solo io" }),
       ).toHaveAttribute("aria-checked", "true");
       await expect(
         page.getByRole("radio", { name: "In coppia" }),
@@ -343,7 +343,7 @@ test.describe("creazione del Nest", () => {
         second.getByRole("radiogroup", { name: QUESTION }),
       ).toBeVisible();
 
-      await choose(page, "Vivo da solo");
+      await choose(page, "Solo io");
       await continua(page).click();
       await expect(page).toHaveURL(/\/oggi$/);
 

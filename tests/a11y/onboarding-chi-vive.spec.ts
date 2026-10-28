@@ -65,6 +65,17 @@ async function choose(page: Page, name: string) {
 }
 
 test.describe("onboarding · chi vive con te · accessibilità", () => {
+  test("«Solo io» scelto (3 tacche): axe", async ({ page, baseURL }) => {
+    await openAsC(page, baseURL);
+    await choose(page, "Solo io");
+    await expect(
+      page
+        .getByRole("progressbar", { name: "Passo 1 di 3" })
+        .filter({ visible: true }),
+    ).toBeVisible();
+    await expectNoBlocking(page);
+  });
+
   test("nessuna scelta: axe, un solo h1, id unici", async ({
     page,
     baseURL,
