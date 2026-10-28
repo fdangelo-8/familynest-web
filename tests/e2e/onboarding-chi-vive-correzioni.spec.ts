@@ -211,7 +211,11 @@ test.describe("controlli statici (punto 17)", () => {
 
   test("CA-12: nessun file condiviso modificato", () => {
     const run = (...args: string[]) =>
-      execFileSync("git", args, { encoding: "utf8", stdio: "pipe" });
+      // safe.directory: the CI container runs as another user than the owner.
+      execFileSync("git", ["-c", "safe.directory=*", ...args], {
+        encoding: "utf8",
+        stdio: "pipe",
+      });
     // The CI checkout is shallow and has no origin/main: fetch what is needed
     // instead of skipping the test.
     try {
