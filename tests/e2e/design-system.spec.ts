@@ -1491,7 +1491,7 @@ test.describe("correzioni approvate (#52)", () => {
       run([
         "fetch",
         "--no-tags",
-        "--depth=200",
+        "--deepen=200",
         "origin",
         "+main:refs/remotes/origin/main",
       ]);
@@ -1499,7 +1499,7 @@ test.describe("correzioni approvate (#52)", () => {
     }
     expect(
       diff,
-      "origin/main non disponibile: CA-22 non verificabile",
+      "storia comune con origin/main non disponibile: CA-22 non verificabile",
     ).not.toBeNull();
     const changed = (diff ?? "").split("\n").filter(Boolean);
     expect(changed.length).toBeGreaterThan(0);
