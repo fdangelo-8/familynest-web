@@ -6,7 +6,7 @@ import { PageError } from "@/components/ui/PageError/PageError";
 
 /**
  * Whole-page error of the onboarding. Whoever is here has no Nest yet, so
- * there is no "Torna a Oggi": only the text and "Riprova".
+ * there is nowhere to go back to: only the text and "Riprova".
  */
 export function OnboardingError() {
   const router = useRouter();
