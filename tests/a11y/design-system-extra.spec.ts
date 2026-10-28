@@ -42,9 +42,20 @@ test("focus da tastiera: ogni controllo raggiunto con Tab ha un anello visibile"
       const el = document.activeElement as HTMLElement | null;
       if (!el || el === document.body) return null;
       const cs = getComputedStyle(el);
-      const ring =
+      let ring =
         (cs.outlineStyle !== "none" && parseFloat(cs.outlineWidth) > 0) ||
         cs.boxShadow !== "none";
+      // Only listed containers may carry the focus indicator for their
+      // descendant (WCAG 2.4.7). `.campo-rapido`: the input has `outline: none`
+      // by spec (#63 §3, mockup) and `.campo-rapido:focus-within` draws a
+      // 1.5 px ink ring on the form (resting ring is 1 px, so it must be 1.5).
+      const container = el.closest(".campo-rapido");
+      if (container && container !== el) {
+        const m = getComputedStyle(container).boxShadow.match(
+          /rgb\(23, 24, 28\) 0px 0px 0px ([\d.]+)px inset/,
+        );
+        ring = !!m && parseFloat(m[1] ?? "0") >= 1.5;
+      }
       const name = (
         el.getAttribute("aria-label") ||
         el.textContent ||
