@@ -65,6 +65,8 @@ test("cornice: lente su «Nest» in Oggi", async ({ page }) => {
   const nest = lens.getByRole("button", { name: /Nest$/ });
   await nest.click();
   await expect(nest).toHaveAttribute("aria-pressed", "true");
+  // Move the pointer away: the screenshot must show the resting state, not hover.
+  await page.mouse.move(0, 0);
   await expect(page).toHaveScreenshot("oggi-lente-nest.png");
 });
 
