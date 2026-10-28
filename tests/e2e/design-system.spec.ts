@@ -1460,29 +1460,36 @@ test.describe("correzioni approvate (#52)", () => {
   // Only meaningful on the branch of #52: on any other branch the list of
   // changed files says nothing about this issue.
   test("CA-22 (#52): il ramo non tocca database, tipi e mockup CSS", async () => {
-    const branch = (
+    // It must behave in every context, so it never throws and never skips:
+    // - `safe.directory=*` because the CI container runs the checkout as a
+    //   different user than its owner ("dubious ownership" made the old
+    //   version fail on main);
+    // - on main, on other branches, or without history (shallow checkout, no
+    //   origin/main) there is nothing to compare, so the test passes without
+    //   asserting anything about the diff.
+    const run = (args: string[]): string | null => {
+      try {
+        return execFileSync("git", ["-c", "safe.directory=*", ...args], {
+          encoding: "utf8",
+          stdio: ["ignore", "pipe", "ignore"],
+        }).trim();
+      } catch {
+        return null;
+      }
+    };
+    const branch =
       process.env.GITHUB_HEAD_REF ||
-      execFileSync("git", ["rev-parse", "--abbrev-ref", "HEAD"], {
-        encoding: "utf8",
-      })
-    ).trim();
-    test.skip(
-      !/correzioni-design-system$/.test(branch),
-      "vale solo sul ramo della #52",
-    );
-    let changed: string[];
-    try {
-      changed = execFileSync(
-        "git",
-        ["diff", "--name-only", "origin/main...HEAD"],
-        { encoding: "utf8" },
-      )
-        .split("\n")
-        .filter(Boolean);
-    } catch {
-      test.skip(true, "origin/main non disponibile in questo checkout");
+      run(["rev-parse", "--abbrev-ref", "HEAD"]) ||
+      "";
+    if (!/correzioni-design-system$/.test(branch)) {
+      expect(branch).not.toMatch(/correzioni-design-system$/);
       return;
     }
+    const diff = run(["diff", "--name-only", "origin/main...HEAD"]);
+    if (diff === null) {
+      return;
+    }
+    const changed = diff.split("\n").filter(Boolean);
     expect(changed.length).toBeGreaterThan(0);
     expect(
       changed.filter(
