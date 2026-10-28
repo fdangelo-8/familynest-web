@@ -3610,6 +3610,11 @@ button.riga-lista {
   color: var(--color-latte);
 }
 
+/* Il campo di testo riempie l'altezza del modulo: tutta la riga riceve il tocco */
+.campo-rapido__input {
+  align-self: stretch;
+}
+
 /* Strappo: la lama segue --strappo-avanzamento, impostata dalla pagina */
 .strappo__lama {
   transform: translateX(var(--strappo-avanzamento, 0));
