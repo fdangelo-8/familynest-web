@@ -68,10 +68,12 @@ test("a11y: contrasto del conteggio del selettore almeno 4.5:1", async ({
     .locator(".selettore__conteggio");
   const ratio = await count.evaluate((el) => {
     const lum = (rgb: string) => {
-      const [r, g, b] = (rgb.match(/[\d.]+/g) ?? []).slice(0, 3).map((v) => {
-        const c = Number(v) / 255;
-        return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
-      });
+      const [r = 0, g = 0, b = 0] = (rgb.match(/[\d.]+/g) ?? [])
+        .slice(0, 3)
+        .map((v) => {
+          const c = Number(v) / 255;
+          return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+        });
       return 0.2126 * r + 0.7152 * g + 0.0722 * b;
     };
     const cs = getComputedStyle(el);
