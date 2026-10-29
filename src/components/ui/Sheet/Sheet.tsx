@@ -1,6 +1,13 @@
 "use client";
 
-import { useId, useRef, type PointerEvent, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  type PointerEvent,
+  type ReactNode,
+} from "react";
 import { createPortal } from "react-dom";
 import { cx } from "../cx";
 import { IconButton } from "../IconButton/IconButton";
@@ -19,6 +26,12 @@ export type SheetProps = {
   side?: ReactNode;
   /** Mobile only: the sheet reaches up to the bar (`.foglio--alto`) */
   tall?: boolean;
+  /** While true X, Esc, the veil and the drag do not close the sheet (saving in progress) */
+  locked?: boolean;
+  /** Turns true when the parent wants the sheet to leave with its exit animation; `onClose` runs after it */
+  closeRequested?: boolean;
+  /** `id` of the text that describes the dialog (`aria-describedby`) */
+  "aria-describedby"?: string;
   className?: string;
   "data-testid"?: string;
 };
@@ -42,6 +55,9 @@ function SheetContent({
   footer,
   side,
   tall,
+  locked = false,
+  closeRequested = false,
+  "aria-describedby": describedBy,
   className,
   "data-testid": testId,
 }: SheetProps) {
@@ -49,7 +65,17 @@ function SheetContent({
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
   const dragStart = useRef<number | null>(null);
-  const { closing, requestClose } = useAnimatedClose(onClose);
+  const { closing, requestClose: startClose } = useAnimatedClose(onClose);
+  const lockedRef = useRef(locked);
+  useEffect(() => {
+    lockedRef.current = locked;
+  });
+  const requestClose = useCallback(() => {
+    if (!lockedRef.current) startClose();
+  }, [startClose]);
+  useEffect(() => {
+    if (closeRequested) startClose();
+  }, [closeRequested, startClose]);
 
   useDialogFocus(dialogRef, { onEscape: requestClose, initialFocus: "field" });
 
@@ -64,6 +90,7 @@ function SheetContent({
   );
 
   const onHandleDown = (event: PointerEvent<HTMLDivElement>) => {
+    if (lockedRef.current) return;
     dragStart.current = event.clientY;
     event.currentTarget.setPointerCapture(event.pointerId);
     const dialog = dialogRef.current;
@@ -86,7 +113,7 @@ function SheetContent({
     const dialog = dialogRef.current;
     if (!dialog) return;
     dialog.classList.remove("is-trascinato");
-    if (delta > dialog.offsetHeight * DRAG_CLOSE_RATIO) {
+    if (delta > dialog.offsetHeight * DRAG_CLOSE_RATIO && !lockedRef.current) {
       requestClose();
     } else {
       dialog.classList.add("is-rientro");
@@ -116,6 +143,7 @@ function SheetContent({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
+        aria-describedby={describedBy}
         data-testid={testId}
       >
         {desktop ? null : (

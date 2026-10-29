@@ -3888,6 +3888,35 @@ main[tabindex="-1"]:focus {
   display: contents;
 }
 
+/* Foglio dei membri (#85): il modulo sta dentro il corpo del foglio e lascia
+   al corpo la disposizione dei campi; il bottone di salvataggio sta fuori, nel piede. */
+.modulo-membro {
+  display: contents;
+}
+
+/* Pagina Spesa (/casa/spesa, #21 e #79): parti che esistono solo su mobile o
+   solo su desktop, e intestazione di colonna letta dai lettori di schermo. */
+@media (min-width: 1024px) {
+  .spesa-selettore,
+  .spesa-solo-mobile {
+    display: none;
+  }
+}
+@media (max-width: 1023px) {
+  .spesa-solo-desktop {
+    display: none;
+  }
+  .spesa-testa-colonna {
+    position: absolute;
+    width: var(--border-sottile);
+    height: var(--border-sottile);
+    min-height: var(--space-0);
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
 /* Campo su più righe */
 textarea.campo__input {
   height: auto;

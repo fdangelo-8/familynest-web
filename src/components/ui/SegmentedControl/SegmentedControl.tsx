@@ -7,6 +7,8 @@ export type SegmentedOption<T extends string> = {
   label: string;
   /** Optional count shown after the label */
   count?: number;
+  /** Not selectable (native `disabled` plus `aria-disabled`) */
+  disabled?: boolean;
 };
 
 export type SegmentedControlProps<T extends string> = {
@@ -17,6 +19,8 @@ export type SegmentedControlProps<T extends string> = {
   /** Exactly one option is always selected */
   value: T;
   onChange: (value: T) => void;
+  /** `id` of a text that describes the group (`aria-describedby`) */
+  describedBy?: string;
   /** White-on-paper variant (`.selettore--carta`) */
   paper?: boolean;
   className?: string;
@@ -28,6 +32,7 @@ export function SegmentedControl<T extends string>({
   value,
   onChange,
   paper,
+  describedBy,
   className,
   "aria-label": ariaLabel,
   "data-testid": testId,
@@ -36,6 +41,7 @@ export function SegmentedControl<T extends string>({
     <div
       role="group"
       aria-label={ariaLabel}
+      aria-describedby={describedBy}
       className={cx("selettore", paper && "selettore--carta", className)}
       data-testid={testId}
     >
@@ -45,6 +51,8 @@ export function SegmentedControl<T extends string>({
           type="button"
           className="selettore__voce"
           aria-pressed={option.value === value}
+          disabled={option.disabled}
+          aria-disabled={option.disabled ? true : undefined}
           onClick={() => onChange(option.value)}
         >
           {option.label}
