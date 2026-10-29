@@ -26,9 +26,9 @@ function matchesAny(pathname: string, bases: readonly string[]): boolean {
   return bases.some((base) => matchesPrefix(pathname, base));
 }
 
-// Only the pages that exist. When the "Da fare" (/casa/da-fare) and
-// "Scadenze" (/casa/scadenze) pages are built they must be added here.
-const CASA_ROUTES = ["/casa/spesa"];
+// Only the pages that exist: new Casa pages must be added here (explicit
+// list, not a prefix).
+const CASA_ROUTES = ["/casa/spesa", "/casa/da-fare", "/casa/scadenze"];
 
 /** Known Casa pages only: an unknown address under /casa is a 404, not Casa. */
 export function isCasaRoute(pathname: string): boolean {
@@ -118,6 +118,8 @@ export type PlaceholderKey =
   | "aggiungi"
   | "calendario"
   | "casa"
+  | "casa-da-fare"
+  | "casa-scadenze"
   | "nest"
   | "notifiche"
   | "ricerca"
@@ -136,6 +138,8 @@ export type PlaceholderDef = {
     | "plus"
     | "calendar"
     | "shopping-basket"
+    | "square-check"
+    | "file-clock"
     | "users"
     | "bell"
     | "search"
@@ -175,6 +179,20 @@ export const PLACEHOLDERS: Record<PlaceholderKey, PlaceholderDef> = {
     browserTitle: "FamilyNest · Casa · Spesa",
     icon: "shopping-basket",
     text: `Qui ci saranno la spesa, le cose da fare e le scadenze di casa. ${COMING}`,
+    backToToday: true,
+  },
+  "casa-da-fare": {
+    title: "Casa",
+    browserTitle: "FamilyNest · Casa · Da fare",
+    icon: "square-check",
+    text: `Qui ci saranno le cose da fare della casa. ${COMING}`,
+    backToToday: true,
+  },
+  "casa-scadenze": {
+    title: "Casa",
+    browserTitle: "FamilyNest · Casa · Scadenze",
+    icon: "file-clock",
+    text: `Qui ci saranno le scadenze della casa. ${COMING}`,
     backToToday: true,
   },
   nest: {

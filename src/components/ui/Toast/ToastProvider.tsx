@@ -11,13 +11,17 @@ import {
   type ReactNode,
 } from "react";
 import { cx } from "../cx";
-import { Icon } from "../Icon/Icon";
+import { Icon, type IconName } from "../Icon/Icon";
 
 /** The toast disappears by itself after 5 seconds. */
 const TOAST_DURATION_MS = 5000;
 
 export type ToastOptions = {
   text: string;
+  /** Optional bold part shown before the text, for example "3 cose" */
+  lead?: string;
+  /** Icon before the text: absent = check, `null` = no icon */
+  icon?: IconName | null;
   /** Optional bold part shown after the text, for example the name of the item */
   emphasis?: string;
   /** With a function the toast shows an "Annulla" button that calls it */
@@ -111,8 +115,13 @@ function ToastView({
       onBlur={resume}
       data-testid="toast"
     >
-      <Icon name="check" />
+      {toast.icon === null ? null : <Icon name={toast.icon ?? "check"} />}
       <span className="toast__testo">
+        {toast.lead ? (
+          <>
+            <b>{toast.lead}</b>{" "}
+          </>
+        ) : null}
         {toast.text}
         {toast.emphasis ? (
           <>

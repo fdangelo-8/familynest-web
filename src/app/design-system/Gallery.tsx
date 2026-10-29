@@ -21,6 +21,8 @@ import { Icon } from "@/components/ui/Icon/Icon";
 import { IconButton } from "@/components/ui/IconButton/IconButton";
 import { List, ListRow } from "@/components/ui/List/List";
 import { PageError } from "@/components/ui/PageError/PageError";
+import { QuickAddField } from "@/components/ui/QuickAddField/QuickAddField";
+import { SectionSwitcher } from "@/components/ui/SegmentedControl/SectionSwitcher";
 import { SegmentedControl } from "@/components/ui/SegmentedControl/SegmentedControl";
 import { Sheet } from "@/components/ui/Sheet/Sheet";
 import { Skeleton, SkeletonGroup } from "@/components/ui/Skeleton/Skeleton";
@@ -441,6 +443,8 @@ function ButtonsSection() {
 
 function FieldsSection() {
   const [kind, setKind] = useState("Ogni martedì e giovedì");
+  const [quickText, setQuickText] = useState("");
+  const [quickSent, setQuickSent] = useState<string[]>([]);
   return (
     <>
       <Section id="campo" title="Campo">
@@ -523,6 +527,34 @@ function FieldsSection() {
           </FieldPair>
         </Example>
       </Section>
+
+      <Section id="campo-rapido" title="Campo rapido">
+        <Example caption="campo-rapido · normale">
+          <div className={styles.campoRapido}>
+            <QuickAddField
+              label="Aggiungi alla spesa…"
+              value={quickText}
+              onChange={setQuickText}
+              onSubmit={(text) => setQuickSent((list) => [...list, text])}
+              data-testid="campo-rapido-normale"
+            />
+            <p className={styles.contatore} data-testid="campo-rapido-inviati">
+              Inviati:{" "}
+              {quickSent.length > 0 ? quickSent.join(" | ") : "nessuno"}
+            </p>
+          </div>
+        </Example>
+        <Example caption="campo-rapido--attivo">
+          <QuickAddField
+            label="Cosa manca in casa?"
+            value=""
+            onChange={() => undefined}
+            onSubmit={() => undefined}
+            active
+            data-testid="campo-rapido-attivo"
+          />
+        </Example>
+      </Section>
     </>
   );
 }
@@ -536,6 +568,10 @@ function ControlsSection() {
   const [paperView, setPaperView] = useState("figlio");
   const [chipA, setChipA] = useState(false);
   const [chipB, setChipB] = useState(false);
+  const [roundEmpty, setRoundEmpty] = useState(false);
+  const [roundFull, setRoundFull] = useState(true);
+  const [roundRow1, setRoundRow1] = useState(false);
+  const [roundRow2, setRoundRow2] = useState(false);
 
   return (
     <>
@@ -564,6 +600,65 @@ function ControlsSection() {
             aria-label="Segna come fatto: Comprare il pane"
             data-testid="casella-disabilitata"
           />
+        </Example>
+      </Section>
+
+      <Section id="tondo-spunta" title="Spunta tonda">
+        <Example caption="tondo-spunta · vuoto">
+          <Checkbox
+            variant="round"
+            checked={roundEmpty}
+            onChange={setRoundEmpty}
+            aria-label="Preso: Latte"
+            data-testid="tondo-vuoto"
+          />
+        </Example>
+        <Example caption="tondo-spunta · pieno">
+          <Checkbox
+            variant="round"
+            checked={roundFull}
+            onChange={setRoundFull}
+            aria-label="Rimetti in lista: Pane"
+            data-testid="tondo-pieno"
+          />
+        </Example>
+        <Example caption="tondo-spunta · disabilitato">
+          <Checkbox
+            variant="round"
+            checked={false}
+            onChange={() => undefined}
+            disabled
+            aria-label="Preso: Uova"
+            data-testid="tondo-disabilitato"
+          />
+        </Example>
+        <Example caption="tondo-spunta · in una lista">
+          <List className="scheda">
+            <ListRow>
+              <Checkbox
+                variant="round"
+                checked={roundRow1}
+                onChange={setRoundRow1}
+                aria-label="Preso: Latte"
+                data-testid="tondo-riga-1"
+              />
+              <span className="riga-lista__testo">
+                <span className="riga-lista__titolo">Latte</span>
+              </span>
+            </ListRow>
+            <ListRow>
+              <Checkbox
+                variant="round"
+                checked={roundRow2}
+                onChange={setRoundRow2}
+                aria-label="Preso: Pane"
+                data-testid="tondo-riga-2"
+              />
+              <span className="riga-lista__testo">
+                <span className="riga-lista__titolo">Pane</span>
+              </span>
+            </ListRow>
+          </List>
         </Example>
       </Section>
 
@@ -637,6 +732,28 @@ function ControlsSection() {
               { value: "scadenze", label: "Scadenze", count: 4 },
             ]}
             data-testid="selettore-conteggio"
+          />
+        </Example>
+        <Example caption="selettore · con voci-link">
+          <SectionSwitcher
+            aria-label="Sezione della casa"
+            current="spesa"
+            items={[
+              { key: "spesa", label: "Spesa", href: "/casa/spesa", count: 4 },
+              {
+                key: "da-fare",
+                label: "Da fare",
+                href: "/casa/da-fare",
+                count: 0,
+              },
+              {
+                key: "scadenze",
+                label: "Scadenze",
+                href: "/casa/scadenze",
+                count: 120,
+              },
+            ]}
+            data-testid="selettore-link"
           />
         </Example>
       </Section>
@@ -987,6 +1104,42 @@ function ListSection() {
           </List>
         </Example>
       </Section>
+
+      <Section id="strappo" title="Strappo">
+        <Example caption="strappo · a riposo">
+          <div className="strappo" data-testid="strappo-riposo">
+            <span className="strappo__linea" aria-hidden="true" />
+            <span className="strappo__testo" aria-hidden="true">
+              <span>Trascina per strappare i presi</span>
+            </span>
+            <button
+              type="button"
+              className="strappo__lama"
+              aria-label="Togli dalla lista le 3 cose prese"
+            >
+              <Icon name="scissors" />
+            </button>
+          </div>
+        </Example>
+        <Example caption="strappo · trascinato">
+          <div
+            className={`strappo is-trascinato ${styles.strappoTrascinato}`}
+            data-testid="strappo-trascinato"
+          >
+            <span className="strappo__linea" aria-hidden="true" />
+            <span className="strappo__testo" aria-hidden="true">
+              <span>Trascina per strappare i presi</span>
+            </span>
+            <button
+              type="button"
+              className="strappo__lama"
+              aria-label="Togli dalla lista le 3 cose prese"
+            >
+              <Icon name="scissors" />
+            </button>
+          </div>
+        </Example>
+      </Section>
     </>
   );
 }
@@ -1133,6 +1286,33 @@ function OverlaysSection() {
               }
             >
               Mostra un altro toast
+            </Button>
+            <Button
+              variant="secondary"
+              data-testid="toast-mostra-inizio"
+              onClick={() =>
+                toast.showToast({
+                  lead: "3 cose",
+                  text: "tolte dalla lista.",
+                  icon: "scissors",
+                  onUndo: () => setUndone((n) => n + 1),
+                })
+              }
+            >
+              Mostra toast con grassetto all&rsquo;inizio
+            </Button>
+            <Button
+              variant="secondary"
+              data-testid="toast-mostra-senza-icona"
+              onClick={() =>
+                toast.showToast({
+                  lead: "Latte",
+                  text: "è già in lista.",
+                  icon: null,
+                })
+              }
+            >
+              Mostra toast senza icona
             </Button>
             <span className={styles.contatore} data-testid="toast-annullato">
               Annullato: {undone}

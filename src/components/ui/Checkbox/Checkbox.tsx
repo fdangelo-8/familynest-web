@@ -9,15 +9,18 @@ export type CheckboxProps = {
   /** Required: the box has no visible text */
   "aria-label": string;
   disabled?: boolean;
+  /** `"square"` is the checkbox (`.casella`), `"round"` the round tick (`.tondo-spunta`) */
+  variant?: "square" | "round";
   className?: string;
   "data-testid"?: string;
 };
 
-/** `role="checkbox"` button (`.casella`). Click, Space and Enter toggle it. */
+/** `role="checkbox"` button (`.casella`, or `.tondo-spunta` if round). Click, Space and Enter toggle it. */
 export function Checkbox({
   checked,
   onChange,
   disabled,
+  variant = "square",
   className,
   "aria-label": ariaLabel,
   "data-testid": testId,
@@ -29,7 +32,10 @@ export function Checkbox({
       aria-checked={checked}
       aria-label={ariaLabel}
       disabled={disabled}
-      className={cx("casella", className)}
+      className={cx(
+        variant === "round" ? "tondo-spunta" : "casella",
+        className,
+      )}
       onClick={() => onChange(!checked)}
       data-testid={testId}
     >
