@@ -261,7 +261,13 @@ export function useShoppingList({
           '[data-focus="to-take-heading"]',
           '[data-focus="common-heading"]',
         ];
-        if (row?.dataset.itemKey) {
+        if (active.closest(".strappo__lama")) {
+          focusRequest.current = [
+            ".strappo__lama",
+            '[data-testid="spesa-presi"] h3',
+            ...headings,
+          ];
+        } else if (row?.dataset.itemKey) {
           const inTaken = row.closest('[data-testid="spesa-presi"]');
           focusRequest.current = [
             `[data-item-key="${CSS.escape(row.dataset.itemKey)}"] [role="checkbox"]`,
@@ -529,7 +535,6 @@ export function useShoppingList({
     if (status !== "ready" || !householdId) return;
     const supabase = getClient();
     let closed = false;
-    let subscribedBefore = false;
     let channel: ReturnType<Client["channel"]> | null = null;
     void (async () => {
       const { data } = await supabase.auth.getSession();
@@ -573,8 +578,7 @@ export function useShoppingList({
           const connected = state === "SUBSCRIBED";
           setRealtimeOk(connected);
           // Events missed while the channel was down are not sent again.
-          if (connected && subscribedBefore) scheduleRefetch();
-          if (connected) subscribedBefore = true;
+          if (connected) scheduleRefetch();
         });
     })();
     return () => {

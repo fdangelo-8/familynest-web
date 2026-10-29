@@ -103,6 +103,12 @@ export function Tear({
     pointerHandled.current = false;
   };
 
+  const handleLostCapture = () => {
+    window.setTimeout(() => {
+      pointerHandled.current = false;
+    }, 100);
+  };
+
   // A click without a pointer gesture comes from the keyboard or assistive tools.
   const handleClick = () => {
     if (pointerHandled.current) return;
@@ -127,6 +133,7 @@ export function Tear({
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerCancel}
+        onLostPointerCapture={handleLostCapture}
         onClick={handleClick}
       >
         <Icon name="scissors" />
