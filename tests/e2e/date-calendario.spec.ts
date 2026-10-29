@@ -1,6 +1,7 @@
+import { randomUUID } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import {
   BUSY_TITLE,
   VISIBILITY_LABELS,
@@ -870,4 +871,425 @@ test.describe("segnaposto con l'utente (Supabase locale)", () => {
       }
     });
   }
+});
+
+/* ---------- Stati CSS in un browser vero ---------- */
+
+test.describe("stati CSS nel browser", () => {
+  const styles = [readFileSync("src/app/globals.css", "utf8"), css].join("\n");
+
+  async function render(page: import("@playwright/test").Page, body: string) {
+    await page.setContent(
+      `<!doctype html><html lang="it"><head><style>${styles}</style></head>` +
+        `<body>${body}</body></html>`,
+    );
+  }
+
+  test("passaggio del mouse e premuto: stesso fondo, solo sui cliccabili", async ({
+    page,
+  }) => {
+    await render(
+      page,
+      `<a id="riga" class="riga-evento" href="#">Riga</a>
+       <a id="insieme" class="riga-evento riga-evento--insieme" href="#">Insieme</a>
+       <a id="occupato" class="riga-evento riga-evento--occupato" href="#">Occ</a>
+       <a id="prossimo" class="scheda prossimo" href="#">Prossimo</a>
+       <button id="giorno" class="striscia-giorni__giorno" type="button">22</button>
+       <button id="giorno-sel" class="striscia-giorni__giorno is-selezionato" type="button">23</button>
+       <a id="blocco" class="blocco-orario" style="position:static" href="#">Blocco</a>
+       <div id="blocco-div" class="blocco-orario blocco-orario--occupato" style="position:static">Occupato</div>
+       <div id="blocco-ins" class="blocco-orario blocco-orario--insieme" style="position:static">Insieme</div>
+       <a id="passo" class="passo-partenza" href="#">Passo</a>
+       <button id="fatti" class="riga-gia-fatti" type="button" aria-expanded="false">Già fatti</button>`,
+    );
+    const bg = (id: string) =>
+      page
+        .locator(`#${id}`)
+        .evaluate((el) => getComputedStyle(el).backgroundColor);
+    // Colours are resolved by the browser: never compared as strings of CSS.
+    const resolved = (name: string) =>
+      page.evaluate((n) => {
+        const probe = document.createElement("div");
+        probe.style.backgroundColor = `var(${n})`;
+        document.body.append(probe);
+        const value = getComputedStyle(probe).backgroundColor;
+        probe.remove();
+        return value;
+      }, name);
+    const carta = await resolved("--color-carta");
+    const carta2 = await resolved("--color-carta-2");
+
+    for (const id of ["riga", "prossimo", "blocco", "passo", "giorno-sel"]) {
+      await page.locator(`#${id}`).hover();
+      await expect
+        .poll(() => bg(id), { message: `${id} in hover` })
+        .toBe(carta);
+    }
+    for (const id of ["giorno", "fatti"]) {
+      await page.locator(`#${id}`).hover();
+      await expect
+        .poll(() => bg(id), { message: `${id} in hover` })
+        .toBe(carta2);
+    }
+    // not clickable: no change
+    for (const id of ["insieme", "occupato", "blocco-div", "blocco-ins"]) {
+      const before = await bg(id);
+      await page.locator(`#${id}`).hover();
+      expect(await bg(id), `${id} non cambia`).toBe(before);
+    }
+    await page.mouse.move(0, 0);
+    // the pressed state is the same as hover
+    for (const [id, expected] of [
+      ["riga", carta],
+      ["prossimo", carta],
+      ["giorno", carta2],
+    ] as const) {
+      await page.locator(`#${id}`).hover();
+      await page.mouse.down();
+      await expect
+        .poll(() => bg(id), { message: `${id} premuto` })
+        .toBe(expected);
+      await page.mouse.up();
+    }
+  });
+
+  test("cursore normale sui blocchi non cliccabili, non sui link", async ({
+    page,
+  }) => {
+    await render(
+      page,
+      `<div id="div" class="blocco-orario blocco-orario--occupato">Occupato</div>
+       <a id="link" class="blocco-orario" href="#">Blocco</a>`,
+    );
+    await expect(page.locator("#div")).toHaveCSS("cursor", "default");
+    await expect(page.locator("#link")).not.toHaveCSS("cursor", "default");
+  });
+
+  test("linea di adesso: la posizione segue --adesso-ore", async ({ page }) => {
+    await render(
+      page,
+      `<div style="position:relative;--h:50px;height:900px">
+         <div id="linea" class="linea-adesso" style="--adesso-ore:7.8"></div>
+       </div>`,
+    );
+    await expect(page.locator("#linea")).toHaveCSS("top", "390px");
+    await page
+      .locator("#linea")
+      .evaluate((el) => el.style.setProperty("--adesso-ore", "2"));
+    await expect(page.locator("#linea")).toHaveCSS("top", "100px");
+  });
+
+  test("freccia di «Già fatti» capovolta solo da aperta", async ({ page }) => {
+    await render(
+      page,
+      `<button id="chiuso" class="riga-gia-fatti" type="button" aria-expanded="false"><span class="icona"></span><span class="icona"></span></button>
+       <button id="aperto" class="riga-gia-fatti" type="button" aria-expanded="true"><span class="icona"></span><span class="icona"></span></button>`,
+    );
+    const scale = (id: string) =>
+      page
+        .locator(`#${id} .icona:last-child`)
+        .evaluate((el) => getComputedStyle(el).scale);
+    expect(await scale("chiuso")).toBe("none");
+    expect(await scale("aperto")).toBe("1 -1");
+  });
+});
+
+/* ---------- listHouseholdEvents contro la RPC vera (Supabase locale) ---------- */
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "";
+
+// Members of the seeded Nests (scripts/seed-test-users.ts)
+const GIULIA = "b1000000-0000-4000-8000-000000000001";
+const PAOLO_ID = "b1000000-0000-4000-8000-000000000002";
+const LEO_ID = "b1000000-0000-4000-8000-000000000003";
+const ANNA_ID = "b1000000-0000-4000-8000-000000000004";
+
+async function clientFor(key: "A" | "B" | "B2" | "C") {
+  const client = createClient<Database>(supabaseUrl, publishableKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  const { error } = await client.auth.signInWithPassword({
+    email: process.env[`TEST_USER_${key}_EMAIL`] ?? "",
+    password: process.env[`TEST_USER_${key}_PASSWORD`] ?? "",
+  });
+  if (error) throw new Error(`Accesso di prova fallito per ${key}`);
+  return client;
+}
+
+// One free winter day (CET, no clock change) per test, never shared between
+// workers: parallel tests and the two projects cannot see each other's events.
+let dayCounter = 0;
+function freshDay(parallelIndex: number): string {
+  dayCounter += 1;
+  const date = new Date(Date.UTC(2027, 0, 5 + parallelIndex * 8 + dayCounter));
+  return date.toISOString().slice(0, 10);
+}
+const rome = (day: string, time: string) => `${day}T${time}:00+01:00`;
+
+async function addEvent(
+  client: SupabaseClient<Database>,
+  event: {
+    title: string;
+    day: string;
+    from: string;
+    to: string;
+    visibility: "household" | "busy" | "private";
+    recurrence?: "none" | "weekly";
+    weekdays?: number[];
+    members?: string[];
+  },
+) {
+  const { error } = await client.from("events").insert({
+    title: event.title,
+    starts_at: rome(event.day, event.from),
+    ends_at: rome(event.day, event.to),
+    visibility: event.visibility,
+    recurrence: event.recurrence ?? "none",
+    recurrence_weekdays: event.weekdays ?? null,
+  });
+  if (error) throw new Error("Creazione impegno di prova fallita");
+  if (event.members?.length) {
+    const { data } = await client
+      .from("events")
+      .select("id")
+      .eq("title", event.title);
+    const id = data?.[0]?.id;
+    if (!id) throw new Error("Impegno di prova non trovato");
+    const { error: peopleError } = await client
+      .from("event_members")
+      .insert(event.members.map((member_id) => ({ event_id: id, member_id })));
+    if (peopleError) throw new Error("Partecipanti di prova non aggiunti");
+  }
+}
+
+async function removeEvents(client: SupabaseClient<Database>, tag: string) {
+  await client.from("events").delete().like("title", `${tag}%`);
+}
+
+test.describe("listHouseholdEvents contro la RPC vera (#88)", () => {
+  test.beforeEach(() => {
+    test.skip(!usersConfigured("A", "B"), skipReason("A", "B"));
+  });
+
+  test("impegno per tutto il Nest, Occupato e Solo io: ognuno vede quello che deve", async ({}, testInfo) => {
+    const tag = `T88-${randomUUID().slice(0, 8)}`;
+    const day = freshDay(testInfo.parallelIndex);
+    const giulia = await clientFor("B");
+    const paolo = await clientFor("B2");
+    const marco = await clientFor("A");
+    try {
+      await addEvent(giulia, {
+        title: `${tag} Cena`,
+        day,
+        from: "09:00",
+        to: "10:00",
+        visibility: "household",
+        members: [GIULIA, LEO_ID],
+      });
+      await addEvent(giulia, {
+        title: `${tag} Riunione riservata`,
+        day,
+        from: "12:00",
+        to: "14:00",
+        visibility: "busy",
+      });
+      await addEvent(giulia, {
+        title: `${tag} Medico personale`,
+        day,
+        from: "16:00",
+        to: "17:00",
+        visibility: "private",
+      });
+      const from = rome(day, "00:00");
+      const to = rome(addDaysToDayKey(day, 1), "00:00");
+
+      // Paolo, same Nest: full household event, masked «Occupato», no «Solo io»
+      const seen = await listHouseholdEvents(from, to, paolo);
+      expect(seen.ok).toBe(true);
+      if (!seen.ok) return;
+      expect(seen.events).toHaveLength(2);
+      const [dinner, busy] = seen.events;
+      expect(dinner).toMatchObject({
+        masked: false,
+        title: `${tag} Cena`,
+        visibility: "household",
+        authorMemberId: GIULIA,
+        memberIds: [GIULIA, LEO_ID],
+        location: null,
+        escortMemberId: null,
+      });
+      expect(new Date(dinner!.startsAt).toISOString()).toBe(
+        new Date(rome(day, "09:00")).toISOString(),
+      );
+      expect(busy).toEqual({
+        masked: true,
+        startsAt: expect.any(String),
+        endsAt: expect.any(String),
+        visibility: "busy",
+        authorMemberId: GIULIA,
+      });
+      expect(Object.keys(busy!).sort()).toEqual([
+        "authorMemberId",
+        "endsAt",
+        "masked",
+        "startsAt",
+        "visibility",
+      ]);
+      expect(new Date(busy!.startsAt).toISOString()).toBe(
+        new Date(rome(day, "12:00")).toISOString(),
+      );
+      const text = JSON.stringify(seen.events);
+      expect(text).not.toContain("Riunione riservata");
+      expect(text).not.toContain("Medico personale");
+
+      // the lens «Io» works on real ids
+      expect(filterByLens(seen.events, "io", PAOLO_ID)).toEqual([]);
+      expect(hiddenByLens(seen.events, PAOLO_ID)).toHaveLength(2);
+      expect(filterByLens(seen.events, "io", LEO_ID)).toEqual([dinner]);
+
+      // Giulia sees all three in full, in order
+      const own = await listHouseholdEvents(from, to, giulia);
+      expect(own.ok).toBe(true);
+      if (!own.ok) return;
+      expect(own.events.map((e) => (e.masked ? null : e.title))).toEqual([
+        `${tag} Cena`,
+        `${tag} Riunione riservata`,
+        `${tag} Medico personale`,
+      ]);
+
+      // another Nest (Marco, Casa D'Angelo) sees nothing at all
+      expect(await listHouseholdEvents(from, to, marco)).toEqual({
+        ok: true,
+        events: [],
+      });
+    } finally {
+      await removeEvents(giulia, tag);
+    }
+  });
+
+  test("Liberi insieme con dati veri: l'Occupato di Giulia toglie la sera anche a Paolo", async ({}, testInfo) => {
+    const tag = `T88-${randomUUID().slice(0, 8)}`;
+    const day = freshDay(testInfo.parallelIndex);
+    const giulia = await clientFor("B");
+    const paolo = await clientFor("B2");
+    try {
+      await addEvent(giulia, {
+        title: `${tag} Serata`,
+        day,
+        from: "18:00",
+        to: "23:00",
+        visibility: "busy",
+      });
+      const week = getWeekDays(day);
+      const adults = [GIULIA, PAOLO_ID, ANNA_ID];
+      for (const reader of [giulia, paolo]) {
+        const result = await listHouseholdEvents(
+          week[0]!.start,
+          week[6]!.end,
+          reader,
+        );
+        expect(result.ok).toBe(true);
+        if (!result.ok) return;
+        const evenings = computeFreeEvenings(week, adults, result.events);
+        // the busy evening is gone for both; the other days are free
+        expect(evenings.has(day)).toBe(false);
+        expect(evenings.size).toBe(6);
+      }
+    } finally {
+      await removeEvents(giulia, tag);
+    }
+  });
+
+  test("impegno ripetuto: una riga per ogni occorrenza, stesso id", async ({}, testInfo) => {
+    const tag = `T88-${randomUUID().slice(0, 8)}`;
+    const day = freshDay(testInfo.parallelIndex);
+    const giulia = await clientFor("B");
+    try {
+      const isoDay = new Date(`${day}T12:00:00Z`).getUTCDay() || 7;
+      await addEvent(giulia, {
+        title: `${tag} Nuoto`,
+        day,
+        from: "17:00",
+        to: "18:00",
+        visibility: "household",
+        recurrence: "weekly",
+        weekdays: [isoDay],
+      });
+      // 15 days: the first day plus two repetitions
+      const result = await listHouseholdEvents(
+        rome(day, "00:00"),
+        rome(addDaysToDayKey(day, 15), "00:00"),
+        giulia,
+      );
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      const mine = result.events.filter(
+        (e) => !e.masked && e.title.startsWith(tag),
+      );
+      expect(mine).toHaveLength(3);
+      expect(new Set(mine.map((e) => (e.masked ? "" : e.id))).size).toBe(1);
+      expect(new Set(mine.map((e) => e.startsAt)).size).toBe(3);
+    } finally {
+      await removeEvents(giulia, tag);
+    }
+  });
+
+  test("stato vuoto: giorno senza impegni e utente senza Nest danno ok con elenco vuoto", async ({}, testInfo) => {
+    const day = freshDay(testInfo.parallelIndex);
+    const from = rome(day, "00:00");
+    const to = rome(addDaysToDayKey(day, 1), "00:00");
+    const giulia = await clientFor("B");
+    expect(await listHouseholdEvents(from, to, giulia)).toEqual({
+      ok: true,
+      events: [],
+    });
+    const chiara = await clientFor("C");
+    expect(await listHouseholdEvents(from, to, chiara)).toEqual({
+      ok: true,
+      events: [],
+    });
+  });
+
+  test("errore: periodo oltre 42 giorni, senza accesso, database non raggiungibile", async ({}, testInfo) => {
+    const day = freshDay(testInfo.parallelIndex);
+    const from = rome(day, "00:00");
+    const oneDay = rome(addDaysToDayKey(day, 1), "00:00");
+    const giulia = await clientFor("B");
+    expect(
+      await listHouseholdEvents(
+        from,
+        rome(addDaysToDayKey(day, 50), "00:00"),
+        giulia,
+      ),
+    ).toEqual({ ok: false });
+    // exactly 42 days is the limit and works
+    const edge = await listHouseholdEvents(
+      from,
+      rome(addDaysToDayKey(day, 42), "00:00"),
+      giulia,
+    );
+    expect(edge.ok).toBe(true);
+    // not signed in: the database refuses, the function does not throw
+    const options = {
+      auth: { persistSession: false, autoRefreshToken: false },
+    };
+    const anonymous = createClient<Database>(
+      supabaseUrl,
+      publishableKey,
+      options,
+    );
+    expect(await listHouseholdEvents(from, oneDay, anonymous)).toEqual({
+      ok: false,
+    });
+    // unreachable server
+    const unreachable = createClient<Database>(
+      "http://127.0.0.1:9",
+      publishableKey,
+      options,
+    );
+    expect(await listHouseholdEvents(from, oneDay, unreachable)).toEqual({
+      ok: false,
+    });
+  });
 });
