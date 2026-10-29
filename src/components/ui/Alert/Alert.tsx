@@ -14,6 +14,8 @@ const VARIANT_ICON: Record<AlertVariant, IconName> = {
 export type AlertProps = {
   variant: AlertVariant;
   children: ReactNode;
+  /** Optional sprite icon name; when missing the icon of the variant is used */
+  icon?: IconName;
   /** Optional action on the right, for example a "Riprova" button */
   action?: ReactNode;
   className?: string;
@@ -24,6 +26,7 @@ export type AlertProps = {
 export function Alert({
   variant,
   children,
+  icon,
   action,
   className,
   "data-testid": testId,
@@ -39,7 +42,7 @@ export function Alert({
       role={variant === "errore" ? "alert" : "status"}
       data-testid={testId}
     >
-      <Icon name={VARIANT_ICON[variant]} />
+      <Icon name={icon ?? VARIANT_ICON[variant]} />
       <span className="avviso__testo">{children}</span>
       {action}
     </div>

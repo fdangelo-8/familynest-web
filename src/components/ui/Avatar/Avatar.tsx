@@ -6,6 +6,11 @@ export const MEMBER_COLORS = [
   "salvia",
   "cobalto",
   "zafferano",
+  "lampone",
+  "ceruleo",
+  "peonia",
+  "basilico",
+  "cannella",
   "insieme",
 ] as const;
 

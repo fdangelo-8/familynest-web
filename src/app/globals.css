@@ -48,6 +48,11 @@
   --color-membro-salvia: #8dbf9b;
   --color-membro-cobalto: #5c7fe0;
   --color-membro-zafferano: #f2b33d;
+  --color-membro-lampone: #d75596; /* aggiunto, #74 */
+  --color-membro-ceruleo: #4b96aa; /* aggiunto, #74 */
+  --color-membro-peonia: #f2a8c6; /* aggiunto, #74 */
+  --color-membro-basilico: #649100; /* aggiunto, #74 */
+  --color-membro-cannella: #af8273; /* aggiunto, #74 */
 
   /* ---------- Colori: marchi dei calendari esterni (solo nei loghi) ---------- */
   --color-marchio-outlook: #0f6cbd;
