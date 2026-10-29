@@ -53,6 +53,33 @@ export function getActiveNavItem(
   return null;
 }
 
+/**
+ * Value of `aria-current` for a navigation entry. "page" only when the
+ * address is exactly the entry's link; "true" when the entry is highlighted
+ * for a related page (so a screen reader does not say "current page").
+ * At most one entry is active, so at most one gets a value.
+ */
+export function getNavAriaCurrent(
+  pathname: string,
+  viewport: Viewport,
+  item: NavItem,
+): "page" | "true" | undefined {
+  if (getActiveNavItem(pathname, viewport) !== item) return undefined;
+  const entry = NAV_ITEMS.find((candidate) => candidate.id === item);
+  return entry && pathname === entry.href ? "page" : "true";
+}
+
+const NO_TODAY_LINK_ON_ERROR = ["/oggi", "/onboarding"] as const;
+
+/**
+ * The page-wide error offers "Torna a Oggi" everywhere except on Oggi itself
+ * (same page as "Riprova") and in the onboarding (Oggi does not exist yet
+ * for whoever is there).
+ */
+export function hasTodayLinkOnError(pathname: string): boolean {
+  return !matchesAny(pathname, NO_TODAY_LINK_ON_ERROR);
+}
+
 const NO_BOTTOM_NAV = [
   "/nest",
   "/ricerca",
@@ -82,20 +109,25 @@ export function getActiveSettingsItem(pathname: string): SettingsItem | null {
 }
 
 export type BarConfig =
-  | { kind: "section"; center: "lens" | "title"; right: "bell" | "search" }
+  | {
+      kind: "section";
+      center: "lens" | "title";
+      /** Icon links on the right, in order */
+      actions: ReadonlyArray<"search" | "bell">;
+    }
   | { kind: "detail"; fallback: string }
   | { kind: "close"; href: string };
 
 /** Shape of the mobile top bar for a route. */
 export function getBarConfig(pathname: string): BarConfig {
   if (matchesAny(pathname, ["/oggi", "/aggiungi"])) {
-    return { kind: "section", center: "lens", right: "bell" };
+    return { kind: "section", center: "lens", actions: ["bell"] };
   }
   if (matchesPrefix(pathname, "/calendario")) {
-    return { kind: "section", center: "lens", right: "search" };
+    return { kind: "section", center: "lens", actions: ["search", "bell"] };
   }
   if (isCasaRoute(pathname)) {
-    return { kind: "section", center: "title", right: "search" };
+    return { kind: "section", center: "title", actions: ["search", "bell"] };
   }
   if (matchesPrefix(pathname, "/nest")) {
     return { kind: "close", href: "/oggi" };

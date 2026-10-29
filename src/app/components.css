@@ -3533,6 +3533,9 @@ button.riga-lista {
 .schermo-notte .adesivo:nth-child(3) {
   animation-delay: calc(2 * var(--durata-rapida));
 }
+.schermo-notte .adesivo:nth-child(4) {
+  animation-delay: calc(3 * var(--durata-rapida));
+}
 
 /* Schermate notte e passi nella fascia 768-1023 px: il fondo resta a tutta
    larghezza, il contenuto ha la larghezza delle pagine della fondamenta #10 (#11) */
@@ -3562,6 +3565,17 @@ button.riga-lista {
 
 /* Area di tocco di almeno 44 x 44 senza cambiare il disegno */
 .btn-icona--piccolo,
+.btn-icona,
+.quadrato-nest:not(.quadrato-nest--notte),
+.btn--piccolo,
+.btn-tenue,
+.btn-aggiungi--desktop,
+.btn-link,
+.btn-pericolo,
+.stato-vuoto__testo a,
+.stato-vuoto__testo button,
+.puntina,
+.scelta-colore__colore,
 .casella,
 .tondo-spunta,
 .selettore__voce,
@@ -3570,6 +3584,17 @@ button.riga-lista {
   position: relative;
 }
 .btn-icona--piccolo::before,
+.btn-icona::before,
+.quadrato-nest:not(.quadrato-nest--notte)::before,
+.btn--piccolo::before,
+.btn-tenue::before,
+.btn-aggiungi--desktop::before,
+.btn-link::before,
+.btn-pericolo::before,
+.stato-vuoto__testo a::before,
+.stato-vuoto__testo button::before,
+.puntina::before,
+.scelta-colore__colore::before,
 .casella::before,
 .tondo-spunta::before,
 .selettore__voce::before,
@@ -3592,6 +3617,59 @@ button.riga-lista {
   clip-path: inset(
     calc((100% - var(--size-tocco)) / 2) calc(-1 * var(--space-1))
   );
+}
+
+/* Vai al contenuto (#67 punto 8): primo elemento raggiungibile con Tab, nascosto
+   finche' non ha il focus. Sta dopo l'elenco dell'area di tocco: resta fixed. */
+.vai-al-contenuto {
+  position: fixed;
+  top: calc(var(--space-3) + env(safe-area-inset-top));
+  left: max(var(--grid-margine-mobile), env(safe-area-inset-left));
+  z-index: var(--z-toast);
+}
+.vai-al-contenuto:not(:focus) {
+  width: var(--border-sottile);
+  height: var(--border-sottile);
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+@media (min-width: 768px) {
+  .vai-al-contenuto {
+    left: max(
+      var(--grid-margine-mobile),
+      calc(
+        (100% - var(--grid-colonna-stretta)) / 2 + var(--grid-margine-mobile)
+      )
+    );
+  }
+}
+@media (min-width: 1024px) {
+  .vai-al-contenuto {
+    top: calc((var(--size-nav-desktop) - var(--size-controllo)) / 2);
+    left: max(
+      var(--grid-margine-desktop),
+      calc((100% - var(--grid-contenuto-max)) / 2)
+    );
+  }
+}
+main[tabindex="-1"]:focus {
+  outline: none;
+}
+
+/* Barra mobile con due azioni a destra (#67 punto 9): Cerca e Notifiche */
+.barra--due-azioni {
+  grid-template-columns: 1fr minmax(0, auto) 1fr;
+}
+.barra--due-azioni .lente {
+  min-width: 0;
+}
+.barra__azioni {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 /* Conteggio leggibile sulle voci non scelte (#43 punto 18) */

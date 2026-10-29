@@ -1326,6 +1326,7 @@ function OverlaysSection() {
 
 function StatesSection() {
   const [retries, setRetries] = useState(0);
+  const [exitRetries, setExitRetries] = useState(0);
   return (
     <>
       <Section id="stato-vuoto" title="Stato vuoto">
@@ -1454,6 +1455,19 @@ function StatesSection() {
           />
           <p className={styles.contatore} data-testid="errore-pagina-conteggio">
             Riprova: {retries}
+          </p>
+        </Example>
+        <Example caption="errore-pagina · con uscita">
+          <PageError
+            onRetry={() => setExitRetries((n) => n + 1)}
+            exit={{ label: "Torna a Oggi", href: "/oggi" }}
+            data-testid="errore-pagina-con-uscita"
+          />
+          <p
+            className={styles.contatore}
+            data-testid="errore-pagina-con-uscita-conteggio"
+          >
+            Riprova: {exitRetries}
           </p>
         </Example>
       </Section>

@@ -3,7 +3,11 @@ import { Icon } from "@/components/ui/Icon/Icon";
 
 export default function AppNotFound() {
   return (
-    <main className="pagina pagina-desktop pagina-desktop--centrata">
+    <main
+      id="contenuto"
+      tabIndex={-1}
+      className="pagina pagina-desktop pagina-desktop--centrata"
+    >
       <div className="errore-pagina">
         <span className="errore-pagina__icona">
           <Icon name="compass" />

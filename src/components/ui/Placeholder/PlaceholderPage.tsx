@@ -69,7 +69,7 @@ export function PlaceholderPage({
 
   if (WITH_SETTINGS_MENU.includes(pageKey)) {
     return (
-      <main className="pagina pagina-desktop">
+      <main id="contenuto" tabIndex={-1} className="pagina pagina-desktop">
         <div className="colonne colonne--menu">
           <SettingsMenu />
           <div className="colonna">{content}</div>
@@ -79,7 +79,11 @@ export function PlaceholderPage({
   }
 
   return (
-    <main className="pagina pagina-desktop pagina-desktop--centrata">
+    <main
+      id="contenuto"
+      tabIndex={-1}
+      className="pagina pagina-desktop pagina-desktop--centrata"
+    >
       {content}
     </main>
   );
