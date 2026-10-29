@@ -77,6 +77,32 @@ as $$
   );
 $$;
 
+-- True when the caller may add people to the event (participants, escort): adding a
+-- person widens who sees the event in full. Every member of the household for a
+-- «Tutto il Nest» event (everybody sees it anyway); only the author for «Solo io» and
+-- «Occupato» (privacy review of PR #96). Removing people narrows who sees the event and
+-- stays allowed to everyone who sees it in full.
+create or replace function private.can_manage_event_people(p_event_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1
+    from public.events e
+    join public.household_members me
+      on me.household_id = e.household_id
+     and me.user_id = (select auth.uid())
+    where e.id = p_event_id
+      and (
+        e.visibility = 'household'
+        or e.author_member_id = me.id
+      )
+  );
+$$;
+
 -- ---------------------------------------------------------------------------
 -- events: normalisation and guards
 -- ---------------------------------------------------------------------------
@@ -149,7 +175,9 @@ create trigger events_before_insert
   for each row execute function private.events_before_insert();
 
 -- The app changes the content of an event (column grants). Household, author and
--- creation time never change; only the author changes who sees the event.
+-- creation time never change; only the author changes who sees the event. On «Solo io»
+-- and «Occupato» events only the author sets a new escort (it would widen who sees the
+-- event); removing the escort stays allowed.
 create or replace function private.events_before_update()
 returns trigger
 language plpgsql
@@ -168,6 +196,12 @@ begin
        and (old.author_member_id is null
             or old.author_member_id is distinct from (select private.current_member_id())) then
       raise exception 'only the author can change who sees an event' using errcode = '42501';
+    end if;
+
+    if new.escort_member_id is not null
+       and new.escort_member_id is distinct from old.escort_member_id
+       and not private.can_manage_event_people(old.id) then
+      raise exception 'only the author can add people to this event' using errcode = '42501';
     end if;
   end if;
 

@@ -9,7 +9,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(29);
+select plan(30);
 
 insert into public.events (
   id, household_id, author_member_id, title, location, starts_at, ends_at, visibility,
@@ -35,6 +35,9 @@ values
    'Occupato con Giulia', null, '2026-10-20 12:00+02', '2026-10-20 13:00+02', 'busy', null, 'none', null, null),
   ('b4000000-0000-4000-8000-000000000008', '22222222-2222-4222-8222-222222222222', 'b1000000-0000-4000-8000-000000000002',
    'Solo io con Giulia', null, '2026-10-21 12:00+02', '2026-10-21 13:00+02', 'private', null, 'none', null, null),
+  ('b4000000-0000-4000-8000-000000000015', '22222222-2222-4222-8222-222222222222', 'b1000000-0000-4000-8000-000000000002',
+   'Regalo', 'Centro', '2026-10-24 15:00+02', '2026-10-24 16:00+02', 'private',
+   'b1000000-0000-4000-8000-000000000001', 'none', null, null),
   ('b4000000-0000-4000-8000-000000000009', '22222222-2222-4222-8222-222222222222', 'b1000000-0000-4000-8000-000000000002',
    'Corsa', null, '2026-10-22 07:00+02', '2026-10-22 08:00+02', 'busy',
    'b1000000-0000-4000-8000-000000000001', 'none', null, null),
@@ -93,9 +96,17 @@ select results_eq(
        ('b4000000-0000-4000-8000-000000000004', 'Nuoto Leo', '2026-10-22 15:00Z', '2026-10-22 16:30Z', 'household', false),
        ('b4000000-0000-4000-8000-000000000003', 'Cena da Marta', '2026-10-23 18:00Z', '2026-10-23 21:00Z', 'household', false),
        ('b4000000-0000-4000-8000-000000000012', 'Mio privato', '2026-10-24 07:00Z', '2026-10-24 08:00Z', 'private', false),
+       ('b4000000-0000-4000-8000-000000000015', 'Regalo', '2026-10-24 13:00Z', '2026-10-24 14:00Z', 'private', false),
        ('b4000000-0000-4000-8000-000000000011', 'Domenica sera', '2026-10-25 19:00Z', '2026-10-25 20:00Z', 'household', false),
        ('b4000000-0000-4000-8000-000000000014', 'Turno', '2026-10-25 22:00Z', '2026-10-26 00:00Z', 'household', false) $$,
   'B gets every occurrence of the week in order: her own, «Tutto il Nest», the ones she is involved in, the «Occupato» of B2 masked; local times kept across the change of time'
+);
+select results_eq(
+  $$ select e.title, e.location, e.escort_member_id, e.is_masked
+     from public.list_household_events('2026-10-19 00:00+02', '2026-10-26 00:00+01') e
+     where e.id = 'b4000000-0000-4000-8000-000000000015' $$,
+  $$ values ('Regalo', 'Centro', 'b1000000-0000-4000-8000-000000000001'::uuid, false) $$,
+  'B, escort of a «Solo io» of B2, gets it in full'
 );
 select results_eq(
   $$ select e.id, e.title, e.location, e.escort_member_id, e.member_ids, e.author_member_id
@@ -219,7 +230,7 @@ select results_eq(
        ('Turno', false), ('Notte', false), ('Riunione segreta', false), ('Prova privata', false),
        ('Occupato con Giulia', false), ('Nuoto Leo', false), ('Solo io con Giulia', false),
        ('Allenamento', false), ('Corsa', false), ('Nuoto Leo', false), ('Cena da Marta', false),
-       ('Domenica sera', false), ('Turno', false) $$,
+       ('Regalo', false), ('Domenica sera', false), ('Turno', false) $$,
   'B2 gets his «Occupato» and «Solo io» in full, and not the «Solo io» of B'
 );
 select results_eq(

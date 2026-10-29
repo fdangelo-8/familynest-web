@@ -12,7 +12,11 @@
 -- Membership is checked with `household_id = (select public.current_household_id())`:
 -- one account belongs to at most one household, the subquery runs once per statement.
 -- The policies of the two tables never read each other's table: they use the security
--- definer helpers private.is_event_participant() and private.can_read_event().
+-- definer helpers private.is_event_participant(), private.can_read_event() and
+-- private.can_manage_event_people().
+-- Only the author of a «Solo io» or «Occupato» event adds people to it (participants
+-- here, escort in the events_before_update trigger): adding a person would show the
+-- event in full to them.
 
 -- ---------------------------------------------------------------------------
 -- Privileges on the tables
@@ -59,6 +63,8 @@ revoke execute on function private.can_read_event(uuid) from public, anon;
 grant execute on function private.current_member_id() to authenticated;
 grant execute on function private.is_event_participant(uuid) to authenticated;
 grant execute on function private.can_read_event(uuid) to authenticated;
+revoke execute on function private.can_manage_event_people(uuid) from public, anon;
+grant execute on function private.can_manage_event_people(uuid) to authenticated;
 
 -- Reading the calendar: signed-in users only.
 revoke execute on function public.list_household_events(timestamptz, timestamptz) from public, anon;
@@ -140,12 +146,15 @@ create policy event_members_select on public.event_members
     and private.can_read_event(event_id)
   );
 
+-- Adding a person widens who sees the event: on «Solo io» and «Occupato» events only
+-- the author adds participants (private.can_manage_event_people). Removing stays
+-- allowed to everyone who sees the event in full.
 drop policy if exists event_members_insert on public.event_members;
 create policy event_members_insert on public.event_members
   for insert to authenticated
   with check (
     household_id = (select public.current_household_id())
-    and private.can_read_event(event_id)
+    and private.can_manage_event_people(event_id)
   );
 
 drop policy if exists event_members_delete on public.event_members;

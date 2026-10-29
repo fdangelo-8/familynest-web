@@ -8,7 +8,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(108);
+select plan(120);
 
 -- ---------------------------------------------------------------------------
 -- Schema
@@ -142,6 +142,12 @@ select lives_ok(
      values ('Inglese', '2026-10-23 16:00+02', '2026-10-23 17:00+02', 'household', 'b1000000-0000-4000-8000-000000000004') $$,
   'B2 adds an event accompanied by Anna (adult without account)'
 );
+select lives_ok(
+  $$ insert into public.events (title, starts_at, ends_at, visibility, escort_member_id)
+     values ('Regalo', '2026-10-24 15:00+02', '2026-10-24 16:00+02', 'private', 'b1000000-0000-4000-8000-000000000001') $$,
+  'B2 adds a «Solo io» event accompanied by Giulia'
+);
+select set_config('test.gift', (select e.id::text from public.events e where e.title = 'Regalo'), true);
 
 select set_config('test.busy', (select e.id::text from public.events e where e.title = 'Riunione segreta'), true);
 select set_config('test.private', (select e.id::text from public.events e where e.title = 'Prova privata'), true);
@@ -323,10 +329,10 @@ set local request.jwt.claims to '{"sub":"bbbbbbbb-0000-4000-8000-000000000001","
 
 select results_eq(
   $$ select e.title from public.events e
-     where e.title in ('Riunione segreta', 'Prova privata', 'Piscina', 'Sorpresa', 'Corsa', 'Inglese')
+     where e.title in ('Riunione segreta', 'Prova privata', 'Piscina', 'Sorpresa', 'Corsa', 'Inglese', 'Regalo')
      order by e.starts_at $$,
-  $$ values ('Piscina'), ('Sorpresa'), ('Corsa'), ('Inglese') $$,
-  'B reads «Tutto il Nest» events, a «Solo io» where she participates and an «Occupato» she accompanies'
+  $$ values ('Piscina'), ('Sorpresa'), ('Corsa'), ('Inglese'), ('Regalo') $$,
+  'B reads «Tutto il Nest» events, a «Solo io» where she participates, an «Occupato» and a «Solo io» she accompanies'
 );
 select is_empty(
   $$ select 1 from public.events e
@@ -401,6 +407,79 @@ select results_eq(
      select count(*)::integer from d $$,
   $$ values (1) $$,
   'B removes Anna from it'
+);
+select lives_ok(
+  $$ update public.events set escort_member_id = 'b1000000-0000-4000-8000-000000000001'
+     where id = current_setting('test.pool')::uuid $$,
+  'B sets herself as escort of a «Tutto il Nest» event of B2'
+);
+select lives_ok(
+  $$ update public.events set escort_member_id = null where id = current_setting('test.pool')::uuid $$,
+  'B removes the escort of a «Tutto il Nest» event of B2'
+);
+
+-- Adding people widens who sees a «Solo io» or «Occupato» event: only its author does it.
+select throws_ok(
+  $$ insert into public.event_members (event_id, member_id)
+     values (current_setting('test.surprise')::uuid, 'b1000000-0000-4000-8000-000000000004') $$,
+  '42501', null,
+  'B, participant of a «Solo io» of B2, cannot add a participant'
+);
+select throws_ok(
+  $$ update public.events set escort_member_id = 'b1000000-0000-4000-8000-000000000004'
+     where id = current_setting('test.surprise')::uuid $$,
+  '42501', null,
+  'B, participant of a «Solo io» of B2, cannot set an escort'
+);
+select throws_ok(
+  $$ insert into public.event_members (event_id, member_id)
+     values (current_setting('test.run')::uuid, 'b1000000-0000-4000-8000-000000000004') $$,
+  '42501', null,
+  'B, escort of an «Occupato» of B2, cannot add a participant'
+);
+select throws_ok(
+  $$ update public.events set escort_member_id = 'b1000000-0000-4000-8000-000000000004'
+     where id = current_setting('test.gift')::uuid $$,
+  '42501', null,
+  'B, escort of a «Solo io» of B2, cannot hand the escort to another adult'
+);
+
+-- The author of a «Solo io» adds people.
+set local request.jwt.claims to '{"sub":"bbbbbbbb-0000-4000-8000-000000000002","role":"authenticated"}';
+select lives_ok(
+  $$ insert into public.event_members (event_id, member_id)
+     values (current_setting('test.surprise')::uuid, 'b1000000-0000-4000-8000-000000000003') $$,
+  'B2, author of the «Solo io», adds a participant'
+);
+select lives_ok(
+  $$ update public.events set escort_member_id = 'b1000000-0000-4000-8000-000000000004'
+     where id = current_setting('test.surprise')::uuid $$,
+  'B2, author of the «Solo io», sets an escort'
+);
+
+-- Removing people narrows who sees the event: still allowed to who sees it in full.
+set local request.jwt.claims to '{"sub":"bbbbbbbb-0000-4000-8000-000000000001","role":"authenticated"}';
+select results_eq(
+  $$ with u as (update public.events set escort_member_id = null
+                where id = current_setting('test.surprise')::uuid returning 1)
+     select count(*)::integer from u $$,
+  $$ values (1) $$,
+  'B, participant of the «Solo io», removes its escort'
+);
+select results_eq(
+  $$ with d as (delete from public.event_members
+                where event_id = current_setting('test.surprise')::uuid
+                  and member_id = 'b1000000-0000-4000-8000-000000000003' returning 1)
+     select count(*)::integer from d $$,
+  $$ values (1) $$,
+  'B, participant of the «Solo io», removes a participant'
+);
+-- Default of issue #19: who sees an event in full may delete it.
+select results_eq(
+  $$ with d as (delete from public.events where id = current_setting('test.surprise')::uuid returning 1)
+     select count(*)::integer from d $$,
+  $$ values (1) $$,
+  'B, participant of a «Solo io» of B2, deletes it'
 );
 
 -- B2 changes the visibility of his own event; then B no longer reads it.
@@ -563,7 +642,7 @@ select is_empty(
   $$ select 1 from public.events e
      where e.id in (current_setting('test.busy')::uuid, current_setting('test.private')::uuid,
                     current_setting('test.surprise')::uuid, current_setting('test.run')::uuid,
-                    current_setting('test.english')::uuid) $$,
+                    current_setting('test.english')::uuid, current_setting('test.gift')::uuid) $$,
   'the «Solo io» and «Occupato» events of B2 are deleted with him'
 );
 select is_empty(
