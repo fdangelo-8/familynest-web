@@ -1,7 +1,10 @@
+"use client";
+
 import { Brand, Claim, Stickers } from "@/components/accesso/parts";
-import { Icon } from "@/components/ui/Icon/Icon";
+import { Button } from "@/components/ui/Button/Button";
 import { Skeleton, SkeletonGroup } from "@/components/ui/Skeleton/Skeleton";
 import styles from "./onboarding.module.css";
+import { BackArrow, BackLink } from "./PeopleBack";
 import { Steps } from "./Steps";
 
 function Placeholder() {
@@ -11,10 +14,9 @@ function Placeholder() {
         <Skeleton shape="riga" />
         <Skeleton shape="riga" />
       </SkeletonGroup>
-      <button type="button" className="btn-tratteggiato" disabled>
-        <Icon name="plus" />
+      <Button variant="tratteggiato" icon="plus" disabled>
         Aggiungi una persona o un animale
-      </button>
+      </Button>
     </>
   );
 }
@@ -32,8 +34,9 @@ function Heading() {
 
 /**
  * Shown while the page reads the Nest: head, steps and heading are real, the
- * list is two skeleton rows and "Continua" waits (plain buttons: `Button` is
- * for client components). The step count is the
+ * list is two skeleton rows and "Continua" waits. A client component because
+ * `Button` builds its click handler, which a server component cannot pass to
+ * the DOM. The step count is the
  * default (4): the real one arrives with the list.
  */
 export function PeopleSkeleton() {
@@ -41,7 +44,7 @@ export function PeopleSkeleton() {
     <main className={styles.root}>
       <div className={`${styles.mobile} passo-onboarding`}>
         <div className="passo-onboarding__testa">
-          <span className="btn-icona" aria-hidden="true" />
+          <BackArrow />
           <Steps current={2} total={4} />
           <span className="barra__vuoto" aria-hidden="true" />
         </div>
@@ -50,9 +53,9 @@ export function PeopleSkeleton() {
           <Placeholder />
         </div>
         <div className="dialogo__azioni">
-          <button type="button" className="btn-primary btn--pieno" disabled>
-            <span className="btn__testo">Continua</span>
-          </button>
+          <Button full disabled>
+            Continua
+          </Button>
         </div>
       </div>
 
@@ -69,10 +72,8 @@ export function PeopleSkeleton() {
             <Placeholder />
           </div>
           <div className="modale__piede">
-            <span />
-            <button type="button" className="btn-primary" disabled>
-              <span className="btn__testo">Continua</span>
-            </button>
+            <BackLink />
+            <Button disabled>Continua</Button>
           </div>
         </div>
       </div>

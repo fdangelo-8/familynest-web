@@ -32,7 +32,14 @@ function parse(input: unknown): MemberValues | null {
     if (kind === "adult") return null;
     if (typeof birthDate !== "string") return null;
     if (!/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) return null;
-    if (Number.isNaN(Date.parse(`${birthDate}T00:00:00Z`))) return null;
+    // Round trip: "2026-02-31" parses but is not a real day.
+    const parsed = new Date(`${birthDate}T00:00:00Z`);
+    if (
+      Number.isNaN(parsed.getTime()) ||
+      parsed.toISOString().slice(0, 10) !== birthDate
+    ) {
+      return null;
+    }
     if (birthDate > toDateFieldValue(new Date())) return null;
     date = birthDate;
   }

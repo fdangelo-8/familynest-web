@@ -1,8 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { startTransition, useState } from "react";
+import { startTransition, useEffect, useRef, useState } from "react";
 import { addMember, updateMember } from "@/app/onboarding/persone/actions";
 import { Brand, Claim, Stickers } from "@/components/accesso/parts";
 import { Avatar } from "@/components/ui/Avatar/Avatar";
@@ -13,6 +12,7 @@ import type {
 } from "@/components/ui/ColorChoice/ColorChoice";
 import { Icon } from "@/components/ui/Icon/Icon";
 import { IconButton } from "@/components/ui/IconButton/IconButton";
+import { VisuallyHidden } from "@/components/ui/VisuallyHidden/VisuallyHidden";
 import {
   MemberSheet,
   type MemberKind,
@@ -25,6 +25,7 @@ import {
 } from "@/lib/household-limits";
 import type { Database } from "@/types/database";
 import styles from "./onboarding.module.css";
+import { BackArrow, BackLink } from "./PeopleBack";
 import { Steps } from "./Steps";
 
 /** One member of the Nest as the page needs it. No account id, no email. */
@@ -153,6 +154,24 @@ export function PeopleStep({
     others.map((person) => ({ color: person.color, by: person.name }));
 
   const refresh = () => startTransition(() => router.refresh());
+  // The list is out of date after a refused save (Nest already full).
+  const stale = useRef(false);
+  // The tenth member leaves no "Aggiungi" to go back to: focus goes to Continua.
+  const focusContinue = useRef(false);
+  const mobileActions = useRef<HTMLDivElement>(null);
+  const desktopActions = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (sheet !== null || !focusContinue.current) return;
+    focusContinue.current = false;
+    for (const box of [mobileActions.current, desktopActions.current]) {
+      const button = box?.querySelector("button");
+      if (button && button.offsetParent !== null) {
+        button.focus();
+        return;
+      }
+    }
+  }, [sheet]);
 
   function openAdd() {
     setAnnouncement("");
@@ -174,22 +193,30 @@ export function PeopleStep({
       birthDate: values.birthDate,
       color: values.color,
     };
-    return sheet?.person
-      ? updateMember(sheet.person.id, input)
-      : addMember(input);
+    return (
+      sheet?.person ? updateMember(sheet.person.id, input) : addMember(input)
+    ).then((result) => {
+      if (!result.ok && result.reason === "full") stale.current = true;
+      return result;
+    });
   }
 
   function onSaved(values: MemberValues) {
     setAnnouncement(
       sheet?.person ? "Modifiche salvate." : `${values.name} è nel Nest.`,
     );
+    if (!sheet?.person && people.length + 1 >= MAX_HOUSEHOLD_MEMBERS) {
+      focusContinue.current = true;
+    }
     refresh();
   }
 
   function onClose() {
     setSheet(null);
-    // A refused save (Nest already full) leaves the list out of date.
-    refresh();
+    if (stale.current) {
+      stale.current = false;
+      refresh();
+    }
   }
 
   const goOn = () => router.push(NEXT_STEP);
@@ -198,14 +225,7 @@ export function PeopleStep({
     <main className={styles.root}>
       <div className={`${styles.mobile} passo-onboarding`}>
         <div className="passo-onboarding__testa">
-          <Link
-            href="/onboarding?cambia=1"
-            prefetch={false}
-            className="btn-icona"
-            aria-label="Indietro"
-          >
-            <Icon name="arrow-left" />
-          </Link>
+          <BackArrow />
           <Steps current={2} total={total} />
           <span className="barra__vuoto" aria-hidden="true" />
         </div>
@@ -219,7 +239,7 @@ export function PeopleStep({
             onEdit={openEdit}
           />
         </div>
-        <div className="dialogo__azioni">
+        <div className="dialogo__azioni" ref={mobileActions}>
           <Button full onClick={goOn}>
             Continua
           </Button>
@@ -244,21 +264,15 @@ export function PeopleStep({
               onEdit={openEdit}
             />
           </div>
-          <div className="modale__piede">
-            <Link
-              href="/onboarding?cambia=1"
-              prefetch={false}
-              className="btn-link btn-link--secondario"
-            >
-              Indietro
-            </Link>
+          <div className="modale__piede" ref={desktopActions}>
+            <BackLink />
             <Button onClick={goOn}>Continua</Button>
           </div>
         </div>
       </div>
 
-      <div role="status" className="visivamente-nascosto">
-        {announcement}
+      <div role="status">
+        <VisuallyHidden>{announcement}</VisuallyHidden>
       </div>
 
       <MemberSheet
