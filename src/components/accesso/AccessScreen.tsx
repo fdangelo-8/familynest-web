@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button/Button";
+import { cx } from "@/components/ui/cx";
 import { Icon } from "@/components/ui/Icon/Icon";
 import { createClient } from "@/lib/supabase/client";
 import styles from "./accesso.module.css";
@@ -45,8 +46,16 @@ function ErrorNotice({
   }, []);
 
   return (
-    <div className="avviso avviso--errore" role="alert" tabIndex={-1} ref={ref}>
-      <Icon name={error.cancelled ? "circle-alert" : "wifi-off"} />
+    <div
+      className={cx(
+        "avviso",
+        error.cancelled ? "avviso--info" : "avviso--errore",
+      )}
+      role={error.cancelled ? "status" : "alert"}
+      tabIndex={-1}
+      ref={ref}
+    >
+      <Icon name={error.cancelled ? "info" : "wifi-off"} />
       <p className="avviso__testo">{errorText(error)}</p>
       <Button variant="link" onClick={onRetry}>
         Riprova

@@ -1,14 +1,24 @@
 name: CI
 
+# Runs on pull requests and on main only: a push to a branch with an open pull
+# request is covered by the pull_request run, so it never runs twice.
 on:
   pull_request:
     branches: [main]
   push:
     branches: [main]
 
+# A new push cancels the run still in progress for the same pull request or branch.
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
+
+permissions:
+  contents: read
+  # Changed files of the pull request.
+  pull-requests: read
+  # Job durations in the run summary.
+  actions: read
 
 env:
   # Optional: when the secrets are not set these are empty and nothing fails.
@@ -19,7 +29,49 @@ env:
 jobs:
   check:
     runs-on: ubuntu-latest
+    outputs:
+      app: ${{ steps.changes.outputs.app }}
+      visual: ${{ steps.changes.outputs.visual }}
     steps:
+      # Decides which of the heavier jobs are needed, here to avoid paying for an extra job.
+      # On main everything runs. On a pull request:
+      # - app: build and Playwright tests, skipped when only docs/** (except docs/mockup/,
+      #   which the tests read) or *.md files change;
+      # - visual: visual tests, only when something they render or depend on changes.
+      - name: Detect changes
+        id: changes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT" != "pull_request" ]; then
+            echo "app=true" >> "$GITHUB_OUTPUT"
+            echo "visual=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          files="$RUNNER_TEMP/files.txt"
+          gh api --paginate "repos/$REPO/pulls/$PR/files" --jq '.[].filename' > "$files"
+          echo "File modificati:"; cat "$files"
+
+          app=false
+          if awk '/^docs\/mockup\// { print; next } /^docs\// || /\.md$/ { next } { print }' "$files" | grep -q .; then
+            app=true
+          fi
+          visual=false
+          if grep -Eq '^(src/|tests/visual/|tests/fixtures/|public/|package(-lock)?\.json$|playwright\.config\.|next\.config\.|\.github/workflows/ci\.yml$|\.github/actions/)|\.css$' "$files"; then
+            visual=true
+          fi
+          echo "app=$app" >> "$GITHUB_OUTPUT"
+          echo "visual=$visual" >> "$GITHUB_OUTPUT"
+          {
+            echo "Build e test Playwright: $([ "$app" = true ] && echo "sì" || echo "no, solo documentazione")"
+            echo ""
+            echo "Test visivi: $([ "$visual" = true ] && echo "sì" || echo "no, nessun file visivo cambiato")"
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
@@ -28,8 +80,16 @@ jobs:
       - run: npm ci
       - run: npm run hooks:test
       - run: npm run check
+      - uses: ./.github/actions/job-duration
+        if: always()
+        continue-on-error: true
+        with:
+          job: ${{ github.job }}
+          token: ${{ github.token }}
 
   build:
+    needs: check
+    if: needs.check.outputs.app == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -39,10 +99,22 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+      - uses: ./.github/actions/job-duration
+        if: always()
+        continue-on-error: true
+        with:
+          job: ${{ github.job }}
+          token: ${{ github.token }}
 
   test:
-    needs: build
+    needs: [check, build]
+    if: needs.check.outputs.app == 'true'
     runs-on: ubuntu-latest
+    # Same group as the seed-test-users workflow, so the seed never resets the
+    # remote test data while a suite is using it.
+    concurrency:
+      group: remote-test-data
+      cancel-in-progress: false
     container:
       # Keep in sync with the @playwright/test version in package.json.
       image: mcr.microsoft.com/playwright:v1.64.1-noble
@@ -54,14 +126,19 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install chromium
-      - run: npm run test
+      # One Playwright run for all suites, so the app is built once.
+      - run: npx playwright test tests/e2e tests/a11y ${{ needs.check.outputs.visual == 'true' && 'tests/visual' || '' }}
         env:
           CI: "true"
-          # Optional: empty when the secrets are not set; current tests do not need them.
+          # Optional: empty when the secrets are not set; tests that need them skip themselves.
           TEST_USER_A_EMAIL: ${{ secrets.TEST_USER_A_EMAIL }}
           TEST_USER_A_PASSWORD: ${{ secrets.TEST_USER_A_PASSWORD }}
           TEST_USER_B_EMAIL: ${{ secrets.TEST_USER_B_EMAIL }}
           TEST_USER_B_PASSWORD: ${{ secrets.TEST_USER_B_PASSWORD }}
+          TEST_USER_B2_EMAIL: ${{ secrets.TEST_USER_B2_EMAIL }}
+          TEST_USER_B2_PASSWORD: ${{ secrets.TEST_USER_B2_PASSWORD }}
+          TEST_USER_C_EMAIL: ${{ secrets.TEST_USER_C_EMAIL }}
+          TEST_USER_C_PASSWORD: ${{ secrets.TEST_USER_C_PASSWORD }}
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
@@ -70,3 +147,9 @@ jobs:
             playwright-report/
             test-results/
           retention-days: 7
+      - uses: ./.github/actions/job-duration
+        if: always()
+        continue-on-error: true
+        with:
+          job: ${{ github.job }}
+          token: ${{ github.token }}

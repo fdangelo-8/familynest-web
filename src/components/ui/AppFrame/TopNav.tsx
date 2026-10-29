@@ -2,8 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { NAV_ITEMS, getActiveNavItem } from "@/lib/app-routes";
+import {
+  NAV_ITEMS,
+  getActiveNavItem,
+  getNavAriaCurrent,
+} from "@/lib/app-routes";
 import { cx } from "../cx";
+import { Icon } from "../Icon/Icon";
 import { NestSquare } from "../NestSquare/NestSquare";
 import { NotificationsLink, SearchLink } from "./IconLinks";
 
@@ -23,13 +28,19 @@ export function TopNav() {
             key={item.id}
             href={item.href}
             className={cx("nav-alto__voce", active === item.id && "is-attiva")}
-            aria-current={active === item.id ? "page" : undefined}
+            aria-current={getNavAriaCurrent(pathname, "desktop", item.id)}
           >
             {item.label}
           </Link>
         ))}
       </nav>
       <div className="nav-alto__azioni">
+        <Link href="/aggiungi" className="btn-aggiungi btn-aggiungi--desktop">
+          <span className="btn-aggiungi__piu">
+            <Icon name="plus" size="s" />
+          </span>
+          Aggiungi
+        </Link>
         <SearchLink label="Cerca nel Nest (⌘K)" />
         <NotificationsLink />
         <NestSquare />

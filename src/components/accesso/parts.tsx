@@ -19,7 +19,7 @@ export function Brand() {
   );
 }
 
-/** Decorative stickers (decision D1: three, no health-related one). */
+/** Decorative stickers (decision D1: four, none health-related). */
 export function Stickers() {
   return (
     <div className="adesivi" aria-hidden="true">
@@ -40,6 +40,12 @@ export function Stickers() {
           <Icon name="heart" />
         </span>
         Liberi insieme <span className="adesivo__nota">ven sera</span>
+      </span>
+      <span className="adesivo adesivo--destra membro-glicine">
+        <span className="avatar membro-glicine" aria-hidden="true">
+          L
+        </span>
+        Calcetto <span className="adesivo__nota">sab 10:00</span>
       </span>
     </div>
   );

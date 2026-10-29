@@ -71,7 +71,10 @@ Se in `docs/mockup/` c'è un mockup senza issue corrispondenti:
 
 - Un compito per lancio, con un prompt autosufficiente: numero della issue e/o PR, cosa fare, branch da usare, cosa consegnare, e "rispondi con FATTO, DA CORREGGERE, SUPERATO, NON SUPERATO o BLOCCATO".
 - **Isolamento:** `sviluppatore`, `architetto-dati`, `tester-funzionale`, `tester-visivo`, `designer` e `documentalista` si lanciano sempre con `isolation: "worktree"`. Analista e revisore possono lavorare senza worktree perché non modificano il repository.
-- **Parallelismo massimo:** 3 pagine in lavorazione contemporanea (da `in-specifica` a `in-test`). Un solo lavoro `shared/*` e un solo lavoro `db/*` alla volta, mai in parallelo con altro lavoro sugli stessi file.
+- **Parallelismo massimo** (decisione di Francesco del 29/10, issue #82):
+  - **Analisi e specifica grafica:** fino a 6 pagine insieme in `in-specifica`. Non toccano il codice.
+  - **Sviluppo:** fino a 4 pagine insieme (da `da-sviluppare` a `in-test`), solo se non toccano gli stessi file.
+  - **File condivisi e database:** un solo lavoro `shared/*` e un solo lavoro `db/*` alla volta, mai in parallelo con altro lavoro sugli stessi file.
 - Lancia in parallelo solo lavori indipendenti (nello stesso messaggio più chiamate Agent).
 - Non passare mai segreti nei prompt.
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { isCasaRoute } from "@/lib/app-routes";
+import { hasTodayLinkOnError, isCasaRoute } from "@/lib/app-routes";
 import { PageError } from "../PageError/PageError";
 
 /**
@@ -20,7 +20,11 @@ export function ErrorMain({
   const isCasa = isCasaRoute(pathname);
 
   return (
-    <main className="pagina pagina-desktop pagina-desktop--centrata">
+    <main
+      id="contenuto"
+      tabIndex={-1}
+      className="pagina pagina-desktop pagina-desktop--centrata"
+    >
       {isCasa ? (
         <div className="intestazione-desktop">
           <h1 className="t-titolo-pagina">Casa</h1>
@@ -31,6 +35,11 @@ export function ErrorMain({
         icon="circle-alert"
         retrying={retrying}
         onRetry={onRetry}
+        exit={
+          hasTodayLinkOnError(pathname)
+            ? { label: "Torna a Oggi", href: "/oggi" }
+            : undefined
+        }
       />
     </main>
   );

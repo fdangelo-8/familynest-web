@@ -216,17 +216,17 @@ test.describe("regole di navigazione (funzioni pure)", () => {
     expect(getBarConfig("/oggi")).toEqual({
       kind: "section",
       center: "lens",
-      right: "bell",
+      actions: ["bell"],
     });
     expect(getBarConfig("/calendario")).toEqual({
       kind: "section",
       center: "lens",
-      right: "search",
+      actions: ["search", "bell"],
     });
     expect(getBarConfig("/casa/spesa")).toEqual({
       kind: "section",
       center: "title",
-      right: "search",
+      actions: ["search", "bell"],
     });
     expect(getBarConfig("/nest")).toEqual({ kind: "close", href: "/oggi" });
     expect(getBarConfig("/profilo")).toEqual({
@@ -429,9 +429,10 @@ test.describe("sessione con utenti", () => {
     await openAs(page, baseURL, "A", "/casa/da-fare");
     await expect(page.getByText("In arrivo")).toBeVisible();
     await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
-    await expect(mainNav(page).locator('[aria-current="page"]')).toHaveText(
-      /Casa/,
-    );
+    // Casa is highlighted for a related page: "true", not "page" (#67)
+    const active = mainNav(page).locator("[aria-current]");
+    await expect(active).toHaveText(/Casa/);
+    await expect(active).toHaveAttribute("aria-current", "true");
   });
 });
 
@@ -510,9 +511,14 @@ test.describe("mobile 390 px", () => {
     for (const [name, url, current] of steps) {
       await mainNav(page).getByRole("link", { name, exact: true }).click();
       await expect(page).toHaveURL(url);
-      const active = mainNav(page).locator('[aria-current="page"]');
+      // "page" only on the exact address; /aggiungi highlights Oggi as "true"
+      const active = mainNav(page).locator("[aria-current]");
       await expect(active).toHaveCount(1);
       await expect(active).toHaveText(current);
+      await expect(active).toHaveAttribute(
+        "aria-current",
+        name === "Aggiungi" ? "true" : "page",
+      );
     }
   });
 
@@ -522,9 +528,10 @@ test.describe("mobile 390 px", () => {
   }) => {
     withUser("A");
     await openAs(page, baseURL, "A", "/notifiche");
-    const active = mainNav(page).locator('[aria-current="page"]');
+    const active = mainNav(page).locator("[aria-current]");
     await expect(active).toHaveCount(1);
     await expect(active).toHaveText("Oggi");
+    await expect(active).toHaveAttribute("aria-current", "true");
     for (const route of [
       "/nest",
       "/ricerca",
@@ -588,7 +595,9 @@ test.describe("mobile 390 px", () => {
     await expect(
       bar.getByRole("link", { name: "Cerca nel Nest" }),
     ).toHaveAttribute("href", "/ricerca");
-    await expect(bar.getByRole("link", { name: "Notifiche" })).toHaveCount(0);
+    await expect(
+      bar.getByRole("link", { name: "Notifiche", exact: true }),
+    ).toHaveAttribute("href", "/notifiche");
 
     await page.goto("/casa/spesa");
     bar = visibleHeader(page);
@@ -599,6 +608,9 @@ test.describe("mobile 390 px", () => {
     await expect(
       bar.getByRole("link", { name: "Cerca nel Nest" }),
     ).toBeVisible();
+    await expect(
+      bar.getByRole("link", { name: "Notifiche", exact: true }),
+    ).toHaveAttribute("href", "/notifiche");
     await expect(bar.getByRole("group", { name: LENS })).toHaveCount(0);
   });
 
@@ -833,6 +845,7 @@ test.describe("desktop 1280 px", () => {
       "Oggi",
       "Calendario",
       "Casa",
+      "Aggiungi",
       "Cerca nel Nest (⌘K)",
       "Notifiche",
       NEST_A,
@@ -845,6 +858,7 @@ test.describe("desktop 1280 px", () => {
       "/oggi",
       "/calendario",
       "/casa/spesa",
+      "/aggiungi",
       "/ricerca",
       "/notifiche",
       "/nest",
@@ -852,7 +866,8 @@ test.describe("desktop 1280 px", () => {
     await expect(header.getByRole("navigation", NAV)).toBeVisible();
     // the only visible main navigation is the one in the header
     await expect(mainNav(page)).toHaveCount(1);
-    await expect(page.getByRole("link", { name: "Aggiungi" })).toHaveCount(0);
+    // one visible "Aggiungi": the one in the top navigation (#67)
+    await expect(page.getByRole("link", { name: "Aggiungi" })).toHaveCount(1);
   });
 
   test("CA-16: il logo porta a Oggi", async ({ page, baseURL }) => {
@@ -884,6 +899,11 @@ test.describe("desktop 1280 px", () => {
       "/impostazioni": null,
       "/membri": null,
     };
+    const voiceHref: Record<string, string> = {
+      Oggi: "/oggi",
+      Calendario: "/calendario",
+      Casa: "/casa/spesa",
+    };
     for (const [route, voice] of Object.entries(expected)) {
       await page.goto(route);
       await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
@@ -891,7 +911,11 @@ test.describe("desktop 1280 px", () => {
       if (voice) {
         await expect(active, route).toHaveCount(1);
         await expect(active, route).toHaveText(voice);
-        await expect(active, route).toHaveAttribute("aria-current", "page");
+        // "page" only on the exact address of the entry (#67)
+        await expect(active, route).toHaveAttribute(
+          "aria-current",
+          route === voiceHref[voice] ? "page" : "true",
+        );
       } else {
         await expect(active, route).toHaveCount(0);
       }
@@ -1037,7 +1061,11 @@ test.describe("desktop 1280 px", () => {
     await expect(
       page.getByRole("link", { name: "FamilyNest", exact: true }),
     ).toBeVisible();
-    await expect(page.getByRole("link", { name: "Aggiungi" })).toHaveCount(0);
+    // from 1024 px the only visible "Aggiungi" is in the top navigation (#67)
+    await expect(page.getByRole("link", { name: "Aggiungi" })).toHaveCount(1);
+    await expect(
+      visibleHeader(page).getByRole("link", { name: "Aggiungi" }),
+    ).toHaveAttribute("href", "/aggiungi");
   });
 
   test("CA-29: su desktop la lente sta nel main, non nella navigazione in alto", async ({

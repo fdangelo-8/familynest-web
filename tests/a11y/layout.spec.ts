@@ -122,15 +122,17 @@ test.describe("pagine dell'app (utente A)", () => {
     const expected =
       testInfo.project.name === "desktop"
         ? [
+            "Vai al contenuto",
             "FamilyNest",
             "Oggi",
             "Calendario",
             "Casa",
+            "Aggiungi",
             "Cerca nel Nest",
             "Notifiche",
             "Apri Casa D'Angelo",
           ]
-        : ["Apri Casa D'Angelo", "Io", "Nest", "Notifiche"];
+        : ["Vai al contenuto", "Apri Casa D'Angelo", "Io", "Nest", "Notifiche"];
     for (const name of expected) {
       await page.keyboard.press("Tab");
       const label = await page.evaluate(() => {
@@ -156,5 +158,27 @@ test.describe("pagine dell'app (utente A)", () => {
       expect(box!.height).toBeGreaterThanOrEqual(44);
       expect(box!.width).toBeGreaterThanOrEqual(44);
     }
+    // Icon buttons and the Nest square are drawn 40 px but touchable at 44 px (#67)
+    const touch = await page.evaluate(() =>
+      Array.from(
+        document.querySelectorAll<HTMLElement>(
+          ".barra .btn-icona, .barra .quadrato-nest",
+        ),
+      ).map((el) => {
+        const r = el.getBoundingClientRect();
+        const cx = r.x + r.width / 2;
+        const cy = r.y + r.height / 2;
+        const hit = (x: number, y: number) =>
+          el.contains(document.elementFromPoint(x, y));
+        return (
+          hit(cx - 21, cy) &&
+          hit(cx + 21, cy) &&
+          hit(cx, cy - 21) &&
+          hit(cx, cy + 21)
+        );
+      }),
+    );
+    expect(touch.length).toBeGreaterThan(0);
+    expect(touch.every(Boolean)).toBe(true);
   });
 });

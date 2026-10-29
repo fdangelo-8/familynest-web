@@ -2,7 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { NAV_ITEMS, getActiveNavItem, hasBottomNav } from "@/lib/app-routes";
+import {
+  NAV_ITEMS,
+  getActiveNavItem,
+  getNavAriaCurrent,
+  hasBottomNav,
+} from "@/lib/app-routes";
 import { cx } from "../cx";
 import { Icon, type IconName } from "../Icon/Icon";
 
@@ -26,7 +31,7 @@ export function BottomNav() {
             key={item.id}
             href={item.href}
             className={cx("nav-basso__voce", active === item.id && "is-attiva")}
-            aria-current={active === item.id ? "page" : undefined}
+            aria-current={getNavAriaCurrent(pathname, "mobile", item.id)}
           >
             <Icon name={ICONS[item.id]} />
             {item.label}
