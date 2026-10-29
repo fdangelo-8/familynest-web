@@ -399,7 +399,18 @@ test.describe("punto 8: Vai al contenuto", () => {
     await expect(skip).toBeFocused();
     const box = (await skip.boundingBox())!;
     const viewport = page.viewportSize()!;
-    expect(box.height).toBeGreaterThanOrEqual(44);
+    // Decision of the coordinator (editable by Francesco): 40 px (.btn--piccolo),
+    // tolerance 1 px. The 44 px touch area is not checked here.
+    expect(Math.abs(box.height - 40)).toBeLessThanOrEqual(1);
+    await expect(skip).toBeVisible();
+    const ring = await skip.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return (
+        (s.outlineStyle !== "none" && parseFloat(s.outlineWidth) > 0) ||
+        s.boxShadow !== "none"
+      );
+    });
+    expect(ring).toBe(true);
     expect(box.x).toBeGreaterThanOrEqual(0);
     expect(box.y).toBeGreaterThanOrEqual(0);
     expect(box.x + box.width).toBeLessThanOrEqual(viewport.width);
