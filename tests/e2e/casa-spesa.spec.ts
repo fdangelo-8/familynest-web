@@ -1324,7 +1324,7 @@ test.describe("caricamento ed errore", () => {
     await expect(titles(toTakeSection(page))).toHaveText(["Burro"]);
   });
 
-  test("CA-34: «Riprova» a rete tornata invia la coda e il fuoco va sul titolo della sezione", async ({
+  test("CA-34: «Riprova» a rete tornata invia la coda e il fuoco va sul titolo della prima sezione", async ({
     page,
     baseURL,
   }) => {
@@ -1340,7 +1340,28 @@ test.describe("caricamento ed errore", () => {
     await page.context().setOffline(false);
     await page.keyboard.press("Enter");
     await expect(alerts(page)).toHaveCount(0, { timeout: 5000 });
-    await expect(toTakeHeading(page)).toBeFocused();
+    // With fewer than 3 things «Le più comuni» is the first section.
+    await expect(
+      page.getByRole("heading", { level: 3, name: "Le più comuni" }),
+    ).toBeFocused();
+  });
+
+  test("CA-34: se la rete torna da sola con il fuoco su «Riprova», il fuoco va sul titolo della prima sezione", async ({
+    page,
+    baseURL,
+  }) => {
+    await addShopping("A", ["Pane", "Latte"]);
+    await openSpesa(page, baseURL, "A");
+    await page.context().setOffline(true);
+    await page.getByRole("checkbox", { name: "Preso: Pane" }).click();
+    const retry = alerts(page).getByRole("button", { name: "Riprova" });
+    await expect(retry).toBeVisible();
+    await retry.focus();
+    await page.context().setOffline(false);
+    await expect(alerts(page)).toHaveCount(0, { timeout: 5000 });
+    await expect(
+      page.getByRole("heading", { level: 3, name: "Le più comuni" }),
+    ).toBeFocused();
   });
 
   test("CA-35: se la lettura iniziale fallisce c'è l'errore di pagina; «Riprova» a lettura tornata mostra la lista", async ({
