@@ -67,6 +67,13 @@ function readConfig() {
       "NEXT_PUBLIC_SUPABASE_URL does not point to the FamilyNest project or to the local database. Nothing was written.",
     );
   }
+  // The remote project is seeded only by the GitHub workflow: a local shell that
+  // still points to the remote project (a common mistake) must not write there.
+  if (!isLocal && process.env.GITHUB_ACTIONS !== "true") {
+    fail(
+      "NEXT_PUBLIC_SUPABASE_URL points to the remote project: use the 'Seed utenti di test' workflow, or point to the local database. Nothing was written.",
+    );
+  }
 
   const users = USER_KEYS.map((key) => ({
     key,

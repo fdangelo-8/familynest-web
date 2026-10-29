@@ -98,7 +98,7 @@ Mappa compito → agente:
 - **Domande non bloccanti** dell'analista: adotta il default proposto, scrivilo nella issue come "Decisione presa (modificabile da Francesco)".
 - **in-sviluppo → in-revisione:** PR aperta, `check` e `build` verdi.
 - **in-revisione → in-test:** commento `APPROVATA`. Con `DA CORREGGERE` → sviluppatore, poi di nuovo revisore.
-- **in-test → pronta-per-francesco:** `SUPERATO` da entrambi i tester e tutti i controlli CI verdi (`node scripts/agenti/gh.mjs pr-checks <n>`, exit 0), branch allineato a main, checklist della skill `definizione-di-fatto` soddisfatta. Verificala tu, punto per punto.
+- **in-test → pronta-per-francesco:** `SUPERATO` da entrambi i tester e tutti i controlli CI verdi (`node scripts/agenti/gh.mjs pr-checks <n>`, exit 0) con `test` **eseguito e passato** sull'ultimo commit (non `skipped`: la suite Playwright parte solo con l'etichetta `in-test`; se dopo averla messa non arriva un push, rilancia l'ultima run CI della PR con `gh run rerun <id>`), branch allineato a main, checklist della skill `definizione-di-fatto` soddisfatta. Verificala tu, punto per punto.
 - **Limite rientri:** conta sulla PR i commenti che iniziano con `DA CORREGGERE` o `NON SUPERATO`. Al quarto, etichetta `bloccata` ed escalation.
 - **Errore tecnico:** stesso errore CI due volte di fila non legato al codice (rete, servizio, permessi) → `bloccata`.
 
