@@ -450,6 +450,16 @@ test.describe("segnaposto", () => {
         page.getByRole("heading", { level: 1, name: h1, exact: true }),
       ).toBeVisible();
       await expect(page).toHaveTitle(title);
+      if (route === "/casa/spesa") {
+        // Real page since #21: no placeholder, the quick-add field is there.
+        await expect(page.getByTestId("pagina-segnaposto")).toHaveCount(0);
+        await expect(
+          page.getByRole("textbox", {
+            name: /^(Aggiungi alla spesa…|Cosa manca in casa\?)$/,
+          }),
+        ).toBeVisible();
+        return;
+      }
       const placeholder = page.getByTestId("pagina-segnaposto");
       await expect(placeholder).toBeVisible();
       // empty state of the design system

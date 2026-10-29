@@ -9,9 +9,9 @@ import type { BrowserContext } from "@playwright/test";
 // Credentials come only from environment variables:
 //   NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
 //   TEST_USER_A_EMAIL / _PASSWORD, TEST_USER_B_*, TEST_USER_C_*.
-// A = Marco (Casa D'Angelo), B = Giulia (Casa Bianchi), C = no Nest.
+// A = Marco (Casa D'Angelo), B = Giulia and B2 = Paolo (Casa Bianchi), C = no Nest.
 
-export type TestUserKey = "A" | "B" | "C";
+export type TestUserKey = "A" | "B" | "B2" | "C";
 
 type SessionCookie = { name: string; value: string; expires?: number };
 
