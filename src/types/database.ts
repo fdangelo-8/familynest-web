@@ -421,7 +421,17 @@ export type Database = {
       household_type:
         "single" | "couple" | "family_with_children" | "roommates";
       invitation_status: "pending" | "accepted" | "revoked";
-      member_color: "pomodoro" | "glicine" | "salvia" | "cobalto" | "zafferano";
+      member_color:
+        | "pomodoro"
+        | "glicine"
+        | "salvia"
+        | "cobalto"
+        | "zafferano"
+        | "lampone"
+        | "ceruleo"
+        | "peonia"
+        | "basilico"
+        | "cannella";
       member_kind: "adult" | "child" | "pet";
     };
     CompositeTypes: {
@@ -554,7 +564,18 @@ export const Constants = {
       event_visibility: ["private", "busy", "household"],
       household_type: ["single", "couple", "family_with_children", "roommates"],
       invitation_status: ["pending", "accepted", "revoked"],
-      member_color: ["pomodoro", "glicine", "salvia", "cobalto", "zafferano"],
+      member_color: [
+        "pomodoro",
+        "glicine",
+        "salvia",
+        "cobalto",
+        "zafferano",
+        "lampone",
+        "ceruleo",
+        "peonia",
+        "basilico",
+        "cannella",
+      ],
       member_kind: ["adult", "child", "pet"],
     },
   },

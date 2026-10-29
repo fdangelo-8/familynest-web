@@ -1,4 +1,5 @@
--- Schema, privacy and seed checks (issue #9: CA-1, CA-2 functions, CA-3, CA-32).
+-- Schema, privacy and seed checks (issue #9: CA-1, CA-2 functions, CA-3, CA-32;
+-- issue #74: CA-17).
 begin;
 create extension if not exists pgtap with schema extensions;
 
@@ -70,7 +71,12 @@ select is_empty(
 -- Enumerated types.
 select enum_has_labels('public', 'household_type', array['single', 'couple', 'family_with_children', 'roommates'], 'household_type labels');
 select enum_has_labels('public', 'member_kind', array['adult', 'child', 'pet'], 'member_kind labels');
-select enum_has_labels('public', 'member_color', array['pomodoro', 'glicine', 'salvia', 'cobalto', 'zafferano'], 'member_color labels');
+-- Issue #74 CA-17: the 10 colours, the 5 of issue #9 first, in order.
+select enum_has_labels(
+  'public', 'member_color',
+  array['pomodoro', 'glicine', 'salvia', 'cobalto', 'zafferano', 'lampone', 'ceruleo', 'peonia', 'basilico', 'cannella'],
+  'CA-17 (#74): member_color has the 10 colours in order'
+);
 select enum_has_labels('public', 'invitation_status', array['pending', 'accepted', 'revoked'], 'invitation_status labels');
 
 -- CA-2: functions offered to the pages.
