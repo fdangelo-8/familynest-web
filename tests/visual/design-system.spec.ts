@@ -85,3 +85,14 @@ test("#63: toast senza icona", async ({ page }) => {
   ).toBeVisible();
   await expect(page).toHaveScreenshot("toast-senza-icona.png");
 });
+
+// #74 / #80 (PR #91): ten member colours, two-row colour choice, alert icon.
+for (const id of [
+  "avatar-dieci-colori",
+  "scelta-colore-dieci",
+  "avviso-icona-personalizzata",
+]) {
+  test(`#74/#80: esempio ${id}`, async ({ page }) => {
+    await expect(page.getByTestId(id)).toHaveScreenshot(`esempio-${id}.png`);
+  });
+}
