@@ -342,6 +342,88 @@ export type Database = {
           },
         ];
       };
+      todos: {
+        Row: {
+          assignee_member_id: string | null;
+          created_at: string;
+          created_by_member_id: string | null;
+          done_at: string | null;
+          done_by_member_id: string | null;
+          due_date: string | null;
+          for_member_id: string | null;
+          household_id: string;
+          id: string;
+          is_private: boolean;
+          title: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          assignee_member_id?: string | null;
+          created_at?: string;
+          created_by_member_id?: string | null;
+          done_at?: string | null;
+          done_by_member_id?: string | null;
+          due_date?: string | null;
+          for_member_id?: string | null;
+          household_id?: string;
+          id?: string;
+          is_private?: boolean;
+          title: string;
+          updated_at?: string;
+        };
+        Update: {
+          assignee_member_id?: string | null;
+          created_at?: string;
+          created_by_member_id?: string | null;
+          done_at?: string | null;
+          done_by_member_id?: string | null;
+          due_date?: string | null;
+          for_member_id?: string | null;
+          household_id?: string;
+          id?: string;
+          is_private?: boolean;
+          title?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "todos_assignee_fkey";
+            columns: ["assignee_member_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "household_members";
+            referencedColumns: ["id", "household_id"];
+          },
+          {
+            foreignKeyName: "todos_created_by_fkey";
+            columns: ["created_by_member_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "household_members";
+            referencedColumns: ["id", "household_id"];
+          },
+          {
+            foreignKeyName: "todos_done_by_fkey";
+            columns: ["done_by_member_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "household_members";
+            referencedColumns: ["id", "household_id"];
+          },
+          {
+            foreignKeyName: "todos_for_member_fkey";
+            columns: ["for_member_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "household_members";
+            referencedColumns: ["id", "household_id"];
+          },
+          {
+            foreignKeyName: "todos_household_id_fkey";
+            columns: ["household_id"];
+            isOneToOne: false;
+            referencedRelation: "households";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
