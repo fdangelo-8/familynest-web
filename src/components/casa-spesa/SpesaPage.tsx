@@ -330,6 +330,7 @@ export function SpesaPage({ nestName }: { nestName: string }) {
           {offline ? (
             <Alert
               variant="errore"
+              icon="wifi-off"
               action={
                 <Button
                   variant="link"
