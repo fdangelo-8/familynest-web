@@ -1,6 +1,7 @@
 # Database pipeline.
-# - On every pull request: start a throwaway local Postgres, apply ALL migrations
-#   from scratch, run pgTAP tests, and check generated types are committed.
+# - On every pull request that changes more than docs/** and *.md files: start a
+#   throwaway local Postgres, apply ALL migrations from scratch, run pgTAP tests,
+#   and check generated types are committed.
 # - On push to main: apply new migrations to the FamilyNest Supabase project.
 #   The connection string lives only in the SUPABASE_DB_URL GitHub secret:
 #   no agent ever holds database credentials.
@@ -9,11 +10,17 @@ name: db
 on:
   pull_request:
     branches: [main]
+    # Documentation alone cannot change the database: no run, no minutes.
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
   push:
     branches: [main]
 
 permissions:
   contents: read
+  # Job durations in the run summary.
+  actions: read
 
 concurrency:
   group: db-${{ github.ref }}
@@ -76,6 +83,13 @@ jobs:
         run: |
           echo "Nessuna migrazione ancora presente, controlli database saltati."
 
+      - uses: ./.github/actions/job-duration
+        if: always()
+        continue-on-error: true
+        with:
+          job: ${{ github.job }}
+          token: ${{ github.token }}
+
   deploy:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
@@ -103,3 +117,10 @@ jobs:
             *) echo "::error::SUPABASE_DB_URL non punta al progetto yksosqvugiempsldejyt."; exit 1 ;;
           esac
           npx supabase db push --db-url "$SUPABASE_DB_URL" --include-all
+
+      - uses: ./.github/actions/job-duration
+        if: always()
+        continue-on-error: true
+        with:
+          job: ${{ github.job }}
+          token: ${{ github.token }}

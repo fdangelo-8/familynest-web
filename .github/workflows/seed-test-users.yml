@@ -1,0 +1,40 @@
+name: Seed utenti di test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Same group as the e2e job of ci.yml, so the seed never resets the remote
+# test data while a suite is using it.
+concurrency:
+  group: remote-test-data
+  cancel-in-progress: false
+
+jobs:
+  seed:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run seed:test-users
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          TEST_USER_A_EMAIL: ${{ secrets.TEST_USER_A_EMAIL }}
+          TEST_USER_A_PASSWORD: ${{ secrets.TEST_USER_A_PASSWORD }}
+          TEST_USER_B_EMAIL: ${{ secrets.TEST_USER_B_EMAIL }}
+          TEST_USER_B_PASSWORD: ${{ secrets.TEST_USER_B_PASSWORD }}
+          TEST_USER_B2_EMAIL: ${{ secrets.TEST_USER_B2_EMAIL }}
+          TEST_USER_B2_PASSWORD: ${{ secrets.TEST_USER_B2_PASSWORD }}
+          TEST_USER_C_EMAIL: ${{ secrets.TEST_USER_C_EMAIL }}
+          TEST_USER_C_PASSWORD: ${{ secrets.TEST_USER_C_PASSWORD }}
