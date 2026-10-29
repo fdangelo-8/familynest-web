@@ -39,6 +39,10 @@ declare
   c_max_members constant integer := 10;
   v_count integer;
 begin
+  -- Not covered by this limit: a future security definer function that inserts for a
+  -- caller who is not (yet) a member (skipped by the check below, like create_household
+  -- for its first member) and an update of household_id run by postgres or service_role
+  -- (this trigger fires on insert only; the API roles cannot change household_id).
   -- Not a member of the target household: RLS refuses the row with 42501.
   if (select auth.uid()) is not null
      and not private.is_household_member(new.household_id) then

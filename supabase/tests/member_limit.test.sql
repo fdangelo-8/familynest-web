@@ -24,9 +24,17 @@ select ok(
    where t.tgrelid = 'public.household_members'::regclass and t.tgname = 'household_members_limit'),
   'household_members_limit is a before insert trigger for each row'
 );
-select ok(
-  'household_members_limit' < 'household_members_normalize',
-  'household_members_limit fires before household_members_normalize (name order)'
+-- Postgres fires triggers of the same kind in name order (byte order, as the "C"
+-- collation): the limit must be the first before insert row trigger of the table.
+select results_eq(
+  $$ select t.tgname::text collate "default"
+     from pg_trigger t
+     where t.tgrelid = 'public.household_members'::regclass
+       and not t.tgisinternal
+       and t.tgtype & 7 = 7
+     order by t.tgname collate "C" $$,
+  $$ values ('household_members_limit'), ('household_members_normalize') $$,
+  'household_members_limit is the first before insert trigger, then household_members_normalize'
 );
 select ok(
   (select p.prosecdef from pg_proc p where p.oid = 'public.household_members_enforce_limit()'::regprocedure),
