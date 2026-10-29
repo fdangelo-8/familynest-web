@@ -189,6 +189,42 @@ test.describe("settimana e giorni a Roma", () => {
     );
   });
 
+  test("articolo davanti ai giorni 1, 8 e 11", () => {
+    const now = "2026-10-20T13:52:00Z";
+    expect(formatFirstDeadline("2026-11-08T10:00:00Z", now)).toBe(
+      "Il primo scade l'8 novembre",
+    );
+    expect(formatFirstDeadline("2026-11-11T10:00:00Z", now)).toBe(
+      "Il primo scade l'11 novembre",
+    );
+    expect(formatFirstDeadline("2026-11-01T10:00:00Z", now)).toBe(
+      "Il primo scade l'1 novembre",
+    );
+    expect(formatFirstDeadline("2026-11-18T10:00:00Z", now)).toBe(
+      "Il primo scade il 18 novembre",
+    );
+    // «entro» has no article
+    expect(formatDeadline("2026-11-08T10:00:00Z", now)).toBe(
+      "Entro 8 novembre",
+    );
+    const later = "2026-11-20T13:52:00Z";
+    expect(formatDeadline("2026-11-08T10:00:00Z", later)).toBe(
+      "Scaduto l'8 novembre",
+    );
+    expect(formatDeadline("2026-11-11T10:00:00Z", later)).toBe(
+      "Scaduto l'11 novembre",
+    );
+    expect(formatDeadline("2026-11-01T10:00:00Z", later)).toBe(
+      "Scaduto l'1 novembre",
+    );
+    expect(formatFirstDeadline("2026-11-08T10:00:00Z", later)).toBe(
+      "Il primo è scaduto l'8 novembre",
+    );
+    expect(
+      formatDeadline("2026-11-15T10:00:00Z", later, { capitalized: false }),
+    ).toBe("scaduto il 15 novembre");
+  });
+
   test("«Il primo scade ...»", () => {
     const now = "2026-10-20T13:52:00Z";
     const f = (due: string, capitalized = true) =>

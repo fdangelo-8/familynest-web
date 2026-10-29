@@ -466,13 +466,21 @@ function comingDeadline(due: Instant, now: Instant): string {
 function pastDeadline(due: Instant, now: Instant): string {
   return romeDayNumber(now) - romeDayNumber(due) === 1
     ? "ieri"
-    : `il ${dayAndMonth(due, now)}`;
+    : withDateArticle(dayAndMonth(due, now));
+}
+
+/** `il 28 ottobre`, but `l'1 ottobre`, `l'8 ottobre`, `l'11 ottobre`. */
+function withDateArticle(dayAndMonthText: string): string {
+  const day = Number.parseInt(dayAndMonthText, 10);
+  return day === 1 || day === 8 || day === 11
+    ? `l'${dayAndMonthText}`
+    : `il ${dayAndMonthText}`;
 }
 
 /** After «scade»: `a fine mese`, `il 28 ottobre`; words stay as they are. */
 function withPreposition(phrase: string): string {
   if (phrase.startsWith("fine ")) return `a ${phrase}`;
-  if (/^\d/.test(phrase)) return `il ${phrase}`;
+  if (/^\d/.test(phrase)) return withDateArticle(phrase);
   return phrase;
 }
 
