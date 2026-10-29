@@ -98,3 +98,37 @@ values
    'b1000000-0000-4000-8000-000000000001', null, now() - interval '2 days' + interval '1 minute'),
   ('b3000000-0000-4000-8000-000000000003', '22222222-2222-4222-8222-222222222222', 'Caffè', null,
    'b1000000-0000-4000-8000-000000000001', now() - interval '1 day', now() - interval '2 days' + interval '2 minutes');
+
+-- Things to do (issue #87): a few examples per household. Invented texts, no health
+-- data (D1). Due dates are days in Europe/Rome counted from today. Page tests start
+-- from an empty list and must clear these first (each household with its own session;
+-- the «Solo io» thing of Paolo only with Paolo's session).
+--   Casa D'Angelo (created by Marco): Firmare autorizzazione gita (per Sofia, Marco,
+--     in 3 days); Comprare la cuffia da nuoto (per Sofia, Laura, in 2 days); Sistemare
+--     la cantina (nothing else); Portare le scarpe dal calzolaio (Marco, done yesterday
+--     by Marco).
+--   Casa Bianchi: Prenotare il ristorante («Solo io» of Paolo, Paolo, tomorrow);
+--     Prenotare la palestra (created by Giulia, Paolo, no date).
+insert into public.todos (
+  id, household_id, title, created_by_member_id, assignee_member_id, for_member_id,
+  due_date, is_private, done_at, done_by_member_id, created_at
+)
+values
+  ('a4000000-0000-4000-8000-000000000001', '11111111-1111-4111-8111-111111111111', 'Firmare autorizzazione gita',
+   'a1000000-0000-4000-8000-000000000001', 'a1000000-0000-4000-8000-000000000001', 'a1000000-0000-4000-8000-000000000003',
+   (now() at time zone 'Europe/Rome')::date + 3, false, null, null, now() - interval '3 days'),
+  ('a4000000-0000-4000-8000-000000000002', '11111111-1111-4111-8111-111111111111', 'Comprare la cuffia da nuoto',
+   'a1000000-0000-4000-8000-000000000001', 'a1000000-0000-4000-8000-000000000002', 'a1000000-0000-4000-8000-000000000003',
+   (now() at time zone 'Europe/Rome')::date + 2, false, null, null, now() - interval '3 days' + interval '1 minute'),
+  ('a4000000-0000-4000-8000-000000000003', '11111111-1111-4111-8111-111111111111', 'Sistemare la cantina',
+   'a1000000-0000-4000-8000-000000000001', null, null,
+   null, false, null, null, now() - interval '3 days' + interval '2 minutes'),
+  ('a4000000-0000-4000-8000-000000000004', '11111111-1111-4111-8111-111111111111', 'Portare le scarpe dal calzolaio',
+   'a1000000-0000-4000-8000-000000000001', 'a1000000-0000-4000-8000-000000000001', null,
+   null, false, now() - interval '1 day', 'a1000000-0000-4000-8000-000000000001', now() - interval '3 days' + interval '3 minutes'),
+  ('b4000000-0000-4000-8000-000000000001', '22222222-2222-4222-8222-222222222222', 'Prenotare il ristorante',
+   'b1000000-0000-4000-8000-000000000002', 'b1000000-0000-4000-8000-000000000002', null,
+   (now() at time zone 'Europe/Rome')::date + 1, true, null, null, now() - interval '2 days'),
+  ('b4000000-0000-4000-8000-000000000002', '22222222-2222-4222-8222-222222222222', 'Prenotare la palestra',
+   'b1000000-0000-4000-8000-000000000001', 'b1000000-0000-4000-8000-000000000002', null,
+   null, false, null, null, now() - interval '2 days' + interval '1 minute');
