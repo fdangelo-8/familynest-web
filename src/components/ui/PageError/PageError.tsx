@@ -14,6 +14,8 @@ export type PageErrorProps = {
   headingLevel?: 1 | 2;
   /** The retry is running: spinner in the button */
   retrying?: boolean;
+  /** Optional way out shown under "Riprova" (link with text and address) */
+  exit?: { label: string; href: string };
   className?: string;
   "data-testid"?: string;
 };
@@ -26,6 +28,7 @@ export function PageError({
   icon = "wifi-off",
   headingLevel = 2,
   retrying = false,
+  exit,
   className,
   "data-testid": testId,
 }: PageErrorProps) {
@@ -50,6 +53,11 @@ export function PageError({
       >
         Riprova
       </Button>
+      {exit ? (
+        <Button variant="link" href={exit.href}>
+          {exit.label}
+        </Button>
+      ) : null}
     </div>
   );
 }

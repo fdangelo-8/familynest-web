@@ -33,6 +33,10 @@ function needSupabase() {
 }
 
 /** The error notice (the Next.js route announcer is also a role=alert). */
+function noticeWith(page: Page, text: string) {
+  return page.getByRole("status").filter({ hasText: text });
+}
+
 function alertWith(page: Page, text: string) {
   return page.getByRole("alert").filter({ hasText: text });
 }
@@ -323,15 +327,19 @@ test.describe("Apple e Google", () => {
   }) => {
     await page.goto("/auth/callback?provider=google&error=access_denied");
     await expect(page).toHaveURL(/\/accesso\?errore=google&annullato=1$/);
+    // Cancelled by the user: a neutral notice, not a red alert (#67)
     await expect(
-      alertWith(
+      noticeWith(
         page,
         "Accesso con Google annullato. Riprova o scegli un altro modo per entrare.",
       ),
     ).toBeVisible();
+    await expect(page.locator(".avviso--info:visible")).toHaveCount(1);
+    await expect(page.locator(".avviso--errore")).toHaveCount(0);
+    await expect(page.locator(".avviso[role=alert]")).toHaveCount(0);
     await page.goto("/auth/callback?provider=apple&error=access_denied");
     await expect(
-      alertWith(
+      noticeWith(
         page,
         "Accesso con Apple annullato. Riprova o scegli un altro modo per entrare.",
       ),

@@ -3,6 +3,7 @@ import { AppBar } from "@/components/ui/AppFrame/AppBar";
 import { BottomNav } from "@/components/ui/AppFrame/BottomNav";
 import { FrameError } from "@/components/ui/AppFrame/FrameError";
 import { NestProvider } from "@/components/ui/AppFrame/NestProvider";
+import { SkipLink } from "@/components/ui/AppFrame/SkipLink";
 import { SearchShortcut } from "@/components/ui/AppFrame/SearchShortcut";
 import { TopNav } from "@/components/ui/AppFrame/TopNav";
 import { requireNest } from "@/lib/nest-frame";
@@ -21,6 +22,7 @@ async function AppFrame({ children }: { children: React.ReactNode }) {
       members={frame.members}
       me={frame.me}
     >
+      <SkipLink />
       <SearchShortcut />
       <AppBar />
       <TopNav />
