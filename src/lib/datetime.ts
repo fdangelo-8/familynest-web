@@ -469,6 +469,13 @@ function pastDeadline(due: Instant, now: Instant): string {
     : `il ${dayAndMonth(due, now)}`;
 }
 
+/** After «scade»: `a fine mese`, `il 28 ottobre`; words stay as they are. */
+function withPreposition(phrase: string): string {
+  if (phrase.startsWith("fine ")) return `a ${phrase}`;
+  if (/^\d/.test(phrase)) return `il ${phrase}`;
+  return phrase;
+}
+
 function capitalizeIf(text: string, capitalized: boolean): string {
   return capitalized ? capitalize(text) : text;
 }
@@ -509,6 +516,6 @@ export function formatFirstDeadline(
   const text =
     days < 0
       ? `il primo è scaduto ${pastDeadline(due, now)}`
-      : `il primo scade ${comingDeadline(due, now)}`;
+      : `il primo scade ${withPreposition(comingDeadline(due, now))}`;
   return capitalizeIf(text, capitalized);
 }

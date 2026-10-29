@@ -197,9 +197,13 @@ test.describe("settimana e giorni a Roma", () => {
     expect(f("2026-10-21T10:00:00Z")).toBe("Il primo scade domani");
     expect(f("2026-10-23T10:00:00Z")).toBe("Il primo scade venerdì");
     expect(f("2026-10-23T10:00:00Z", false)).toBe("il primo scade venerdì");
-    expect(f("2026-10-28T10:00:00Z")).toBe("Il primo scade 28 ottobre");
-    expect(f("2026-10-31T10:00:00Z")).toBe("Il primo scade fine mese");
+    expect(f("2026-10-28T10:00:00Z")).toBe("Il primo scade il 28 ottobre");
+    expect(f("2026-10-31T10:00:00Z")).toBe("Il primo scade a fine mese");
     expect(f("2026-10-19T10:00:00Z")).toBe("Il primo è scaduto ieri");
+    expect(f("2026-11-30T10:00:00Z")).toBe("Il primo scade a fine novembre");
+    expect(f("2027-01-31T10:00:00Z")).toBe(
+      "Il primo scade a fine gennaio 2027",
+    );
   });
 
   test("scadenze attraverso il cambio dell'ora", () => {
