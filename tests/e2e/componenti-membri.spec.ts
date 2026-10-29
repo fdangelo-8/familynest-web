@@ -415,8 +415,10 @@ test.describe("MemberSheet: correzioni della revisione", () => {
       .click();
     const dialog = page.getByRole("dialog");
     await dialog.getByLabel("Nome").fill("Rita");
-    // let the entry animation finish
-    await page.waitForTimeout(600);
+    // let the entry animation finish (no fixed wait)
+    await dialog.evaluate((element) =>
+      Promise.all(element.getAnimations().map((a) => a.finished)),
+    );
     const before = (await dialog.boundingBox())!;
     await dialog.getByRole("button", { name: "Aggiungi Rita" }).click();
     await expect(
