@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { Alert } from "@/components/ui/Alert/Alert";
-import { Avatar } from "@/components/ui/Avatar/Avatar";
+import { Avatar, MEMBER_COLORS } from "@/components/ui/Avatar/Avatar";
 import { Button } from "@/components/ui/Button/Button";
 import { Card } from "@/components/ui/Card/Card";
 import { Checkbox } from "@/components/ui/Checkbox/Checkbox";
@@ -32,6 +32,10 @@ import { Toggle } from "@/components/ui/Toggle/Toggle";
 import { useToast } from "@/components/ui/Toast/ToastProvider";
 import { VisuallyHidden } from "@/components/ui/VisuallyHidden/VisuallyHidden";
 import styles from "./gallery.module.css";
+
+function colorLabel(color: string) {
+  return color.charAt(0).toLocaleUpperCase("it-IT") + color.slice(1);
+}
 
 function Section({
   id,
@@ -868,6 +872,49 @@ function PeopleSection() {
             <Avatar name="Insieme" color="insieme" size="m" nameShown />
           </div>
         </Example>
+        <Example caption="avatar · i 10 colori dei membri">
+          <div className={styles.riga} data-testid="avatar-dieci-colori">
+            {MEMBER_COLORS.filter((color) => color !== "insieme").map(
+              (color) => (
+                <Avatar
+                  key={color}
+                  name={colorLabel(color)}
+                  color={color}
+                  size="m"
+                />
+              ),
+            )}
+          </div>
+        </Example>
+        <Example caption="scelta-colore · 10 colori">
+          <div
+            className="scelta-colore"
+            role="radiogroup"
+            aria-label="Il tuo colore"
+            data-testid="scelta-colore-dieci"
+          >
+            {MEMBER_COLORS.filter((color) => color !== "insieme").map(
+              (color, index) => {
+                const taken = color === "glicine" || color === "salvia";
+                return (
+                  <button
+                    key={color}
+                    type="button"
+                    role="radio"
+                    aria-checked={index === 0}
+                    aria-label={
+                      taken
+                        ? `${colorLabel(color)} (già usato)`
+                        : colorLabel(color)
+                    }
+                    disabled={taken}
+                    className={`scelta-colore__colore membro-${color}`}
+                  />
+                );
+              },
+            )}
+          </div>
+        </Example>
       </Section>
 
       <Section id="etichetta" title="Etichetta">
@@ -1434,6 +1481,15 @@ function StatesSection() {
         <Example caption="avviso--senza-azione">
           <Alert variant="info" data-testid="avviso-senza-azione">
             Tutti riceveranno un avviso se cambi l&apos;orario.
+          </Alert>
+        </Example>
+        <Example caption="avviso · icona a scelta (wifi-off)">
+          <Alert
+            variant="avviso"
+            icon="wifi-off"
+            data-testid="avviso-icona-personalizzata"
+          >
+            Sei offline. Le modifiche partiranno appena torna la connessione.
           </Alert>
         </Example>
         <Example caption="avviso--ok">

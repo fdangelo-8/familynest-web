@@ -66,8 +66,17 @@ test.describe("token e base", () => {
     "--color-filo-campo": "#82858b",
     "--color-allerta-scuro": "#a82a27",
   };
+  // Approved by Francesco (#74, decision of 28/10): five new member colours.
+  const APPROVED_TOKENS_74: Record<string, string> = {
+    "--color-membro-lampone": "#d75596",
+    "--color-membro-ceruleo": "#4b96aa",
+    "--color-membro-peonia": "#f2a8c6",
+    "--color-membro-basilico": "#649100",
+    "--color-membro-cannella": "#af8273",
+  };
+  const APPROVED_TOKENS = { ...APPROVED_TOKENS_52, ...APPROVED_TOKENS_74 };
 
-  test("CA-1: i token coincidono con tokens.css, più le differenze approvate (#52)", async ({
+  test("CA-1: i token coincidono con tokens.css, più le differenze approvate (#52, #74)", async ({
     page,
   }) => {
     const tokens = tokensFromMockup();
@@ -112,9 +121,9 @@ test.describe("token e base", () => {
       return [...found];
     });
     const extra = declared.filter((name) => !names.includes(name));
-    expect(extra.sort()).toEqual(Object.keys(APPROVED_TOKENS_52).sort());
-    const added = await rootValues(page, Object.keys(APPROVED_TOKENS_52));
-    for (const [name, value] of Object.entries(APPROVED_TOKENS_52)) {
+    expect(extra.sort()).toEqual(Object.keys(APPROVED_TOKENS).sort());
+    const added = await rootValues(page, Object.keys(APPROVED_TOKENS));
+    for (const [name, value] of Object.entries(APPROVED_TOKENS)) {
       expect(normalize(added[name]!), name).toBe(normalize(value));
     }
   });
