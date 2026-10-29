@@ -48,7 +48,7 @@ async function open(page: import("@playwright/test").Page, route: string) {
   const isSpesa = route === "/casa/spesa";
   if (isSpesa) await installSpesaFake(page, { items: NORMAL_LIST });
   await page.goto(route);
-  await expect(page.locator("main")).toBeVisible();
+  await expect(page.getByRole("main")).toBeVisible();
   if (isSpesa) await expect(page.getByTestId("spesa-riga")).toHaveCount(7);
   await page.evaluate(() => document.fonts.ready);
 }

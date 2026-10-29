@@ -26,7 +26,9 @@ async function open(page: Page, options: FakeOptions, ready = true) {
   const fake = await installSpesaFake(page, options);
   await page.goto("/casa/spesa");
   if (ready) {
-    await expect(page.getByRole("region", { name: "Spesa" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Spesa" })).toBeVisible({
+      timeout: 20_000,
+    });
   }
   return fake;
 }
