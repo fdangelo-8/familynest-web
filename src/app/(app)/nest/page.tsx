@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { EnterFromBottom } from "@/components/nest/EnterFromBottom";
 import { InviteSomeone } from "@/components/nest/InviteSomeone";
 import { NestError } from "@/components/nest/NestError";
-import { Avatar, type MemberColor } from "@/components/ui/Avatar/Avatar";
+import { Avatar } from "@/components/ui/Avatar/Avatar";
 import { Icon, type IconName } from "@/components/ui/Icon/Icon";
 import { ListRow } from "@/components/ui/List/List";
 import { PLACEHOLDERS } from "@/lib/app-routes";
 import { formatAge } from "@/lib/datetime";
 import { MAX_HOUSEHOLD_MEMBERS } from "@/lib/household-limits";
-import { requireNest } from "@/lib/nest-frame";
+import { requireNest, type NestFrameData } from "@/lib/nest-frame";
 import { createClient } from "@/lib/supabase/server";
+import type { Database } from "@/types/database";
 
 export const metadata: Metadata = {
   title: PLACEHOLDERS["nest"].browserTitle,
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 type Row = {
   id: string;
   name: string;
-  color: MemberColor;
+  color: Database["public"]["Enums"]["member_color"];
   isMe: boolean;
   info: string;
 };
@@ -51,36 +51,27 @@ const SETTINGS: ReadonlyArray<{
 ];
 
 /** Reads Nest, members and (administrators only) invitations. `null` on any error. */
-async function load(): Promise<Loaded | null> {
+async function load(frame: NestFrameData): Promise<Loaded | null> {
   const supabase = await createClient();
-  // Two independent reads at once: fewer round trips before the page shows.
-  const [{ data: userData, error: userError }, householdResult] =
-    await Promise.all([
-      supabase.auth.getUser(),
-      supabase.rpc("current_household_id"),
-    ]);
-  if (userError || !userData.user) return null;
-  const userId = userData.user.id;
+  // The session and the Nest name were already read by requireNest():
+  // the colour is unique in the Nest, so it tells which member is the user.
+  const { data: householdId, error: householdError } = await supabase.rpc(
+    "current_household_id",
+  );
+  if (householdError || !householdId || !frame.me || frame.nestName === null) {
+    return null;
+  }
+  const myColor = frame.me.color;
 
-  const { data: householdId, error: householdError } = householdResult;
-  if (householdError || !householdId) return null;
+  const members = await supabase
+    .from("household_members")
+    .select("id, kind, name, color, birth_date, user_id, is_admin")
+    .eq("household_id", householdId)
+    .order("created_at", { ascending: true })
+    .order("id", { ascending: true });
+  if (members.error) return null;
 
-  const [household, members] = await Promise.all([
-    supabase
-      .from("households")
-      .select("name")
-      .eq("id", householdId)
-      .maybeSingle(),
-    supabase
-      .from("household_members")
-      .select("id, kind, name, color, birth_date, user_id, is_admin")
-      .eq("household_id", householdId)
-      .order("created_at", { ascending: true })
-      .order("id", { ascending: true }),
-  ]);
-  if (household.error || !household.data || members.error) return null;
-
-  const admin = members.data.some((m) => m.user_id === userId && m.is_admin);
+  const admin = members.data.some((m) => m.color === myColor && m.is_admin);
 
   // Only administrators can read invitations: the others never ask.
   // Only member, status and expiry are read, never the token or the code.
@@ -103,7 +94,7 @@ async function load(): Promise<Loaded | null> {
   }
 
   const rows = members.data.map((m): Row => {
-    const isMe = m.user_id === userId;
+    const isMe = m.color === myColor;
     let info: string;
     if (m.kind === "adult") {
       if (isMe) info = "Adulto · il tuo profilo";
@@ -127,7 +118,7 @@ async function load(): Promise<Loaded | null> {
     };
   });
 
-  return { nestName: household.data.name, rows, admin };
+  return { nestName: frame.nestName, rows, admin };
 }
 
 function MemberRow({ row }: { row: Row }) {
@@ -160,7 +151,7 @@ function MemberRow({ row }: { row: Row }) {
 export default async function Page() {
   // Session and Nest check before anything else (the layout is not a guard).
   const frame = await requireNest();
-  const loaded = frame.failed ? null : await load().catch(() => null);
+  const loaded = frame.failed ? null : await load(frame).catch(() => null);
   if (!loaded) return <NestError />;
 
   const { nestName, rows, admin } = loaded;
@@ -168,7 +159,6 @@ export default async function Page() {
 
   return (
     <main id="contenuto" tabIndex={-1} className="pagina pagina-desktop">
-      <EnterFromBottom />
       <div className="colonne colonne--due">
         <div className="colonna">
           <h1 className="t-titolo-pagina">{nestName}</h1>
@@ -219,7 +209,7 @@ export default async function Page() {
             <InviteSomeone
               full={full}
               taken={rows.map((row) => ({
-                color: row.color as Exclude<MemberColor, "insieme">,
+                color: row.color,
                 by: row.name,
               }))}
             />

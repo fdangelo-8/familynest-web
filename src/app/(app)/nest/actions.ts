@@ -5,6 +5,8 @@ import type { MemberSaveResult } from "@/components/ui/MemberSheet/MemberSheet";
 import { isHouseholdFullError } from "@/lib/household-limits";
 import { createClient } from "@/lib/supabase/server";
 
+// Same limit as NAME_MAX_LENGTH in MemberSheet. That is a "use client" module:
+// a server action gets only a reference from it, not the number.
 const NAME_MAX_LENGTH = 40;
 
 /**
