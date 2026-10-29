@@ -491,23 +491,30 @@ test.describe("chiudi", () => {
     await expect(page).toHaveURL(/\/oggi$/);
   });
 
-  test("CA-14: con movimento ridotto la pagina non si anima", async ({
-    page,
-    baseURL,
-  }) => {
-    await page.emulateMedia({ reducedMotion: "reduce" });
-    await signInSeeded(page, baseURL, "A");
-    await page.goto("/nest");
-    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-    const names = await page.evaluate(() => {
-      const main = document.querySelector("main")!;
-      return [main, ...Array.from(main.children)].map(
-        (el) => getComputedStyle(el).animationName,
+  // The entry from the bottom was removed for now (it comes with #104), so
+  // the page has no animation, with or without reduced motion.
+  for (const reducedMotion of ["reduce", "no-preference"] as const) {
+    test(`CA-14: nessuna animazione sulla pagina (movimento ${reducedMotion})`, async ({
+      page,
+      baseURL,
+    }) => {
+      await page.emulateMedia({ reducedMotion });
+      await signInSeeded(page, baseURL, "A");
+      await page.goto("/nest");
+      await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+      // During streaming a hidden second <main> may exist for a moment: only
+      // the main of the accessibility tree counts.
+      const main = page.getByRole("main");
+      await expect(main).toHaveCount(1);
+      const names = await main.evaluate((el) =>
+        [el, ...Array.from(el.children)].map(
+          (node) => getComputedStyle(node).animationName,
+        ),
       );
+      expect(names.length).toBeGreaterThan(1);
+      expect(names.every((n) => n === "none")).toBe(true);
     });
-    expect(names.length).toBeGreaterThan(1);
-    expect(names.every((n) => n === "none")).toBe(true);
-  });
+  }
 });
 
 // ------------------------------------------------------ invita qualcuno
@@ -636,7 +643,7 @@ test.describe("invita qualcuno", () => {
       await expect(dialog).toBeHidden();
       const adults = (await members(user)).filter((m) => m.kind === "adult");
       expect(adults.map((m) => m.name.length).sort((a, b) => a - b)).toEqual([
-        5, 40,
+        6, 40,
       ]);
     });
   });
@@ -990,22 +997,37 @@ test.describe("isolamento e privacy", () => {
 // ------------------------------------------------------------- errore
 
 test.describe("errore", () => {
-  test("CA-29: la pagina controlla il Nest prima di leggere e mostra PageError", async ({}, info) => {
+  test("CA-29: la pagina controlla il Nest prima di leggere e mostra l'errore con «Riprova»", async ({}, info) => {
     onlyMobile(info.project.name);
     const source = readFileSync(
       join(process.cwd(), "src/app/(app)/nest/page.tsx"),
       "utf8",
     );
-    const guard = source.indexOf("requireNest()");
+    const guard = source.indexOf("await requireNest()");
     expect(guard).toBeGreaterThan(-1);
-    for (const read of [".from(", ".rpc(", "current_household_id"]) {
-      const at = source.indexOf(read);
-      if (at !== -1) expect(guard).toBeLessThan(at);
-    }
-    expect(source).toMatch(/PageError/);
-    expect(source).toMatch(/Riprova/);
+    // The first reading in the component is the call to `load`.
+    const firstRead = source.indexOf("await load(");
+    expect(firstRead).toBeGreaterThan(guard);
+    // Any failed reading returns null and the page shows the error, no partial content.
+    expect(source).toMatch(/if \(!loaded\) return <NestError/);
     expect(source).not.toMatch(
       /SUPABASE_SECRET_KEY|supabase\/admin|createAdminClient/,
     );
+    const error = readFileSync(
+      join(process.cwd(), "src/components/nest/NestError.tsx"),
+      "utf8",
+    );
+    expect(error).toMatch(/ErrorMain/);
+    expect(error).toMatch(/router\.refresh\(\)/);
+    const errorMain = readFileSync(
+      join(process.cwd(), "src/components/ui/AppFrame/ErrorMain.tsx"),
+      "utf8",
+    );
+    expect(errorMain).toContain("Torna a Oggi");
+    const pageError = readFileSync(
+      join(process.cwd(), "src/components/ui/PageError/PageError.tsx"),
+      "utf8",
+    );
+    expect(pageError).toContain("Riprova");
   });
 });
