@@ -71,7 +71,7 @@ Revisione e test rimandano allo sviluppatore; al quarto rientro la pagina divent
 ## 5. Parallelismo e risorse condivise
 
 - **Fondamenta in sequenza:** design system e stili globali, layout e navigazione, login e sessione, schema base. Nessuna pagina parte prima che le fondamenta siano unite su `main`.
-- **Fino a 6 pagine in specifica e fino a 4 in sviluppo** (da `da-sviluppare` a `in-test`), se non toccano gli stessi file; un solo lavoro `shared/*` e un solo `db/*` alla volta. Ognuna in un git worktree isolato e su branch `feat/<pagina>` (decisione di Francesco del 29/10, #82).
+- **Fino a 12 pagine in specifica e fino a 4 in sviluppo** (da `da-sviluppare` a `in-test`), se non toccano gli stessi file; un solo lavoro `shared/*` e un solo `db/*` alla volta. Ognuna in un git worktree isolato e su branch `feat/<pagina>` (decisione di Francesco del 29/10, #82).
 - Lo sviluppatore modifica solo `src/app/(app)/<pagina>/`, `src/components/<pagina>/` e i test della pagina.
 
 | Risorsa                                                         | Proprietario                                              | Come si chiede              |
