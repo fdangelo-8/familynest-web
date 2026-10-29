@@ -11,7 +11,7 @@ import type { BrowserContext } from "@playwright/test";
 //   TEST_USER_A_EMAIL / _PASSWORD, TEST_USER_B_*, TEST_USER_C_*.
 // A = Marco (Casa D'Angelo), B = Giulia (Casa Bianchi), C = no Nest.
 
-export type TestUserKey = "A" | "B" | "C";
+export type TestUserKey = "A" | "B" | "B2" | "C";
 
 type SessionCookie = { name: string; value: string; expires?: number };
 
