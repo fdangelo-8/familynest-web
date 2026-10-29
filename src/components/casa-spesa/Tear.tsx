@@ -35,6 +35,8 @@ export function Tear({
 }) {
   const stripRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<Drag | null>(null);
+  // A pointer gesture is followed by a click: it was already handled.
+  const pointerHandled = useRef(false);
 
   const setProgress = (value: number) => {
     stripRef.current?.style.setProperty("--strappo-avanzamento", `${value}px`);
@@ -60,6 +62,7 @@ export function Tear({
 
   const handlePointerDown = (event: PointerEvent<HTMLButtonElement>) => {
     if (event.button !== 0 || !stripRef.current) return;
+    pointerHandled.current = true;
     const blade = event.currentTarget;
     const edge = parseFloat(getComputedStyle(blade).left) || 0;
     const travel = Math.max(
@@ -89,16 +92,21 @@ export function Tear({
   const handlePointerUp = (event: PointerEvent<HTMLButtonElement>) => {
     if (dragRef.current?.pointerId !== event.pointerId) return;
     finish(event.currentTarget, true);
+    window.setTimeout(() => {
+      pointerHandled.current = false;
+    }, 100);
   };
 
   const handlePointerCancel = (event: PointerEvent<HTMLButtonElement>) => {
     if (dragRef.current?.pointerId !== event.pointerId) return;
     finish(event.currentTarget, false);
+    pointerHandled.current = false;
   };
 
-  // Enter and Space reach the button as a click without a pointer (detail 0).
-  const handleClick = (event: { detail: number }) => {
-    if (event.detail === 0) onTear(true);
+  // A click without a pointer gesture comes from the keyboard or assistive tools.
+  const handleClick = () => {
+    if (pointerHandled.current) return;
+    onTear(true);
   };
 
   return (

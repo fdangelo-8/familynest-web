@@ -251,10 +251,35 @@ export function useShoppingList({
     (rows: ItemRow[], nextMembers: ShoppingMember[]) => {
       const keys = new Map<string, string>();
       for (const item of itemsRef.current) keys.set(item.id, item.key);
+      // Remember what had the focus: a change by someone else can remove it.
+      const active = document.activeElement;
+      const root = rootRef.current;
+      if (root && active && root.contains(active)) {
+        const row = active.closest<HTMLElement>("[data-item-key]");
+        const chip = active.closest<HTMLElement>("[data-chip]");
+        const headings = [
+          '[data-focus="to-take-heading"]',
+          '[data-focus="common-heading"]',
+        ];
+        if (row?.dataset.itemKey) {
+          const inTaken = row.closest('[data-testid="spesa-presi"]');
+          focusRequest.current = [
+            `[data-item-key="${CSS.escape(row.dataset.itemKey)}"] [role="checkbox"]`,
+            ...(inTaken ? ['[data-testid="spesa-presi"] h3'] : []),
+            ...headings,
+          ];
+        } else if (chip?.dataset.chip) {
+          focusRequest.current = [
+            `[data-chip="${CSS.escape(chip.dataset.chip)}"]`,
+            '[data-focus="common-heading"]',
+            '[data-focus="to-take-heading"]',
+          ];
+        }
+      }
       setItems(() => rows.map((row) => toItem(row, keys)));
       setMembers(nextMembers);
     },
-    [setItems],
+    [rootRef, setItems],
   );
 
   const queueIsBusy = useCallback(
@@ -334,7 +359,9 @@ export function useShoppingList({
         const match = read.rows
           .filter(
             (row) =>
-              !known.has(row.id) && nameKey(row.name) === nameKey(op.name),
+              !known.has(row.id) &&
+              row.checked_at === null &&
+              nameKey(row.name) === nameKey(op.name),
           )
           .sort((a, b) => (a.created_at < b.created_at ? -1 : 1))[0];
         if (match) {
@@ -361,7 +388,7 @@ export function useShoppingList({
           if (isNetworkError(error)) return "network";
           setItems((current) =>
             current.map((item) =>
-              item.id === op.id
+              item.id === op.id || item.id === id
                 ? { ...item, checkedAt: op.previousCheckedAt }
                 : item,
             ),
@@ -502,6 +529,7 @@ export function useShoppingList({
     if (status !== "ready" || !householdId) return;
     const supabase = getClient();
     let closed = false;
+    let subscribedBefore = false;
     let channel: ReturnType<Client["channel"]> | null = null;
     void (async () => {
       const { data } = await supabase.auth.getSession();
@@ -541,7 +569,13 @@ export function useShoppingList({
             }
           },
         )
-        .subscribe((state) => setRealtimeOk(state === "SUBSCRIBED"));
+        .subscribe((state) => {
+          const connected = state === "SUBSCRIBED";
+          setRealtimeOk(connected);
+          // Events missed while the channel was down are not sent again.
+          if (connected && subscribedBefore) scheduleRefetch();
+          if (connected) subscribedBefore = true;
+        });
     })();
     return () => {
       closed = true;
@@ -549,6 +583,18 @@ export function useShoppingList({
       if (channel) void supabase.removeChannel(channel);
     };
   }, [getClient, householdId, scheduleRefetch, status]);
+
+  // Back on screen (after a sleep timers and sockets may have been stopped).
+  useEffect(() => {
+    if (status !== "ready") return;
+    const handleVisible = () => {
+      if (document.visibilityState === "visible") scheduleRefetch();
+    };
+    document.addEventListener("visibilitychange", handleVisible);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisible);
+    };
+  }, [scheduleRefetch, status]);
 
   // Safety net: no realtime channel -> read again every few seconds.
   useEffect(() => {
