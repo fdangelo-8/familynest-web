@@ -231,7 +231,12 @@ test.describe("controlli statici (punto 17)", () => {
         "+refs/heads/main:refs/remotes/origin/main",
       );
     }
-    const diff = run("diff", "--name-only", "origin/main...HEAD");
+    // A `shared/*` branch (e.g. #67) is allowed to change shared files: this
+    // check guards the onboarding branch of #69 only.
+    const branch = process.env.GITHUB_HEAD_REF ?? "";
+    const diff = branch.startsWith("shared/")
+      ? ""
+      : run("diff", "--name-only", "origin/main...HEAD");
     for (const file of diff.split("\n").filter(Boolean)) {
       expect(file).not.toMatch(
         /^(src\/components\/ui\/|src\/lib\/|src\/app\/\(app\)\/|supabase\/|src\/app\/components\.css$|src\/app\/globals\.css$)/,

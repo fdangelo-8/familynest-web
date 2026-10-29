@@ -452,7 +452,7 @@ test.describe("Rotte di Casa e segnaposto", () => {
       expect(getBarConfig(path), path).toEqual({
         kind: "section",
         center: "title",
-        right: "search",
+        actions: ["search", "bell"],
       });
       expect(hasBottomNav(path), path).toBe(true);
     }
