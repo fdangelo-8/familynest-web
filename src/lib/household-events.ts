@@ -21,7 +21,8 @@ export type FullEvent = {
   startsAt: string;
   endsAt: string;
   visibility: Visibility;
-  authorMemberId: string;
+  /** null if the author left the Nest (a «Tutto il Nest» stays without author) */
+  authorMemberId: string | null;
   title: string;
   location: string | null;
   escortMemberId: string | null;
@@ -57,9 +58,15 @@ type Row =
  */
 type RawRow = Omit<
   Row,
-  "id" | "title" | "location" | "escort_member_id" | "member_ids"
+  | "id"
+  | "title"
+  | "location"
+  | "escort_member_id"
+  | "member_ids"
+  | "author_member_id"
 > & {
   id: string | null;
+  author_member_id: string | null;
   title: string | null;
   location: string | null;
   escort_member_id: string | null;
@@ -67,7 +74,9 @@ type RawRow = Omit<
 };
 
 function toEvent(raw: RawRow): HouseholdEvent | null {
-  // A «Solo io» of someone else must never arrive; if one does, drop it.
+  // The database never sends «Solo io» of others and masks «Occupato» of
+  // others: that guarantee is theirs. Here a row that is not provably complete
+  // is reduced to the allowed fields, and rows that cannot exist are dropped.
   const hasDetails =
     raw.is_masked !== true &&
     raw.id !== null &&
@@ -89,7 +98,7 @@ function toEvent(raw: RawRow): HouseholdEvent | null {
   }
   // Anything that is not provably a full row is treated as «Occupato»: only
   // the three allowed fields are copied, nothing else can leak.
-  if (raw.visibility !== "busy") return null;
+  if (raw.visibility !== "busy" || raw.author_member_id === null) return null;
   return {
     masked: true,
     startsAt: raw.starts_at,
@@ -138,8 +147,9 @@ export async function listHouseholdEvents(
   }
 
   const events: HouseholdEvent[] = [];
-  for (const raw of rows as RawRow[]) {
-    const event = toEvent(raw);
+  for (const raw of rows as unknown[]) {
+    if (typeof raw !== "object" || raw === null) continue;
+    const event = toEvent(raw as RawRow);
     if (event) events.push(event);
   }
   return { ok: true, events };

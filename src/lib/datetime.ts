@@ -428,35 +428,87 @@ function dayAndMonth(value: Instant, now: Instant): string {
     : `${day} ${month} ${year}`;
 }
 
+/** Last day of the month of a day key. */
+function isLastDayOfMonth(dayKey: string): boolean {
+  return addDaysToDayKey(dayKey, 1).slice(0, 7) !== dayKey.slice(0, 7);
+}
+
 /**
- * Deadline in words: `Entro oggi`, `Entro domani`, `Entro venerdì` (up to 6
- * days ahead), `Entro il 31 ottobre` beyond (with the year if it is not the
- * current one). A deadline already gone reads `Scaduto il 28 ottobre`.
+ * How a coming deadline reads after «entro»: `oggi`, `domani`, a weekday up
+ * to Sunday of the current week, then `fine mese` / `fine novembre` /
+ * `fine gennaio 2027` for the last day of a month, else `26 ottobre`
+ * (year only if it is not the current one).
+ */
+function comingDeadline(due: Instant, now: Instant): string {
+  const dueKey = toDayKey(due);
+  const nowKey = toDayKey(now);
+  const days = romeDayNumber(due) - romeDayNumber(now);
+  if (days === 0) return "oggi";
+  if (days === 1) return "domani";
+  if (dueKey <= addDaysToDayKey(getWeekStartKey(nowKey), 6)) {
+    return weekdayName(due);
+  }
+  if (isLastDayOfMonth(dueKey)) {
+    const dueParts = romeParts(due);
+    const nowParts = romeParts(now);
+    if (dueParts.year === nowParts.year && dueParts.month === nowParts.month) {
+      return "fine mese";
+    }
+    const month = textPart(due, { month: "long" }, "month");
+    return dueParts.year === nowParts.year
+      ? `fine ${month}`
+      : `fine ${month} ${dueParts.year}`;
+  }
+  return dayAndMonth(due, now);
+}
+
+/** `ieri` or `il 15 ottobre`, for a deadline already gone. */
+function pastDeadline(due: Instant, now: Instant): string {
+  return romeDayNumber(now) - romeDayNumber(due) === 1
+    ? "ieri"
+    : `il ${dayAndMonth(due, now)}`;
+}
+
+function capitalizeIf(text: string, capitalized: boolean): string {
+  return capitalized ? capitalize(text) : text;
+}
+
+/**
+ * Deadline in words (table of issue #23, valid for every page): `Entro oggi`,
+ * `Entro domani`, `Entro giovedì` (up to Sunday of this week), `Entro fine
+ * mese`, `Entro fine novembre`, `Entro 26 ottobre`, `Entro 15 gennaio 2027`;
+ * already gone: `Scaduto ieri`, `Scaduto il 15 ottobre`. With
+ * `capitalized: false` it reads inside a sentence (`entro venerdì`).
  */
 export function formatDeadline(
   due: Instant,
   now: Instant = new Date(),
+  options: { capitalized?: boolean } = {},
 ): string {
+  const { capitalized = true } = options;
   const days = romeDayNumber(due) - romeDayNumber(now);
-  if (days < 0) return `Scaduto il ${dayAndMonth(due, now)}`;
-  if (days === 0) return "Entro oggi";
-  if (days === 1) return "Entro domani";
-  if (days <= 6) return `Entro ${weekdayName(due)}`;
-  return `Entro il ${dayAndMonth(due, now)}`;
+  const text =
+    days < 0
+      ? `scaduto ${pastDeadline(due, now)}`
+      : `entro ${comingDeadline(due, now)}`;
+  return capitalizeIf(text, capitalized);
 }
 
 /**
- * For the closest deadline: `Il primo scade oggi`, `... domani`,
- * `... venerdì` (up to 6 days ahead), `... il 31 ottobre` beyond.
+ * For the closest deadline: `Il primo scade oggi`, `... domani`, `... venerdì`,
+ * `... fine mese`, `... 26 ottobre` (same rules as `formatDeadline`);
+ * already gone: `Il primo è scaduto ieri`.
  */
 export function formatFirstDeadline(
   due: Instant,
   now: Instant = new Date(),
+  options: { capitalized?: boolean } = {},
 ): string {
+  const { capitalized = true } = options;
   const days = romeDayNumber(due) - romeDayNumber(now);
-  if (days < 0) return `Il primo è scaduto il ${dayAndMonth(due, now)}`;
-  if (days === 0) return "Il primo scade oggi";
-  if (days === 1) return "Il primo scade domani";
-  if (days <= 6) return `Il primo scade ${weekdayName(due)}`;
-  return `Il primo scade il ${dayAndMonth(due, now)}`;
+  const text =
+    days < 0
+      ? `il primo è scaduto ${pastDeadline(due, now)}`
+      : `il primo scade ${comingDeadline(due, now)}`;
+  return capitalizeIf(text, capitalized);
 }

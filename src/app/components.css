@@ -3885,7 +3885,7 @@ main[tabindex="-1"]:focus {
   a.scheda.prossimo:hover,
   a.scheda.contatore:hover,
   a.scheda.scheda-spazio:not(.scheda--tratteggiata):hover,
-  .striscia-giorni__giorno.is-selezionato:hover,
+  button.striscia-giorni__giorno.is-selezionato:hover,
   a.blocco-orario:not(.blocco-orario--insieme, .blocco-orario--occupato):hover,
   button.blocco-orario:not(
       .blocco-orario--insieme,
@@ -3896,7 +3896,7 @@ main[tabindex="-1"]:focus {
   }
   a.scheda--tratteggiata.scheda-spazio:hover,
   button.riga-gia-fatti:hover,
-  .striscia-giorni__giorno:not(.is-selezionato):hover {
+  button.striscia-giorni__giorno:not(.is-selezionato):hover {
     background: var(--color-carta-2);
   }
 }
@@ -3904,7 +3904,7 @@ a.riga-evento:not(.riga-evento--insieme, .riga-evento--occupato):active,
 a.scheda.prossimo:active,
 a.scheda.contatore:active,
 a.scheda.scheda-spazio:not(.scheda--tratteggiata):active,
-.striscia-giorni__giorno.is-selezionato:active,
+button.striscia-giorni__giorno.is-selezionato:active,
 a.blocco-orario:not(.blocco-orario--insieme, .blocco-orario--occupato):active,
 button.blocco-orario:not(
     .blocco-orario--insieme,
@@ -3915,7 +3915,7 @@ a.passo-partenza:active {
 }
 a.scheda--tratteggiata.scheda-spazio:active,
 button.riga-gia-fatti:active,
-.striscia-giorni__giorno:not(.is-selezionato):active {
+button.striscia-giorni__giorno:not(.is-selezionato):active {
   background: var(--color-carta-2);
 }
 

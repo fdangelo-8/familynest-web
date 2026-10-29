@@ -8,12 +8,14 @@ import {
   eventsOfDay,
   filterByLens,
   findFreeEvening,
+  busyIntervals,
   formatBusyLabel,
   formatFreeEveningRow,
   formatFreeEveningWindow,
   formatHiddenCount,
   formatWithYou,
   hiddenByLens,
+  isInvolved,
 } from "../../src/lib/calendar";
 import {
   addDaysToDayKey,
@@ -56,7 +58,7 @@ test.describe("settimana e giorni a Roma", () => {
     expect(toDateFieldValue(getWeekStart("2026-10-25T20:30:00Z"))).toBe(
       "2026-10-19",
     );
-    // Sunday 00:30 UTC is already Sunday 01:30 in Rome; Monday 22:30 UTC is Tuesday
+    // Monday 26 October 00:30 UTC is 01:30 in Rome (winter time): a new week
     expect(toDateFieldValue(getWeekStart("2026-10-26T00:30:00Z"))).toBe(
       "2026-10-26",
     );
@@ -156,45 +158,57 @@ test.describe("settimana e giorni a Roma", () => {
     expect(formatGreeting("2026-10-25T04:00:00Z")).toBe("Buongiorno"); // 05:00 CET
   });
 
-  test("scadenze in parole", () => {
+  test("scadenze in parole (tabella della #23)", () => {
     const now = "2026-10-20T13:52:00Z"; // martedì 20 ottobre
-    expect(formatDeadline("2026-10-20T20:00:00Z", now)).toBe("Entro oggi");
-    expect(formatDeadline("2026-10-21T08:00:00Z", now)).toBe("Entro domani");
-    expect(formatDeadline("2026-10-23T08:00:00Z", now)).toBe("Entro venerdì");
-    expect(formatDeadline("2026-10-26T08:00:00Z", now)).toBe("Entro lunedì");
-    expect(formatDeadline("2026-10-27T08:00:00Z", now)).toBe(
-      "Entro il 27 ottobre",
-    );
-    expect(formatDeadline("2026-10-31T10:00:00Z", now)).toBe(
-      "Entro il 31 ottobre",
-    );
-    expect(formatDeadline("2027-01-05T10:00:00Z", now)).toBe(
-      "Entro il 5 gennaio 2027",
-    );
-    expect(formatDeadline("2026-10-19T10:00:00Z", now)).toBe(
-      "Scaduto il 19 ottobre",
-    );
+    const d = (due: string, capitalized = true) =>
+      formatDeadline(due, now, { capitalized });
+    expect(d("2026-10-20T20:00:00Z")).toBe("Entro oggi");
+    expect(d("2026-10-21T08:00:00Z")).toBe("Entro domani");
+    expect(d("2026-10-21T08:00:00Z", false)).toBe("entro domani");
+    expect(d("2026-10-23T08:00:00Z")).toBe("Entro venerdì");
+    expect(d("2026-10-23T08:00:00Z", false)).toBe("entro venerdì");
+    // Sunday 25 is the last weekday word; Monday 26 is a date
+    expect(d("2026-10-25T12:00:00Z")).toBe("Entro domenica");
+    expect(d("2026-10-26T08:00:00Z")).toBe("Entro 26 ottobre");
+    expect(d("2026-10-27T08:00:00Z", false)).toBe("entro 27 ottobre");
+    expect(d("2027-01-15T10:00:00Z")).toBe("Entro 15 gennaio 2027");
+    // last day of a month
+    expect(d("2026-10-31T10:00:00Z")).toBe("Entro fine mese");
+    expect(d("2026-11-30T10:00:00Z")).toBe("Entro fine novembre");
+    expect(d("2026-11-30T10:00:00Z", false)).toBe("entro fine novembre");
+    expect(d("2027-01-31T10:00:00Z")).toBe("Entro fine gennaio 2027");
+    // already gone
+    expect(d("2026-10-19T10:00:00Z")).toBe("Scaduto ieri");
+    expect(d("2026-10-19T10:00:00Z", false)).toBe("scaduto ieri");
+    expect(d("2026-10-15T10:00:00Z")).toBe("Scaduto il 15 ottobre");
     // the day is the Rome day: 23:30 UTC on the 20th is already the 21st
-    expect(formatDeadline("2026-10-20T23:30:00Z", now)).toBe("Entro domani");
-    expect(formatFirstDeadline("2026-10-20T10:00:00Z", now)).toBe(
-      "Il primo scade oggi",
+    expect(d("2026-10-20T23:30:00Z")).toBe("Entro domani");
+    // end of month inside this week reads as a weekday
+    expect(formatDeadline("2026-10-31T10:00:00Z", "2026-10-27T10:00:00Z")).toBe(
+      "Entro sabato",
     );
-    expect(formatFirstDeadline("2026-10-21T10:00:00Z", now)).toBe(
-      "Il primo scade domani",
-    );
-    expect(formatFirstDeadline("2026-10-23T10:00:00Z", now)).toBe(
-      "Il primo scade venerdì",
-    );
-    expect(formatFirstDeadline("2026-10-31T10:00:00Z", now)).toBe(
-      "Il primo scade il 31 ottobre",
-    );
+  });
+
+  test("«Il primo scade ...»", () => {
+    const now = "2026-10-20T13:52:00Z";
+    const f = (due: string, capitalized = true) =>
+      formatFirstDeadline(due, now, { capitalized });
+    expect(f("2026-10-20T10:00:00Z")).toBe("Il primo scade oggi");
+    expect(f("2026-10-21T10:00:00Z")).toBe("Il primo scade domani");
+    expect(f("2026-10-23T10:00:00Z")).toBe("Il primo scade venerdì");
+    expect(f("2026-10-23T10:00:00Z", false)).toBe("il primo scade venerdì");
+    expect(f("2026-10-28T10:00:00Z")).toBe("Il primo scade 28 ottobre");
+    expect(f("2026-10-31T10:00:00Z")).toBe("Il primo scade fine mese");
+    expect(f("2026-10-19T10:00:00Z")).toBe("Il primo è scaduto ieri");
   });
 
   test("scadenze attraverso il cambio dell'ora", () => {
     // Saturday 24 Oct 22:30 UTC = Sunday 25 Oct 00:30 Rome (still summer time)
     const now = "2026-10-24T20:00:00Z";
     expect(formatDeadline("2026-10-25T12:00:00Z", now)).toBe("Entro domani");
-    expect(formatDeadline("2026-10-26T12:00:00Z", now)).toBe("Entro lunedì");
+    expect(formatDeadline("2026-10-26T12:00:00Z", now)).toBe(
+      "Entro 26 ottobre",
+    );
   });
 });
 
@@ -420,12 +434,6 @@ test.describe("Liberi insieme", () => {
     );
     const childWithEscort = { ...child, escortMemberId: ANNA };
     expect(evening([base, childWithEscort], day)).toBeNull();
-    // the author of a «Tutto il Nest» who is not a participant is not busy
-    const hosted = full(day, "18:00", "23:00", {
-      authorMemberId: PAOLO,
-      memberIds: [LEO],
-    });
-    expect(evening([base, hosted], day)).not.toBeNull();
   });
 
   test("CA-26: con un solo adulto, o senza impegni, non c'è mai", () => {
@@ -656,6 +664,54 @@ test.describe("listHouseholdEvents", () => {
     expect(calls).toHaveLength(0);
   });
 
+  test("un «Tutto il Nest» con l'autore uscito dal Nest arriva completo con autore null", async () => {
+    const result = await listHouseholdEvents(
+      FROM,
+      TO,
+      fakeClient({
+        data: [
+          {
+            id: "e-5",
+            starts_at: "2026-10-20T16:00:00Z",
+            ends_at: "2026-10-20T18:00:00Z",
+            visibility: "household",
+            author_member_id: null,
+            is_masked: false,
+            title: "Cena",
+            location: null,
+            escort_member_id: null,
+            member_ids: ["m-1"],
+          },
+          // impossible rows: masked without author, null instead of a row
+          {
+            id: null,
+            starts_at: "2026-10-20T07:00:00Z",
+            ends_at: "2026-10-20T08:00:00Z",
+            visibility: "busy",
+            author_member_id: null,
+            is_masked: true,
+            title: null,
+            location: null,
+            escort_member_id: null,
+            member_ids: null,
+          },
+          null,
+        ],
+        error: null,
+      }),
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.events).toHaveLength(1);
+    const event = result.events[0]!;
+    expect(event.masked).toBe(false);
+    expect(event.masked ? null : event.authorMemberId).toBeNull();
+    // the shared rules cope with a missing author
+    expect(isInvolved(event, "m-2")).toBe(false);
+    expect(isInvolved(event, "m-1")).toBe(true);
+    expect(busyIntervals(result.events, ["m-1", "m-2"])).toHaveLength(1);
+  });
+
   test("nessuna riga: ok con elenco vuoto", async () => {
     const result = await listHouseholdEvents(
       FROM,
@@ -756,6 +812,13 @@ test.describe("segnaposto con l'utente (Supabase locale)", () => {
       await signInAs(page.context(), baseURL as string, "B");
       await page.goto(route);
       await expect(page.getByText("In arrivo")).toBeVisible();
+      if (route.startsWith("/calendario/")) {
+        await expect(
+          page.getByRole("group", {
+            name: "Punto di vista: solo tu o tutto il Nest",
+          }),
+        ).toBeVisible();
+      }
       await expect(page.getByRole("main")).toHaveCount(1);
       if (testInfo.project.name === "mobile") {
         const nav = page.getByRole("navigation", {
