@@ -210,37 +210,44 @@ test.describe("controlli statici (punto 17)", () => {
   });
 
   test("CA-12: nessun file condiviso modificato", () => {
-    const run = (...args: string[]) =>
-      // safe.directory: the CI container runs as another user than the owner.
-      execFileSync("git", ["-c", "safe.directory=*", ...args], {
-        encoding: "utf8",
-        stdio: "pipe",
-      });
-    // The CI checkout is shallow and has no origin/main: fetch what is needed
-    // instead of skipping the test.
-    try {
-      run("merge-base", "origin/main", "HEAD");
-    } catch {
-      if (run("rev-parse", "--is-shallow-repository").trim() === "true") {
-        run("fetch", "--no-tags", "--unshallow", "origin");
+    // Only meaningful on the branch of #69: elsewhere the list of changed
+    // files says nothing about this issue. Same approach as CA-22 of #52.
+    const run = (args: string[]): string | null => {
+      try {
+        // safe.directory: the CI container runs as another user than the owner.
+        return execFileSync("git", ["-c", "safe.directory=*", ...args], {
+          encoding: "utf8",
+          stdio: ["ignore", "pipe", "ignore"],
+        }).trim();
+      } catch {
+        return null;
       }
-      run(
-        "fetch",
-        "--no-tags",
-        "origin",
-        "+refs/heads/main:refs/remotes/origin/main",
-      );
-    }
-    // A `shared/*` branch (e.g. #67) is allowed to change shared files: this
-    // check guards the onboarding branch of #69 only.
-    const branch = process.env.GITHUB_HEAD_REF ?? "";
-    const diff = branch.startsWith("shared/")
-      ? ""
-      : run("diff", "--name-only", "origin/main...HEAD");
-    for (const file of diff.split("\n").filter(Boolean)) {
-      expect(file).not.toMatch(
-        /^(src\/components\/ui\/|src\/lib\/|src\/app\/\(app\)\/|supabase\/|src\/app\/components\.css$|src\/app\/globals\.css$)/,
-      );
+    };
+    const branch =
+      process.env.GITHUB_HEAD_REF ||
+      run(["rev-parse", "--abbrev-ref", "HEAD"]) ||
+      "";
+    if (/onboarding-chi-vive-correzioni$/.test(branch)) {
+      let diff = run(["diff", "--name-only", "origin/main...HEAD"]);
+      if (diff === null) {
+        run([
+          "fetch",
+          "--no-tags",
+          "--deepen=200",
+          "origin",
+          "+main:refs/remotes/origin/main",
+        ]);
+        diff = run(["diff", "--name-only", "origin/main...HEAD"]);
+      }
+      expect(
+        diff,
+        "storia comune con origin/main non disponibile: CA-12 non verificabile",
+      ).not.toBeNull();
+      for (const file of (diff ?? "").split("\n").filter(Boolean)) {
+        expect(file).not.toMatch(
+          /^(src\/components\/ui\/|src\/lib\/|src\/app\/\(app\)\/|supabase\/|src\/app\/components\.css$|src\/app\/globals\.css$)/,
+        );
+      }
     }
     expect(read("src/components/ui/PageError/PageError.tsx")).toContain(
       "Controlla la connessione e riprova. Se il problema resta, torna a Oggi.",

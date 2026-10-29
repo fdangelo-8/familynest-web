@@ -170,7 +170,12 @@ test.describe("pagine dell'app (utente A)", () => {
         const cy = r.y + r.height / 2;
         const hit = (x: number, y: number) =>
           el.contains(document.elementFromPoint(x, y));
-        return hit(cx - 21, cy) && hit(cx + 21, cy) && hit(cx, cy - 21);
+        return (
+          hit(cx - 21, cy) &&
+          hit(cx + 21, cy) &&
+          hit(cx, cy - 21) &&
+          hit(cx, cy + 21)
+        );
       }),
     );
     expect(touch.length).toBeGreaterThan(0);
