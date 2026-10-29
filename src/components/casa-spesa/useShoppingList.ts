@@ -392,6 +392,14 @@ export function useShoppingList({
           .eq("id", id);
         if (error) {
           if (isNetworkError(error)) return "network";
+          // The row goes back at once: no waiting in the wrong list.
+          for (const item of itemsRef.current) {
+            if (item.id !== op.id && item.id !== id) continue;
+            const timer = settleTimers.current.get(item.key);
+            if (timer !== undefined) window.clearTimeout(timer);
+            settleTimers.current.delete(item.key);
+            setSettling((set) => set.delete(item.key));
+          }
           setItems((current) =>
             current.map((item) =>
               item.id === op.id || item.id === id
@@ -439,7 +447,7 @@ export function useShoppingList({
       }
       return "done";
     },
-    [getClient, resolveId, setItems, showToast, toastRejected],
+    [getClient, resolveId, setItems, setSettling, showToast, toastRejected],
   );
 
   const processQueue = useCallback(async () => {

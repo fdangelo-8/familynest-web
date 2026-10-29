@@ -175,15 +175,24 @@ export function SpesaPage({ nestName }: { nestName: string }) {
     requestFocus,
   } = list;
 
-  const retryHadFocus = useRef(false);
+  // Did the focus sit inside the offline alert ("Riprova") the last time it moved?
+  const focusInAlert = useRef(false);
+  useEffect(() => {
+    const track = (event: FocusEvent) => {
+      focusInAlert.current =
+        event.target instanceof Element && !!event.target.closest(".avviso");
+    };
+    document.addEventListener("focusin", track);
+    return () => document.removeEventListener("focusin", track);
+  }, []);
   useEffect(() => {
     // The alert is gone and "Riprova" with it: the focus goes to a heading.
-    if (offline || !retryHadFocus.current) return;
-    retryHadFocus.current = false;
+    if (offline || !focusInAlert.current) return;
+    focusInAlert.current = false;
     const root = rootRef.current;
     const target =
-      root?.querySelector<HTMLElement>(TO_TAKE_HEADING) ??
-      root?.querySelector<HTMLElement>(COMMON_HEADING);
+      root?.querySelector<HTMLElement>(COMMON_HEADING) ??
+      root?.querySelector<HTMLElement>(TO_TAKE_HEADING);
     target?.focus();
   }, [offline]);
 
@@ -311,10 +320,7 @@ export function SpesaPage({ nestName }: { nestName: string }) {
                 <Button
                   variant="link"
                   loading={list.retrying}
-                  onClick={() => {
-                    retryHadFocus.current = true;
-                    list.retry();
-                  }}
+                  onClick={list.retry}
                 >
                   Riprova
                 </Button>
