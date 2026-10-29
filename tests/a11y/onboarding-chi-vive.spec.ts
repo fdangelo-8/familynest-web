@@ -65,6 +65,38 @@ async function choose(page: Page, name: string) {
 }
 
 test.describe("onboarding · chi vive con te · accessibilità", () => {
+  test("«Solo io» scelto (3 tacche): axe", async ({ page, baseURL }) => {
+    await openAsC(page, baseURL);
+    await choose(page, "Solo io");
+    await expect(
+      page
+        .getByRole("progressbar", { name: "Passo 1 di 3" })
+        .filter({ visible: true }),
+    ).toBeVisible();
+    // Name, range and drawn ticks tell the same story, and the bar is not a
+    // tab stop.
+    const bar = page.getByRole("progressbar").filter({ visible: true });
+    await expect(bar).toHaveCount(1);
+    await expect(bar).toHaveAttribute("aria-valuemin", "1");
+    await expect(bar).toHaveAttribute("aria-valuenow", "1");
+    await expect(bar).toHaveAttribute("aria-valuemax", "3");
+    await expect(bar).toHaveAttribute("aria-label", "Passo 1 di 3");
+    await expect(bar.locator(".tacche-passi__tacca")).toHaveCount(3);
+    expect(await bar.getAttribute("tabindex")).toBeNull();
+    await expectNoBlocking(page);
+  });
+
+  test("nessuna scelta: barra a 4 passi coerente", async ({
+    page,
+    baseURL,
+  }) => {
+    await openAsC(page, baseURL);
+    const bar = page.getByRole("progressbar").filter({ visible: true });
+    await expect(bar).toHaveAttribute("aria-valuemax", "4");
+    await expect(bar).toHaveAttribute("aria-label", "Passo 1 di 4");
+    await expect(bar.locator(".tacche-passi__tacca")).toHaveCount(4);
+  });
+
   test("nessuna scelta: axe, un solo h1, id unici", async ({
     page,
     baseURL,

@@ -112,20 +112,22 @@ function ChoiceGroup({
   );
 }
 
-function Steps() {
+function Steps({ total }: { total: number }) {
   return (
     <div
       className="tacche-passi"
       role="progressbar"
       aria-valuemin={1}
-      aria-valuemax={4}
+      aria-valuemax={total}
       aria-valuenow={1}
-      aria-label="Passo 1 di 4"
+      aria-label={`Passo 1 di ${total}`}
     >
-      <span className="tacche-passi__tacca is-fatta" />
-      <span className="tacche-passi__tacca" />
-      <span className="tacche-passi__tacca" />
-      <span className="tacche-passi__tacca" />
+      {Array.from({ length: total }, (_, i) => (
+        <span
+          key={i}
+          className={`tacche-passi__tacca${i === 0 ? " is-fatta" : ""}`}
+        />
+      ))}
     </div>
   );
 }
@@ -149,6 +151,8 @@ export function OnboardingStep({ greeting }: { greeting: string }) {
   const [failure, setFailure] = useState<Failure | null>(null);
   const busy = useRef(false);
   const router = useRouter();
+  // Whoever lives alone skips the "Invito" step: 3 steps instead of 4.
+  const total = value === "solo" ? 3 : 4;
 
   async function submit() {
     if (!value || busy.current) return;
@@ -204,7 +208,7 @@ export function OnboardingStep({ greeting }: { greeting: string }) {
           >
             <Icon name="arrow-left" />
           </button>
-          <Steps />
+          <Steps total={total} />
           <span className="barra__vuoto" aria-hidden="true" />
         </div>
         <Heading greeting={greeting} />
@@ -238,7 +242,7 @@ export function OnboardingStep({ greeting }: { greeting: string }) {
           <Claim as="p" />
         </div>
         <div className="split-onboarding__passo">
-          <Steps />
+          <Steps total={total} />
           <div className="sezione">
             <Heading greeting={greeting} />
             <ChoiceGroup

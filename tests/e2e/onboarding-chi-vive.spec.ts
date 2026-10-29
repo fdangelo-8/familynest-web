@@ -13,7 +13,7 @@ import {
 
 const QUESTION = "Chi vive con te?";
 const TITLES = [
-  "Vivo da solo",
+  "Solo io",
   "In coppia",
   "In famiglia, con figli",
   "Con coinquilini",
