@@ -32,10 +32,18 @@ export function SearchLink({ label = "Cerca nel Nest" }: { label?: string }) {
 }
 
 /**
- * "Indietro" icon button: goes back when the user came from another page of
- * the app, otherwise to the fallback route.
+ * Icon link that goes back when the user came from another page of the app,
+ * otherwise to the fallback route.
  */
-export function BackLink({ fallback }: { fallback: string }) {
+function HistoryLink({
+  fallback,
+  label,
+  icon,
+}: {
+  fallback: string;
+  label: string;
+  icon: "arrow-left" | "x";
+}) {
   const router = useRouter();
   const { hasPreviousPage } = useNest();
 
@@ -50,10 +58,20 @@ export function BackLink({ fallback }: { fallback: string }) {
     <Link
       href={fallback}
       className="btn-icona"
-      aria-label="Indietro"
+      aria-label={label}
       onClick={handleClick}
     >
-      <Icon name="arrow-left" />
+      <Icon name={icon} />
     </Link>
   );
+}
+
+/** "Indietro" icon button (arrow). */
+export function BackLink({ fallback }: { fallback: string }) {
+  return <HistoryLink fallback={fallback} label="Indietro" icon="arrow-left" />;
+}
+
+/** "Chiudi" icon button (X): same behaviour as `BackLink`. */
+export function CloseLink({ fallback }: { fallback: string }) {
+  return <HistoryLink fallback={fallback} label="Chiudi" icon="x" />;
 }

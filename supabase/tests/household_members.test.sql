@@ -97,7 +97,7 @@ select throws_ok(
      values ('11111111-1111-4111-8111-111111111111', 'child', 'Nuovo', 'verde') $$,
   '22P02',
   null,
-  'CA-21: colour outside the five refused'
+  'CA-21: colour outside the ten refused'
 );
 select throws_ok(
   $$ insert into public.household_members (household_id, kind, name, color, birth_date)

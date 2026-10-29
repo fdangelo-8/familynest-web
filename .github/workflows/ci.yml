@@ -2,6 +2,12 @@ name: CI
 
 # Runs on pull requests and on main only: a push to a branch with an open pull
 # request is covered by the pull_request run, so it never runs twice.
+#
+# To save Actions minutes the Playwright suite (the `test` job, about 20 minutes)
+# runs on a pull request only while it has the `in-test` or `pronta-per-francesco`
+# label; before that a push runs only `check` and `build`, and agents run the suites
+# locally. The labels are read when the run starts, so after adding `in-test` to a
+# pull request with no new push, re-running its latest CI run starts the suite.
 on:
   pull_request:
     branches: [main]
@@ -32,12 +38,14 @@ jobs:
     outputs:
       app: ${{ steps.changes.outputs.app }}
       visual: ${{ steps.changes.outputs.visual }}
+      tests: ${{ steps.changes.outputs.tests }}
     steps:
       # Decides which of the heavier jobs are needed, here to avoid paying for an extra job.
       # On main everything runs. On a pull request:
       # - app: build and Playwright tests, skipped when only docs/** (except docs/mockup/,
       #   which the tests read) or *.md files change;
       # - visual: visual tests, only when something they render or depend on changes.
+      # - tests: Playwright suite, only while the pull request is in-test or pronta-per-francesco.
       - name: Detect changes
         id: changes
         env:
@@ -50,8 +58,15 @@ jobs:
           if [ "$EVENT" != "pull_request" ]; then
             echo "app=true" >> "$GITHUB_OUTPUT"
             echo "visual=true" >> "$GITHUB_OUTPUT"
+            echo "tests=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
+          # Current labels, not the ones in the event: a re-run sees a label added later.
+          tests=false
+          if gh api "repos/$REPO/pulls/$PR" --jq '.labels[].name' | grep -Eqx 'in-test|pronta-per-francesco'; then
+            tests=true
+          fi
+          echo "tests=$tests" >> "$GITHUB_OUTPUT"
           files="$RUNNER_TEMP/files.txt"
           gh api --paginate "repos/$REPO/pulls/$PR/files" --jq '.[].filename' > "$files"
           echo "File modificati:"; cat "$files"
@@ -70,6 +85,8 @@ jobs:
             echo "Build e test Playwright: $([ "$app" = true ] && echo "sì" || echo "no, solo documentazione")"
             echo ""
             echo "Test visivi: $([ "$visual" = true ] && echo "sì" || echo "no, nessun file visivo cambiato")"
+            echo ""
+            echo "Suite Playwright: $([ "$tests" = true ] && echo "sì" || echo "no, la PR non è ancora in-test")"
             echo ""
           } >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/checkout@v4
@@ -108,7 +125,7 @@ jobs:
 
   test:
     needs: [check, build]
-    if: needs.check.outputs.app == 'true'
+    if: needs.check.outputs.app == 'true' && needs.check.outputs.tests == 'true'
     runs-on: ubuntu-latest
     # Same group as the seed-test-users workflow, so the seed never resets the
     # remote test data while a suite is using it.

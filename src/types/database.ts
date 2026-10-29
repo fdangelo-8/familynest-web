@@ -9,6 +9,124 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      event_members: {
+        Row: {
+          created_at: string;
+          event_id: string;
+          household_id: string;
+          member_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          event_id: string;
+          household_id?: string;
+          member_id: string;
+        };
+        Update: {
+          created_at?: string;
+          event_id?: string;
+          household_id?: string;
+          member_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "event_members_event_fkey";
+            columns: ["event_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "events";
+            referencedColumns: ["id", "household_id"];
+          },
+          {
+            foreignKeyName: "event_members_household_id_fkey";
+            columns: ["household_id"];
+            isOneToOne: false;
+            referencedRelation: "households";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "event_members_member_fkey";
+            columns: ["member_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "household_members";
+            referencedColumns: ["id", "household_id"];
+          },
+        ];
+      };
+      events: {
+        Row: {
+          author_member_id: string | null;
+          created_at: string;
+          ends_at: string;
+          escort_member_id: string | null;
+          household_id: string;
+          id: string;
+          location: string | null;
+          recurrence: Database["public"]["Enums"]["event_recurrence"];
+          recurrence_until: string | null;
+          recurrence_weekdays: number[] | null;
+          starts_at: string;
+          title: string;
+          updated_at: string;
+          visibility: Database["public"]["Enums"]["event_visibility"];
+        };
+        ComputedFields: never;
+        Insert: {
+          author_member_id?: string | null;
+          created_at?: string;
+          ends_at: string;
+          escort_member_id?: string | null;
+          household_id?: string;
+          id?: string;
+          location?: string | null;
+          recurrence?: Database["public"]["Enums"]["event_recurrence"];
+          recurrence_until?: string | null;
+          recurrence_weekdays?: number[] | null;
+          starts_at: string;
+          title: string;
+          updated_at?: string;
+          visibility: Database["public"]["Enums"]["event_visibility"];
+        };
+        Update: {
+          author_member_id?: string | null;
+          created_at?: string;
+          ends_at?: string;
+          escort_member_id?: string | null;
+          household_id?: string;
+          id?: string;
+          location?: string | null;
+          recurrence?: Database["public"]["Enums"]["event_recurrence"];
+          recurrence_until?: string | null;
+          recurrence_weekdays?: number[] | null;
+          starts_at?: string;
+          title?: string;
+          updated_at?: string;
+          visibility?: Database["public"]["Enums"]["event_visibility"];
+        };
+        Relationships: [
+          {
+            foreignKeyName: "events_author_fkey";
+            columns: ["author_member_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "household_members";
+            referencedColumns: ["id", "household_id"];
+          },
+          {
+            foreignKeyName: "events_escort_fkey";
+            columns: ["escort_member_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "household_members";
+            referencedColumns: ["id", "household_id"];
+          },
+          {
+            foreignKeyName: "events_household_id_fkey";
+            columns: ["household_id"];
+            isOneToOne: false;
+            referencedRelation: "households";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       household_members: {
         Row: {
           birth_date: string | null;
@@ -262,6 +380,21 @@ export type Database = {
         Args: Record<PropertyKey, never>;
         Returns: string;
       };
+      list_household_events: {
+        Args: { p_from: string; p_to: string };
+        Returns: {
+          author_member_id: string;
+          ends_at: string;
+          escort_member_id: string;
+          id: string;
+          is_masked: boolean;
+          location: string;
+          member_ids: string[];
+          starts_at: string;
+          title: string;
+          visibility: Database["public"]["Enums"]["event_visibility"];
+        }[];
+      };
       restore_shopping_items: {
         Args: { item_ids: string[] };
         Returns: {
@@ -283,10 +416,22 @@ export type Database = {
       };
     };
     Enums: {
+      event_recurrence: "none" | "weekly" | "monthly";
+      event_visibility: "private" | "busy" | "household";
       household_type:
         "single" | "couple" | "family_with_children" | "roommates";
       invitation_status: "pending" | "accepted" | "revoked";
-      member_color: "pomodoro" | "glicine" | "salvia" | "cobalto" | "zafferano";
+      member_color:
+        | "pomodoro"
+        | "glicine"
+        | "salvia"
+        | "cobalto"
+        | "zafferano"
+        | "lampone"
+        | "ceruleo"
+        | "peonia"
+        | "basilico"
+        | "cannella";
       member_kind: "adult" | "child" | "pet";
     };
     CompositeTypes: {
@@ -415,9 +560,22 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      event_recurrence: ["none", "weekly", "monthly"],
+      event_visibility: ["private", "busy", "household"],
       household_type: ["single", "couple", "family_with_children", "roommates"],
       invitation_status: ["pending", "accepted", "revoked"],
-      member_color: ["pomodoro", "glicine", "salvia", "cobalto", "zafferano"],
+      member_color: [
+        "pomodoro",
+        "glicine",
+        "salvia",
+        "cobalto",
+        "zafferano",
+        "lampone",
+        "ceruleo",
+        "peonia",
+        "basilico",
+        "cannella",
+      ],
       member_kind: ["adult", "child", "pet"],
     },
   },

@@ -178,6 +178,34 @@ export function formatTimeUntil(
   return rest === 0 ? `tra ${hours} h` : `tra ${hours} h ${rest} min`;
 }
 
+/**
+ * Age completed on `now`, counted in Rome, for children and pets:
+ * `meno di un mese`, `1 mese`, `8 mesi`, `1 anno`, `9 anni`.
+ * `birthDate` is a `YYYY-MM-DD` calendar day (as in a date field) or an
+ * instant read in Rome. A birth date after `now` counts as `meno di un mese`.
+ */
+export function formatAge(
+  birthDate: Instant,
+  now: Instant = new Date(),
+): string {
+  const match =
+    typeof birthDate === "string"
+      ? /^(\d{4})-(\d{2})-(\d{2})$/.exec(birthDate)
+      : null;
+  const birth = match
+    ? { year: Number(match[1]), month: Number(match[2]), day: Number(match[3]) }
+    : romeParts(birthDate);
+  const today = romeParts(now);
+  const months =
+    (today.year - birth.year) * 12 +
+    (today.month - birth.month) -
+    (today.day < birth.day ? 1 : 0);
+  if (months < 1) return "meno di un mese";
+  if (months < 12) return months === 1 ? "1 mese" : `${months} mesi`;
+  const years = Math.floor(months / 12);
+  return years === 1 ? "1 anno" : `${years} anni`;
+}
+
 /* ---------- Conversion between instants and form fields ---------- */
 
 /** Instant to the `YYYY-MM-DD` value of a date field (Rome day). */

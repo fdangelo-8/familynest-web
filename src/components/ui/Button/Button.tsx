@@ -42,6 +42,8 @@ export type ButtonProps = {
   /** With `href` the button is a link */
   href?: string;
   type?: "button" | "submit";
+  /** `id` of a form the button submits, when it sits outside that form */
+  form?: string;
   onClick?: (event: MouseEvent<HTMLElement>) => void;
   className?: string;
   children: ReactNode;
@@ -58,6 +60,7 @@ export function Button({
   disabled = false,
   href,
   type = "button",
+  form,
   onClick,
   className,
   children,
@@ -112,6 +115,7 @@ export function Button({
   return (
     <button
       type={type}
+      form={form}
       className={classes}
       disabled={disabled}
       aria-busy={loading || undefined}
