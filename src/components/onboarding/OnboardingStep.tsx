@@ -2,12 +2,13 @@
 
 import { useRouter } from "next/navigation";
 import { useRef, useState, type KeyboardEvent } from "react";
-import { createNest } from "@/app/onboarding/actions";
+import { changeAnswer, createNest } from "@/app/onboarding/actions";
 import { Brand, Claim, Stickers } from "@/components/accesso/parts";
 import { Button } from "@/components/ui/Button/Button";
 import { Icon } from "@/components/ui/Icon/Icon";
 import { CHOICES, type Living } from "./choices";
 import styles from "./onboarding.module.css";
+import { Steps } from "./Steps";
 
 type Failure = "network" | "server";
 
@@ -112,26 +113,6 @@ function ChoiceGroup({
   );
 }
 
-function Steps({ total }: { total: number }) {
-  return (
-    <div
-      className="tacche-passi"
-      role="progressbar"
-      aria-valuemin={1}
-      aria-valuemax={total}
-      aria-valuenow={1}
-      aria-label={`Passo 1 di ${total}`}
-    >
-      {Array.from({ length: total }, (_, i) => (
-        <span
-          key={i}
-          className={`tacche-passi__tacca${i === 0 ? " is-fatta" : ""}`}
-        />
-      ))}
-    </div>
-  );
-}
-
 function Heading({ greeting }: { greeting: string }) {
   return (
     <div className="intestazione">
@@ -143,10 +124,18 @@ function Heading({ greeting }: { greeting: string }) {
 
 /**
  * Step 1 of the onboarding (mockup 02): two layouts in one <main>, one visible
- * at a time, sharing one state. "Continua" creates the Nest on the server.
+ * at a time, sharing one state. "Continua" creates the Nest on the server, or,
+ * with `saved`, only updates the answer of the existing Nest.
  */
-export function OnboardingStep({ greeting }: { greeting: string }) {
-  const [value, setValue] = useState<Living | null>(null);
+export function OnboardingStep({
+  greeting,
+  saved = null,
+}: {
+  greeting: string;
+  /** Answer already saved: set when the administrator comes back from step 2 */
+  saved?: Living | null;
+}) {
+  const [value, setValue] = useState<Living | null>(saved);
   const [sending, setSending] = useState(false);
   const [failure, setFailure] = useState<Failure | null>(null);
   const busy = useRef(false);
@@ -161,7 +150,7 @@ export function OnboardingStep({ greeting }: { greeting: string }) {
     setFailure(null);
     let result: Awaited<ReturnType<typeof createNest>> | null = null;
     try {
-      result = await createNest(value);
+      result = saved ? await changeAnswer(value) : await createNest(value);
     } catch {
       result = null;
     }
@@ -208,7 +197,7 @@ export function OnboardingStep({ greeting }: { greeting: string }) {
           >
             <Icon name="arrow-left" />
           </button>
-          <Steps total={total} />
+          <Steps current={1} total={total} />
           <span className="barra__vuoto" aria-hidden="true" />
         </div>
         <Heading greeting={greeting} />
@@ -242,7 +231,7 @@ export function OnboardingStep({ greeting }: { greeting: string }) {
           <Claim as="p" />
         </div>
         <div className="split-onboarding__passo">
-          <Steps total={total} />
+          <Steps current={1} total={total} />
           <div className="sezione">
             <Heading greeting={greeting} />
             <ChoiceGroup
