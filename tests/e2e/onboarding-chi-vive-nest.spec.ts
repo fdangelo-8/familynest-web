@@ -129,7 +129,7 @@ test.describe("creazione del Nest", () => {
     test.skip(!throwawayConfigured(), throwawaySkipReason);
   });
 
-  test("CA-9: Continua crea il Nest e porta a /oggi, senza avvisi durante l'attesa", async ({
+  test("CA-9: Continua crea il Nest e porta a /onboarding/persone, senza avvisi durante l'attesa", async ({
     page,
     baseURL,
   }) => {
@@ -138,8 +138,8 @@ test.describe("creazione del Nest", () => {
       await openAs(page, user, baseURL);
       await choose(page, "In famiglia, con figli");
       await continua(page).click();
-      await expect(page).toHaveURL(/\/oggi$/);
-      // The page was watched from the first paint to the arrival on /oggi.
+      await expect(page).toHaveURL(/\/onboarding\/persone$/);
+      // The page was watched from the first paint to the arrival on /onboarding/persone.
       expect(notices).toEqual([]);
 
       const nests = await readNests(user.client);
@@ -172,7 +172,7 @@ test.describe("creazione del Nest", () => {
         await openAs(page, user, baseURL);
         await choose(page, answer);
         await continua(page).click();
-        await expect(page).toHaveURL(/\/oggi$/);
+        await expect(page).toHaveURL(/\/onboarding\/persone$/);
         const nests = await readNests(user.client);
         expect(nests.map((n) => n.household_type)).toEqual([type]);
       });
@@ -190,7 +190,7 @@ test.describe("creazione del Nest", () => {
       ).toHaveText("Ciao Ilaria");
       await choose(page, "Solo io");
       await continua(page).click();
-      await expect(page).toHaveURL(/\/oggi$/);
+      await expect(page).toHaveURL(/\/onboarding\/persone$/);
       const nests = await readNests(user.client);
       expect(nests).toHaveLength(1);
       expect(nests[0]!.name).toBe("Casa di Ilaria");
@@ -210,7 +210,7 @@ test.describe("creazione del Nest", () => {
       await expect(greeting).toHaveText("Ciao");
       await choose(page, "Solo io");
       await continua(page).click();
-      await expect(page).toHaveURL(/\/oggi$/);
+      await expect(page).toHaveURL(/\/onboarding\/persone$/);
       const nests = await readNests(user.client);
       expect(nests).toHaveLength(1);
       expect(nests[0]!.name).toBe("Casa mia");
@@ -229,7 +229,7 @@ test.describe("creazione del Nest", () => {
       await openAs(page, user, baseURL);
       await choose(page, "In coppia");
       await continua(page).click();
-      await expect(page).toHaveURL(/\/oggi$/);
+      await expect(page).toHaveURL(/\/onboarding\/persone$/);
       const nests = await readNests(user.client);
       expect(nests).toHaveLength(1);
       expect(nests[0]!.name).toHaveLength(60);
@@ -256,7 +256,7 @@ test.describe("creazione del Nest", () => {
     });
   });
 
-  test("CA-15: caricamento: un solo invio, scelta bloccata, poi /oggi", async ({
+  test("CA-15: caricamento: un solo invio, scelta bloccata, poi /onboarding/persone", async ({
     page,
     baseURL,
   }) => {
@@ -286,7 +286,7 @@ test.describe("creazione del Nest", () => {
         page.getByRole("radio", { name: "In coppia" }),
       ).toHaveAttribute("aria-checked", "false");
       await expect(continua(page)).toHaveAttribute("aria-busy", "true");
-      await expect(page).toHaveURL(/\/oggi$/);
+      await expect(page).toHaveURL(/\/onboarding\/persone$/);
       expect(saves).toBe(1);
       expect(notices).toEqual([]);
       const nests = await readNests(user.client);
@@ -323,7 +323,7 @@ test.describe("creazione del Nest", () => {
 
       await page.unroute("**/onboarding");
       await notice.getByRole("button", { name: "Riprova" }).click();
-      await expect(page).toHaveURL(/\/oggi$/);
+      await expect(page).toHaveURL(/\/onboarding\/persone$/);
       const nests = await readNests(user.client);
       expect(nests.map((n) => n.household_type)).toEqual(["couple"]);
     });
@@ -345,7 +345,7 @@ test.describe("creazione del Nest", () => {
 
       await choose(page, "Solo io");
       await continua(page).click();
-      await expect(page).toHaveURL(/\/oggi$/);
+      await expect(page).toHaveURL(/\/onboarding\/persone$/);
 
       await choose(second, "Con coinquilini");
       await continua(second).click();
@@ -467,7 +467,7 @@ test.describe("correzioni #69: «Solo io»", () => {
       await openAs(page, user, baseURL, 390);
       await choose(page, "Solo io");
       await continua(page).click();
-      await expect(page).toHaveURL(/\/oggi$/);
+      await expect(page).toHaveURL(/\/onboarding\/persone$/);
       const nests = await readNests(user.client);
       expect(nests).toHaveLength(1);
       expect(nests[0]!.name).toBe("Casa De Santis");
@@ -523,7 +523,7 @@ test.describe("correzioni #69: «Solo io»", () => {
       await openAs(page, user, baseURL, 390);
       await choose(page, "Solo io");
       await continua(page).click();
-      await expect(page).toHaveURL(/\/oggi$/);
+      await expect(page).toHaveURL(/\/onboarding\/persone$/);
 
       const clientA = await clientFor("A");
       const asA = await readNests(clientA);
