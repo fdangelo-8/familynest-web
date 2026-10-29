@@ -465,15 +465,34 @@ test("focus: torna la rete con il focus su «Riprova» (senza premerlo): il focu
   page,
   context,
 }) => {
-  // Known defect of PR #79 (spec 3.6a): the focus moves to a heading only when
-  // "Riprova" was pressed. Remove test.fail() when the page is fixed.
-  test.fail();
   const retry = await offlineWithPane(page, context);
   await retry.focus();
   await context.setOffline(false);
   await expect(page.locator(".avviso--errore")).toBeHidden({ timeout: 15_000 });
   // Spec 3.6a: "se il focus era su «Riprova» va sull'h3 della prima sezione visibile".
   expect(await page.evaluate(() => document.activeElement?.tagName)).toBe("H3");
+});
+
+test("spunta rifiutata: la riga torna subito in «Da prendere»", async ({
+  page,
+}) => {
+  const fake = await open(page, { items: NORMAL_LIST });
+  fake.refuseWrites();
+  await page.getByRole("checkbox", { name: "Preso: Latte" }).click();
+  await expect(
+    page
+      .getByRole("status")
+      .filter({ hasText: "Non siamo riusciti a salvare" }),
+  ).toBeVisible();
+  // At once, not after the 600 ms wait of a tick: the circle is empty and the row is in its own list.
+  await expect(
+    page.getByTestId("spesa-da-prendere").getByRole("checkbox", {
+      name: "Preso: Latte",
+    }),
+  ).toBeVisible({ timeout: 300 });
+  await expect(page.getByTestId("spesa-presi")).not.toContainText("Latte", {
+    timeout: 300,
+  });
 });
 
 // --- the live region ---------------------------------------------------------
