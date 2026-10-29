@@ -223,6 +223,9 @@ export function PeopleStep({
 
   return (
     <main className={styles.root}>
+      <div role="status">
+        <VisuallyHidden>{announcement}</VisuallyHidden>
+      </div>
       <div className={`${styles.mobile} passo-onboarding`}>
         <div className="passo-onboarding__testa">
           <BackArrow />
@@ -269,10 +272,6 @@ export function PeopleStep({
             <Button onClick={goOn}>Continua</Button>
           </div>
         </div>
-      </div>
-
-      <div role="status">
-        <VisuallyHidden>{announcement}</VisuallyHidden>
       </div>
 
       <MemberSheet
