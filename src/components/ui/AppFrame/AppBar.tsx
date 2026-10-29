@@ -1,13 +1,16 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { getBarConfig } from "@/lib/app-routes";
-import { Icon } from "../Icon/Icon";
 import { Lens } from "../Lens/Lens";
 import { NestSquare } from "../NestSquare/NestSquare";
 import { cx } from "../cx";
-import { BackLink, NotificationsLink, SearchLink } from "./IconLinks";
+import {
+  BackLink,
+  CloseLink,
+  NotificationsLink,
+  SearchLink,
+} from "./IconLinks";
 
 /** Mobile top bar (`.barra`). Its shape follows the route. Hidden from 1024 px. */
 export function AppBar() {
@@ -41,9 +44,7 @@ export function AppBar() {
   return (
     <header className="barra">
       {config.kind === "close" ? (
-        <Link href={config.href} className="btn-icona" aria-label="Chiudi">
-          <Icon name="x" />
-        </Link>
+        <CloseLink fallback={config.href} />
       ) : (
         <BackLink fallback={config.fallback} />
       )}

@@ -4171,3 +4171,9 @@ body {
     gap: var(--space-5);
   }
 }
+
+/* Foglio dei membri (#85): il modulo sta dentro il corpo del foglio e lascia
+   al corpo la disposizione dei campi; il bottone di salvataggio sta fuori, nel piede. */
+.modulo-membro {
+  display: contents;
+}
