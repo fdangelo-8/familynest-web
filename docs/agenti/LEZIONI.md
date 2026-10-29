@@ -44,6 +44,8 @@ Errori già commessi (in questo progetto o in quelli precedenti dell'ecosistema)
 - Risposta di Francesco a una `proposta-design` registrata in ritardo, o nota di stato che la dà per «da decidere» → un'issue d'implementazione per ogni punto approvato, subito; prima di scrivere lo stato si rileggono i commenti di Francesco nell'issue (punti 6–14 della #43 erano rimasti senza issue).
 - Scostamento dal criterio deciso in PR (testo diverso dal CA) → il coordinatore aggiorna il criterio nell'issue prima del test funzionale, altrimenti il tester lo legge in contrasto con la PR.
 - Criterio di accettazione con un valore oltre i limiti del database (CA-13 della #12 superava i 100 caratteri, e non era verificabile) → l'analista controlla lunghezze e vincoli di colonne e funzioni prima di fissare il criterio.
+- CI rossa su `main` per 4 giorni senza che nessuno se ne accorgesse → dopo ogni merge il coordinatore controlla la CI su `main` e, se è rossa, apre subito una issue.
+- Push con `check` o `build` rotti dopo un push di soli file di test → si lancia `npm run check` e `npm run build` prima di ogni push, anche per file di test.
 
 ## Test
 
@@ -54,9 +56,13 @@ Errori già commessi (in questo progetto o in quelli precedenti dell'ecosistema)
 - Confronti di stili calcolati con il mockup falliscono in CI su altezze che dipendono da andata a capo e font (il mockup non carica i font da Google in CI) → escludere `height` solo dove dipende dal testo, non togliere l'intero caso.
 - Riferimento visivo vecchio ma sotto tolleranza non viene riscritto dal workflow visual-baseline (`--update-snapshots`), e gli hook vietano di cancellare screenshot → il riferimento resta valido finché è sotto tolleranza; per rigenerarlo si usa l'immagine della CI (container Playwright) sull'ultimo commit che cambia il CSS, con il workflow `visual-baseline` o in locale con la stessa immagine e `--update-snapshots=all`, e si controlla il pixel che è cambiato, perché sotto tolleranza la CI resta verde anche con un riferimento sbagliato.
 - Script che scrive nel progetto remoto riconosceva gli account di test solo dalla mail → gli script che toccano il progetto remoto marcano i propri dati (es. `app_metadata.familynest_test_user`), fanno tutti i controlli prima della prima scrittura e cancellano solo dati marcati.
-- Test che richiedono un utente autenticato saltati in CI finché gli utenti di test remoti non esistono, e "CI verde" non prova quei casi → quando un test è saltato in CI, la verifica si fa in locale contro Supabase locale e l'esito lo dice esplicitamente.
+- Test che richiedono un utente autenticato saltati in CI finché gli utenti di test remoti non esistono, e "CI verde" non prova quei casi → quando un test è saltato in CI, la verifica si fa in locale contro Supabase locale e l'esito lo dice esplicitamente; quando arrivano le credenziali, i riferimenti visivi che le usano si generano subito con `visual-baseline`, senza aspettare la PR successiva.
 - Due tester che usano lo stesso Supabase locale e riseminano con credenziali diverse si cancellano a vicenda i dati → un solo seed condiviso per sessione, stesse variabili per tutti.
 - Correzione approvata che cambia uno stile fissato dal mockup → il test di confronto fallisce: si aggiorna con l'elenco delle differenze approvate, citando la decisione, senza disattivarlo.
+- Script `node --env-file` che scrive nel progetto remoto per errore, perché non sovrascrive le variabili già presenti nella shell → seed e test in locale sostituiscono esplicitamente l'ambiente e verificano che l'URL sia `127.0.0.1` prima della prima scrittura.
+- Test che leggono il nome del branch o il diff con `origin/main` (CA-22 della #52) passavano in silenzio in CI, dove il checkout è superficiale e `origin/main` manca → il recupero usa `git fetch --deepen=N` (non `--depth`, che non allunga la storia di `HEAD`), con `git -c safe.directory=*` nel container; se il diff non si può calcolare il test fallisce con un messaggio, mai con un `return` silenzioso.
+- Screenshot scattato dopo un clic, con il puntatore ancora sopra, che cattura lo stato di passaggio del mouse → `await page.mouse.move(0, 0)` prima dello screenshot.
+- Test di accessibilità sul fuoco che non trova l'anello su un campo con `outline: none` → l'anello su `:focus-within` del contenitore è ammesso solo se la specifica lo documenta, e il test controlla il contenitore, non il campo.
 
 ## Design
 
