@@ -1,0 +1,39 @@
+# Writes the duration of the current job to the run summary, to keep an eye on
+# the Actions minutes. Reads the job start time from the API, so runner and
+# container setup are counted too. Use it as the last step with `if: always()`;
+# the job needs `actions: read`.
+name: job-duration
+description: Write the current job duration to the run summary
+
+inputs:
+  job:
+    description: Job name as shown in the run (the job id when the job has no name)
+    required: true
+  token:
+    description: Token with actions read permission
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        JOB: ${{ inputs.job }}
+        GH_TOKEN: ${{ inputs.token }}
+      run: |
+        node - <<'EOF'
+        const { appendFileSync } = require("node:fs");
+        const { GITHUB_API_URL, GITHUB_REPOSITORY, GITHUB_RUN_ID, GITHUB_RUN_ATTEMPT } = process.env;
+        const url = `${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/attempts/${GITHUB_RUN_ATTEMPT}/jobs?per_page=100`;
+        const write = (line) => appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${line}\n`);
+        fetch(url, { headers: { authorization: `Bearer ${process.env.GH_TOKEN}`, accept: "application/vnd.github+json" } })
+          .then((response) => (response.ok ? response.json() : Promise.reject(new Error(`HTTP ${response.status}`))))
+          .then(({ jobs }) => {
+            const job = jobs.find((j) => j.name === process.env.JOB && j.status === "in_progress");
+            if (!job) throw new Error("job not found");
+            const seconds = Math.max(0, Math.round((Date.now() - Date.parse(job.started_at)) / 1000));
+            const billed = Math.max(1, Math.ceil(seconds / 60));
+            write(`⏱️ Job \`${process.env.JOB}\`: ${Math.floor(seconds / 60)} min ${seconds % 60} s (minuti conteggiati da GitHub: ${billed})`);
+          })
+          .catch((error) => write(`⏱️ Job \`${process.env.JOB}\`: durata non disponibile (${error.message})`));
+        EOF
