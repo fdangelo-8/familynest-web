@@ -3866,6 +3866,75 @@ main[tabindex="-1"]:focus {
   background: var(--color-carta);
 }
 
+/* Righe, schede, striscia e blocchi del Calendario e di Oggi (#88, per #25 e
+   #30): passaggio del mouse e premuto, stessa regola e stessi fondi. Solo i
+   cliccabili cambiano: Occupato e Liberi insieme (div) e le righe del pannello
+   non sono controlli. */
+@media (hover: hover) {
+  .riga-evento,
+  .scheda-spazio,
+  .contatore,
+  .prossimo,
+  .striscia-giorni__giorno,
+  .blocco-orario,
+  .passo-partenza,
+  .riga-gia-fatti {
+    transition: background var(--durata-rapida) var(--curva);
+  }
+  a.riga-evento:not(.riga-evento--insieme, .riga-evento--occupato):hover,
+  a.scheda.prossimo:hover,
+  a.scheda.contatore:hover,
+  a.scheda.scheda-spazio:not(.scheda--tratteggiata):hover,
+  .striscia-giorni__giorno.is-selezionato:hover,
+  a.blocco-orario:not(.blocco-orario--insieme, .blocco-orario--occupato):hover,
+  button.blocco-orario:not(
+      .blocco-orario--insieme,
+      .blocco-orario--occupato
+    ):hover,
+  a.passo-partenza:hover {
+    background: var(--color-carta);
+  }
+  a.scheda--tratteggiata.scheda-spazio:hover,
+  button.riga-gia-fatti:hover,
+  .striscia-giorni__giorno:not(.is-selezionato):hover {
+    background: var(--color-carta-2);
+  }
+}
+a.riga-evento:not(.riga-evento--insieme, .riga-evento--occupato):active,
+a.scheda.prossimo:active,
+a.scheda.contatore:active,
+a.scheda.scheda-spazio:not(.scheda--tratteggiata):active,
+.striscia-giorni__giorno.is-selezionato:active,
+a.blocco-orario:not(.blocco-orario--insieme, .blocco-orario--occupato):active,
+button.blocco-orario:not(
+    .blocco-orario--insieme,
+    .blocco-orario--occupato
+  ):active,
+a.passo-partenza:active {
+  background: var(--color-carta);
+}
+a.scheda--tratteggiata.scheda-spazio:active,
+button.riga-gia-fatti:active,
+.striscia-giorni__giorno:not(.is-selezionato):active {
+  background: var(--color-carta-2);
+}
+
+/* Blocchi che non si toccano (Occupato, Liberi insieme): cursore normale */
+div.blocco-orario {
+  cursor: default;
+}
+
+/* Linea di adesso al minuto: la pagina imposta --adesso-ore (ore passate dalle
+   8:00, es. 15:52 = 7.8667) con style.setProperty. */
+.linea-adesso {
+  top: calc(var(--h) * var(--adesso-ore, 0));
+}
+
+/* Già fatti (Oggi): la freccia si capovolge quando la riga è aperta */
+.riga-gia-fatti[aria-expanded="true"] .icona:last-child {
+  scale: 1 -1;
+}
+
 /* Caricamento: il bottone è inattivo (aria-disabled) ma non sembra disabilitato */
 .is-caricamento[aria-disabled="true"] {
   opacity: 1;

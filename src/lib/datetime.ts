@@ -265,3 +265,198 @@ export function fromFieldValues(date: string, time: string): Date {
     .filter((ms) => romeOffsetMinutes(ms) === (shifted - ms) / MS_PER_MINUTE);
   return new Date(Math.min(...fallback));
 }
+
+/* ---------- Weeks and days in Rome (calendar, Oggi) ---------- */
+
+const DAY_KEY = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+/** True for a real calendar day written `YYYY-MM-DD` (rejects 2026-02-30). */
+export function isValidDayKey(value: string): boolean {
+  const match = DAY_KEY.exec(value);
+  if (!match) return false;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return (
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day
+  );
+}
+
+/** `YYYY-MM-DD` of the Rome day that is `days` after (or before) `dayKey`. */
+export function addDaysToDayKey(dayKey: string, days: number): string {
+  const match = DAY_KEY.exec(dayKey);
+  if (!match) return dayKey;
+  const date = new Date(
+    Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]) + days),
+  );
+  return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}`;
+}
+
+/** The Rome day of an instant, as `YYYY-MM-DD`. */
+export function toDayKey(value: Instant): string {
+  return toDateFieldValue(value);
+}
+
+/** UTC instant of 00:00 in Rome on `dayKey` (safe across clock changes). */
+export function startOfDay(dayKey: string): Date {
+  return fromFieldValues(dayKey, "00:00");
+}
+
+/** ISO weekday of a day key: 1 = Monday ... 7 = Sunday. */
+function isoWeekday(dayKey: string): number {
+  const match = DAY_KEY.exec(dayKey);
+  if (!match) return 1;
+  const day = new Date(
+    Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])),
+  ).getUTCDay();
+  return day === 0 ? 7 : day;
+}
+
+/** Day key of the Monday of the week (Rome) that contains `dayKey`. */
+export function getWeekStartKey(dayKey: string): string {
+  return addDaysToDayKey(dayKey, 1 - isoWeekday(dayKey));
+}
+
+/** Monday 00:00 in Rome of the week that contains the instant. */
+export function getWeekStart(value: Instant): Date {
+  return startOfDay(getWeekStartKey(toDayKey(value)));
+}
+
+export type CalendarDay = {
+  /** `YYYY-MM-DD`, Rome day */
+  key: string;
+  /** 00:00 in Rome */
+  start: Date;
+  /** 00:00 in Rome of the next day (the day is `[start, end)`) */
+  end: Date;
+};
+
+/** A Rome day from its key. It lasts 23 or 25 hours on clock-change days. */
+export function getCalendarDay(dayKey: string): CalendarDay {
+  return {
+    key: dayKey,
+    start: startOfDay(dayKey),
+    end: startOfDay(addDaysToDayKey(dayKey, 1)),
+  };
+}
+
+/**
+ * The 7 days, Monday to Sunday, of the week that contains `reference`
+ * (an instant, or a `YYYY-MM-DD` day key).
+ */
+export function getWeekDays(reference: Instant): CalendarDay[] {
+  const dayKey =
+    typeof reference === "string" && DAY_KEY.test(reference)
+      ? reference
+      : toDayKey(reference);
+  const monday = getWeekStartKey(dayKey);
+  return Array.from({ length: 7 }, (_, index) =>
+    getCalendarDay(addDaysToDayKey(monday, index)),
+  );
+}
+
+/** Value of the `settimana` address parameter: the Monday as `YYYY-MM-DD`. */
+export function formatWeekParam(reference: Instant): string {
+  return getWeekStartKey(toDayKey(reference));
+}
+
+/**
+ * Reads the `settimana` parameter. A valid date gives the week that contains
+ * it (Monday not required); anything else gives the week of `now`, silently.
+ * Returns the Monday 00:00 in Rome.
+ */
+export function parseWeekParam(
+  value: string | string[] | null | undefined,
+  now: Instant = new Date(),
+): Date {
+  const raw = Array.isArray(value) ? value[0] : value;
+  if (typeof raw === "string" && isValidDayKey(raw)) {
+    return startOfDay(getWeekStartKey(raw));
+  }
+  return getWeekStart(now);
+}
+
+/** Value of the `mese` address parameter: `YYYY-MM`. */
+export function formatMonthParam(value: Instant): string {
+  const { year, month } = romeParts(value);
+  return `${year}-${pad(month)}`;
+}
+
+/** `10:00 – 11:00` (24 h, hour without leading zero, as `formatTime`). */
+export function formatTimeRange(start: Instant, end: Instant): string {
+  return `${formatTime(start)} – ${formatTime(end)}`;
+}
+
+/**
+ * `Martedì 20` (capitalized by default). With `withMonth` the month follows
+ * (`Domenica 1 novembre`), for the days of the second month in a week.
+ */
+export function formatDayNumber(
+  value: Instant,
+  options: { capitalized?: boolean; withMonth?: boolean } = {},
+): string {
+  const { capitalized = true, withMonth = false } = options;
+  const weekday = textPart(value, { weekday: "long" }, "weekday");
+  const day = romeParts(value).day;
+  const month = withMonth
+    ? ` ${textPart(value, { month: "long" }, "month")}`
+    : "";
+  const text = `${weekday} ${day}${month}`;
+  return capitalized ? capitalize(text) : text;
+}
+
+/** `Buongiorno` 05:00-12:59, `Buon pomeriggio` 13:00-17:59, else `Buonasera`. */
+export function formatGreeting(now: Instant = new Date()): string {
+  const { hour } = romeParts(now);
+  if (hour >= 5 && hour < 13) return "Buongiorno";
+  if (hour >= 13 && hour < 18) return "Buon pomeriggio";
+  return "Buonasera";
+}
+
+function weekdayName(value: Instant): string {
+  return textPart(value, { weekday: "long" }, "weekday");
+}
+
+function dayAndMonth(value: Instant, now: Instant): string {
+  const { day, year } = romeParts(value);
+  const month = textPart(value, { month: "long" }, "month");
+  return year === romeParts(now).year
+    ? `${day} ${month}`
+    : `${day} ${month} ${year}`;
+}
+
+/**
+ * Deadline in words: `Entro oggi`, `Entro domani`, `Entro venerdì` (up to 6
+ * days ahead), `Entro il 31 ottobre` beyond (with the year if it is not the
+ * current one). A deadline already gone reads `Scaduto il 28 ottobre`.
+ */
+export function formatDeadline(
+  due: Instant,
+  now: Instant = new Date(),
+): string {
+  const days = romeDayNumber(due) - romeDayNumber(now);
+  if (days < 0) return `Scaduto il ${dayAndMonth(due, now)}`;
+  if (days === 0) return "Entro oggi";
+  if (days === 1) return "Entro domani";
+  if (days <= 6) return `Entro ${weekdayName(due)}`;
+  return `Entro il ${dayAndMonth(due, now)}`;
+}
+
+/**
+ * For the closest deadline: `Il primo scade oggi`, `... domani`,
+ * `... venerdì` (up to 6 days ahead), `... il 31 ottobre` beyond.
+ */
+export function formatFirstDeadline(
+  due: Instant,
+  now: Instant = new Date(),
+): string {
+  const days = romeDayNumber(due) - romeDayNumber(now);
+  if (days < 0) return `Il primo è scaduto il ${dayAndMonth(due, now)}`;
+  if (days === 0) return "Il primo scade oggi";
+  if (days === 1) return "Il primo scade domani";
+  if (days <= 6) return `Il primo scade ${weekdayName(due)}`;
+  return `Il primo scade il ${dayAndMonth(due, now)}`;
+}

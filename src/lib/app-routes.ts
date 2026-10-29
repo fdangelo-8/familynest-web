@@ -149,6 +149,9 @@ export type PlaceholderKey =
   | "oggi"
   | "aggiungi"
   | "calendario"
+  | "calendario-giorno"
+  | "calendario-mese"
+  | "impegno"
   | "casa"
   | "casa-da-fare"
   | "casa-scadenze"
@@ -206,6 +209,28 @@ export const PLACEHOLDERS: Record<PlaceholderKey, PlaceholderDef> = {
     browserTitle: "FamilyNest · Calendario",
     icon: "calendar",
     text: `Qui vedrai gli impegni di tutta la casa, per giorno, settimana e mese. ${COMING}`,
+    backToToday: true,
+  },
+  // Until #26 (Giorno), #27 (Mese) and #19 (Dettaglio impegno) are built.
+  "calendario-giorno": {
+    title: "Calendario",
+    browserTitle: "FamilyNest · Calendario",
+    icon: "calendar",
+    text: `Qui vedrai gli impegni di un giorno, ora per ora. ${COMING}`,
+    backToToday: true,
+  },
+  "calendario-mese": {
+    title: "Calendario",
+    browserTitle: "FamilyNest · Calendario",
+    icon: "calendar",
+    text: `Qui vedrai gli impegni del mese, giorno per giorno. ${COMING}`,
+    backToToday: true,
+  },
+  impegno: {
+    title: "Impegno",
+    browserTitle: "FamilyNest · Impegno",
+    icon: "calendar",
+    text: `Qui vedrai i dettagli di un impegno. ${COMING}`,
     backToToday: true,
   },
   casa: {
