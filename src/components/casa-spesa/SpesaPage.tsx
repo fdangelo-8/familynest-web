@@ -23,14 +23,7 @@ import {
   type ShoppingItem,
   type ShoppingMember,
 } from "./model";
-import { SPESA_PAGE_CSS } from "./page-css";
 
-const styles = {
-  switcher: "spesa-selettore",
-  onlyMobile: "spesa-solo-mobile",
-  onlyDesktop: "spesa-solo-desktop",
-  columnHead: "spesa-testa-colonna",
-};
 import { Tear } from "./Tear";
 import { useShoppingList } from "./useShoppingList";
 
@@ -59,17 +52,16 @@ function PageTop({ nestName }: { nestName: string }) {
 function LoadingState({ nestName }: { nestName: string }) {
   return (
     <main id="contenuto" tabIndex={-1} className="pagina pagina-desktop">
-      <style>{SPESA_PAGE_CSS}</style>
       <PageTop nestName={nestName} />
       <SectionSwitcher
         aria-label="Sezione della casa"
         items={switcherItems(undefined)}
         current="spesa"
-        className={styles.switcher}
+        className={"spesa-selettore"}
       />
       <div aria-busy="true" aria-live="polite">
         <VisuallyHidden>Caricamento in corso</VisuallyHidden>
-        <div className={styles.onlyMobile}>
+        <div className={"spesa-solo-mobile"}>
           <div className="gruppo-skeleton" aria-hidden="true">
             <Skeleton shape="riga" />
           </div>
@@ -78,7 +70,7 @@ function LoadingState({ nestName }: { nestName: string }) {
             <Skeleton shape="grande" />
           </div>
         </div>
-        <div className={cx("colonne", "colonne--tre", styles.onlyDesktop)}>
+        <div className={cx("colonne", "colonne--tre", "spesa-solo-desktop")}>
           {[0, 1, 2].map((column) => (
             <div key={column} className="gruppo-skeleton" aria-hidden="true">
               <Skeleton shape="riga" />
@@ -157,7 +149,7 @@ function ComingSoonColumn({
   text: string;
 }) {
   return (
-    <section className={cx("colonna", styles.onlyDesktop)} aria-label={title}>
+    <section className={cx("colonna", "spesa-solo-desktop")} aria-label={title}>
       <div className="sezione__testa">
         <h2 className="sezione__titolo">{title}</h2>
       </div>
@@ -310,17 +302,16 @@ export function SpesaPage({ nestName }: { nestName: string }) {
       ref={rootRef}
       className="pagina pagina-desktop"
     >
-      <style>{SPESA_PAGE_CSS}</style>
       <PageTop nestName={nestName} />
       <SectionSwitcher
         aria-label="Sezione della casa"
         items={switcherItems(toTake.length)}
         current="spesa"
-        className={styles.switcher}
+        className={"spesa-selettore"}
       />
       <div className="colonne colonne--tre">
         <section className="colonna" aria-label="Spesa">
-          <div className={cx("sezione__testa", styles.columnHead)}>
+          <div className={cx("sezione__testa", "spesa-testa-colonna")}>
             <h2 className="sezione__titolo">Spesa</h2>
             {toTake.length > 0 ? (
               <span className="sezione__info">{toTake.length} da prendere</span>
