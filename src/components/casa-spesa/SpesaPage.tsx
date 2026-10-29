@@ -23,7 +23,14 @@ import {
   type ShoppingItem,
   type ShoppingMember,
 } from "./model";
-import styles from "./spesa.module.css";
+import { SPESA_PAGE_CSS } from "./page-css";
+
+const styles = {
+  switcher: "spesa-selettore",
+  onlyMobile: "spesa-solo-mobile",
+  onlyDesktop: "spesa-solo-desktop",
+  columnHead: "spesa-testa-colonna",
+};
 import { Tear } from "./Tear";
 import { useShoppingList } from "./useShoppingList";
 
@@ -51,7 +58,8 @@ function PageTop({ nestName }: { nestName: string }) {
 
 function LoadingState({ nestName }: { nestName: string }) {
   return (
-    <main className="pagina pagina-desktop">
+    <main id="contenuto" tabIndex={-1} className="pagina pagina-desktop">
+      <style>{SPESA_PAGE_CSS}</style>
       <PageTop nestName={nestName} />
       <SectionSwitcher
         aria-label="Sezione della casa"
@@ -221,7 +229,7 @@ export function SpesaPage({ nestName }: { nestName: string }) {
 
   if (status === "error") {
     return (
-      <main className="pagina pagina-desktop">
+      <main id="contenuto" tabIndex={-1} className="pagina pagina-desktop">
         <PageError onRetry={() => window.location.reload()} />
       </main>
     );
@@ -296,7 +304,13 @@ export function SpesaPage({ nestName }: { nestName: string }) {
   }
 
   return (
-    <main ref={rootRef} className="pagina pagina-desktop">
+    <main
+      id="contenuto"
+      tabIndex={-1}
+      ref={rootRef}
+      className="pagina pagina-desktop"
+    >
+      <style>{SPESA_PAGE_CSS}</style>
       <PageTop nestName={nestName} />
       <SectionSwitcher
         aria-label="Sezione della casa"
