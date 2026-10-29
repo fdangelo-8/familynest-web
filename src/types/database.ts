@@ -181,24 +181,30 @@ export type Database = {
       households: {
         Row: {
           created_at: string;
+          first_shopping_item_at: string | null;
           household_type: Database["public"]["Enums"]["household_type"];
           id: string;
           name: string;
+          starter_list_completed_at: string | null;
           updated_at: string;
         };
         ComputedFields: never;
         Insert: {
           created_at?: string;
+          first_shopping_item_at?: string | null;
           household_type: Database["public"]["Enums"]["household_type"];
           id?: string;
           name: string;
+          starter_list_completed_at?: string | null;
           updated_at?: string;
         };
         Update: {
           created_at?: string;
+          first_shopping_item_at?: string | null;
           household_type?: Database["public"]["Enums"]["household_type"];
           id?: string;
           name?: string;
+          starter_list_completed_at?: string | null;
           updated_at?: string;
         };
         Relationships: [];
@@ -449,6 +455,10 @@ export type Database = {
           isSetofReturn: true;
         };
       };
+      complete_starter_list: {
+        Args: Record<PropertyKey, never>;
+        Returns: boolean;
+      };
       create_household: {
         Args: {
           color: Database["public"]["Enums"]["member_color"];
@@ -461,6 +471,12 @@ export type Database = {
       current_household_id: {
         Args: Record<PropertyKey, never>;
         Returns: string;
+      };
+      current_member_welcome: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          inviter_name: string;
+        }[];
       };
       list_household_events: {
         Args: { p_from: string; p_to: string };

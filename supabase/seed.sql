@@ -31,10 +31,16 @@ values
    'utente-c@example.com', now(), '{"provider":"email","providers":["email"]}', '{"full_name":"Chiara Neri"}',
    now(), now(), '', '', '', '');
 
-insert into public.households (id, name, household_type, created_at)
+-- Both households have the starter list of page #30 already completed (issue #90), so the
+-- page tests of the normal state never see it. Page tests of the starter list create a
+-- new household (user C). first_shopping_item_at is set by the trigger when the shopping
+-- items below are inserted.
+insert into public.households (id, name, household_type, created_at, starter_list_completed_at)
 values
-  ('11111111-1111-4111-8111-111111111111', 'Casa D''Angelo', 'family_with_children', now() - interval '30 days'),
-  ('22222222-2222-4222-8222-222222222222', 'Casa Bianchi', 'family_with_children', now() - interval '30 days');
+  ('11111111-1111-4111-8111-111111111111', 'Casa D''Angelo', 'family_with_children', now() - interval '30 days',
+   now() - interval '29 days'),
+  ('22222222-2222-4222-8222-222222222222', 'Casa Bianchi', 'family_with_children', now() - interval '30 days',
+   now() - interval '29 days');
 
 -- Members, in insertion order (created_at one minute apart).
 insert into public.household_members (
