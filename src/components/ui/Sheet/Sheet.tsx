@@ -90,6 +90,7 @@ function SheetContent({
   );
 
   const onHandleDown = (event: PointerEvent<HTMLDivElement>) => {
+    if (lockedRef.current) return;
     dragStart.current = event.clientY;
     event.currentTarget.setPointerCapture(event.pointerId);
     const dialog = dialogRef.current;
@@ -112,7 +113,7 @@ function SheetContent({
     const dialog = dialogRef.current;
     if (!dialog) return;
     dialog.classList.remove("is-trascinato");
-    if (delta > dialog.offsetHeight * DRAG_CLOSE_RATIO) {
+    if (delta > dialog.offsetHeight * DRAG_CLOSE_RATIO && !lockedRef.current) {
       requestClose();
     } else {
       dialog.classList.add("is-rientro");

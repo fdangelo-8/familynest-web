@@ -3888,6 +3888,12 @@ main[tabindex="-1"]:focus {
   display: contents;
 }
 
+/* Foglio dei membri (#85): il modulo sta dentro il corpo del foglio e lascia
+   al corpo la disposizione dei campi; il bottone di salvataggio sta fuori, nel piede. */
+.modulo-membro {
+  display: contents;
+}
+
 /* Campo su più righe */
 textarea.campo__input {
   height: auto;
@@ -4170,10 +4176,4 @@ body {
     align-items: center;
     gap: var(--space-5);
   }
-}
-
-/* Foglio dei membri (#85): il modulo sta dentro il corpo del foglio e lascia
-   al corpo la disposizione dei campi; il bottone di salvataggio sta fuori, nel piede. */
-.modulo-membro {
-  display: contents;
 }

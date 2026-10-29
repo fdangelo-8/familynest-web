@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useRef, useState, type FormEvent } from "react";
+import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { toDateFieldValue } from "@/lib/datetime";
 import { HOUSEHOLD_FULL_MESSAGE } from "@/lib/household-limits";
 import { Alert } from "../Alert/Alert";
@@ -94,7 +94,6 @@ const NAME_ERROR = "Scrivi il nome per continuare.";
 const DATE_ERROR = "Questa data è nel futuro: scegli un giorno fino a oggi.";
 const COLOR_TAKEN_ERROR =
   "Questo colore l'ha appena preso qualcun altro: scegline un altro.";
-const COLOR_MISSING_ERROR = "Scegli un colore per continuare.";
 
 /**
  * Sheet to add or change a member of the Nest (mobile: bottom sheet; from
@@ -145,7 +144,11 @@ function MemberSheetOpen({
   const [nameError, setNameError] = useState<string | undefined>();
   const [dateError, setDateError] = useState<string | undefined>();
   const [colorError, setColorError] = useState<string | undefined>();
-  const [failure, setFailure] = useState<Failure | null>(null);
+  // No free colour at opening means the Nest is full.
+  const [failure, setFailure] = useState<Failure | null>(
+    !editing && firstFreeColor(taken) === null ? "full" : null,
+  );
+  const [colorFocusTick, setColorFocusTick] = useState(0);
   const [saving, setSaving] = useState(false);
   const [leaving, setLeaving] = useState(false);
 
@@ -171,6 +174,17 @@ function MemberSheetOpen({
         ? `Aggiungi ${trimmed}`
         : "Aggiungi";
 
+  function focusColor() {
+    colorRef.current
+      ?.querySelector<HTMLElement>('[role="radio"][tabindex="0"]')
+      ?.focus();
+  }
+
+  // After "colour taken in the meantime" the radios have just re-rendered.
+  useEffect(() => {
+    if (colorFocusTick > 0) focusColor();
+  }, [colorFocusTick]);
+
   async function submit() {
     if (busy.current) return;
 
@@ -178,9 +192,7 @@ function MemberSheetOpen({
     const nextNameError = trimmed ? undefined : NAME_ERROR;
     const nextDateError =
       showDate && birthDate && birthDate > today ? DATE_ERROR : undefined;
-    const nextColorError = color
-      ? undefined
-      : (colorError ?? COLOR_MISSING_ERROR);
+    const nextColorError = color ? undefined : colorError;
     setNameError(nextNameError);
     setDateError(nextDateError);
     setColorError(nextColorError);
@@ -195,9 +207,8 @@ function MemberSheetOpen({
       return;
     }
     if (!color) {
-      colorRef.current
-        ?.querySelector<HTMLElement>('[role="radio"][tabindex="0"]')
-        ?.focus();
+      if (!colorError) setFailure("full");
+      focusColor();
       return;
     }
 
@@ -230,6 +241,7 @@ function MemberSheetOpen({
       setJustTaken((list) => [...list, color]);
       setColor(null);
       setColorError(COLOR_TAKEN_ERROR);
+      setColorFocusTick((n) => n + 1);
     } else {
       setFailure(result.reason);
     }
@@ -368,7 +380,7 @@ function MemberSheetOpen({
             I colori spenti sono già di qualcun altro.
           </p>
           {colorError ? (
-            <p className="campo__errore" id={colorErrorId}>
+            <p className="campo__errore" id={colorErrorId} role="alert">
               <Icon name="circle-alert" size="s" />
               {colorError}
             </p>
@@ -381,7 +393,16 @@ function MemberSheetOpen({
             icon={failure === "network" ? "wifi-off" : "circle-alert"}
             action={
               failure === "full" ? undefined : (
-                <Button variant="link" onClick={() => void submit()}>
+                <Button
+                  variant="link"
+                  onClick={() => {
+                    // The alert is removed by the new attempt: keep the focus inside the dialog.
+                    document
+                      .querySelector<HTMLElement>(`[form="${formId}"]`)
+                      ?.focus();
+                    void submit();
+                  }}
+                >
                   Riprova
                 </Button>
               )

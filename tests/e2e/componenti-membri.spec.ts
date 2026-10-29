@@ -264,6 +264,16 @@ test.describe("MemberSheet", () => {
       ),
     ).toBeVisible();
     await expect(dialog.getByLabel("Nome")).toHaveValue("Rita");
+    // focus moves to the colour group and the error is announced
+    await expect(
+      dialog.getByRole("radio").and(page.locator(":focus")),
+    ).toHaveCount(1);
+    await expect(
+      dialog.getByRole("alert").filter({ hasText: "appena preso" }),
+    ).toBeVisible();
+    await expect(
+      dialog.getByRole("radiogroup", { name: "Colore" }),
+    ).toHaveAccessibleDescription(/appena preso/);
     await expect(
       dialog.getByRole("radio", { name: "Salvia (già usato)" }),
     ).toBeDisabled();
@@ -390,5 +400,62 @@ test.describe("MemberSheet", () => {
     await page.keyboard.press("Enter");
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(page.getByTestId("membri-chiamate")).toHaveText("Chiamate: 1");
+  });
+});
+
+test.describe("MemberSheet: correzioni della revisione", () => {
+  test("trascinare il foglio durante il salvataggio non lo sposta", async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== "mobile", "Solo il foglio mobile");
+    await page.goto(DEMO);
+    await page.getByRole("button", { name: "Lento" }).click();
+    await page
+      .getByRole("button", { name: "Aggiungi una persona o un animale" })
+      .click();
+    const dialog = page.getByRole("dialog");
+    await dialog.getByLabel("Nome").fill("Rita");
+    // let the entry animation finish
+    await page.waitForTimeout(600);
+    const before = (await dialog.boundingBox())!;
+    await dialog.getByRole("button", { name: "Aggiungi Rita" }).click();
+    await expect(
+      dialog.getByRole("button", { name: "Aggiungi Rita" }),
+    ).toHaveAttribute("aria-busy", "true");
+    const handle = (await page.getByTestId("sheet-maniglia").boundingBox())!;
+    const x = handle.x + handle.width / 2;
+    const y = handle.y + handle.height / 2;
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    await page.mouse.move(x, y + 500, { steps: 5 });
+    await page.mouse.up();
+    await expect(dialog).toBeVisible();
+    const after = (await dialog.boundingBox())!;
+    expect(Math.abs(after.y - before.y)).toBeLessThan(2);
+  });
+
+  test("«Riprova» tiene il fuoco dentro il dialogo", async ({ page }) => {
+    await page.goto(DEMO);
+    await page.getByRole("button", { name: "Rete" }).click();
+    await page
+      .getByRole("button", { name: "Aggiungi una persona o un animale" })
+      .click();
+    const dialog = page.getByRole("dialog");
+    await dialog.getByLabel("Nome").fill("Rita");
+    await dialog.getByRole("button", { name: "Aggiungi Rita" }).click();
+    await dialog.getByRole("button", { name: "Riprova" }).click();
+    const inside = await page.evaluate(() =>
+      document
+        .querySelector('[role="dialog"]')
+        ?.contains(document.activeElement),
+    );
+    expect(inside).toBe(true);
+    await expect(dialog.getByRole("alert")).toBeVisible();
+    const stillInside = await page.evaluate(() =>
+      document
+        .querySelector('[role="dialog"]')
+        ?.contains(document.activeElement),
+    );
+    expect(stillInside).toBe(true);
   });
 });

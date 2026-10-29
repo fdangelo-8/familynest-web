@@ -28,6 +28,7 @@ const OUTCOMES = {
   completo: "Al completo",
   rete: "Rete",
   server: "Server",
+  lento: "Lento",
 } as const;
 type Outcome = keyof typeof OUTCOMES;
 
@@ -37,6 +38,7 @@ const RESULTS: Record<Outcome, MemberSaveResult> = {
   completo: { ok: false, reason: "full" },
   rete: { ok: false, reason: "network" },
   server: { ok: false, reason: "server" },
+  lento: { ok: true },
 };
 
 type Which = "add" | "edit" | "invite" | null;
@@ -105,7 +107,9 @@ export function MembersDemo() {
         onClose={() => setWhich(null)}
         onSave={async () => {
           setCalls((n) => n + 1);
-          await new Promise((resolve) => setTimeout(resolve, 300));
+          await new Promise((resolve) =>
+            setTimeout(resolve, outcome === "lento" ? 2000 : 300),
+          );
           return RESULTS[outcome];
         }}
         onSaved={setSaved}

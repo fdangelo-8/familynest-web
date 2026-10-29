@@ -55,3 +55,18 @@ test("a11y: foglio con errori di campo e avviso di salvataggio", async ({
   await expect(dialog.getByRole("alert")).toBeVisible();
   expect(await seriousViolations(page)).toEqual([]);
 });
+
+test("a11y: colore preso nel frattempo, errore sul gruppo dei colori", async ({
+  page,
+}) => {
+  await page.goto(DEMO);
+  await page.getByRole("button", { name: "Colore preso" }).click();
+  await page
+    .getByRole("button", { name: "Aggiungi una persona o un animale" })
+    .click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByLabel("Nome").fill("Rita");
+  await dialog.getByRole("button", { name: "Aggiungi Rita" }).click();
+  await expect(dialog.getByRole("alert")).toContainText("appena preso");
+  expect(await seriousViolations(page)).toEqual([]);
+});
