@@ -427,7 +427,7 @@ test("CA-21: isolamento: A e U vedono solo il proprio Nest", async ({
     await openAs(page, user, baseURL);
     await choose(page, "In famiglia, con figli");
     await continua(page).click();
-    await expect(page).toHaveURL(/\/oggi$/);
+    await expect(page).toHaveURL(/\/onboarding\/persone$/);
 
     const asA = await readNests(await clientFor("A"));
     expect(asA.map((n) => n.name)).toEqual(["Casa D'Angelo"]);

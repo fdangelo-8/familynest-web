@@ -311,7 +311,9 @@ test.describe("contenuto", () => {
     await expect(page).toHaveTitle("FamilyNest · Chi c'è nel Nest?");
     await expect(page.locator("h1:visible")).toHaveCount(1);
     await expect(page.locator("h1:visible")).toHaveText("Chi c'è nel Nest?");
-    await expect(page.getByText("La tua famiglia").first()).toBeVisible();
+    await expect(
+      page.getByText("La tua famiglia").filter({ visible: true }).first(),
+    ).toBeVisible();
     const bar = progress(page, "Passo 2 di 4");
     await expect(bar).toHaveCount(1);
     await expect(bar).toHaveAttribute("aria-valuenow", "2");
@@ -359,13 +361,18 @@ test.describe("contenuto", () => {
     await signInAs(page.context(), baseURL as string, "A");
     await page.goto(PATH);
     await expect(
-      page.getByText("FamilyNest", { exact: true }).first(),
+      page
+        .getByText("FamilyNest", { exact: true })
+        .filter({ visible: true })
+        .first(),
     ).toBeVisible();
-    await expect(page.getByText("La casa, in un posto solo.")).toBeVisible();
+    await expect(page.locator(".claim").filter({ visible: true })).toHaveText(
+      /La casa,\s*in un posto solo\./,
+    );
     for (const sticker of ["Nuoto", "Latte e pane", "Liberi insieme"]) {
       await expect(
-        page.getByText(sticker, { exact: true }).first(),
-      ).toBeVisible();
+        page.locator(".adesivi").filter({ visible: true }),
+      ).toContainText(sticker);
     }
     const texts = await page.evaluate(() => [
       document.body.innerText,
@@ -854,7 +861,9 @@ test.describe("Continua e Indietro", () => {
         .first()
         .click();
       await expect(page).toHaveURL(/\/onboarding\?cambia=1$/);
-      await expect(page.getByText("Chi vive con te?").first()).toBeVisible();
+      await expect(
+        page.getByText("Chi vive con te?").filter({ visible: true }).first(),
+      ).toBeVisible();
       await expect(
         page.getByRole("radio", { name: "In coppia" }),
       ).toHaveAttribute("aria-checked", "true");
@@ -888,7 +897,9 @@ test.describe("Continua e Indietro", () => {
     await page.goto("/onboarding");
     await expect(page).toHaveURL(/\/oggi$/);
     await page.goto("/onboarding?cambia=1");
-    await expect(page.getByText("Chi vive con te?").first()).toBeVisible();
+    await expect(
+      page.getByText("Chi vive con te?").filter({ visible: true }).first(),
+    ).toBeVisible();
     await expect(
       page.getByRole("radio", { name: "In famiglia, con figli" }),
     ).toHaveAttribute("aria-checked", "true");
@@ -1060,12 +1071,39 @@ test.describe("Nest al completo", () => {
       await openPage(page, user, baseURL);
       await expect(rows(page)).toHaveCount(10);
       await expect(addButton(page)).toBeDisabled();
-      await expect(page.getByText(FULL_MESSAGE, { exact: true })).toBeVisible();
+      await expect(
+        page.getByText(FULL_MESSAGE, { exact: true }).filter({ visible: true }),
+      ).toBeVisible();
       const pencils = page.getByRole("button", { name: /^Modifica / });
       await expect(pencils).toHaveCount(10);
       for (const pencil of await pencils.all()) {
         await expect(pencil).toBeEnabled();
       }
+    });
+  });
+
+  test("CA-33 (decisione coordinatore): aggiunto il decimo membro, il fuoco va su «Continua»", async ({
+    page,
+    baseURL,
+  }) => {
+    await withNest("family_with_children", async (user) => {
+      for (const color of COLORS.slice(1, 9)) {
+        await addMember(user, {
+          name: `M ${label(color)}`,
+          kind: "adult",
+          color,
+        });
+      }
+      await openPage(page, user, baseURL);
+      await expect(rows(page)).toHaveCount(9);
+      const d = await openAdd(page);
+      await nameField(d).fill("Rita");
+      await kindButton(d, "Adulto").click();
+      await submit(d, "Aggiungi Rita").click();
+      await expect(d).toBeHidden();
+      await expect(rows(page)).toHaveCount(10);
+      await expect(addButton(page)).toBeDisabled();
+      await expect(continua(page)).toBeFocused();
     });
   });
 
