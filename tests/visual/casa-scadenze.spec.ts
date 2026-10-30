@@ -82,7 +82,9 @@ test("normale", async ({ page }) => {
 test("scadute, oggi e Solo io", async ({ page }) => {
   await open(page, { deadlines: OVERDUE_TODAY_PRIVATE_DEADLINES });
   await expect(page.getByTestId("scadenza-riga")).toHaveCount(8);
-  await expect(page.getByTestId("lucchetto")).toHaveCount(1);
+  await expect(
+    page.getByRole("region", { name: "Scadenze" }).getByTestId("lucchetto"),
+  ).toHaveCount(1);
   await shoot(page, "scadute-oggi-solo-io.png");
 });
 
