@@ -774,8 +774,8 @@ test.describe("errori nel foglio", () => {
 
       await expect(dialog.getByText(COLOR_TAKEN)).toBeVisible();
       await expect(dialog).toBeVisible();
-      await expect(colorRadio(dialog, "Cobalto")).toBeDisabled();
-      await expect(colorRadio(dialog, "Cobalto")).not.toBeChecked();
+      await expect(colorRadio(dialog, "Cobalto (già usato)")).toBeDisabled();
+      await expect(colorRadio(dialog, "Cobalto (già usato)")).not.toBeChecked();
       await expect(anyToast(page)).toHaveCount(0);
       await expect(h1(page)).toHaveText("Laura");
       expect((await memberById(laura))!.color).toBe("glicine");
