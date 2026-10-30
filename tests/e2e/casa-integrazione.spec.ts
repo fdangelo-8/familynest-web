@@ -626,8 +626,21 @@ test.describe("isolamento e stato vuoto", () => {
     await seedD(casa);
     await signInAndOpen(page, baseURL, bianchi, "Giulia", "/casa/spesa");
     await waitForPage(page);
+    // Wait for Giulia's own empty lists first: asserting an absence on a page
+    // that is still loading would pass without proving anything.
+    await expect(page.getByText("Casa Bianchi", { exact: true })).toBeVisible();
+    await expect(page.getByText("Niente da fare, per ora")).toBeVisible();
+    await expect(page.getByText("Nessuna scadenza")).toBeVisible();
+    await expect(page.getByText("Una lista per tutta la casa")).toBeVisible();
+    // Rows only: the empty Spesa column offers «Le più comuni» chips, whose
+    // labels («Latte», «Pane») are suggestions of the page, not Nest data.
+    const rows = page.locator(".riga-lista__titolo");
+    await expect(rows).toHaveCount(0);
     for (const text of [...SHOPPING, ...TODOS, ...DEADLINES]) {
-      await expect(page.getByText(text, { exact: true })).toHaveCount(0);
+      await expect(rows.filter({ hasText: text })).toHaveCount(0);
+      await expect(
+        page.getByRole("checkbox", { name: new RegExp(text) }),
+      ).toHaveCount(0);
     }
     await expect(page.getByText("Casa D'Angelo")).toHaveCount(0);
   });
