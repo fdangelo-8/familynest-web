@@ -273,7 +273,8 @@ async function focusedLabel(page: Page) {
   });
 }
 
-async function tabThrough(page: Page, max = 30) {
+// On desktop the three columns have many things to reach: the walk is long.
+async function tabThrough(page: Page, max = 90) {
   const seen: string[] = [];
   for (let i = 0; i < max; i++) {
     await page.keyboard.press("Tab");
@@ -307,7 +308,7 @@ test("ordine del focus con le righe: nessuna riga riceve il focus, nessuna trapp
     expect(seen.length).toBeGreaterThan(5);
   }
   // The focus goes on: no trap (the walk ended by itself, not at the limit).
-  expect(seen.length).toBeLessThan(30);
+  expect(seen.length).toBeLessThan(90);
 });
 
 test("ordine del focus nello stato vuoto: «Aggiungi una scadenza» prima della navigazione", async ({
