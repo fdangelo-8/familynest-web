@@ -66,7 +66,8 @@ async function load(frame: NestFrameData, id: string): Promise<Loaded> {
   let subtitle: string;
   let invite: MemberViewProps["invite"] = null;
   if (member.kind === "pet") {
-    // Only the age text leaves the server, never the birth date.
+    // The age text only. The birth date reaches the browser just for an
+    // administrator (edit sheet, `birthDate` below), never for the others.
     subtitle = member.birth_date
       ? `Animale · ${formatAge(member.birth_date)}`
       : "Animale";

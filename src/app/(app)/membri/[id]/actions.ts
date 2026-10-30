@@ -169,6 +169,9 @@ export type UpdateMemberValues = {
 export type UpdateMemberResult =
   { ok: true } | { ok: false; reason: Failure | "color-taken" | "gone" };
 
+// Same limit as NAME_MAX_LENGTH in MemberSheet (a "use client" module: a server
+// action gets only a reference from it, not the number).
+const NAME_MAX_LENGTH = 40;
 const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
 
 /**
@@ -184,7 +187,7 @@ export async function updateMember(
     typeof memberId !== "string" ||
     !UUID.test(memberId) ||
     !name ||
-    name.length > 40 ||
+    name.length > NAME_MAX_LENGTH ||
     !CHOOSABLE_COLORS.includes(values.color) ||
     !(
       values.birthDate === null ||
@@ -195,6 +198,21 @@ export async function updateMember(
   }
   try {
     const supabase = await createClient();
+    // Only pets and adults without account can be changed here.
+    const target = await supabase
+      .from("household_members")
+      .select("kind, user_id")
+      .eq("id", memberId)
+      .maybeSingle();
+    if (target.error) return { ok: false, reason: failureOf(target.error) };
+    if (!target.data) return { ok: false, reason: "gone" };
+    if (
+      target.data.kind === "child" ||
+      (target.data.kind === "adult" &&
+        (target.data.user_id !== null || values.birthDate !== null))
+    ) {
+      return { ok: false, reason: "server" };
+    }
     const update = await supabase
       .from("household_members")
       .update({

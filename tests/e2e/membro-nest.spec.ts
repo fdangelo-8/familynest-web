@@ -420,21 +420,29 @@ test.describe("contenuto", () => {
     });
   });
 
-  test("CA-14: Fido, animale con data di nascita, mostra solo l'età", async ({
+  test("CA-14: Fido, animale con data di nascita, mostra l'età e la data solo all'amministratore", async ({
     page,
     baseURL,
   }) => {
     onlyMobile();
     needsThrowaway();
-    await withMemberNest(async ({ user, addPet }) => {
+    await withRita(async ({ user, addPet, u2 }) => {
       const birthDate = yearsAgo(3);
       const fido = await addPet("Fido", "lampone", birthDate);
+      expect(formatAge(birthDate)).toBe("3 anni");
+
+      // Not an administrator (Rita): the age text only, never the date.
+      await u2.signInContext(page.context(), baseURL as string);
+      await openMember(page, fido, "Fido");
+      await expect(subtitle(page)).toHaveText("Animale · 3 anni");
+      const viewer = await htmlOf(page, memberPath(fido));
+      expect(viewer.text).not.toContain(birthDate);
+
+      // Administrator: the date may reach the browser (edit sheet only).
+      await page.context().clearCookies();
       await user.signInContext(page.context(), baseURL as string);
       await openMember(page, fido, "Fido");
       await expect(subtitle(page)).toHaveText("Animale · 3 anni");
-      expect(formatAge(birthDate)).toBe("3 anni");
-      const { text } = await htmlOf(page, memberPath(fido));
-      expect(text).not.toContain(birthDate);
     });
   });
 });
