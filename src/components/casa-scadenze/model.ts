@@ -1,9 +1,9 @@
 import type { MemberColor } from "@/components/ui/Avatar/Avatar";
 import {
-  formatDayNumber,
+  dayAndMonth,
   formatDeadline,
+  romeDayNumber,
   startOfDay,
-  toDayKey,
   type Instant,
 } from "@/lib/datetime";
 
@@ -31,7 +31,6 @@ export const URGENT_DAYS = 14;
 /** Up to this many days the number counts days; beyond, it counts months. */
 const DAYS_LIMIT = 60;
 const DAYS_PER_MONTH = 30;
-const MS_PER_DAY = 86_400_000;
 
 function compareStrings(a: string, b: string): number {
   return a < b ? -1 : a > b ? 1 : 0;
@@ -46,16 +45,9 @@ export function byDueDate(a: Deadline, b: Deadline): number {
   );
 }
 
-function dayNumber(dayKey: string): number {
-  const [year, month, day] = dayKey.split("-").map(Number);
-  return Math.floor(
-    Date.UTC(year ?? 0, (month ?? 1) - 1, day ?? 1) / MS_PER_DAY,
-  );
-}
-
-/** Calendar days from today to the due day (both Rome `YYYY-MM-DD` keys). */
-export function daysUntil(dueDate: string, todayKey: string): number {
-  return dayNumber(dueDate) - dayNumber(todayKey);
+/** Calendar days from today (Rome) to the due day, negative if it is gone. */
+export function daysUntil(dueDate: string, now: Instant): number {
+  return romeDayNumber(startOfDay(dueDate)) - romeDayNumber(now);
 }
 
 export function isUrgent(days: number): boolean {
@@ -105,15 +97,7 @@ export function howMuch(days: number): HowMuch {
 
 /** `3 novembre`, or `20 gennaio 2027` when the year is not the current one. */
 export function writtenDate(dueDate: string, now: Instant): string {
-  const due = startOfDay(dueDate);
-  // `Martedì 3 novembre` without the weekday.
-  const dayAndMonth = formatDayNumber(due, { withMonth: true })
-    .split(" ")
-    .slice(1)
-    .join(" ");
-  return dueDate.slice(0, 4) === toDayKey(now).slice(0, 4)
-    ? dayAndMonth
-    : `${dayAndMonth} ${dueDate.slice(0, 4)}`;
+  return dayAndMonth(startOfDay(dueDate), now);
 }
 
 function capitalizeFirst(text: string): string {
@@ -138,9 +122,8 @@ export function toView(
   membersById: ReadonlyMap<string, DeadlineMember>,
   meId: string | null,
   now: Instant,
-  todayKey: string,
 ): DeadlineView {
-  const days = daysUntil(deadline.dueDate, todayKey);
+  const days = daysUntil(deadline.dueDate, now);
   const assignee = deadline.assigneeId
     ? (membersById.get(deadline.assigneeId) ?? null)
     : null;

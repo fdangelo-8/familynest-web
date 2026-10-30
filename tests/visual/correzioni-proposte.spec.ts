@@ -1,4 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
+import {
+  NORMAL_DEADLINES,
+  installScadenzeFake,
+} from "../fixtures/scadenze-fake";
 import { NORMAL_LIST, installSpesaFake } from "../fixtures/spesa-fake";
 import { NORMAL_TODOS, installTodosFake } from "../fixtures/todos-fake";
 import { hasTestUser, signInAs } from "../fixtures/visual-login";
@@ -73,6 +77,7 @@ test.describe("cornice dell'app (utente A)", () => {
     // Casa · Spesa shows the shopping list: a fixed list, served by a fake (#21).
     await installSpesaFake(page, { items: NORMAL_LIST });
     await installTodosFake(page, { todos: NORMAL_TODOS });
+    await installScadenzeFake(page, { deadlines: NORMAL_DEADLINES });
     await page.goto("/casa/spesa");
     await expect(page.getByRole("main")).toBeVisible();
     await expect(page.getByTestId("spesa-riga")).toHaveCount(7);

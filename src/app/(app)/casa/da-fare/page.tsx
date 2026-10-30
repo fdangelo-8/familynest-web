@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CasaPage } from "@/components/casa-da-fare/CasaPage";
+import { CasaPage } from "@/components/casa/CasaPage";
 import { requireNest } from "@/lib/nest-frame";
 
 export const metadata: Metadata = {

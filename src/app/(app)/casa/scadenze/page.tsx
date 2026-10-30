@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ScadenzePage } from "@/components/casa-scadenze/ScadenzePage";
+import { CasaPage } from "@/components/casa/CasaPage";
 import { requireNest } from "@/lib/nest-frame";
 
 export const metadata: Metadata = {
@@ -12,7 +12,7 @@ export default async function Page() {
   // The frame already shows its own error: nothing to read here.
   if (frame.failed || frame.nestName === null) return null;
 
-  // The list is read in the browser, so the page can show its own loading
+  // The lists are read in the browser, so the page can show its own loading
   // and error states.
-  return <ScadenzePage nestName={frame.nestName} />;
+  return <CasaPage nestName={frame.nestName} current="scadenze" />;
 }
