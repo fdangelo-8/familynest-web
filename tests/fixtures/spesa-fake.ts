@@ -113,33 +113,26 @@ export async function installSpesaFake(
     return rows;
   }
 
-  // The members list is real: read the response, remember it, pass it on.
-  await page.route("**/rest/v1/household_members?*", async (route) => {
-    const url = route.request().url();
+  // The members list is real: read the response and remember it. A response
+  // listener (not a route) so that the fakes of the other lists of Casa, which
+  // read the same list, can be installed on the same page.
+  page.on("response", async (response) => {
+    const request = response.request();
     if (
-      route.request().method() !== "GET" ||
-      !url.includes("household_id=eq.")
+      request.method() !== "GET" ||
+      !response.url().includes("/rest/v1/household_members?") ||
+      !response.url().includes("household_id=eq.")
     ) {
-      return route.continue();
+      return;
     }
     try {
-      const response = await route.fetch();
-      const body = await response.body();
-      try {
-        members = JSON.parse(body.toString("utf8")) as Member[];
-      } catch {
-        members = [];
-      }
-      resolveMembers();
-      return await route.fulfill({
-        status: response.status(),
-        headers: response.headers(),
-        body,
-      });
+      members = JSON.parse(
+        (await response.body()).toString("utf8"),
+      ) as Member[];
     } catch {
-      // Offline or the page is gone: let the request fail by itself.
-      return route.continue().catch(() => {});
+      members = [];
     }
+    resolveMembers();
   });
 
   await page.route("**/rest/v1/todos*", async (route) => {

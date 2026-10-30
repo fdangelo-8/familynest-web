@@ -133,7 +133,7 @@ export function formatDayRange(start: Instant, end: Instant): string {
 }
 
 /** Day number of the Rome calendar day, to count calendar days. */
-function romeDayNumber(value: Instant): number {
+export function romeDayNumber(value: Instant): number {
   const { year, month, day } = romeParts(value);
   return Math.floor(Date.UTC(year, month - 1, day) / MS_PER_DAY);
 }
@@ -432,7 +432,11 @@ function weekdayName(value: Instant): string {
   return textPart(value, { weekday: "long" }, "weekday");
 }
 
-function dayAndMonth(value: Instant, now: Instant): string {
+/**
+ * `26 ottobre`, with the year (`26 ottobre 2027`) only when it is not the
+ * year of `now`.
+ */
+export function dayAndMonth(value: Instant, now: Instant): string {
   const { day, year } = romeParts(value);
   const month = textPart(value, { month: "long" }, "month");
   return year === romeParts(now).year
