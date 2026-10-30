@@ -26,13 +26,18 @@ test.beforeEach(async ({ context, baseURL }) => {
   test.skip(!signedIn, "utente di test A non ancora creato (#55)");
 });
 
-async function open(page: Page, options: FakeOptions, ready = true) {
+async function open(
+  page: Page,
+  options: FakeOptions,
+  ready = true,
+  deadlines: "ok" | "error" = "ok",
+) {
   const fake = await installSpesaFake(page, options);
   // The deadlines are the third column; if the list cannot be read they fail
   // too (on desktop the whole-page error needs all the lists to fail).
   await installScadenzeFake(page, {
     deadlines: NORMAL_DEADLINES,
-    reads: options.reads === "error" ? "error" : "ok",
+    reads: options.reads === "error" || deadlines === "error" ? "error" : "ok",
   });
   await page.goto("/casa/spesa");
   if (ready) {
@@ -485,6 +490,33 @@ test("focus: torna la rete con il focus su «Riprova» (senza premerlo): il focu
   await expect(page.locator(".avviso--errore")).toBeHidden({ timeout: 15_000 });
   // Spec 3.6a: "se il focus era su «Riprova» va sull'h3 della prima sezione visibile".
   expect(await page.evaluate(() => document.activeElement?.tagName)).toBe("H3");
+});
+
+test("focus: il «Riprova» della colonna Scadenze tiene il focus quando sparisce l'avviso offline (desktop)", async ({
+  page,
+  context,
+}, testInfo) => {
+  test.skip(isMobile(testInfo.project.name), "Caso a 1280 px");
+  await open(page, { items: NORMAL_LIST }, true, "error");
+  const column = page.getByRole("region", { name: "Scadenze" });
+  const columnRetry = column.getByRole("button", { name: "Riprova" });
+  await expect(columnRetry).toBeVisible();
+  await context.setOffline(true);
+  await page.getByRole("checkbox", { name: "Preso: Pane" }).click();
+  await expect(page.locator(".avviso--errore")).toHaveCount(2);
+  await columnRetry.focus();
+  await context.setOffline(false);
+  // The offline alert goes away by itself; the other alert, with the focus, stays.
+  await expect(page.locator(".avviso--errore")).toHaveCount(1, {
+    timeout: 15_000,
+  });
+  await expect(columnRetry).toBeFocused();
+  // A click on something that cannot take the focus drops it: nothing moves it later.
+  await page.mouse.click(5, 300);
+  await expect(columnRetry).not.toBeFocused();
+  expect(await page.evaluate(() => document.activeElement?.tagName)).toBe(
+    "BODY",
+  );
 });
 
 test("spunta rifiutata: la riga torna subito in «Da prendere»", async ({

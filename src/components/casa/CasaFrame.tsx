@@ -2,7 +2,6 @@ import { useEffect, useRef, type ReactNode, type RefObject } from "react";
 import { Alert } from "@/components/ui/Alert/Alert";
 import { Button } from "@/components/ui/Button/Button";
 import { cx } from "@/components/ui/cx";
-import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
 import { SectionSwitcher } from "@/components/ui/SegmentedControl/SectionSwitcher";
 import { Skeleton } from "@/components/ui/Skeleton/Skeleton";
 import { VisuallyHidden } from "@/components/ui/VisuallyHidden/VisuallyHidden";
@@ -38,56 +37,55 @@ export type CasaColumn = {
   children: ReactNode;
 };
 
-export type CasaFrameProps = {
+type CasaFrameBaseProps = {
   nestName: string;
   /** The page that is open: it is the only column visible below 1024 px */
   current: CasaSection;
   /** Numbers in the mobile switcher; 0 or absent = no number */
   counts?: Partial<Record<CasaSection, number>>;
-  /** Columns that are ready; the others show the "In arrivo" placeholder */
-  columns?: Partial<Record<CasaSection, CasaColumn>>;
   /** Person filter: one state, rendered once per layout. Absent = no chips. */
   filter?: PersonFilterProps;
   /** The chips are not drawn on mobile (they stay in the desktop header) */
   hideFilterOnMobile?: boolean;
-  /** Shows the loading skeletons instead of the columns */
-  loading?: boolean;
   /** Rendered after the columns, still inside `main` (live regions) */
   after?: ReactNode;
   /** The `main` of the page; the frame also reads it to move the focus */
   mainRef: RefObject<HTMLElement | null>;
 };
 
+export type CasaFrameProps = CasaFrameBaseProps &
+  (
+    | {
+        /** The three columns, always all of them */
+        columns: Record<CasaSection, CasaColumn>;
+        loading?: false;
+      }
+    | {
+        /** Shows the loading skeletons instead of the columns */
+        loading: true;
+        columns?: undefined;
+      }
+  );
+
 const SECTIONS: ReadonlyArray<{
   key: CasaSection;
   title: string;
   href: string;
-  icon: "square-check" | "file-clock" | "shopping-basket";
-  placeholder: string;
 }> = [
   {
     key: "spesa",
     title: "Spesa",
     href: "/casa/spesa",
-    icon: "shopping-basket",
-    placeholder:
-      "Qui ci sarà la spesa della casa. Stiamo preparando questa parte.",
   },
   {
     key: "da-fare",
     title: "Da fare",
     href: "/casa/da-fare",
-    icon: "square-check",
-    placeholder:
-      "Qui ci saranno le cose da fare della casa. Stiamo preparando questa parte.",
   },
   {
     key: "scadenze",
     title: "Scadenze",
     href: "/casa/scadenze",
-    icon: "file-clock",
-    placeholder:
-      "Qui ci saranno le scadenze della casa. Stiamo preparando questa parte.",
   },
 ];
 
@@ -173,15 +171,40 @@ export function CasaFrame({
       </Alert>
     ) : null;
 
-  // Did the focus sit on a "Riprova" of an alert the last time it moved?
-  const focusInAlert = useRef(false);
+  // Which alert has the focus: "offline" or "error:<column>". Cleared when the
+  // focus leaves it for good (a click on something that cannot take the focus
+  // sends it to the body without a `focusin`).
+  const focusAlert = useRef<string | null>(null);
   useEffect(() => {
     const track = (event: FocusEvent) => {
-      focusInAlert.current =
-        event.target instanceof Element && !!event.target.closest(".avviso");
+      const alert =
+        event.target instanceof Element
+          ? event.target.closest(".avviso")
+          : null;
+      if (!alert) {
+        focusAlert.current = null;
+        return;
+      }
+      const column = alert.closest<HTMLElement>("[data-casa-column]");
+      focusAlert.current = column
+        ? `error:${column.dataset.casaColumn}`
+        : "offline";
+    };
+    const leave = (event: FocusEvent) => {
+      const target = event.target;
+      if (event.relatedTarget !== null || !(target instanceof Element)) return;
+      // An element that is removed from the page may also send a `focusout`:
+      // only an element that is still there has lost the focus.
+      queueMicrotask(() => {
+        if (target.isConnected) focusAlert.current = null;
+      });
     };
     document.addEventListener("focusin", track);
-    return () => document.removeEventListener("focusin", track);
+    document.addEventListener("focusout", leave);
+    return () => {
+      document.removeEventListener("focusin", track);
+      document.removeEventListener("focusout", leave);
+    };
   }, []);
 
   // What shows a "Riprova" now, to see which alert has just gone away.
@@ -198,7 +221,11 @@ export function CasaFrame({
     if (loading) return;
     const last = before.current;
     before.current = { offline: offlineShown, failed: failedKeys };
-    if (!focusInAlert.current) return;
+    const had = focusAlert.current;
+    if (had === null) return;
+    // The focus is moved only if the element that had it is gone.
+    const active = document.activeElement;
+    if (active !== null && active !== document.body) return;
     const root = mainRef.current;
     if (!root) return;
     const visible = (selector: string, scope: Element) =>
@@ -210,14 +237,17 @@ export function CasaFrame({
     const stillFailed = failedKeys.split(",");
     const solved = last.failed
       .split(",")
-      .find((key) => key !== "" && !stillFailed.includes(key));
+      .find(
+        (key) =>
+          key !== "" && !stillFailed.includes(key) && had === `error:${key}`,
+      );
 
     let target: HTMLElement | undefined;
     if (solved) {
       // The column error is gone: the focus goes to the title of the column.
       target = column(solved)?.querySelector<HTMLElement>("h2") ?? undefined;
       target?.setAttribute("tabindex", "-1");
-    } else if (last.offline && !offlineShown) {
+    } else if (last.offline && !offlineShown && had === "offline") {
       // The offline alert is gone ("Riprova" with it): the focus goes to a
       // place of the open column. While any column is still offline the alert
       // stays, and so does the focus.
@@ -235,7 +265,7 @@ export function CasaFrame({
       }
     }
     if (!target) return;
-    focusInAlert.current = false;
+    focusAlert.current = null;
     target.focus();
   }, [offlineShown, failedKeys, currentTargets, current, loading, mainRef]);
 
@@ -290,16 +320,7 @@ export function CasaFrame({
                     <span className="sezione__info">{column.info}</span>
                   ) : null}
                 </div>
-                {column ? (
-                  column.children
-                ) : (
-                  <EmptyState
-                    icon={section.icon}
-                    title="In arrivo"
-                    text={section.placeholder}
-                    actions={null}
-                  />
-                )}
+                {column?.children}
               </section>
             );
           })}
