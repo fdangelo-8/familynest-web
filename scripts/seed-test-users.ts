@@ -7,8 +7,9 @@
 // Idempotent: users are created or updated, the Nests of the test users are
 // deleted and rebuilt. Nothing else is touched. Secrets are never printed.
 //
-// Safety: test accounts carry app_metadata.familynest_test_user = true. All
-// checks run before the first write; an account without the marker, or a Nest
+// Safety: the script runs only against a local database (http://127.0.0.1:* or
+// http://localhost:*) and refuses any other URL. Test accounts carry
+// app_metadata.familynest_test_user = true. All checks run before the first write; an account without the marker, or a Nest
 // shared with non-test accounts, stops the script with nothing written.
 //
 // Not transactional: if it stops after the cleanup, the test data stays
@@ -16,7 +17,6 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "../src/types/database";
 
-const ALLOWED_PROJECT_REF = "yksosqvugiempsldejyt";
 const TEST_MARKER = "familynest_test_user";
 const DAY_MS = 24 * 60 * 60 * 1000;
 const MINUTE_MS = 60 * 1000;
@@ -61,17 +61,14 @@ function readConfig() {
       "NEXT_PUBLIC_SUPABASE_URL is not a valid URL. Nothing was written.",
     );
   }
-  const isLocal = host === "127.0.0.1" || host === "localhost";
-  if (!isLocal && host !== `${ALLOWED_PROJECT_REF}.supabase.co`) {
+  // Test data is written only to the local database. Any other URL (the
+  // FamilyNest remote project included, from any environment) stops the script.
+  const isLocal =
+    new URL(url).protocol === "http:" &&
+    (host === "127.0.0.1" || host === "localhost");
+  if (!isLocal) {
     fail(
-      "NEXT_PUBLIC_SUPABASE_URL does not point to the FamilyNest project or to the local database. Nothing was written.",
-    );
-  }
-  // The remote project is seeded only by the GitHub workflow: a local shell that
-  // still points to the remote project (a common mistake) must not write there.
-  if (!isLocal && process.env.GITHUB_ACTIONS !== "true") {
-    fail(
-      "NEXT_PUBLIC_SUPABASE_URL points to the remote project: use the 'Seed utenti di test' workflow, or point to the local database. Nothing was written.",
+      "NEXT_PUBLIC_SUPABASE_URL is not local (http://127.0.0.1:* or http://localhost:*): this script writes only to the local database. Nothing was written.",
     );
   }
 
