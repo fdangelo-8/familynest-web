@@ -112,7 +112,11 @@ async function expectExpired(page: Page) {
     page.getByRole("button", { name: /^Entra con (Apple|Google)$/ }),
   ).toHaveCount(0);
   await expect(page.getByRole("link", { name: "Usa la mail" })).toHaveCount(0);
-  await expect(page.locator(".avatar")).toHaveCount(0);
+  // After the client navigation the previous page (08) may stay in the DOM,
+  // hidden: only what is visible counts.
+  await expect(page.locator(".avatar").filter({ visible: true })).toHaveCount(
+    0,
+  );
   await expect(page.getByText("Continuando accetti")).toHaveCount(0);
 }
 
