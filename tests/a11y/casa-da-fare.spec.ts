@@ -154,7 +154,10 @@ test.describe("axe", () => {
     await filterGroup(page)
       .getByRole("button", { name: "Tommaso", exact: true })
       .click();
-    await expect(page.getByText("Niente da fare per Tommaso")).toBeVisible();
+    // The live region says it too: look in the column only.
+    await expect(
+      col(page).getByText("Niente da fare per Tommaso", { exact: true }),
+    ).toBeVisible();
     expect(await seriousViolations(page)).toEqual([]);
   });
 
@@ -355,10 +358,9 @@ test("aree di tocco di almeno 44 px (mobile)", async ({
     ).toBe(true);
   }
   const voices = switcher(page).locator(".selettore__voce");
+  // The voice is 32 px high but its touch area (::before) is 44 px.
   for (let i = 0; i < (await voices.count()); i++) {
-    expect((await voices.nth(i).boundingBox())!.height).toBeGreaterThanOrEqual(
-      44,
-    );
+    expect(await hasTouchArea(voices.nth(i), 44)).toBe(true);
   }
 });
 

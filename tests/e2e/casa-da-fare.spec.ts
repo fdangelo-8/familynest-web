@@ -623,6 +623,8 @@ test.describe("segnare fatto e annullare", () => {
     await expect(titles(group(page, "Fatti")).first()).toHaveText(FIRMARE);
     await expect(infoOf(page, FIRMARE)).toHaveText("Fatto da Marco, oggi");
     await expect.poll(() => doneAtOf(casa, FIRMARE)).not.toBeNull();
+    // A paused clock freezes the timers of the new document: let it run.
+    await page.clock.resume();
     await page.goto(PATH);
     await expect(titles(group(page, "Fatti")).first()).toHaveText(FIRMARE);
     await expect(infoOf(page, FIRMARE)).toHaveText("Fatto da Marco, oggi");
@@ -650,6 +652,8 @@ test.describe("segnare fatto e annullare", () => {
       page.getByRole("status").filter({ hasText: /\S/ }),
     ).toHaveCount(0);
     await expect.poll(() => doneAtOf(casa, FIRMARE)).toBeNull();
+    // A paused clock freezes the timers of the new document: let it run.
+    await page.clock.resume();
     await page.goto(PATH);
     await expect(group(page, "Questa settimana")).toBeVisible();
     await expect(
@@ -690,6 +694,8 @@ test.describe("segnare fatto e annullare", () => {
       page.getByRole("heading", { level: 3, name: "Fatti" }),
     ).toHaveCount(0);
     await expect.poll(() => doneAtOf(casa, FIRMARE)).toBeNull();
+    // A paused clock freezes the timers of the new document: let it run.
+    await page.clock.resume();
     await page.goto(PATH);
     await expect(titles(group(page, "Questa settimana"))).toHaveText([
       CUFFIA,
@@ -852,6 +858,8 @@ test.describe("filtri", () => {
     await open(page, baseURL, casa);
     await chip(page, "Laura").click();
     await expect(allRows(page)).toHaveCount(2);
+    // A paused clock freezes the timers of the new document: let it run.
+    await page.clock.resume();
     await page.reload();
     await expect(col(page)).toBeVisible();
     await expect(chip(page, "Tutti")).toHaveAttribute("aria-pressed", "true");
@@ -995,6 +1003,8 @@ test.describe("campo rapido (desktop)", () => {
         ),
       )
       .toBe(true);
+    // A paused clock freezes the timers of the new document: let it run.
+    await page.clock.resume();
     await page.goto(PATH);
     await expect(titles(group(page, "Più avanti")).last()).toHaveText(
       "Comprare le lampadine",
