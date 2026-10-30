@@ -43,7 +43,7 @@ test.beforeEach(async ({ page, context, baseURL }) => {
 
 async function open(page: import("@playwright/test").Page, route: string) {
   await page.goto(route);
-  await expect(page.locator("main")).toBeVisible();
+  await expect(page.getByRole("main")).toBeVisible();
   await page.evaluate(() => document.fonts.ready);
 }
 
