@@ -477,10 +477,8 @@ test.describe("Rotte di Casa e segnaposto", () => {
     });
   });
 
-  for (const [dir, key] of [
-    ["da-fare", "casa-da-fare"],
-    ["scadenze", "casa-scadenze"],
-  ] as const) {
+  // Scadenze has its own page since #24: the placeholder check stays for Da fare.
+  for (const [dir, key] of [["da-fare", "casa-da-fare"]] as const) {
     test(`CA-26: la pagina ${dir} ha metadata, requireNest e PlaceholderPage`, () => {
       const file = `src/app/(app)/casa/${dir}/page.tsx`;
       expect(existsSync(file)).toBe(true);

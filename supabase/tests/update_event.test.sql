@@ -209,7 +209,7 @@ select is(
 select is(
   (select count(*)::int from public.event_exceptions x where x.event_id = current_setting('test.split')::uuid),
   0,
-  'a new rule drops the exceptions'
+  'a new rule drops the exceptions that are not days of it (Tuesday 27 is not the 20th of a month)'
 );
 select results_eq(
   $$ select em.member_id from public.event_members em where em.event_id = current_setting('test.split')::uuid $$,
