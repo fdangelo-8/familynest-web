@@ -6,6 +6,7 @@ const isCI = !!process.env.CI;
 
 export default defineConfig({
   testDir: "./tests",
+  testMatch: "**/visual/casa-spesa.spec.ts",
   fullyParallel: true,
   forbidOnly: isCI,
   retries: isCI ? 2 : 0,
