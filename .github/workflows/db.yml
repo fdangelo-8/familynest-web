@@ -8,17 +8,17 @@
 name: db
 
 on:
+  # Runs on every pull request because `db` is a required check: a pull request
+  # that changes only docs/** and *.md files gets a quick success instead of no run.
   pull_request:
     branches: [main]
-    # Documentation alone cannot change the database: no run, no minutes.
-    paths-ignore:
-      - "docs/**"
-      - "**/*.md"
   push:
     branches: [main]
 
 permissions:
   contents: read
+  # Changed files of the pull request.
+  pull-requests: read
   # Job durations in the run summary.
   actions: read
 
@@ -32,23 +32,46 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
+      # Documentation alone cannot change the database: the remaining steps are skipped.
+      - name: Detect documentation-only changes
+        id: docs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          files="$RUNNER_TEMP/files.txt"
+          gh api --paginate "repos/$REPO/pulls/$PR/files" --jq '.[].filename' > "$files"
+          if awk '/^docs\// || /\.md$/ { next } { print }' "$files" | grep -q .; then
+            echo "only=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "only=true" >> "$GITHUB_OUTPUT"
+            echo "Solo documentazione: controlli database saltati." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
       - uses: actions/checkout@v4
+        if: steps.docs.outputs.only != 'true'
       - uses: actions/setup-node@v4
+        if: steps.docs.outputs.only != 'true'
         with:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+        if: steps.docs.outputs.only != 'true'
 
       - name: Count migrations
         id: mig
+        if: steps.docs.outputs.only != 'true'
         run: echo "count=$(find supabase/migrations -name '*.sql' 2>/dev/null | wc -l | tr -d ' ')" >> "$GITHUB_OUTPUT"
 
+      # The runner sometimes still holds the database port: retry once after a clean stop.
       - name: Start local database and apply all migrations
-        if: steps.mig.outputs.count != '0'
-        run: npx supabase db start
+        if: steps.docs.outputs.only != 'true' && steps.mig.outputs.count != '0'
+        run: npx supabase db start || { sleep 15; npx supabase stop --no-backup; npx supabase db start; }
 
       - name: Run pgTAP tests
-        if: steps.mig.outputs.count != '0'
+        if: steps.docs.outputs.only != 'true' && steps.mig.outputs.count != '0'
         run: |
           if find supabase/tests -name '*.sql' 2>/dev/null | grep -q .; then
             npx supabase test db
@@ -58,7 +81,7 @@ jobs:
           fi
 
       - name: Check generated types are up to date
-        if: steps.mig.outputs.count != '0'
+        if: steps.docs.outputs.only != 'true' && steps.mig.outputs.count != '0'
         run: |
           set -o pipefail
           # Same output as `npm run db:types:local`: Prettier resolves the project config from the real path.
