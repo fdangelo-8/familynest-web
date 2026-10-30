@@ -9,9 +9,9 @@ export type InviteEndedKind = "expired" | "other-nest";
 const CONTENT = {
   expired: {
     lead: "Questo invito",
-    emphasis: "è scaduto.",
-    desktopTitle: "Invito scaduto",
-    text: "Chiedi a chi ti ha invitato di mandartene uno nuovo: dal suo FamilyNest bastano due tocchi.",
+    emphasis: "non vale più.",
+    desktopTitle: "Invito non più valido",
+    text: "Chiedi a chi ti ha mandato il link di invitarti di nuovo: dal suo FamilyNest bastano due tocchi.",
     action: "Entra in FamilyNest",
     href: "/accesso",
   },

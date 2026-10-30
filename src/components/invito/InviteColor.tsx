@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/ColorChoice/ColorChoice";
 import { Icon } from "@/components/ui/Icon/Icon";
 import { HOUSEHOLD_FULL_MESSAGE } from "@/lib/household-limits";
+import styles from "./invito.module.css";
 import { colorHelp, colorWithArticle } from "./invite-text";
 
 export type InviteColorProps = {
@@ -285,7 +286,17 @@ export function InviteColor({
             {alertBox("d")}
           </div>
           <div className="modale__piede">
-            <span />
+            <Link
+              href="/invito"
+              prefetch={false}
+              className={`btn-link btn-link--secondario ${styles.backInactive}`}
+              aria-disabled={sending || undefined}
+              onClick={(event) => {
+                if (sending) event.preventDefault();
+              }}
+            >
+              Indietro
+            </Link>
             <Button
               disabled={full}
               loading={sending}

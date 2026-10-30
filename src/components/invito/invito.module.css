@@ -1,0 +1,5 @@
+/* «Indietro» while «Continua» works: inactive, but it keeps its look (#143). */
+a.backInactive[aria-disabled="true"] {
+  opacity: 1;
+  cursor: default;
+}

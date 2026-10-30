@@ -225,7 +225,7 @@ test.describe("invito · benvenuto (07) · accessibilità", () => {
     await expectNoBlocking(page);
     await expectStructure(page);
     await expect(page.locator("h1:visible")).toHaveText(
-      isMobile() ? /Questo invito\s*è scaduto\./ : "Invito scaduto",
+      isMobile() ? /Questo invito\s*non vale più\./ : "Invito non più valido",
     );
     await expectFocusOrder(page, ["Entra in FamilyNest"]);
     if (isMobile()) {
@@ -317,7 +317,7 @@ test.describe("invito · il tuo colore (08) · accessibilità", () => {
     await openColor(page, baseURL, laura, nest.token);
     const expected = isMobile()
       ? ["Indietro", "Glicine", "Continua"]
-      : ["Glicine", "Continua"];
+      : ["Glicine", "Indietro", "Continua"];
     await page.evaluate(() =>
       (document.activeElement as HTMLElement | null)?.blur(),
     );
@@ -398,12 +398,10 @@ test.describe("invito · il tuo colore (08) · accessibilità", () => {
         name: "Glicine",
       }),
     ).toBeDisabled();
-    if (isMobile()) {
-      await expect(shown(page, "link", "Indietro")).toHaveAttribute(
-        "aria-disabled",
-        "true",
-      );
-    }
+    await expect(shown(page, "link", "Indietro")).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
     await expectNoBlocking(page);
   });
 

@@ -107,7 +107,9 @@ test.describe("invito · benvenuto (07)", () => {
     await expect(page).toHaveURL(/\/invito$/);
     await page.locator("h1:visible").first().waitFor();
     await expect(
-      page.getByText("Chiedi a chi ti ha invitato", { exact: false }).first(),
+      page
+        .getByText("Chiedi a chi ti ha mandato il link", { exact: false })
+        .first(),
     ).toBeAttached();
     await settle(page);
     await shot(page, "07-invito-scaduto.png");
