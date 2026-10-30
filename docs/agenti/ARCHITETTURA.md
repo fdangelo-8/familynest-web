@@ -23,7 +23,7 @@ Versione approvata da Francesco il 21/10/2026. Copia operativa per gli agenti: i
 | Framework        | Next.js App Router, TypeScript strict                                            |
 | Stile            | CSS proprio con variabili del design system; niente Tailwind, niente librerie UI |
 | Database e login | Supabase, progetto `yksosqvugiempsldejyt` (unico consentito)                     |
-| Hosting          | Vercel, preview per ogni PR                                                      |
+| Hosting          | Vercel, anteprima solo per `main`, `feat/*`, `shared/*` (#141)                   |
 | Test             | Playwright (e2e, visivi, a11y) + pgTAP per il database + controlli statici       |
 | Layout           | Un solo codice, due layout responsive: mobile (390 px) e desktop (1280 px)       |
 | Lingua           | Interfaccia in italiano; codice, commenti e nomi in inglese                      |

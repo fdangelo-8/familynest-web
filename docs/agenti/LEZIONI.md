@@ -44,6 +44,7 @@ Errori già commessi (in questo progetto o in quelli precedenti dell'ecosistema)
 - Token d'invito che finisce in un percorso di ritorno (`next`, poi `redirect_to`, log e indirizzo) (#124) → la destinazione passa sempre da `safeNextPath`, che rifiuta i percorsi con un token; il test prova un `next` esterno e uno con token.
 - Componente condiviso che riceve dalla pagina un elemento già pronto (avviso offline con «Riprova») invece dei dati (#119) → il componente condiviso possiede avviso, azioni e stato di caricamento; la pagina passa solo dati e callback.
 - Voce di menu di una sezione (Casa) con `aria-current="page"` anche sulle pagine interne → `"true"` per la sezione, `"page"` solo sull'indirizzo esatto della voce (`getNavAriaCurrent`).
+- Costante esportata da un modulo `"use client"` (es. `CHOOSABLE_COLORS` in `ColorChoice.tsx`) importata da codice server: diventa un riferimento client, non un valore (#130, di nuovo #146) → dal server si importano solo tipi (`import type`); i valori stanno in moduli senza `"use client"`.
 
 ## Processo
 
@@ -85,7 +86,7 @@ Errori già commessi (in questo progetto o in quelli precedenti dell'ecosistema)
 - Test che richiedono un utente autenticato saltati in CI finché gli utenti di test remoti non esistono, e riferimenti visivi mai generati: arrivate le credenziali dell'utente A, la CI su main è rimasta rossa (#73); "CI verde" non prova quei casi → quando un test è saltato in CI, la verifica si fa in locale contro Supabase locale e l'esito lo dice esplicitamente; quando arrivano le credenziali, i riferimenti visivi che le usano si generano subito con `visual-baseline`, senza aspettare la PR successiva.
 - Due tester che usano lo stesso Supabase locale e riseminano con credenziali diverse si cancellano a vicenda i dati → un solo seed condiviso per sessione, stesse variabili per tutti.
 - Correzione approvata che cambia uno stile fissato dal mockup → il test di confronto fallisce: si aggiorna con l'elenco delle differenze approvate, citando la decisione, senza disattivarlo.
-- Script `node --env-file` che scrive nel progetto remoto per errore, perché non sovrascrive le variabili già presenti nella shell → seed e test in locale sostituiscono esplicitamente l'ambiente; chi lancia lo script verifica che l'URL sia `127.0.0.1` prima della prima scrittura. Lo script rifiuta comunque il progetto remoto fuori da GitHub Actions (due incidenti, #76 e #95: seed scritti sul remoto).
+- Script `node --env-file` che scrive nel progetto remoto per errore, perché non sovrascrive le variabili già presenti nella shell → seed e test in locale sostituiscono esplicitamente l'ambiente; chi lancia lo script verifica che l'URL sia `127.0.0.1` prima della prima scrittura. Lo script accetta solo un URL locale (`127.0.0.1` o `localhost`), anche in GitHub Actions: dalla #157 (issue #158) rifiuta il progetto remoto in ogni ambiente (due incidenti, #76 e #95: seed scritti sul remoto).
 - Test che leggono il nome del branch o il diff con `origin/main` (CA-22 della #52) passavano in silenzio in CI, dove il checkout è superficiale e `origin/main` manca → il recupero usa `git fetch --deepen=N` o `--unshallow` (non `--depth`, che non allunga la storia di `HEAD`), con `git -c safe.directory=*` nel container; se il diff non si può calcolare il test fallisce con un messaggio, mai con un `return` silenzioso.
 - Screenshot scattato dopo un clic, con il puntatore ancora sopra, che cattura lo stato di passaggio del mouse → `await page.mouse.move(0, 0)` prima dello screenshot.
 - Porta 54322 del database locale occupata sul runner, con il controllo `db` rosso senza bug → `db.yml` riprova una volta dopo uno stop pulito; se il controllo `db` cade per la porta, si rilancia prima di cercare un bug (#121).
@@ -93,6 +94,8 @@ Errori già commessi (in questo progetto o in quelli precedenti dell'ecosistema)
 - Selettori dei test sul campo della spesa che diventano ambigui dopo l'arrivo di un secondo campo rapido (strict mode) → restringere con `aria-label` su ogni campo.
 - Test di accessibilità sul fuoco che non trova l'anello su un campo con `outline: none` → l'anello su `:focus-within` del contenitore è ammesso solo se la specifica lo documenta, e il test controlla il contenitore, non il campo.
 - Due `<main>` nel documento per un attimo (React 19 in streaming: `loading` e pagina insieme) → i test aspettano l'h1 della pagina e poi cercano `getByRole("main")`; mai il primo `main` appena visibile.
+- Test di isolamento che cercano i Nest del seed per nome: altri test creano Nest usa e getta con lo stesso nome, e il risultato cambia (#155) → usare gli id fissi `SEED_HOME_A` e `SEED_HOME_B`; prima di verificare un'assenza si attende che la pagina sia caricata (un testo che non c'è ancora passa per assente).
+- Workflow `visual-baseline` con una sola spec da rigenerare: il riferimento va rifatto con un Supabase locale, con `-f spec=<file sotto tests/visual>` e `-f update=all` (la differenza è sotto la tolleranza del 2%, e senza `all` il riferimento non viene riscritto); l'artefatto viene caricato anche se fallisce una spec estranea, quindi si legge il log della spec richiesta (#153).
 
 ## Design
 
