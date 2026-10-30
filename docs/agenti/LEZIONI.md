@@ -44,6 +44,7 @@ Errori già commessi (in questo progetto o in quelli precedenti dell'ecosistema)
 - Token d'invito che finisce in un percorso di ritorno (`next`, poi `redirect_to`, log e indirizzo) (#124) → la destinazione passa sempre da `safeNextPath`, che rifiuta i percorsi con un token; il test prova un `next` esterno e uno con token.
 - Componente condiviso che riceve dalla pagina un elemento già pronto (avviso offline con «Riprova») invece dei dati (#119) → il componente condiviso possiede avviso, azioni e stato di caricamento; la pagina passa solo dati e callback.
 - Voce di menu di una sezione (Casa) con `aria-current="page"` anche sulle pagine interne → `"true"` per la sezione, `"page"` solo sull'indirizzo esatto della voce (`getNavAriaCurrent`).
+- Costante esportata da un modulo `"use client"` (es. `CHOOSABLE_COLORS` in `ColorChoice.tsx`) importata da codice server: diventa un riferimento client, non un valore (#130, di nuovo #146) → dal server si importano solo tipi (`import type`); i valori stanno in moduli senza `"use client"`.
 
 ## Processo
 
@@ -75,12 +76,12 @@ Errori già commessi (in questo progetto o in quelli precedenti dell'ecosistema)
 
 ## Test
 
-- Falsi errori di insert in locale per saturazione del pool di connessioni → verificare sulla preview prima di dichiarare un bug.
+- Falsi errori di insert in locale per saturazione del pool di connessioni → verificare sulla preview prima di dichiarare un bug; le anteprime esistono solo per `main`, `feat/*` e `shared/*`, con modifiche fuori da `tests/`, `docs/` e `*.md` (#141), quindi su `db/*`, `docs/*` e `admin/*` non ce ne sono.
 - Test fragili legati a testi o classi CSS → selettori per ruolo e nome accessibile, o `data-testid` dove serve.
 - Test che confrontano token o stili come stringhe falliscono perché la build minifica i valori (`.30`→`.3`, `#ffffff`→`#fff`, rgba→hex) e Prettier riscrive i numeri → i test che confrontano token o stili normalizzano i valori, mai confronto letterale di stringhe.
 - Test con timer che usavano `page.clock.install()` senza fermare il tempo fallivano solo in CI (più lenta) → nei test con tempi usare `page.clock.pauseAt` e avanzare con `runFor`.
 - Confronti di stili calcolati con il mockup falliscono in CI su altezze che dipendono da andata a capo e font (il mockup non carica i font da Google in CI) → escludere `height` solo dove dipende dal testo, non togliere l'intero caso.
-- Riferimento visivo vecchio ma sotto tolleranza non viene riscritto dal workflow visual-baseline (`--update-snapshots`), e gli hook vietano di cancellare screenshot → il riferimento resta valido finché è sotto tolleranza; per rigenerarlo si usa l'immagine della CI (container Playwright) sull'ultimo commit che cambia il CSS, con il workflow `visual-baseline` o in locale con la stessa immagine e `--update-snapshots=all`, e si controlla il pixel che è cambiato, perché sotto tolleranza la CI resta verde anche con un riferimento sbagliato.
+- Riferimento visivo vecchio ma sotto tolleranza non viene riscritto dal workflow visual-baseline (`--update-snapshots`), e gli hook vietano di cancellare screenshot → il riferimento resta valido finché è sotto tolleranza; per rigenerarlo si usa l'immagine della CI (container Playwright) sull'ultimo commit che cambia il CSS, con il workflow `visual-baseline` con `-f spec=<file sotto tests/visual>` e `-f update=all` (la differenza è sotto la tolleranza del 2%, e senza `all` non si riscrive), su Supabase locale, o in locale con la stessa immagine e `--update-snapshots=all`; l'artefatto viene caricato anche se fallisce una spec estranea, quindi si legge il log della spec richiesta, e si controlla il pixel che è cambiato, perché sotto tolleranza la CI resta verde anche con un riferimento sbagliato (#153).
 - Script che scrive nel progetto remoto riconosceva gli account di test solo dalla mail → gli script che toccano il progetto remoto marcano i propri dati (es. `app_metadata.familynest_test_user`), fanno tutti i controlli prima della prima scrittura e cancellano solo dati marcati.
 - Test che richiedono un utente autenticato saltati in CI finché gli utenti di test remoti non esistono, e riferimenti visivi mai generati: arrivate le credenziali dell'utente A, la CI su main è rimasta rossa (#73); "CI verde" non prova quei casi → quando un test è saltato in CI, la verifica si fa in locale contro Supabase locale e l'esito lo dice esplicitamente; quando arrivano le credenziali, i riferimenti visivi che le usano si generano subito con `visual-baseline`, senza aspettare la PR successiva.
 - Due tester che usano lo stesso Supabase locale e riseminano con credenziali diverse si cancellano a vicenda i dati → un solo seed condiviso per sessione, stesse variabili per tutti.
@@ -93,6 +94,7 @@ Errori già commessi (in questo progetto o in quelli precedenti dell'ecosistema)
 - Selettori dei test sul campo della spesa che diventano ambigui dopo l'arrivo di un secondo campo rapido (strict mode) → restringere con `aria-label` su ogni campo.
 - Test di accessibilità sul fuoco che non trova l'anello su un campo con `outline: none` → l'anello su `:focus-within` del contenitore è ammesso solo se la specifica lo documenta, e il test controlla il contenitore, non il campo.
 - Due `<main>` nel documento per un attimo (React 19 in streaming: `loading` e pagina insieme) → i test aspettano l'h1 della pagina e poi cercano `getByRole("main")`; mai il primo `main` appena visibile.
+- Test di isolamento che cercano i Nest del seed per nome: altri test creano Nest usa e getta con lo stesso nome, e il risultato cambia (#155) → usare gli id fissi `SEED_HOME_A` e `SEED_HOME_B`; prima di verificare un'assenza si attende che la pagina sia caricata (un testo che non c'è ancora passa per assente).
 
 ## Design
 
