@@ -826,6 +826,11 @@ test.describe("invita qualcuno", () => {
       expect((await members(user)).some((m) => m.name === "Rita")).toBe(false);
       await dialog.getByRole("button", { name: "Chiudi" }).click();
       await expect(dialog).toBeHidden();
+      // The page rereads the server on close: the tenth member, written while
+      // the dialog was open, is now listed and counted (no manual reload).
+      await expect(rows(page)).toHaveCount(10);
+      await expect(count(page)).toHaveText("10");
+      await expect(list(page).getByText("Ultimo")).toBeVisible();
       await expect(invite(page)).toBeDisabled();
     });
   });
