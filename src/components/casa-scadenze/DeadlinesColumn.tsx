@@ -68,6 +68,41 @@ function Row({ view }: { view: DeadlineView }) {
   );
 }
 
+/** Marks the group headings the focus can land on (#22 will use it). */
+export const DEADLINE_HEADING = '[data-focus="scadenze-heading"]';
+
+function Group({
+  testId,
+  title,
+  info,
+  views,
+}: {
+  testId: string;
+  title: string;
+  info: string;
+  views: ReadonlyArray<DeadlineView>;
+}) {
+  return (
+    <section className="sezione" data-testid={testId}>
+      <div className="sezione__testa">
+        <h3
+          className="sezione__titolo"
+          tabIndex={-1}
+          data-focus="scadenze-heading"
+        >
+          {title}
+        </h3>
+        <span className="sezione__info">{info}</span>
+      </div>
+      <ul className="scheda lista">
+        {views.map((view) => (
+          <Row key={view.deadline.id} view={view} />
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 /** What every row shows, from the data and the member who is looking. */
 export function useDeadlineViews(list: DeadlinesList): DeadlineView[] {
   const { status, deadlines, members, meId } = list;
@@ -123,17 +158,26 @@ export function DeadlinesColumn({
       />
     );
   }
+  const overdue = views.filter((view) => view.overdue);
+  const upcoming = views.filter((view) => !view.overdue);
   return (
-    <section className="sezione" data-testid="scadenze-prossime">
-      <div className="sezione__testa">
-        <h3 className="sezione__titolo">Prossime</h3>
-        <span className="sezione__info">in ordine di data</span>
-      </div>
-      <ul className="scheda lista">
-        {views.map((view) => (
-          <Row key={view.deadline.id} view={view} />
-        ))}
-      </ul>
-    </section>
+    <>
+      {overdue.length > 0 ? (
+        <Group
+          testId="scadenze-scadute"
+          title="Scadute"
+          info={String(overdue.length)}
+          views={overdue}
+        />
+      ) : null}
+      {upcoming.length > 0 ? (
+        <Group
+          testId="scadenze-prossime"
+          title="Prossime"
+          info="in ordine di data"
+          views={upcoming}
+        />
+      ) : null}
+    </>
   );
 }

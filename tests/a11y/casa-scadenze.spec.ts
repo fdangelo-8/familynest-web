@@ -223,6 +223,24 @@ test.describe("struttura e lettura delle righe", () => {
     }
   });
 
+  test("con scadute: h3 «Scadute» poi h3 «Prossime», due liste", async ({
+    page,
+    baseURL,
+    casa,
+  }) => {
+    await seed(casa);
+    await casa.deadline("Marco", {
+      title: "Scaduta da cinque",
+      due: "2026-10-15",
+    });
+    await open(page, baseURL, casa);
+    await expect(col(page).getByRole("heading", { level: 3 })).toHaveText([
+      "Scadute",
+      "Prossime",
+    ]);
+    await expect(col(page).getByRole("list")).toHaveCount(2);
+  });
+
   test("le righe sono elementi di una lista", async ({
     page,
     baseURL,
