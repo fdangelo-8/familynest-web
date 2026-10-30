@@ -19,8 +19,6 @@ import {
 // use a throwaway user (U) prepared and cleaned up with the administrative
 // client. Selectors use roles and the texts of the issue (with the decision of
 // 30/10: "Invito condiviso con", not "Invito mandato a").
-// TODO(#15): adjust any selector that the final markup makes ambiguous; do not
-// weaken an assertion.
 
 test.use({ locale: "it-IT", timezoneId: "Europe/Rome" });
 
@@ -79,7 +77,6 @@ async function expectAvatars(
 ) {
   const group = avatars(page, names);
   await expect(group).toBeVisible();
-  // TODO(#15): the avatar element is found by the shared "avatar" class.
   const items = group.locator(".avatar");
   await expect(items).toHaveCount(initials.length);
   for (const [i, letter] of initials.entries()) {
@@ -122,6 +119,19 @@ async function withNest(body: (ctx: NestContext) => Promise<void>) {
     if (error) throw new Error("Creazione del Nest di prova fallita");
     const { data } = await user.client.rpc("current_household_id");
     const householdId = data as string;
+    // Each member of a Nest has its own colour (Ilaria has pomodoro).
+    const colors = [
+      "glicine",
+      "salvia",
+      "cobalto",
+      "zafferano",
+      "lampone",
+      "ceruleo",
+      "peonia",
+      "basilico",
+      "cannella",
+    ];
+    let next = 0;
     const addAdult = async (name: string) => {
       const { data: row, error: insertError } = await user.admin
         .from("household_members")
@@ -129,7 +139,7 @@ async function withNest(body: (ctx: NestContext) => Promise<void>) {
           household_id: householdId,
           kind: "adult",
           name,
-          color: "glicine",
+          color: colors[next++],
         })
         .select("id")
         .single();
@@ -268,7 +278,7 @@ test.describe("contenuto", () => {
     baseURL,
   }) => {
     await openAs(page, baseURL, "A");
-    // TODO(#15): remove when #37 or #34 add the calendar row.
+    // Provisional: the calendar row arrives with #37 or #34.
     for (const text of ["impegni arrivati", "Outlook", "Google", "iCloud"]) {
       await expect(page.getByText(text)).toHaveCount(0);
     }
@@ -441,7 +451,6 @@ test.describe("dati preparati dal test", () => {
     await page.goto("/onboarding/invito");
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     const mobile = test.info().project.name === "mobile";
-    // TODO(#15): the exact names come from the #14 specification.
     const button = page
       .getByRole("button", { name: mobile ? "Lo faccio dopo" : "Ho finito" })
       .filter({ visible: true });
@@ -577,25 +586,25 @@ test.describe("stati di errore e di caricamento", () => {
     expect(source).toMatch(/<OnboardingError/);
     expect(source).not.toMatch(/FrameError|ErrorMain/);
     expect(source).toContain("requireUser");
-    // TODO(#15): check that the Nest, member and invitation reads each lead to
-    // the error once the shape of the code is known; run the runtime check
-    // locally with Supabase stopped after sign-in.
+    // The Nest, member and invitation reads share one error check.
+    expect(source).toMatch(
+      /nest\.error\s*\|\|\s*members\.error\s*\|\|\s*invitations\.error/,
+    );
+    // The runtime check needs Supabase stopped after sign-in: done by hand.
   });
 
   test("CA-19: il caricamento è un fallback Suspense, senza loading.tsx", () => {
     const source = page15();
     expect(source).toMatch(/<Suspense[^>]*fallback=/);
     expect(existsSync("src/app/onboarding/pronto/loading.tsx")).toBe(false);
-    // TODO(#15): the fallback (ReadyLoading) holds aria-busy, the hidden text
-    // «Stiamo preparando la casa» and the button «Preparazione in corso»; the
-    // file name is a guess, adjust it to the real one.
-    const all = [
-      source,
-      ...["ReadyLoading.tsx", "ReadyStep.tsx"]
-        .map((file) => `src/components/onboarding/${file}`)
-        .filter((file) => existsSync(file))
-        .map((file) => readFileSync(file, "utf8")),
-    ].join("\n");
+    expect(source).toMatch(/fallback=\{<ReadyLoading\s*\/>\}/);
+    const screen = readFileSync(
+      "src/components/onboarding/ReadyScreen.tsx",
+      "utf8",
+    );
+    const loading = screen.slice(screen.indexOf("function LoadingBody"));
+    expect(loading).not.toContain('href="/oggi"');
+    const all = loading;
     expect(all).toContain("Stiamo preparando la casa");
     expect(all).toContain("Preparazione in corso");
   });

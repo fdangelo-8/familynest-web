@@ -6,7 +6,6 @@ import { signInAs, skipReason, usersConfigured } from "../fixtures/auth";
 // two projects): axe without serious or critical violations, no duplicate ids
 // (CA-24), keyboard, visible focus, touch target on mobile. Written before the
 // page exists. Skipped when the test users are not configured.
-// TODO(#15): adjust selectors to the final markup; do not weaken assertions.
 
 test.use({
   locale: "it-IT",
@@ -90,7 +89,6 @@ test("CA-3: i nomi dei membri sono letti una volta sola, gli avatar sono nascost
     exact: true,
   });
   await expect(group).toBeVisible();
-  // TODO(#15): the single avatars carry the shared "avatar" class.
   const avatars = group.locator(".avatar");
   await expect(avatars).toHaveCount(5);
   for (let i = 0; i < 5; i++) {
