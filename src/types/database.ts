@@ -436,6 +436,13 @@ export type Database = {
     };
     Functions: {
       accept_invitation: { Args: { token: string }; Returns: string };
+      accept_invitation_with_color: {
+        Args: {
+          p_color: Database["public"]["Enums"]["member_color"];
+          p_token: string;
+        };
+        Returns: string;
+      };
       clear_checked_shopping_items: {
         Args: { item_ids: string[] };
         Returns: {
@@ -478,6 +485,19 @@ export type Database = {
           inviter_name: string;
         }[];
       };
+      invitation_preview: {
+        Args: { p_token: string };
+        Returns: {
+          expires_at: string;
+          household_name: string;
+          invitee_color: Database["public"]["Enums"]["member_color"];
+          invitee_name: string;
+          inviter_name: string;
+          members: Database["public"]["CompositeTypes"]["invitation_preview_member"][];
+          message: string;
+          status: Database["public"]["Enums"]["invitation_preview_status"];
+        }[];
+      };
       list_household_events: {
         Args: { p_from: string; p_to: string };
         Returns: {
@@ -518,6 +538,7 @@ export type Database = {
       event_visibility: "private" | "busy" | "household";
       household_type:
         "single" | "couple" | "family_with_children" | "roommates";
+      invitation_preview_status: "valid" | "invalid";
       invitation_status: "pending" | "accepted" | "revoked";
       member_color:
         | "pomodoro"
@@ -533,7 +554,11 @@ export type Database = {
       member_kind: "adult" | "child" | "pet";
     };
     CompositeTypes: {
-      [_ in never]: never;
+      invitation_preview_member: {
+        initial: string | null;
+        color: Database["public"]["Enums"]["member_color"] | null;
+        name: string | null;
+      };
     };
   };
 };
@@ -661,6 +686,7 @@ export const Constants = {
       event_recurrence: ["none", "weekly", "monthly"],
       event_visibility: ["private", "busy", "household"],
       household_type: ["single", "couple", "family_with_children", "roommates"],
+      invitation_preview_status: ["valid", "invalid"],
       invitation_status: ["pending", "accepted", "revoked"],
       member_color: [
         "pomodoro",
