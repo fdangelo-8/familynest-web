@@ -167,11 +167,13 @@ export function ReadyScreen({
 
 function LoadingBody() {
   return (
-    <SkeletonGroup label="Stiamo preparando la casa">
-      <Skeleton shape="cerchio" night />
-      <Skeleton shape="titolo" night />
-      <Skeleton shape="testo" night />
-    </SkeletonGroup>
+    <div>
+      <SkeletonGroup label="Stiamo preparando la casa">
+        <Skeleton shape="cerchio" night />
+        <Skeleton shape="titolo" night />
+        <Skeleton shape="testo" night />
+      </SkeletonGroup>
+    </div>
   );
 }
 
