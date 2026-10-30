@@ -158,7 +158,11 @@ export default async function Page() {
   const full = rows.length >= MAX_HOUSEHOLD_MEMBERS;
 
   return (
-    <main id="contenuto" tabIndex={-1} className="pagina pagina-desktop">
+    <main
+      id="contenuto"
+      tabIndex={-1}
+      className="pagina pagina-desktop pagina-foglio"
+    >
       <div className="colonne colonne--due">
         <div className="colonna">
           <h1 className="t-titolo-pagina">{nestName}</h1>
