@@ -187,7 +187,9 @@ export async function colorNames(page: Page): Promise<string[]> {
 }
 
 export const backControl = (page: Page) =>
-  page.getByLabel("Indietro", { exact: true }).filter({ visible: true });
+  page
+    .getByRole("link", { name: "Indietro", exact: true })
+    .filter({ visible: true });
 
 export const continueButton = (page: Page) =>
   page.getByRole("button", { name: "Continua", exact: true });

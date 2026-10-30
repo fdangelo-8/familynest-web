@@ -76,7 +76,13 @@ export function InviteColorSkeleton() {
             <CardSkeleton />
           </div>
           <div className="modale__piede">
-            <span />
+            <Link
+              href="/invito"
+              prefetch={false}
+              className="btn-link btn-link--secondario"
+            >
+              Indietro
+            </Link>
             <Button disabled>Continua</Button>
           </div>
         </div>

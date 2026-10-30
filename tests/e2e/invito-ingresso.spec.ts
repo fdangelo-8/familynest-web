@@ -83,7 +83,7 @@ const originOf = (baseURL: string | undefined) =>
   new URL(baseURL as string).origin;
 
 const EXPIRED_TEXT =
-  "Chiedi a chi ti ha invitato di mandartene uno nuovo: dal suo FamilyNest bastano due tocchi.";
+  "Chiedi a chi ti ha mandato il link di invitarti di nuovo: dal suo FamilyNest bastano due tocchi.";
 const OTHER_NEST_TEXT =
   "Con un account per ora si sta in un solo Nest. Il Nest in cui sei resta com'è.";
 
@@ -94,17 +94,23 @@ const visibleText = (page: Page, text: string) =>
 /** The error state of /invito (CA-7): same texts for every reason. */
 async function expectExpired(page: Page) {
   if (isMobileProject()) {
-    await expect(h1(page)).toHaveText("Questo invito è scaduto.", {
+    await expect(h1(page)).toHaveText("Questo invito non vale più.", {
       useInnerText: true,
     });
   } else {
-    await expect(h1(page)).toHaveText("Invito scaduto", { useInnerText: true });
+    await expect(h1(page)).toHaveText("Invito non più valido", {
+      useInnerText: true,
+    });
     await expect(page.locator("p.claim").filter({ visible: true })).toHaveText(
-      "Questo invito è scaduto.",
+      "Questo invito non vale più.",
       { useInnerText: true },
     );
   }
   await expect(visibleText(page, EXPIRED_TEXT)).toBeVisible();
+  // Web-first and scoped: during the page change two <main> can coexist.
+  await expect(
+    page.locator("main").filter({ hasText: EXPIRED_TEXT }),
+  ).not.toContainText(/scadut/i);
   const enter = page.getByRole("link", { name: "Entra in FamilyNest" });
   await expect(enter).toBeVisible();
   await expect(enter).toHaveAttribute("href", "/accesso");
@@ -766,7 +772,7 @@ test.describe("il tuo colore (08)", () => {
     await expect(backControl(page)).toHaveCount(1);
   });
 
-  test("CA-15: su desktop un solo h1, «Continua» e passo, niente «Indietro» né «Pediatra»", async ({
+  test("CA-15: su desktop un solo h1, «Continua», «Indietro» e passo, niente «Pediatra»", async ({
     page,
     baseURL,
   }) => {
@@ -779,7 +785,8 @@ test.describe("il tuo colore (08)", () => {
     await expect(
       page.getByRole("progressbar", { name: "Passo 1 di 3" }),
     ).toBeVisible();
-    await expect(backControl(page)).toHaveCount(0);
+    await expect(backControl(page)).toHaveCount(1);
+    await expect(backControl(page)).toHaveAttribute("href", "/invito");
     const text = await page.locator("main").innerText();
     expect(text).not.toContain("Pediatra");
     expect(await rawHtml(page, "/invito/colore")).not.toContain("Pediatra");
@@ -865,9 +872,14 @@ test.describe("il tuo colore (08)", () => {
     expect(new Set(second).size, "seconda riga").toBe(1);
     expect(second[0]!).toBeGreaterThan(first[0]!);
 
-    // One tab stop for the whole group: Tab leaves it for «Continua».
+    // One tab stop for the whole group: Tab leaves it for the next control
+    // (on desktop «Indietro» comes first, then «Continua»).
     await radio(page, "Glicine").focus();
     await page.keyboard.press("Tab");
+    if (!isMobileProject()) {
+      await expect(backControl(page)).toBeFocused();
+      await page.keyboard.press("Tab");
+    }
     await expect(continueButton(page)).toBeFocused();
   });
 
@@ -1114,12 +1126,44 @@ test.describe("il tuo colore (08)", () => {
     });
   });
 
-  test("CA-24: «Indietro» riporta alla 07 nello stato normale", async ({
+  test("CA-24b: con «Continua» in corso, il clic su «Indietro» non cambia pagina", async ({
+    page,
+    baseURL,
+  }) => {
+    needsThrowaway();
+    await withNestAndVisitor(async (nest, visitor) => {
+      await visitor.signInContext(page.context(), baseURL as string);
+      await page.goto(linkOf(originOf(baseURL), nest.invite.token));
+      await page.goto("/invito/colore");
+      await colorPageReady(page);
+
+      await page.route(
+        (url) => url.pathname === "/invito/colore",
+        async (route) => {
+          if (route.request().method() !== "POST") return route.continue();
+          // The request never ends: «Continua» stays in progress.
+          return new Promise<void>(() => undefined);
+        },
+      );
+      const button = continueButton(page);
+      await button.click();
+      await expect(button).toHaveAttribute("aria-busy", "true");
+      const back = backControl(page);
+      await expect(back).toHaveAttribute("aria-disabled", "true");
+      // Explicit wait: a navigation to /invito must NOT happen after the click.
+      const navigation = page.waitForURL(/\/invito$/, { timeout: 1000 });
+      await back.dispatchEvent("click");
+      await expect(navigation).rejects.toThrow(/Timeout/);
+      await expect(page).toHaveURL(`${originOf(baseURL)}/invito/colore`);
+      await expect(h1(page)).toHaveText("Scegli il tuo colore");
+    });
+  });
+
+  test("CA-24: «Indietro» riporta alla 07 nello stato normale (anche su desktop)", async ({
     page,
     baseURL,
   }) => {
     needsUsers("C");
-    onlyMobile();
     const laura = await colorAsC(page, baseURL);
     await backControl(page).click();
     await expect(page).toHaveURL(`${originOf(baseURL)}/invito`);

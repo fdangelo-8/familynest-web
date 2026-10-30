@@ -225,7 +225,7 @@ test.describe("invito · benvenuto (07) · accessibilità", () => {
     await expectNoBlocking(page);
     await expectStructure(page);
     await expect(page.locator("h1:visible")).toHaveText(
-      isMobile() ? /Questo invito\s*è scaduto\./ : "Invito scaduto",
+      isMobile() ? /Questo invito\s*non vale più\./ : "Invito non più valido",
     );
     await expectFocusOrder(page, ["Entra in FamilyNest"]);
     if (isMobile()) {
@@ -317,7 +317,7 @@ test.describe("invito · il tuo colore (08) · accessibilità", () => {
     await openColor(page, baseURL, laura, nest.token);
     const expected = isMobile()
       ? ["Indietro", "Glicine", "Continua"]
-      : ["Glicine", "Continua"];
+      : ["Glicine", "Indietro", "Continua"];
     await page.evaluate(() =>
       (document.activeElement as HTMLElement | null)?.blur(),
     );
@@ -398,12 +398,10 @@ test.describe("invito · il tuo colore (08) · accessibilità", () => {
         name: "Glicine",
       }),
     ).toBeDisabled();
-    if (isMobile()) {
-      await expect(shown(page, "link", "Indietro")).toHaveAttribute(
-        "aria-disabled",
-        "true",
-      );
-    }
+    await expect(shown(page, "link", "Indietro")).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
     await expectNoBlocking(page);
   });
 
@@ -513,6 +511,10 @@ test.describe("invito · il tuo colore (08) · accessibilità", () => {
     await expect(alert).toBeVisible();
     await expect(alert.getByRole("button")).toHaveCount(0);
     await expect(shown(page, "button", "Continua")).toBeDisabled();
+    // «Indietro» stays active when the Nest is full (#143).
+    const back = shown(page, "link", "Indietro");
+    await expect(back).toHaveAttribute("href", "/invito");
+    await expect(back).not.toHaveAttribute("aria-disabled", /.*/);
     await expectNoBlocking(page);
     await expectStructure(page);
   });
@@ -533,6 +535,12 @@ test.describe("invito · il tuo colore (08) · accessibilità", () => {
       await expect(
         page.locator(".skeleton:not([aria-hidden='true'])"),
       ).toHaveCount(0);
+      // On desktop «Indietro» is a real, active link (#143).
+      if (!isMobile()) {
+        const back = shown(page, "link", "Indietro");
+        await expect(back).toHaveAttribute("href", "/invito");
+        await expect(back).not.toHaveAttribute("aria-disabled", /.*/);
+      }
     });
   });
 });

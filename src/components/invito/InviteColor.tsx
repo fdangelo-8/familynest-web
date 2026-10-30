@@ -285,7 +285,17 @@ export function InviteColor({
             {alertBox("d")}
           </div>
           <div className="modale__piede">
-            <span />
+            <Link
+              href="/invito"
+              prefetch={false}
+              className="btn-link btn-link--secondario"
+              aria-disabled={sending || undefined}
+              onClick={(event) => {
+                if (sending) event.preventDefault();
+              }}
+            >
+              Indietro
+            </Link>
             <Button
               disabled={full}
               loading={sending}
