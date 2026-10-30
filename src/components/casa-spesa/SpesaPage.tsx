@@ -1,13 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { CasaFrame } from "@/components/casa/CasaFrame";
+import { useMemo, type ReactNode } from "react";
 import { Avatar } from "@/components/ui/Avatar/Avatar";
 import { Checkbox } from "@/components/ui/Checkbox/Checkbox";
 import { cx } from "@/components/ui/cx";
 import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
 import { Icon } from "@/components/ui/Icon/Icon";
-import { PageError } from "@/components/ui/PageError/PageError";
 import { QuickAddField } from "@/components/ui/QuickAddField/QuickAddField";
 import {
   byCreation,
@@ -21,10 +19,10 @@ import {
 } from "./model";
 
 import { Tear } from "./Tear";
-import { useShoppingList } from "./useShoppingList";
+import type { ShoppingList } from "./useShoppingList";
 
-const TO_TAKE_HEADING = '[data-focus="to-take-heading"]';
-const COMMON_HEADING = '[data-focus="common-heading"]';
+export const TO_TAKE_HEADING = '[data-focus="to-take-heading"]';
+export const COMMON_HEADING = '[data-focus="common-heading"]';
 
 function Row({
   item,
@@ -82,76 +80,44 @@ function SectionHead({
   );
 }
 
-export function SpesaPage({ nestName }: { nestName: string }) {
-  const [quick, setQuick] = useState("");
-  const rootRef = useRef<HTMLElement>(null);
-  const list = useShoppingList({
-    rootRef,
-    onAddRejected: (name) => setQuick((current) => current || name),
-  });
-  const {
-    status,
-    items,
-    members,
-    meMemberId,
-    settling,
-    offline,
-    requestFocus,
-  } = list;
+/**
+ * The rows of «Da prendere» and «Presi». A row that was just toggled stays in
+ * its list while it settles.
+ */
+export function splitShopping(
+  items: ShoppingItem[],
+  settling: ReadonlySet<string>,
+) {
+  return {
+    toTake: items
+      .filter((item) => (item.checkedAt === null) !== settling.has(item.key))
+      .sort(byCreation),
+    taken: items
+      .filter((item) => (item.checkedAt !== null) !== settling.has(item.key))
+      .sort(byLastTaken),
+  };
+}
 
-  // Did the focus sit inside the offline alert ("Riprova") the last time it moved?
-  const focusInAlert = useRef(false);
-  useEffect(() => {
-    const track = (event: FocusEvent) => {
-      focusInAlert.current =
-        event.target instanceof Element && !!event.target.closest(".avviso");
-    };
-    document.addEventListener("focusin", track);
-    return () => document.removeEventListener("focusin", track);
-  }, []);
-  useEffect(() => {
-    // The alert is gone and "Riprova" with it: the focus goes to a heading.
-    if (offline || !focusInAlert.current) return;
-    focusInAlert.current = false;
-    const root = rootRef.current;
-    const target =
-      root?.querySelector<HTMLElement>(COMMON_HEADING) ??
-      root?.querySelector<HTMLElement>(TO_TAKE_HEADING);
-    target?.focus();
-  }, [offline]);
+/** What goes inside the «Spesa» column (the frame draws the column itself). */
+export function SpesaColumn({
+  list,
+  quick,
+  onQuickChange,
+}: {
+  list: ShoppingList;
+  quick: string;
+  onQuickChange: (value: string) => void;
+}) {
+  const { items, members, meMemberId, settling, requestFocus } = list;
 
   const membersById = useMemo(
     () => new Map(members.map((member) => [member.id, member])),
     [members],
   );
-
-  // A row that was just toggled stays in its list while it settles.
-  const toTake = useMemo(
-    () =>
-      items
-        .filter((item) => (item.checkedAt === null) !== settling.has(item.key))
-        .sort(byCreation),
+  const { toTake, taken } = useMemo(
+    () => splitShopping(items, settling),
     [items, settling],
   );
-  const taken = useMemo(
-    () =>
-      items
-        .filter((item) => (item.checkedAt !== null) !== settling.has(item.key))
-        .sort(byLastTaken),
-    [items, settling],
-  );
-
-  if (status === "loading") {
-    return <CasaFrame nestName={nestName} current="spesa" loading />;
-  }
-
-  if (status === "error") {
-    return (
-      <main id="contenuto" tabIndex={-1} className="pagina pagina-desktop">
-        <PageError onRetry={() => window.location.reload()} />
-      </main>
-    );
-  }
 
   const isEmpty = toTake.length === 0 && taken.length === 0;
   const pets = members.filter((member) => member.kind === "pet");
@@ -222,94 +188,63 @@ export function SpesaPage({ nestName }: { nestName: string }) {
   }
 
   return (
-    <CasaFrame
-      nestName={nestName}
-      current="spesa"
-      counts={{ spesa: toTake.length }}
-      mainRef={rootRef}
-      columns={{
-        spesa: {
-          offline: {
-            active: offline,
-            retrying: list.retrying,
-            onRetry: list.retry,
-          },
-          info: toTake.length > 0 ? `${toTake.length} da prendere` : undefined,
-          children: (
-            <>
-              <QuickAddField
-                label={quickLabel}
-                value={quick}
-                onChange={setQuick}
-                onSubmit={list.addItem}
-                active={isEmpty}
-              />
+    <>
+      <QuickAddField
+        label={quickLabel}
+        value={quick}
+        onChange={onQuickChange}
+        onSubmit={list.addItem}
+        active={isEmpty}
+      />
 
-              {showCommon ? (
-                <section className="sezione" data-testid="spesa-piu-comuni">
-                  <SectionHead
-                    title="Le più comuni"
-                    info="un tocco per aggiungere"
-                    headingProps={{ "data-focus": "common-heading" }}
-                  />
-                  <div
-                    className="gruppo-chip"
-                    role="group"
-                    aria-label="Le più comuni"
-                  >
-                    {chips.map((name) => (
-                      <button
-                        key={name}
-                        type="button"
-                        className="chip"
-                        aria-label={`Aggiungi ${name}`}
-                        data-chip={name}
-                        onClick={() => addChip(name)}
-                      >
-                        <Icon name="plus" size="s" />
-                        {name}
-                      </button>
-                    ))}
-                  </div>
-                </section>
-              ) : null}
+      {showCommon ? (
+        <section className="sezione" data-testid="spesa-piu-comuni">
+          <SectionHead
+            title="Le più comuni"
+            info="un tocco per aggiungere"
+            headingProps={{ "data-focus": "common-heading" }}
+          />
+          <div className="gruppo-chip" role="group" aria-label="Le più comuni">
+            {chips.map((name) => (
+              <button
+                key={name}
+                type="button"
+                className="chip"
+                aria-label={`Aggiungi ${name}`}
+                data-chip={name}
+                onClick={() => addChip(name)}
+              >
+                <Icon name="plus" size="s" />
+                {name}
+              </button>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
-              {isEmpty ? (
-                <EmptyState
-                  icon="users"
-                  title="Una lista per tutta la casa"
-                  text={
-                    otherAdult
-                      ? `Quando ${otherAdult.name} aggiunge qualcosa, lo vedi subito anche tu.`
-                      : "Quando qualcuno entra nel Nest, vedrete la stessa lista."
-                  }
-                  actions={null}
-                />
-              ) : (
-                <>
-                  {toTakeSection}
-                  {taken.length > 0 ? (
-                    <section className="sezione" data-testid="spesa-presi">
-                      <SectionHead title="Presi" info={String(taken.length)} />
-                      {renderRows(taken)}
-                      <Tear count={clearableCount} onTear={list.tear} />
-                    </section>
-                  ) : null}
-                </>
-              )}
-            </>
-          ),
-        },
-      }}
-      after={
-        <div
-          className="visivamente-nascosto"
-          aria-live="polite"
-          data-testid="spesa-annuncio"
-        >
-          {list.announcement}
-        </div>
-      }
-    />
+      {isEmpty ? (
+        <EmptyState
+          icon="users"
+          title="Una lista per tutta la casa"
+          text={
+            otherAdult
+              ? `Quando ${otherAdult.name} aggiunge qualcosa, lo vedi subito anche tu.`
+              : "Quando qualcuno entra nel Nest, vedrete la stessa lista."
+          }
+          actions={null}
+        />
+      ) : (
+        <>
+          {toTakeSection}
+          {taken.length > 0 ? (
+            <section className="sezione" data-testid="spesa-presi">
+              <SectionHead title="Presi" info={String(taken.length)} />
+              {renderRows(taken)}
+              <Tear count={clearableCount} onTear={list.tear} />
+            </section>
+          ) : null}
+        </>
+      )}
+    </>
   );
 }

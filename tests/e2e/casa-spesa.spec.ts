@@ -1573,15 +1573,22 @@ test.describe("fuoco e tastiera", () => {
 });
 
 test.describe("compatibilità con le altre pagine di Casa", () => {
-  test("Extra: «Da fare» e «Scadenze» su desktop sono colonne «In arrivo» accanto alla Spesa", async ({
+  test("Extra: su desktop «Da fare» è una colonna vera accanto alla Spesa; «Scadenze» è ancora «In arrivo»", async ({
     page,
     baseURL,
   }, testInfo) => {
     test.skip(isMobile(testInfo), "Le tre colonne ci sono solo a 1280 px");
     await openSpesa(page, baseURL, "A");
+    const todo = page.getByRole("region", { name: "Da fare" });
     await expect(
-      page.getByRole("region", { name: "Da fare" }).getByText("In arrivo"),
+      todo.getByRole("heading", { level: 2, name: "Da fare" }),
     ).toBeVisible();
+    await expect(
+      todo.getByRole("textbox", { name: "Aggiungi una cosa da fare…" }),
+    ).toBeVisible();
+    await expect(todo.getByText("In arrivo")).toHaveCount(0);
+    // Scadenze stays a placeholder here until the three pages share one frame
+    // (#128): that issue updates this line.
     await expect(
       page.getByRole("region", { name: "Scadenze" }).getByText("In arrivo"),
     ).toBeVisible();
