@@ -55,11 +55,11 @@ const REFETCH_DELAY_MS = 120;
 const DEFAULT_SETTLE_MS = 600;
 
 /** A failed request with no database code never reached the server. */
-function isNetworkError(error: { code?: string | null }): boolean {
+export function isNetworkError(error: { code?: string | null }): boolean {
   return !error.code;
 }
 
-function readSettleMs(): number {
+export function readSettleMs(): number {
   const raw = getComputedStyle(document.documentElement)
     .getPropertyValue("--durata-ampia")
     .trim();
@@ -80,10 +80,10 @@ function toItem(row: ItemRow, keys: Map<string, string>): ShoppingItem {
   };
 }
 
-type Identity = { householdId: string; meMemberId: string | null };
+export type Identity = { householdId: string; meMemberId: string | null };
 
 /** Which Nest the signed-in user is in, and which member they are. */
-async function readIdentity(supabase: Client): Promise<Identity | null> {
+export async function readIdentity(supabase: Client): Promise<Identity | null> {
   const { data: sessionData } = await supabase.auth.getSession();
   const userId = sessionData.session?.user.id;
   if (!userId) return null;
