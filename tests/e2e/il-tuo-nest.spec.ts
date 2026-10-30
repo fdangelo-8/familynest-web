@@ -339,20 +339,33 @@ test.describe("contenuto", () => {
     });
   });
 
-  test("CA-8: solo la propria riga è un link, verso /profilo", async ({
+  // Since #18 the rows of the adults and of the pets are links (CA-38 of #18,
+  // which replaces CA-8 of #17); the children have no page yet (#31).
+  test("CA-8 e CA-38: le righe di adulti e animali sono link, quelle dei figli no", async ({
     page,
     baseURL,
-  }, info) => {
-    onlyMobile(info.project.name);
+  }) => {
     test.skip(!usersConfigured("A"), skipReason("A"));
     await signInSeeded(page, baseURL, "A");
     await page.goto("/nest");
     const r = rows(page);
-    await expect(r.nth(0).getByRole("link")).toHaveCount(1);
-    for (const i of [1, 2, 3, 4]) {
-      await expect(r.nth(i).getByRole("link")).toHaveCount(0);
+    await expect(r).toHaveCount(5);
+    const linkOf = (title: string) =>
+      r.filter({ hasText: title }).getByRole("link");
+    await expect(linkOf("Marco, tu")).toHaveAttribute("href", "/profilo");
+    await expect(linkOf("Laura")).toHaveAttribute(
+      "href",
+      "/membri/a1000000-0000-4000-8000-000000000002",
+    );
+    await expect(linkOf("Biscotto")).toHaveAttribute(
+      "href",
+      "/membri/a1000000-0000-4000-8000-000000000005",
+    );
+    for (const child of ["Sofia", "Tommaso"]) {
+      await expect(r.filter({ hasText: child })).toHaveCount(1);
+      await expect(linkOf(child)).toHaveCount(0);
     }
-    await r.nth(0).getByRole("link").click();
+    await linkOf("Marco, tu").click();
     await expect(page).toHaveURL(/\/profilo$/);
   });
 
@@ -570,7 +583,9 @@ test.describe("invita qualcuno", () => {
     await expect(rows(page)).toHaveCount(5);
   });
 
-  test("CA-16: «  Laura  » con Glicine crea l'adulto «da invitare»", async ({
+  // Since #18 «Continua» opens the page of the new adult (CA-40 of #18, which
+  // replaces CA-16 of #17).
+  test("CA-16 e CA-40: «Continua» con «  Laura  » e Glicine apre la pagina di Laura", async ({
     page,
     baseURL,
   }, info) => {
@@ -579,21 +594,18 @@ test.describe("invita qualcuno", () => {
     await withU(async (user) => {
       await openNestAs(page, user, baseURL);
       const dialog = await openDialog(page);
+      await expect(dialog).not.toContainText("Per ora aggiungi");
       await dialog.getByLabel("Nome").fill("  Laura  ");
       await dialog.getByRole("radio", { name: "Glicine" }).click();
       await dialog.getByRole("button", { name: "Continua" }).click();
-      await expect(dialog).toBeHidden();
-      await expectRow(rows(page).nth(1), "Laura", "Adulto · da invitare", {
-        initial: "L",
-        color: "glicine",
-      });
-      await expect(count(page)).toHaveText("2");
-      await expect(invite(page)).toBeFocused();
+      await expect(page).toHaveURL(/\/membri\/[0-9a-f-]{36}$/);
+      await expect(page.getByRole("heading", { level: 1 })).toHaveText("Laura");
+      await expect(page.locator(".intestazione__sotto")).toHaveText(
+        "Adulto · da invitare",
+      );
       await expect(
-        page.getByRole("status").filter({ hasText: "Laura è nel Nest." }),
-      ).toHaveCount(1);
-      const url = new URL(page.url());
-      expect(url.pathname + url.search).toBe("/nest");
+        page.getByRole("button", { name: /^Manda l'invito/ }),
+      ).toBeFocused();
       const saved = (await members(user)).filter((m) => m.name === "Laura");
       expect(saved).toEqual([
         {
@@ -719,7 +731,7 @@ test.describe("invita qualcuno", () => {
       await page.unroute("**/nest");
       await alert.getByRole("button", { name: "Riprova" }).click();
       await expect(dialog).toBeHidden();
-      await expect(rows(page).filter({ hasText: "Rita" })).toHaveCount(1);
+      await expect(page).toHaveURL(/\/membri\/[0-9a-f-]{36}$/);
     });
   });
 
@@ -749,7 +761,7 @@ test.describe("invita qualcuno", () => {
       await page.keyboard.press("Escape");
       await expect(dialog).toBeVisible();
       await expect(dialog).toBeHidden({ timeout: 15_000 });
-      await expect(rows(page).filter({ hasText: "Rita" })).toHaveCount(1);
+      await expect(page).toHaveURL(/\/membri\/[0-9a-f-]{36}$/);
       expect(saves).toBe(1);
       expect(
         (await members(user)).filter((m) => m.name === "Rita"),
@@ -999,10 +1011,10 @@ test.describe("isolamento e privacy", () => {
       await dialog.getByLabel("Nome").fill("Laura");
       await dialog.getByRole("button", { name: "Continua" }).click();
       await expect(dialog).toBeHidden();
-      await expect(rows(page).filter({ hasText: "Laura" })).toHaveCount(1);
+      await expect(page).toHaveURL(/\/membri\/[0-9a-f-]{36}$/);
       expect(urls.filter((url) => /laura/i.test(url))).toEqual([]);
       const url = new URL(page.url());
-      expect(url.pathname).toBe("/nest");
+      expect(url.pathname).toMatch(/^\/membri\/[0-9a-f-]{36}$/);
       expect(url.search).toBe("");
     });
   });

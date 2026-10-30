@@ -332,12 +332,11 @@ test.describe("con un utente usa e getta", () => {
     const dialog = await openSheet(page);
     await dialog.getByLabel("Nome").fill("Rita");
     await dialog.getByRole("button", { name: "Continua" }).click();
-    await expect(dialog).toBeHidden();
+    // Since #18 «Continua» opens the page of the new adult (CA-40 of #18);
+    // the list with the new row is shown by opening /nest again.
+    await expect(page).toHaveURL(/\/membri\/[0-9a-f-]{36}$/);
+    await openNest(page, "Casa De Santis");
     await expect(page.getByText("Adulto · da invitare")).toBeVisible();
-    await expect(
-      page.getByRole("button", { name: "Invita qualcuno" }),
-    ).toBeFocused();
-    await freezeAges(page);
     await shoot(page, "nest-salvato.png");
   });
 
