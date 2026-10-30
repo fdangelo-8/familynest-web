@@ -67,19 +67,9 @@ async function Welcome({ searchParams }: { searchParams: SearchParams }) {
 
   if (householdId) {
     // Same Nest as the invitation: nothing to do, go to Oggi. Another Nest:
-    // one account stays in one Nest. Either way the cookie goes. The Nest of
-    // the invitation is told apart by its name, read through the policies
-    // (only a member sees their own Nest).
-    let sameNest = false;
-    if (preview.status === "valid") {
-      const own = await supabase
-        .from("households")
-        .select("name")
-        .eq("id", householdId)
-        .maybeSingle();
-      if (own.error) return <OnboardingError />;
-      sameNest = own.data?.name === preview.householdName;
-    }
+    // one account stays in one Nest. Either way the cookie goes. The database
+    // says whether the caller is a member of the invitation's Nest.
+    const sameNest = preview.status === "valid" && preview.callerIsMember;
     redirect(`/invito/chiudi?vai=${sameNest ? "oggi" : "altro-nest"}`);
   }
 
