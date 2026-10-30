@@ -5,10 +5,9 @@ import { Brand, Claim, Stickers } from "@/components/accesso/parts";
 import { Button } from "@/components/ui/Button/Button";
 import { Icon } from "@/components/ui/Icon/Icon";
 import { Skeleton, SkeletonGroup } from "@/components/ui/Skeleton/Skeleton";
+import { PEOPLE_PATH } from "./invite-routes";
 import styles from "./onboarding.module.css";
 import { Steps } from "./Steps";
-
-const BACK = "/onboarding/persone";
 
 function Placeholder() {
   return (
@@ -33,7 +32,7 @@ export function InviteSkeleton() {
       <div className={`${styles.mobile} passo-onboarding`}>
         <div className="passo-onboarding__testa">
           <Link
-            href={BACK}
+            href={PEOPLE_PATH}
             prefetch={false}
             className="btn-icona"
             aria-label="Indietro"
@@ -43,9 +42,13 @@ export function InviteSkeleton() {
           <Steps current={4} total={4} />
           <span className="barra__vuoto" aria-hidden="true" />
         </div>
-        <SkeletonGroup className="sezione">
-          <Placeholder />
+        <SkeletonGroup className="intestazione">
+          <p className="intestazione__sopra">Ultimo passo</p>
+          <Skeleton shape="titolo" />
         </SkeletonGroup>
+        <div className="sezione">
+          <Skeleton shape="testo" />
+        </div>
         <div className="dialogo__azioni">
           <Button icon="send" full disabled>
             Manda il link
@@ -53,13 +56,9 @@ export function InviteSkeleton() {
           <Button variant="secondary" icon="copy" full disabled>
             Copia il link
           </Button>
-          <button
-            type="button"
-            className="btn-link btn-link--secondario"
-            disabled
-          >
+          <Button variant="link-secondario" disabled>
             Lo faccio dopo
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -84,7 +83,7 @@ export function InviteSkeleton() {
           </SkeletonGroup>
           <div className="modale__piede">
             <Link
-              href={BACK}
+              href={PEOPLE_PATH}
               prefetch={false}
               className="btn-link btn-link--secondario"
             >

@@ -2,34 +2,31 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { startTransition, useEffect, useRef, useState } from "react";
+import {
+  startTransition,
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { Brand, Claim, Stickers } from "@/components/accesso/parts";
 import { Alert } from "@/components/ui/Alert/Alert";
 import { Button } from "@/components/ui/Button/Button";
 import { Icon } from "@/components/ui/Icon/Icon";
 import { useToast } from "@/components/ui/Toast/ToastProvider";
+import { invitePath, PEOPLE_PATH, READY_PATH } from "./invite-routes";
 import styles from "./onboarding.module.css";
 import { Steps } from "./Steps";
-
-/** Where the step leads: kept in one place so later pages can change it. */
-const INVITE_PATH = "/onboarding/invito";
-const PREVIOUS_STEP = "/onboarding/persone";
-const NEXT_STEP = "/onboarding/pronto";
 
 /** Names longer than this make the buttons shorter, so they stay on one line. */
 const LONG_NAME = 15;
 
 export type InviteFailure = "network" | "server";
 
-const FAILURE_TEXT = (name: string): Record<InviteFailure, string> => ({
+const failureText = (name: string): Record<InviteFailure, string> => ({
   network: `Non riusciamo a preparare l'invito per ${name}. Controlla la connessione e riprova.`,
   server: `Non riusciamo a preparare l'invito per ${name} per un problema nostro. Riprova tra qualche minuto.`,
 });
-
-/** Address of the invitation of the adult at `position` (1 = first). */
-function invitePath(position: number): string {
-  return position <= 1 ? INVITE_PATH : `${INVITE_PATH}?persona=${position}`;
-}
 
 export type InviteProps = {
   /** Name of the adult shown */
@@ -63,22 +60,27 @@ export function InviteStep({
   const router = useRouter();
   const { showToast } = useToast();
   const [going, setGoing] = useState(false);
-  const [retrying, setRetrying] = useState(false);
+  const [retrying, startRetry] = useTransition();
   const [copyFailed, setCopyFailed] = useState(false);
   const mobileHeading = useRef<HTMLHeadingElement>(null);
   const desktopHeading = useRef<HTMLHeadingElement>(null);
   const previous = useRef({ position, failed: failure !== null });
 
-  const long = Array.from(name).length > LONG_NAME;
-  const sendLabel = long ? "Manda il link" : `Manda il link a ${name}`;
-  const nextLabel = long ? "Invita il prossimo" : `Ora invita ${nextName}`;
+  const sendLabel =
+    Array.from(name).length > LONG_NAME
+      ? "Manda il link"
+      : `Manda il link a ${name}`;
+  const nextLabel =
+    nextName !== null && Array.from(nextName).length > LONG_NAME
+      ? "Invita il prossimo"
+      : `Ora invita ${nextName}`;
   const exitMobile = nextName ? nextLabel : "Lo faccio dopo";
   const exitDesktop = nextName ? nextLabel : "Ho finito";
   const above =
     total > 1
       ? `Ultimo passo · invito ${position} di ${total}`
       : "Ultimo passo";
-  const backHref = position <= 1 ? PREVIOUS_STEP : invitePath(position - 1);
+  const backHref = position <= 1 ? PEOPLE_PATH : invitePath(position - 1);
   const noLink = token === null || going;
 
   // New adult, or the invitation just got prepared: the heading takes the
@@ -90,7 +92,6 @@ export function InviteStep({
     const recovered = before.failed && failure === null;
     if (changed || recovered) {
       setGoing(false);
-      setRetrying(false);
       window.scrollTo(0, 0);
       for (const heading of [mobileHeading.current, desktopHeading.current]) {
         if (heading && heading.offsetParent !== null) {
@@ -98,8 +99,6 @@ export function InviteStep({
           return;
         }
       }
-    } else if (before.failed && failure !== null) {
-      setRetrying(false);
     }
   }, [position, failure]);
 
@@ -138,14 +137,12 @@ export function InviteStep({
   function exit() {
     if (going) return;
     setGoing(true);
-    const href = nextName ? invitePath(position + 1) : NEXT_STEP;
+    const href = nextName ? invitePath(position + 1) : READY_PATH;
     startTransition(() => router.push(href));
   }
 
   function retry() {
-    if (retrying) return;
-    setRetrying(true);
-    startTransition(() => router.refresh());
+    startRetry(() => router.refresh());
   }
 
   const heading = (ref: typeof mobileHeading) => (
@@ -171,7 +168,7 @@ export function InviteStep({
         </Button>
       }
     >
-      {FAILURE_TEXT(name)[failure]}
+      {failureText(name)[failure]}
     </Alert>
   ) : (
     <p className="t-nota t-secondario">{note}</p>

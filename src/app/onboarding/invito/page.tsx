@@ -6,6 +6,7 @@ import {
   InviteStep,
   type InviteFailure,
 } from "@/components/onboarding/InviteStep";
+import { READY_PATH } from "@/components/onboarding/invite-routes";
 import { OnboardingError } from "@/components/onboarding/OnboardingError";
 import { requireUser } from "@/lib/auth/require-user";
 import { formatLongDay, formatTime, toDayKey } from "@/lib/datetime";
@@ -81,7 +82,9 @@ async function ensureInvitation(
     }
     const reread = await readPending(supabase, memberId);
     if (reread.error) return { ok: false, failure: failureOf(reread.error) };
-    if (!reread.data) return { ok: false, failure: "server" };
+    if (!reread.data || Date.parse(reread.data.expires_at) <= Date.now()) {
+      return { ok: false, failure: "server" };
+    }
     return {
       ok: true,
       invitation: {
@@ -145,11 +148,11 @@ async function Invite({
     (member) => member.kind === "adult" && member.user_id === null,
   );
   // Nobody to invite: straight on, nothing is created.
-  if (adults.length === 0) redirect("/onboarding/pronto");
+  if (adults.length === 0) redirect(READY_PATH);
 
   const position = positionOf(persona, adults.length);
   const adult = adults[position - 1];
-  if (!adult) redirect("/onboarding/pronto");
+  if (!adult) redirect(READY_PATH);
   const result = await ensureInvitation(supabase, household.data, adult.id);
 
   return (
