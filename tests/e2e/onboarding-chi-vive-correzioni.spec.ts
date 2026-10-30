@@ -205,6 +205,8 @@ test.describe("controlli statici (punto 17)", () => {
     for (const file of files) {
       const text = read(file);
       expect(text, file).not.toMatch(/torna a oggi/i);
+      // «Vai a Oggi» of the Pronto step (#15) is required: only that file may link.
+      if (file.endsWith("ReadyScreen.tsx")) continue;
       expect(text, file).not.toContain('href="/oggi"');
     }
   });

@@ -829,18 +829,18 @@ test.describe("errori del foglio", () => {
 // ================================================================ Continua / Indietro
 
 test.describe("Continua e Indietro", () => {
-  test("CA-26: «Continua» porta a /oggi (destinazione provvisoria) e non cambia i membri", async ({
+  test("CA-26: «Continua» porta a /onboarding/pronto (#15, CA-20) e non cambia i membri", async ({
     page,
     baseURL,
   }) => {
-    // TODO(#13): update when #37, #14 or #15 reach main (see the issue).
+    // TODO(#13): update when #37 or #14 reach main (see the issue).
     needsThrowaway();
     await withNest("couple", async (user) => {
       await addMember(user, { name: "Laura", kind: "adult", color: "glicine" });
       const before = await members(user);
       await openPage(page, user, baseURL);
       await continua(page).click();
-      await expect(page).toHaveURL(/\/oggi$/);
+      await expect(page).toHaveURL(/\/onboarding\/pronto$/);
       expect(await members(user)).toEqual(before);
     });
   });
