@@ -39,8 +39,11 @@ import {
   seedClient,
   setInviteCookie,
   statusWith,
+  watchActions,
+  explain,
   withDeSantisNest,
   withNestAndVisitor,
+  visibleButtons,
   type Color,
 } from "../fixtures/invito-ingresso";
 import {
@@ -461,12 +464,22 @@ test.describe("benvenuto (07)", () => {
           .poll(() => authorize.length, { timeout: 2000 })
           .toBeGreaterThan(0),
     );
-    await expect(
-      page.getByRole("button", { name: "Accesso con Google in corso" }),
-    ).toHaveAttribute("aria-busy", "true");
-    await expect(
-      page.getByRole("button", { name: "Entra con Apple" }),
-    ).toBeDisabled();
+    // Read from the DOM: while the browser is being sent to the provider the
+    // locators wait for that navigation (same as tests/e2e/login.spec.ts).
+    await expect
+      .poll(() => visibleButtons(page))
+      .toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            text: "Accesso con Google in corso",
+            busy: "true",
+          }),
+          expect.objectContaining({
+            text: "Entra con Apple",
+            disabled: true,
+          }),
+        ]),
+      );
 
     expect(authorize).toHaveLength(1);
     const raw = new URL(authorize[0]!).searchParams.get("redirect_to");
@@ -881,13 +894,14 @@ test.describe("il tuo colore (08)", () => {
       await page.goto(linkOf(originOf(baseURL), nest.invite.token));
       await page.goto("/invito/colore");
       await colorPageReady(page);
+      const log = watchActions(page);
       await radio(page, "Peonia").click();
       await expect(radio(page, "Peonia")).toHaveAttribute(
         "aria-checked",
         "true",
       );
       await continueButton(page).click();
-      await expect(page).toHaveURL(/\/oggi$/);
+      await explain(page, log, () => expect(page).toHaveURL(/\/oggi$/));
       expect(await inviteCookie(page)).toBeUndefined();
 
       const davide = await nest.member(nest.davideId);
@@ -914,8 +928,9 @@ test.describe("il tuo colore (08)", () => {
       await page.goto(linkOf(originOf(baseURL), nest.invite.token));
       await page.goto("/invito/colore");
       await colorPageReady(page);
+      const log = watchActions(page);
       await continueButton(page).click();
-      await expect(page).toHaveURL(/\/oggi$/);
+      await explain(page, log, () => expect(page).toHaveURL(/\/oggi$/));
       expect((await nest.member(nest.davideId)).color).toBe("cobalto");
       expect((await nest.member(nest.davideId)).user_id).toBe(visitor.id);
     });
@@ -931,6 +946,7 @@ test.describe("il tuo colore (08)", () => {
       await page.goto(linkOf(originOf(baseURL), nest.invite.token));
       await page.goto("/invito/colore");
       await colorPageReady(page);
+      const log = watchActions(page);
 
       // Someone takes the colour after the page was drawn.
       const taken = await nest.owner.admin
@@ -945,12 +961,14 @@ test.describe("il tuo colore (08)", () => {
         "true",
       );
       await continueButton(page).click();
-      await expect(
-        alertWith(
-          page,
-          "Pietro ha appena preso la peonia. Scegli un altro colore.",
-        ),
-      ).toBeVisible();
+      await explain(page, log, () =>
+        expect(
+          alertWith(
+            page,
+            "Pietro ha appena preso la peonia. Scegli un altro colore.",
+          ),
+        ).toBeVisible(),
+      );
       await expect(page).toHaveURL(/\/invito\/colore$/);
       await expect(radio(page, "Peonia (già di Pietro)")).toBeDisabled();
       expect((await nest.member(nest.davideId)).user_id).toBeNull();
@@ -961,7 +979,7 @@ test.describe("il tuo colore (08)", () => {
         "true",
       );
       await continueButton(page).click();
-      await expect(page).toHaveURL(/\/oggi$/);
+      await explain(page, log, () => expect(page).toHaveURL(/\/oggi$/));
       const davide = await nest.member(nest.davideId);
       expect(davide.user_id).toBe(visitor.id);
       expect(davide.color).toBe("basilico");
@@ -979,6 +997,7 @@ test.describe("il tuo colore (08)", () => {
       await page.goto(linkOf(origin, nest.invite.token));
       await page.goto("/invito/colore");
       await colorPageReady(page);
+      const log = watchActions(page);
 
       const revoked = await nest.owner.admin
         .from("invitations")
@@ -987,7 +1006,9 @@ test.describe("il tuo colore (08)", () => {
       expect(revoked.error).toBeNull();
 
       await continueButton(page).click();
-      await expect(page).toHaveURL(`${origin}/invito`);
+      await explain(page, log, () =>
+        expect(page).toHaveURL(`${origin}/invito`),
+      );
       await expectExpired(page);
       expect(await inviteCookie(page)).toBeUndefined();
       expect((await nest.member(nest.davideId)).user_id).toBeNull();
@@ -1047,6 +1068,7 @@ test.describe("il tuo colore (08)", () => {
       await page.goto(linkOf(originOf(baseURL), nest.invite.token));
       await page.goto("/invito/colore");
       await colorPageReady(page);
+      const log = watchActions(page);
 
       let calls = 0;
       let release!: () => void;
@@ -1070,7 +1092,7 @@ test.describe("il tuo colore (08)", () => {
       await button.dispatchEvent("click");
       await expect.poll(() => calls).toBe(1);
       release();
-      await expect(page).toHaveURL(/\/oggi$/);
+      await explain(page, log, () => expect(page).toHaveURL(/\/oggi$/));
       expect(calls, "richieste della server action").toBe(1);
       expect((await nest.member(nest.davideId)).user_id).toBe(visitor.id);
     });
@@ -1138,7 +1160,7 @@ test.describe("isolamento", () => {
       await page.goto("/invito/colore");
       await colorPageReady(page);
       const html = await rawHtml(page, "/invito/colore");
-      expect(html).toContain("Ciao Davide");
+      expect(html).toMatch(/Ciao\s*(<!-- -->)?\s*Davide/);
       expect(html).not.toMatch(/D(&#x27;|&#39;|')Angelo/);
       for (const word of ["Marco", "Sofia", "Laura"]) {
         expect(mentions(html, word), word).toBe(false);
