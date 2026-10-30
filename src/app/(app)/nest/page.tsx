@@ -18,6 +18,7 @@ export const metadata: Metadata = {
 
 type Row = {
   id: string;
+  kind: Database["public"]["Enums"]["member_kind"];
   name: string;
   color: Database["public"]["Enums"]["member_color"];
   isMe: boolean;
@@ -111,6 +112,7 @@ async function load(frame: NestFrameData): Promise<Loaded | null> {
     }
     return {
       id: m.id,
+      kind: m.kind,
       name: m.name,
       color: m.color,
       isMe,
@@ -122,6 +124,12 @@ async function load(frame: NestFrameData): Promise<Loaded | null> {
 }
 
 function MemberRow({ row }: { row: Row }) {
+  // Adults and pets have their own page (#18); children have none yet (#31).
+  const href = row.isMe
+    ? "/profilo"
+    : row.kind === "child"
+      ? null
+      : `/membri/${row.id}`;
   const content = (
     <>
       <Avatar name={row.name} color={row.color} size="l" nameShown />
@@ -131,16 +139,15 @@ function MemberRow({ row }: { row: Row }) {
         </span>
         <span className="riga-lista__info">{row.info}</span>
       </span>
-      {row.isMe ? (
+      {href ? (
         <span className="riga-lista__valore">
           <Icon name="chevron-right" />
         </span>
       ) : null}
     </>
   );
-  // Rows of the others become links when their pages exist (#18, #31).
-  return row.isMe ? (
-    <ListRow href="/profilo">{content}</ListRow>
+  return href ? (
+    <ListRow href={href}>{content}</ListRow>
   ) : (
     <li>
       <div className="riga-lista">{content}</div>
