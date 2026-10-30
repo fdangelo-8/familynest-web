@@ -9,7 +9,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(72);
+select plan(75);
 
 insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, created_at, updated_at)
 values ('00000000-0000-0000-0000-000000000000', 'dddddddd-0000-4000-8000-000000000001', 'authenticated',
@@ -213,7 +213,7 @@ select is(pg_temp.preview(repeat('%', 64)), current_setting('test.invalid')::jso
 select is(pg_temp.preview(repeat('_', 64)), current_setting('test.invalid')::jsonb, 'anon: _ wildcards are not patterns');
 select is(pg_temp.preview($t$' or '1'='1' or token like '%$t$), current_setting('test.invalid')::jsonb, 'anon: SQL text is only a value');
 
--- Through the Data API only POST is accepted: a GET would put the token in the URL.
+-- Through the Data API only POST is accepted: GET and HEAD would put the token in the URL.
 set local request.method to 'GET';
 select throws_ok(
   $$ select * from public.invitation_preview(current_setting('test.laura')) $$,
@@ -226,6 +226,26 @@ select throws_ok(
   'P0001',
   'use POST',
   'anon: a GET call is refused for an invalid token too'
+);
+set local request.method to 'HEAD';
+select throws_ok(
+  $$ select * from public.invitation_preview(current_setting('test.laura')) $$,
+  'P0001',
+  'use POST',
+  'anon: a HEAD call of the Data API is refused (arguments would be in the URL)'
+);
+set local request.method to 'PUT';
+select throws_ok(
+  $$ select * from public.invitation_preview(current_setting('test.laura')) $$,
+  'P0001',
+  'use POST',
+  'anon: any method other than POST is refused'
+);
+set local request.method to '';
+select is(
+  (select p.status::text from public.invitation_preview(current_setting('test.laura')) p),
+  'valid',
+  'anon: a direct SQL call (no request method) works'
 );
 set local request.method to 'POST';
 select is(

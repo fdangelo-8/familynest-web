@@ -39,10 +39,13 @@
 -- Guessing: tokens are 256 random bits (invitations.token default), compared for
 -- equality through the unique index, so they cannot be enumerated or guessed.
 --
--- Only POST: the Data API (PostgREST) can also call a function with GET, which puts the
--- arguments in the query string of the URL, where gateways and logs record them. Through
--- the Data API (request.method set by PostgREST) a GET call is refused with
--- P0001 'use POST', before reading anything, so the token travels only in the body.
+-- Only POST: the Data API (PostgREST) can also call a function with GET or HEAD, which
+-- put the arguments in the query string of the URL. Through the Data API (request.method
+-- set by PostgREST) any method other than POST is refused with P0001 'use POST', before
+-- reading anything: a wrong call fails at once instead of working silently. This does not
+-- keep a token out of gateway logs if a client sends it in a URL anyway; the protection is
+-- the server action calling .rpc() with POST. Direct SQL calls (request.method null or
+-- empty) are not affected.
 -- supabase-js .rpc() uses POST unless asked otherwise. The function writes nothing.
 -- ---------------------------------------------------------------------------
 create or replace function public.invitation_preview(p_token text)
@@ -63,7 +66,7 @@ set search_path = ''
 as $$
 #variable_conflict use_column
 begin
-  if current_setting('request.method', true) = 'GET' then
+  if coalesce(current_setting('request.method', true), '') not in ('', 'POST') then
     raise exception 'use POST' using errcode = 'P0001';
   end if;
 
@@ -138,8 +141,8 @@ $$;
 -- R2: join the household with the invitation and the chosen colour, all or nothing.
 --
 -- Same checks as accept_invitation(), in this order, plus the colour:
--- 0. GET through the Data API                    -> P0001 'use POST' (as for the preview:
---    the token never goes in a URL);
+-- 0. any method other than POST through the Data API -> P0001 'use POST' (as for the
+--    preview: a call with the token in a URL is refused);
 -- 1. no session                                  -> 42501 'not authenticated'
 --    (anonymous callers have no execute privilege: 42501 as well);
 -- 2. no colour                                   -> 22023 'color is required';
@@ -175,7 +178,7 @@ declare
   v_invitation public.invitations%rowtype;
   v_current_color public.member_color;
 begin
-  if current_setting('request.method', true) = 'GET' then
+  if coalesce(current_setting('request.method', true), '') not in ('', 'POST') then
     raise exception 'use POST' using errcode = 'P0001';
   end if;
 

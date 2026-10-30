@@ -10,7 +10,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(52);
+select plan(54);
 
 insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, created_at, updated_at)
 values
@@ -146,10 +146,16 @@ select throws_ok($$ select public.accept_invitation_with_color(current_setting('
 select throws_ok($$ select public.accept_invitation_with_color(current_setting('test.laura'), 'pomodoro') $$,
   '23505', 'color already taken', 'C: the colour of Marco (the inviter) is taken');
 
--- Through the Data API only POST is accepted: a GET would put the token in the URL.
+-- Through the Data API only POST is accepted: GET and HEAD would put the token in the URL.
 set local request.method to 'GET';
 select throws_ok($$ select public.accept_invitation_with_color(current_setting('test.laura'), 'peonia') $$,
   'P0001', 'use POST', 'C: a GET call of the Data API is refused before anything else');
+set local request.method to 'HEAD';
+select throws_ok($$ select public.accept_invitation_with_color(current_setting('test.laura'), 'peonia') $$,
+  'P0001', 'use POST', 'C: a HEAD call of the Data API is refused before anything else');
+set local request.method to 'PUT';
+select throws_ok($$ select public.accept_invitation_with_color(current_setting('test.laura'), 'peonia') $$,
+  'P0001', 'use POST', 'C: any method other than POST is refused');
 set local request.method to 'POST';
 
 -- Nothing changed.
