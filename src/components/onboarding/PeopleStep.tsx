@@ -53,11 +53,11 @@ type SheetState = {
 };
 
 /**
- * Where "Continua" goes. Provisional (#13): the next steps (Calendario #37,
- * Invito #14, Pronto #15) are not on main yet, so it ends in Oggi, like the
- * previous step did. Each of those pages moves this when it arrives.
+ * Where "Continua" goes. Provisional (#13): Calendario (#37) and Invito
+ * (#14) are not on main yet, so it ends in Pronto (#15). Each of those pages
+ * moves this when it arrives.
  */
-const NEXT_STEP = "/oggi";
+const NEXT_STEP = "/onboarding/pronto";
 
 function Roster({
   prefix,
