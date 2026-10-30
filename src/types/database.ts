@@ -181,24 +181,30 @@ export type Database = {
       households: {
         Row: {
           created_at: string;
+          first_shopping_item_at: string | null;
           household_type: Database["public"]["Enums"]["household_type"];
           id: string;
           name: string;
+          starter_list_completed_at: string | null;
           updated_at: string;
         };
         ComputedFields: never;
         Insert: {
           created_at?: string;
+          first_shopping_item_at?: string | null;
           household_type: Database["public"]["Enums"]["household_type"];
           id?: string;
           name: string;
+          starter_list_completed_at?: string | null;
           updated_at?: string;
         };
         Update: {
           created_at?: string;
+          first_shopping_item_at?: string | null;
           household_type?: Database["public"]["Enums"]["household_type"];
           id?: string;
           name?: string;
+          starter_list_completed_at?: string | null;
           updated_at?: string;
         };
         Relationships: [];
@@ -342,6 +348,88 @@ export type Database = {
           },
         ];
       };
+      todos: {
+        Row: {
+          assignee_member_id: string | null;
+          created_at: string;
+          created_by_member_id: string | null;
+          done_at: string | null;
+          done_by_member_id: string | null;
+          due_date: string | null;
+          for_member_id: string | null;
+          household_id: string;
+          id: string;
+          is_private: boolean;
+          title: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          assignee_member_id?: string | null;
+          created_at?: string;
+          created_by_member_id?: string | null;
+          done_at?: string | null;
+          done_by_member_id?: string | null;
+          due_date?: string | null;
+          for_member_id?: string | null;
+          household_id?: string;
+          id?: string;
+          is_private?: boolean;
+          title: string;
+          updated_at?: string;
+        };
+        Update: {
+          assignee_member_id?: string | null;
+          created_at?: string;
+          created_by_member_id?: string | null;
+          done_at?: string | null;
+          done_by_member_id?: string | null;
+          due_date?: string | null;
+          for_member_id?: string | null;
+          household_id?: string;
+          id?: string;
+          is_private?: boolean;
+          title?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "todos_assignee_fkey";
+            columns: ["assignee_member_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "household_members";
+            referencedColumns: ["id", "household_id"];
+          },
+          {
+            foreignKeyName: "todos_created_by_fkey";
+            columns: ["created_by_member_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "household_members";
+            referencedColumns: ["id", "household_id"];
+          },
+          {
+            foreignKeyName: "todos_done_by_fkey";
+            columns: ["done_by_member_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "household_members";
+            referencedColumns: ["id", "household_id"];
+          },
+          {
+            foreignKeyName: "todos_for_member_fkey";
+            columns: ["for_member_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "household_members";
+            referencedColumns: ["id", "household_id"];
+          },
+          {
+            foreignKeyName: "todos_household_id_fkey";
+            columns: ["household_id"];
+            isOneToOne: false;
+            referencedRelation: "households";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -367,6 +455,10 @@ export type Database = {
           isSetofReturn: true;
         };
       };
+      complete_starter_list: {
+        Args: Record<PropertyKey, never>;
+        Returns: boolean;
+      };
       create_household: {
         Args: {
           color: Database["public"]["Enums"]["member_color"];
@@ -379,6 +471,12 @@ export type Database = {
       current_household_id: {
         Args: Record<PropertyKey, never>;
         Returns: string;
+      };
+      current_member_welcome: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          inviter_name: string;
+        }[];
       };
       list_household_events: {
         Args: { p_from: string; p_to: string };
