@@ -10,6 +10,7 @@ import {
 } from "@playwright/test";
 import { formatAge } from "../../src/lib/datetime";
 import { signInAs, skipReason, usersConfigured } from "../fixtures/auth";
+import { SEED_HOME_A } from "../fixtures/invito";
 import {
   createThrowawayUser,
   throwawayConfigured,
@@ -886,9 +887,9 @@ test.describe("isolamento e privacy", () => {
     expect(accountId).toBeTruthy();
     const { data: laura } = await admin
       .from("household_members")
-      .select("id, households!inner(name)")
+      .select("id")
       .eq("name", "Laura")
-      .eq("households.name", "Casa D'Angelo")
+      .eq("household_id", SEED_HOME_A)
       .limit(1);
     const { data: invitations } = await admin
       .from("invitations")
@@ -974,7 +975,7 @@ test.describe("isolamento e privacy", () => {
       const { data: target } = await user.admin
         .from("households")
         .select("id")
-        .eq("name", "Casa D'Angelo")
+        .eq("id", SEED_HOME_A)
         .single();
       expect(target).not.toBeNull();
       const m = await user.client

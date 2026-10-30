@@ -7,6 +7,7 @@ import {
   usersConfigured,
   type TestUserKey,
 } from "../fixtures/auth";
+import { SEED_HOME_A } from "../fixtures/invito";
 import {
   createThrowawayUser,
   throwawayConfigured,
@@ -230,7 +231,7 @@ test.describe("contenuto", () => {
       const { data: households } = await admin
         .from("households")
         .select("id, updated_at")
-        .eq("name", NEST_A);
+        .eq("id", SEED_HOME_A);
       const id = households?.[0]?.id as string;
       const { data: members } = await admin
         .from("household_members")
@@ -549,7 +550,7 @@ test.describe("isolamento e minimizzazione", () => {
     const { data: nest } = await admin
       .from("households")
       .select("id")
-      .eq("name", NEST_A)
+      .eq("id", SEED_HOME_A)
       .single();
     const { data: members } = await admin
       .from("household_members")
