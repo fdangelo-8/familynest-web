@@ -36,8 +36,6 @@ export function InviteSomeone({
 
   function saved(values: MemberValues) {
     setAnnouncement(`${values.name} è nel Nest.`);
-    // Reads the list again: the new row and the new count come from the server.
-    router.refresh();
   }
 
   return (
@@ -71,6 +69,9 @@ export function InviteSomeone({
         intro={INVITE_PROVISIONAL_INTRO}
         onClose={() => {
           setOpen(false);
+          // Reads the page again on every close: after saving, the new row and
+          // count; after a full Nest (or a colour taken), the real members.
+          router.refresh();
           buttonRef.current?.focus();
         }}
         onSave={save}
