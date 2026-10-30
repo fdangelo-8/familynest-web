@@ -84,6 +84,74 @@ export type Database = {
           },
         ];
       };
+      event_exceptions: {
+        Row: {
+          created_at: string;
+          ends_at: string | null;
+          escort_member_id: string | null;
+          event_id: string;
+          household_id: string;
+          is_cancelled: boolean;
+          location: string | null;
+          notes: string | null;
+          occurrence_date: string;
+          starts_at: string | null;
+          title: string | null;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          ends_at?: string | null;
+          escort_member_id?: string | null;
+          event_id: string;
+          household_id?: string;
+          is_cancelled?: boolean;
+          location?: string | null;
+          notes?: string | null;
+          occurrence_date: string;
+          starts_at?: string | null;
+          title?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          ends_at?: string | null;
+          escort_member_id?: string | null;
+          event_id?: string;
+          household_id?: string;
+          is_cancelled?: boolean;
+          location?: string | null;
+          notes?: string | null;
+          occurrence_date?: string;
+          starts_at?: string | null;
+          title?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "event_exceptions_escort_fkey";
+            columns: ["escort_member_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "household_members";
+            referencedColumns: ["id", "household_id"];
+          },
+          {
+            foreignKeyName: "event_exceptions_event_fkey";
+            columns: ["event_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "events";
+            referencedColumns: ["id", "household_id"];
+          },
+          {
+            foreignKeyName: "event_exceptions_household_id_fkey";
+            columns: ["household_id"];
+            isOneToOne: false;
+            referencedRelation: "households";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       event_members: {
         Row: {
           created_at: string;
@@ -137,6 +205,7 @@ export type Database = {
           household_id: string;
           id: string;
           location: string | null;
+          notes: string | null;
           recurrence: Database["public"]["Enums"]["event_recurrence"];
           recurrence_until: string | null;
           recurrence_weekdays: number[] | null;
@@ -154,6 +223,7 @@ export type Database = {
           household_id?: string;
           id?: string;
           location?: string | null;
+          notes?: string | null;
           recurrence?: Database["public"]["Enums"]["event_recurrence"];
           recurrence_until?: string | null;
           recurrence_weekdays?: number[] | null;
@@ -170,6 +240,7 @@ export type Database = {
           household_id?: string;
           id?: string;
           location?: string | null;
+          notes?: string | null;
           recurrence?: Database["public"]["Enums"]["event_recurrence"];
           recurrence_until?: string | null;
           recurrence_weekdays?: number[] | null;
@@ -541,6 +612,22 @@ export type Database = {
         Args: Record<PropertyKey, never>;
         Returns: boolean;
       };
+      create_event: {
+        Args: {
+          p_ends_at: string;
+          p_escort_member_id?: string;
+          p_location?: string;
+          p_member_ids: string[];
+          p_notes?: string;
+          p_recurrence?: Database["public"]["Enums"]["event_recurrence"];
+          p_recurrence_until?: string;
+          p_recurrence_weekdays?: number[];
+          p_starts_at: string;
+          p_title: string;
+          p_visibility: Database["public"]["Enums"]["event_visibility"];
+        };
+        Returns: string;
+      };
       create_household: {
         Args: {
           color: Database["public"]["Enums"]["member_color"];
@@ -558,6 +645,36 @@ export type Database = {
         Args: Record<PropertyKey, never>;
         Returns: {
           inviter_name: string;
+        }[];
+      };
+      delete_event_occurrence: {
+        Args: {
+          p_day: string;
+          p_event_id: string;
+          p_scope: Database["public"]["Enums"]["event_change_scope"];
+        };
+        Returns: undefined;
+      };
+      get_event_occurrence: {
+        Args: { p_day?: string; p_event_id: string };
+        Returns: {
+          author_member_id: string;
+          ends_at: string;
+          escort_member_id: string;
+          id: string;
+          is_modified: boolean;
+          location: string;
+          member_ids: string[];
+          notes: string;
+          occurrence_date: string;
+          recurrence: Database["public"]["Enums"]["event_recurrence"];
+          recurrence_until: string;
+          recurrence_weekdays: number[];
+          series_ends_at: string;
+          series_starts_at: string;
+          starts_at: string;
+          title: string;
+          visibility: Database["public"]["Enums"]["event_visibility"];
         }[];
       };
       invitation_preview: {
@@ -607,8 +724,43 @@ export type Database = {
           isSetofReturn: true;
         };
       };
+      update_event: {
+        Args: {
+          p_day: string;
+          p_ends_at: string;
+          p_escort_member_id: string;
+          p_event_id: string;
+          p_location: string;
+          p_member_ids: string[];
+          p_notes: string;
+          p_recurrence: Database["public"]["Enums"]["event_recurrence"];
+          p_recurrence_until: string;
+          p_recurrence_weekdays: number[];
+          p_starts_at: string;
+          p_title: string;
+          p_visibility: Database["public"]["Enums"]["event_visibility"];
+        };
+        Returns: {
+          day: string;
+          id: string;
+        }[];
+      };
+      update_event_occurrence: {
+        Args: {
+          p_day: string;
+          p_ends_at: string;
+          p_escort_member_id: string;
+          p_event_id: string;
+          p_location: string;
+          p_notes: string;
+          p_starts_at: string;
+          p_title: string;
+        };
+        Returns: undefined;
+      };
     };
     Enums: {
+      event_change_scope: "this" | "following";
       event_recurrence: "none" | "weekly" | "monthly";
       event_visibility: "private" | "busy" | "household";
       household_type:
@@ -758,6 +910,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      event_change_scope: ["this", "following"],
       event_recurrence: ["none", "weekly", "monthly"],
       event_visibility: ["private", "busy", "household"],
       household_type: ["single", "couple", "family_with_children", "roommates"],
