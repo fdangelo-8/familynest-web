@@ -3638,6 +3638,11 @@ button.riga-lista {
   transform: translate(-50%, -50%);
 }
 
+/* Link dentro il testo dello stato vuoto («Torna a Oggi»): mai su due righe */
+.stato-vuoto__testo a {
+  white-space: nowrap;
+}
+
 /* Voce del selettore: il taglio passa da overflow a clip-path, così l'area di
    tocco di 44 px (6 px sopra e sotto la voce) non viene tagliata. Ai lati il
    taglio sta a 4 px, per l'anello di focus. */
