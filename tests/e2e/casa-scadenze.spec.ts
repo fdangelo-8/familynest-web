@@ -153,10 +153,13 @@ test.describe("struttura", () => {
     await expect(
       switcher(page).getByRole("button", { name: /^Scadenze/ }),
     ).toHaveAttribute("aria-pressed", "true");
+    // The navigation sets aria-current="page" only on the exact link of the
+    // entry (/casa/spesa) and "true" on the other Casa pages (getNavAriaCurrent,
+    // src/lib/app-routes.ts, checked by layout.spec.ts).
     await expect(
       page
         .getByRole("navigation", { name: "Navigazione principale" })
-        .locator('[aria-current="page"]'),
+        .locator('[aria-current="true"]'),
     ).toHaveText(/Casa/);
     await expect(filterGroup(page)).toHaveCount(0);
   });

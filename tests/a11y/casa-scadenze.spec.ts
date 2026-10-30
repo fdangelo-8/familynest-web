@@ -267,9 +267,15 @@ test.describe("struttura e lettura delle righe", () => {
       assignee: "Marco",
     });
     await open(page, baseURL, casa);
+    // Specification section 2: the icon inside the lock is aria-hidden.
+    await expect(
+      rowOf(page, "Rinnovo del passaporto")
+        .getByTestId("lucchetto")
+        .locator("svg"),
+    ).toHaveAttribute("aria-hidden", "true");
     await expect(
       rowOf(page, "Rinnovo del passaporto").getByTestId("lucchetto"),
-    ).toHaveAttribute("aria-hidden", "true");
+    ).toHaveText("");
     await expect(
       rowOf(page, "Rinnovo del passaporto").locator(".riga-lista__info"),
     ).toContainText("solo tu");
@@ -292,10 +298,9 @@ test.describe("aree di tocco e tastiera", () => {
       page.getByText("Nessuna scadenza", { exact: true }),
     );
     const voices = switcher(page).locator(".selettore__voce");
+    // The voices are 32 px high: the 44 px area comes from ::before (#63).
     for (let i = 0; i < (await voices.count()); i++) {
-      expect(
-        (await voices.nth(i).boundingBox())!.height,
-      ).toBeGreaterThanOrEqual(44);
+      expect(await hasTouchArea(voices.nth(i), 44), `voce ${i}`).toBe(true);
     }
     const add = page.getByRole("link", { name: "Aggiungi una scadenza" });
     expect(await hasTouchArea(add, 44)).toBe(true);
