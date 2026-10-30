@@ -138,3 +138,31 @@ values
   ('b4000000-0000-4000-8000-000000000002', '22222222-2222-4222-8222-222222222222', 'Prenotare la palestra',
    'b1000000-0000-4000-8000-000000000001', 'b1000000-0000-4000-8000-000000000002', null,
    null, false, null, null, now() - interval '2 days' + interval '1 minute');
+
+-- Deadlines (issue #108): a few examples per household. Invented texts, no health data
+-- (D1). Due dates are days in Europe/Rome counted from today; reminders are the default
+-- 30, 7 and 1 days. Page tests start from an empty list and must clear these first (each
+-- household with its own session; the «Solo io» deadline of Paolo only with Paolo's
+-- session).
+--   Casa D'Angelo (created by Marco): Rinnovo carta d'identità di Sofia (note «Serve per
+--     la gita», riguarda Sofia, nobody takes care of it, in 14 days); Bollo dell'auto
+--     (Marco, in 48 days).
+--   Casa Bianchi: Revisione della caldaia (created by Giulia, Paolo, in 20 days); Rinnovo
+--     del passaporto («Solo io» of Paolo, Paolo, in 60 days).
+insert into public.deadlines (
+  id, household_id, title, due_date, note, created_by_member_id, assignee_member_id, for_member_id,
+  is_private, created_at
+)
+values
+  ('a5000000-0000-4000-8000-000000000001', '11111111-1111-4111-8111-111111111111', 'Rinnovo carta d''identità di Sofia',
+   (now() at time zone 'Europe/Rome')::date + 14, 'Serve per la gita', 'a1000000-0000-4000-8000-000000000001',
+   null, 'a1000000-0000-4000-8000-000000000003', false, now() - interval '3 days'),
+  ('a5000000-0000-4000-8000-000000000002', '11111111-1111-4111-8111-111111111111', 'Bollo dell''auto',
+   (now() at time zone 'Europe/Rome')::date + 48, null, 'a1000000-0000-4000-8000-000000000001',
+   'a1000000-0000-4000-8000-000000000001', null, false, now() - interval '3 days' + interval '1 minute'),
+  ('b5000000-0000-4000-8000-000000000001', '22222222-2222-4222-8222-222222222222', 'Revisione della caldaia',
+   (now() at time zone 'Europe/Rome')::date + 20, null, 'b1000000-0000-4000-8000-000000000001',
+   'b1000000-0000-4000-8000-000000000002', null, false, now() - interval '2 days'),
+  ('b5000000-0000-4000-8000-000000000002', '22222222-2222-4222-8222-222222222222', 'Rinnovo del passaporto',
+   (now() at time zone 'Europe/Rome')::date + 60, null, 'b1000000-0000-4000-8000-000000000002',
+   'b1000000-0000-4000-8000-000000000002', null, true, now() - interval '2 days' + interval '1 minute');
