@@ -24,6 +24,8 @@ export type ToastOptions = {
   icon?: IconName | null;
   /** Optional bold part shown after the text, for example the name of the item */
   emphasis?: string;
+  /** Normal text right after `emphasis`, for example "." (no space added) */
+  after?: string;
   /** With a function the toast shows an "Annulla" button that calls it */
   onUndo?: () => void;
   /** For screens without the bottom navigation: sits lower */
@@ -127,6 +129,7 @@ function ToastView({
           <>
             {" "}
             <b>{toast.emphasis}</b>
+            {toast.after}
           </>
         ) : null}
       </span>
