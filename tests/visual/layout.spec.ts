@@ -1,4 +1,8 @@
 import { expect, test } from "@playwright/test";
+import {
+  NORMAL_DEADLINES,
+  installScadenzeFake,
+} from "../fixtures/scadenze-fake";
 import { NORMAL_LIST, installSpesaFake } from "../fixtures/spesa-fake";
 import { NORMAL_TODOS, installTodosFake } from "../fixtures/todos-fake";
 import { hasTestUser, signInAs } from "../fixtures/visual-login";
@@ -52,6 +56,8 @@ async function open(page: import("@playwright/test").Page, route: string) {
     // Since #23 the Da fare column sits next to Spesa on desktop (and its count
     // is in the switcher): a fixed list, served by a fake.
     await installTodosFake(page, { todos: NORMAL_TODOS });
+    // Same for the Scadenze column (#128).
+    await installScadenzeFake(page, { deadlines: NORMAL_DEADLINES });
   }
   await page.goto(route);
   await expect(page.getByRole("main")).toBeVisible();

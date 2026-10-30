@@ -1395,7 +1395,11 @@ test.describe("caricamento ed errore", () => {
   test("CA-35: se la lettura iniziale fallisce c'è l'errore di pagina; «Riprova» a lettura tornata mostra la lista", async ({
     page,
     baseURL,
-  }) => {
+  }, testInfo) => {
+    test.skip(
+      !isMobile(testInfo),
+      "Su desktop l'errore è nella colonna, vedi il caso successivo (#23 CA-42, #128)",
+    );
     await addShopping("A", ["Latte"]);
     const cors = {
       "access-control-allow-origin": "*",
@@ -1434,6 +1438,52 @@ test.describe("caricamento ed errore", () => {
     await page.unroute(/\/rest\/v1\/shopping_items/);
     await error.getByRole("button", { name: "Riprova" }).click();
     await expect(field(page)).toBeVisible();
+    await expect(titles(toTakeSection(page))).toHaveText(["Latte"]);
+    await expect(alerts(page)).toHaveCount(0);
+  });
+
+  test("CA-35 (desktop): se si legge tutto tranne la spesa l'errore è nella colonna «Spesa» e «Riprova» rilegge solo quella lista", async ({
+    page,
+    baseURL,
+  }, testInfo) => {
+    test.skip(isMobile(testInfo), "Caso a 1280 px");
+    await addShopping("A", ["Latte"]);
+    const cors = {
+      "access-control-allow-origin": "*",
+      "access-control-allow-headers": "*",
+    };
+    await page.route(/\/rest\/v1\/shopping_items/, async (route) => {
+      if (route.request().method() === "OPTIONS") {
+        await route.continue();
+        return;
+      }
+      await route.fulfill({
+        status: 500,
+        contentType: "application/json",
+        headers: cors,
+        body: JSON.stringify({
+          code: "XX000",
+          message: "boom internal detail",
+        }),
+      });
+    });
+    await signInAs(page.context(), baseURL as string, "A");
+    await page.goto("/casa/spesa");
+    const error = column(page).getByRole("alert");
+    await expect(error).toContainText(
+      "Non riusciamo a caricare la spesa. Controlla la connessione e riprova.",
+      { timeout: 20_000 },
+    );
+    await expect(error).not.toContainText("boom");
+    // No page error: the other columns are there.
+    await expect(page.getByText("Questa pagina non si è caricata")).toHaveCount(
+      0,
+    );
+    await expect(page.getByRole("region", { name: "Da fare" })).toBeVisible();
+
+    await page.unroute(/\/rest\/v1\/shopping_items/);
+    await error.getByRole("button", { name: "Riprova" }).click();
+    await expect(field(page)).toBeVisible({ timeout: 20_000 });
     await expect(titles(toTakeSection(page))).toHaveText(["Latte"]);
     await expect(alerts(page)).toHaveCount(0);
   });
@@ -1573,7 +1623,7 @@ test.describe("fuoco e tastiera", () => {
 });
 
 test.describe("compatibilità con le altre pagine di Casa", () => {
-  test("Extra: su desktop «Da fare» è una colonna vera accanto alla Spesa; «Scadenze» è ancora «In arrivo»", async ({
+  test("Extra: su desktop «Da fare» e «Scadenze» sono colonne vere accanto alla Spesa, senza «In arrivo»", async ({
     page,
     baseURL,
   }, testInfo) => {
@@ -1587,10 +1637,11 @@ test.describe("compatibilità con le altre pagine di Casa", () => {
       todo.getByRole("textbox", { name: "Aggiungi una cosa da fare…" }),
     ).toBeVisible();
     await expect(todo.getByText("In arrivo")).toHaveCount(0);
-    // Scadenze stays a placeholder here until the three pages share one frame
-    // (#128): that issue updates this line.
+    // The three pages share one frame since #128: Scadenze is a real column.
+    const deadlines = page.getByRole("region", { name: "Scadenze" });
     await expect(
-      page.getByRole("region", { name: "Scadenze" }).getByText("In arrivo"),
+      deadlines.getByRole("heading", { level: 2, name: "Scadenze" }),
     ).toBeVisible();
+    await expect(deadlines.getByText("In arrivo")).toHaveCount(0);
   });
 });

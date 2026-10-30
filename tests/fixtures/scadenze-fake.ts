@@ -8,8 +8,8 @@ import type { Page, Route } from "@playwright/test";
 // browser reads the deadlines through this fake (page.route) and nothing is
 // ever written to the database. Everything else (sign-in, Nest, members, page
 // code) is real: the members are read from the real response and passed on.
-// The two numbers of the other sections (Spesa, Da fare) are faked too, so the
-// selector looks like the mockup whatever the other suites left in the Nest.
+// Casa reads the three lists on every page: the tests also install the fakes of
+// Spesa and Da fare (spesa-fake.ts, todos-fake.ts) before this one.
 
 export type FakeMemberName = "Marco" | "Laura" | "Sofia" | "Tommaso";
 
@@ -29,8 +29,6 @@ export type FakeOptions = {
   deadlines?: FakeDeadline[];
   /** "slow": the reads wait until release() is called; "error": they fail with a database error */
   reads?: "ok" | "slow" | "error";
-  /** Numbers shown by the Spesa and Da fare entries of the selector */
-  counts?: { spesa: number; todo: number };
 };
 
 export type ScadenzeFake = {
@@ -80,35 +78,29 @@ export async function installScadenzeFake(
   const idOf = (name: string | null | undefined) =>
     name ? (members?.find((m) => m.name === name)?.id ?? null) : null;
 
-  // The members list is real: read the response, remember it, pass it on.
-  await page.route("**/rest/v1/household_members?*", async (route) => {
-    const url = route.request().url();
+  // The members list is real: read the response and remember it. A response
+  // listener (not a route) so that the fakes of the other lists of Casa, which
+  // read the same list, can be installed on the same page.
+  page.on("response", async (response) => {
+    const request = response.request();
     if (
-      route.request().method() !== "GET" ||
-      !url.includes("order=created_at")
+      request.method() !== "GET" ||
+      !response.url().includes("/rest/v1/household_members?") ||
+      !response.url().includes("order=created_at")
     ) {
-      return route.continue();
+      return;
     }
     try {
-      const response = await route.fetch();
-      const body = await response.body();
-      try {
-        const parsed = JSON.parse(body.toString("utf8")) as Member[];
-        // Only the list that carries the names (other reads may exist).
-        if (Array.isArray(parsed) && parsed.every((m) => "name" in m)) {
-          members = parsed;
-          resolveMembers();
-        }
-      } catch {
-        // not a members list: ignore
+      const parsed = JSON.parse(
+        (await response.body()).toString("utf8"),
+      ) as Member[];
+      // Only the list that carries the names (other reads may exist).
+      if (Array.isArray(parsed) && parsed.every((m) => "name" in m)) {
+        members = parsed;
+        resolveMembers();
       }
-      return await route.fulfill({
-        status: response.status(),
-        headers: response.headers(),
-        body,
-      });
     } catch {
-      return route.continue().catch(() => {});
+      // not a members list, or the page is gone: ignore
     }
   });
 
@@ -137,30 +129,6 @@ export async function installScadenzeFake(
     }));
     return json(route, 200, rows);
   });
-
-  // The numbers of the other two sections of the selector.
-  const counts = options.counts ?? { spesa: 4, todo: 4 };
-  for (const [table, value] of [
-    ["shopping_items", counts.spesa],
-    ["todos", counts.todo],
-  ] as const) {
-    await page.route(`**/rest/v1/${table}?*`, async (route) => {
-      const method = route.request().method();
-      if (method === "OPTIONS") {
-        return route.fulfill({ status: 204, headers: CORS });
-      }
-      if (method !== "HEAD" && method !== "GET") return route.continue();
-      return route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        headers: {
-          ...CORS,
-          "content-range": value === 0 ? "*/0" : `0-${value - 1}/${value}`,
-        },
-        body: method === "HEAD" ? "" : "[]",
-      });
-    });
-  }
 
   return {
     release: () => release(),

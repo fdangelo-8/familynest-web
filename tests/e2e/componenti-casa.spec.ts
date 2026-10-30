@@ -477,23 +477,42 @@ test.describe("Rotte di Casa e segnaposto", () => {
     });
   });
 
-  // Da fare is a real page since #23 (CasaPage, no placeholder): its own checks.
-  test("CA-26: la pagina da-fare ha metadata, requireNest e CasaPage (non più il segnaposto)", () => {
-    const file = "src/app/(app)/casa/da-fare/page.tsx";
-    expect(existsSync(file)).toBe(true);
-    const source = readFileSync(file, "utf8");
-    expect(source).toContain('title: "FamilyNest · Casa · Da fare"');
-    expect(source).toContain("<CasaPage");
-    expect(source).not.toContain("PlaceholderPage");
-    // requireNest() is the first statement of the page function.
-    const body = source.slice(source.indexOf("export default"));
-    const open = body.indexOf("{", body.indexOf(")"));
-    expect(
-      body
-        .slice(open + 1)
-        .replace(/^(\s*\/\/[^\n]*\n)+/, "")
-        .trimStart(),
-    ).toMatch(/^const frame = await requireNest\(\)/);
+  // The three pages are real since #21, #23 and #24, and all draw the same
+  // CasaPage (src/components/casa/): no placeholder is left in Casa.
+  test("CA-26: le pagine di Casa hanno metadata, requireNest e CasaPage (nessun segnaposto)", () => {
+    const pages = [
+      ["spesa", "Spesa", "spesa"],
+      ["da-fare", "Da fare", "da-fare"],
+      ["scadenze", "Scadenze", "scadenze"],
+    ] as const;
+    for (const [dir, label, current] of pages) {
+      const file = `src/app/(app)/casa/${dir}/page.tsx`;
+      expect(existsSync(file), file).toBe(true);
+      const source = readFileSync(file, "utf8");
+      expect(source, file).toContain(`title: "FamilyNest · Casa · ${label}"`);
+      expect(source, file).toContain(
+        'import { CasaPage } from "@/components/casa/CasaPage"',
+      );
+      expect(source, file).toContain(
+        `<CasaPage nestName={frame.nestName} current="${current}" />`,
+      );
+      expect(source, file).not.toContain("PlaceholderPage");
+      // requireNest() is the first statement of the page function.
+      const body = source.slice(source.indexOf("export default"));
+      const open = body.indexOf("{", body.indexOf(")"));
+      expect(
+        body
+          .slice(open + 1)
+          .replace(/^(\s*\/\/[^\n]*\n)+/, "")
+          .trimStart(),
+        file,
+      ).toMatch(/^const frame = await requireNest\(\)/);
+    }
+    // The old homes of the page are gone.
+    expect(existsSync("src/components/casa-da-fare/CasaPage.tsx")).toBe(false);
+    expect(existsSync("src/components/casa-scadenze/ScadenzePage.tsx")).toBe(
+      false,
+    );
   });
 
   test("CA-27: senza sessione Da fare e Scadenze portano a /accesso", async ({
