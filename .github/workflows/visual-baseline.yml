@@ -26,28 +26,22 @@ jobs:
   baseline:
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
+    # Same setup as the CI test job: a throwaway local Supabase with migrations,
+    # seed and test users created for this run. The remote project is never touched.
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
-      - name: Read pinned Playwright version
-        id: pw
-        run: echo "version=$(node -p "require('./package.json').devDependencies['@playwright/test']")" >> "$GITHUB_OUTPUT"
-      - name: Update snapshots inside the official Playwright container
+          cache: npm
+      - run: npm ci
+
+      - name: Check inputs
         env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
-          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
-          TEST_USER_A_EMAIL: ${{ secrets.TEST_USER_A_EMAIL }}
-          TEST_USER_A_PASSWORD: ${{ secrets.TEST_USER_A_PASSWORD }}
-          TEST_USER_B_EMAIL: ${{ secrets.TEST_USER_B_EMAIL }}
-          TEST_USER_B_PASSWORD: ${{ secrets.TEST_USER_B_PASSWORD }}
           SPEC: ${{ inputs.spec || 'tests/visual' }}
-          UPDATE: ${{ inputs.update || 'changed' }}
         run: |
-          # Only paths under tests/visual are accepted, so the input cannot inject shell.
+          # Only paths under tests/visual are accepted.
           for p in $SPEC; do
             case "$p" in
               tests/visual|tests/visual/*) ;;
@@ -55,13 +49,52 @@ jobs:
             esac
             case "$p" in *[!A-Za-z0-9._/-]*) echo "::error::invalid characters in spec: $p"; exit 1 ;; esac
           done
-          docker run --rm --ipc=host -v "$PWD":/work -w /work \
-            -e CI=true \
-            -e NEXT_PUBLIC_SUPABASE_URL -e NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY -e SUPABASE_SECRET_KEY \
-            -e TEST_USER_A_EMAIL -e TEST_USER_A_PASSWORD -e TEST_USER_B_EMAIL -e TEST_USER_B_PASSWORD \
-            -e SPEC -e UPDATE \
+
+      - name: Start throwaway Supabase
+        run: npx supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor
+
+      - name: Create local test users
+        run: |
+          set -euo pipefail
+          eval "$(npx supabase status -o env)"
+          case "$API_URL" in
+            http://127.0.0.1:*) ;;
+            *) echo "::error::Supabase locale non trovato."; exit 1 ;;
+          esac
+          env_file="$RUNNER_TEMP/test.env"
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL"
+            echo "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=${PUBLISHABLE_KEY:-$ANON_KEY}"
+            echo "SUPABASE_SECRET_KEY=${SECRET_KEY:-$SERVICE_ROLE_KEY}"
+          } > "$env_file"
+          for key in A B B2 C; do
+            password="$(openssl rand -hex 16)"
+            echo "::add-mask::$password"
+            {
+              echo "TEST_USER_${key}_EMAIL=ci-$(echo "$key" | tr '[:upper:]' '[:lower:]')@example.test"
+              echo "TEST_USER_${key}_PASSWORD=$password"
+            } >> "$env_file"
+          done
+          set -a
+          . "$env_file"
+          set +a
+          node scripts/seed-test-users.ts
+
+      - name: Read pinned Playwright version
+        id: pw
+        run: echo "version=$(node -p "require('./package.json').devDependencies['@playwright/test']")" >> "$GITHUB_OUTPUT"
+
+      - name: Update snapshots inside the official Playwright container
+        env:
+          SPEC: ${{ inputs.spec || 'tests/visual' }}
+          UPDATE: ${{ inputs.update || 'changed' }}
+        run: |
+          docker run --rm --network host --ipc host \
+            --env-file "$RUNNER_TEMP/test.env" -e CI=true -e SPEC -e UPDATE \
+            -v "$GITHUB_WORKSPACE:/work" -w /work \
             "mcr.microsoft.com/playwright:v${{ steps.pw.outputs.version }}-noble" \
-            bash -c 'npm ci && npx playwright test $SPEC --update-snapshots=$UPDATE'
+            bash -c 'npx playwright test $SPEC --update-snapshots=$UPDATE'
+
       # Upload even when unrelated specs fail, so the references of the passing ones are not lost.
       - uses: actions/upload-artifact@v4
         if: always()
