@@ -477,26 +477,24 @@ test.describe("Rotte di Casa e segnaposto", () => {
     });
   });
 
-  // Scadenze has its own page since #24: the placeholder check stays for Da fare.
-  for (const [dir, key] of [["da-fare", "casa-da-fare"]] as const) {
-    test(`CA-26: la pagina ${dir} ha metadata, requireNest e PlaceholderPage`, () => {
-      const file = `src/app/(app)/casa/${dir}/page.tsx`;
-      expect(existsSync(file)).toBe(true);
-      const source = readFileSync(file, "utf8");
-      expect(source).toContain(`PLACEHOLDERS["${key}"].browserTitle`);
-      expect(source).toMatch(/title:\s*PLACEHOLDERS\[/);
-      expect(source).toContain(`<PlaceholderPage pageKey="${key}"`);
-      // requireNest() is the first statement of the page function.
-      const body = source.slice(source.indexOf("export default"));
-      const open = body.indexOf("{", body.indexOf(")"));
-      expect(
-        body
-          .slice(open + 1)
-          .replace(/^(\s*\/\/[^\n]*\n)+/, "")
-          .trimStart(),
-      ).toMatch(/^await requireNest\(\)/);
-    });
-  }
+  // Da fare is a real page since #23 (CasaPage, no placeholder): its own checks.
+  test("CA-26: la pagina da-fare ha metadata, requireNest e CasaPage (non più il segnaposto)", () => {
+    const file = "src/app/(app)/casa/da-fare/page.tsx";
+    expect(existsSync(file)).toBe(true);
+    const source = readFileSync(file, "utf8");
+    expect(source).toContain('title: "FamilyNest · Casa · Da fare"');
+    expect(source).toContain("<CasaPage");
+    expect(source).not.toContain("PlaceholderPage");
+    // requireNest() is the first statement of the page function.
+    const body = source.slice(source.indexOf("export default"));
+    const open = body.indexOf("{", body.indexOf(")"));
+    expect(
+      body
+        .slice(open + 1)
+        .replace(/^(\s*\/\/[^\n]*\n)+/, "")
+        .trimStart(),
+    ).toMatch(/^const frame = await requireNest\(\)/);
+  });
 
   test("CA-27: senza sessione Da fare e Scadenze portano a /accesso", async ({
     page,

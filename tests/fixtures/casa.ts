@@ -12,8 +12,8 @@ import {
 } from "./throwaway-user";
 
 // Helpers shared by the tests of Casa · Da fare (#23) and Casa · Scadenze (#24).
-// Written before the pages exist: selectors use the roles and texts of the
-// requirements (TODO(#23) / TODO(#24) mark what to check against the code).
+// Selectors use the roles and texts of the requirements (the Da fare ones are
+// checked against the code of PR #127; Scadenze (#24) is still to be checked).
 //
 // Data: every test that creates or changes data uses its own throwaway Nest
 // (users created with the administrative key, marked as test users, removed at
