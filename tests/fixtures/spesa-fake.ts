@@ -8,6 +8,10 @@ import type { Page, Route } from "@playwright/test";
 // browser reads and writes the list through this fake (page.route) and nothing
 // is ever written to the database. Everything else (sign-in, Nest, members,
 // page code) is real: members are read from the real response and passed on.
+//
+// The «Da fare» column is drawn next to the Spesa at 1280 px since #23 and
+// reads `todos`: that read is faked too, always an empty list, so the column
+// never shows the real things to do of the test user.
 
 export type FakeMemberName = "Marco" | "Laura" | "Biscotto";
 
@@ -136,6 +140,15 @@ export async function installSpesaFake(
       // Offline or the page is gone: let the request fail by itself.
       return route.continue().catch(() => {});
     }
+  });
+
+  await page.route("**/rest/v1/todos*", async (route) => {
+    const method = route.request().method();
+    if (method === "OPTIONS") {
+      return route.fulfill({ status: 204, headers: CORS });
+    }
+    if (method === "GET") return json(route, 200, []);
+    return route.fulfill({ status: 204, headers: CORS, body: "" });
   });
 
   await page.route("**/rest/v1/shopping_items*", async (route) => {

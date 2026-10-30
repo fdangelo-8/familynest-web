@@ -422,14 +422,15 @@ test.describe("sessione con utenti", () => {
     await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
     await expect(mainNav(page).locator('[aria-current="page"]')).toHaveCount(0);
   });
-  test("/casa/da-fare è «In arrivo»: un solo h1 e Casa attiva", async ({
+  test("/casa/da-fare è la pagina vera (#23): un solo h1 e Casa attiva", async ({
     page,
     baseURL,
   }, testInfo) => {
     test.skip(testInfo.project.name !== "mobile", "Caso a 390 px");
     withUser("A");
     await openAs(page, baseURL, "A", "/casa/da-fare");
-    await expect(page.getByText("In arrivo")).toBeVisible();
+    await expect(page.getByRole("region", { name: "Da fare" })).toBeVisible();
+    await expect(page.getByTestId("pagina-segnaposto")).toHaveCount(0);
     await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
     // Casa is highlighted for a related page: "true", not "page" (#67)
     const active = mainNav(page).locator("[aria-current]");
@@ -462,6 +463,14 @@ test.describe("segnaposto", () => {
           page.getByRole("textbox", {
             name: /^(Aggiungi alla spesa…|Cosa manca in casa\?)$/,
           }),
+        ).toBeVisible();
+        return;
+      }
+      if (route === "/casa/da-fare") {
+        // Real page since #23: no placeholder, the «Da fare» column is there.
+        await expect(page.getByTestId("pagina-segnaposto")).toHaveCount(0);
+        await expect(
+          page.getByRole("region", { name: "Da fare" }),
         ).toBeVisible();
         return;
       }
