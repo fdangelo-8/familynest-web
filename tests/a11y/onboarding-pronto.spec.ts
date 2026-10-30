@@ -46,7 +46,7 @@ function contrast(fg: string, bg: string): number {
   return (a! + 0.05) / (b! + 0.05);
 }
 
-async function expectContrast(page: Page) {
+async function expectContrast(page: Page, minPairs = 4) {
   const pairs = await page.evaluate(() => {
     const root = Array.from(
       document.querySelectorAll<HTMLElement>(
@@ -76,7 +76,7 @@ async function expectContrast(page: Page) {
       })(),
     ].filter(Boolean);
   });
-  expect(pairs.length).toBeGreaterThan(3);
+  expect(pairs.length).toBeGreaterThanOrEqual(minPairs);
   for (const p of pairs) {
     expect(
       contrast(p!.fg, p!.bg),
@@ -120,7 +120,8 @@ test.describe("onboarding · pronto · accessibilità", () => {
       await openReady(page, user, baseURL);
       await settle(page);
       await expectNoBlocking(page);
-      await expectContrast(page);
+      // No list in the empty state: heading, brand and button only.
+      await expectContrast(page, 3);
     } finally {
       await user.remove();
     }
