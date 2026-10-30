@@ -320,6 +320,72 @@ test.describe("dati preparati dal test", () => {
     });
   });
 
+  test("CA-6 (stato vuoto): Nest «Solo io» senza nessun ul nel DOM e «Vai a Oggi» sotto il titolo", async ({
+    page,
+    baseURL,
+  }) => {
+    await withNest(async ({ user }) => {
+      await user.signInContext(page.context(), baseURL as string);
+      await openPage(page);
+      // No empty list and no thread, in either of the two layouts.
+      await expect(page.locator("ul")).toHaveCount(0);
+      await expect(page.locator(".lista--notte")).toHaveCount(0);
+      await expect(page.getByText(/Invit/)).toHaveCount(0);
+      const heading = await page
+        .getByRole("heading", { level: 1 })
+        .boundingBox();
+      const link = await goLink(page).boundingBox();
+      expect(heading).not.toBeNull();
+      expect(link).not.toBeNull();
+      expect(link!.y).toBeGreaterThan(heading!.y + heading!.height);
+      if (test.info().project.name === "mobile") {
+        // Free space sits between the title and the button, which stays low.
+        const viewport = page.viewportSize()!;
+        expect(link!.y + link!.height).toBeGreaterThan(viewport.height * 0.8);
+      }
+    });
+  });
+
+  test("CA-1 e CA-2: Nest con un invito ancora valido ha una sola lista con una sola riga", async ({
+    page,
+    baseURL,
+  }) => {
+    await withNest(async ({ user, addAdult, invite }) => {
+      await invite(await addAdult("Laura"));
+      await user.signInContext(page.context(), baseURL as string);
+      await openPage(page);
+      await expect(page.getByRole("list")).toHaveCount(1);
+      await expect(summary(page)).toHaveCount(1);
+      await expect(summary(page).nth(0)).toHaveText(
+        "Invito condiviso con Laura",
+      );
+      await expect(page.getByText(TIP_PREFIX)).toHaveCount(0);
+      await expect(goLink(page)).toHaveAttribute("href", "/oggi");
+    });
+  });
+
+  test("CA-5: invito scaduto in un Nest preparato dal test: nessuna lista, nessun «Invit», nessun consiglio", async ({
+    page,
+    baseURL,
+  }) => {
+    await withNest(async ({ user, addAdult, invite }) => {
+      const anna = await addAdult("Anna");
+      await invite(anna);
+      const { error } = await user.admin
+        .from("invitations")
+        .update({ expires_at: new Date(Date.now() - 60_000).toISOString() })
+        .eq("member_id", anna);
+      expect(error).toBeNull();
+      await user.signInContext(page.context(), baseURL as string);
+      await openPage(page);
+      await expect(page.getByRole("list")).toHaveCount(0);
+      await expect(page.locator("ul")).toHaveCount(0);
+      await expect(page.getByText(/Invit/)).toHaveCount(0);
+      await expect(page.getByText(TIP_PREFIX)).toHaveCount(0);
+      await expect(goLink(page)).toBeVisible();
+    });
+  });
+
   test("CA-7: due inviti validi danno una sola riga «Inviti condivisi con Laura e Carla»", async ({
     page,
     baseURL,
