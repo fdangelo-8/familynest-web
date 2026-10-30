@@ -414,6 +414,50 @@ test.describe("righe, ordine e testi", () => {
     );
   });
 
+  test("CA-11: con sole scadute c'è «Scadute» e non c'è «Prossime»", async ({
+    page,
+    baseURL,
+    casa,
+  }) => {
+    await casa.deadline("Marco", { title: "Scaduta ieri", due: "2026-10-19" });
+    await casa.deadline("Marco", {
+      title: "Scaduta da cinque",
+      due: "2026-10-15",
+    });
+    await open(page, baseURL, casa);
+    await expect(col(page).getByRole("heading", { level: 3 })).toHaveText([
+      "Scadute",
+    ]);
+    await expect(col(page).getByTestId("scadenze-prossime")).toHaveCount(0);
+    await expect(
+      col(page).getByRole("heading", { level: 3, name: "Prossime" }),
+    ).toHaveCount(0);
+    const overdue = col(page).getByTestId("scadenze-scadute");
+    await expect(overdue.locator(".sezione__info").first()).toHaveText("2");
+    await expect(titles(overdue)).toHaveText([
+      "Scaduta da cinque",
+      "Scaduta ieri",
+    ]);
+    await expect(emptyTitle(page)).toHaveCount(0);
+  });
+
+  test("CA-11: una scadenza con data di oggi resta in «Prossime», senza «Scadute»", async ({
+    page,
+    baseURL,
+    casa,
+  }) => {
+    await casa.deadline("Marco", { title: "Oggi scade", due: "2026-10-20" });
+    await open(page, baseURL, casa);
+    await expect(col(page).getByRole("heading", { level: 3 })).toHaveText([
+      "Prossime",
+    ]);
+    await expect(col(page).getByTestId("scadenze-scadute")).toHaveCount(0);
+    await expect(titles(col(page).getByTestId("scadenze-prossime"))).toHaveText(
+      ["Oggi scade"],
+    );
+    await expect(numberOf(page, "Oggi scade")).toHaveText("Oggi");
+  });
+
   test("CA-12: a mezzanotte e mezza in Italia il conto dei giorni è quello di Roma", async ({
     page,
     baseURL,
