@@ -1095,6 +1095,35 @@ test.describe("il tuo colore (08)", () => {
     });
   });
 
+  test("CA-24b: con «Continua» in corso, il clic su «Indietro» non cambia pagina", async ({
+    page,
+    baseURL,
+  }) => {
+    needsThrowaway();
+    await withNestAndVisitor(async (nest, visitor) => {
+      await visitor.signInContext(page.context(), baseURL as string);
+      await page.goto(linkOf(originOf(baseURL), nest.invite.token));
+      await page.goto("/invito/colore");
+      await colorPageReady(page);
+
+      await page.route(
+        (url) => url.pathname === "/invito/colore",
+        async (route) => {
+          if (route.request().method() !== "POST") return route.continue();
+          // The request never ends: «Continua» stays in progress.
+          return new Promise<void>(() => undefined);
+        },
+      );
+      const button = continueButton(page);
+      await button.click();
+      await expect(button).toHaveAttribute("aria-busy", "true");
+      const back = backControl(page);
+      await expect(back).toHaveAttribute("aria-disabled", "true");
+      await back.dispatchEvent("click");
+      await expect(page).toHaveURL(`${originOf(baseURL)}/invito/colore`);
+    });
+  });
+
   test("CA-24: «Indietro» riporta alla 07 nello stato normale (anche su desktop)", async ({
     page,
     baseURL,

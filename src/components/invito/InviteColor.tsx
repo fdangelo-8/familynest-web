@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/ColorChoice/ColorChoice";
 import { Icon } from "@/components/ui/Icon/Icon";
 import { HOUSEHOLD_FULL_MESSAGE } from "@/lib/household-limits";
-import styles from "./invito.module.css";
 import { colorHelp, colorWithArticle } from "./invite-text";
 
 export type InviteColorProps = {
@@ -289,7 +288,7 @@ export function InviteColor({
             <Link
               href="/invito"
               prefetch={false}
-              className={`btn-link btn-link--secondario ${styles.backInactive}`}
+              className="btn-link btn-link--secondario"
               aria-disabled={sending || undefined}
               onClick={(event) => {
                 if (sending) event.preventDefault();

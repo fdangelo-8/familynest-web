@@ -511,6 +511,10 @@ test.describe("invito · il tuo colore (08) · accessibilità", () => {
     await expect(alert).toBeVisible();
     await expect(alert.getByRole("button")).toHaveCount(0);
     await expect(shown(page, "button", "Continua")).toBeDisabled();
+    // «Indietro» stays active when the Nest is full (#143).
+    const back = shown(page, "link", "Indietro");
+    await expect(back).toHaveAttribute("href", "/invito");
+    await expect(back).not.toHaveAttribute("aria-disabled", /.*/);
     await expectNoBlocking(page);
     await expectStructure(page);
   });
@@ -531,6 +535,12 @@ test.describe("invito · il tuo colore (08) · accessibilità", () => {
       await expect(
         page.locator(".skeleton:not([aria-hidden='true'])"),
       ).toHaveCount(0);
+      // On desktop «Indietro» is a real, active link (#143).
+      if (!isMobile()) {
+        const back = shown(page, "link", "Indietro");
+        await expect(back).toHaveAttribute("href", "/invito");
+        await expect(back).not.toHaveAttribute("aria-disabled", /.*/);
+      }
     });
   });
 });
