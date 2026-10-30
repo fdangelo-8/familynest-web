@@ -155,6 +155,7 @@ test.describe("invito: funzioni condivise", () => {
       invitee_name: "Marco",
       invitee_color: "glicine",
       expires_at: "2026-10-27T10:00:00Z",
+      caller_is_member: false,
       members: [
         { initial: "L", color: "pomodoro", name: "Laura" },
         { initial: "S", color: "salvia", name: null },
@@ -178,6 +179,35 @@ test.describe("invito: funzioni condivise", () => {
     expect(shapePreview({ ...row, status: "expired" }, true)).toEqual({
       status: "invalid",
     });
+  });
+
+  test("caller_is_member: vero, falso, e null come errore per un invito valido", () => {
+    const row: PreviewRow = {
+      status: "valid",
+      household_name: "Rossi",
+      inviter_name: null,
+      message: null,
+      invitee_name: "Marco",
+      invitee_color: "glicine",
+      expires_at: "2026-10-27T10:00:00Z",
+      caller_is_member: true,
+      members: [],
+    };
+    const yes = shapePreview(row, false);
+    if (yes.status !== "valid") throw new Error("expected valid");
+    expect(yes.callerIsMember).toBe(true);
+    const no = shapePreview({ ...row, caller_is_member: false }, false);
+    if (no.status !== "valid") throw new Error("expected valid");
+    expect(no.callerIsMember).toBe(false);
+    expect(shapePreview({ ...row, caller_is_member: null }, false)).toEqual({
+      status: "error",
+    });
+    expect(
+      shapePreview(
+        { ...row, status: "expired", caller_is_member: null },
+        false,
+      ),
+    ).toEqual({ status: "invalid" });
   });
 
   test("S5: testi di errore dell'accesso", () => {
