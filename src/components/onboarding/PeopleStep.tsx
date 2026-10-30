@@ -53,11 +53,11 @@ type SheetState = {
 };
 
 /**
- * Where "Continua" goes. Provisional (#13): Calendario (#37) and Invito
- * (#14) are not on main yet, so it ends in Pronto (#15). Each of those pages
- * moves this when it arrives.
+ * Where "Continua" goes. Provisional (#13): Calendario (#37) is not on main
+ * yet. The Invito page sends straight on to Pronto when there is no adult to
+ * invite ("Solo io"), so this does not need to know.
  */
-const NEXT_STEP = "/onboarding/pronto";
+const NEXT_STEP = "/onboarding/invito";
 
 function Roster({
   prefix,
