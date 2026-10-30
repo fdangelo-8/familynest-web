@@ -28,13 +28,24 @@ function failureOf(error: NonNullable<DbError>): InviteFailure {
   return error.code ? "server" : "network";
 }
 
-/** The pending invitation of the adult, if any (the database allows one). */
-async function readPending(supabase: Supabase, memberId: string) {
-  return supabase
+/**
+ * The pending invitation of the adult, if any (the database allows one).
+ * With `validAt` only one that has not expired by then counts. The reread
+ * after the insert passes it: Next merges identical GET requests of one
+ * render, so the same query as the first read would return the same empty
+ * answer instead of the new invitation.
+ */
+async function readPending(
+  supabase: Supabase,
+  memberId: string,
+  validAt?: string,
+) {
+  const pending = supabase
     .from("invitations")
     .select("id, token, expires_at")
     .eq("member_id", memberId)
-    .eq("status", "pending")
+    .eq("status", "pending");
+  return (validAt ? pending.gt("expires_at", validAt) : pending)
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -80,7 +91,11 @@ async function ensureInvitation(
     if (created.error && created.error.code !== "23505") {
       return { ok: false, failure: failureOf(created.error) };
     }
-    const reread = await readPending(supabase, memberId);
+    const reread = await readPending(
+      supabase,
+      memberId,
+      new Date().toISOString(),
+    );
     if (reread.error) return { ok: false, failure: failureOf(reread.error) };
     if (!reread.data || Date.parse(reread.data.expires_at) <= Date.now()) {
       return { ok: false, failure: "server" };
