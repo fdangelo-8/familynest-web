@@ -27,6 +27,9 @@ export function safeNextPath(raw: string | null | undefined): string | null {
   if (path.includes("\\")) return null;
   if (path === "/auth" || path.startsWith("/auth/")) return null;
   if (path.startsWith("/accesso")) return null;
+  // The pages of an invitation carry the token in the address: only the colour
+  // page may be a destination, never `/invito/<token>`.
+  if (path.startsWith("/invito/") && path !== "/invito/colore") return null;
   // The normalised form is what gets used.
   return path + url.search;
 }

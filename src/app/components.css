@@ -4103,6 +4103,30 @@ button.riga-lista {
   cursor: not-allowed;
 }
 
+/* Ingresso con invito (#16) e Un membro del Nest (#18) */
+
+/* Cerchio «+N» del gruppo di avatar della 07: stessa forma di .avatar--vuoto, bordo pieno. Solo su fondo notte. */
+.avatar--altri {
+  background: var(--color-notte);
+  border: var(--border-medio) solid var(--color-latte-2);
+  color: var(--color-latte);
+}
+
+/* Una parola più lunga della riga va a capo invece di uscire (#15, #16): cambia solo in quel caso */
+.claim,
+.anteprima-avatar__nome,
+.split-onboarding__passo .intestazione__titolo {
+  overflow-wrap: break-word;
+}
+
+/* .btn-pericolo in caricamento: lo spinner sta a sinistra del testo senza spostarlo né allargare il bottone (#18) */
+.btn-pericolo.is-caricamento .spinner {
+  position: absolute;
+  top: calc(50% - var(--size-icona-s) / 2);
+  right: 100%;
+  margin-right: var(--space-1);
+}
+
 /* Movimento ridotto: niente animazioni né transizioni, ovunque */
 @media (prefers-reduced-motion: reduce) {
   *,

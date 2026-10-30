@@ -8,6 +8,8 @@ export type ToggleProps = {
   onChange: (checked: boolean) => void;
   /** Required: the switch has no visible text */
   "aria-label": string;
+  /** `id` of a help text that describes the switch */
+  "aria-describedby"?: string;
   disabled?: boolean;
   className?: string;
   "data-testid"?: string;
@@ -20,6 +22,7 @@ export function Toggle({
   disabled,
   className,
   "aria-label": ariaLabel,
+  "aria-describedby": describedBy,
   "data-testid": testId,
 }: ToggleProps) {
   return (
@@ -28,6 +31,7 @@ export function Toggle({
       role="switch"
       aria-checked={checked}
       aria-label={ariaLabel}
+      aria-describedby={describedBy}
       disabled={disabled}
       className={cx("toggle", className)}
       onClick={() => onChange(!checked)}

@@ -139,6 +139,18 @@ function romeDayNumber(value: Instant): number {
 }
 
 /**
+ * Number of calendar days from `now` to `target`, counted in Rome (not in
+ * 24-hour blocks): 0 the same day, 1 the next day, negative if `target` is
+ * earlier. The number behind `formatDaysUntil`, for texts like «ancora 6 giorni».
+ */
+export function calendarDaysUntil(
+  target: Instant,
+  now: Instant = new Date(),
+): number {
+  return romeDayNumber(target) - romeDayNumber(now);
+}
+
+/**
  * Calendar days from `now` to `target`, counted in Rome (not in 24-hour blocks):
  * `oggi`, `domani`, `tra 6 giorni`, `ieri`, `3 giorni fa`.
  */
@@ -146,7 +158,7 @@ export function formatDaysUntil(
   target: Instant,
   now: Instant = new Date(),
 ): string {
-  const days = romeDayNumber(target) - romeDayNumber(now);
+  const days = calendarDaysUntil(target, now);
   if (days === 0) return "oggi";
   if (days === 1) return "domani";
   if (days === -1) return "ieri";
