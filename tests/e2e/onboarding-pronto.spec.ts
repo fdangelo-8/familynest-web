@@ -24,7 +24,7 @@ import {
 test.use({ locale: "it-IT", timezoneId: "Europe/Rome" });
 
 const PATH = "/onboarding/pronto";
-const TIP = "Prova a scrivere";
+const TIP_PREFIX = "Prova a scrivere";
 const NEST_A = "Casa D'Angelo";
 const NEST_B = "Casa Bianchi";
 const A_NAMES = "Marco, Laura, Sofia, Tommaso, Biscotto";
@@ -181,7 +181,7 @@ async function withNest(body: (ctx: NestContext) => Promise<void>) {
 test.describe("contenuto", () => {
   test.beforeEach(() => needsUsers("A"));
 
-  test("CA-1 e CA-2: A vede titolo, avatar, due righe e il link «Vai a Oggi»", async ({
+  test("CA-1 e CA-2: A vede titolo, avatar, la riga dell'invito e il link «Vai a Oggi»", async ({
     page,
     baseURL,
   }) => {
@@ -190,7 +190,7 @@ test.describe("contenuto", () => {
     await expectAvatars(page, A_NAMES, A_INITIALS, A_COLORS);
     await expect(summary(page)).toHaveCount(1);
     await expect(summary(page).nth(0)).toHaveText("Invito condiviso con Laura");
-    await expect(page.getByText(TIP)).toHaveCount(0);
+    await expect(page.getByText(TIP_PREFIX)).toHaveCount(0);
     await expect(goLink(page)).toHaveAttribute("href", "/oggi");
     await expect(page.getByRole("progressbar")).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Indietro" })).toHaveCount(0);
@@ -271,7 +271,7 @@ test.describe("contenuto", () => {
     await expectAvatars(page, "Giulia, Paolo, Leo, Anna", ["G", "P", "L", "A"]);
     await expect(page.getByRole("list")).toHaveCount(0);
     await expect(page.getByText(/Invit/)).toHaveCount(0);
-    await expect(page.getByText(TIP)).toHaveCount(0);
+    await expect(page.getByText(TIP_PREFIX)).toHaveCount(0);
   });
 
   test("CA-11: A non vede la riga del calendario (provvisorio, #37)", async ({
@@ -305,7 +305,7 @@ test.describe("contenuto", () => {
 test.describe("dati preparati dal test", () => {
   test.beforeEach(() => needsThrowaway());
 
-  test("CA-6 (stato vuoto): Nest «Solo io» con un avatar e il solo consiglio", async ({
+  test("CA-6 (stato vuoto): Nest «Solo io» con un avatar e nessuna lista", async ({
     page,
     baseURL,
   }) => {
@@ -315,7 +315,7 @@ test.describe("dati preparati dal test", () => {
       await expectHeading(page, nest);
       await expectAvatars(page, "Ilaria", ["I"]);
       await expect(page.getByRole("list")).toHaveCount(0);
-      await expect(page.getByText(TIP)).toHaveCount(0);
+      await expect(page.getByText(TIP_PREFIX)).toHaveCount(0);
       await expect(goLink(page)).toBeVisible();
     });
   });
