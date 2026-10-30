@@ -616,6 +616,29 @@ test.describe("accesso e redirect", () => {
     expect(after.status).toBe("pending");
   });
 
+  test("CA-28 bis: un altro Nest con lo stesso nome non è il Nest dell'invito", async ({
+    page,
+    baseURL,
+  }) => {
+    needsThrowaway();
+    await withNestAndVisitor(async (nest, visitor) => {
+      const origin = originOf(baseURL);
+      // The visitor founds a Nest with the very same name as the one inviting.
+      const created = await visitor.client.rpc("create_household", {
+        name: nest.nest,
+        household_type: "single",
+        member_name: "Giorgio",
+        color: "pomodoro",
+      });
+      expect(created.error).toBeNull();
+      await visitor.signInContext(page.context(), baseURL as string);
+      await page.goto(linkOf(origin, nest.invite.token));
+      await expect(page).toHaveURL(/\/invito(\?stato=altro-nest)?$/);
+      await expectOtherNest(page);
+      expect(await inviteCookie(page)).toBeUndefined();
+    });
+  });
+
   test("CA-28: B, in un altro Nest, vede «Sei già in un altro Nest» e non il Nest dell'invito", async ({
     page,
     baseURL,

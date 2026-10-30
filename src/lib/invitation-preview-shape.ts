@@ -22,6 +22,8 @@ export type InvitationPreview<M extends InvitationMember = InvitationMember> =
       inviteeName: string;
       inviteeColor: MemberColor;
       expiresAt: string;
+      /** Whether the signed-in caller already belongs to the Nest of the invitation. */
+      callerIsMember: boolean;
       members: M[];
     }
   | { status: "invalid" }
@@ -36,6 +38,8 @@ export type PreviewRow = {
   invitee_name: string | null;
   invitee_color: MemberColor | null;
   expires_at: string | null;
+  /** `null` only for an invalid invitation; for a valid one it is an error. */
+  caller_is_member: boolean | null;
   members: Array<{
     initial: string | null;
     color: MemberColor | null;
@@ -60,7 +64,8 @@ export function shapePreview(
     !row.household_name ||
     !row.invitee_name ||
     !row.invitee_color ||
-    !row.expires_at
+    !row.expires_at ||
+    typeof row.caller_is_member !== "boolean"
   ) {
     return { status: "error" };
   }
@@ -81,6 +86,7 @@ export function shapePreview(
     inviteeName: row.invitee_name,
     inviteeColor: row.invitee_color,
     expiresAt: row.expires_at,
+    callerIsMember: row.caller_is_member,
     members,
   };
 }
