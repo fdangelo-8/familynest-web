@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { NORMAL_LIST, installSpesaFake } from "../fixtures/spesa-fake";
 import { hasTestUser, signInAs } from "../fixtures/visual-login";
 
 // Layout and navigation (#10): the app frame in every section, at 390 and
@@ -42,8 +43,13 @@ test.beforeEach(async ({ page, context, baseURL }) => {
 });
 
 async function open(page: import("@playwright/test").Page, route: string) {
+  // Casa · Spesa (#21) shows the shopping list: a fixed list, served by a fake,
+  // so the reference does not depend on what other suites write in the Nest.
+  const isSpesa = route === "/casa/spesa";
+  if (isSpesa) await installSpesaFake(page, { items: NORMAL_LIST });
   await page.goto(route);
   await expect(page.getByRole("main")).toBeVisible();
+  if (isSpesa) await expect(page.getByTestId("spesa-riga")).toHaveCount(7);
   await page.evaluate(() => document.fonts.ready);
 }
 

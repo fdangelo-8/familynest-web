@@ -14,6 +14,8 @@ const WITH_LENS: ReadonlyArray<PlaceholderKey> = [
   "oggi",
   "aggiungi",
   "calendario",
+  "calendario-giorno",
+  "calendario-mese",
 ];
 const WITH_SETTINGS_MENU: ReadonlyArray<PlaceholderKey> = [
   "profilo",

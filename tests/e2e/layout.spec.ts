@@ -455,6 +455,16 @@ test.describe("segnaposto", () => {
         page.getByRole("heading", { level: 1, name: h1, exact: true }),
       ).toBeVisible();
       await expect(page).toHaveTitle(title);
+      if (route === "/casa/spesa") {
+        // Real page since #21: no placeholder, the quick-add field is there.
+        await expect(page.getByTestId("pagina-segnaposto")).toHaveCount(0);
+        await expect(
+          page.getByRole("textbox", {
+            name: /^(Aggiungi alla spesa…|Cosa manca in casa\?)$/,
+          }),
+        ).toBeVisible();
+        return;
+      }
       const placeholder = page.getByTestId("pagina-segnaposto");
       await expect(placeholder).toBeVisible();
       // empty state of the design system
@@ -1137,6 +1147,9 @@ test.describe("entrambe le larghezze", () => {
     browser,
     baseURL,
   }, testInfo) => {
+    // Walks every page of the menus for two users: with the real pages (Casa ·
+    // Spesa reads the database) it takes about 27 s alone, close to the 30 s limit.
+    test.slow();
     withUser("A", "B");
     for (const user of ["A", "B"] as const) {
       const context = await browser.newContext({
