@@ -107,7 +107,10 @@ async function expectExpired(page: Page) {
     );
   }
   await expect(visibleText(page, EXPIRED_TEXT)).toBeVisible();
-  expect(await page.locator("main").innerText()).not.toMatch(/scadut/i);
+  // Web-first and scoped: during the page change two <main> can coexist.
+  await expect(
+    page.locator("main").filter({ hasText: EXPIRED_TEXT }),
+  ).not.toContainText(/scadut/i);
   const enter = page.getByRole("link", { name: "Entra in FamilyNest" });
   await expect(enter).toBeVisible();
   await expect(enter).toHaveAttribute("href", "/accesso");
@@ -846,9 +849,14 @@ test.describe("il tuo colore (08)", () => {
     expect(new Set(second).size, "seconda riga").toBe(1);
     expect(second[0]!).toBeGreaterThan(first[0]!);
 
-    // One tab stop for the whole group: Tab leaves it for «Continua».
+    // One tab stop for the whole group: Tab leaves it for the next control
+    // (on desktop «Indietro» comes first, then «Continua»).
     await radio(page, "Glicine").focus();
     await page.keyboard.press("Tab");
+    if (!isMobileProject()) {
+      await expect(backControl(page)).toBeFocused();
+      await page.keyboard.press("Tab");
+    }
     await expect(continueButton(page)).toBeFocused();
   });
 
