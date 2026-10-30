@@ -12,10 +12,10 @@ import {
 import { useShoppingList } from "@/components/casa-spesa/useShoppingList";
 import { Alert } from "@/components/ui/Alert/Alert";
 import { Button } from "@/components/ui/Button/Button";
+import { useIsDesktop } from "@/components/ui/overlay";
 import { PageError } from "@/components/ui/PageError/PageError";
 import { countOpen, groupTodos } from "./model";
 import { TODO_HEADING, TodoColumn } from "./TodoColumn";
-import { useIsDesktop } from "./useIsDesktop";
 import { useTodos } from "./useTodos";
 
 function reloadPage() {
@@ -23,12 +23,20 @@ function reloadPage() {
 }
 
 /** One column could not be read: the other columns stay usable. */
-function ColumnError({ what }: { what: string }) {
+function ColumnError({
+  what,
+  retrying,
+  onRetry,
+}: {
+  what: string;
+  retrying: boolean;
+  onRetry: () => void;
+}) {
   return (
     <Alert
       variant="errore"
       action={
-        <Button variant="link" onClick={reloadPage}>
+        <Button variant="link" onClick={onRetry} disabled={retrying}>
           Riprova
         </Button>
       }
@@ -141,8 +149,9 @@ export function CasaPage({
     return all.thisWeek.length + all.later.length + all.done.length === 0;
   }, [todos.todos, settling, meMemberId, now]);
 
-  const currentStatus = current === "spesa" ? shopping.status : todos.status;
-  if (currentStatus === "error") {
+  // The whole page fails only when nothing can be read; one list that fails
+  // shows its error in its own column and the other keeps working.
+  if (shopping.status === "error" && todos.status === "error") {
     return (
       <main
         id="contenuto"
@@ -190,7 +199,15 @@ export function CasaPage({
       columns={{
         spesa:
           shopping.status === "error"
-            ? { children: <ColumnError what="la spesa" /> }
+            ? {
+                children: (
+                  <ColumnError
+                    what="la spesa"
+                    retrying={shopping.retrying}
+                    onRetry={shopping.retry}
+                  />
+                ),
+              }
             : {
                 offline: {
                   active: shopping.offline,
@@ -211,7 +228,15 @@ export function CasaPage({
               },
         "da-fare":
           todos.status === "error"
-            ? { children: <ColumnError what="le cose da fare" /> }
+            ? {
+                children: (
+                  <ColumnError
+                    what="le cose da fare"
+                    retrying={todos.retrying}
+                    onRetry={todos.retry}
+                  />
+                ),
+              }
             : {
                 offline: {
                   active: todos.offline,

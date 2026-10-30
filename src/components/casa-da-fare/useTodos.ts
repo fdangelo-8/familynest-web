@@ -140,6 +140,9 @@ async function readEverything(
 function watchToastClosed(textStart: string, onClosed: () => void) {
   let toast: Element | null = null;
   let finished = false;
+  // Toasts already on the page belong to something else (maybe the same title):
+  // each toast is a new element, so only a new one is the toast of this row.
+  const already = new Set(document.querySelectorAll('[data-testid="toast"]'));
   const observer = new MutationObserver(() => check());
   const fallback = window.setTimeout(() => {
     if (finished || toast !== null) return;
@@ -156,7 +159,8 @@ function watchToastClosed(textStart: string, onClosed: () => void) {
     if (toast === null) {
       toast =
         Array.from(document.querySelectorAll('[data-testid="toast"]')).find(
-          (node) => node.textContent?.startsWith(textStart),
+          (node) =>
+            !already.has(node) && node.textContent?.startsWith(textStart),
         ) ?? null;
       return;
     }
@@ -220,6 +224,8 @@ export function useTodos({
   const [networkDown, setNetworkDown] = useState(false);
   const [browserOffline, setBrowserOffline] = useState(false);
   const [retrying, setRetrying] = useState(false);
+  // Counts the retries of the first read (only this list is read again).
+  const [attempt, setAttempt] = useState(0);
   const [announcement, setAnnouncement] = useState("");
 
   const clientRef = useRef<Client | null>(null);
@@ -480,23 +486,26 @@ export function useTodos({
       if (cancelled) return;
       if (!identity) {
         setStatus("error");
+        setRetrying(false);
         return;
       }
       const result = await readEverything(supabase, identity.householdId);
       if (cancelled) return;
       if (result.kind !== "ok") {
         setStatus("error");
+        setRetrying(false);
         return;
       }
       identityRef.current = identity;
       setMeMemberId(identity.meMemberId);
       applyRead(result.rows, result.members);
       setStatus("ready");
+      setRetrying(false);
     })();
     return () => {
       cancelled = true;
     };
-  }, [applyRead, getClient]);
+  }, [applyRead, getClient, attempt]);
 
   // Browser connection.
   useEffect(() => {
@@ -680,12 +689,17 @@ export function useTodos({
 
   const retry = useCallback(() => {
     setRetrying(true);
+    if (status === "error") {
+      // The first read failed: read this list again, nothing else.
+      setAttempt((n) => n + 1);
+      return;
+    }
     void (async () => {
       await processQueue();
       if (queueRef.current.length === 0) await refetch();
       setRetrying(false);
     })();
-  }, [processQueue, refetch]);
+  }, [processQueue, refetch, status]);
 
   return {
     status,
