@@ -1197,7 +1197,7 @@ test.describe("caricamento ed errori", () => {
   // Decision of the coordinator (30/10) and specification 3.7b: on desktop an
   // error of one list shows in its column and its «Riprova» reads only that
   // list; the page error is for when nothing can be read.
-  test("CA-42 (desktop): se si legge solo la Spesa l'errore è nella colonna «Da fare» e «Riprova» rilegge solo quella lista", async ({
+  test("CA-42 (desktop): se si legge tutto tranne le cose da fare l'errore è nella colonna «Da fare» e «Riprova» rilegge solo quella lista", async ({
     page,
     baseURL,
     casa,
@@ -1258,6 +1258,7 @@ test.describe("caricamento ed errori", () => {
     await seedBase(casa);
     await failReads(page, /\/rest\/v1\/todos/);
     await failReads(page, /\/rest\/v1\/shopping_items/);
+    await failReads(page, /\/rest\/v1\/deadlines/);
     await casa.signIn(page, baseURL, "Marco");
     await page.goto(PATH);
     await expect(alerts(page)).toContainText("Questa pagina non si è caricata");
