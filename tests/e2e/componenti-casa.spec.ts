@@ -477,10 +477,28 @@ test.describe("Rotte di Casa e segnaposto", () => {
     });
   });
 
-  for (const [dir, key] of [
-    ["da-fare", "casa-da-fare"],
-    ["scadenze", "casa-scadenze"],
-  ] as const) {
+  // Da fare is a real page since #23 (CasaPage, no placeholder): its own checks.
+  test("CA-26: la pagina da-fare ha metadata, requireNest e CasaPage (non più il segnaposto)", () => {
+    const file = "src/app/(app)/casa/da-fare/page.tsx";
+    expect(existsSync(file)).toBe(true);
+    const source = readFileSync(file, "utf8");
+    expect(source).toContain('title: "FamilyNest · Casa · Da fare"');
+    expect(source).toContain("<CasaPage");
+    expect(source).not.toContain("PlaceholderPage");
+    // requireNest() is the first statement of the page function.
+    const body = source.slice(source.indexOf("export default"));
+    const open = body.indexOf("{", body.indexOf(")"));
+    expect(
+      body
+        .slice(open + 1)
+        .replace(/^(\s*\/\/[^\n]*\n)+/, "")
+        .trimStart(),
+    ).toMatch(/^const frame = await requireNest\(\)/);
+  });
+
+  // Scadenze is still a placeholder: #24 (PR #123) turns it into a real page
+  // and then drops this check.
+  for (const [dir, key] of [["scadenze", "casa-scadenze"]] as const) {
     test(`CA-26: la pagina ${dir} ha metadata, requireNest e PlaceholderPage`, () => {
       const file = `src/app/(app)/casa/${dir}/page.tsx`;
       expect(existsSync(file)).toBe(true);
