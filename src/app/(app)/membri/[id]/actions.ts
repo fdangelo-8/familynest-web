@@ -5,11 +5,16 @@ import {
   inviteSentText,
   inviteSubtitle,
 } from "@/components/membri/texts";
-import {
-  CHOOSABLE_COLORS,
-  type ChoosableColor,
-} from "@/components/ui/ColorChoice/ColorChoice";
+import { MEMBER_COLORS } from "@/components/ui/Avatar/Avatar";
+import type { ChoosableColor } from "@/components/ui/ColorChoice/ColorChoice";
 import { createClient } from "@/lib/supabase/server";
+
+// Not imported from ColorChoice ("use client"): on the server that would be a
+// client reference, not an array.
+const isChoosable = (color: unknown): color is ChoosableColor =>
+  typeof color === "string" &&
+  color !== "insieme" &&
+  (MEMBER_COLORS as ReadonlyArray<string>).includes(color);
 
 export type Failure = "network" | "server";
 
@@ -188,7 +193,7 @@ export async function updateMember(
     !UUID.test(memberId) ||
     !name ||
     name.length > NAME_MAX_LENGTH ||
-    !CHOOSABLE_COLORS.includes(values.color) ||
+    !isChoosable(values.color) ||
     !(
       values.birthDate === null ||
       (typeof values.birthDate === "string" && DATE_ONLY.test(values.birthDate))

@@ -10,10 +10,8 @@ import {
   inviteSentText,
   inviteSubtitle,
 } from "@/components/membri/texts";
-import {
-  CHOOSABLE_COLORS,
-  type ChoosableColor,
-} from "@/components/ui/ColorChoice/ColorChoice";
+import { MEMBER_COLORS } from "@/components/ui/Avatar/Avatar";
+import type { ChoosableColor } from "@/components/ui/ColorChoice/ColorChoice";
 import { SettingsMenu } from "@/components/ui/AppFrame/SettingsMenu";
 import { formatAge } from "@/lib/datetime";
 import { requireNest, type NestFrameData } from "@/lib/nest-frame";
@@ -26,8 +24,11 @@ export const metadata: Metadata = {
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+// Not imported from ColorChoice ("use client"): on the server that would be a
+// client reference, not an array.
 const isChoosable = (color: string): boolean =>
-  (CHOOSABLE_COLORS as ReadonlyArray<string>).includes(color);
+  color !== "insieme" &&
+  (MEMBER_COLORS as ReadonlyArray<string>).includes(color);
 
 type Loaded =
   | { status: "error" }
