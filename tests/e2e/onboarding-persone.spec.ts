@@ -829,19 +829,45 @@ test.describe("errori del foglio", () => {
 // ================================================================ Continua / Indietro
 
 test.describe("Continua e Indietro", () => {
-  test("CA-26: «Continua» porta a /onboarding/pronto (#15, CA-20) e non cambia i membri", async ({
+  test("CA-26: «Continua» con un adulto senza account porta a /onboarding/invito e non cambia i membri", async ({
     page,
     baseURL,
   }) => {
-    // TODO(#13): update when #37 or #14 reach main (see the issue).
     needsThrowaway();
     await withNest("couple", async (user) => {
       await addMember(user, { name: "Laura", kind: "adult", color: "glicine" });
       const before = await members(user);
       await openPage(page, user, baseURL);
       await continua(page).click();
+      await expect(page).toHaveURL(/\/onboarding\/invito$/);
+      expect(await members(user)).toEqual(before);
+    });
+  });
+
+  test("CA-26: «Continua» senza adulti da invitare porta a /onboarding/pronto", async ({
+    page,
+    baseURL,
+  }) => {
+    needsThrowaway();
+    await withNest("family_with_children", async (user) => {
+      await addMember(user, { name: "Sofia", kind: "child", color: "salvia" });
+      const before = await members(user);
+      await openPage(page, user, baseURL);
+      await continua(page).click();
       await expect(page).toHaveURL(/\/onboarding\/pronto$/);
       expect(await members(user)).toEqual(before);
+    });
+  });
+
+  test("CA-26: «Continua» con «Solo io» porta a /onboarding/pronto", async ({
+    page,
+    baseURL,
+  }) => {
+    needsThrowaway();
+    await withNest("single", async (user) => {
+      await openPage(page, user, baseURL);
+      await continua(page).click();
+      await expect(page).toHaveURL(/\/onboarding\/pronto$/);
     });
   });
 

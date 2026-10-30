@@ -24,6 +24,7 @@ import {
   MAX_HOUSEHOLD_MEMBERS,
 } from "@/lib/household-limits";
 import type { Database } from "@/types/database";
+import { INVITE_PATH, READY_PATH } from "./invite-routes";
 import styles from "./onboarding.module.css";
 import { BackArrow, BackLink } from "./PeopleBack";
 import { Steps } from "./Steps";
@@ -51,13 +52,6 @@ type SheetState = {
   /** Colours of the others, frozen when the sheet opens */
   taken: TakenColor[];
 };
-
-/**
- * Where "Continua" goes. Provisional (#13): Calendario (#37) and Invito
- * (#14) are not on main yet, so it ends in Pronto (#15). Each of those pages
- * moves this when it arrives.
- */
-const NEXT_STEP = "/onboarding/pronto";
 
 function Roster({
   prefix,
@@ -219,7 +213,14 @@ export function PeopleStep({
     }
   }
 
-  const goOn = () => router.push(NEXT_STEP);
+  // Invito only when someone has to be invited (an adult without account);
+  // "Solo io" skips it. The Invito page checks again on the server.
+  const goOn = () =>
+    router.push(
+      people.some((person) => person.kind === "adult" && !person.hasAccount)
+        ? INVITE_PATH
+        : READY_PATH,
+    );
 
   return (
     <main className={styles.root}>
