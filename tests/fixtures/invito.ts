@@ -73,6 +73,7 @@ export async function inviteCountOfHousehold(
   return count ?? 0;
 }
 
+/** For the two seed Nests it returns the fixed id, never a lookup by name. */
 export async function householdIdByName(name: string): Promise<string> {
   if (name === NEST_A) return SEED_HOME_A;
   if (name === NEST_B) return SEED_HOME_B;

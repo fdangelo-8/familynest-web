@@ -632,8 +632,18 @@ test.describe("isolamento e stato vuoto", () => {
     await expect(page.getByText("Niente da fare, per ora")).toBeVisible();
     await expect(page.getByText("Nessuna scadenza")).toBeVisible();
     await expect(page.getByText("Una lista per tutta la casa")).toBeVisible();
-    // Rows only: the empty Spesa column offers «Le più comuni» chips, whose
-    // labels («Latte», «Pane») are suggestions of the page, not Nest data.
+    // «Latte» and «Pane» are also suggestions in «Le più comuni»: on the whole
+    // page only the occurrences inside that group are accepted.
+    const common = page.getByRole("group", { name: "Le più comuni" });
+    for (const text of SHOPPING) {
+      await expect(page.getByText(text, { exact: true })).toHaveCount(
+        await common.getByText(text, { exact: true }).count(),
+      );
+    }
+    for (const text of [...TODOS, ...DEADLINES]) {
+      await expect(page.getByText(text, { exact: true })).toHaveCount(0);
+    }
+    // Rows and checkboxes: nothing at all in the three lists.
     const rows = page.locator(".riga-lista__titolo");
     await expect(rows).toHaveCount(0);
     for (const text of [...SHOPPING, ...TODOS, ...DEADLINES]) {
