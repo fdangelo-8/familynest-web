@@ -96,3 +96,23 @@ for (const id of [
     await expect(page.getByTestId(id)).toHaveScreenshot(`esempio-${id}.png`);
   });
 }
+
+// #133: clickable rows inside a card. The fill of the hover state stays inside
+// the border and follows the corners of the card (first, last and only row).
+// The extra cards are shown only with ?righe-scheda=1.
+for (const [name, card, row] of [
+  ["prima-riga", "scheda-righe", "scheda-righe-marco"],
+  ["riga-in-mezzo", "scheda-righe", "scheda-righe-laura"],
+  ["ultima-riga", "scheda-righe", "scheda-righe-sofia"],
+  ["riga-unica", "scheda-riga-unica", "scheda-riga-unica-riga"],
+] as const) {
+  test(`#133: scheda con il mouse sopra: ${name}`, async ({ page }) => {
+    await page.goto("/design-system?righe-scheda=1");
+    await page.evaluate(() => document.fonts.ready);
+    await expect(page.locator("h1")).toHaveText("Design system");
+    const cardLocator = page.getByTestId(card);
+    await cardLocator.scrollIntoViewIfNeeded();
+    await page.getByTestId(row).hover();
+    await expect(cardLocator).toHaveScreenshot(`scheda-righe-${name}.png`);
+  });
+}

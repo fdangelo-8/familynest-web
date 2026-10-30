@@ -69,7 +69,7 @@ function Example({
   );
 }
 
-export function Gallery() {
+export function Gallery({ rowCards = false }: { rowCards?: boolean }) {
   return (
     <main className={styles.pagina}>
       <h1 className="t-titolo-pagina">Design system</h1>
@@ -78,7 +78,7 @@ export function Gallery() {
       <FieldsSection />
       <ControlsSection />
       <PeopleSection />
-      <ListSection />
+      <ListSection rowCards={rowCards} />
       <OverlaysSection />
       <StatesSection />
     </main>
@@ -946,7 +946,7 @@ function PeopleSection() {
   );
 }
 
-function ListSection() {
+function ListSection({ rowCards }: { rowCards: boolean }) {
   const [done, setDone] = useState(false);
   return (
     <>
@@ -1022,6 +1022,35 @@ function ListSection() {
             </ListRow>
           </List>
         </Example>
+        {rowCards ? (
+          <Example caption="riga-lista--cliccabile · righe in una scheda (#133)">
+            <List className="scheda" data-testid="scheda-righe">
+              {["Marco", "Laura", "Sofia"].map((name) => (
+                <ListRow
+                  key={name}
+                  href="/design-system"
+                  data-testid={`scheda-righe-${name.toLowerCase()}`}
+                >
+                  <span className="riga-lista__testo">
+                    <span className="riga-lista__titolo">{name}</span>
+                  </span>
+                </ListRow>
+              ))}
+            </List>
+            <List className="scheda" data-testid="scheda-riga-unica">
+              <ListRow
+                href="/design-system"
+                data-testid="scheda-riga-unica-riga"
+              >
+                <span className="riga-lista__testo">
+                  <span className="riga-lista__titolo">
+                    Manda di nuovo l&apos;invito
+                  </span>
+                </span>
+              </ListRow>
+            </List>
+          </Example>
+        ) : null}
         <Example caption="riga-lista · con casella">
           <List className="scheda">
             <ListRow
