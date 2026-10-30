@@ -9,6 +9,81 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      deadlines: {
+        Row: {
+          assignee_member_id: string | null;
+          created_at: string;
+          created_by_member_id: string | null;
+          due_date: string;
+          for_member_id: string | null;
+          household_id: string;
+          id: string;
+          is_private: boolean;
+          note: string | null;
+          reminder_days: number[];
+          title: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          assignee_member_id?: string | null;
+          created_at?: string;
+          created_by_member_id?: string | null;
+          due_date: string;
+          for_member_id?: string | null;
+          household_id?: string;
+          id?: string;
+          is_private?: boolean;
+          note?: string | null;
+          reminder_days?: number[];
+          title: string;
+          updated_at?: string;
+        };
+        Update: {
+          assignee_member_id?: string | null;
+          created_at?: string;
+          created_by_member_id?: string | null;
+          due_date?: string;
+          for_member_id?: string | null;
+          household_id?: string;
+          id?: string;
+          is_private?: boolean;
+          note?: string | null;
+          reminder_days?: number[];
+          title?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "deadlines_assignee_fkey";
+            columns: ["assignee_member_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "household_members";
+            referencedColumns: ["id", "household_id"];
+          },
+          {
+            foreignKeyName: "deadlines_created_by_fkey";
+            columns: ["created_by_member_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "household_members";
+            referencedColumns: ["id", "household_id"];
+          },
+          {
+            foreignKeyName: "deadlines_for_member_fkey";
+            columns: ["for_member_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "household_members";
+            referencedColumns: ["id", "household_id"];
+          },
+          {
+            foreignKeyName: "deadlines_household_id_fkey";
+            columns: ["household_id"];
+            isOneToOne: false;
+            referencedRelation: "households";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       event_members: {
         Row: {
           created_at: string;
