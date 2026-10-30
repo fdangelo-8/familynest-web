@@ -4057,6 +4057,14 @@ textarea.campo__input {
   }
 }
 
+/* Pagina-foglio: su mobile il main sale dal basso all'apertura (#104, per /nest, #17).
+   Da 1024 px e' una pagina normale, senza animazione. Movimento ridotto: spento dalla regola globale. */
+@media (max-width: 1023px) {
+  .pagina-foglio {
+    animation: foglio-entra var(--durata-normale) var(--curva);
+  }
+}
+
 /* Riga di lista cliccabile: un solo link o bottone che riempie la riga */
 a.riga-lista,
 button.riga-lista {
@@ -4272,13 +4280,5 @@ body {
     text-align: left;
     align-items: center;
     gap: var(--space-5);
-  }
-}
-
-/* Pagina-foglio: su mobile il main sale dal basso all'apertura (#104, per /nest, #17).
-   Da 1024 px e' una pagina normale, senza animazione. Movimento ridotto: spento dalla regola globale. */
-@media (max-width: 1023px) {
-  .pagina-foglio {
-    animation: foglio-entra var(--durata-normale) var(--curva);
   }
 }
