@@ -279,7 +279,9 @@ async function tabThrough(page: Page, max = 90) {
   for (let i = 0; i < max; i++) {
     await page.keyboard.press("Tab");
     const label = await focusedLabel(page);
-    if (label === "(body)" || seen.includes(label)) break;
+    // Stops at the end of the page or when the walk comes back to the start;
+    // two fields can share a label, so a repeated label is not the end.
+    if (label === "(body)" || label === seen[0]) break;
     seen.push(label);
   }
   return seen;
