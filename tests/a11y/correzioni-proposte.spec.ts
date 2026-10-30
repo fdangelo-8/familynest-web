@@ -219,7 +219,7 @@ test.describe("con l'utente A", () => {
   }, testInfo) => {
     // /calendario: its <main> has a link inside, so "the next Tab" has a target on both widths.
     await page.goto("/calendario");
-    await expect(page.locator("main")).toBeVisible();
+    await expect(page.getByRole("main")).toBeVisible();
     const link = page.getByRole("link", { name: "Vai al contenuto" });
     await expect(link).toHaveCount(1);
     // Hidden before the focus: at most 1 x 1 px.
@@ -251,7 +251,7 @@ test.describe("con l'utente A", () => {
 
     // The focus goes on <main>, the URL gets no query, the next Tab goes into the main.
     await page.keyboard.press("Enter");
-    await expect(page.locator("main")).toBeFocused();
+    await expect(page.getByRole("main")).toBeFocused();
     const url = new URL(page.url());
     expect(url.pathname).toBe("/calendario");
     expect(url.search).toBe("");
@@ -300,7 +300,7 @@ test.describe("con l'utente A", () => {
       page,
     }) => {
       await page.goto(route);
-      await expect(page.locator("main")).toBeVisible();
+      await expect(page.getByRole("main")).toBeVisible();
       await expectNoBlocking(page);
       await page.keyboard.press("Tab");
       await expect(
@@ -325,7 +325,7 @@ test.describe("con l'utente A", () => {
       // Touch areas are a phone rule (CA-6, 390 px); the desktop bar is for the mouse.
       test.skip(testInfo.project.name !== "mobile", "solo mobile");
       await page.goto(route);
-      await expect(page.locator("main")).toBeVisible();
+      await expect(page.getByRole("main")).toBeVisible();
       const report = await touchAreaReport(page);
       expect(report.length).toBeGreaterThan(0);
       expect(report.filter((h) => !h.ok)).toEqual([]);
@@ -336,7 +336,7 @@ test.describe("con l'utente A", () => {
     page,
   }) => {
     await page.goto("/oggi");
-    await expect(page.locator("main")).toBeVisible();
+    await expect(page.getByRole("main")).toBeVisible();
     const sizes = await page.evaluate(() =>
       Array.from(
         document.querySelectorAll<HTMLElement>(
@@ -391,7 +391,7 @@ test.describe("con l'utente A", () => {
   }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop", "solo desktop");
     await page.goto("/casa/spesa");
-    await expect(page.locator("main")).toBeVisible();
+    await expect(page.getByRole("main")).toBeVisible();
     const order = [
       "Vai al contenuto",
       "FamilyNest",
@@ -442,7 +442,7 @@ test.describe("con l'utente A", () => {
       ["/casa/spesa", "Casa"],
     ] as const) {
       await page.goto(route);
-      await expect(page.locator("main")).toBeVisible();
+      await expect(page.getByRole("main")).toBeVisible();
       const cur = await current();
       expect(cur).toHaveLength(1);
       expect(cur[0]![0]).toContain(label);
@@ -453,7 +453,7 @@ test.describe("con l'utente A", () => {
       : ["/aggiungi", "/ricerca"];
     for (const route of notPage) {
       await page.goto(route);
-      await expect(page.locator("main")).toBeVisible();
+      await expect(page.getByRole("main")).toBeVisible();
       const cur = await current();
       expect(cur).toHaveLength(1);
       expect(cur[0]![0]).toContain("Oggi");
@@ -464,7 +464,7 @@ test.describe("con l'utente A", () => {
     if (!mobile) {
       for (const route of ["/nest", "/notifiche", "/profilo", "/membri"]) {
         await page.goto(route);
-        await expect(page.locator("main")).toBeVisible();
+        await expect(page.getByRole("main")).toBeVisible();
         expect(await current()).toHaveLength(0);
       }
     }
@@ -476,7 +476,7 @@ test.describe("con l'utente A", () => {
     test.skip(testInfo.project.name !== "mobile", "solo mobile");
     for (const route of ["/calendario", "/casa/spesa", "/oggi"]) {
       await page.goto(route);
-      await expect(page.locator("main")).toBeVisible();
+      await expect(page.getByRole("main")).toBeVisible();
       const names = await page.evaluate(() =>
         Array.from(
           document.querySelectorAll<HTMLElement>(
@@ -512,7 +512,7 @@ test.describe("con l'utente A", () => {
       await page.setViewportSize({ width, height: 844 });
       for (const route of ["/calendario", "/casa/spesa"]) {
         await page.goto(route);
-        await expect(page.locator("main")).toBeVisible();
+        await expect(page.getByRole("main")).toBeVisible();
         const rects = await page.evaluate(() => {
           const sel = [
             ".barra .quadrato-nest",
