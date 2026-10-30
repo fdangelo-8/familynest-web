@@ -9,7 +9,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(87);
+select plan(99);
 
 insert into public.events (
   id, household_id, author_member_id, title, location, notes, starts_at, ends_at, visibility,
@@ -38,14 +38,22 @@ values
    null, 'weekly', '{3}', null),
   ('b5000000-0000-4000-8000-000000000006', '22222222-2222-4222-8222-222222222222', 'b1000000-0000-4000-8000-000000000001',
    'Fine serie', null, null, '2026-10-01 18:00+02', '2026-10-01 19:00+02', 'household',
-   null, 'weekly', '{4}', '2026-10-15');
+   null, 'weekly', '{4}', '2026-10-15'),
+  ('b5000000-0000-4000-8000-000000000007', '22222222-2222-4222-8222-222222222222', 'b1000000-0000-4000-8000-000000000001',
+   'Pilates', null, null, '2026-10-09 19:00+02', '2026-10-09 20:00+02', 'household',
+   null, 'weekly', '{5}', null),
+  -- «Solo io» of Paolo without Giulia.
+  ('b5000000-0000-4000-8000-000000000008', '22222222-2222-4222-8222-222222222222', 'b1000000-0000-4000-8000-000000000002',
+   'Segreto', 'Altrove', null, '2026-10-06 07:00+02', '2026-10-06 07:30+02', 'private',
+   null, 'weekly', '{2}', null);
 
 insert into public.event_members (event_id, member_id, household_id)
 values
   ('a5000000-0000-4000-8000-000000000001', 'a1000000-0000-4000-8000-000000000003', '11111111-1111-4111-8111-111111111111'),
   ('b5000000-0000-4000-8000-000000000001', 'b1000000-0000-4000-8000-000000000002', '22222222-2222-4222-8222-222222222222'),
   ('b5000000-0000-4000-8000-000000000002', 'b1000000-0000-4000-8000-000000000002', '22222222-2222-4222-8222-222222222222'),
-  ('b5000000-0000-4000-8000-000000000002', 'b1000000-0000-4000-8000-000000000001', '22222222-2222-4222-8222-222222222222');
+  ('b5000000-0000-4000-8000-000000000002', 'b1000000-0000-4000-8000-000000000001', '22222222-2222-4222-8222-222222222222'),
+  ('b5000000-0000-4000-8000-000000000008', 'b1000000-0000-4000-8000-000000000002', '22222222-2222-4222-8222-222222222222');
 
 -- ---------------------------------------------------------------------------
 -- Schema and privileges
@@ -249,6 +257,29 @@ select results_eq(
   $$ values ('2026-11-03 17:00+01'::timestamptz), ('2026-11-07 10:00+01'::timestamptz) $$,
   'the calendar of that week has Tuesday 3 and the moved occurrence on Saturday 7'
 );
+-- Review of PR #120, point 2: never two occurrences starting on the same day.
+select throws_ok(
+  $$ select public.update_event_occurrence('a5000000-0000-4000-8000-000000000001', '2026-11-10', 'Nuoto Sofia',
+       '2026-11-12 10:00+01', '2026-11-12 11:00+01', null, null, null) $$,
+  'P0001', 'another occurrence of the event starts on that day',
+  'an occurrence cannot be moved to a day on which another occurrence starts (Thursday 12)'
+);
+select throws_ok(
+  $$ insert into public.event_exceptions (event_id, occurrence_date, is_cancelled, title, starts_at, ends_at)
+     values ('a5000000-0000-4000-8000-000000000001', '2026-11-10', false, 'Nuoto Sofia', '2026-11-07 18:00+01', '2026-11-07 19:00+01') $$,
+  'P0001', 'another occurrence of the event starts on that day',
+  'nor onto the day of an occurrence that was moved there (Saturday 7), also with a direct insert'
+);
+select results_eq(
+  $$ select g.occurrence_date, g.starts_at from public.get_event_occurrence('a5000000-0000-4000-8000-000000000001', '2026-11-12') g $$,
+  $$ values ('2026-11-12'::date, '2026-11-12 17:00+01'::timestamptz) $$,
+  'Thursday 12 still opens its own occurrence'
+);
+select is_empty(
+  $$ select 1 from public.list_household_events('2026-10-05 00:00+02', '2026-11-16 00:00+01') e
+     where e::text like '%cuffia%' $$,
+  'no column of the calendar carries the text of the notes'
+);
 select throws_ok(
   $$ select public.update_event_occurrence('a5000000-0000-4000-8000-000000000001', '2026-11-10', 'Nuoto Sofia',
        '2026-11-10 10:00+01', '2026-11-18 10:00+01', null, null, null) $$,
@@ -275,6 +306,13 @@ select throws_ok(
   $$ select public.delete_event_occurrence('a5000000-0000-4000-8000-000000000001', '2026-11-10', 'this') $$,
   'P0001', 'use POST',
   'delete_event_occurrence refuses GET'
+);
+set local request.method to 'HEAD';
+select throws_ok(
+  $$ select public.update_event_occurrence('a5000000-0000-4000-8000-000000000001', '2026-11-10', 'Con HEAD',
+       '2026-11-10 17:00+01', '2026-11-10 18:00+01', null, null, null) $$,
+  'P0001', 'use POST',
+  'update_event_occurrence refuses HEAD'
 );
 set local request.method to 'POST';
 
@@ -346,6 +384,15 @@ select lives_ok(
        '2026-10-22 11:00+02', '2026-10-22 12:00+02', 'Ufficio Sud', null, 'Portare il pass') $$,
   'B2 moves Thursday 22 of his «Occupato» to 11:00'
 );
+select lives_ok(
+  $$ select public.update_event_occurrence('b5000000-0000-4000-8000-000000000008', '2026-10-20', 'Segreto spostato',
+       '2026-10-20 07:45+02', '2026-10-20 08:15+02', 'Altrove', null, null) $$,
+  'B2 changes one occurrence of his «Solo io» without B'
+);
+select lives_ok(
+  $$ select public.delete_event_occurrence('b5000000-0000-4000-8000-000000000008', '2026-10-27', 'this') $$,
+  'B2 removes another occurrence of it'
+);
 
 -- Giulia sees the «Occupato» of Paolo only as masked rows.
 set local request.jwt.claims to '{"sub":"bbbbbbbb-0000-4000-8000-000000000001","role":"authenticated"}';
@@ -365,6 +412,18 @@ select is_empty(
 select is_empty(
   $$ select 1 from public.get_event_occurrence('b5000000-0000-4000-8000-000000000001', '2026-10-22') $$,
   'B cannot read an occurrence of an «Occupato» of B2 (zero rows)'
+);
+select is_empty(
+  $$ select 1 from public.list_household_events('2026-10-19 00:00+02', '2026-11-02 00:00+01') e
+     where e.title like 'Segreto%' or e.location = 'Altrove'
+        or e.starts_at in ('2026-10-20 07:45+02', '2026-10-27 07:00+01', '2026-10-20 07:00+02') $$,
+  'nothing of a «Solo io» of B2 without B reaches B, changed or removed occurrences included'
+);
+select is_empty(
+  $$ select 1 from public.event_exceptions x where x.event_id = 'b5000000-0000-4000-8000-000000000008'
+     union all
+     select 1 from public.get_event_occurrence('b5000000-0000-4000-8000-000000000008', '2026-10-20') $$,
+  'B reads neither the exceptions nor an occurrence of that «Solo io»'
 );
 select is_empty(
   $$ select 1 from public.get_event_occurrence('b5000000-0000-4000-8000-000000000001') $$,
@@ -403,6 +462,24 @@ select lives_ok(
   $$ select public.update_event_occurrence('b5000000-0000-4000-8000-000000000003', '2026-11-20', 'Affitto',
        '2026-11-20 10:00+01', '2026-11-20 11:00+01', null, 'b1000000-0000-4000-8000-000000000004', null) $$,
   'on a «Tutto il Nest» event any adult may accompany one occurrence'
+);
+
+-- The author makes a «Tutto il Nest» event «Occupato»: the escort of one occurrence who
+-- does not see it any more is removed from it.
+select lives_ok(
+  $$ select public.update_event_occurrence('b5000000-0000-4000-8000-000000000007', '2026-10-16', 'Pilates',
+       '2026-10-16 19:00+02', '2026-10-16 20:00+02', null, 'b1000000-0000-4000-8000-000000000004', null) $$,
+  'B sets Anna as escort of one occurrence of her «Pilates»'
+);
+select lives_ok(
+  $$ update public.events set visibility = 'busy' where id = 'b5000000-0000-4000-8000-000000000007' $$,
+  'B makes «Pilates» «Occupato» with a direct update'
+);
+select results_eq(
+  $$ select x.escort_member_id, x.title from public.event_exceptions x
+     where x.event_id = 'b5000000-0000-4000-8000-000000000007' $$,
+  $$ values (null::uuid, 'Pilates') $$,
+  'the occurrence keeps its values but not an escort who cannot see it any more'
 );
 
 -- Exceptions only for repeated events, only on their days.

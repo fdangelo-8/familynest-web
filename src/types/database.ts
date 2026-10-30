@@ -740,7 +740,10 @@ export type Database = {
           p_title: string;
           p_visibility: Database["public"]["Enums"]["event_visibility"];
         };
-        Returns: string;
+        Returns: {
+          day: string;
+          id: string;
+        }[];
       };
       update_event_occurrence: {
         Args: {

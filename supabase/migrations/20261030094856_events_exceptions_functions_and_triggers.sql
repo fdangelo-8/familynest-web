@@ -29,7 +29,10 @@
 -- - 42501: not allowed (only the author changes who sees an event or adds people to a
 --   «Solo io» or «Occupato» event; the escort of one occurrence must already see it);
 -- - 22023: invalid arguments (for example a scope or a list of participants with null);
--- - P0001 'use POST': called through the Data API with GET or HEAD.
+-- - P0001 'use POST': called through the Data API with GET or HEAD;
+-- - P0001 'another occurrence of the event starts on that day': one occurrence moved to
+--   a day on which another occurrence of the same event starts (it could not be opened
+--   any more from the address ?giorno=).
 
 -- ---------------------------------------------------------------------------
 -- events: the notes are normalised with the other texts (same function as #86, one
@@ -189,6 +192,46 @@ as $$
     and private.event_has_occurrence_on(p_starts_at, p_recurrence, p_weekdays, p_until, x.occurrence_date);
 $$;
 
+-- False when an event has nothing left to show: a series with a last day whose
+-- occurrences are all removed (a series without a last day always has occurrences left;
+-- an event that does not repeat is itself its occurrence). Such an event is invisible and
+-- no page could delete it, but it keeps title, place and notes: the functions that remove
+-- occurrences or split a series delete it (privacy review of PR #120).
+-- Security invoker: reads the event and its exceptions as the caller.
+create or replace function private.event_has_remaining_occurrence(p_event_id uuid)
+returns boolean
+language plpgsql
+stable
+set search_path = ''
+as $$
+declare
+  v_event public.events;
+begin
+  select e.* into v_event
+  from public.events e
+  where e.id = p_event_id;
+
+  if not found then
+    return false;
+  end if;
+
+  if v_event.recurrence = 'none' or v_event.recurrence_until is null then
+    return true;
+  end if;
+
+  -- Moved occurrences may start before the first or after the last day of the series.
+  return exists (
+    select 1
+    from private.event_occurrences(
+      v_event.id, v_event.starts_at, v_event.ends_at, v_event.recurrence,
+      v_event.recurrence_weekdays, v_event.recurrence_until,
+      v_event.starts_at - interval '400 days',
+      ((v_event.recurrence_until + 1)::timestamp at time zone 'Europe/Rome') + interval '400 days'
+    )
+  );
+end;
+$$;
+
 -- ---------------------------------------------------------------------------
 -- event_exceptions: normalisation and guards
 -- ---------------------------------------------------------------------------
@@ -201,10 +244,17 @@ $$;
 -- - the escort of one occurrence is an adult of the household and, on «Solo io» and
 --   «Occupato» events, someone who already sees the event in full (author, escort or
 --   participant of the series): an exception never widens who sees an event. Checked
---   only when the escort changes (p_old_escort_member_id is the previous value).
+--   only when the escort changes (p_old_escort_member_id is the previous value);
+-- - a changed occurrence never starts on a day (Europe/Rome) on which another occurrence
+--   of the same event, not removed, starts: the detail page finds an occurrence by the
+--   day it starts (?giorno=), so the other one could not be opened any more. Error P0001
+--   'another occurrence of the event starts on that day'. Checked for the Data API roles
+--   when the day of the start changes (p_old_starts_at is the previous value, null on
+--   insert); the trusted split of a series moves exceptions without changing any day.
 create or replace function private.event_exceptions_normalize(
   p_row public.event_exceptions,
-  p_old_escort_member_id uuid
+  p_old_escort_member_id uuid,
+  p_old_starts_at timestamptz
 )
 returns public.event_exceptions
 language plpgsql
@@ -264,6 +314,28 @@ begin
     end if;
   end if;
 
+  if current_user in ('authenticated', 'anon')
+     and not p_row.is_cancelled
+     and p_row.starts_at is not null
+     and (
+       p_old_starts_at is null
+       or (p_old_starts_at at time zone 'Europe/Rome')::date
+          <> (p_row.starts_at at time zone 'Europe/Rome')::date
+     )
+     and exists (
+       select 1
+       from private.event_occurrences(
+         v_event.id, v_event.starts_at, v_event.ends_at, v_event.recurrence,
+         v_event.recurrence_weekdays, v_event.recurrence_until,
+         ((p_row.starts_at at time zone 'Europe/Rome')::date)::timestamp at time zone 'Europe/Rome',
+         ((p_row.starts_at at time zone 'Europe/Rome')::date + 1)::timestamp at time zone 'Europe/Rome'
+       ) o
+       where o.occurrence_date <> p_row.occurrence_date
+         and (o.starts_at at time zone 'Europe/Rome')::date = (p_row.starts_at at time zone 'Europe/Rome')::date
+     ) then
+    raise exception 'another occurrence of the event starts on that day' using errcode = 'P0001';
+  end if;
+
   return p_row;
 end;
 $$;
@@ -289,7 +361,7 @@ begin
     new.updated_at := now();
   end if;
 
-  new := private.event_exceptions_normalize(new, null);
+  new := private.event_exceptions_normalize(new, null, null);
   return new;
 end;
 $$;
@@ -315,7 +387,7 @@ begin
     end if;
   end if;
 
-  new := private.event_exceptions_normalize(new, old.escort_member_id);
+  new := private.event_exceptions_normalize(new, old.escort_member_id, old.starts_at);
   return new;
 end;
 $$;
@@ -327,6 +399,39 @@ create trigger event_exceptions_before_update
 create trigger event_exceptions_set_updated_at
   before update on public.event_exceptions
   for each row execute function public.set_updated_at();
+
+-- An event becomes «Solo io» or «Occupato» (only its author can do it): the escort of a
+-- changed occurrence who does not see the event in full any more (not author, escort or
+-- participant of the series) is removed from that occurrence, so that an occurrence never
+-- names someone who cannot see it (review of PR #120). Security invoker: the author sees
+-- the exceptions and may change them.
+create or replace function private.events_after_update_visibility()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if new.visibility <> 'household' and new.visibility is distinct from old.visibility then
+    update public.event_exceptions x
+    set escort_member_id = null
+    where x.event_id = new.id
+      and x.escort_member_id is not null
+      and x.escort_member_id is distinct from new.author_member_id
+      and x.escort_member_id is distinct from new.escort_member_id
+      and not exists (
+        select 1
+        from public.event_members em
+        where em.event_id = new.id
+          and em.member_id = x.escort_member_id
+      );
+  end if;
+  return null;
+end;
+$$;
+
+create trigger events_after_update_visibility
+  after update of visibility on public.events
+  for each row execute function private.events_after_update_visibility();
 
 -- ---------------------------------------------------------------------------
 -- «Tutti i prossimi» on an occurrence after the first one: the series is split in two.
@@ -586,8 +691,8 @@ $$;
 -- Exactly one row when the caller sees the event in full and the day has an occurrence
 -- that was not removed; zero rows in every other case (unknown id, other household,
 -- «Occupato» or «Solo io» of the others, wrong day, removed occurrence), never an error
--- that tells them apart. Two occurrences starting on the same day (one was moved there):
--- the one that starts first.
+-- that tells them apart. Two occurrences of the same event never start on the same day
+-- (the exceptions refuse it); should it happen anyway, the one that starts first.
 --
 -- Columns:
 -- - id, occurrence_date: what the app sends back to change or delete this occurrence
@@ -788,22 +893,39 @@ $$;
 -- i prossimi»), in one transaction. Every argument is the new value (the complete form):
 -- nothing is kept from before unless the app sends it again.
 --
--- p_day is the occurrence the user opened (occurrence_date of get_event_occurrence):
+-- p_day is the occurrence the user opened (occurrence_date of get_event_occurrence, not
+-- the day of the address: they differ for an occurrence moved to another day):
 -- - null, the first occurrence, or an event that does not repeat: the whole event
 --   changes;
 -- - a later occurrence: the series is split there (private.split_event_series): the
 --   occurrences before stay as they were, the new values apply from p_day on, to a new
---   event whose id is returned (the app shows that one).
--- Returns the id of the event that now holds the changed occurrences.
+--   event. When the occurrences before p_day were all removed, the old part has nothing
+--   left and is deleted (it would keep title, place and notes, invisible to everyone).
 --
+-- How the new series is placed (the app sends the form as the user sees it):
+-- - the shift is measured on the form: shift = day of p_starts_at - day on which the
+--   opened occurrence starts now (its own start when it was moved, see starts_at of
+--   get_event_occurrence). The app sends the days of the week moved by the same shift
+--   («Ogni martedì e giovedì» moved by one day = {3,5}; unchanged when the day is not
+--   changed);
+-- - same rule (same repetition and, for weekly, the old days of the week moved by the
+--   shift): the series keeps its rhythm and starts on p_day + shift, at the time of
+--   p_starts_at, lasting p_ends_at - p_starts_at. For an occurrence that was not moved
+--   this is exactly p_starts_at; for a moved one, the series does not follow the one-off
+--   move (a Tuesday moved to Saturday, saved «tutti i prossimi» without changing the day,
+--   goes back to Tuesday with the new values). So the start is always a day of the rule
+--   and events_weekdays_include_start cannot fail for a form sent this way;
+-- - a new rule: the series starts again from p_starts_at as sent.
 -- Exceptions of the changed part:
--- - modified occurrences take the new values (their own values are dropped);
--- - removed occurrences stay removed when the rule stays the same, moved by as many days
---   as the start moved (a series of Tuesday and Thursday moved to Wednesday and Friday,
---   with the weekdays sent moved the same way, keeps its removed days one day later);
---   they are dropped when the rule changes (the series starts again from p_starts_at).
+-- - changed occurrences take the new values (their own values are dropped);
+-- - removed occurrences stay removed with the same rule, moved by the shift (removed
+--   Thursday 29 of a series moved by one day becomes Friday 30); with a new rule they are
+--   dropped (the series starts again).
 -- Participants: those of p_member_ids are added (RLS: only the author adds people to a
 -- «Solo io» or «Occupato» event), the others removed.
+--
+-- Returns one row: id = the event that now holds the opened occurrence (a new id after a
+-- split), day = the day (Europe/Rome) on which that occurrence starts now (for ?giorno=).
 -- ---------------------------------------------------------------------------
 create or replace function public.update_event(
   p_event_id uuid,
@@ -820,17 +942,20 @@ create or replace function public.update_event(
   p_recurrence_until date,
   p_notes text
 )
-returns uuid
+returns table (id uuid, day date)
 language plpgsql
 volatile
 set search_path = ''
 as $$
+#variable_conflict use_column
 declare
   v_event public.events;
+  v_day date;
   v_target uuid;
-  v_old_start timestamptz;
-  v_delta integer;
-  v_same_rule boolean;
+  v_open_start timestamptz;
+  v_delta integer := 0;
+  v_same_rule boolean := false;
+  v_new_start timestamptz := p_starts_at;
   v_cancelled date[] := array[]::date[];
   v_changed public.events;
 begin
@@ -870,16 +995,34 @@ begin
     raise exception 'event not found' using errcode = 'P0002';
   end if;
 
-  if p_day is null or p_day <= (v_event.starts_at at time zone 'Europe/Rome')::date then
+  -- The opened occurrence: its day in the series and where it starts now.
+  v_day := coalesce(p_day, (v_event.starts_at at time zone 'Europe/Rome')::date);
+  v_open_start := coalesce(
+    (
+      select x.starts_at
+      from public.event_exceptions x
+      where v_event.recurrence <> 'none'
+        and x.event_id = p_event_id
+        and x.occurrence_date = v_day
+        and not x.is_cancelled
+    ),
+    (v_day + (v_event.starts_at at time zone 'Europe/Rome')::time) at time zone 'Europe/Rome'
+  );
+
+  if v_day <= (v_event.starts_at at time zone 'Europe/Rome')::date then
     v_target := p_event_id;
-    v_old_start := v_event.starts_at;
   else
-    v_target := private.split_event_series(p_event_id, p_day);
-    v_old_start := (p_day + (v_event.starts_at at time zone 'Europe/Rome')::time) at time zone 'Europe/Rome';
+    v_target := private.split_event_series(p_event_id, v_day);
+
+    -- The old part may have nothing left (every occurrence before v_day removed).
+    if not private.event_has_remaining_occurrence(p_event_id) then
+      delete from public.events e
+      where e.id = p_event_id;
+    end if;
   end if;
 
   if v_event.recurrence <> 'none' then
-    v_delta := (p_starts_at at time zone 'Europe/Rome')::date - (v_old_start at time zone 'Europe/Rome')::date;
+    v_delta := (p_starts_at at time zone 'Europe/Rome')::date - (v_open_start at time zone 'Europe/Rome')::date;
     v_same_rule := coalesce(
       p_recurrence = v_event.recurrence
       and (
@@ -899,6 +1042,9 @@ begin
     );
 
     if v_same_rule then
+      -- Keep the rhythm of the series: start on v_day + shift, at the time of the form.
+      v_new_start := ((v_day + v_delta) + (p_starts_at at time zone 'Europe/Rome')::time) at time zone 'Europe/Rome';
+
       select coalesce(array_agg(x.occurrence_date + v_delta), array[]::date[]) into v_cancelled
       from public.event_exceptions x
       where x.event_id = v_target
@@ -914,8 +1060,8 @@ begin
     title = p_title,
     location = p_location,
     notes = p_notes,
-    starts_at = p_starts_at,
-    ends_at = p_ends_at,
+    starts_at = v_new_start,
+    ends_at = v_new_start + (p_ends_at - p_starts_at),
     visibility = p_visibility,
     escort_member_id = p_escort_member_id,
     recurrence = p_recurrence,
@@ -953,7 +1099,8 @@ begin
   where em.event_id = v_target
     and em.member_id <> all (p_member_ids);
 
-  return v_target;
+  return query
+    select v_target, (v_new_start at time zone 'Europe/Rome')::date;
 end;
 $$;
 
@@ -1132,19 +1279,7 @@ begin
   end if;
 
   -- Nothing left to show: the event goes.
-  select e.* into v_event
-  from public.events e
-  where e.id = p_event_id;
-
-  if v_event.recurrence_until is not null and not exists (
-    select 1
-    from private.event_occurrences(
-      v_event.id, v_event.starts_at, v_event.ends_at, v_event.recurrence,
-      v_event.recurrence_weekdays, v_event.recurrence_until,
-      v_event.starts_at - interval '400 days',
-      ((v_event.recurrence_until + 1)::timestamp at time zone 'Europe/Rome') + interval '400 days'
-    )
-  ) then
+  if not private.event_has_remaining_occurrence(p_event_id) then
     delete from public.events e
     where e.id = p_event_id;
   end if;

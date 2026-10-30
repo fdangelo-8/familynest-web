@@ -8,7 +8,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(32);
+select plan(33);
 
 -- ---------------------------------------------------------------------------
 -- Schema and privileges
@@ -177,6 +177,12 @@ select throws_ok(
   $$ select public.create_event('Con GET', '2026-10-22 10:00+02', '2026-10-22 11:00+02', 'household', array[]::uuid[]) $$,
   'P0001', 'use POST',
   'create_event refuses GET (the texts would end up in the URL)'
+);
+set local request.method to 'HEAD';
+select throws_ok(
+  $$ select public.create_event('Con GET', '2026-10-22 10:00+02', '2026-10-22 11:00+02', 'household', array[]::uuid[]) $$,
+  'P0001', 'use POST',
+  'create_event refuses HEAD'
 );
 set local request.method to 'POST';
 

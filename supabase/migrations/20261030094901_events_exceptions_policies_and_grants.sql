@@ -75,6 +75,7 @@ create policy event_exceptions_delete on public.event_exceptions
 -- Trigger functions are never called directly.
 revoke execute on function private.event_exceptions_before_insert() from public, anon, authenticated;
 revoke execute on function private.event_exceptions_before_update() from public, anon, authenticated;
+revoke execute on function private.events_after_update_visibility() from public, anon, authenticated;
 
 -- Helpers evaluated as the caller by the guard triggers and the security invoker
 -- functions below. The private schema is not exposed by the Data API: the app cannot
@@ -98,8 +99,10 @@ revoke execute on function private.event_occurrences(
 grant execute on function private.event_occurrences(
   uuid, timestamptz, timestamptz, public.event_recurrence, smallint[], date, timestamptz, timestamptz
 ) to authenticated;
-revoke execute on function private.event_exceptions_normalize(public.event_exceptions, uuid) from public, anon;
-grant execute on function private.event_exceptions_normalize(public.event_exceptions, uuid) to authenticated;
+revoke execute on function private.event_exceptions_normalize(public.event_exceptions, uuid, timestamptz) from public, anon;
+grant execute on function private.event_exceptions_normalize(public.event_exceptions, uuid, timestamptz) to authenticated;
+revoke execute on function private.event_has_remaining_occurrence(uuid) from public, anon;
+grant execute on function private.event_has_remaining_occurrence(uuid) to authenticated;
 -- Called by public.update_event() as the caller; checks by itself that the caller sees
 -- the event in full.
 revoke execute on function private.split_event_series(uuid, date) from public, anon;

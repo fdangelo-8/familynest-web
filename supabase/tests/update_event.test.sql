@@ -9,7 +9,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(42);
+select plan(60);
 
 insert into public.events (
   id, household_id, author_member_id, title, location, notes, starts_at, ends_at, visibility,
@@ -34,7 +34,15 @@ values
   -- Every day at 23:00 – 23:30 from 1 January 2026 (the occurrence «now»).
   ('b6000000-0000-4000-8000-000000000002', '22222222-2222-4222-8222-222222222222', 'b1000000-0000-4000-8000-000000000001',
    'Ogni sera', null, null, '2026-01-01 23:00+01', '2026-01-01 23:30+01', 'household',
-   null, 'weekly', '{1,2,3,4,5,6,7}', null);
+   null, 'weekly', '{1,2,3,4,5,6,7}', null),
+  -- «Yoga» of Giulia every Tuesday from 6 October at 18:00.
+  ('b6000000-0000-4000-8000-000000000003', '22222222-2222-4222-8222-222222222222', 'b1000000-0000-4000-8000-000000000001',
+   'Yoga', null, null, '2026-10-06 18:00+02', '2026-10-06 19:00+02', 'household',
+   null, 'weekly', '{2}', null),
+  -- «Corso» of Giulia every Tuesday from 6 October, with notes.
+  ('b6000000-0000-4000-8000-000000000004', '22222222-2222-4222-8222-222222222222', 'b1000000-0000-4000-8000-000000000001',
+   'Corso', 'Biblioteca', 'Portare la cuffia', '2026-10-06 18:00+02', '2026-10-06 19:00+02', 'household',
+   null, 'weekly', '{2}', null);
 
 insert into public.event_members (event_id, member_id, household_id)
 values
@@ -86,14 +94,14 @@ select ok(
 set local role authenticated;
 set local request.jwt.claims to '{"sub":"aaaaaaaa-0000-4000-8000-000000000001","role":"authenticated"}';
 
-select is(
-  public.update_event(
-    'a6000000-0000-4000-8000-000000000001', '2026-10-06', 'Nuoto', '2026-10-07 17:30+02', '2026-10-07 19:00+02',
-    'household', array['a1000000-0000-4000-8000-000000000003']::uuid[], 'Piscina comunale, Lissone',
-    'a1000000-0000-4000-8000-000000000002', 'weekly', '{3,5}', '2026-12-18', E'Portare la cuffia\n'
-  ),
-  'a6000000-0000-4000-8000-000000000001'::uuid,
-  'from the first occurrence the whole event changes and keeps its id'
+select results_eq(
+  $$ select u.id, u.day from public.update_event(
+       'a6000000-0000-4000-8000-000000000001', '2026-10-06', 'Nuoto', '2026-10-07 17:30+02', '2026-10-07 19:00+02',
+       'household', array['a1000000-0000-4000-8000-000000000003']::uuid[], 'Piscina comunale, Lissone',
+       'a1000000-0000-4000-8000-000000000002', 'weekly', '{3,5}', '2026-12-18', E'Portare la cuffia\n'
+     ) u $$,
+  $$ values ('a6000000-0000-4000-8000-000000000001'::uuid, '2026-10-07'::date) $$,
+  'from the first occurrence the whole event changes and keeps its id; the opened occurrence is now on Wednesday 7'
 );
 select results_eq(
   $$ select e.title, e.starts_at, e.recurrence_weekdays, e.recurrence_until, e.notes from public.events e
@@ -123,11 +131,11 @@ select results_eq(
 -- Marco (A): «Salva tutti i prossimi» from Tuesday 20 on the second «Nuoto»
 -- ---------------------------------------------------------------------------
 select ok(
-  set_config('test.split', public.update_event(
+  set_config('test.split', (select u.id from public.update_event(
     'a6000000-0000-4000-8000-000000000002', '2026-10-20', 'Nuoto nuovo', '2026-10-20 17:30+02', '2026-10-20 19:00+02',
     'household', array['a1000000-0000-4000-8000-000000000003', 'a1000000-0000-4000-8000-000000000004']::uuid[],
     'Piscina Lissone', null, 'weekly', '{2,4}', null, null
-  )::text, true)::uuid <> 'a6000000-0000-4000-8000-000000000002'::uuid,
+  ) u)::text, true)::uuid <> 'a6000000-0000-4000-8000-000000000002'::uuid,
   'from a later occurrence the series is split: a new id is returned'
 );
 select results_eq(
@@ -191,10 +199,10 @@ select results_eq(
 
 -- A new rule from the first occurrence: the series starts again, its exceptions are dropped.
 select is(
-  public.update_event(
+  (select u.id from public.update_event(
     current_setting('test.split')::uuid, '2026-10-20', 'Nuoto nuovo', '2026-10-20 17:30+02', '2026-10-20 19:00+02',
     'household', array['a1000000-0000-4000-8000-000000000003']::uuid[], 'Piscina Lissone', null, 'monthly', null, null, null
-  ),
+  ) u),
   current_setting('test.split')::uuid,
   'the new event becomes monthly'
 );
@@ -211,10 +219,10 @@ select results_eq(
 
 -- An event that does not repeat.
 select is(
-  public.update_event(
+  (select u.id from public.update_event(
     'a6000000-0000-4000-8000-000000000003', null, ' Cena  dai nonni ', '2026-10-20 22:00+02', '2026-10-21 01:00+02',
     'household', array['a1000000-0000-4000-8000-000000000001']::uuid[], null, null, 'none', null, null, '  Portare il dolce  '
-  ),
+  ) u),
   'a6000000-0000-4000-8000-000000000003'::uuid,
   'an event that does not repeat is changed with no day'
 );
@@ -311,11 +319,11 @@ select throws_ok(
   'the split refuses an event the caller does not see in full'
 );
 select is(
-  public.update_event(
+  (select u.id from public.update_event(
     'b6000000-0000-4000-8000-000000000001', '2026-10-19', 'Riunione spostata', '2026-10-19 11:00+02', '2026-10-19 12:00+02',
     'busy', array['b1000000-0000-4000-8000-000000000002', 'b1000000-0000-4000-8000-000000000001']::uuid[],
     'Ufficio Nord', null, 'weekly', '{1}', null, null
-  ) <> 'b6000000-0000-4000-8000-000000000001'::uuid,
+  ) u) <> 'b6000000-0000-4000-8000-000000000001'::uuid,
   true,
   'B, participant of an «Occupato» of B2, changes it from Monday 19 on'
 );
@@ -350,6 +358,101 @@ select results_eq(
 );
 
 -- ---------------------------------------------------------------------------
+-- Giulia (B): «Tutti i prossimi» from an occurrence moved to another day (review of
+-- PR #120, point 3). «Yoga» every Tuesday from 6 October at 18:00: Tuesday 27 removed,
+-- Tuesday 20 moved to Saturday 24 at 10:00. The form shows Saturday 24 at 10:00 and
+-- «Ogni martedì»; Giulia changes only title and time and saves «Tutti i prossimi».
+-- ---------------------------------------------------------------------------
+select lives_ok(
+  $$ select public.delete_event_occurrence('b6000000-0000-4000-8000-000000000003', '2026-10-27', 'this') $$,
+  'B removes Tuesday 27 of «Yoga»'
+);
+select lives_ok(
+  $$ select public.update_event_occurrence('b6000000-0000-4000-8000-000000000003', '2026-10-20', 'Yoga',
+       '2026-10-24 10:00+02', '2026-10-24 11:00+02', null, null, null) $$,
+  'B moves only Tuesday 20 to Saturday 24 at 10:00 (a day outside the rule)'
+);
+select results_eq(
+  $$ select u.day from public.update_event(
+       'b6000000-0000-4000-8000-000000000003', '2026-10-20', 'Yoga serale', '2026-10-24 19:00+02', '2026-10-24 20:00+02',
+       'household', array['b1000000-0000-4000-8000-000000000001']::uuid[], null, null, 'weekly', '{2}', null, null
+     ) u $$,
+  $$ values ('2026-10-20'::date) $$,
+  'the save does not fail on the rule (Saturday is not a Tuesday): the shift is measured on the form (0 days), the series keeps Tuesdays and the opened occurrence is now on Tuesday 20'
+);
+select ok(
+  set_config('test.yoga', (select e.id::text from public.events e where e.title = 'Yoga serale'), true) is not null,
+  'the new part of «Yoga» exists'
+);
+select results_eq(
+  $$ select e.starts_at, e.ends_at, e.recurrence_weekdays from public.events e where e.id = current_setting('test.yoga')::uuid $$,
+  $$ values ('2026-10-20 19:00+02'::timestamptz, '2026-10-20 20:00+02'::timestamptz, '{2}'::smallint[]) $$,
+  'the new part starts on Tuesday 20 at the time of the form, not on the Saturday of the one-off move'
+);
+select is_empty(
+  $$ select 1 from public.get_event_occurrence(current_setting('test.yoga')::uuid, '2026-10-27')
+     union all
+     select 1 from public.get_event_occurrence(current_setting('test.yoga')::uuid, '2026-10-24') $$,
+  'Tuesday 27 stays removed; the one-off Saturday 24 takes the new values (back on Tuesday)'
+);
+select results_eq(
+  $$ select g.title, g.starts_at from public.get_event_occurrence(current_setting('test.yoga')::uuid, '2026-11-03') g $$,
+  $$ values ('Yoga serale', '2026-11-03 19:00+01'::timestamptz) $$,
+  'the following Tuesdays have the new values'
+);
+select results_eq(
+  $$ select g.title, g.starts_at, g.recurrence_until from public.get_event_occurrence('b6000000-0000-4000-8000-000000000003', '2026-10-13') g $$,
+  $$ values ('Yoga', '2026-10-13 18:00+02'::timestamptz, '2026-10-19'::date) $$,
+  'the occurrences before Tuesday 20 keep the old values'
+);
+
+-- The day changed in the form on a moved occurrence: the series moves by the same days.
+select lives_ok(
+  $$ select public.update_event_occurrence(current_setting('test.yoga')::uuid, '2026-11-10', 'Yoga serale',
+       '2026-11-12 19:00+01', '2026-11-12 20:00+01', null, null, null) $$,
+  'B moves only Tuesday 10 November to Thursday 12'
+);
+select lives_ok(
+  $$ select public.delete_event_occurrence(current_setting('test.yoga')::uuid, '2026-11-17', 'this') $$,
+  'B removes Tuesday 17 November'
+);
+select results_eq(
+  $$ select u.day from public.update_event(
+       current_setting('test.yoga')::uuid, '2026-11-10', 'Yoga serale', '2026-11-13 19:00+01', '2026-11-13 20:00+01',
+       'household', array['b1000000-0000-4000-8000-000000000001']::uuid[], null, null, 'weekly', '{3}', null, null
+     ) u $$,
+  $$ values ('2026-11-11'::date) $$,
+  'Thursday 12 moved to Friday 13 in the form (+1 day) with «Ogni mercoledì» sent: the series moves from Tuesday 10 to Wednesday 11'
+);
+select results_eq(
+  $$ select x.occurrence_date, x.is_cancelled from public.event_exceptions x
+     where x.event_id = (select e.id from public.events e where e.title = 'Yoga serale' and e.starts_at = '2026-11-11 19:00+01') $$,
+  $$ values ('2026-11-18'::date, true) $$,
+  'the removed Tuesday 17 stays removed, as Wednesday 18'
+);
+
+-- A split that leaves nothing before (review of PR #120, point 1).
+select lives_ok(
+  $$ select public.delete_event_occurrence('b6000000-0000-4000-8000-000000000004', '2026-10-06', 'this') $$,
+  'B removes the first occurrence of «Corso» (Tuesday 6)'
+);
+select lives_ok(
+  $$ select public.update_event(
+       'b6000000-0000-4000-8000-000000000004', '2026-10-13', 'Corso nuovo', '2026-10-13 18:00+02', '2026-10-13 19:00+02',
+       'household', array[]::uuid[], null, null, 'weekly', '{2}', null, null) $$,
+  'B saves «Tutti i prossimi» from Tuesday 13'
+);
+set local request.method to 'HEAD';
+select throws_ok(
+  $$ select public.update_event(
+       'a6000000-0000-4000-8000-000000000003', null, 'Con HEAD', '2026-10-20 22:00+02', '2026-10-21 01:00+02',
+       'household', array[]::uuid[], null, null, 'none', null, null, null) $$,
+  'P0001', 'use POST',
+  'update_event refuses HEAD'
+);
+set local request.method to 'POST';
+
+-- ---------------------------------------------------------------------------
 -- As the database owner: the split of Giulia kept Paolo as author
 -- ---------------------------------------------------------------------------
 reset role;
@@ -372,6 +475,21 @@ select is(
   (select e.recurrence_until from public.events e where e.title = 'Riunione segreta'),
   '2026-10-18'::date,
   'the old part ends the day before'
+);
+select is_empty(
+  $$ select 1 from public.events e where e.id = 'b6000000-0000-4000-8000-000000000004'
+        or e.notes = 'Portare la cuffia' and e.title = 'Corso' $$,
+  'the old part of «Corso», with no occurrence left, is deleted with its title, place and notes'
+);
+select is(
+  (select count(*)::int from public.event_exceptions x where x.event_id = 'b6000000-0000-4000-8000-000000000004'),
+  0,
+  'its removed occurrence is deleted with it'
+);
+select results_eq(
+  $$ select e.starts_at from public.events e where e.title = 'Corso nuovo' $$,
+  $$ values ('2026-10-13 18:00+02'::timestamptz) $$,
+  'the new part of «Corso» starts on Tuesday 13'
 );
 
 select * from finish();
