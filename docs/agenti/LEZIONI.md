@@ -15,6 +15,8 @@ Errori già commessi (in questo progetto o in quelli precedenti dell'ecosistema)
 - Eventi `DELETE` di Realtime (Postgres Changes) senza filtro né RLS → arrivano a tutti gli iscritti con il solo `id`: la pagina ignora gli id che non conosce, e la descrizione della PR dice cosa arriva davvero.
 - Pulizia dei dati con scadenza affidata a un trigger di scrittura (dati oltre la scadenza se nessuno scrive) → la scadenza si garantisce con un job `pg_cron` che non dipende dall'uso.
 - Permesso di `insert` sulla colonna `id` → un altro Nest riusa un id ricevuto dagli eventi `DELETE` di Realtime e blocca l'«Annulla» del Nest che l'aveva tolto → mai `grant insert` su `id`: lo genera il database; la coda offline usa un id temporaneo e riconcilia con una lettura separata, senza `.select()`.
+- Impegni «Solo io» o «Occupato» di un altro: chi vi partecipa o li accompagna li vede per intero e può allargarli (aggiungere persone, cambiare chi accompagna) → solo l'autore aggiunge persone e cambia l'accompagnatore, con una funzione `security definer` in `private` usata dalla policy e un trigger sull'accompagnatore, più test pgTAP per ogni ruolo; togliere resta permesso a chi vede (#96).
+- Funzione che restituisce righe mascherate (campi `null` per privacy) → i tipi generati dicono `string`, e il compilatore non avvisa: la pagina non chiama la RPC direttamente, ma passa da una funzione unica in `src/lib/` con un tipo a varianti (`isMasked`) (#96).
 
 ## Sviluppo
 
@@ -30,6 +32,8 @@ Errori già commessi (in questo progetto o in quelli precedenti dell'ecosistema)
 - `redirect()` in una server action fa rifiutare la promessa lato client, e dentro un `try` viene preso per errore di rete → le server action restituiscono la destinazione e il client naviga; dove serve `redirect()`, il `catch` chiama per primo `unstable_rethrow(error)`.
 - Guardia di sessione che davanti a un errore tecnico (Auth non raggiungibile) mostra comunque il contenuto → la guardia chiude sull'errore con «Riprova»; il chiamante gestisce il caso di errore e non scarta il risultato.
 - Stessa parte di interfaccia in due disposizioni (mobile e desktop) con lo stesso `id` → `id` duplicati, `aria-describedby` ambigui, axe `duplicate-id-aria` → un `id` per disposizione, con prefisso diverso (`m-`, `d-`).
+- Link «Vai al contenuto» con `next/link` che non sposta il focus (Invio cambia solo lo scroll, il Tab successivo torna alla navigazione) → un `<a href="#contenuto">` nativo con `onClick` che chiama `focus()` sul `main` (`tabIndex={-1}`); il test verifica il focus dopo Invio (#78).
+- Pagine sotto `(app)` con un CSS module di pagina: per un attimo `loading.tsx` e la pagina coesistono, con due `<main>` nel documento; un CSS in stringa `<style>` è stato respinto in revisione → sotto `(app)` niente CSS module e niente `<style>` nelle pagine. Le classi di disposizione le aggiunge un lavoro `shared/*` (richiesta-condivisa) come classi globali nel blocco del designer di `components.css`, perché `feat/*` non può toccarlo (#79, #21, PR #94).
 
 ## Processo
 
@@ -46,6 +50,10 @@ Errori già commessi (in questo progetto o in quelli precedenti dell'ecosistema)
 - Criterio di accettazione con un valore oltre i limiti del database (CA-13 della #12 superava i 100 caratteri, e non era verificabile) → l'analista controlla lunghezze e vincoli di colonne e funzioni prima di fissare il criterio.
 - CI rossa su `main` per 4 giorni senza che nessuno se ne accorgesse → dopo ogni merge il coordinatore controlla la CI su `main` e, se è rossa, apre subito una issue.
 - Push con `check` o `build` rotti dopo un push di soli file di test → si lancia `npm run check` e `npm run build` prima di ogni push, anche per file di test.
+- Suite Playwright completa (circa 20 minuti) a ogni push di ogni PR, con i minuti di Actions finiti il 29/10 e la CI bloccata fino al 1° novembre → la suite completa gira sempre su `main` e sulle PR con etichetta `in-test` o `pronta-per-francesco`, letta a inizio run; a ogni altro push girano solo `check` e `build`. Se l'etichetta arriva senza un nuovo push, si rilancia l'ultima run (#97, decisione di Francesco del 29/10, vedi `ARCHITETTURA.md` §9). Un solo push per lavoro, dopo i controlli in locale (#83).
+- Gruppo di concorrenza `remote-test-data` con una sola run in attesa: una nuova annulla quella in attesa, e il `test` annullato resta senza esito (#93) → il coordinatore rilancia a mano solo la suite annullata, quando la coda si libera; mai un job fallito.
+- `npm run check` nella copia principale che fallisce con migliaia di errori dalle copie di lavoro degli agenti (`.claude/worktrees/`, build `.next` incluse), perché la configurazione flat di ESLint non legge `.gitignore` → `.claude/worktrees/**` è escluso da ESLint (#93, #97).
+- Agente senza worktree che fa `git checkout` nella copia principale e cambia il branch sotto gli altri (successo il 29/10) → niente cambi di branch nella copia principale: si lavora solo nel proprio worktree.
 
 ## Test
 
@@ -59,7 +67,7 @@ Errori già commessi (in questo progetto o in quelli precedenti dell'ecosistema)
 - Test che richiedono un utente autenticato saltati in CI finché gli utenti di test remoti non esistono, e riferimenti visivi mai generati: arrivate le credenziali dell'utente A, la CI su main è rimasta rossa (#73); "CI verde" non prova quei casi → quando un test è saltato in CI, la verifica si fa in locale contro Supabase locale e l'esito lo dice esplicitamente; quando arrivano le credenziali, i riferimenti visivi che le usano si generano subito con `visual-baseline`, senza aspettare la PR successiva.
 - Due tester che usano lo stesso Supabase locale e riseminano con credenziali diverse si cancellano a vicenda i dati → un solo seed condiviso per sessione, stesse variabili per tutti.
 - Correzione approvata che cambia uno stile fissato dal mockup → il test di confronto fallisce: si aggiorna con l'elenco delle differenze approvate, citando la decisione, senza disattivarlo.
-- Script `node --env-file` che scrive nel progetto remoto per errore, perché non sovrascrive le variabili già presenti nella shell → seed e test in locale sostituiscono esplicitamente l'ambiente; chi lancia lo script verifica che l'URL sia `127.0.0.1` prima della prima scrittura (lo script accetta anche il progetto remoto).
+- Script `node --env-file` che scrive nel progetto remoto per errore, perché non sovrascrive le variabili già presenti nella shell → seed e test in locale sostituiscono esplicitamente l'ambiente; chi lancia lo script verifica che l'URL sia `127.0.0.1` prima della prima scrittura. Lo script rifiuta comunque il progetto remoto fuori da GitHub Actions (due incidenti, #76 e #95: seed scritti sul remoto).
 - Test che leggono il nome del branch o il diff con `origin/main` (CA-22 della #52) passavano in silenzio in CI, dove il checkout è superficiale e `origin/main` manca → il recupero usa `git fetch --deepen=N` o `--unshallow` (non `--depth`, che non allunga la storia di `HEAD`), con `git -c safe.directory=*` nel container; se il diff non si può calcolare il test fallisce con un messaggio, mai con un `return` silenzioso.
 - Screenshot scattato dopo un clic, con il puntatore ancora sopra, che cattura lo stato di passaggio del mouse → `await page.mouse.move(0, 0)` prima dello screenshot.
 - Test di accessibilità sul fuoco che non trova l'anello su un campo con `outline: none` → l'anello su `:focus-within` del contenitore è ammesso solo se la specifica lo documenta, e il test controlla il contenitore, non il campo.
