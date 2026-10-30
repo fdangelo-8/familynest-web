@@ -15,6 +15,11 @@ export const SEED_LAURA_INVITE_ID = "a2000000-0000-4000-8000-000000000001";
 export const SEED_LAURA_MEMBER_ID = "a1000000-0000-4000-8000-000000000002";
 export const NEST_A = "Casa D'Angelo";
 export const NEST_B = "Casa Bianchi";
+// Fixed ids of the two seed Nests (supabase/seed.sql). Tests that look a seed
+// Nest up must use these, never the name: the throwaway Nests of other tests
+// running in parallel are also called "Casa D'Angelo" and "Casa Bianchi".
+export const SEED_HOME_A = "11111111-1111-4111-8111-111111111111";
+export const SEED_HOME_B = "22222222-2222-4222-8222-222222222222";
 
 export const isMobileProject = () => test.info().project.name === "mobile";
 
@@ -68,7 +73,10 @@ export async function inviteCountOfHousehold(
   return count ?? 0;
 }
 
+/** For the two seed Nests it returns the fixed id, never a lookup by name. */
 export async function householdIdByName(name: string): Promise<string> {
+  if (name === NEST_A) return SEED_HOME_A;
+  if (name === NEST_B) return SEED_HOME_B;
   const { data, error } = await adminClient()
     .from("households")
     .select("id")
