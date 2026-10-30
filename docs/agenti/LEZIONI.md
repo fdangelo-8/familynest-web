@@ -17,6 +17,7 @@ Errori già commessi (in questo progetto o in quelli precedenti dell'ecosistema)
 - Permesso di `insert` sulla colonna `id` → un altro Nest riusa un id ricevuto dagli eventi `DELETE` di Realtime e blocca l'«Annulla» del Nest che l'aveva tolto → mai `grant insert` su `id`: lo genera il database; la coda offline usa un id temporaneo e riconcilia con una lettura separata, senza `.select()`.
 - Impegni «Solo io» o «Occupato» di un altro: chi vi partecipa o li accompagna li vede per intero e può allargarli (aggiungere persone, cambiare chi accompagna) → solo l'autore aggiunge persone e cambia l'accompagnatore, con una funzione `security definer` in `private` usata dalla policy e un trigger sull'accompagnatore, più test pgTAP per ogni ruolo; togliere resta permesso a chi vede (#96).
 - Funzione che restituisce righe mascherate (campi `null` per privacy) → i tipi generati dicono `string`, e il compilatore non avvisa: la pagina non chiama la RPC direttamente, ma passa da una funzione unica in `src/lib/` con un tipo a varianti (`isMasked`) (#96).
+- Funzione del database chiamabile da anonimo (anteprima invito) con un blocco «solo POST» che rifiuta solo `GET` → il blocco rifiuta tutto ciò che non è `POST` (`HEAD`, `PUT`…) prima di leggere dati, e i test provano ogni metodo diverso da `POST` (#112).
 
 ## Sviluppo
 
@@ -44,6 +45,7 @@ Errori già commessi (in questo progetto o in quelli precedenti dell'ecosistema)
 - `.claude/worktrees/` sono le copie di lavoro degli agenti, ignorate da git → non si committano e non vanno "sistemate" quando un hook dell'ambiente segnala file non tracciati.
 - Due tester in parallelo sulla stessa PR condividono branch locale e indice git: un commit ha cancellato per errore gli spec dell'altro → ogni tester committa solo i propri file con pathspec esplicito, fa `git pull --no-rebase` prima del push e controlla `git show --stat` del proprio commit.
 - Tester che dichiara "CI tutta verde" guardando un commit precedente al proprio push → l'esito si dà solo dopo `node scripts/agenti/gh.mjs pr-checks <n> --watch` sul commit appena pushato.
+- `pr-checks <n> --watch` che dice «tutto verde» prima che il job `test` sia finito → l'esito si dà solo quando il job `test` del commit pushato risulta completato, non solo l'elenco dei controlli.
 - Lavoro su script e file condivisi assegnato all'architetto dati su branch `db/*`, ma guard e hook lo vietano → script in `scripts/`, `.env.example` e `package.json` si fanno solo su branch `shared/*`, anche se riguardano i dati.
 - Risposta di Francesco a una `proposta-design` registrata in ritardo, o nota di stato che la dà per «da decidere» → un'issue d'implementazione per ogni punto approvato, subito; prima di scrivere lo stato si rileggono i commenti di Francesco nell'issue (punti 6–14 della #43 erano rimasti senza issue).
 - Scostamento dal criterio deciso in PR (testo diverso dal CA) → il coordinatore aggiorna il criterio nell'issue prima del test funzionale, altrimenti il tester lo legge in contrasto con la PR.
@@ -54,6 +56,9 @@ Errori già commessi (in questo progetto o in quelli precedenti dell'ecosistema)
 - Gruppo di concorrenza `remote-test-data` con una sola run in attesa: una nuova annulla quella in attesa, e il `test` annullato resta senza esito (#93) → il coordinatore rilancia a mano solo la suite annullata, quando la coda si libera; mai un job fallito.
 - `npm run check` nella copia principale che fallisce con migliaia di errori dalle copie di lavoro degli agenti (`.claude/worktrees/`, build `.next` incluse), perché la configurazione flat di ESLint non legge `.gitignore` → `.claude/worktrees/**` è escluso da ESLint (#93, #97).
 - Agente senza worktree che fa `git checkout` nella copia principale e cambia il branch sotto gli altri (successo il 29/10) → niente cambi di branch nella copia principale: si lavora solo nel proprio worktree.
+- Script o file nello scratchpad condiviso tra agenti: uno script condiviso ha portato più agenti a scrivere sul Supabase remoto → ogni agente lavora solo dentro il proprio worktree, mai script o file in cartelle condivise.
+- Stack Supabase locale avviato con una cartella o un project-id comuni → cartella e project-id dentro il proprio worktree; per fermarlo `supabase stop --workdir <cartella del proprio worktree>`, mai lo stack di un altro agente.
+- Disco del container limitato, con `node_modules`, `.next` e `test-results` lasciati dai worktree → alla fine di ogni lavoro si cancellano `node_modules`, `.next` e `test-results` del proprio worktree.
 
 ## Test
 
@@ -71,6 +76,7 @@ Errori già commessi (in questo progetto o in quelli precedenti dell'ecosistema)
 - Test che leggono il nome del branch o il diff con `origin/main` (CA-22 della #52) passavano in silenzio in CI, dove il checkout è superficiale e `origin/main` manca → il recupero usa `git fetch --deepen=N` o `--unshallow` (non `--depth`, che non allunga la storia di `HEAD`), con `git -c safe.directory=*` nel container; se il diff non si può calcolare il test fallisce con un messaggio, mai con un `return` silenzioso.
 - Screenshot scattato dopo un clic, con il puntatore ancora sopra, che cattura lo stato di passaggio del mouse → `await page.mouse.move(0, 0)` prima dello screenshot.
 - Test di accessibilità sul fuoco che non trova l'anello su un campo con `outline: none` → l'anello su `:focus-within` del contenitore è ammesso solo se la specifica lo documenta, e il test controlla il contenitore, non il campo.
+- Due `<main>` nel documento per un attimo (React 19 in streaming: `loading` e pagina insieme) → i test aspettano l'h1 della pagina e poi cercano `getByRole("main")`; mai il primo `main` appena visibile.
 
 ## Design
 
