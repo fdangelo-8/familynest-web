@@ -1119,8 +1119,12 @@ test.describe("il tuo colore (08)", () => {
       await expect(button).toHaveAttribute("aria-busy", "true");
       const back = backControl(page);
       await expect(back).toHaveAttribute("aria-disabled", "true");
+      // Explicit wait: a navigation to /invito must NOT happen after the click.
+      const navigation = page.waitForURL(/\/invito$/, { timeout: 1000 });
       await back.dispatchEvent("click");
+      await expect(navigation).rejects.toThrow(/Timeout/);
       await expect(page).toHaveURL(`${originOf(baseURL)}/invito/colore`);
+      await expect(h1(page)).toHaveText("Scegli il tuo colore");
     });
   });
 
