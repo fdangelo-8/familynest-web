@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
+import { safeNextPath } from "./safe-next";
 
 /**
  * Sign-in with Apple and Google started from the browser, shared by the
@@ -36,11 +37,15 @@ export async function startOAuthSignIn(
   options: { next?: string } = {},
 ): Promise<"started" | "failed"> {
   if (!navigator.onLine) return "failed";
+  // `next` goes through the same check as the return routes: an external or
+  // forbidden path (an invitation address with its token) is refused.
+  const next = options.next === undefined ? null : safeNextPath(options.next);
+  if (options.next !== undefined && next === null) return "failed";
   try {
     const supabase = createClient();
     const redirectTo = new URL("/auth/callback", window.location.origin);
     redirectTo.searchParams.set("provider", provider);
-    if (options.next) redirectTo.searchParams.set("next", options.next);
+    if (next) redirectTo.searchParams.set("next", next);
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: { redirectTo: redirectTo.toString() },

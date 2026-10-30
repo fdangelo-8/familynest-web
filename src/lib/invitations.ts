@@ -42,37 +42,61 @@ export type InviteCookieOptions = {
   sameSite: "lax";
   path: "/";
   secure: boolean;
-  expires: Date;
+  /** Seconds, always between 1 and `INVITE_COOKIE_MAX_AGE_SECONDS`. */
+  maxAge: number;
 };
 
 /**
- * Options to set the cookie: HttpOnly, SameSite=Lax, Path=/, Secure on https.
- * It lasts 24 hours, or less if the invitation expires sooner.
+ * Options to set the cookie: HttpOnly, SameSite=Lax, Path=/, Secure on https,
+ * `maxAge` between 1 and 86400 seconds: 24 hours, or less if the invitation
+ * expires sooner. An invitation already expired (or expiring within the
+ * second) returns `null`: no cookie is set, never one with a zero or negative
+ * duration.
  */
 export function inviteCookieOptions(
   origin: string,
   invitationExpiresAt?: Date | string | null,
   now: Date = new Date(),
-): InviteCookieOptions {
-  let expires = new Date(now.getTime() + INVITE_COOKIE_MAX_AGE_SECONDS * 1000);
+): InviteCookieOptions | null {
+  let maxAge = INVITE_COOKIE_MAX_AGE_SECONDS;
   if (invitationExpiresAt) {
-    const invitation = new Date(invitationExpiresAt);
-    if (!Number.isNaN(invitation.getTime()) && invitation < expires) {
-      expires = invitation;
+    const invitation = new Date(invitationExpiresAt).getTime();
+    if (!Number.isNaN(invitation)) {
+      maxAge = Math.min(
+        maxAge,
+        Math.floor((invitation - now.getTime()) / 1000),
+      );
     }
   }
+  if (maxAge < 1) return null;
   return {
     httpOnly: true,
     sameSite: "lax",
     path: "/",
     secure: origin.startsWith("https:"),
-    expires,
+    maxAge,
   };
 }
 
-/** Options to delete the cookie: a past expiry and the same path (a `maxAge` of 0 leaves an empty cookie, LEZIONI). */
-export function clearInviteCookieOptions(origin: string): InviteCookieOptions {
-  return { ...inviteCookieOptions(origin), expires: new Date(0) };
+export type ClearInviteCookieOptions = {
+  httpOnly: true;
+  sameSite: "lax";
+  path: "/";
+  secure: boolean;
+  expires: Date;
+};
+
+/** Options to delete the cookie: a past expiry and the same path, no `maxAge` (a `maxAge` of 0 leaves an empty cookie, LEZIONI). */
+export function clearInviteCookieOptions(
+  origin: string,
+): ClearInviteCookieOptions {
+  return {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+    secure: origin.startsWith("https:"),
+    expires: new Date(0),
+  };
 }
 
 /** The link to share: `<origin>/invito/<token>`. */
