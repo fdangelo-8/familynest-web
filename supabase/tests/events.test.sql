@@ -28,9 +28,9 @@ select columns_are(
   array[
     'id', 'household_id', 'author_member_id', 'title', 'location', 'starts_at', 'ends_at',
     'visibility', 'escort_member_id', 'recurrence', 'recurrence_weekdays', 'recurrence_until',
-    'created_at', 'updated_at'
+    'created_at', 'updated_at', 'notes'
   ],
-  'events has exactly the planned columns (no notes, no health data)'
+  'events has exactly the planned columns (notes added by #109, no health data)'
 );
 select columns_are(
   'public', 'event_members',
@@ -102,7 +102,9 @@ select ok(
 );
 select ok(
   not has_function_privilege('authenticated', 'private.household_members_delete_private_events()', 'execute')
-  and not has_function_privilege('authenticated', 'private.event_occurrence_starts(timestamptz, public.event_recurrence, smallint[], date, timestamptz, timestamptz)', 'execute'),
+  -- #109: event_occurrence_starts() is now evaluated as the caller by the security
+  -- invoker functions (pure computation, private schema not exposed by the Data API).
+  and not has_function_privilege('anon', 'private.event_occurrence_starts(timestamptz, public.event_recurrence, smallint[], date, timestamptz, timestamptz)', 'execute'),
   'internal event functions cannot be called by the app'
 );
 
