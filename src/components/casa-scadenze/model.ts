@@ -107,6 +107,8 @@ function capitalizeFirst(text: string): string {
 export type DeadlineView = {
   deadline: Deadline;
   howMuch: HowMuch;
+  /** The due day is before today (Rome): the row goes in «Scadute» */
+  overdue: boolean;
   urgent: boolean;
   /** Visible line under the title */
   info: string;
@@ -157,6 +159,7 @@ export function toView(
   return {
     deadline,
     howMuch: howMuch(days),
+    overdue: days < 0,
     urgent: isUrgent(days),
     info: capitalizeFirst(parts.join(", ")),
     avatar,
