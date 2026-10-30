@@ -2,11 +2,11 @@
 
 import { cookies } from "next/headers";
 import { clearInviteCookie } from "@/components/invito/server";
-import {
-  CHOOSABLE_COLORS,
-  type ChoosableColor,
-  type TakenColor,
+import type {
+  ChoosableColor,
+  TakenColor,
 } from "@/components/ui/ColorChoice/ColorChoice";
+import { MEMBER_COLORS } from "@/components/ui/Avatar/Avatar";
 import { isHouseholdFullError } from "@/lib/household-limits";
 import { getInvitationPreview } from "@/lib/invitation-preview";
 import {
@@ -25,7 +25,10 @@ export type AcceptResult =
   | { status: "error"; kind: "network" | "server" };
 
 function isChoosable(value: string): value is ChoosableColor {
-  return (CHOOSABLE_COLORS as ReadonlyArray<string>).includes(value);
+  return (
+    value !== "insieme" &&
+    (MEMBER_COLORS as ReadonlyArray<string>).includes(value)
+  );
 }
 
 /**

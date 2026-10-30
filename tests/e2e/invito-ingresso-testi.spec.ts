@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import {
   avatarGroupLabel,
@@ -60,5 +61,14 @@ test.describe("ingresso con invito: testi", () => {
     expect(colorHelp(null, "zafferano")).toBe(
       "Ti era stato dato lo zafferano. I colori spenti sono già di qualcun altro.",
     );
+  });
+
+  test("la server action non importa valori da moduli client", () => {
+    // ColorChoice is "use client": on the server a value imported from it is a
+    // client reference, not an array (CHOOSABLE_COLORS.includes failed).
+    const source = readFileSync("src/app/invito/actions.ts", "utf8");
+    expect(source).not.toMatch(/^import (?!type)[^;]*ColorChoice/m);
+    expect(source).toMatch(/import type \{[^}]*\} from "[^"]*ColorChoice/);
+    expect(source).not.toContain("CHOOSABLE_COLORS");
   });
 });
