@@ -134,6 +134,8 @@ test.describe("Un membro del Nest: accessibilità", () => {
     page,
   }) => {
     await openMember(page, IDS.laura, "Laura");
+    // Start from the main: the stops before it (bar, menus) are not under test.
+    await page.getByRole("main").evaluate((el) => el.focus());
     const stops: string[] = [];
     for (let i = 0; i < 40; i++) {
       await page.keyboard.press("Tab");
@@ -149,7 +151,6 @@ test.describe("Un membro del Nest: accessibilità", () => {
       });
       if (!stop) break;
       const label = `${stop.role}: ${stop.label}`;
-      if (stops.includes(label)) break;
       stops.push(label);
       expect(await focusIsVisible(page), `anello assente su ${label}`).toBe(
         true,

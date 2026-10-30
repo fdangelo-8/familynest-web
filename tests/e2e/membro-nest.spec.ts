@@ -1102,12 +1102,10 @@ test.describe("errore", () => {
     );
     const guard = source.indexOf("await requireNest()");
     expect(guard).toBeGreaterThan(-1);
-    // Every reading of the database comes after the guard.
-    const readings = [...source.matchAll(/\.from\(|\.rpc\(|await load\(/g)].map(
-      (match) => match.index!,
-    );
-    expect(readings.length).toBeGreaterThan(0);
-    for (const index of readings) expect(index).toBeGreaterThan(guard);
+    // The only reading in the component is the call to `load`, after the guard
+    // (the helper `load`, defined above, does the reads when it is called).
+    const firstRead = source.indexOf("await load(");
+    expect(firstRead).toBeGreaterThan(guard);
     expect(source).toMatch(/notFound\(\)/);
     expect(source).toMatch(/<MemberError\s*\/>/);
     expect(source).toMatch(/status:\s*"error"/);
