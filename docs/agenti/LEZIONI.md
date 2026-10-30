@@ -18,6 +18,8 @@ Errori già commessi (in questo progetto o in quelli precedenti dell'ecosistema)
 - Impegni «Solo io» o «Occupato» di un altro: chi vi partecipa o li accompagna li vede per intero e può allargarli (aggiungere persone, cambiare chi accompagna) → solo l'autore aggiunge persone e cambia l'accompagnatore, con una funzione `security definer` in `private` usata dalla policy e un trigger sull'accompagnatore, più test pgTAP per ogni ruolo; togliere resta permesso a chi vede (#96).
 - Funzione che restituisce righe mascherate (campi `null` per privacy) → i tipi generati dicono `string`, e il compilatore non avvisa: la pagina non chiama la RPC direttamente, ma passa da una funzione unica in `src/lib/` con un tipo a varianti (`isMasked`) (#96).
 - Funzione del database chiamabile da anonimo (anteprima invito) con un blocco «solo POST» che rifiuta solo `GET` → il blocco rifiuta tutto ciò che non è `POST` (`HEAD`, `PUT`…) prima di leggere dati, e i test provano ogni metodo diverso da `POST` (#112).
+- Divisione di una serie di impegni fatta con più scritture separate: un errore a metà lascia un impegno «fantasma» con le sue note (#120) → ogni operazione che spezza una serie è una sola funzione `security definer` che scrive tutto in una transazione; il test conta le copie dopo un errore forzato.
+- Test pgTAP in `supabase/tests/` scritti dal tester o dal coordinatore → li scrive solo l'architetto dati nel branch `db/*`, perché gli hook lo impongono; il tester funzionale indica i casi mancanti nella PR, senza scriverli.
 
 ## Sviluppo
 
@@ -35,6 +37,13 @@ Errori già commessi (in questo progetto o in quelli precedenti dell'ecosistema)
 - Stessa parte di interfaccia in due disposizioni (mobile e desktop) con lo stesso `id` → `id` duplicati, `aria-describedby` ambigui, axe `duplicate-id-aria` → un `id` per disposizione, con prefisso diverso (`m-`, `d-`).
 - Link «Vai al contenuto» con `next/link` che non sposta il focus (Invio cambia solo lo scroll, il Tab successivo torna alla navigazione) → un `<a href="#contenuto">` nativo con `onClick` che chiama `focus()` sul `main` (`tabIndex={-1}`); il test verifica il focus dopo Invio (#78).
 - Pagine sotto `(app)` con un CSS module di pagina: per un attimo `loading.tsx` e la pagina coesistono, con due `<main>` nel documento; un CSS in stringa `<style>` è stato respinto in revisione → sotto `(app)` niente CSS module e niente `<style>` nelle pagine. Le classi di disposizione le aggiunge un lavoro `shared/*` (richiesta-condivisa) come classi globali nel blocco del designer di `components.css`, perché `feat/*` non può toccarlo (#79, #21, PR #94).
+- Rilettura dopo una scrittura con la stessa query della prima lettura: Next.js unisce le GET identiche nello stesso render e restituisce il risultato vecchio (#117) → rileggi con una query diversa (per esempio con un filtro su un istante che cambia), senza `.select()` sulla scrittura.
+- «Riprova» che resta in caricamento se il secondo tentativo dà lo stesso errore, perché l'effetto dipende da un valore che non cambia (#117) → lo stato di attesa si gestisce con `useTransition` attorno al nuovo tentativo, che si chiude sempre.
+- Funzione condivisa che restituisce nomi o dati personali a ogni chiamante, anche dove non servono (#124) → il tipo di ritorno dichiara cosa include; un parametro obbligatorio decide se i dati ci sono, e il test copre entrambi i casi.
+- Cookie con scadenza impostato solo con `expires`, senza `Max-Age` richiesto dal criterio (#124) → imposta anche `maxAge` in secondi (almeno 1, mai oltre la scadenza); la cancellazione usa opzioni sue, senza ereditarlo.
+- Token d'invito che finisce in un percorso di ritorno (`next`, poi `redirect_to`, log e indirizzo) (#124) → la destinazione passa sempre da `safeNextPath`, che rifiuta i percorsi con un token; il test prova un `next` esterno e uno con token.
+- Componente condiviso che riceve dalla pagina un elemento già pronto (avviso offline con «Riprova») invece dei dati (#119) → il componente condiviso possiede avviso, azioni e stato di caricamento; la pagina passa solo dati e callback.
+- Voce di menu di una sezione (Casa) con `aria-current="page"` anche sulle pagine interne → `"true"` per la sezione, `"page"` solo sull'indirizzo esatto della voce (`getNavAriaCurrent`).
 
 ## Processo
 
@@ -59,6 +68,10 @@ Errori già commessi (in questo progetto o in quelli precedenti dell'ecosistema)
 - Script o file nello scratchpad condiviso tra agenti: uno script condiviso ha portato più agenti a scrivere sul Supabase remoto → ogni agente lavora solo dentro il proprio worktree, mai script o file in cartelle condivise.
 - Stack Supabase locale avviato con una cartella o un project-id comuni → cartella e project-id dentro il proprio worktree; per fermarlo `supabase stop --workdir <cartella del proprio worktree>`, mai lo stack di un altro agente.
 - Disco del container limitato, con `node_modules`, `.next` e `test-results` lasciati dai worktree → alla fine di ogni lavoro si cancellano `node_modules`, `.next` e `test-results` del proprio worktree.
+- PR di sola documentazione bloccate perché la verifica `db` non partiva mai → la verifica `db` parte sempre; se la PR tocca solo `docs/**` o `*.md` salta i passi del database e finisce verde (#121).
+- PR di una fondamenta `shared/*` con `Refs #n` nel corpo, e guard rosso → il guard vuole `Closes #<n>` nel corpo di ogni PR, anche delle fondamenta; `Refs` non basta (#124).
+- `pr-checks <n> --watch` subito dopo un push che dice «TUTTO VERDE» prima che partano i run del nuovo SHA → si aspetta che esistano i run del nuovo SHA (`gh run list`), poi si legge l'esito.
+- File temporanei con nomi uguali in una cartella usata da più agenti in parallelo si sovrascrivono → ogni file temporaneo ha un prefisso unico (numero di issue o PR) e sta nel proprio spazio di lavoro.
 
 ## Test
 
@@ -75,6 +88,9 @@ Errori già commessi (in questo progetto o in quelli precedenti dell'ecosistema)
 - Script `node --env-file` che scrive nel progetto remoto per errore, perché non sovrascrive le variabili già presenti nella shell → seed e test in locale sostituiscono esplicitamente l'ambiente; chi lancia lo script verifica che l'URL sia `127.0.0.1` prima della prima scrittura. Lo script rifiuta comunque il progetto remoto fuori da GitHub Actions (due incidenti, #76 e #95: seed scritti sul remoto).
 - Test che leggono il nome del branch o il diff con `origin/main` (CA-22 della #52) passavano in silenzio in CI, dove il checkout è superficiale e `origin/main` manca → il recupero usa `git fetch --deepen=N` o `--unshallow` (non `--depth`, che non allunga la storia di `HEAD`), con `git -c safe.directory=*` nel container; se il diff non si può calcolare il test fallisce con un messaggio, mai con un `return` silenzioso.
 - Screenshot scattato dopo un clic, con il puntatore ancora sopra, che cattura lo stato di passaggio del mouse → `await page.mouse.move(0, 0)` prima dello screenshot.
+- Porta 54322 del database locale occupata sul runner, con il controllo `db` rosso senza bug → `db.yml` riprova una volta dopo uno stop pulito; se il controllo `db` cade per la porta, si rilancia prima di cercare un bug (#121).
+- Area di tocco fatta con `::before` misurata con `boundingBox` (dà il box del nodo, non l'area toccabile) → si verifica con `elementFromPoint` nei punti dell'area (#78).
+- Selettori dei test sul campo della spesa che diventano ambigui dopo l'arrivo di un secondo campo rapido (strict mode) → restringere con `aria-label` su ogni campo.
 - Test di accessibilità sul fuoco che non trova l'anello su un campo con `outline: none` → l'anello su `:focus-within` del contenitore è ammesso solo se la specifica lo documenta, e il test controlla il contenitore, non il campo.
 - Due `<main>` nel documento per un attimo (React 19 in streaming: `loading` e pagina insieme) → i test aspettano l'h1 della pagina e poi cercano `getByRole("main")`; mai il primo `main` appena visibile.
 
@@ -83,3 +99,4 @@ Errori già commessi (in questo progetto o in quelli precedenti dell'ecosistema)
 - Grafiche che "sembrano fatte dall'AI" (card inclinate, CTA generiche, `+` anonimi) → seguire il mockup alla lettera; testi di bottoni specifici (es. "Aggiungi", non "Scrivi").
 - Componente in caricamento con lo stile del disabilitato sembrava disabilitato → `aria-busy` e `aria-disabled` sono corretti, ma lo stile visivo del caricamento va separato da quello del disabilitato.
 - Frase sul comportamento nella guida del design system (es. dove appare il dialogo, «in basso» su mobile) scritta senza controllarla sul CSS → ogni frase di comportamento si verifica su `components.css` prima di approvare o correggere la guida.
+- Regole CSS nuove in fondo a `components.css`, fuori dal blocco del designer che la specifica indica (#114, #119), e descrizione della PR che dice il contrario → le regole vanno nel blocco «STATI AGGIUNTI DAL DESIGNER», nel punto indicato dalla specifica; la descrizione lo dichiara solo dopo averlo controllato.
