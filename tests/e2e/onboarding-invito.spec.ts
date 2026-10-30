@@ -303,14 +303,8 @@ test.describe("copia e condivisione", () => {
     await expect.poll(async () => (await shareCalls(page)).length).toBe(1);
     const [call] = await shareCalls(page);
     expect(call!.url).toBe(inviteUrl(page, invite.token));
-    // TODO(#14): the requirement (CA-7 rewritten) wants title "Invito a
-    // FamilyNest" and the text below, while the graphic specification of 30/10
-    // (section 4) says "only the link". Check which one the code follows and
-    // align this test; the coordinator has to settle the contradiction.
-    expect(call!.title).toBe("Invito a FamilyNest");
-    expect(call!.text).toBe(
-      `Entra in ${NEST_A} su FamilyNest. ${expiryNote(invite.expires_at)}`,
-    );
+    // Decision of the coordinator: share only the link, no title, no text.
+    expect(Object.keys(call!).sort()).toEqual(["url"]);
     await expect(
       messages(page).filter({ hasText: "Link copiato" }),
     ).toHaveCount(0);
@@ -359,13 +353,10 @@ test.describe("copia e condivisione", () => {
     });
     await openAs(page, baseURL, "A");
     await copyButton(page).click();
-    // TODO(#14): the requirement says role="status" (toast without icon), the
-    // graphic specification says role="alert" (Alert). Both are accepted here;
-    // keep only the one the code uses.
     await expect(
-      messages(page).filter({
-        hasText: "Non siamo riusciti a copiare il link. Riprova.",
-      }),
+      page
+        .getByRole("alert")
+        .filter({ hasText: "Non siamo riusciti a copiare il link. Riprova." }),
     ).toBeVisible();
     await expect(
       messages(page).filter({ hasText: "Link copiato" }),
