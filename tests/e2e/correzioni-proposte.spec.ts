@@ -70,7 +70,8 @@ async function loginAs(
 /** Waits for the frame to be rendered and the page to be hydrated. */
 async function openFrame(page: Page, route: string) {
   await page.goto(route);
-  await expect(page.locator("main")).toBeVisible();
+  // With React streaming a second, hidden <main> may exist for a moment.
+  await expect(page.getByRole("main")).toBeVisible();
 }
 
 /**
@@ -485,7 +486,7 @@ test.describe("punto 8: Vai al contenuto", () => {
       await expect(
         page.getByRole("link", { name: "Vai al contenuto" }),
       ).toHaveCount(1);
-      await expect(page.locator("main")).toHaveCount(1);
+      await expect(page.getByRole("main")).toHaveCount(1);
       await page.keyboard.press("Tab");
       await expect(
         page.getByRole("link", { name: "Vai al contenuto" }),
@@ -503,7 +504,7 @@ test.describe("punto 8: Vai al contenuto", () => {
     await expect(
       page.getByRole("link", { name: "Vai al contenuto" }),
     ).toHaveCount(1);
-    await expect(page.locator("main")).toHaveCount(1);
+    await expect(page.getByRole("main")).toHaveCount(1);
     await page.keyboard.press("Tab");
     await expect(
       page.getByRole("link", { name: "Vai al contenuto" }),
