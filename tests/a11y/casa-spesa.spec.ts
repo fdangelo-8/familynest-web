@@ -7,6 +7,10 @@ import {
   installSpesaFake,
   type FakeOptions,
 } from "../fixtures/spesa-fake";
+import {
+  NORMAL_DEADLINES,
+  installScadenzeFake,
+} from "../fixtures/scadenze-fake";
 import { hasTestUser, signInAs } from "../fixtures/visual-login";
 
 // Casa · Spesa (#21): axe in every state, touch areas, focus order and focus
@@ -24,6 +28,12 @@ test.beforeEach(async ({ context, baseURL }) => {
 
 async function open(page: Page, options: FakeOptions, ready = true) {
   const fake = await installSpesaFake(page, options);
+  // The deadlines are the third column; if the list cannot be read they fail
+  // too (on desktop the whole-page error needs all the lists to fail).
+  await installScadenzeFake(page, {
+    deadlines: NORMAL_DEADLINES,
+    reads: options.reads === "error" ? "error" : "ok",
+  });
   await page.goto("/casa/spesa");
   if (ready) {
     await expect(page.getByRole("region", { name: "Spesa" })).toBeVisible({

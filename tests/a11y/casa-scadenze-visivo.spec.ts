@@ -7,6 +7,8 @@ import {
   installScadenzeFake,
   type FakeOptions,
 } from "../fixtures/scadenze-fake";
+import { NORMAL_LIST, installSpesaFake } from "../fixtures/spesa-fake";
+import { NORMAL_TODOS, installTodosFake } from "../fixtures/todos-fake";
 import { hasTestUser, signInAs } from "../fixtures/visual-login";
 
 // Casa · Scadenze (#24), visual tester: axe in every state, keyboard (focus
@@ -28,6 +30,9 @@ test.beforeEach(async ({ context, baseURL }) => {
 
 async function open(page: Page, options: FakeOptions, ready = true) {
   await page.clock.install({ time: NOW });
+  // Casa reads the three lists on every page: the other two are faked too.
+  await installSpesaFake(page, { items: NORMAL_LIST });
+  await installTodosFake(page, { todos: NORMAL_TODOS });
   const fake = await installScadenzeFake(page, options);
   await page.goto("/casa/scadenze");
   if (ready) {

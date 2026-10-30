@@ -7,6 +7,10 @@ import {
   installSpesaFake,
   type FakeOptions,
 } from "../fixtures/spesa-fake";
+import {
+  NORMAL_DEADLINES,
+  installScadenzeFake,
+} from "../fixtures/scadenze-fake";
 import { NORMAL_TODOS, installTodosFake } from "../fixtures/todos-fake";
 import { hasTestUser } from "../fixtures/visual-login";
 import { signInAsCached } from "../fixtures/visual-login-cached";
@@ -38,7 +42,17 @@ async function open(page: Page, options: FakeOptions, ready = true) {
   const fake = await installSpesaFake(page, options);
   // Since #23 the Da fare column sits next to Spesa on desktop: same fake
   // things to do as the Da fare page, so the shots do not depend on real data.
-  await installTodosFake(page, { todos: NORMAL_TODOS });
+  // And the deadlines. If the shopping list cannot be read the others fail
+  // too: on desktop that is the only case of a whole-page error.
+  const othersFail = options.reads === "error";
+  await installTodosFake(page, {
+    todos: NORMAL_TODOS,
+    reads: othersFail ? "error" : "ok",
+  });
+  await installScadenzeFake(page, {
+    deadlines: NORMAL_DEADLINES,
+    reads: othersFail ? "error" : "ok",
+  });
   await page.goto("/casa/spesa");
   if (ready) {
     await expect(page.getByRole("region", { name: "Spesa" })).toBeVisible({

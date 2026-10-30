@@ -6,6 +6,8 @@ import {
   installScadenzeFake,
   type FakeOptions,
 } from "../fixtures/scadenze-fake";
+import { NORMAL_LIST, installSpesaFake } from "../fixtures/spesa-fake";
+import { NORMAL_TODOS, installTodosFake } from "../fixtures/todos-fake";
 import { hasTestUser, signInAs } from "../fixtures/visual-login";
 
 // Casa · Scadenze (#24): one screenshot per state, at 390 and 1280 px (projects).
@@ -32,6 +34,9 @@ test.beforeEach(async ({ context, baseURL }) => {
 
 async function open(page: Page, options: FakeOptions, ready = true) {
   await page.clock.install({ time: NOW });
+  // Casa reads the three lists on every page: the other two are faked too.
+  await installSpesaFake(page, { items: NORMAL_LIST });
+  await installTodosFake(page, { todos: NORMAL_TODOS });
   const fake = await installScadenzeFake(page, options);
   await page.goto("/casa/scadenze");
   if (ready) {
@@ -88,7 +93,7 @@ test("titoli lunghi", async ({ page }) => {
 });
 
 test("vuoto", async ({ page }) => {
-  await open(page, { deadlines: [], counts: { spesa: 4, todo: 4 } });
+  await open(page, { deadlines: [] });
   await expect(page.getByText("Nessuna scadenza")).toBeVisible();
   await shoot(page, "vuoto.png");
 });
