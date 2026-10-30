@@ -1064,6 +1064,19 @@ function ListSection({ rowCards }: { rowCards: boolean }) {
             </List>
           </Example>
         ) : null}
+        {rowCards ? (
+          <Example caption="testa del profilo in caricamento (#133)">
+            <SkeletonGroup data-testid="profilo-testa-skeleton">
+              <div className="profilo-testa profilo-testa--riga">
+                <Skeleton shape="cerchio" />
+                <div className="intestazione">
+                  <Skeleton shape="titolo" />
+                  <Skeleton shape="testo-corto" />
+                </div>
+              </div>
+            </SkeletonGroup>
+          </Example>
+        ) : null}
         <Example caption="riga-lista · con casella">
           <List className="scheda">
             <ListRow

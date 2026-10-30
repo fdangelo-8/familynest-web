@@ -116,3 +116,17 @@ for (const [name, card, row] of [
     await expect(cardLocator).toHaveScreenshot(`scheda-righe-${name}.png`);
   });
 }
+
+// #133: the profile head in loading state shows title and short text skeletons
+// (they used to collapse to zero width).
+test("#133: testa del profilo in caricamento", async ({ page }) => {
+  await page.goto("/design-system?righe-scheda=1");
+  await page.evaluate(() => document.fonts.ready);
+  const group = page.getByTestId("profilo-testa-skeleton");
+  await group.scrollIntoViewIfNeeded();
+  for (const shape of ["titolo", "testo-corto"]) {
+    const box = await group.locator(`.skeleton--${shape}`).boundingBox();
+    expect(box?.width ?? 0).toBeGreaterThan(0);
+  }
+  await expect(group).toHaveScreenshot("profilo-testa-skeleton.png");
+});
