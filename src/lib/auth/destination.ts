@@ -1,14 +1,18 @@
 import "server-only";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { INVITE_COLOR_PATH, readInviteToken } from "@/lib/invitations";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/database";
 import { safeNextPath } from "./safe-next";
 
 /**
  * Where a signed-in person goes: a safe `next` if the route asked for one,
- * otherwise /oggi when they have a Nest and /onboarding when they do not.
+ * otherwise /oggi when they have a Nest. Without a Nest they go to
+ * /invito/colore when the invitation cookie is there (they came from an
+ * invitation link), and to /onboarding when it is not.
  * On a technical error it goes to /oggi, whose layout checks everything again.
  */
 export async function resolveDestination(
@@ -21,7 +25,13 @@ export async function resolveDestination(
     "current_household_id",
   );
   if (error) return "/oggi";
-  return householdId ? "/oggi" : "/onboarding";
+  if (householdId) return "/oggi";
+  try {
+    if (readInviteToken(await cookies())) return INVITE_COLOR_PATH;
+  } catch {
+    // No request context for cookies: same as no cookie.
+  }
+  return "/onboarding";
 }
 
 /**

@@ -62,10 +62,21 @@ export function Claim({ as: Tag }: { as: "h1" | "p" }) {
   );
 }
 
-/** Legal sentence with the links to terms and privacy. */
-export function LegalLine({ className }: { className: string }) {
+/**
+ * Legal sentence with the links to terms and privacy. `lead` is an optional
+ * sentence before it (for example the validity of an invitation), separated
+ * by a space.
+ */
+export function LegalLine({
+  className,
+  lead,
+}: {
+  className: string;
+  lead?: string;
+}) {
   return (
     <p className={className}>
+      {lead ? `${lead} ` : null}
       Continuando accetti i{" "}
       <Link className="legale__link" href="/termini">
         Termini d&apos;uso
