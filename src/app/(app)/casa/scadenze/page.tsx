@@ -1,14 +1,18 @@
 import type { Metadata } from "next";
-import { PlaceholderPage } from "@/components/ui/Placeholder/PlaceholderPage";
+import { ScadenzePage } from "@/components/casa-scadenze/ScadenzePage";
 import { requireNest } from "@/lib/nest-frame";
-import { PLACEHOLDERS } from "@/lib/app-routes";
 
 export const metadata: Metadata = {
-  title: PLACEHOLDERS["casa-scadenze"].browserTitle,
+  title: "FamilyNest · Casa · Scadenze",
 };
 
 export default async function Page() {
   // Session and Nest check before anything else (the layout is not a guard).
-  await requireNest();
-  return <PlaceholderPage pageKey="casa-scadenze" />;
+  const frame = await requireNest();
+  // The frame already shows its own error: nothing to read here.
+  if (frame.failed || frame.nestName === null) return null;
+
+  // The list is read in the browser, so the page can show its own loading
+  // and error states.
+  return <ScadenzePage nestName={frame.nestName} />;
 }
