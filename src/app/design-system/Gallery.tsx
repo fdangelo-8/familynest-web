@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type ReactNode } from "react";
+import { useState, useSyncExternalStore, type ReactNode } from "react";
 import { Alert } from "@/components/ui/Alert/Alert";
 import { Avatar, MEMBER_COLORS } from "@/components/ui/Avatar/Avatar";
 import { Button } from "@/components/ui/Button/Button";
@@ -69,7 +69,20 @@ function Example({
   );
 }
 
-export function Gallery({ rowCards = false }: { rowCards?: boolean }) {
+// The query string never changes while the page is open: nothing to watch.
+function subscribeNever() {
+  return () => {};
+}
+
+// #133: the clickable-row cards for the hover tests are shown only with
+// ?righe-scheda=1, so the reference of the whole gallery does not change.
+export function Gallery() {
+  const rowCards = useSyncExternalStore(
+    subscribeNever,
+    () =>
+      new URLSearchParams(window.location.search).get("righe-scheda") === "1",
+    () => false,
+  );
   return (
     <main className={styles.pagina}>
       <h1 className="t-titolo-pagina">Design system</h1>
