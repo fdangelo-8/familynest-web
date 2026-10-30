@@ -28,6 +28,28 @@ export function firstFreeColor(
   );
 }
 
+/**
+ * Order of the colour page for invitations and members (design system, 08 and
+ * 27): the chosen colour first, then the free ones, then the taken ones, each
+ * group in the base order. Computed once when the page opens, so the circles
+ * do not move under the finger.
+ */
+export function chosenFirstOrder(
+  chosen: ChoosableColor | null,
+  taken: ReadonlyArray<TakenColor>,
+): ChoosableColor[] {
+  const isTaken = (color: ChoosableColor) =>
+    taken.some((t) => t.color === color);
+  const first = chosen ? [chosen] : [];
+  const free = CHOOSABLE_COLORS.filter(
+    (color) => color !== chosen && !isTaken(color),
+  );
+  const used = CHOOSABLE_COLORS.filter(
+    (color) => color !== chosen && isTaken(color),
+  );
+  return [...first, ...free, ...used];
+}
+
 export type ColorChoiceProps = {
   /** Required accessible name of the group, for example "Colore" */
   "aria-label": string;
@@ -36,6 +58,8 @@ export type ColorChoiceProps = {
   onChange: (color: ChoosableColor) => void;
   /** Colours of other members: switched off and named "<Colore> (già di <nome>)" or "<Colore> (già usato)" */
   taken?: ReadonlyArray<TakenColor>;
+  /** Order in which the ten colours are shown and walked with the arrows; the base order without it */
+  order?: ReadonlyArray<ChoosableColor>;
   /** Whole group disabled (saving in progress) */
   disabled?: boolean;
   /** Group left aligned (`.scelta-colore--sinistra`), as in sheets and forms; centered when false */
@@ -60,6 +84,7 @@ export function ColorChoice({
   value,
   onChange,
   taken = [],
+  order,
   disabled = false,
   alignStart = false,
   invalid,
@@ -71,6 +96,14 @@ export function ColorChoice({
 }: ColorChoiceProps) {
   const refs = useRef<Array<HTMLButtonElement | null>>([]);
 
+  // A partial or repeated order would hide colours: fall back to the base one.
+  const colors =
+    order &&
+    order.length === CHOOSABLE_COLORS.length &&
+    CHOOSABLE_COLORS.every((color) => order.includes(color))
+      ? order
+      : CHOOSABLE_COLORS;
+
   const isOff = (color: ChoosableColor) =>
     disabled || taken.some((t) => t.color === color);
 
@@ -78,13 +111,13 @@ export function ColorChoice({
   const tabStop =
     value && !isOff(value)
       ? value
-      : (CHOOSABLE_COLORS.find((color) => !isOff(color)) ?? null);
+      : (colors.find((color) => !isOff(color)) ?? null);
 
   const move = (from: number, step: 1 | -1) => {
-    const count = CHOOSABLE_COLORS.length;
+    const count = colors.length;
     for (let i = 1; i <= count; i += 1) {
       const index = (from + step * i + count * count) % count;
-      const color = CHOOSABLE_COLORS[index]!;
+      const color = colors[index]!;
       if (!isOff(color)) {
         onChange(color);
         refs.current[index]?.focus();
@@ -119,7 +152,7 @@ export function ColorChoice({
       aria-describedby={describedBy}
       data-testid={testId}
     >
-      {CHOOSABLE_COLORS.map((color, index) => {
+      {colors.map((color, index) => {
         const owner = taken.find((t) => t.color === color);
         const name = memberColorLabel(color);
         const label = owner

@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { resolveDestination } from "@/lib/auth/destination";
+import { INVITE_WELCOME_PATH, readInviteToken } from "@/lib/invitations";
 import { createClient } from "@/lib/supabase/server";
 
 // Return from Apple and Google. Server only, no interface.
@@ -15,8 +16,13 @@ export async function GET(request: NextRequest) {
       : null;
 
   // No session: back to /accesso with a generic error (never technical details).
+  // With the invitation cookie the person is on the invitation: back to /invito,
+  // which shows the same notice (the token never goes in the address).
   const failure = (cancelled: boolean) => {
-    const url = new URL("/accesso", origin);
+    const url = new URL(
+      readInviteToken(request.cookies) ? INVITE_WELCOME_PATH : "/accesso",
+      origin,
+    );
     url.searchParams.set("errore", provider ?? "accesso");
     if (cancelled && provider) url.searchParams.set("annullato", "1");
     return NextResponse.redirect(url, 303);

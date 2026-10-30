@@ -4,29 +4,17 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button/Button";
 import { cx } from "@/components/ui/cx";
 import { Icon } from "@/components/ui/Icon/Icon";
-import { createClient } from "@/lib/supabase/client";
+import {
+  accessErrorText,
+  PROVIDER_NAME,
+  startOAuthSignIn,
+  type AccessError,
+  type Provider,
+} from "@/lib/auth/oauth";
 import styles from "./accesso.module.css";
 import { Brand, Claim, LegalLine, Stickers } from "./parts";
 
-export type Provider = "google" | "apple";
-
-/** Error shown on top of the buttons. `provider` null = unknown provider. */
-export type AccessError = { provider: Provider | null; cancelled: boolean };
-
-const PROVIDER_NAME: Record<Provider, string> = {
-  google: "Google",
-  apple: "Apple",
-};
-
-function errorText({ provider, cancelled }: AccessError): string {
-  if (!provider) {
-    return "Accesso non riuscito. Controlla la connessione e riprova.";
-  }
-  const name = PROVIDER_NAME[provider];
-  return cancelled
-    ? `Accesso con ${name} annullato. Riprova o scegli un altro modo per entrare.`
-    : `Accesso con ${name} non riuscito. Controlla la connessione e riprova.`;
-}
+export type { AccessError, Provider };
 
 function ErrorNotice({
   error,
@@ -56,7 +44,7 @@ function ErrorNotice({
       ref={ref}
     >
       <Icon name={error.cancelled ? "info" : "wifi-off"} />
-      <p className="avviso__testo">{errorText(error)}</p>
+      <p className="avviso__testo">{accessErrorText(error)}</p>
       <Button variant="link" onClick={onRetry}>
         Riprova
       </Button>
@@ -101,17 +89,9 @@ export function AccessScreen({
     }
     busy.current = true;
     setLoading(provider);
-    try {
-      const supabase = createClient();
-      const { error: startError } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback?provider=${provider}`,
-        },
-      });
-      if (startError) throw startError;
-      // The browser is going to the provider's page: the loading state stays.
-    } catch {
+    const result = await startOAuthSignIn(provider);
+    // `started`: the browser is going to the provider's page, the loading state stays.
+    if (result === "failed") {
       busy.current = false;
       setLoading(null);
       setError({ provider, cancelled: false });
