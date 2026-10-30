@@ -55,11 +55,11 @@ const REFETCH_DELAY_MS = 120;
 const DEFAULT_SETTLE_MS = 600;
 
 /** A failed request with no database code never reached the server. */
-function isNetworkError(error: { code?: string | null }): boolean {
+export function isNetworkError(error: { code?: string | null }): boolean {
   return !error.code;
 }
 
-function readSettleMs(): number {
+export function readSettleMs(): number {
   const raw = getComputedStyle(document.documentElement)
     .getPropertyValue("--durata-ampia")
     .trim();
@@ -80,10 +80,10 @@ function toItem(row: ItemRow, keys: Map<string, string>): ShoppingItem {
   };
 }
 
-type Identity = { householdId: string; meMemberId: string | null };
+export type Identity = { householdId: string; meMemberId: string | null };
 
 /** Which Nest the signed-in user is in, and which member they are. */
-async function readIdentity(supabase: Client): Promise<Identity | null> {
+export async function readIdentity(supabase: Client): Promise<Identity | null> {
   const { data: sessionData } = await supabase.auth.getSession();
   const userId = sessionData.session?.user.id;
   if (!userId) return null;
@@ -179,6 +179,8 @@ export function useShoppingList({
   const [networkDown, setNetworkDown] = useState(false);
   const [browserOffline, setBrowserOffline] = useState(false);
   const [retrying, setRetrying] = useState(false);
+  // Counts the retries of the first read (only this list is read again).
+  const [attempt, setAttempt] = useState(0);
   const [realtimeOk, setRealtimeOk] = useState(false);
   const [announcement, setAnnouncement] = useState("");
 
@@ -502,12 +504,14 @@ export function useShoppingList({
       if (cancelled) return;
       if (!identity) {
         setStatus("error");
+        setRetrying(false);
         return;
       }
       const result = await readEverything(supabase, identity.householdId);
       if (cancelled) return;
       if (result.kind !== "ok") {
         setStatus("error");
+        setRetrying(false);
         return;
       }
       identityRef.current = identity;
@@ -515,11 +519,12 @@ export function useShoppingList({
       setMeMemberId(identity.meMemberId);
       applyRead(result.rows, result.members);
       setStatus("ready");
+      setRetrying(false);
     })();
     return () => {
       cancelled = true;
     };
-  }, [applyRead, getClient]);
+  }, [applyRead, getClient, attempt]);
 
   // Browser connection.
   useEffect(() => {
@@ -710,12 +715,17 @@ export function useShoppingList({
 
   const retry = useCallback(() => {
     setRetrying(true);
+    if (status === "error") {
+      // The first read failed: read this list again, nothing else.
+      setAttempt((n) => n + 1);
+      return;
+    }
     void (async () => {
       await processQueue();
       if (queueRef.current.length === 0) await refetch();
       setRetrying(false);
     })();
-  }, [processQueue, refetch]);
+  }, [processQueue, refetch, status]);
 
   const tear = useCallback(
     (fromKeyboard: boolean) => {

@@ -7,13 +7,16 @@ import {
   installSpesaFake,
   type FakeOptions,
 } from "../fixtures/spesa-fake";
-import { hasTestUser, signInAs } from "../fixtures/visual-login";
+import { NORMAL_TODOS, installTodosFake } from "../fixtures/todos-fake";
+import { hasTestUser } from "../fixtures/visual-login";
+import { signInAsCached } from "../fixtures/visual-login-cached";
 
 // Casa · Spesa (#21): one screenshot per state, at 390 and 1280 px (projects).
 // The list is served by a fake of the shopping-list endpoints (see
 // fixtures/spesa-fake.ts): nothing is written to the database, and the shots
 // do not depend on what other suites do in the same Nest. Sign-in, the Nest
 // and its members (Marco, Laura, Biscotto) are real: test user A is needed.
+// The Da fare column (desktop) is served by fixtures/todos-fake.ts.
 // The references are generated in the CI container (workflow visual-baseline).
 
 test.use({
@@ -26,13 +29,16 @@ const NOW = new Date("2026-10-20T15:00:00+02:00");
 
 test.beforeEach(async ({ context, baseURL }) => {
   test.skip(!hasTestUser("A"), "TEST_USER_A_* non impostati");
-  const signedIn = await signInAs(context, baseURL!, "A");
+  const signedIn = await signInAsCached(context, baseURL!, "A");
   test.skip(!signedIn, "utente di test A non ancora creato (#55)");
 });
 
 async function open(page: Page, options: FakeOptions, ready = true) {
   await page.clock.install({ time: NOW });
   const fake = await installSpesaFake(page, options);
+  // Since #23 the Da fare column sits next to Spesa on desktop: same fake
+  // things to do as the Da fare page, so the shots do not depend on real data.
+  await installTodosFake(page, { todos: NORMAL_TODOS });
   await page.goto("/casa/spesa");
   if (ready) {
     await expect(page.getByRole("region", { name: "Spesa" })).toBeVisible({
