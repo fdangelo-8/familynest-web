@@ -36,7 +36,7 @@ function ColumnError({
     <Alert
       variant="errore"
       action={
-        <Button variant="link" onClick={onRetry} disabled={retrying}>
+        <Button variant="link" onClick={onRetry} loading={retrying}>
           Riprova
         </Button>
       }
@@ -149,9 +149,14 @@ export function CasaPage({
     return all.thisWeek.length + all.later.length + all.done.length === 0;
   }, [todos.todos, settling, meMemberId, now]);
 
-  // The whole page fails only when nothing can be read; one list that fails
-  // shows its error in its own column and the other keeps working.
-  if (shopping.status === "error" && todos.status === "error") {
+  // The page fails when the list of the open section cannot be read (on
+  // desktop Da fare only when Spesa fails too); otherwise the error shows in
+  // the column of the list that failed.
+  const pageFails =
+    current === "spesa"
+      ? shopping.status === "error"
+      : todos.status === "error" && (!desktop || shopping.status === "error");
+  if (pageFails) {
     return (
       <main
         id="contenuto"
