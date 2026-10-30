@@ -34,13 +34,11 @@ function SectionHead({ title, info }: { title: string; info: string }) {
 
 function Row({
   todo,
-  shownOpen,
   info,
   assignee,
   onToggle,
 }: {
   todo: Todo;
-  shownOpen: boolean;
   info: ReturnType<typeof todoInfo>;
   assignee: TodoMember | undefined;
   onToggle: (key: string) => void;
@@ -54,7 +52,6 @@ function Row({
       className={cx("riga-lista", done && "riga-lista--fatto")}
       data-item-key={todo.key}
       data-testid="da-fare-riga"
-      data-shown={shownOpen ? "open" : "done"}
     >
       <Checkbox
         checked={done}
@@ -146,7 +143,6 @@ export function TodoColumn({
           <Row
             key={todo.key}
             todo={todo}
-            shownOpen={shownOpen}
             info={todoInfo(todo, { shownOpen, now, membersById })}
             assignee={
               todo.assigneeId ? membersById.get(todo.assigneeId) : undefined
@@ -188,8 +184,7 @@ export function TodoColumn({
         }
         actions={
           <Button
-            variant="secondary"
-            small
+            variant="link"
             onClick={() => {
               list.requestFocus([
                 '[data-testid="filtro-persona-mobile"] .chip',
