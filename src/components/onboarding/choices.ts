@@ -49,3 +49,13 @@ export const CHOICES: readonly Choice[] = [
 export function isLiving(value: unknown): value is Living {
   return CHOICES.some((c) => c.value === value);
 }
+
+type HouseholdType = Database["public"]["Enums"]["household_type"];
+
+/** The answer of step 1 that a saved Nest type comes from (and back). */
+export const LIVING_BY_TYPE: Record<HouseholdType, Living> = {
+  single: "solo",
+  couple: "coppia",
+  family_with_children: "famiglia",
+  roommates: "coinquilini",
+};

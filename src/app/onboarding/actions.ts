@@ -15,7 +15,11 @@ const TYPE: Record<Living, HouseholdType> = {
 };
 
 export type CreateNestResult =
-  { status: "error" } | { status: "ok"; destination: "/oggi" | "/accesso" };
+  | { status: "error" }
+  | {
+      status: "ok";
+      destination: "/onboarding/persone" | "/oggi" | "/accesso";
+    };
 
 /**
  * Creates the person's Nest. The browser sends only the answer: Nest name,
@@ -26,7 +30,7 @@ export type CreateNestResult =
 export async function createNest(answer: string): Promise<CreateNestResult> {
   if (!isLiving(answer)) return { status: "error" };
 
-  let destination: "/oggi" | "/accesso";
+  let destination: "/onboarding/persone" | "/oggi" | "/accesso";
   try {
     const supabase = await createClient();
     const { data: userData, error: userError } = await supabase.auth.getUser();
@@ -51,7 +55,7 @@ export async function createNest(answer: string): Promise<CreateNestResult> {
         color: "pomodoro",
       });
       if (!error) {
-        destination = "/oggi";
+        destination = "/onboarding/persone";
       } else if (
         (error.code === "P0001" &&
           error.message.includes("already belongs to a household")) ||
@@ -67,4 +71,39 @@ export async function createNest(answer: string): Promise<CreateNestResult> {
     return { status: "error" };
   }
   return { status: "ok", destination };
+}
+
+/**
+ * "Indietro" from step 2: the administrator changes the answer of step 1.
+ * Only the Nest type is updated (no second Nest, members untouched). The Nest
+ * is decided here, and the database lets only an administrator update it.
+ */
+export async function changeAnswer(answer: string): Promise<CreateNestResult> {
+  if (!isLiving(answer)) return { status: "error" };
+
+  try {
+    const supabase = await createClient();
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError?.name === "AuthRetryableFetchError") {
+      return { status: "error" };
+    }
+    if (userError || !userData.user) {
+      return { status: "ok", destination: "/accesso" };
+    }
+
+    const { data: householdId, error: householdError } = await supabase.rpc(
+      "current_household_id",
+    );
+    if (householdError || !householdId) return { status: "error" };
+
+    const { error, count } = await supabase
+      .from("households")
+      .update({ household_type: TYPE[answer] }, { count: "exact" })
+      .eq("id", householdId);
+    // Zero rows: not an administrator (row-level security hides the Nest).
+    if (error || !count) return { status: "error" };
+  } catch {
+    return { status: "error" };
+  }
+  return { status: "ok", destination: "/onboarding/persone" };
 }
