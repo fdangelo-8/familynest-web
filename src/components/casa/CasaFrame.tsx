@@ -1,4 +1,4 @@
-import type { ReactNode, Ref } from "react";
+import { useEffect, useRef, type ReactNode, type RefObject } from "react";
 import { Alert } from "@/components/ui/Alert/Alert";
 import { Button } from "@/components/ui/Button/Button";
 import { cx } from "@/components/ui/cx";
@@ -24,6 +24,17 @@ export type CasaColumn = {
   offline?: CasaColumnOffline;
   /** Shown on the right of the column title (desktop), for example "4 aperti" */
   info?: string;
+  /**
+   * The column shows its own read error (with "Riprova"). When it goes away
+   * and the focus was on "Riprova", the frame moves it to the column title.
+   */
+  failed?: boolean;
+  /**
+   * Selectors, inside this column, of the places that take the focus when the
+   * offline alert goes away with the focus on "Riprova": the first one that
+   * is on screen wins; without any, the column title.
+   */
+  focusTargets?: ReadonlyArray<string>;
   children: ReactNode;
 };
 
@@ -37,11 +48,14 @@ export type CasaFrameProps = {
   columns?: Partial<Record<CasaSection, CasaColumn>>;
   /** Person filter: one state, rendered once per layout. Absent = no chips. */
   filter?: PersonFilterProps;
+  /** The chips are not drawn on mobile (they stay in the desktop header) */
+  hideFilterOnMobile?: boolean;
   /** Shows the loading skeletons instead of the columns */
   loading?: boolean;
   /** Rendered after the columns, still inside `main` (live regions) */
   after?: ReactNode;
-  mainRef?: Ref<HTMLElement>;
+  /** The `main` of the page; the frame also reads it to move the focus */
+  mainRef: RefObject<HTMLElement | null>;
 };
 
 const SECTIONS: ReadonlyArray<{
@@ -122,6 +136,7 @@ export function CasaFrame({
   counts,
   columns,
   filter,
+  hideFilterOnMobile = false,
   loading = false,
   after,
   mainRef,
@@ -158,6 +173,72 @@ export function CasaFrame({
       </Alert>
     ) : null;
 
+  // Did the focus sit on a "Riprova" of an alert the last time it moved?
+  const focusInAlert = useRef(false);
+  useEffect(() => {
+    const track = (event: FocusEvent) => {
+      focusInAlert.current =
+        event.target instanceof Element && !!event.target.closest(".avviso");
+    };
+    document.addEventListener("focusin", track);
+    return () => document.removeEventListener("focusin", track);
+  }, []);
+
+  // What shows a "Riprova" now, to see which alert has just gone away.
+  const offlineShown = offlineAlert !== null;
+  const failedKeys = SECTIONS.filter(
+    (section) => columns?.[section.key]?.failed,
+  )
+    .map((section) => section.key)
+    .join(",");
+  const currentTargets = columns?.[current]?.focusTargets?.join("|") ?? "";
+  const before = useRef({ offline: false, failed: "" });
+  useEffect(() => {
+    // While the columns are not drawn nothing is compared.
+    if (loading) return;
+    const last = before.current;
+    before.current = { offline: offlineShown, failed: failedKeys };
+    if (!focusInAlert.current) return;
+    const root = mainRef.current;
+    if (!root) return;
+    const visible = (selector: string, scope: Element) =>
+      Array.from(scope.querySelectorAll<HTMLElement>(selector)).find(
+        (element) => element.getClientRects().length > 0,
+      );
+    const column = (key: string) =>
+      root.querySelector(`section[data-casa-column="${key}"]`);
+    const stillFailed = failedKeys.split(",");
+    const solved = last.failed
+      .split(",")
+      .find((key) => key !== "" && !stillFailed.includes(key));
+
+    let target: HTMLElement | undefined;
+    if (solved) {
+      // The column error is gone: the focus goes to the title of the column.
+      target = column(solved)?.querySelector<HTMLElement>("h2") ?? undefined;
+      target?.setAttribute("tabindex", "-1");
+    } else if (last.offline && !offlineShown) {
+      // The offline alert is gone ("Riprova" with it): the focus goes to a
+      // place of the open column. While any column is still offline the alert
+      // stays, and so does the focus.
+      const scope = column(current);
+      if (scope) {
+        for (const selector of currentTargets.split("|")) {
+          if (selector === "") continue;
+          target = visible(selector, scope);
+          if (target) break;
+        }
+        if (!target) {
+          target = scope.querySelector<HTMLElement>("h2") ?? undefined;
+          target?.setAttribute("tabindex", "-1");
+        }
+      }
+    }
+    if (!target) return;
+    focusInAlert.current = false;
+    target.focus();
+  }, [offlineShown, failedKeys, currentTargets, current, loading, mainRef]);
+
   return (
     <main
       id="contenuto"
@@ -184,7 +265,7 @@ export function CasaFrame({
         className="casa-solo-mobile"
       />
       {offlineAlert}
-      {filter && !loading && current === "da-fare" ? (
+      {filter && !loading && !hideFilterOnMobile ? (
         <PersonFilter layout="mobile" {...filter} />
       ) : null}
       {loading ? (
@@ -196,6 +277,7 @@ export function CasaFrame({
             return (
               <section
                 key={section.key}
+                data-casa-column={section.key}
                 className={cx(
                   "colonna",
                   section.key !== current && "casa-solo-desktop",

@@ -57,8 +57,6 @@ const SAVE_FAILED =
 const RETRY_MS = 4000;
 /** How often "now" is read again (the day can change under an open page). */
 const CLOCK_MS = 60 * 1000;
-/** If the toast of a row never shows up, the row does not wait for it. */
-const TOAST_LOOKUP_MS = 1000;
 
 function checkboxSelector(key: string): string {
   return `[data-item-key="${CSS.escape(key)}"] [role="checkbox"]`;
@@ -129,49 +127,6 @@ async function readEverything(
     rows: todosResult.rows,
     members: membersResult.data ?? [],
   };
-}
-
-/**
- * Calls `onClosed` when the toast that starts with `textStart` leaves the
- * page (time over, or replaced by another toast). The toast component does
- * not tell when it closes, so the row watches the page for it. If the toast
- * never shows up the row does not wait. Returns the function that stops it.
- */
-function watchToastClosed(textStart: string, onClosed: () => void) {
-  let toast: Element | null = null;
-  let finished = false;
-  // Toasts already on the page belong to something else (maybe the same title):
-  // each toast is a new element, so only a new one is the toast of this row.
-  const already = new Set(document.querySelectorAll('[data-testid="toast"]'));
-  const observer = new MutationObserver(() => check());
-  const fallback = window.setTimeout(() => {
-    if (finished || toast !== null) return;
-    stop();
-    onClosed();
-  }, TOAST_LOOKUP_MS);
-  const stop = () => {
-    finished = true;
-    observer.disconnect();
-    window.clearTimeout(fallback);
-  };
-  const check = () => {
-    if (finished) return;
-    if (toast === null) {
-      toast =
-        Array.from(document.querySelectorAll('[data-testid="toast"]')).find(
-          (node) =>
-            !already.has(node) && node.textContent?.startsWith(textStart),
-        ) ?? null;
-      return;
-    }
-    if (!toast.isConnected) {
-      stop();
-      onClosed();
-    }
-  };
-  observer.observe(document.body, { childList: true, subtree: true });
-  check();
-  return stop;
 }
 
 export type Todos = {
@@ -632,15 +587,21 @@ export function useTodos({
         if (waiting.kind === "done") hideToast();
       } else if (markDone) {
         setSettling((set) => set.add(key));
-        // Same words as the toast below; a stop is kept to cancel the wait.
+        // The row waits for its toast to close; the stop cancels the wait.
+        let cancelled = false;
         settleStops.current.set(key, {
           kind: "done",
-          stop: watchToastClosed(`Fatto: ${todo.title}.`, settle),
+          stop: () => {
+            cancelled = true;
+          },
         });
         showToast({
           text: "Fatto:",
           emphasis: todo.title,
           after: ".",
+          onClose: () => {
+            if (!cancelled) settle();
+          },
           onUndo: () => {
             toggleRef.current(key);
             requestFocus([checkboxSelector(key)]);

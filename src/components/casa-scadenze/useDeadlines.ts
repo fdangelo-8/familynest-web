@@ -6,15 +6,12 @@ import { byDueDate, type Deadline, type DeadlineMember } from "./model";
 
 export type DeadlinesStatus = "loading" | "ready" | "error";
 
-type OtherCounts = { spesa?: number; todo?: number };
-
 type ReadResult =
   | {
       ok: true;
       deadlines: Deadline[];
       members: DeadlineMember[];
       meId: string | null;
-      counts: OtherCounts;
     }
   | { ok: false };
 
@@ -31,7 +28,7 @@ async function readEverything(): Promise<ReadResult> {
     const userId = sessionData.session?.user.id;
     if (!userId) return { ok: false };
 
-    const [deadlines, members, me, shopping, todos] = await Promise.all([
+    const [deadlines, members, me] = await Promise.all([
       supabase
         .from("deadlines")
         .select(
@@ -50,14 +47,6 @@ async function readEverything(): Promise<ReadResult> {
         .select("id")
         .eq("user_id", userId)
         .maybeSingle(),
-      supabase
-        .from("shopping_items")
-        .select("id", { count: "exact", head: true })
-        .is("checked_at", null),
-      supabase
-        .from("todos")
-        .select("id", { count: "exact", head: true })
-        .is("done_at", null),
     ]);
     if (deadlines.error || members.error || me.error) return { ok: false };
 
@@ -77,11 +66,6 @@ async function readEverything(): Promise<ReadResult> {
         .sort(byDueDate),
       members: members.data ?? [],
       meId: me.data?.id ?? null,
-      // The numbers of the other two sections are optional: no number if unknown.
-      counts: {
-        spesa: shopping.error ? undefined : (shopping.count ?? undefined),
-        todo: todos.error ? undefined : (todos.count ?? undefined),
-      },
     };
   } catch {
     return { ok: false };
@@ -94,7 +78,6 @@ export type DeadlinesList = {
   members: DeadlineMember[];
   /** The member of the signed-in user */
   meId: string | null;
-  counts: OtherCounts;
   /** "Riprova" is running */
   retrying: boolean;
   retry: () => void;
@@ -106,7 +89,6 @@ export function useDeadlines(): DeadlinesList {
   const [deadlines, setDeadlines] = useState<Deadline[]>([]);
   const [members, setMembers] = useState<DeadlineMember[]>([]);
   const [meId, setMeId] = useState<string | null>(null);
-  const [counts, setCounts] = useState<OtherCounts>({});
   const [retrying, setRetrying] = useState(false);
   const running = useRef(false);
 
@@ -121,7 +103,6 @@ export function useDeadlines(): DeadlinesList {
       setDeadlines(result.deadlines);
       setMembers(result.members);
       setMeId(result.meId);
-      setCounts(result.counts);
       setStatus("ready");
     }
     setRetrying(false);
@@ -138,5 +119,5 @@ export function useDeadlines(): DeadlinesList {
     void load();
   }, [load]);
 
-  return { status, deadlines, members, meId, counts, retrying, retry };
+  return { status, deadlines, members, meId, retrying, retry };
 }
