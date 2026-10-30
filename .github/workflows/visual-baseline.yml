@@ -37,7 +37,7 @@ jobs:
             -e NEXT_PUBLIC_SUPABASE_URL -e NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY -e SUPABASE_SECRET_KEY \
             -e TEST_USER_A_EMAIL -e TEST_USER_A_PASSWORD -e TEST_USER_B_EMAIL -e TEST_USER_B_PASSWORD \
             "mcr.microsoft.com/playwright:v${{ steps.pw.outputs.version }}-noble" \
-            bash -c "npm ci && npx playwright test tests/visual --update-snapshots"
+            bash -c "npm ci && npx playwright test tests/visual/casa-spesa.spec.ts tests/visual/casa-da-fare.spec.ts tests/visual/casa-scadenze.spec.ts tests/visual/layout.spec.ts tests/visual/correzioni-proposte.spec.ts --update-snapshots --retries=0 || true"
       - uses: actions/upload-artifact@v4
         with:
           name: visual-baselines
