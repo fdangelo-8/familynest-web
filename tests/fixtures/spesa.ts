@@ -41,31 +41,40 @@ export function apiAs(key: TestUserKey): Promise<Client> {
   return client;
 }
 
-/** Empties the shopping list of the Nest of a user (takes everything, tears it). */
+/**
+ * Empties the shopping list of the Nest of a user (takes everything, tears it).
+ * The page under test updates first and writes later (offline queue), so a
+ * write of the page can land between the read and the tear: the whole job is
+ * repeated from a fresh read until it goes through.
+ */
 export async function resetShopping(key: TestUserKey): Promise<void> {
   const api = await apiAs(key);
-  const { data, error } = await api
-    .from("shopping_items")
-    .select("id, checked_at");
-  if (error) throw new Error("Lettura della spesa fallita");
-  const open = (data ?? []).filter((row) => !row.checked_at);
-  if (open.length > 0) {
-    await api
+  await expect(async () => {
+    const { data, error } = await api
       .from("shopping_items")
-      .update({ checked_at: new Date().toISOString() })
-      .in(
-        "id",
-        open.map((row) => row.id),
+      .select("id, checked_at");
+    if (error) throw new Error("Lettura della spesa fallita");
+    const open = (data ?? []).filter((row) => !row.checked_at);
+    if (open.length > 0) {
+      const { error: takeError } = await api
+        .from("shopping_items")
+        .update({ checked_at: new Date().toISOString() })
+        .in(
+          "id",
+          open.map((row) => row.id),
+        );
+      if (takeError) throw new Error("Spunta della spesa fallita");
+    }
+    const ids = (data ?? []).map((row) => row.id);
+    if (ids.length > 0) {
+      const { error: clearError } = await api.rpc(
+        "clear_checked_shopping_items",
+        { item_ids: ids },
       );
-  }
-  const ids = (data ?? []).map((row) => row.id);
-  if (ids.length > 0) {
-    const { error: clearError } = await api.rpc(
-      "clear_checked_shopping_items",
-      { item_ids: ids },
-    );
-    if (clearError) throw new Error("Pulizia della spesa fallita");
-  }
+      if (clearError)
+        throw new Error(`Pulizia della spesa fallita: ${clearError.message}`);
+    }
+  }).toPass({ timeout: 20_000, intervals: [100, 250, 500, 1000] });
 }
 
 export type NewItem = string | { name: string; quantity?: string };

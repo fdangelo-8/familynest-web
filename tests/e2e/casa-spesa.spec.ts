@@ -84,7 +84,8 @@ async function openSpesa(
 ): Promise<void> {
   await signInAs(page.context(), baseURL as string, user);
   await page.goto("/casa/spesa");
-  await expect(field(page)).toBeVisible();
+  // On a busy machine the page can take longer than 5 s to read the list.
+  await expect(field(page)).toBeVisible({ timeout: 20_000 });
 }
 
 /** A second browser of the same Nest, with the viewport of the project. */
@@ -142,6 +143,19 @@ test.describe("struttura", () => {
     const headings = page.getByRole("heading", { level: 1 });
     await expect(headings).toHaveCount(1);
     await expect(headings).toHaveText("Casa");
+  });
+
+  test("CA-3: a pagina caricata c'è un solo landmark main, con id «contenuto»", async ({
+    page,
+    baseURL,
+  }) => {
+    await openSpesa(page, baseURL, "A");
+    // While the page streams in, React 19 keeps the skeleton and the real page
+    // (in a hidden div) for an instant: the accessibility tree has one main,
+    // so the roles are the right way to count them.
+    const main = page.getByRole("main");
+    await expect(main).toHaveCount(1);
+    await expect(main).toHaveAttribute("id", "contenuto");
   });
 
   test("CA-4: il selettore «Sezione della casa» e la voce Casa attiva", async ({
@@ -638,7 +652,9 @@ test.describe("strappo e Annulla", () => {
     const undo = toast(page).getByRole("button", { name: "Annulla" });
     await expect(undo).toBeVisible();
     await expect(undo).toBeFocused();
-    await expect.poll(async () => (await readShopping("A")).taken).toEqual([]);
+    await expect
+      .poll(async () => (await readShopping("A")).taken, { timeout: 15_000 })
+      .toEqual([]);
   });
 
   test("CA-20: da tastiera anche Spazio sulle forbici strappa", async ({
@@ -652,6 +668,10 @@ test.describe("strappo e Annulla", () => {
     await page.keyboard.press("Space");
     await expect(takenSection(page)).toHaveCount(0);
     await expect(toast(page)).toHaveText(/1 cosa tolta dalla lista\./);
+    // The page updates first and the server follows: wait for the database.
+    await expect
+      .poll(async () => (await readShopping("A")).taken, { timeout: 15_000 })
+      .toEqual([]);
   });
 
   test("CA-21: «Annulla» riporta le cose in Presi nello stesso ordine, anche dopo il ricaricamento", async ({
@@ -715,7 +735,10 @@ test.describe("strappo e Annulla", () => {
     await page.clock.runFor(400);
     await expect(toast(page)).toHaveCount(0);
     await expect(takenSection(page)).toHaveCount(0);
-    expect((await readShopping("A")).taken).toEqual([]);
+    // The queue runs on real time: the server may still be writing.
+    await expect
+      .poll(async () => (await readShopping("A")).taken, { timeout: 15_000 })
+      .toEqual([]);
   });
 
   test("CA-36: un semplice clic sulle forbici strappa subito, con «Annulla»", async ({
@@ -1332,6 +1355,9 @@ test.describe("caricamento ed errore", () => {
     await openSpesa(page, baseURL, "A");
     await page.context().setOffline(true);
     await page.getByRole("checkbox", { name: "Preso: Pane" }).click();
+    // The row settles into «Presi» after a moment and takes the focus back if
+    // it had it: wait for it, or that late move steals the focus we test.
+    await expect(titles(takenSection(page))).toHaveText(["Pane"]);
     const retry = page
       .getByRole("alert")
       .getByRole("button", { name: "Riprova" });
@@ -1354,6 +1380,8 @@ test.describe("caricamento ed errore", () => {
     await openSpesa(page, baseURL, "A");
     await page.context().setOffline(true);
     await page.getByRole("checkbox", { name: "Preso: Pane" }).click();
+    // Same as above: let the row settle into «Presi» before moving the focus.
+    await expect(titles(takenSection(page))).toHaveText(["Pane"]);
     const retry = alerts(page).getByRole("button", { name: "Riprova" });
     await expect(retry).toBeVisible();
     await retry.focus();

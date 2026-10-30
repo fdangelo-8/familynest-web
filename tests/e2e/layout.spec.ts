@@ -1145,6 +1145,9 @@ test.describe("entrambe le larghezze", () => {
     browser,
     baseURL,
   }, testInfo) => {
+    // Walks every page of the menus for two users: with the real pages (Casa ·
+    // Spesa reads the database) it takes about 27 s alone, close to the 30 s limit.
+    test.slow();
     withUser("A", "B");
     for (const user of ["A", "B"] as const) {
       const context = await browser.newContext({
