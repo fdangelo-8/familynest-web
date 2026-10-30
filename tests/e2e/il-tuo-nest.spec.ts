@@ -491,13 +491,15 @@ test.describe("chiudi", () => {
     await expect(page).toHaveURL(/\/oggi$/);
   });
 
-  // The entry from the bottom was removed for now (it comes with #104), so
-  // the page has no animation, with or without reduced motion.
+  // Entry from the bottom (#104): on mobile the main enters with
+  // `foglio-entra`, unless the user asks for reduced motion; on desktop
+  // there is no animation. Nothing else on the page (the children of the
+  // main, the "Invita qualcuno" sheet included) has an animation.
   for (const reducedMotion of ["reduce", "no-preference"] as const) {
-    test(`CA-14: nessuna animazione sulla pagina (movimento ${reducedMotion})`, async ({
+    test(`CA-14: animazione di entrata della pagina (movimento ${reducedMotion})`, async ({
       page,
       baseURL,
-    }) => {
+    }, info) => {
       await page.emulateMedia({ reducedMotion });
       await signInSeeded(page, baseURL, "A");
       await page.goto("/nest");
@@ -506,13 +508,20 @@ test.describe("chiudi", () => {
       // the main of the accessibility tree counts.
       const main = page.getByRole("main");
       await expect(main).toHaveCount(1);
-      const names = await main.evaluate((el) =>
-        [el, ...Array.from(el.children)].map(
+      const expectedMain =
+        isMobileProject(info.project.name) && reducedMotion === "no-preference"
+          ? "foglio-entra"
+          : "none";
+      await expect
+        .poll(() => main.evaluate((el) => getComputedStyle(el).animationName))
+        .toBe(expectedMain);
+      const childNames = await main.evaluate((el) =>
+        Array.from(el.children).map(
           (node) => getComputedStyle(node).animationName,
         ),
       );
-      expect(names.length).toBeGreaterThan(1);
-      expect(names.every((n) => n === "none")).toBe(true);
+      expect(childNames.length).toBeGreaterThan(0);
+      expect(childNames.every((n) => n === "none")).toBe(true);
     });
   }
 });
