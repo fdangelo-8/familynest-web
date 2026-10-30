@@ -101,11 +101,112 @@ test.describe("utenti del seed", () => {
     await expect(togli).toBeFocused();
   });
 
-  test("#18: aria-haspopup solo su «Togli»", async ({ page }) => {
+  test("#18: aria-haspopup solo su «Togli» e «Modifica nome e colore»", async ({
+    page,
+  }) => {
     test.skip(!hasTestUser("A"), "Utente A non configurato");
     await signIn(page, "A");
     await openMember(page, LAURA_A, "Laura");
-    await expect(page.locator("main [aria-haspopup]")).toHaveCount(1);
+    await expect(page.locator("main [aria-haspopup]")).toHaveCount(2);
+    await expect(
+      page.getByRole("button", { name: "Modifica nome e colore" }),
+    ).toHaveAttribute("aria-haspopup", "dialog");
+  });
+
+  test("#144: axe, riga e foglio aperto (Laura e Biscotto)", async ({
+    page,
+  }) => {
+    test.skip(!hasTestUser("A"), "Utente A non configurato");
+    await signIn(page, "A");
+    for (const [id, name] of [
+      [LAURA_A, "Laura"],
+      [BISCOTTO_A, "Biscotto"],
+    ] as const) {
+      await openMember(page, id, name);
+      const row = page.getByRole("button", { name: "Modifica nome e colore" });
+      await expect(row).toBeVisible();
+      await axe(page);
+      await row.click();
+      const dialog = page.getByRole("dialog", { name: `Modifica ${name}` });
+      await expect(dialog).toBeVisible();
+      await expect(dialog.getByLabel("Nome")).toBeFocused();
+      await axe(page);
+      await page.keyboard.press("Escape");
+      await expect(dialog).toBeHidden();
+      await expect(row).toBeFocused();
+    }
+  });
+
+  test("#144: la riga sta sopra «Ruolo» (Laura) e sotto la testa (Biscotto)", async ({
+    page,
+  }) => {
+    test.skip(!hasTestUser("A"), "Utente A non configurato");
+    await signIn(page, "A");
+    await openMember(page, LAURA_A, "Laura");
+    const row = page.getByRole("button", { name: "Modifica nome e colore" });
+    const roleTitle = page.getByRole("heading", { name: "Ruolo" });
+    const rowY = (await row.boundingBox())!.y;
+    expect(rowY).toBeLessThan((await roleTitle.boundingBox())!.y);
+    expect(rowY).toBeGreaterThan(
+      (await page
+        .getByRole("button", { name: /Manda di nuovo/ })
+        .boundingBox())!.y,
+    );
+    await openMember(page, BISCOTTO_A, "Biscotto");
+    await expect(row).toBeVisible();
+    await expect(roleTitle).toHaveCount(0);
+  });
+
+  test("#144: tastiera, ordine del fuoco con la riga (Laura e Biscotto)", async ({
+    page,
+  }) => {
+    test.skip(!hasTestUser("A"), "Utente A non configurato");
+    await signIn(page, "A");
+    for (const [id, name, before] of [
+      [LAURA_A, "Laura", "Manda di nuovo"],
+      [BISCOTTO_A, "Biscotto", null],
+    ] as const) {
+      await openMember(page, id, name);
+      await page.locator("main").focus();
+      const names: string[] = [];
+      const rings: Record<string, string> = {};
+      for (let i = 0; i < 12; i++) {
+        await page.keyboard.press("Tab");
+        const got = await page.evaluate(() => {
+          const el = document.activeElement as HTMLElement | null;
+          if (!el || !el.closest("main")) return null;
+          return {
+            text: el.textContent?.trim() ?? "",
+            ring: getComputedStyle(el).outlineStyle,
+          };
+        });
+        if (got) {
+          names.push(got.text);
+          rings[got.text] = got.ring;
+        }
+      }
+      const rowAt = names.findIndex((n) => n.startsWith("Modifica nome"));
+      const togliAt = names.findIndex((n) => n.startsWith(`Togli ${name}`));
+      expect(rowAt, "riga raggiunta").toBeGreaterThanOrEqual(0);
+      expect(togliAt, "«Togli» dopo la riga").toBeGreaterThan(rowAt);
+      if (before) {
+        const beforeAt = names.findIndex((n) => n.startsWith(before));
+        expect(beforeAt).toBeGreaterThanOrEqual(0);
+        expect(rowAt).toBeGreaterThan(beforeAt);
+      }
+      expect(rings["Modifica nome e colore"]).not.toBe("none");
+    }
+  });
+
+  test("#144: area di tocco della riga (44 px)", async ({ page }) => {
+    test.skip(!hasTestUser("A"), "Utente A non configurato");
+    await signIn(page, "A");
+    await openMember(page, LAURA_A, "Laura");
+    const row = page.getByRole("button", { name: "Modifica nome e colore" });
+    const box = (await row.boundingBox())!;
+    expect(box.height).toBeGreaterThanOrEqual(44);
+    expect(box.width).toBeGreaterThanOrEqual(44);
+    expect(await hasTouchArea(page, row)).toBe(true);
   });
 
   test("#18: tastiera, ordine del fuoco e anello visibile", async ({
@@ -163,6 +264,23 @@ test.describe("utenti del seed", () => {
 
 test.describe("con utenti usa e getta", () => {
   test.skip(!throwawayConfigured(), "Chiavi Supabase non impostate");
+
+  test("#144: fuoco sulla riga dopo il salvataggio, axe con toast", async ({
+    page,
+  }) => {
+    const { user, lauraId } = await withLaura(page);
+    cleanup.push(user);
+    await openMember(page, lauraId, "Laura");
+    const row = page.getByRole("button", { name: "Modifica nome e colore" });
+    await row.click();
+    const dialog = page.getByRole("dialog", { name: "Modifica Laura" });
+    await dialog.getByLabel("Nome").fill("Lara");
+    await dialog.getByRole("button", { name: "Salva le modifiche" }).click();
+    await expect(dialog).toBeHidden();
+    await expect(page.getByRole("status")).toContainText("Modifiche salvate.");
+    await axe(page);
+    await expect(row).toBeFocused();
+  });
 
   const cleanup: ThrowawayUser[] = [];
   test.afterEach(async () => {
