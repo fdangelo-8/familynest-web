@@ -626,8 +626,31 @@ test.describe("isolamento e stato vuoto", () => {
     await seedD(casa);
     await signInAndOpen(page, baseURL, bianchi, "Giulia", "/casa/spesa");
     await waitForPage(page);
-    for (const text of [...SHOPPING, ...TODOS, ...DEADLINES]) {
+    // Wait for Giulia's own empty lists first: asserting an absence on a page
+    // that is still loading would pass without proving anything.
+    await expect(page.getByText("Casa Bianchi", { exact: true })).toBeVisible();
+    await expect(page.getByText("Niente da fare, per ora")).toBeVisible();
+    await expect(page.getByText("Nessuna scadenza")).toBeVisible();
+    await expect(page.getByText("Una lista per tutta la casa")).toBeVisible();
+    // «Latte» and «Pane» are also suggestions in «Le più comuni»: on the whole
+    // page only the occurrences inside that group are accepted.
+    const common = page.getByRole("group", { name: "Le più comuni" });
+    for (const text of SHOPPING) {
+      await expect(page.getByText(text, { exact: true })).toHaveCount(
+        await common.getByText(text, { exact: true }).count(),
+      );
+    }
+    for (const text of [...TODOS, ...DEADLINES]) {
       await expect(page.getByText(text, { exact: true })).toHaveCount(0);
+    }
+    // Rows and checkboxes: nothing at all in the three lists.
+    const rows = page.locator(".riga-lista__titolo");
+    await expect(rows).toHaveCount(0);
+    for (const text of [...SHOPPING, ...TODOS, ...DEADLINES]) {
+      await expect(rows.filter({ hasText: text })).toHaveCount(0);
+      await expect(
+        page.getByRole("checkbox", { name: new RegExp(text) }),
+      ).toHaveCount(0);
     }
     await expect(page.getByText("Casa D'Angelo")).toHaveCount(0);
   });
