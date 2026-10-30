@@ -440,6 +440,8 @@ test.describe("sessione con utenti", () => {
 
 test.describe("segnaposto", () => {
   for (const [route, h1, title] of SCREENS) {
+    // /nest is no longer a placeholder (#17): see tests/e2e/il-tuo-nest.spec.ts.
+    if (route === "/nest") continue;
     test(`CA-6: A apre ${route}: stato 200, un solo h1 «${h1}», titolo, segnaposto`, async ({
       page,
       baseURL,

@@ -103,7 +103,7 @@ test.describe("pagine dell'app (utente A)", () => {
       page,
     }, testInfo) => {
       await page.goto(route);
-      await expect(page.locator("main")).toBeVisible();
+      await expect(page.getByRole("main")).toBeVisible();
       await expect(page.locator("h1:visible")).toHaveCount(1);
       // Desktop: always one. Mobile: one, except on detail pages (no bottom nav).
       const navCount = await page
@@ -118,7 +118,7 @@ test.describe("pagine dell'app (utente A)", () => {
 
   test("ordine del focus e anello visibile", async ({ page }, testInfo) => {
     await page.goto("/oggi");
-    await expect(page.locator("main")).toBeVisible();
+    await expect(page.getByRole("main")).toBeVisible();
     const expected =
       testInfo.project.name === "desktop"
         ? [
