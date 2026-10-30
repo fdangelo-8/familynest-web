@@ -5,7 +5,16 @@ import {
   inviteSentText,
   inviteSubtitle,
 } from "@/components/membri/texts";
+import { MEMBER_COLORS } from "@/components/ui/Avatar/Avatar";
+import type { ChoosableColor } from "@/components/ui/ColorChoice/ColorChoice";
 import { createClient } from "@/lib/supabase/server";
+
+// Not imported from ColorChoice ("use client"): on the server that would be a
+// client reference, not an array.
+const isChoosable = (color: unknown): color is ChoosableColor =>
+  typeof color === "string" &&
+  color !== "insieme" &&
+  (MEMBER_COLORS as ReadonlyArray<string>).includes(color);
 
 export type Failure = "network" | "server";
 
@@ -147,6 +156,100 @@ export async function setAdmin(
       .maybeSingle();
     if (reread.error) return { ok: false, reason: failureOf(reread.error) };
     if (!reread.data || reread.data.is_admin !== isAdmin) {
+      return { ok: false, reason: "server" };
+    }
+    return { ok: true };
+  } catch {
+    return { ok: false, reason: "network" };
+  }
+}
+
+export type UpdateMemberValues = {
+  name: string;
+  color: ChoosableColor;
+  /** `YYYY-MM-DD` or `null`; only pets keep one */
+  birthDate: string | null;
+};
+
+export type UpdateMemberResult =
+  { ok: true } | { ok: false; reason: Failure | "color-taken" | "gone" };
+
+// Same limit as NAME_MAX_LENGTH in MemberSheet (a "use client" module: a server
+// action gets only a reference from it, not the number).
+const NAME_MAX_LENGTH = 40;
+const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * Changes name, colour and (pets) birth date. The role (`kind`) never changes.
+ * `gone`: the member is not there any more (removed by someone else).
+ */
+export async function updateMember(
+  memberId: string,
+  values: UpdateMemberValues,
+): Promise<UpdateMemberResult> {
+  const name = typeof values?.name === "string" ? values.name.trim() : "";
+  if (
+    typeof memberId !== "string" ||
+    !UUID.test(memberId) ||
+    !name ||
+    name.length > NAME_MAX_LENGTH ||
+    !isChoosable(values.color) ||
+    !(
+      values.birthDate === null ||
+      (typeof values.birthDate === "string" && DATE_ONLY.test(values.birthDate))
+    )
+  ) {
+    return { ok: false, reason: "server" };
+  }
+  try {
+    const supabase = await createClient();
+    // Only pets and adults without account can be changed here.
+    const target = await supabase
+      .from("household_members")
+      .select("kind, user_id")
+      .eq("id", memberId)
+      .maybeSingle();
+    if (target.error) return { ok: false, reason: failureOf(target.error) };
+    if (!target.data) return { ok: false, reason: "gone" };
+    if (
+      target.data.kind === "child" ||
+      (target.data.kind === "adult" &&
+        (target.data.user_id !== null || values.birthDate !== null))
+    ) {
+      return { ok: false, reason: "server" };
+    }
+    const update = await supabase
+      .from("household_members")
+      .update({
+        name,
+        color: values.color,
+        birth_date: values.birthDate,
+      })
+      .eq("id", memberId);
+    if (update.error) {
+      if (
+        update.error.code === "23505" &&
+        update.error.message.includes("color")
+      ) {
+        return { ok: false, reason: "color-taken" };
+      }
+      return { ok: false, reason: failureOf(update.error) };
+    }
+
+    // A refused update touches no row and gives no error, and so does a
+    // member who is gone: the row is read again (separate query).
+    const reread = await supabase
+      .from("household_members")
+      .select("name, color, birth_date")
+      .eq("id", memberId)
+      .maybeSingle();
+    if (reread.error) return { ok: false, reason: failureOf(reread.error) };
+    if (!reread.data) return { ok: false, reason: "gone" };
+    if (
+      reread.data.name !== name ||
+      reread.data.color !== values.color ||
+      reread.data.birth_date !== values.birthDate
+    ) {
       return { ok: false, reason: "server" };
     }
     return { ok: true };

@@ -10,6 +10,8 @@ import {
   inviteSentText,
   inviteSubtitle,
 } from "@/components/membri/texts";
+import { MEMBER_COLORS } from "@/components/ui/Avatar/Avatar";
+import type { ChoosableColor } from "@/components/ui/ColorChoice/ColorChoice";
 import { SettingsMenu } from "@/components/ui/AppFrame/SettingsMenu";
 import { formatAge } from "@/lib/datetime";
 import { requireNest, type NestFrameData } from "@/lib/nest-frame";
@@ -21,6 +23,12 @@ export const metadata: Metadata = {
 };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// Not imported from ColorChoice ("use client"): on the server that would be a
+// client reference, not an array.
+const isChoosable = (color: string): boolean =>
+  color !== "insieme" &&
+  (MEMBER_COLORS as ReadonlyArray<string>).includes(color);
 
 type Loaded =
   | { status: "error" }
@@ -59,7 +67,8 @@ async function load(frame: NestFrameData, id: string): Promise<Loaded> {
   let subtitle: string;
   let invite: MemberViewProps["invite"] = null;
   if (member.kind === "pet") {
-    // Only the age text leaves the server, never the birth date.
+    // The age text only. The birth date reaches the browser just for an
+    // administrator (edit sheet, `birthDate` below), never for the others.
     subtitle = member.birth_date
       ? `Animale · ${formatAge(member.birth_date)}`
       : "Animale";
@@ -89,6 +98,16 @@ async function load(frame: NestFrameData, id: string): Promise<Loaded> {
     }
   }
 
+  // Only an administrator can change name and colour, and only of adults
+  // without account and of pets. The birth date (pets) and the colours of the
+  // others leave the server only for them.
+  const canEdit = canManage && (member.kind === "pet" || !hasAccount);
+  const taken: MemberViewProps["taken"] = canEdit
+    ? members.data
+        .filter((m) => m.id !== id && isChoosable(m.color))
+        .map((m) => ({ color: m.color as ChoosableColor, by: m.name }))
+    : [];
+
   return {
     status: "ok",
     props: {
@@ -101,6 +120,9 @@ async function load(frame: NestFrameData, id: string): Promise<Loaded> {
       hasAccount,
       isAdmin: member.is_admin,
       invite,
+      canEdit,
+      birthDate: canEdit && member.kind === "pet" ? member.birth_date : null,
+      taken,
     },
   };
 }

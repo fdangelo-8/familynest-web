@@ -71,4 +71,15 @@ test.describe("ingresso con invito: testi", () => {
     expect(source).toMatch(/import type \{[^}]*\} from "[^"]*ColorChoice/);
     expect(source).not.toContain("CHOOSABLE_COLORS");
   });
+
+  test("le pagine del membro non importano valori da moduli client", () => {
+    for (const file of [
+      "src/app/(app)/membri/[id]/page.tsx",
+      "src/app/(app)/membri/[id]/actions.ts",
+    ]) {
+      const source = readFileSync(file, "utf8");
+      expect(source, file).not.toMatch(/^import (?!type)[^;]*ColorChoice/m);
+      expect(source, file).not.toContain("CHOOSABLE_COLORS");
+    }
+  });
 });

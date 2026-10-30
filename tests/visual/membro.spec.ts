@@ -12,6 +12,7 @@ import {
   LAURA_A,
   PAOLO_B,
   baseURL,
+  addMember,
   openMember,
   shoot,
   withLaura,
@@ -174,6 +175,32 @@ test.describe("utenti del seed", () => {
   });
 });
 
+test.describe("#144: modifica nome e colore (utenti del seed)", () => {
+  test("#144: foglio aperto, adulto senza account (Laura)", async ({
+    page,
+  }) => {
+    test.skip(!hasTestUser("A"), "Utente A non configurato");
+    await signIn(page, "A");
+    await openMember(page, LAURA_A, "Laura");
+    await page.getByRole("button", { name: "Modifica nome e colore" }).click();
+    await expect(
+      page.getByRole("dialog", { name: "Modifica Laura" }),
+    ).toBeVisible();
+    await shoot(page, "membro-modifica-foglio.png", false);
+  });
+
+  test("#144: foglio aperto, animale (Biscotto)", async ({ page }) => {
+    test.skip(!hasTestUser("A"), "Utente A non configurato");
+    await signIn(page, "A");
+    await openMember(page, BISCOTTO_A, "Biscotto");
+    await page.getByRole("button", { name: "Modifica nome e colore" }).click();
+    await expect(
+      page.getByRole("dialog", { name: "Modifica Biscotto" }),
+    ).toBeVisible();
+    await shoot(page, "membro-modifica-foglio-animale.png", false);
+  });
+});
+
 test.describe("con utenti usa e getta", () => {
   test.skip(!throwawayConfigured(), throwawaySkipReason);
 
@@ -262,6 +289,70 @@ test.describe("con utenti usa e getta", () => {
       "Non siamo riusciti a togliere Laura. Controlla la connessione e riprova.",
     );
     await shoot(page, "membro-togli-errore.png");
+  });
+});
+
+test.describe("#144: modifica nome e colore (utenti usa e getta)", () => {
+  test.skip(!throwawayConfigured(), throwawaySkipReason);
+
+  const cleanup: ThrowawayUser[] = [];
+  test.afterEach(async () => {
+    for (const u of cleanup.splice(0)) await u.remove();
+  });
+
+  async function rename(page: Page, to: string) {
+    await page.getByRole("button", { name: "Modifica nome e colore" }).click();
+    const dialog = page.getByRole("dialog", { name: "Modifica Laura" });
+    await expect(dialog).toBeVisible();
+    await dialog.getByLabel("Nome").fill(to);
+    await dialog.getByRole("button", { name: "Salva le modifiche" }).click();
+    await expect(dialog).toBeHidden();
+  }
+
+  test("#144: toast «Modifiche salvate.» con «Annulla»", async ({ page }) => {
+    const { user, lauraId } = await withLaura(page);
+    cleanup.push(user);
+    await openMember(page, lauraId, "Laura");
+    await rename(page, "Lara");
+    await expect(page.getByRole("status")).toContainText("Modifiche salvate.");
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Lara" }),
+    ).toBeVisible();
+    await shoot(page, "membro-modifica-toast.png", false);
+  });
+
+  test("#144: toast «Annulla» non riuscito (senza icona)", async ({ page }) => {
+    const { user, lauraId } = await withLaura(page);
+    cleanup.push(user);
+    await openMember(page, lauraId, "Laura");
+    await rename(page, "Lara");
+    await expect(page.getByRole("status")).toContainText("Modifiche salvate.");
+    await page.route(/\/membri\//, async (route) => {
+      if (route.request().method() === "POST") await route.abort();
+      else await route.continue();
+    });
+    await page.getByRole("button", { name: "Annulla" }).click();
+    await expect(page.getByRole("status")).toContainText(
+      "Non siamo riusciti ad annullare. Le modifiche sono rimaste.",
+    );
+    await shoot(page, "membro-modifica-toast-errore.png", false);
+  });
+
+  test("#144: foglio con colore già preso", async ({ page }) => {
+    const { user, lauraId } = await withLaura(page);
+    cleanup.push(user);
+    await openMember(page, lauraId, "Laura");
+    await page.getByRole("button", { name: "Modifica nome e colore" }).click();
+    const dialog = page.getByRole("dialog", { name: "Modifica Laura" });
+    await expect(dialog).toBeVisible();
+    await dialog.getByRole("radio", { name: "Salvia", exact: true }).click();
+    // Someone else takes Salvia while the sheet is open.
+    await addMember(user, { name: "Marta", kind: "adult" });
+    await dialog.getByRole("button", { name: "Salva le modifiche" }).click();
+    await expect(dialog).toContainText(
+      "Questo colore l'ha appena preso qualcun altro: scegline un altro.",
+    );
+    await shoot(page, "membro-modifica-colore-preso.png", false);
   });
 });
 
