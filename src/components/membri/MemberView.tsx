@@ -6,16 +6,28 @@ import {
   removeMember,
   sendInvitation,
   setAdmin,
+  updateMember,
   type Failure,
 } from "@/app/(app)/membri/[id]/actions";
 import { Alert } from "@/components/ui/Alert/Alert";
 import { Avatar, type MemberColor } from "@/components/ui/Avatar/Avatar";
+import type {
+  ChoosableColor,
+  TakenColor,
+} from "@/components/ui/ColorChoice/ColorChoice";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog/ConfirmDialog";
 import { cx } from "@/components/ui/cx";
 import { Icon } from "@/components/ui/Icon/Icon";
+import {
+  MemberSheet,
+  type MemberSaveResult,
+  type MemberToEdit,
+  type MemberValues,
+} from "@/components/ui/MemberSheet/MemberSheet";
 import { Spinner } from "@/components/ui/Spinner/Spinner";
 import { useToast } from "@/components/ui/Toast/ToastProvider";
 import { Toggle } from "@/components/ui/Toggle/Toggle";
+import { formatAge } from "@/lib/datetime";
 import { buildInviteLink } from "@/lib/invitations";
 import { shareOrCopy } from "./share-link";
 import { FOCUS_INVITE_KEY } from "./texts";
@@ -37,7 +49,22 @@ export type MemberViewProps = {
   isAdmin: boolean;
   /** Valid invitation, only for an administrator looking at an adult without account */
   invite: ValidInvite | null;
+  /** Administrator looking at an adult without account or a pet: «Modifica nome e colore» */
+  canEdit: boolean;
+  /** Birth date of the pet (only when `canEdit`) */
+  birthDate: string | null;
+  /** Colours of the OTHER members (only when `canEdit`) */
+  taken: ReadonlyArray<TakenColor>;
 };
+
+type Editable = {
+  name: string;
+  color: ChoosableColor;
+  birthDate: string | null;
+};
+
+const UNDO_ERROR =
+  "Non siamo riusciti ad annullare. Le modifiche sono rimaste.";
 
 const ROLE_HELP_ID = "ruolo-aiuto";
 
@@ -70,17 +97,31 @@ const failureIcon = (failure: Failure) =>
  */
 export function MemberView({
   id,
-  name,
-  color,
+  name: initialName,
+  color: initialColor,
   kind,
   subtitle: initialSubtitle,
   canManage,
   hasAccount,
   isAdmin,
   invite: initialInvite,
+  canEdit,
+  birthDate: initialBirthDate,
+  taken,
 }: MemberViewProps) {
   const router = useRouter();
   const { showToast } = useToast();
+
+  const [current, setCurrent] = useState<Editable>({
+    name: initialName,
+    color: initialColor as ChoosableColor,
+    birthDate: initialBirthDate,
+  });
+  const { name, color } = current;
+  const [editing, setEditing] = useState<MemberToEdit | null>(null);
+  const editRef = useRef<HTMLButtonElement>(null);
+  const unchangedRef = useRef(false);
+  const goneRef = useRef(false);
 
   const [subtitle, setSubtitle] = useState(initialSubtitle);
   const [invite, setInvite] = useState(initialInvite);
@@ -110,6 +151,96 @@ export function MemberView({
       // No storage: the focus stays where the browser puts it.
     }
   }, [id]);
+
+  const subtitleFor = (birthDate: string | null) =>
+    birthDate ? `Animale · ${formatAge(birthDate)}` : "Animale";
+
+  function apply(next: Editable) {
+    setCurrent(next);
+    if (kind === "pet") setSubtitle(subtitleFor(next.birthDate));
+  }
+
+  function openEdit() {
+    setEditing({
+      name,
+      kind,
+      color,
+      birthDate: current.birthDate,
+      hasAccount: false,
+    });
+  }
+
+  async function onEditSave(values: MemberValues): Promise<MemberSaveResult> {
+    const next: Editable = {
+      name: values.name,
+      color: values.color,
+      birthDate: kind === "pet" ? values.birthDate : null,
+    };
+    unchangedRef.current = false;
+    goneRef.current = false;
+    if (
+      next.name === current.name &&
+      next.color === current.color &&
+      next.birthDate === current.birthDate
+    ) {
+      // Nothing changed: the sheet closes, nothing is written.
+      unchangedRef.current = true;
+      return { ok: true };
+    }
+    let result: Awaited<ReturnType<typeof updateMember>>;
+    try {
+      result = await updateMember(id, next);
+    } catch {
+      result = { ok: false, reason: "network" };
+    }
+    if (result.ok) return { ok: true };
+    if (result.reason === "gone") {
+      goneRef.current = true;
+      return { ok: true };
+    }
+    return { ok: false, reason: result.reason };
+  }
+
+  function onEditSaved(values: MemberValues) {
+    if (unchangedRef.current) return;
+    if (goneRef.current) {
+      // The page answers «Questa pagina non c'è».
+      router.refresh();
+      return;
+    }
+    const before = current;
+    apply({
+      name: values.name,
+      color: values.color,
+      birthDate: kind === "pet" ? values.birthDate : null,
+    });
+    router.refresh();
+    showToast({
+      text: "Modifiche salvate.",
+      withoutNav: true,
+      onUndo: () => void undoEdit(before),
+    });
+  }
+
+  async function undoEdit(before: Editable) {
+    const hadFocus = !!document.activeElement?.closest(".toast");
+    let result: Awaited<ReturnType<typeof updateMember>>;
+    try {
+      result = await updateMember(id, before);
+    } catch {
+      result = { ok: false, reason: "network" };
+    }
+    if (result.ok) {
+      apply(before);
+      router.refresh();
+    } else if (result.reason === "gone") {
+      router.refresh();
+      return;
+    } else {
+      showToast({ text: UNDO_ERROR, icon: null, withoutNav: true });
+    }
+    if (hadFocus) editRef.current?.focus();
+  }
 
   const showInvite = canManage && kind === "adult" && !hasAccount;
   const showRole = canManage && kind === "adult";
@@ -235,6 +366,32 @@ export function MemberView({
     router.replace("/nest");
   }
 
+  const editRow = canEdit ? (
+    <div className="sezione">
+      <ul className="scheda lista">
+        <li>
+          <button
+            ref={editRef}
+            type="button"
+            className="riga-lista riga-lista--cliccabile"
+            aria-haspopup="dialog"
+            onClick={openEdit}
+          >
+            <span className="icona-riquadro">
+              <Icon name="pencil" />
+            </span>
+            <span className="riga-lista__testo">
+              <span className="riga-lista__titolo">Modifica nome e colore</span>
+            </span>
+            <span className="riga-lista__valore">
+              <Icon name="chevron-right" />
+            </span>
+          </button>
+        </li>
+      </ul>
+    </div>
+  ) : null;
+
   const roleHelp = !hasAccount
     ? "Potrà diventarlo dopo aver accettato l'invito."
     : null;
@@ -292,6 +449,8 @@ export function MemberView({
         </div>
       ) : null}
 
+      {editRow}
+
       {showRole ? (
         <section className="sezione" aria-labelledby="ruolo-titolo">
           <div className="sezione__testa">
@@ -330,6 +489,18 @@ export function MemberView({
             </Alert>
           ) : null}
         </section>
+      ) : null}
+
+      {canEdit ? (
+        <MemberSheet
+          open={editing !== null}
+          onClose={() => setEditing(null)}
+          mode="edit"
+          member={editing ?? undefined}
+          taken={taken}
+          onSave={onEditSave}
+          onSaved={onEditSaved}
+        />
       ) : null}
 
       {canManage ? (

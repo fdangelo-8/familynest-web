@@ -5,6 +5,10 @@ import {
   inviteSentText,
   inviteSubtitle,
 } from "@/components/membri/texts";
+import {
+  CHOOSABLE_COLORS,
+  type ChoosableColor,
+} from "@/components/ui/ColorChoice/ColorChoice";
 import { createClient } from "@/lib/supabase/server";
 
 export type Failure = "network" | "server";
@@ -147,6 +151,82 @@ export async function setAdmin(
       .maybeSingle();
     if (reread.error) return { ok: false, reason: failureOf(reread.error) };
     if (!reread.data || reread.data.is_admin !== isAdmin) {
+      return { ok: false, reason: "server" };
+    }
+    return { ok: true };
+  } catch {
+    return { ok: false, reason: "network" };
+  }
+}
+
+export type UpdateMemberValues = {
+  name: string;
+  color: ChoosableColor;
+  /** `YYYY-MM-DD` or `null`; only pets keep one */
+  birthDate: string | null;
+};
+
+export type UpdateMemberResult =
+  { ok: true } | { ok: false; reason: Failure | "color-taken" | "gone" };
+
+const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * Changes name, colour and (pets) birth date. The role (`kind`) never changes.
+ * `gone`: the member is not there any more (removed by someone else).
+ */
+export async function updateMember(
+  memberId: string,
+  values: UpdateMemberValues,
+): Promise<UpdateMemberResult> {
+  const name = typeof values?.name === "string" ? values.name.trim() : "";
+  if (
+    typeof memberId !== "string" ||
+    !UUID.test(memberId) ||
+    !name ||
+    name.length > 40 ||
+    !CHOOSABLE_COLORS.includes(values.color) ||
+    !(
+      values.birthDate === null ||
+      (typeof values.birthDate === "string" && DATE_ONLY.test(values.birthDate))
+    )
+  ) {
+    return { ok: false, reason: "server" };
+  }
+  try {
+    const supabase = await createClient();
+    const update = await supabase
+      .from("household_members")
+      .update({
+        name,
+        color: values.color,
+        birth_date: values.birthDate,
+      })
+      .eq("id", memberId);
+    if (update.error) {
+      if (
+        update.error.code === "23505" &&
+        update.error.message.includes("color")
+      ) {
+        return { ok: false, reason: "color-taken" };
+      }
+      return { ok: false, reason: failureOf(update.error) };
+    }
+
+    // A refused update touches no row and gives no error, and so does a
+    // member who is gone: the row is read again (separate query).
+    const reread = await supabase
+      .from("household_members")
+      .select("name, color, birth_date")
+      .eq("id", memberId)
+      .maybeSingle();
+    if (reread.error) return { ok: false, reason: failureOf(reread.error) };
+    if (!reread.data) return { ok: false, reason: "gone" };
+    if (
+      reread.data.name !== name ||
+      reread.data.color !== values.color ||
+      reread.data.birth_date !== values.birthDate
+    ) {
       return { ok: false, reason: "server" };
     }
     return { ok: true };
