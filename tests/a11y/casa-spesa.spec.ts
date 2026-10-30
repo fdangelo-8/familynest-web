@@ -346,7 +346,9 @@ test("anello di focus visibile su tondo, chip, lama e campo", async ({
   // The field has no outline of its own: the ring is on its container (spec).
   const field = page.getByRole("textbox", { name: "Aggiungi alla spesa…" });
   await field.focus();
-  const container = page.locator("form.campo-rapido");
+  const container = page.locator(
+    'form.campo-rapido[aria-label="Aggiungi alla spesa…"]',
+  );
   const before = await container.evaluate(
     (el) => getComputedStyle(el).boxShadow,
   );

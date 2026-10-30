@@ -364,9 +364,9 @@ test("anello di focus visibile su casella, chip, voce del selettore e campo", as
   }
   await page.keyboard.press("Tab"); // make :focus-visible apply
   for (const target of targets) {
-    await target.focus();
-    await page.keyboard.press("Shift+Tab");
+    // A key press first, so the focus counts as coming from the keyboard.
     await page.keyboard.press("Tab");
+    await target.focus();
     await expect(target).toBeFocused();
     const r = await target.evaluate(ring);
     expect(r.outline || r.shadow).toBe(true);
@@ -389,9 +389,9 @@ test("il primo chip non perde l'anello di focus (non tagliato)", async ({
   test.skip(!isMobile(testInfo.project.name), "la fila scorre solo su mobile");
   await open(page, { todos: NORMAL_TODOS });
   const chip = page.getByRole("button", { name: "Tutti" });
-  await chip.focus();
-  await page.keyboard.press("Shift+Tab");
   await page.keyboard.press("Tab");
+  await chip.focus();
+  await expect(chip).toBeFocused();
   const [chipBox, rowBox] = await Promise.all([
     chip.boundingBox(),
     page
