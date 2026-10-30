@@ -6,6 +6,10 @@ import {
   installTodosFake,
   type TodosFakeOptions,
 } from "../fixtures/todos-fake";
+import {
+  NORMAL_DEADLINES,
+  installScadenzeFake,
+} from "../fixtures/scadenze-fake";
 import { hasTestUser } from "../fixtures/visual-login";
 import { signInAsCached } from "../fixtures/visual-login-cached";
 
@@ -43,6 +47,12 @@ async function open(page: Page, options: OpenOptions, ready = true) {
     reads: options.shopping ?? "ok",
   });
   const fake = await installTodosFake(page, options);
+  // The deadlines fail together with the shopping list: on desktop that is
+  // the only case of a whole-page error.
+  await installScadenzeFake(page, {
+    deadlines: NORMAL_DEADLINES,
+    reads: options.shopping === "error" ? "error" : "ok",
+  });
   await page.goto("/casa/da-fare");
   if (ready) {
     await expect(page.getByRole("region", { name: "Da fare" })).toBeVisible({
@@ -135,7 +145,7 @@ test("caricamento", async ({ page }) => {
 });
 
 test("errore di pagina", async ({ page }) => {
-  // Both lists fail: on desktop that is the only case of a whole-page error.
+  // The three lists fail: on desktop that is the only case of a whole-page error.
   await open(page, { reads: "error", shopping: "error" }, false);
   await expect(
     page.getByRole("heading", { name: "Questa pagina non si è caricata" }),

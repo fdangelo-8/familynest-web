@@ -7,6 +7,10 @@ import {
   installTodosFake,
   type TodosFakeOptions,
 } from "../fixtures/todos-fake";
+import {
+  NORMAL_DEADLINES,
+  installScadenzeFake,
+} from "../fixtures/scadenze-fake";
 import { hasTestUser } from "../fixtures/visual-login";
 import { signInAsCached } from "../fixtures/visual-login-cached";
 
@@ -37,6 +41,10 @@ async function open(page: Page, options: OpenOptions, ready = true) {
     reads: options.shopping ?? "ok",
   });
   const fake = await installTodosFake(page, options);
+  await installScadenzeFake(page, {
+    deadlines: NORMAL_DEADLINES,
+    reads: options.shopping === "error" ? "error" : "ok",
+  });
   await page.goto("/casa/da-fare");
   if (ready) {
     await expect(page.getByRole("region", { name: "Da fare" })).toBeVisible({

@@ -1,8 +1,17 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { CasaFrame, type CasaSection } from "@/components/casa/CasaFrame";
 import type { PersonFilterMember } from "@/components/casa/PersonFilter";
+import { groupTodos, countOpen } from "@/components/casa-da-fare/model";
+import { TODO_HEADING, TodoColumn } from "@/components/casa-da-fare/TodoColumn";
+import { useTodos } from "@/components/casa-da-fare/useTodos";
+import {
+  DeadlinesColumn,
+  useDeadlineViews,
+} from "@/components/casa-scadenze/DeadlinesColumn";
+import { urgentLabel } from "@/components/casa-scadenze/model";
+import { useDeadlines } from "@/components/casa-scadenze/useDeadlines";
 import {
   COMMON_HEADING,
   SpesaColumn,
@@ -14,9 +23,6 @@ import { Alert } from "@/components/ui/Alert/Alert";
 import { Button } from "@/components/ui/Button/Button";
 import { useIsDesktop } from "@/components/ui/overlay";
 import { PageError } from "@/components/ui/PageError/PageError";
-import { countOpen, groupTodos } from "./model";
-import { TODO_HEADING, TodoColumn } from "./TodoColumn";
-import { useTodos } from "./useTodos";
 
 function reloadPage() {
   window.location.reload();
@@ -47,16 +53,16 @@ function ColumnError({
 }
 
 /**
- * Casa is one page with three columns: `/casa/spesa` and `/casa/da-fare` draw
- * the same view and differ in which column is the open one (the only one on
- * mobile). Each column reads and writes its own list.
+ * Casa is one page with three columns: `/casa/spesa`, `/casa/da-fare` and
+ * `/casa/scadenze` draw the same view and differ in which column is the open
+ * one (the only one on mobile). Each column reads and writes its own list.
  */
 export function CasaPage({
   nestName,
   current,
 }: {
   nestName: string;
-  current: Extract<CasaSection, "spesa" | "da-fare">;
+  current: CasaSection;
 }) {
   const rootRef = useRef<HTMLElement>(null);
   const [shoppingQuick, setShoppingQuick] = useState("");
@@ -70,39 +76,8 @@ export function CasaPage({
     rootRef,
     onAddRejected: (title) => setTodoQuick((value) => value || title),
   });
-
-  // Did the focus sit inside the offline alert ("Riprova") the last time it moved?
-  const focusInAlert = useRef(false);
-  useEffect(() => {
-    const track = (event: FocusEvent) => {
-      focusInAlert.current =
-        event.target instanceof Element && !!event.target.closest(".avviso");
-    };
-    document.addEventListener("focusin", track);
-    return () => document.removeEventListener("focusin", track);
-  }, []);
-  const anyOffline = shopping.offline || todos.offline;
-  useEffect(() => {
-    // The alert is gone and "Riprova" with it: the focus goes to a heading of
-    // the open column. While any column is still offline the alert stays and
-    // so does the focus.
-    if (anyOffline || !focusInAlert.current) return;
-    focusInAlert.current = false;
-    const root = rootRef.current;
-    const selectors =
-      current === "da-fare"
-        ? [`section[aria-label="Da fare"] ${TODO_HEADING}`]
-        : [COMMON_HEADING, TO_TAKE_HEADING];
-    for (const selector of selectors) {
-      const target = Array.from(
-        root?.querySelectorAll<HTMLElement>(selector) ?? [],
-      ).find((element) => element.getClientRects().length > 0);
-      if (target) {
-        target.focus();
-        break;
-      }
-    }
-  }, [anyOffline, current]);
+  const deadlines = useDeadlines();
+  const deadlineViews = useDeadlineViews(deadlines);
 
   // One live region for the page: it speaks what changed last.
   const [spoken, setSpoken] = useState({ shopping: "", todos: "", text: "" });
@@ -149,14 +124,20 @@ export function CasaPage({
     return all.thisWeek.length + all.later.length + all.done.length === 0;
   }, [todos.todos, settling, meMemberId, now]);
 
-  // The page fails when the list of the open section cannot be read (on
-  // desktop Da fare only when Spesa fails too); otherwise the error shows in
-  // the column of the list that failed.
-  const pageFails =
-    current === "spesa"
-      ? shopping.status === "error"
-      : todos.status === "error" && (!desktop || shopping.status === "error");
+  // The page error replaces the whole page. Mobile: when the list of the open
+  // section cannot be read. Desktop: only when no column can be read at all;
+  // otherwise the error shows in the column of the list that failed.
+  const failed = {
+    spesa: shopping.status === "error",
+    "da-fare": todos.status === "error",
+    scadenze: deadlines.status === "error",
+  };
+  const pageFails = desktop
+    ? failed.spesa && failed["da-fare"] && failed.scadenze
+    : failed[current];
   if (pageFails) {
+    // Scadenze on mobile has its own way out and reads only its list again.
+    const ownRetry = current === "scadenze" && !desktop;
     return (
       <main
         id="contenuto"
@@ -164,12 +145,24 @@ export function CasaPage({
         ref={rootRef}
         className="pagina pagina-desktop"
       >
-        <PageError onRetry={reloadPage} />
+        <PageError
+          onRetry={ownRetry ? deadlines.retry : reloadPage}
+          retrying={ownRetry ? deadlines.retrying : false}
+          exit={
+            current === "scadenze"
+              ? { label: "Torna a Oggi", href: "/oggi" }
+              : undefined
+          }
+        />
       </main>
     );
   }
 
-  if (shopping.status === "loading" || todos.status === "loading") {
+  if (
+    shopping.status === "loading" ||
+    todos.status === "loading" ||
+    deadlines.status === "loading"
+  ) {
     return (
       <CasaFrame
         nestName={nestName}
@@ -181,6 +174,7 @@ export function CasaPage({
   }
 
   const open = countOpen(todos.todos);
+  const urgentCount = deadlineViews.filter((view) => view.urgent).length;
   return (
     <CasaFrame
       nestName={nestName}
@@ -189,6 +183,8 @@ export function CasaPage({
       counts={{
         spesa: shopping.status === "ready" ? shoppingToTake : undefined,
         "da-fare": todos.status === "ready" ? open : undefined,
+        scadenze:
+          deadlines.status === "ready" ? deadlineViews.length : undefined,
       }}
       // On mobile an empty list shows no chips; on desktop they stay in the header.
       filter={
@@ -201,10 +197,13 @@ export function CasaPage({
             }
           : undefined
       }
+      // On mobile the chips are for the cose da fare only.
+      hideFilterOnMobile={current !== "da-fare"}
       columns={{
         spesa:
           shopping.status === "error"
             ? {
+                failed: true,
                 children: (
                   <ColumnError
                     what="la spesa"
@@ -219,6 +218,7 @@ export function CasaPage({
                   retrying: shopping.retrying,
                   onRetry: shopping.retry,
                 },
+                focusTargets: [COMMON_HEADING, TO_TAKE_HEADING],
                 info:
                   shoppingToTake > 0
                     ? `${shoppingToTake} da prendere`
@@ -234,6 +234,7 @@ export function CasaPage({
         "da-fare":
           todos.status === "error"
             ? {
+                failed: true,
                 children: (
                   <ColumnError
                     what="le cose da fare"
@@ -248,6 +249,7 @@ export function CasaPage({
                   retrying: todos.retrying,
                   onRetry: todos.retry,
                 },
+                focusTargets: [TODO_HEADING],
                 info:
                   open > 0
                     ? `${open} ${open === 1 ? "aperto" : "aperti"}`
@@ -261,6 +263,12 @@ export function CasaPage({
                   />
                 ),
               },
+        scadenze: {
+          failed: deadlines.status === "error",
+          info:
+            deadlines.status === "ready" ? urgentLabel(urgentCount) : undefined,
+          children: <DeadlinesColumn list={deadlines} views={deadlineViews} />,
+        },
       }}
       after={
         <div

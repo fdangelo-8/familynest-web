@@ -28,6 +28,11 @@ export type ToastOptions = {
   after?: string;
   /** With a function the toast shows an "Annulla" button that calls it */
   onUndo?: () => void;
+  /**
+   * Called once when the toast leaves the screen, whatever the reason: time
+   * over, "Annulla", replaced by another toast, or `hideToast()`.
+   */
+  onClose?: () => void;
   /** For screens without the bottom navigation: sits lower */
   withoutNav?: boolean;
 };
@@ -37,6 +42,7 @@ type ToastState = ToastOptions & { id: number };
 type ToastApi = {
   /** Shows a toast. A new toast replaces the visible one (decision D-6). */
   showToast: (options: ToastOptions) => void;
+  /** Hides the visible toast, if any */
   hideToast: () => void;
 };
 
@@ -51,12 +57,26 @@ export function useToast(): ToastApi {
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toast, setToast] = useState<ToastState | null>(null);
   const counter = useRef(0);
+  // The toast on screen, to know which `onClose` to call when it leaves.
+  const visible = useRef<ToastState | null>(null);
 
   const showToast = useCallback((options: ToastOptions) => {
     counter.current += 1;
-    setToast({ ...options, id: counter.current });
+    const previous = visible.current;
+    const next = { ...options, id: counter.current };
+    visible.current = next;
+    setToast(next);
+    previous?.onClose?.();
   }, []);
-  const hideToast = useCallback(() => setToast(null), []);
+  /** Closes the toast with this id, or the visible one when no id is given. */
+  const closeToast = useCallback((id?: number) => {
+    const current = visible.current;
+    if (!current || (id !== undefined && current.id !== id)) return;
+    visible.current = null;
+    setToast(null);
+    current.onClose?.();
+  }, []);
+  const hideToast = useCallback(() => closeToast(), [closeToast]);
 
   const api = useMemo(() => ({ showToast, hideToast }), [showToast, hideToast]);
 
@@ -64,7 +84,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <ToastContext.Provider value={api}>
       {children}
       {toast ? (
-        <ToastView key={toast.id} toast={toast} onHide={hideToast} />
+        <ToastView key={toast.id} toast={toast} onHide={closeToast} />
       ) : null}
     </ToastContext.Provider>
   );
@@ -75,17 +95,18 @@ function ToastView({
   onHide,
 }: {
   toast: ToastState;
-  onHide: () => void;
+  onHide: (id: number) => void;
 }) {
   const remaining = useRef(TOAST_DURATION_MS);
   const startedAt = useRef(0);
   const timer = useRef<number | undefined>(undefined);
 
+  const id = toast.id;
   const start = useCallback(() => {
     window.clearTimeout(timer.current);
     startedAt.current = Date.now();
-    timer.current = window.setTimeout(onHide, remaining.current);
-  }, [onHide]);
+    timer.current = window.setTimeout(() => onHide(id), remaining.current);
+  }, [onHide, id]);
 
   // The countdown stops while the toast has the mouse or the focus on it.
   const pause = useCallback(() => {
@@ -139,7 +160,7 @@ function ToastView({
           className="toast__azione"
           onClick={() => {
             toast.onUndo?.();
-            onHide();
+            onHide(id);
           }}
         >
           Annulla

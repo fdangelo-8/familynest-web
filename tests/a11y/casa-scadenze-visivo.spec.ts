@@ -7,6 +7,8 @@ import {
   installScadenzeFake,
   type FakeOptions,
 } from "../fixtures/scadenze-fake";
+import { NORMAL_LIST, installSpesaFake } from "../fixtures/spesa-fake";
+import { NORMAL_TODOS, installTodosFake } from "../fixtures/todos-fake";
 import { hasTestUser, signInAs } from "../fixtures/visual-login";
 
 // Casa · Scadenze (#24), visual tester: axe in every state, keyboard (focus
@@ -28,6 +30,9 @@ test.beforeEach(async ({ context, baseURL }) => {
 
 async function open(page: Page, options: FakeOptions, ready = true) {
   await page.clock.install({ time: NOW });
+  // Casa reads the three lists on every page: the other two are faked too.
+  await installSpesaFake(page, { items: NORMAL_LIST });
+  await installTodosFake(page, { todos: NORMAL_TODOS });
   const fake = await installScadenzeFake(page, options);
   await page.goto("/casa/scadenze");
   if (ready) {
@@ -268,12 +273,15 @@ async function focusedLabel(page: Page) {
   });
 }
 
-async function tabThrough(page: Page, max = 30) {
+// On desktop the three columns have many things to reach: the walk is long.
+async function tabThrough(page: Page, max = 90) {
   const seen: string[] = [];
   for (let i = 0; i < max; i++) {
     await page.keyboard.press("Tab");
     const label = await focusedLabel(page);
-    if (label === "(body)" || seen.includes(label)) break;
+    // Stops at the end of the page or when the walk comes back to the start;
+    // two fields can share a label, so a repeated label is not the end.
+    if (label === "(body)" || label === seen[0]) break;
     seen.push(label);
   }
   return seen;
@@ -302,7 +310,7 @@ test("ordine del focus con le righe: nessuna riga riceve il focus, nessuna trapp
     expect(seen.length).toBeGreaterThan(5);
   }
   // The focus goes on: no trap (the walk ended by itself, not at the limit).
-  expect(seen.length).toBeLessThan(30);
+  expect(seen.length).toBeLessThan(90);
 });
 
 test("ordine del focus nello stato vuoto: «Aggiungi una scadenza» prima della navigazione", async ({

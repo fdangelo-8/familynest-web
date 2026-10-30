@@ -208,13 +208,11 @@ test.describe("struttura", () => {
     await expect(switcher(page)).toHaveCount(0);
   });
 
-  test.fixme("CA-5 (parte): su desktop il gruppo «Filtra per persona» c'è nell'intestazione", async ({
+  test("CA-5 (parte): su desktop il gruppo «Filtra per persona» c'è nell'intestazione", async ({
     page,
     baseURL,
     casa,
   }) => {
-    // Seguito accettato dal coordinatore sulla PR #123 (issue #24): i chip su desktop non sono ancora
-    // collegati alla pagina Scadenze (arrivano con la #23).
     test.skip(isMobileProject(), "Caso a 1280 px");
     await open(page, baseURL, casa);
     await expect(filterGroup(page)).toBeVisible();
@@ -232,13 +230,11 @@ test.describe("struttura", () => {
     await expect(col(page)).not.toContainText("In arrivo");
   });
 
-  test.fixme("CA-6 (parte): la stessa colonna «Scadenze» compare in /casa/spesa e /casa/da-fare", async ({
+  test("CA-6 (parte): la stessa colonna «Scadenze» compare in /casa/spesa e /casa/da-fare", async ({
     page,
     baseURL,
     casa,
   }) => {
-    // Seguito accettato dal coordinatore sulla PR #123 (issue #24): le pagine Spesa e Da fare non
-    // hanno ancora la colonna Scadenze (colonne incrociate).
     test.skip(isMobileProject(), "Caso a 1280 px");
     await seedBase(casa);
     await open(page, baseURL, casa, { path: "/casa/spesa" });
@@ -262,13 +258,11 @@ test.describe("struttura", () => {
     ).toHaveText("4");
   });
 
-  test.fixme("CA-7 (parte): la voce «Scadenze» mostra 4 anche in /casa/spesa e /casa/da-fare (mobile)", async ({
+  test("CA-7 (parte): la voce «Scadenze» mostra 4 anche in /casa/spesa e /casa/da-fare (mobile)", async ({
     page,
     baseURL,
     casa,
   }) => {
-    // Seguito accettato dal coordinatore sulla PR #123 (issue #24): Spesa e Da fare non
-    // leggono ancora le scadenze (colonne incrociate).
     test.skip(!isMobileProject(), "Il selettore c'è solo su mobile (390 px)");
     await seedBase(casa);
     await open(page, baseURL, casa);
@@ -563,13 +557,11 @@ test.describe("colonna desktop e filtri", () => {
     await expect(columnInfo(page)).toHaveText("3 urgenti");
   });
 
-  test.fixme("CA-17: i chip «Laura» e «Tommaso» non filtrano la colonna «Scadenze»", async ({
+  test("CA-17: i chip «Laura» e «Tommaso» non filtrano la colonna «Scadenze»", async ({
     page,
     baseURL,
     casa,
   }) => {
-    // Seguito accettato dal coordinatore sulla PR #123 (issue #24): i chip su desktop non sono ancora
-    // collegati alla pagina Scadenze (arrivano con la #23).
     test.skip(isMobileProject(), "Caso a 1280 px");
     await seedBase(casa);
     await open(page, baseURL, casa);
@@ -849,13 +841,11 @@ test.describe("caricamento ed errori", () => {
     await expect(rows(page)).toHaveCount(4, { timeout: 20_000 });
   });
 
-  test.fixme("CA-27 (parte): in /casa/spesa su desktop se falliscono solo le scadenze, la colonna mostra l'errore e la Spesa resta usabile", async ({
+  test("CA-27 (parte): in /casa/spesa su desktop se falliscono solo le scadenze, la colonna mostra l'errore e la Spesa resta usabile", async ({
     page,
     baseURL,
     casa,
   }) => {
-    // Seguito accettato dal coordinatore sulla PR #123 (issue #24): Spesa non ha ancora la colonna
-    // Scadenze (colonne incrociate).
     test.skip(isMobileProject(), "Caso a 1280 px");
     await seedBase(casa);
     await casa.shopping("Marco", ["Latte", "Pane"]);

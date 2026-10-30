@@ -7,6 +7,11 @@ import {
   installSpesaFake,
   type FakeOptions,
 } from "../fixtures/spesa-fake";
+import {
+  NORMAL_DEADLINES,
+  installScadenzeFake,
+} from "../fixtures/scadenze-fake";
+import { installTodosFake } from "../fixtures/todos-fake";
 import { hasTestUser, signInAs } from "../fixtures/visual-login";
 
 // Casa · Spesa (#21): axe in every state, touch areas, focus order and focus
@@ -22,8 +27,24 @@ test.beforeEach(async ({ context, baseURL }) => {
   test.skip(!signedIn, "utente di test A non ancora creato (#55)");
 });
 
-async function open(page: Page, options: FakeOptions, ready = true) {
+async function open(
+  page: Page,
+  options: FakeOptions,
+  ready = true,
+  deadlines: "ok" | "error" = "ok",
+) {
   const fake = await installSpesaFake(page, options);
+  // The deadlines are the third column; if the list cannot be read they fail
+  // too (on desktop the whole-page error needs all the lists to fail).
+  await installScadenzeFake(page, {
+    deadlines: NORMAL_DEADLINES,
+    reads: options.reads === "error" || deadlines === "error" ? "error" : "ok",
+  });
+  // If the shopping list cannot be read the things to do fail too (on desktop
+  // the whole-page error needs all the lists to fail).
+  if (options.reads === "error") {
+    await installTodosFake(page, { reads: "error" });
+  }
   await page.goto("/casa/spesa");
   if (ready) {
     await expect(page.getByRole("region", { name: "Spesa" })).toBeVisible({
@@ -85,6 +106,17 @@ test.describe("axe", () => {
     // The page's own loading state (the route frame shows a similar one first).
     const busy = page.locator('[aria-busy="true"][aria-live="polite"]');
     await expect(busy).toContainText("Caricamento in corso");
+    expect(await seriousViolations(page)).toEqual([]);
+  });
+
+  test("errore di una sola colonna (desktop)", async ({ page }, testInfo) => {
+    test.skip(isMobile(testInfo.project.name), "Caso a 1280 px");
+    await open(page, { items: NORMAL_LIST }, true, "error");
+    await expect(
+      page
+        .getByRole("region", { name: "Scadenze" })
+        .getByText("Non riusciamo a caricare le scadenze."),
+    ).toBeVisible();
     expect(await seriousViolations(page)).toEqual([]);
   });
 
@@ -475,6 +507,35 @@ test("focus: torna la rete con il focus su «Riprova» (senza premerlo): il focu
   await expect(page.locator(".avviso--errore")).toBeHidden({ timeout: 15_000 });
   // Spec 3.6a: "se il focus era su «Riprova» va sull'h3 della prima sezione visibile".
   expect(await page.evaluate(() => document.activeElement?.tagName)).toBe("H3");
+});
+
+test("focus: il «Riprova» della colonna Scadenze tiene il focus quando sparisce l'avviso offline (desktop)", async ({
+  page,
+  context,
+}, testInfo) => {
+  test.skip(isMobile(testInfo.project.name), "Caso a 1280 px");
+  await open(page, { items: NORMAL_LIST }, true, "error");
+  const column = page.getByRole("region", { name: "Scadenze" });
+  const columnRetry = column.getByRole("button", { name: "Riprova" });
+  await expect(columnRetry).toBeVisible();
+  await context.setOffline(true);
+  await page.getByRole("checkbox", { name: "Preso: Pane" }).click();
+  await expect(page.locator(".avviso--errore")).toHaveCount(2);
+  await columnRetry.focus();
+  await context.setOffline(false);
+  // The offline alert goes away by itself; the other alert, with the focus, stays.
+  await expect(page.locator(".avviso--errore")).toHaveCount(1, {
+    timeout: 15_000,
+  });
+  await expect(columnRetry).toBeFocused();
+  // A click on something that cannot take the focus drops it: nothing moves it later.
+  await page.mouse.click(5, 300);
+  await expect(columnRetry).not.toBeFocused();
+  // The click puts the focus on the page itself: the body, or the `main`
+  // (tabIndex -1, target of «Vai al contenuto»). Not on the old button.
+  expect(["BODY", "MAIN"]).toContain(
+    await page.evaluate(() => document.activeElement?.tagName),
+  );
 });
 
 test("spunta rifiutata: la riga torna subito in «Da prendere»", async ({
