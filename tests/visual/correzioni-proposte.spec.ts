@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { NORMAL_LIST, installSpesaFake } from "../fixtures/spesa-fake";
 import { hasTestUser, signInAs } from "../fixtures/visual-login";
 
 // Corrections 6-13 of #43 (#67): the states that the other visual specs do
@@ -68,8 +69,11 @@ test.describe("cornice dell'app (utente A)", () => {
   test("barra di Casa a 360 px", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "mobile", "solo mobile");
     await page.setViewportSize({ width: 360, height: 800 });
+    // Casa · Spesa shows the shopping list: a fixed list, served by a fake (#21).
+    await installSpesaFake(page, { items: NORMAL_LIST });
     await page.goto("/casa/spesa");
-    await expect(page.locator("main")).toBeVisible();
+    await expect(page.getByRole("main")).toBeVisible();
+    await expect(page.getByTestId("spesa-riga")).toHaveCount(7);
     await settle(page);
     await expect(page).toHaveScreenshot("casa-spesa-360.png");
   });
