@@ -680,6 +680,7 @@ export type Database = {
       invitation_preview: {
         Args: { p_token: string };
         Returns: {
+          caller_is_member: boolean;
           expires_at: string;
           household_name: string;
           invitee_color: Database["public"]["Enums"]["member_color"];

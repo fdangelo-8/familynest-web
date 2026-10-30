@@ -3871,6 +3871,41 @@ main[tabindex="-1"]:focus {
   background: var(--color-carta);
 }
 
+/* #133: riga cliccabile dentro una scheda. Il fondo del passaggio del mouse e
+   del premuto resta dentro il filo e segue gli angoli; misure invariate. */
+.scheda > li > .riga-lista--cliccabile {
+  border: var(--border-sottile) solid transparent;
+  border-bottom-width: var(--space-0);
+  padding: calc(var(--space-2) - var(--border-sottile))
+    calc(var(--space-4) - var(--border-sottile)) var(--space-2);
+}
+.scheda > li:first-child > .riga-lista--cliccabile {
+  border-top-left-radius: var(--radius-l);
+  border-top-right-radius: var(--radius-l);
+}
+.scheda > li:last-child > .riga-lista--cliccabile {
+  border-bottom-width: var(--border-sottile);
+  padding-bottom: calc(var(--space-2) - var(--border-sottile));
+  border-bottom-left-radius: var(--radius-l);
+  border-bottom-right-radius: var(--radius-l);
+}
+/* Le regole del passaggio del mouse e del premuto usano la scorciatoia
+   «background», che rimette background-clip a border-box: qui serve una
+   specificità più alta di «.scheda .riga-lista--cliccabile:hover:not(:disabled)». */
+.scheda > li > .riga-lista--cliccabile,
+.scheda > li > .riga-lista--cliccabile:hover:not(:disabled),
+.scheda > li > .riga-lista--cliccabile:active:not(:disabled) {
+  background-clip: padding-box;
+}
+
+/* #133: testa del profilo in caricamento. .intestazione prende tutta la
+   larghezza disponibile, così titolo e testo-corto (70% e 35%) si vedono, e
+   allinea gli scheletri come la testa: al centro, o a sinistra con --riga. */
+.gruppo-skeleton .profilo-testa > .intestazione {
+  justify-self: stretch;
+  justify-items: inherit;
+}
+
 /* Righe, schede, striscia e blocchi del Calendario e di Oggi (#88, per #25 e
    #30): passaggio del mouse e premuto, stessa regola e stessi fondi. Solo i
    cliccabili cambiano: Occupato e Liberi insieme (div) e le righe del pannello

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type ReactNode } from "react";
+import { useState, useSyncExternalStore, type ReactNode } from "react";
 import { Alert } from "@/components/ui/Alert/Alert";
 import { Avatar, MEMBER_COLORS } from "@/components/ui/Avatar/Avatar";
 import { Button } from "@/components/ui/Button/Button";
@@ -69,7 +69,20 @@ function Example({
   );
 }
 
+// The query string never changes while the page is open: nothing to watch.
+function subscribeNever() {
+  return () => {};
+}
+
+// #133: the clickable-row cards for the hover tests are shown only with
+// ?righe-scheda=1, so the reference of the whole gallery does not change.
 export function Gallery() {
+  const rowCards = useSyncExternalStore(
+    subscribeNever,
+    () =>
+      new URLSearchParams(window.location.search).get("righe-scheda") === "1",
+    () => false,
+  );
   return (
     <main className={styles.pagina}>
       <h1 className="t-titolo-pagina">Design system</h1>
@@ -78,7 +91,7 @@ export function Gallery() {
       <FieldsSection />
       <ControlsSection />
       <PeopleSection />
-      <ListSection />
+      <ListSection rowCards={rowCards} />
       <OverlaysSection />
       <StatesSection />
     </main>
@@ -946,7 +959,7 @@ function PeopleSection() {
   );
 }
 
-function ListSection() {
+function ListSection({ rowCards }: { rowCards: boolean }) {
   const [done, setDone] = useState(false);
   return (
     <>
@@ -1022,6 +1035,48 @@ function ListSection() {
             </ListRow>
           </List>
         </Example>
+        {rowCards ? (
+          <Example caption="riga-lista--cliccabile · righe in una scheda (#133)">
+            <List className="scheda" data-testid="scheda-righe">
+              {["Marco", "Laura", "Sofia"].map((name) => (
+                <ListRow
+                  key={name}
+                  href="/design-system"
+                  data-testid={`scheda-righe-${name.toLowerCase()}`}
+                >
+                  <span className="riga-lista__testo">
+                    <span className="riga-lista__titolo">{name}</span>
+                  </span>
+                </ListRow>
+              ))}
+            </List>
+            <List className="scheda" data-testid="scheda-riga-unica">
+              <ListRow
+                href="/design-system"
+                data-testid="scheda-riga-unica-riga"
+              >
+                <span className="riga-lista__testo">
+                  <span className="riga-lista__titolo">
+                    Manda di nuovo l&apos;invito
+                  </span>
+                </span>
+              </ListRow>
+            </List>
+          </Example>
+        ) : null}
+        {rowCards ? (
+          <Example caption="testa del profilo in caricamento (#133)">
+            <SkeletonGroup data-testid="profilo-testa-skeleton">
+              <div className="profilo-testa profilo-testa--riga">
+                <Skeleton shape="cerchio" />
+                <div className="intestazione">
+                  <Skeleton shape="titolo" />
+                  <Skeleton shape="testo-corto" />
+                </div>
+              </div>
+            </SkeletonGroup>
+          </Example>
+        ) : null}
         <Example caption="riga-lista · con casella">
           <List className="scheda">
             <ListRow
