@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { CasaFrame } from "@/components/casa/CasaFrame";
 import { Alert } from "@/components/ui/Alert/Alert";
 import { Avatar } from "@/components/ui/Avatar/Avatar";
 import { Button } from "@/components/ui/Button/Button";
@@ -10,9 +11,6 @@ import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
 import { Icon } from "@/components/ui/Icon/Icon";
 import { PageError } from "@/components/ui/PageError/PageError";
 import { QuickAddField } from "@/components/ui/QuickAddField/QuickAddField";
-import { SectionSwitcher } from "@/components/ui/SegmentedControl/SectionSwitcher";
-import { Skeleton } from "@/components/ui/Skeleton/Skeleton";
-import { VisuallyHidden } from "@/components/ui/VisuallyHidden/VisuallyHidden";
 import {
   byCreation,
   byLastTaken,
@@ -29,59 +27,6 @@ import { useShoppingList } from "./useShoppingList";
 
 const TO_TAKE_HEADING = '[data-focus="to-take-heading"]';
 const COMMON_HEADING = '[data-focus="common-heading"]';
-
-function switcherItems(toTakeCount: number | undefined) {
-  return [
-    { key: "spesa", label: "Spesa", href: "/casa/spesa", count: toTakeCount },
-    { key: "da-fare", label: "Da fare", href: "/casa/da-fare" },
-    { key: "scadenze", label: "Scadenze", href: "/casa/scadenze" },
-  ];
-}
-
-function PageTop({ nestName }: { nestName: string }) {
-  return (
-    <div className="intestazione-desktop">
-      <div className="intestazione">
-        <p className="intestazione__sopra">{nestName}</p>
-        <h1 className="intestazione__titolo t-titolo-pagina">Casa</h1>
-      </div>
-    </div>
-  );
-}
-
-function LoadingState({ nestName }: { nestName: string }) {
-  return (
-    <main id="contenuto" tabIndex={-1} className="pagina pagina-desktop">
-      <PageTop nestName={nestName} />
-      <SectionSwitcher
-        aria-label="Sezione della casa"
-        items={switcherItems(undefined)}
-        current="spesa"
-        className={"spesa-selettore"}
-      />
-      <div aria-busy="true" aria-live="polite">
-        <VisuallyHidden>Caricamento in corso</VisuallyHidden>
-        <div className={"spesa-solo-mobile"}>
-          <div className="gruppo-skeleton" aria-hidden="true">
-            <Skeleton shape="riga" />
-          </div>
-          <div className="gruppo-skeleton" aria-hidden="true">
-            <Skeleton shape="testo-corto" />
-            <Skeleton shape="grande" />
-          </div>
-        </div>
-        <div className={cx("colonne", "colonne--tre", "spesa-solo-desktop")}>
-          {[0, 1, 2].map((column) => (
-            <div key={column} className="gruppo-skeleton" aria-hidden="true">
-              <Skeleton shape="riga" />
-              <Skeleton shape="grande" />
-            </div>
-          ))}
-        </div>
-      </div>
-    </main>
-  );
-}
 
 function Row({
   item,
@@ -136,25 +81,6 @@ function SectionHead({
       </h3>
       {info ? <span className="sezione__info">{info}</span> : null}
     </div>
-  );
-}
-
-function ComingSoonColumn({
-  title,
-  icon,
-  text,
-}: {
-  title: string;
-  icon: "square-check" | "file-clock";
-  text: string;
-}) {
-  return (
-    <section className={cx("colonna", "spesa-solo-desktop")} aria-label={title}>
-      <div className="sezione__testa">
-        <h2 className="sezione__titolo">{title}</h2>
-      </div>
-      <EmptyState icon={icon} title="In arrivo" text={text} actions={null} />
-    </section>
   );
 }
 
@@ -217,7 +143,9 @@ export function SpesaPage({ nestName }: { nestName: string }) {
     [items, settling],
   );
 
-  if (status === "loading") return <LoadingState nestName={nestName} />;
+  if (status === "loading") {
+    return <CasaFrame nestName={nestName} current="spesa" loading />;
+  }
 
   if (status === "error") {
     return (
@@ -295,128 +223,105 @@ export function SpesaPage({ nestName }: { nestName: string }) {
     );
   }
 
-  return (
-    <main
-      id="contenuto"
-      tabIndex={-1}
-      ref={rootRef}
-      className="pagina pagina-desktop"
+  const offlineAlert = offline ? (
+    <Alert
+      variant="errore"
+      icon="wifi-off"
+      action={
+        <Button variant="link" loading={list.retrying} onClick={list.retry}>
+          Riprova
+        </Button>
+      }
     >
-      <PageTop nestName={nestName} />
-      <SectionSwitcher
-        aria-label="Sezione della casa"
-        items={switcherItems(toTake.length)}
-        current="spesa"
-        className={"spesa-selettore"}
-      />
-      <div className="colonne colonne--tre">
-        <section className="colonna" aria-label="Spesa">
-          <div className={cx("sezione__testa", "spesa-testa-colonna")}>
-            <h2 className="sezione__titolo">Spesa</h2>
-            {toTake.length > 0 ? (
-              <span className="sezione__info">{toTake.length} da prendere</span>
-            ) : null}
-          </div>
+      Sei offline: le cose che spunti partiranno appena torna la connessione.
+    </Alert>
+  ) : null;
 
-          {offline ? (
-            <Alert
-              variant="errore"
-              icon="wifi-off"
-              action={
-                <Button
-                  variant="link"
-                  loading={list.retrying}
-                  onClick={list.retry}
-                >
-                  Riprova
-                </Button>
-              }
-            >
-              Sei offline: le cose che spunti partiranno appena torna la
-              connessione.
-            </Alert>
-          ) : null}
-
-          <QuickAddField
-            label={quickLabel}
-            value={quick}
-            onChange={setQuick}
-            onSubmit={list.addItem}
-            active={isEmpty}
-          />
-
-          {showCommon ? (
-            <section className="sezione" data-testid="spesa-piu-comuni">
-              <SectionHead
-                title="Le più comuni"
-                info="un tocco per aggiungere"
-                headingProps={{ "data-focus": "common-heading" }}
-              />
-              <div
-                className="gruppo-chip"
-                role="group"
-                aria-label="Le più comuni"
-              >
-                {chips.map((name) => (
-                  <button
-                    key={name}
-                    type="button"
-                    className="chip"
-                    aria-label={`Aggiungi ${name}`}
-                    data-chip={name}
-                    onClick={() => addChip(name)}
-                  >
-                    <Icon name="plus" size="s" />
-                    {name}
-                  </button>
-                ))}
-              </div>
-            </section>
-          ) : null}
-
-          {isEmpty ? (
-            <EmptyState
-              icon="users"
-              title="Una lista per tutta la casa"
-              text={
-                otherAdult
-                  ? `Quando ${otherAdult.name} aggiunge qualcosa, lo vedi subito anche tu.`
-                  : "Quando qualcuno entra nel Nest, vedrete la stessa lista."
-              }
-              actions={null}
-            />
-          ) : (
+  return (
+    <CasaFrame
+      nestName={nestName}
+      current="spesa"
+      counts={{ spesa: toTake.length }}
+      mainRef={rootRef}
+      offline={offlineAlert}
+      columns={{
+        spesa: {
+          info: toTake.length > 0 ? `${toTake.length} da prendere` : undefined,
+          children: (
             <>
-              {toTakeSection}
-              {taken.length > 0 ? (
-                <section className="sezione" data-testid="spesa-presi">
-                  <SectionHead title="Presi" info={String(taken.length)} />
-                  {renderRows(taken)}
-                  <Tear count={clearableCount} onTear={list.tear} />
+              <QuickAddField
+                label={quickLabel}
+                value={quick}
+                onChange={setQuick}
+                onSubmit={list.addItem}
+                active={isEmpty}
+              />
+
+              {showCommon ? (
+                <section className="sezione" data-testid="spesa-piu-comuni">
+                  <SectionHead
+                    title="Le più comuni"
+                    info="un tocco per aggiungere"
+                    headingProps={{ "data-focus": "common-heading" }}
+                  />
+                  <div
+                    className="gruppo-chip"
+                    role="group"
+                    aria-label="Le più comuni"
+                  >
+                    {chips.map((name) => (
+                      <button
+                        key={name}
+                        type="button"
+                        className="chip"
+                        aria-label={`Aggiungi ${name}`}
+                        data-chip={name}
+                        onClick={() => addChip(name)}
+                      >
+                        <Icon name="plus" size="s" />
+                        {name}
+                      </button>
+                    ))}
+                  </div>
                 </section>
               ) : null}
-            </>
-          )}
-        </section>
 
-        <ComingSoonColumn
-          title="Da fare"
-          icon="square-check"
-          text="Qui ci saranno le cose da fare della casa. Stiamo preparando questa parte."
-        />
-        <ComingSoonColumn
-          title="Scadenze"
-          icon="file-clock"
-          text="Qui ci saranno le scadenze della casa. Stiamo preparando questa parte."
-        />
-      </div>
-      <div
-        className="visivamente-nascosto"
-        aria-live="polite"
-        data-testid="spesa-annuncio"
-      >
-        {list.announcement}
-      </div>
-    </main>
+              {isEmpty ? (
+                <EmptyState
+                  icon="users"
+                  title="Una lista per tutta la casa"
+                  text={
+                    otherAdult
+                      ? `Quando ${otherAdult.name} aggiunge qualcosa, lo vedi subito anche tu.`
+                      : "Quando qualcuno entra nel Nest, vedrete la stessa lista."
+                  }
+                  actions={null}
+                />
+              ) : (
+                <>
+                  {toTakeSection}
+                  {taken.length > 0 ? (
+                    <section className="sezione" data-testid="spesa-presi">
+                      <SectionHead title="Presi" info={String(taken.length)} />
+                      {renderRows(taken)}
+                      <Tear count={clearableCount} onTear={list.tear} />
+                    </section>
+                  ) : null}
+                </>
+              )}
+            </>
+          ),
+        },
+      }}
+      after={
+        <div
+          className="visivamente-nascosto"
+          aria-live="polite"
+          data-testid="spesa-annuncio"
+        >
+          {list.announcement}
+        </div>
+      }
+    />
   );
 }
