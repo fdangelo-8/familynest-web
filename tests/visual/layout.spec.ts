@@ -5,6 +5,7 @@ import { hasTestUser, signInAs } from "../fixtures/visual-login";
 // 1280 px (projects) and at 800 px (tablet, desktop project only).
 // They need test user A (Casa D'Angelo); without TEST_USER_A_* they are
 // skipped. The references are generated after #55, in the CI container.
+// /nest has its own file, nest.spec.ts (#17): the old placeholder is gone.
 
 test.use({
   locale: "it-IT",
@@ -17,7 +18,6 @@ const PAGES = [
   { route: "/aggiungi", file: "aggiungi", h1: "Aggiungi" },
   { route: "/calendario", file: "calendario", h1: "Calendario" },
   { route: "/casa/spesa", file: "casa-spesa", h1: "Casa" },
-  { route: "/nest", file: "nest", h1: "Il tuo Nest" },
   { route: "/notifiche", file: "notifiche", h1: "Notifiche" },
   { route: "/ricerca", file: "ricerca", h1: "Ricerca" },
   { route: "/profilo", file: "profilo", h1: "Il tuo profilo" },
