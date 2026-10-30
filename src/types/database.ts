@@ -724,6 +724,10 @@ export type Database = {
           isSetofReturn: true;
         };
       };
+      undo_added_shopping_items: {
+        Args: { item_ids: string[] };
+        Returns: string[];
+      };
       update_event: {
         Args: {
           p_day: string;

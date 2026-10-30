@@ -496,28 +496,6 @@ test.describe("Rotte di Casa e segnaposto", () => {
     ).toMatch(/^const frame = await requireNest\(\)/);
   });
 
-  // Scadenze is still a placeholder: #24 (PR #123) turns it into a real page
-  // and then drops this check.
-  for (const [dir, key] of [["scadenze", "casa-scadenze"]] as const) {
-    test(`CA-26: la pagina ${dir} ha metadata, requireNest e PlaceholderPage`, () => {
-      const file = `src/app/(app)/casa/${dir}/page.tsx`;
-      expect(existsSync(file)).toBe(true);
-      const source = readFileSync(file, "utf8");
-      expect(source).toContain(`PLACEHOLDERS["${key}"].browserTitle`);
-      expect(source).toMatch(/title:\s*PLACEHOLDERS\[/);
-      expect(source).toContain(`<PlaceholderPage pageKey="${key}"`);
-      // requireNest() is the first statement of the page function.
-      const body = source.slice(source.indexOf("export default"));
-      const open = body.indexOf("{", body.indexOf(")"));
-      expect(
-        body
-          .slice(open + 1)
-          .replace(/^(\s*\/\/[^\n]*\n)+/, "")
-          .trimStart(),
-      ).toMatch(/^await requireNest\(\)/);
-    });
-  }
-
   test("CA-27: senza sessione Da fare e Scadenze portano a /accesso", async ({
     page,
   }) => {

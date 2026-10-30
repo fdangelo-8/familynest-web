@@ -474,6 +474,14 @@ test.describe("segnaposto", () => {
         ).toBeVisible();
         return;
       }
+      if (route === "/casa/scadenze") {
+        // Real page since #24: no placeholder, the column «Scadenze» is there.
+        await expect(page.getByTestId("pagina-segnaposto")).toHaveCount(0);
+        await expect(
+          page.getByRole("region", { name: "Scadenze" }),
+        ).toBeVisible();
+        return;
+      }
       const placeholder = page.getByTestId("pagina-segnaposto");
       await expect(placeholder).toBeVisible();
       // empty state of the design system
