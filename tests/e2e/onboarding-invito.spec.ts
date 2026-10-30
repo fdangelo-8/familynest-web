@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test } from "@playwright/test";
 import {
@@ -37,6 +37,7 @@ import {
   signInThrowaway,
   skipControl,
   stubShare,
+  visibleText,
   withInviteNest,
   adminClient,
   PATH,
@@ -106,14 +107,16 @@ test.describe("contenuto", () => {
     onlyMobile();
     await openAs(page, baseURL, "A");
     const invite = await pendingInviteOf(SEED_LAURA_MEMBER_ID);
-    await expect(page.getByText("Ultimo passo", { exact: true })).toBeVisible();
+    await expect(visibleText(page, "Ultimo passo")).toBeVisible();
     await expect(heading(page)).toHaveCount(1);
     await expect(heading(page)).toHaveText("Invita Laura");
     const bar = page.getByRole("progressbar", { name: "Passo 4 di 4" });
     await expect(bar).toBeVisible();
     await expect(bar).toHaveAttribute("aria-valuenow", "4");
     await expect(bar).toHaveAttribute("aria-valuemax", "4");
-    await expect(page.getByText(expiryNote(invite.expires_at))).toBeVisible();
+    await expect(
+      visibleText(page, expiryNote(invite.expires_at)),
+    ).toBeVisible();
     await expect(sendButton(page, "Laura")).toBeVisible();
     await expect(copyButton(page)).toBeVisible();
     await expect(skipControl(page)).toBeVisible();
@@ -130,7 +133,9 @@ test.describe("contenuto", () => {
     const invite = await pendingInviteOf(SEED_LAURA_MEMBER_ID);
     await expect(heading(page)).toHaveCount(1);
     await expect(heading(page)).toHaveText("Invita Laura");
-    await expect(page.getByText(expiryNote(invite.expires_at))).toBeVisible();
+    await expect(
+      visibleText(page, expiryNote(invite.expires_at)),
+    ).toBeVisible();
     await expect(sendButton(page, "Laura")).toBeVisible();
     await expect(copyButton(page)).toBeVisible();
     await expect(doneControl(page)).toBeVisible();
@@ -149,7 +154,7 @@ test.describe("contenuto", () => {
       await openInvite(page, `?persona=${value}`);
       await expect(heading(page)).toHaveText("Invita Laura");
       await expect(
-        page.getByText("Questa pagina non si è caricata"),
+        visibleText(page, "Questa pagina non si è caricata"),
       ).toHaveCount(0);
       await expect(
         page.getByRole("alert").filter({ hasText: /\S/ }),
@@ -223,7 +228,7 @@ test.describe("invito creato, riusato e scaduto", () => {
       await signInThrowaway(page, baseURL, user);
       await openInvite(page);
       await expect(heading(page)).toHaveText("Invita Laura");
-      await expect(page.getByText("Il link vale 7 giorni.")).toBeVisible();
+      await expect(visibleText(page, "Il link vale 7 giorni.")).toBeVisible();
 
       const rows = await invitesOf(laura);
       const pending = rows.filter((row) => row.status === "pending");
@@ -252,7 +257,7 @@ test.describe("invito creato, riusato e scaduto", () => {
       await signInThrowaway(page, baseURL, user);
       await openInvite(page);
       await expect(heading(page)).toHaveText("Invita Anna");
-      await expect(page.getByText("Il link vale 7 giorni.")).toBeVisible();
+      await expect(visibleText(page, "Il link vale 7 giorni.")).toBeVisible();
 
       const rows = await invitesOf(anna);
       expect(rows.find((row) => row.id === expired.id)?.status).toBe("revoked");
@@ -431,7 +436,7 @@ test.describe("uscita e passi", () => {
       await openInvite(page);
 
       await expect(
-        page.getByText("Ultimo passo · invito 1 di 2"),
+        visibleText(page, "Ultimo passo · invito 1 di 2"),
       ).toBeVisible();
       await expect(heading(page)).toHaveText("Invita Anna");
       await expect(control(page, "Ora invita Carla")).toBeVisible();
@@ -441,7 +446,7 @@ test.describe("uscita e passi", () => {
       await control(page, "Ora invita Carla").click();
       await expect(page).toHaveURL(/\/onboarding\/invito\?persona=2$/);
       await expect(
-        page.getByText("Ultimo passo · invito 2 di 2"),
+        visibleText(page, "Ultimo passo · invito 2 di 2"),
       ).toBeVisible();
       await expect(heading(page)).toHaveText("Invita Carla");
       await expect(
@@ -478,7 +483,7 @@ test.describe("uscita e passi", () => {
       await backControl(page).click();
       await expect(heading(page)).toHaveText("Invita Anna");
       await expect(
-        page.getByText("Ultimo passo · invito 1 di 2"),
+        visibleText(page, "Ultimo passo · invito 1 di 2"),
       ).toBeVisible();
       await backControl(page).click();
       await expect(page).toHaveURL(/\/onboarding\/persone$/);
@@ -593,32 +598,18 @@ test.describe("errori", () => {
   // on the server). As the criteria allow, they are checked statically on the
   // source of the page, and in local runs with Supabase stopped after sign-in.
   function pageSource(): string {
-    const roots = [
-      join(process.cwd(), "src/app/onboarding/invito"),
-      join(process.cwd(), "src/components/onboarding"),
-    ];
-    const files: string[] = [];
-    const walk = (dir: string) => {
-      if (!existsSync(dir)) return;
-      for (const entry of readdirSync(dir)) {
-        const path = join(dir, entry);
-        if (statSync(path).isDirectory()) walk(path);
-        else if (/\.(ts|tsx)$/.test(entry)) files.push(path);
-      }
-    };
-    roots.forEach(walk);
-    const invitoFiles = files.filter((file) => /invit/i.test(file));
-    expect(
-      invitoFiles.length,
-      "src/app/onboarding/invito deve esistere (TODO(#14): verificare i nomi dei file)",
-    ).toBeGreaterThan(0);
-    return invitoFiles.map((file) => readFileSync(file, "utf8")).join("\n");
+    const files = [
+      "src/app/onboarding/invito/page.tsx",
+      "src/components/onboarding/InviteStep.tsx",
+    ].map((file) => join(process.cwd(), file));
+    for (const file of files) {
+      expect(existsSync(file), `${file} deve esistere`).toBe(true);
+    }
+    return files.map((file) => readFileSync(file, "utf8")).join("\n");
   }
 
   test("CA-23: se l'invito non si prepara il codice rende l'avviso con «Riprova»", () => {
     const source = pageSource();
-    // TODO(#14): replace with the runtime check (Supabase stopped after the
-    // sign-in) once the stack is available, and with the exact component names.
     expect(source).toContain("Non riusciamo a preparare l'invito per");
     expect(source).toContain("Controlla la connessione e riprova.");
     expect(source).toContain(
@@ -630,8 +621,6 @@ test.describe("errori", () => {
 
   test("CA-28: se la pagina non si carica il codice rende OnboardingError", () => {
     const source = pageSource();
-    // TODO(#14): the error branch of the authentication / Nest read must render
-    // OnboardingError ("Questa pagina non si è caricata", "Riprova").
     expect(source).toContain("OnboardingError");
   });
 });

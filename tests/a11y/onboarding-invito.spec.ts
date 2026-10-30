@@ -1,5 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { signInAs, skipReason, usersConfigured } from "../fixtures/auth";
 import {
   throwawayConfigured,
@@ -17,6 +17,7 @@ import {
   sendButton,
   signInThrowaway,
   skipControl,
+  visibleText,
   withInviteNest,
 } from "../fixtures/invito";
 
@@ -112,7 +113,9 @@ test("axe con due adulti (invito 1 di 2 e 2 di 2)", async ({
     await addAdult("Carla", "glicine");
     await signInThrowaway(page, baseURL, user);
     await openInvite(page);
-    await expect(page.getByText("Ultimo passo · invito 1 di 2")).toBeVisible();
+    await expect(
+      visibleText(page, "Ultimo passo · invito 1 di 2"),
+    ).toBeVisible();
     await expectNoDuplicateIds(page);
     await expectNoBlocking(page);
     await control(page, "Ora invita Carla").click();
@@ -164,8 +167,6 @@ test("ordine del fuoco da tastiera e anello visibile", async ({
         shadow: style.boxShadow,
       };
     });
-    // TODO(#14): the ring of the design system may be a box-shadow; check the
-    // real implementation.
     expect(
       (ring.style !== "none" && ring.width > 0) || ring.shadow !== "none",
     ).toBe(true);
@@ -185,19 +186,39 @@ test("«Copia il link» si usa da tastiera e il fuoco resta sul bottone", async 
   await expect(copyButton(page)).toBeFocused();
 });
 
+/** The four corners of a 44 x 44 box around the control reach the control. */
+async function expectTouchArea(locator: Locator, what: string) {
+  await locator.scrollIntoViewIfNeeded();
+  const result = await locator.evaluate((el) => {
+    const r = el.getBoundingClientRect();
+    const cx = r.left + r.width / 2;
+    const cy = r.top + r.height / 2;
+    const misses: string[] = [];
+    for (const [dx, dy] of [
+      [-21, -21],
+      [21, -21],
+      [-21, 21],
+      [21, 21],
+    ] as const) {
+      const hit = document.elementFromPoint(cx + dx, cy + dy);
+      if (!hit || !(el === hit || el.contains(hit))) misses.push(`${dx},${dy}`);
+    }
+    return { width: r.width, height: r.height, misses };
+  });
+  const bigEnough = result.width >= 44 && result.height >= 44;
+  expect(
+    bigEnough || result.misses.length === 0,
+    `${what}: ${Math.round(result.width)}x${Math.round(result.height)} px, area di 44 px non raggiunta`,
+  ).toBe(true);
+}
+
 test("mobile: aree di tocco di almeno 44 px", async ({ page, baseURL }) => {
   test.skip(!isMobileProject(), "Solo mobile (390 px)");
   await openA(page, baseURL);
-  for (const target of [
-    backControl(page),
-    sendButton(page, "Laura"),
-    copyButton(page),
-    skipControl(page),
-  ]) {
-    const box = await target.boundingBox();
-    expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
-    expect(box?.width ?? 0).toBeGreaterThanOrEqual(44);
-  }
+  await expectTouchArea(backControl(page), "freccia Indietro");
+  await expectTouchArea(sendButton(page, "Laura"), "Manda il link");
+  await expectTouchArea(copyButton(page), "Copia il link");
+  await expectTouchArea(skipControl(page), "Lo faccio dopo");
 });
 
 test("desktop: i controlli di invito e uscita sono alti almeno 44 px", async ({

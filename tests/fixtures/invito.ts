@@ -5,7 +5,7 @@ import { createThrowawayUser, type ThrowawayUser } from "./throwaway-user";
 // Shared by tests/e2e/onboarding-invito.spec.ts and
 // tests/a11y/onboarding-invito.spec.ts (onboarding step 4 "Invito", #14).
 // Written before the page exists: selectors use the roles and texts of the
-// requirement; what must be checked against the real code is marked TODO(#14).
+// requirement and checked against the code of the PR.
 // The seed users A and B only read (parallel desktop and mobile runs would
 // race on a mutated seed); every test that changes invitations or members uses
 // its own throwaway user, deleted at the end.
@@ -126,25 +126,30 @@ export const inviteUrl = (page: Page, token: string) =>
 
 // ---------------------------------------------------------------- locators
 
-/** A control that may be a button or a link (TODO(#14): fix on the real code). */
+/** Exit and next-adult controls are buttons; "Indietro" is a link everywhere. */
 export const control = (page: Page, name: string) =>
-  page
-    .getByRole("button", { name, exact: true })
-    .or(page.getByRole("link", { name, exact: true }));
-
+  page.getByRole("button", { name, exact: true });
 export const sendButton = (page: Page, who: string) =>
   page.getByRole("button", { name: `Manda il link a ${who}`, exact: true });
 export const copyButton = (page: Page) =>
   page.getByRole("button", { name: "Copia il link", exact: true });
 export const skipControl = (page: Page) => control(page, "Lo faccio dopo");
 export const doneControl = (page: Page) => control(page, "Ho finito");
-export const backControl = (page: Page) => control(page, "Indietro");
+export const backControl = (page: Page) =>
+  page.getByRole("link", { name: "Indietro", exact: true });
 export const heading = (page: Page) => page.getByRole("heading", { level: 1 });
 export const progress = (page: Page) => page.getByRole("progressbar");
 
+/** Text shown in the visible layout (both layouts are in the DOM). */
+export const visibleText = (page: Page, text: string) =>
+  page.getByText(text, { exact: true }).filter({ visible: true });
+
 /** Any visible toast or alert with text (the Next route announcer is empty). */
 export const messages = (page: Page) =>
-  page.locator('[role="status"], [role="alert"]').filter({ hasText: /\S/ });
+  page
+    .locator('[role="status"], [role="alert"]')
+    .filter({ hasText: /\S/ })
+    .filter({ visible: true });
 
 /** Opens the page and waits for the main landmark and the heading (LEZIONI). */
 export async function openInvite(page: Page, query = "") {
