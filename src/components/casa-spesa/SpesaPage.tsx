@@ -2,9 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { CasaFrame } from "@/components/casa/CasaFrame";
-import { Alert } from "@/components/ui/Alert/Alert";
 import { Avatar } from "@/components/ui/Avatar/Avatar";
-import { Button } from "@/components/ui/Button/Button";
 import { Checkbox } from "@/components/ui/Checkbox/Checkbox";
 import { cx } from "@/components/ui/cx";
 import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
@@ -223,29 +221,19 @@ export function SpesaPage({ nestName }: { nestName: string }) {
     );
   }
 
-  const offlineAlert = offline ? (
-    <Alert
-      variant="errore"
-      icon="wifi-off"
-      action={
-        <Button variant="link" loading={list.retrying} onClick={list.retry}>
-          Riprova
-        </Button>
-      }
-    >
-      Sei offline: le cose che spunti partiranno appena torna la connessione.
-    </Alert>
-  ) : null;
-
   return (
     <CasaFrame
       nestName={nestName}
       current="spesa"
       counts={{ spesa: toTake.length }}
       mainRef={rootRef}
-      offline={offlineAlert}
       columns={{
         spesa: {
+          offline: {
+            active: offline,
+            retrying: list.retrying,
+            onRetry: list.retry,
+          },
           info: toTake.length > 0 ? `${toTake.length} da prendere` : undefined,
           children: (
             <>

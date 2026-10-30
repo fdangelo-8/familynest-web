@@ -1,4 +1,6 @@
 import type { ReactNode, Ref } from "react";
+import { Alert } from "@/components/ui/Alert/Alert";
+import { Button } from "@/components/ui/Button/Button";
 import { cx } from "@/components/ui/cx";
 import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
 import { SectionSwitcher } from "@/components/ui/SegmentedControl/SectionSwitcher";
@@ -8,7 +10,18 @@ import { PersonFilter, type PersonFilterProps } from "./PersonFilter";
 
 export type CasaSection = "spesa" | "da-fare" | "scadenze";
 
+export type CasaColumnOffline = {
+  /** The column has changes waiting for the connection */
+  active: boolean;
+  /** "Riprova" is running for this column */
+  retrying?: boolean;
+  /** Sends the queue of this column again */
+  onRetry: () => void;
+};
+
 export type CasaColumn = {
+  /** Offline state: the frame shows one alert for all the columns */
+  offline?: CasaColumnOffline;
   /** Shown on the right of the column title (desktop), for example "4 aperti" */
   info?: string;
   children: ReactNode;
@@ -24,8 +37,6 @@ export type CasaFrameProps = {
   columns?: Partial<Record<CasaSection, CasaColumn>>;
   /** Person filter: one state, rendered once per layout. Absent = no chips. */
   filter?: PersonFilterProps;
-  /** The only offline alert of the page */
-  offline?: ReactNode;
   /** Shows the loading skeletons instead of the columns */
   loading?: boolean;
   /** Rendered after the columns, still inside `main` (live regions) */
@@ -66,18 +77,26 @@ const SECTIONS: ReadonlyArray<{
   },
 ];
 
-function Skeletons() {
+function Skeletons({ current }: { current: CasaSection }) {
   return (
     <div aria-busy="true" aria-live="polite">
       <VisuallyHidden>Caricamento in corso</VisuallyHidden>
       <div className="casa-solo-mobile">
-        <div className="gruppo-skeleton" aria-hidden="true">
-          <Skeleton shape="riga" />
-        </div>
-        <div className="gruppo-skeleton" aria-hidden="true">
-          <Skeleton shape="testo-corto" />
-          <Skeleton shape="grande" />
-        </div>
+        {current === "scadenze" ? (
+          <div className="gruppo-skeleton" aria-hidden="true">
+            <Skeleton shape="grande" />
+          </div>
+        ) : (
+          <>
+            <div className="gruppo-skeleton" aria-hidden="true">
+              <Skeleton shape="riga" />
+            </div>
+            <div className="gruppo-skeleton" aria-hidden="true">
+              <Skeleton shape="testo-corto" />
+              <Skeleton shape="grande" />
+            </div>
+          </>
+        )}
       </div>
       <div className={cx("colonne", "colonne--tre", "casa-solo-desktop")}>
         {[0, 1, 2].map((column) => (
@@ -103,11 +122,42 @@ export function CasaFrame({
   counts,
   columns,
   filter,
-  offline,
   loading = false,
   after,
   mainRef,
 }: CasaFrameProps) {
+  // One alert for the page. On mobile it shows only if the column of the open
+  // page is offline; on desktop if any column is.
+  const offlineColumns = SECTIONS.map((section) => ({
+    key: section.key,
+    offline: columns?.[section.key]?.offline,
+  })).filter((column) => column.offline?.active);
+  const retrying = offlineColumns.some((column) => column.offline?.retrying);
+  const offlineAlert =
+    offlineColumns.length > 0 ? (
+      <Alert
+        variant="errore"
+        icon="wifi-off"
+        className={cx(
+          !offlineColumns.some((column) => column.key === current) &&
+            "casa-solo-desktop",
+        )}
+        action={
+          <Button
+            variant="link"
+            loading={retrying}
+            onClick={() =>
+              offlineColumns.forEach((column) => column.offline?.onRetry())
+            }
+          >
+            Riprova
+          </Button>
+        }
+      >
+        Sei offline: le cose che spunti partiranno appena torna la connessione.
+      </Alert>
+    ) : null;
+
   return (
     <main
       id="contenuto"
@@ -133,10 +183,12 @@ export function CasaFrame({
         current={current}
         className="casa-solo-mobile"
       />
-      {offline}
-      {filter && !loading ? <PersonFilter layout="mobile" {...filter} /> : null}
+      {offlineAlert}
+      {filter && !loading && current === "da-fare" ? (
+        <PersonFilter layout="mobile" {...filter} />
+      ) : null}
       {loading ? (
-        <Skeletons />
+        <Skeletons current={current} />
       ) : (
         <div className="colonne colonne--tre">
           {SECTIONS.map((section) => {

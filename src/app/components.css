@@ -3972,7 +3972,6 @@ div.blocco-orario {
    parti che esistono solo su mobile o solo su desktop, e intestazione di
    colonna letta dai lettori di schermo. */
 @media (min-width: 1024px) {
-  .casa-solo-mobile,
   .casa-solo-mobile {
     display: none;
   }
@@ -3990,6 +3989,32 @@ div.blocco-orario {
     clip-path: inset(50%);
     white-space: nowrap;
   }
+}
+
+/* Cornice di Casa (#89) */
+
+/* Gruppo di chip che scorre: il padding di --space-1 tiene dentro l'area di
+   tocco di 44 px (chip alti 36) e l'anello di focus, che overflow taglierebbe;
+   il margine negativo lo compensa, quindi nulla si sposta. */
+.gruppo-chip--scorre {
+  padding: var(--space-1);
+  margin: calc(-1 * var(--space-1));
+}
+
+/* Chip dell'intestazione desktop: vanno a capo invece di scorrere */
+@media (min-width: 1024px) {
+  .intestazione-desktop .gruppo-chip--scorre {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    overflow: visible;
+    min-width: var(--space-0);
+  }
+}
+
+/* Scadenze: "Oggi" a parola, nella colonna dei giorni */
+.riga-scadenza__numero--parola {
+  font-size: var(--text-titolo-scheda-size);
+  letter-spacing: var(--text-titolo-scheda-tracking);
 }
 
 /* Campo su più righe */
@@ -4282,30 +4307,4 @@ body {
     align-items: center;
     gap: var(--space-5);
   }
-}
-
-/* Cornice di Casa (#89) */
-
-/* Gruppo di chip che scorre: il padding di --space-1 tiene dentro l'area di
-   tocco di 44 px (chip alti 36) e l'anello di focus, che overflow taglierebbe;
-   il margine negativo lo compensa, quindi nulla si sposta. */
-.gruppo-chip--scorre {
-  padding: var(--space-1);
-  margin: calc(-1 * var(--space-1));
-}
-
-/* Chip dell'intestazione desktop: vanno a capo invece di scorrere */
-@media (min-width: 1024px) {
-  .intestazione-desktop .gruppo-chip--scorre {
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    overflow: visible;
-    min-width: var(--space-0);
-  }
-}
-
-/* Scadenze: "Oggi" a parola, nella colonna dei giorni */
-.riga-scadenza__numero--parola {
-  font-size: var(--text-titolo-scheda-size);
-  letter-spacing: var(--text-titolo-scheda-tracking);
 }
