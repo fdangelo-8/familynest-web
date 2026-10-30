@@ -45,7 +45,7 @@ select columns_are(
 );
 select columns_are(
   'public', 'households',
-  array['id', 'name', 'household_type', 'created_at', 'updated_at'],
+  array['id', 'name', 'household_type', 'created_at', 'updated_at', 'first_shopping_item_at', 'starter_list_completed_at'],
   'households has exactly the planned columns'
 );
 select columns_are(
