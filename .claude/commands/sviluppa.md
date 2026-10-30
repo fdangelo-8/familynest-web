@@ -50,8 +50,8 @@ Esegui in quest'ordine, poi ricomincia da capo finché resta lavoro eseguibile:
 1. **Merge avvenuti** dall'ultimo giro: per ogni PR unita, se ha toccato file condivisi o database, chiedi a ogni branch attivo di riallinearsi (sviluppatore, compito "riallinea"). Raccogli le PR unite per il documentalista.
 2. **Risposte di Francesco:** su una `bloccata` con risposta → applica la decisione nella issue, togli `bloccata`, rimetti lo stato giusto. Su una `proposta-design` approvata → il designer aggiorna la specifica e si apre una issue per l'implementazione; rifiutata → chiudi la proposta.
 3. **Correzioni chieste da Francesco** su una PR `pronta-per-francesco` → torna a `in-sviluppo` con quei punti.
-4. **PR da far avanzare:** `in-revisione` → revisore; `in-test` → tester funzionale e tester visivo **in parallelo**.
-5. **Issue avviate:** `in-specifica` → analista e designer **in parallelo**; `da-sviluppare` → sviluppatore (se le dipendenze sono unite su main).
+4. **PR da far avanzare:** `in-revisione` → revisore; `in-test` → tester funzionale e tester visivo **in parallelo**. I tester partono solo dopo `APPROVATA`: in 2 PR su 3 il revisore chiede correzioni.
+5. **Issue avviate:** `in-specifica` → analista e designer **in parallelo**; `da-sviluppare` → sviluppatore (se le dipendenze sono unite su main) e, nello stesso momento, il tester funzionale che scrive i test dai CA in anticipo (decisione di Francesco del 29/10): commit locale nel suo worktree, nessun push; quando la PR va in test lo richiami, fa merge del branch della PR, esegue, sistema i dettagli e fa un solo push.
 6. **Nuovo lavoro** (sezione 3), rispettando i limiti di parallelismo.
 7. **Documentalista** se ci sono PR unite non ancora documentate.
 
@@ -72,7 +72,7 @@ Se in `docs/mockup/` c'è un mockup senza issue corrispondenti:
 - Un compito per lancio, con un prompt autosufficiente: numero della issue e/o PR, cosa fare, branch da usare, cosa consegnare, e "rispondi con FATTO, DA CORREGGERE, SUPERATO, NON SUPERATO o BLOCCATO".
 - **Isolamento:** `sviluppatore`, `architetto-dati`, `tester-funzionale`, `tester-visivo`, `designer` e `documentalista` si lanciano sempre con `isolation: "worktree"`. Analista e revisore possono lavorare senza worktree perché non modificano il repository.
 - **Parallelismo massimo** (decisione di Francesco del 29/10, issue #82):
-  - **Analisi e specifica grafica:** fino a 6 pagine insieme in `in-specifica`. Non toccano il codice.
+  - **Analisi e specifica grafica:** fino a 12 pagine insieme in `in-specifica` (decisione di Francesco del 29/10 sera). Non toccano il codice.
   - **Sviluppo:** fino a 4 pagine insieme (da `da-sviluppare` a `in-test`), solo se non toccano gli stessi file.
   - **File condivisi e database:** un solo lavoro `shared/*` e un solo lavoro `db/*` alla volta, mai in parallelo con altro lavoro sugli stessi file.
 - Lancia in parallelo solo lavori indipendenti (nello stesso messaggio più chiamate Agent).

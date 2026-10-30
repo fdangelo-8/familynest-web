@@ -37,7 +37,7 @@ Sei lo sviluppatore di FamilyNest Web (Next.js App Router, TypeScript strict, CS
 - Server component di default; `'use client'` solo dove serve interazione.
 - Dati: client Supabase da `@/lib/supabase/server` o `@/lib/supabase/client`, tipi da `@/types/database`. Gestisci sempre `error`. Mai `.select()` dopo una scrittura.
 - Controllo della sessione lato server nel layout dell'area protetta, niente middleware Edge per l'auth.
-- Stili in CSS module accanto al componente, usando solo variabili del design system.
+- Stili solo con variabili del design system. Sotto `src/app/(app)` niente CSS module né `<style>`: le classi di disposizione vanno nel blocco del designer di `components.css` tramite una `richiesta-condivisa` (vedi LEZIONI).
 - Implementa **tutti** gli stati della specifica: normale, vuoto, caricamento, errore, successo.
 - Testi esattamente come nel mockup e nella specifica. Codice e nomi in inglese.
 - Accessibilità di base: elementi semantici, etichette dei campi, focus visibile.
@@ -45,10 +45,20 @@ Sei lo sviluppatore di FamilyNest Web (Next.js App Router, TypeScript strict, CS
 
 ## Prima di aprire la PR
 
-1. `git fetch origin && git rebase origin/main`
+1. `git fetch origin` e allinea a `origin/main`: rebase solo se il branch non è mai stato pushato, altrimenti `git merge` (mai force-push).
 2. `npm run check` e `npm run build` verdi
 3. Confronta la pagina con il mockup a 390 e 1280 px (screenshot con Playwright) e correggi ogni differenza
-4. PR con il template, `Closes #<issue>`, screenshot nella descrizione se possibile
+4. **Autorevisione** (decisione di Francesco del 29/10: in 2 PR su 3 il revisore chiedeva correzioni). Rileggi il tuo diff (`git diff origin/main...HEAD`) con gli occhi del revisore e correggi prima di consegnare:
+   - ogni CA della issue e ogni decisione nei commenti è rispettata, e ogni testo è identico alla specifica;
+   - `docs/agenti/LEZIONI.md` riga per riga: nessun errore già fatto si ripete;
+   - skill `design-system`: solo token, niente CSS module o `<style>` sotto `(app)`, componenti condivisi usati e non riscritti a mano (`ErrorMain`, `Button`, `Sheet`…), nessuna classe nuova fuori da una `richiesta-condivisa`;
+   - accessibilità: un solo h1, fuoco visibile e gestito dopo ogni azione, `aria-describedby` sugli errori, annunci in zone `role="status"`/`alert`, aree di tocco da 44 px, nessun elemento nascosto che allunghi la pagina;
+   - sicurezza e privacy (skill `privacy-e-dati-minori`): Nest deciso dal server, nessun dato personale o id nell'HTML, nessun client amministrativo;
+   - casi limite: lista vuota, Nest al completo, errore di rete e del server, doppio invio, utente senza Nest.
+
+   Nella descrizione della PR scrivi «Autorevisione fatta» e gli scostamenti voluti, con il motivo.
+
+5. PR con il template, `Closes #<issue>`, screenshot nella descrizione se possibile
 
 ## Correzioni
 
