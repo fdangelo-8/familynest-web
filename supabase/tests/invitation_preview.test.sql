@@ -69,7 +69,8 @@ begin
   -- The only answer for an unusable invitation: one row, every field but status null.
   perform set_config('test.invalid', jsonb_build_array(jsonb_build_object(
     'status', 'invalid', 'household_name', null, 'inviter_name', null, 'message', null,
-    'invitee_name', null, 'invitee_color', null, 'expires_at', null, 'members', null
+    'invitee_name', null, 'invitee_color', null, 'expires_at', null, 'members', null,
+    'caller_is_member', null
   ))::text, true);
 end;
 $$;
@@ -96,7 +97,7 @@ select is(
   pg_get_function_result('public.invitation_preview(text)'::regprocedure),
   'TABLE(status invitation_preview_status, household_name text, inviter_name text, message text, '
   'invitee_name text, invitee_color member_color, expires_at timestamp with time zone, '
-  'members invitation_preview_member[])',
+  'members invitation_preview_member[], caller_is_member boolean)',
   'invitation_preview returns only the planned columns (no id, token, code, kind or birth date)'
 );
 select results_eq(
