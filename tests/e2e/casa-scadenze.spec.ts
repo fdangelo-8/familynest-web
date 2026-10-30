@@ -279,7 +279,7 @@ test.describe("struttura", () => {
 // ------------------------------------------------------ rows, order and texts
 
 test.describe("righe, ordine e testi", () => {
-  test("CA-8: una sola sezione «Prossime» con le quattro righe in ordine di data", async ({
+  test("CA-8: senza scadute c'è solo «Prossime», con le quattro righe in ordine di data", async ({
     page,
     baseURL,
     casa,
@@ -289,6 +289,9 @@ test.describe("righe, ordine e testi", () => {
     await expect(col(page).getByRole("heading", { level: 3 })).toHaveText([
       "Prossime",
     ]);
+    await expect(
+      col(page).getByRole("heading", { level: 3, name: "Scadute" }),
+    ).toHaveCount(0);
     await expect(section(page).locator(".sezione__info").first()).toHaveText(
       "in ordine di data",
     );
@@ -357,7 +360,7 @@ test.describe("righe, ordine e testi", () => {
     }
   });
 
-  test("CA-11: scadute e di oggi in cima, tutte urgenti e in rosso", async ({
+  test("CA-11: le scadute stanno in «Scadute» sopra «Prossime», tutte urgenti e in rosso", async ({
     page,
     baseURL,
     casa,
@@ -376,6 +379,19 @@ test.describe("righe, ordine e testi", () => {
       "Oggi scade",
       "Più avanti",
     ]);
+    await expect(col(page).getByRole("heading", { level: 3 })).toHaveText([
+      "Scadute",
+      "Prossime",
+    ]);
+    const overdue = col(page).getByTestId("scadenze-scadute");
+    const upcoming = col(page).getByTestId("scadenze-prossime");
+    await expect(overdue.locator(".sezione__info").first()).toHaveText("2");
+    await expect(titles(overdue)).toHaveText([
+      "Scaduta da cinque",
+      "Scaduta ieri",
+    ]);
+    await expect(titles(upcoming)).toHaveText(["Oggi scade", "Più avanti"]);
+    await expect(upcoming.getByText(/ fa$/)).toHaveCount(0);
     const red = await alertColor(page);
     await expect(numberOf(page, "Scaduta da cinque")).toHaveText("5");
     await expect(unitOf(page, "Scaduta da cinque")).toHaveText("giorni fa");
