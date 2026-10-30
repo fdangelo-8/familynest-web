@@ -5,6 +5,19 @@ name: visual-baseline
 
 on:
   workflow_dispatch:
+    inputs:
+      spec:
+        description: "Spec files or folders to run, space separated (default: all of tests/visual)"
+        required: false
+        default: "tests/visual"
+      update:
+        description: "changed = rewrite only failing references; all = rewrite every reference of the selected specs (needed when a change is under the 2% tolerance)"
+        required: false
+        default: "changed"
+        type: choice
+        options:
+          - changed
+          - all
 
 permissions:
   contents: read
@@ -31,14 +44,27 @@ jobs:
           TEST_USER_A_PASSWORD: ${{ secrets.TEST_USER_A_PASSWORD }}
           TEST_USER_B_EMAIL: ${{ secrets.TEST_USER_B_EMAIL }}
           TEST_USER_B_PASSWORD: ${{ secrets.TEST_USER_B_PASSWORD }}
+          SPEC: ${{ inputs.spec || 'tests/visual' }}
+          UPDATE: ${{ inputs.update || 'changed' }}
         run: |
+          # Only paths under tests/visual are accepted, so the input cannot inject shell.
+          for p in $SPEC; do
+            case "$p" in
+              tests/visual|tests/visual/*) ;;
+              *) echo "::error::spec must be under tests/visual: $p"; exit 1 ;;
+            esac
+            case "$p" in *[!A-Za-z0-9._/-]*) echo "::error::invalid characters in spec: $p"; exit 1 ;; esac
+          done
           docker run --rm --ipc=host -v "$PWD":/work -w /work \
             -e CI=true \
             -e NEXT_PUBLIC_SUPABASE_URL -e NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY -e SUPABASE_SECRET_KEY \
             -e TEST_USER_A_EMAIL -e TEST_USER_A_PASSWORD -e TEST_USER_B_EMAIL -e TEST_USER_B_PASSWORD \
+            -e SPEC -e UPDATE \
             "mcr.microsoft.com/playwright:v${{ steps.pw.outputs.version }}-noble" \
-            bash -c "npm ci && npx playwright test tests/visual --update-snapshots"
+            bash -c 'npm ci && npx playwright test $SPEC --update-snapshots=$UPDATE'
+      # Upload even when unrelated specs fail, so the references of the passing ones are not lost.
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: visual-baselines
           path: tests/visual/__screenshots__/
