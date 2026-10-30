@@ -17,16 +17,16 @@ Versione approvata da Francesco il 21/10/2026. Copia operativa per gli agenti: i
 
 ## 2. Contesto tecnico
 
-| Elemento         | Scelta                                                                           |
-| ---------------- | -------------------------------------------------------------------------------- |
-| Repository       | `fdangelo-8/familynest-web`, branch principale `main`                            |
-| Framework        | Next.js App Router, TypeScript strict                                            |
-| Stile            | CSS proprio con variabili del design system; niente Tailwind, niente librerie UI |
-| Database e login | Supabase, progetto `yksosqvugiempsldejyt` (unico consentito)                     |
-| Hosting          | Vercel, anteprima solo per `main`, `feat/*`, `shared/*` (#141)                   |
-| Test             | Playwright (e2e, visivi, a11y) + pgTAP per il database + controlli statici       |
-| Layout           | Un solo codice, due layout responsive: mobile (390 px) e desktop (1280 px)       |
-| Lingua           | Interfaccia in italiano; codice, commenti e nomi in inglese                      |
+| Elemento         | Scelta                                                                                                                                                                      |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Repository       | `fdangelo-8/familynest-web`, branch principale `main`                                                                                                                       |
+| Framework        | Next.js App Router, TypeScript strict                                                                                                                                       |
+| Stile            | CSS proprio con variabili del design system; niente Tailwind, niente librerie UI                                                                                            |
+| Database e login | Supabase, progetto `yksosqvugiempsldejyt` (unico consentito)                                                                                                                |
+| Hosting          | Vercel: anteprima sempre per `main`; per `feat/*` e `shared/*` solo se l'ultimo commit cambia file fuori da `tests/`, `docs/` e `*.md`; nessuna per gli altri branch (#141) |
+| Test             | Playwright (e2e, visivi, a11y) + pgTAP per il database + controlli statici                                                                                                  |
+| Layout           | Un solo codice, due layout responsive: mobile (390 px) e desktop (1280 px)                                                                                                  |
+| Lingua           | Interfaccia in italiano; codice, commenti e nomi in inglese                                                                                                                 |
 
 **Vietato a tutti gli agenti:** push o merge su `main`; accesso ad altri progetti Supabase (in particolare `jjvnygockahhcrnkfped`) o ad altri repository; scrivere segreti ovunque; installare skill o pacchetti non previsti senza approvazione; disattivare o aggirare hook, test e CI.
 
