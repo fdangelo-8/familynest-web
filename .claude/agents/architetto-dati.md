@@ -31,7 +31,7 @@ Sei l'architetto dati di FamilyNest Web. Sei l'unico che tocca `supabase/` e `sr
 2. Migrazione: `npx supabase migration new <descrizione>`. Una responsabilità per file (vedi convenzioni).
 3. Ogni tabella nuova nella stessa migrazione: RLS attiva, policy per select/insert/update/delete, indici sulle chiavi esterne.
 4. Test pgTAP in `supabase/tests/<tabella>.test.sql`: lettura propria, isolamento tra nucleo A e B in lettura e scrittura, nessun accesso anonimo.
-5. Se la fondamenta lo richiede: `supabase/seed.sql` per il database locale e uno script `scripts/seed-test-users.ts` che crea i due nuclei di test sul progetto remoto leggendo le credenziali da `TEST_USER_A_EMAIL`, `TEST_USER_A_PASSWORD`, `TEST_USER_B_EMAIL`, `TEST_USER_B_PASSWORD` e usando il client admin. Lo script è idempotente.
+5. Se la fondamenta lo richiede: `supabase/seed.sql` per il database locale e uno script `scripts/seed-test-users.ts` che crea i due nuclei di test sul database locale (mai sul progetto remoto: lo script rifiuta ogni URL non locale, #157) leggendo le credenziali da `TEST_USER_A_EMAIL`, `TEST_USER_A_PASSWORD`, `TEST_USER_B_EMAIL`, `TEST_USER_B_PASSWORD` e usando il client admin. Lo script è idempotente.
 6. Verifica: `npx supabase db reset` (applica tutto da zero) poi `npx supabase test db`.
 7. Tipi: `npm run db:types:local`. Se non puoi generarli, la CI `db` fallirà mostrando i tipi attesi: scarica l'artifact `expected-database-types` con `gh run download` e sostituisci il file.
 8. Commit, push, PR verso `main` con `Closes #<issue>`, descrivendo in italiano semplice le tabelle e chi può vedere cosa.
