@@ -6,7 +6,8 @@ import {
   installTodosFake,
   type TodosFakeOptions,
 } from "../fixtures/todos-fake";
-import { hasTestUser, signInAs } from "../fixtures/visual-login";
+import { hasTestUser } from "../fixtures/visual-login";
+import { signInAsCached } from "../fixtures/visual-login-cached";
 
 // Casa · Da fare (#23): one screenshot per state, at 390 and 1280 px (projects).
 // The things to do and the shopping list are served by fakes of their endpoints
@@ -27,7 +28,7 @@ const NOW = new Date("2026-10-20T15:52:00+02:00");
 
 test.beforeEach(async ({ context, baseURL }) => {
   test.skip(!hasTestUser("A"), "TEST_USER_A_* non impostati");
-  const signedIn = await signInAs(context, baseURL!, "A");
+  const signedIn = await signInAsCached(context, baseURL!, "A");
   test.skip(!signedIn, "utente di test A non ancora creato (#55)");
 });
 
@@ -117,7 +118,11 @@ test("filtro senza risultati", async ({ page }) => {
     .getByRole("button", { name: "Tommaso" })
     .filter({ visible: true })
     .click();
-  await expect(page.getByText("Niente da fare per Tommaso")).toBeVisible();
+  await expect(
+    page
+      .getByRole("region", { name: "Da fare" })
+      .getByText("Niente da fare per Tommaso"),
+  ).toBeVisible();
   await shoot(page, "filtro-vuoto.png");
 });
 

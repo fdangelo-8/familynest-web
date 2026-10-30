@@ -7,7 +7,8 @@ import {
   installTodosFake,
   type TodosFakeOptions,
 } from "../fixtures/todos-fake";
-import { hasTestUser, signInAs } from "../fixtures/visual-login";
+import { hasTestUser } from "../fixtures/visual-login";
+import { signInAsCached } from "../fixtures/visual-login-cached";
 
 // Casa · Da fare (#23), visual tester's accessibility checks: axe in every
 // state (normal, empty, filter without results, loading, page error, column
@@ -23,7 +24,7 @@ const NOW = new Date("2026-10-20T15:52:00+02:00");
 
 test.beforeEach(async ({ context, baseURL }) => {
   test.skip(!hasTestUser("A"), "TEST_USER_A_* non impostati");
-  const signedIn = await signInAs(context, baseURL!, "A");
+  const signedIn = await signInAsCached(context, baseURL!, "A");
   test.skip(!signedIn, "utente di test A non ancora creato (#55)");
 });
 
@@ -83,7 +84,11 @@ test.describe("axe", () => {
   test("filtro senza risultati", async ({ page }) => {
     await open(page, { todos: NORMAL_TODOS });
     await page.getByRole("button", { name: "Tommaso" }).click();
-    await expect(page.getByText("Niente da fare per Tommaso")).toBeVisible();
+    await expect(
+      page
+        .getByRole("region", { name: "Da fare" })
+        .getByText("Niente da fare per Tommaso"),
+    ).toBeVisible();
     expect(await seriousViolations(page)).toEqual([]);
   });
 
@@ -272,6 +277,9 @@ async function focusedLabel(page: Page) {
     if (!el || el === document.body) return "(body)";
     const label = el.getAttribute("aria-label");
     if (label) return label;
+    if (el instanceof HTMLInputElement && el.labels?.[0]) {
+      return (el.labels[0].textContent ?? "").trim();
+    }
     const clone = el.cloneNode(true) as HTMLElement;
     clone
       .querySelectorAll(".avatar, .selettore__conteggio")

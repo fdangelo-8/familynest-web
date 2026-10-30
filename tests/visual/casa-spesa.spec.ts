@@ -8,7 +8,8 @@ import {
   type FakeOptions,
 } from "../fixtures/spesa-fake";
 import { NORMAL_TODOS, installTodosFake } from "../fixtures/todos-fake";
-import { hasTestUser, signInAs } from "../fixtures/visual-login";
+import { hasTestUser } from "../fixtures/visual-login";
+import { signInAsCached } from "../fixtures/visual-login-cached";
 
 // Casa · Spesa (#21): one screenshot per state, at 390 and 1280 px (projects).
 // The list is served by a fake of the shopping-list endpoints (see
@@ -28,7 +29,7 @@ const NOW = new Date("2026-10-20T15:00:00+02:00");
 
 test.beforeEach(async ({ context, baseURL }) => {
   test.skip(!hasTestUser("A"), "TEST_USER_A_* non impostati");
-  const signedIn = await signInAs(context, baseURL!, "A");
+  const signedIn = await signInAsCached(context, baseURL!, "A");
   test.skip(!signedIn, "utente di test A non ancora creato (#55)");
 });
 
