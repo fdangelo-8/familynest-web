@@ -26,7 +26,7 @@ test.describe("CA-34: cornice con Vai al contenuto", () => {
       test.skip(!usersConfigured("A"), skipReason("A"));
       await signInAs(context, baseURL!, "A");
       await page.goto(route);
-      await expect(page.locator("main")).toBeVisible();
+      await expect(page.getByRole("main")).toBeVisible();
       await expectNoBlocking(page);
       await page.keyboard.press("Tab");
       await expect(
