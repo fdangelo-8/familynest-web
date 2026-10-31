@@ -546,11 +546,16 @@ export async function blockingViolations(page: Page) {
     }));
 }
 
-/** Ids that appear more than once in the document. */
+/**
+ * Ids that appear more than once in the document, among the elements that are
+ * rendered (Next.js keeps the page it left, hidden, after a client navigation:
+ * that copy is not in the accessibility tree).
+ */
 export async function duplicateIds(page: Page): Promise<string[]> {
   return page.evaluate(() => {
     const seen = new Map<string, number>();
     for (const element of document.querySelectorAll("[id]")) {
+      if (!element.checkVisibility()) continue;
       seen.set(element.id, (seen.get(element.id) ?? 0) + 1);
     }
     return [...seen].filter(([, n]) => n > 1).map(([id]) => id);
