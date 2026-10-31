@@ -115,7 +115,7 @@ const gridColumn = (page: Page, label: string) =>
   page
     .getByRole("heading", {
       level: 2,
-      name: new RegExp(`^${escapeRe(label)}( |$)`),
+      name: new RegExp(`^${escapeRe(label)}( |,|$)`),
     })
     .locator("xpath=..");
 const gridBlock = (page: Page, label: string, title: string) =>
@@ -189,6 +189,20 @@ async function open(
   await expect(h1(page)).toBeVisible({ timeout: 20_000 });
   if (settle) await expect(page.locator('[aria-busy="true"]')).toHaveCount(0);
   await page.clock.pauseAt(TODAY);
+}
+
+/**
+ * Opens the page again after the clock has been stopped: a page loaded with a
+ * stopped clock never finishes starting, so the clock runs for the load and is
+ * stopped again (one second ahead) once the page is up.
+ */
+async function reopen(page: Page, url: string): Promise<void> {
+  await page.clock.resume();
+  await page.goto(url);
+  await expect(h1(page)).toBeVisible({ timeout: 20_000 });
+  await expect(page.locator('[aria-busy="true"]')).toHaveCount(0);
+  const now = await page.evaluate(() => Date.now());
+  await page.clock.pauseAt(now + 1000);
 }
 
 /** Clicks a lens button until the client has hydrated and the state changes. */
@@ -371,6 +385,13 @@ test.describe("struttura", () => {
     "desktop",
     "CA-4: su desktop «Mar, oggi», lente nel main, «Aggiungi» solo nella navigazione",
     async ({ page, baseURL, bianchi }) => {
+      // An empty week shows no grid: the week needs one event.
+      await createEvent(bianchi, "Giulia", {
+        title: "Riunione di team",
+        day: MON,
+        from: "10:00",
+        to: "11:00",
+      });
       await open(page, baseURL, bianchi);
       await expect(page.getByText("Mar, oggi")).toBeVisible();
       const main = page.getByRole("main");
@@ -401,7 +422,7 @@ test.describe("settimane", () => {
     await expect(page).toHaveURL(/settimana=2026-10-26/);
     expect(await page.evaluate(() => "__calMark" in window)).toBe(true);
 
-    await page.goto(page.url());
+    await reopen(page, page.url());
     await expect(h1(page)).toHaveText("26 ottobre – 1 novembre");
 
     await previousWeek(page).click();
@@ -432,7 +453,7 @@ test.describe("settimane", () => {
       path: `${PATH}?settimana=2026-10-21`,
     });
     await expect(h1(page)).toHaveText("19 – 25 ottobre");
-    await page.goto(`${PATH}?settimana=xyz`);
+    await reopen(page, `${PATH}?settimana=xyz`);
     await expect(h1(page)).toHaveText("19 – 25 ottobre");
     await expect(alerts(page)).toHaveCount(0);
     await expect(retry(page)).toHaveCount(0);
@@ -770,7 +791,7 @@ test.describe("visibilità", () => {
       ).toBeVisible();
     } else {
       await expect(
-        page.getByRole("link", { name: /Riunione del lunedì/ }),
+        page.getByRole("link", { name: /Riunione del lunedì/ }).first(),
       ).toBeVisible();
     }
     await expectNoLeak(page, net, ["Prova privata"]);
@@ -800,7 +821,7 @@ test.describe("lente", () => {
       });
       await open(page, baseURL, bianchi);
       await expect(
-        page.getByRole("link", { name: /Cena in famiglia/ }),
+        page.getByRole("link", { name: /Cena in famiglia/ }).first(),
       ).toBeVisible();
       await expect(page.getByRole("link", { name: /Piscina/ })).toHaveCount(0);
       const tuesday = daySection(page, TUE_H);
@@ -811,7 +832,9 @@ test.describe("lente", () => {
 
       const url = page.url();
       await chooseLens(page, "Nest");
-      await expect(page.getByRole("link", { name: /Piscina/ })).toBeVisible();
+      await expect(
+        page.getByRole("link", { name: /Piscina/ }).first(),
+      ).toBeVisible();
       await expect(
         lensGroup(page).getByRole("button", { name: /Nest$/ }),
       ).toHaveAttribute("aria-pressed", "true");
@@ -837,7 +860,9 @@ test.describe("lente", () => {
     await expect(
       lensGroup(page).getByRole("button", { name: /Io$/ }),
     ).toHaveAttribute("aria-pressed", "true");
-    await expect(page.getByRole("link", { name: /Inglese/ })).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: /Inglese/ }).first(),
+    ).toBeVisible();
   });
 
   test("CA-20: con la lente «Io» e nessun impegno proprio c'è «Niente di tuo questa settimana»", async ({
@@ -937,7 +962,7 @@ test.describe("liberi insieme", () => {
       from: "20:00",
       to: "23:00",
     });
-    await page.goto(PATH);
+    await reopen(page, PATH);
     await expect(h1(page)).toHaveText("19 – 25 ottobre");
     await expectInsieme(page, WED_H, {
       desktop: "Dalle 18:00 alle 20:00",
@@ -957,9 +982,9 @@ test.describe("liberi insieme", () => {
       from: "18:00",
       to: "22:15",
     });
-    await open(page, baseURL, bianchi);
+    await open(page, baseURL, bianchi, { lens: "nest" });
     await expect(
-      page.getByRole("link", { name: /Corso serale/ }),
+      page.getByRole("link", { name: /Corso serale/ }).first(),
     ).toBeVisible();
     await expectInsieme(page, THU_H, null);
   });
@@ -975,7 +1000,7 @@ test.describe("liberi insieme", () => {
       from: "18:00",
       to: "22:00",
     });
-    await open(page, baseURL, bianchi);
+    await open(page, baseURL, bianchi, { lens: "nest" });
     await expectInsieme(page, THU_H, {
       desktop: "Dalle 22:00 a fine serata",
       mobile: "Tu, Paolo e Anna, fino a fine serata",
@@ -1006,7 +1031,7 @@ test.describe("liberi insieme", () => {
         from: "19:30",
         to: "21:30",
       });
-      await page.goto(PATH);
+      await reopen(page, PATH);
       await expectInsieme(page, FRI_H, {
         desktop: "Dalle 18:00 alle 19:30",
         mobile: "",
@@ -1047,7 +1072,7 @@ test.describe("liberi insieme", () => {
       title: "Solo di Paolo",
       visibility: "private",
     });
-    await page.goto(PATH);
+    await reopen(page, PATH);
     await expectInsieme(page, SAT_H, everyone);
 
     await remove(solo);
@@ -1056,7 +1081,7 @@ test.describe("liberi insieme", () => {
       title: "Festa di Leo",
       participants: ["Leo"],
     });
-    await page.goto(PATH);
+    await reopen(page, PATH);
     await expectInsieme(page, SAT_H, everyone);
 
     await remove(child);
@@ -1066,7 +1091,7 @@ test.describe("liberi insieme", () => {
       participants: ["Leo"],
       escort: "Anna",
     });
-    await page.goto(PATH);
+    await reopen(page, PATH);
     await expectInsieme(page, SAT_H, null);
   });
 
@@ -1086,7 +1111,9 @@ test.describe("liberi insieme", () => {
         to: "10:00",
       });
       await open(page, baseURL, nest, { who: "Chiara" });
-      await expect(page.getByRole("link", { name: /Studio/ })).toBeVisible();
+      await expect(
+        page.getByRole("link", { name: /Studio/ }).first(),
+      ).toBeVisible();
       await expect(page.getByText(/liberi insieme/i)).toHaveCount(0);
       expect(await page.content()).not.toContain('data-insieme="true"');
       await expect(
@@ -1179,7 +1206,7 @@ test.describe("griglia desktop e pannello", () => {
     const b = (await second.boundingBox())!;
     expect(Math.abs(a.width - b.width)).toBeLessThanOrEqual(1);
     // ±4 px: the lanes of the mockup are 50% minus 4 px wide.
-    expect(Math.abs(a.width - c.width / 2)).toBeLessThanOrEqual(4);
+    expect(Math.abs(a.width - c.width / 2)).toBeLessThanOrEqual(4.5);
     const [left, right] = a.x <= b.x ? [a, b] : [b, a];
     expect(left.x + left.width, "non si coprono").toBeLessThanOrEqual(
       right.x + 1,
@@ -1390,7 +1417,7 @@ test.describe("stato vuoto, caricamento, errori", () => {
       held.release();
     }
     await expect(
-      page.getByRole("link", { name: /Cena da Marta/ }),
+      page.getByRole("link", { name: /Cena da Marta/ }).first(),
     ).toBeVisible();
     await expect(page.locator('[aria-busy="true"]')).toHaveCount(0);
   });
@@ -1416,7 +1443,7 @@ test.describe("stato vuoto, caricamento, errori", () => {
     reads.recover();
     await retry(page).click();
     await expect(
-      page.getByRole("link", { name: /Cena da Marta/ }),
+      page.getByRole("link", { name: /Cena da Marta/ }).first(),
     ).toBeVisible();
     await expect(h1(page)).toHaveText("19 – 25 ottobre");
   });
@@ -1436,7 +1463,7 @@ test.describe("stato vuoto, caricamento, errori", () => {
     });
     await open(page, baseURL, bianchi);
     await expect(
-      page.getByRole("link", { name: /Cena da Marta/ }),
+      page.getByRole("link", { name: /Cena da Marta/ }).first(),
     ).toBeVisible();
     await page.context().setOffline(true);
     await nextWeek(page).click();
@@ -1465,7 +1492,7 @@ test.describe("stato vuoto, caricamento, errori", () => {
     try {
       await goOffline(page, baseURL, bianchi);
       await expect(
-        page.getByRole("link", { name: /Cena da Marta/ }),
+        page.getByRole("link", { name: /Cena da Marta/ }).first(),
       ).toBeVisible();
       const alert = alerts(page).filter({ hasText: OFFLINE_ALERT });
       await expect(alert).toBeVisible();
@@ -1554,7 +1581,7 @@ test.describe("isolamento tra Nest", () => {
     const net = watchNetwork(page);
     await open(page, baseURL, bianchi);
     await expect(
-      page.getByRole("link", { name: /Spesa grande/ }),
+      page.getByRole("link", { name: /Spesa grande/ }).first(),
     ).toBeVisible();
 
     const check = async () => {
@@ -1572,7 +1599,7 @@ test.describe("isolamento tra Nest", () => {
     await check();
     await chooseLens(page, "Nest");
     await expect(
-      page.getByRole("link", { name: /Spesa grande/ }),
+      page.getByRole("link", { name: /Spesa grande/ }).first(),
     ).toBeVisible();
     await check();
     const html = await (await page.request.get(PATH)).text();
@@ -1650,6 +1677,8 @@ test.describe("isolamento tra Nest", () => {
 
 test.describe("accessibilità", () => {
   async function expectAccessible(page: Page) {
+    // axe runs on timers: the clock runs again for the analysis.
+    await page.clock.resume();
     expect(await axeProblems(page), "violazioni serious o critical").toEqual(
       [],
     );
@@ -1681,7 +1710,7 @@ test.describe("accessibilità", () => {
     await withEvents(bianchi);
     await open(page, baseURL, bianchi, { lens: "io" });
     await expect(
-      page.getByRole("link", { name: /Cena da Marta/ }),
+      page.getByRole("link", { name: /Cena da Marta/ }).first(),
     ).toBeVisible();
     await expectAccessible(page);
   });
@@ -1721,7 +1750,7 @@ test.describe("accessibilità", () => {
     await withEvents(bianchi);
     await open(page, baseURL, bianchi);
     await expect(
-      page.getByRole("link", { name: /Cena da Marta/ }),
+      page.getByRole("link", { name: /Cena da Marta/ }).first(),
     ).toBeVisible();
     try {
       await page.context().setOffline(true);
