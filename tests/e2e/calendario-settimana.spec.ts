@@ -399,9 +399,10 @@ test.describe("struttura", () => {
       // Decision of 31/10: no «Aggiungi» in the page header, only the one of
       // the navigation at the top.
       await expect(main.getByRole("link", { name: "Aggiungi" })).toHaveCount(0);
-      await expect(
-        mainNav(page).getByRole("link", { name: "Aggiungi" }),
-      ).toHaveAttribute("href", "/aggiungi");
+      // The only visible «Aggiungi» is the one of the top bar (#67).
+      const add = page.getByRole("link", { name: "Aggiungi" });
+      await expect(add).toHaveCount(1);
+      await expect(add).toHaveAttribute("href", "/aggiungi");
     },
   );
 });
