@@ -384,14 +384,25 @@ test.describe("contenuto", () => {
       ["Notifiche", "/notifiche"],
       ["Impostazioni della casa", "/impostazioni"],
     ] as const;
-    const ys: number[] = [];
     for (const [name, href] of expected) {
-      const link = page
-        .locator("main")
-        .getByRole("link", { name: new RegExp(`^${name}`) });
-      await expect(link).toHaveAttribute("href", href);
-      ys.push((await link.boundingBox())!.y);
+      await expect(
+        page
+          .locator("main")
+          .getByRole("link", { name: new RegExp(`^${name}`) }),
+      ).toHaveAttribute("href", href);
     }
+    // fonts can still swap and move the page: wait for them, then read all
+    // the positions in one go so that no shift falls between two readings
+    await page.evaluate(() => document.fonts.ready);
+    const ys = await page.evaluate(
+      (hrefs) => {
+        return hrefs.map((href) => {
+          const link = document.querySelector(`main a[href="${href}"]`);
+          return link!.getBoundingClientRect().top;
+        });
+      },
+      expected.map(([, href]) => href),
+    );
     expect(ys).toEqual([...ys].sort((a, b) => a - b));
     await expect(
       page
