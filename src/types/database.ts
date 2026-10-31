@@ -423,6 +423,46 @@ export type Database = {
           },
         ];
       };
+      pinned_spaces: {
+        Row: {
+          household_id: string;
+          id: string;
+          member_id: string;
+          pinned_at: string;
+          space: Database["public"]["Enums"]["space_key"];
+        };
+        ComputedFields: never;
+        Insert: {
+          household_id?: string;
+          id?: string;
+          member_id: string;
+          pinned_at?: string;
+          space: Database["public"]["Enums"]["space_key"];
+        };
+        Update: {
+          household_id?: string;
+          id?: string;
+          member_id?: string;
+          pinned_at?: string;
+          space?: Database["public"]["Enums"]["space_key"];
+        };
+        Relationships: [
+          {
+            foreignKeyName: "pinned_spaces_household_id_fkey";
+            columns: ["household_id"];
+            isOneToOne: false;
+            referencedRelation: "households";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "pinned_spaces_member_fkey";
+            columns: ["member_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "household_members";
+            referencedColumns: ["id", "household_id"];
+          },
+        ];
+      };
       profiles: {
         Row: {
           created_at: string;
@@ -706,6 +746,10 @@ export type Database = {
           visibility: Database["public"]["Enums"]["event_visibility"];
         }[];
       };
+      pin_space: {
+        Args: { p_space: Database["public"]["Enums"]["space_key"] };
+        Returns: undefined;
+      };
       restore_shopping_items: {
         Args: { item_ids: string[] };
         Returns: {
@@ -728,6 +772,10 @@ export type Database = {
       undo_added_shopping_items: {
         Args: { item_ids: string[] };
         Returns: string[];
+      };
+      unpin_space: {
+        Args: { p_space: Database["public"]["Enums"]["space_key"] };
+        Returns: undefined;
       };
       update_event: {
         Args: {
@@ -784,6 +832,17 @@ export type Database = {
         | "basilico"
         | "cannella";
       member_kind: "adult" | "child" | "pet";
+      space_key:
+        | "meals"
+        | "couple"
+        | "wellbeing"
+        | "together"
+        | "hobbies"
+        | "chores"
+        | "projects"
+        | "expenses"
+        | "children"
+        | "pets";
     };
     CompositeTypes: {
       invitation_preview_member: {
@@ -934,6 +993,18 @@ export const Constants = {
         "cannella",
       ],
       member_kind: ["adult", "child", "pet"],
+      space_key: [
+        "meals",
+        "couple",
+        "wellbeing",
+        "together",
+        "hobbies",
+        "chores",
+        "projects",
+        "expenses",
+        "children",
+        "pets",
+      ],
     },
   },
 } as const;
