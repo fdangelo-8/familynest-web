@@ -70,11 +70,6 @@ async function touchAreaIs44(page: Page, target: Locator) {
 const PAGES = [
   { route: "/calendario/giorno", h1: "Calendario", lens: true },
   { route: "/calendario/mese", h1: "Calendario", lens: true },
-  {
-    route: "/impegni/6f1b7c0e-3c1d-4f6a-9d1e-2b7a5c8d9e10",
-    h1: "Impegno",
-    lens: false,
-  },
 ];
 
 test.describe("segnaposto «In arrivo»", () => {

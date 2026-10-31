@@ -10,6 +10,7 @@ import {
   usersConfigured,
   type TestUserKey,
 } from "../fixtures/auth";
+import { waitForAnimationsToEnd } from "../fixtures/animations";
 import { formatAge } from "../../src/lib/datetime";
 
 // Added by the functional tester for #85 (PR #94): edge cases of the shared
@@ -376,6 +377,10 @@ test.describe("MemberSheet: modifica", () => {
       await expect(dialog.getByRole("radio", { name: taken })).toBeDisabled();
     }
     await expect(dialog.getByRole("radio", { name: "Cobalto" })).toBeEnabled();
+    // the entry animation must end first: on mobile the sheet slides up and a
+    // click during the slide lands outside the viewport (no fixed wait)
+    await waitForAnimationsToEnd(page);
+    await expect(dialog.getByRole("button", { name: "Adulto" })).toBeDisabled();
     await dialog.getByRole("button", { name: "Adulto" }).click({ force: true });
     await expect(
       dialog.getByRole("button", { name: "Figlio o figlia" }),

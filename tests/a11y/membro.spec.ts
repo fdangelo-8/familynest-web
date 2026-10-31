@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { waitForAnimationsToEnd } from "../fixtures/animations";
 import { hasTestUser, signInAs } from "../fixtures/visual-login";
 import {
   throwawayConfigured,
@@ -95,6 +96,7 @@ test.describe("utenti del seed", () => {
     });
     await expect(dialog).toBeVisible();
     await expect(dialog.getByRole("button", { name: "Annulla" })).toBeFocused();
+    await waitForAnimationsToEnd(page);
     await axe(page);
     await page.keyboard.press("Escape");
     await expect(dialog).toBeHidden();
@@ -130,6 +132,8 @@ test.describe("utenti del seed", () => {
       const dialog = page.getByRole("dialog", { name: `Modifica ${name}` });
       await expect(dialog).toBeVisible();
       await expect(dialog.getByLabel("Nome")).toBeFocused();
+      // axe must not read the backdrop halfway through its fade-in
+      await waitForAnimationsToEnd(page);
       await axe(page);
       await page.keyboard.press("Escape");
       await expect(dialog).toBeHidden();

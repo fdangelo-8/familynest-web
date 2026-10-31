@@ -7,7 +7,7 @@ import {
 import { hasTestUser, signInAs } from "../fixtures/visual-login";
 
 // Dates and calendar (#88, PR #100): the "In arrivo" pages of
-// /calendario/giorno, /calendario/mese and /impegni/<id>, and the CSS states
+// /calendario/giorno and /calendario/mese (/impegni/<id> is the real page since #19), and the CSS states
 // for #25 (Calendario) and #30 (Oggi): hover and pressed on rows, cards, day
 // strip, time blocks and steps, the "adesso" line and the "Già fatti" arrow.
 // No page uses those classes yet, so they are shown on a test page
@@ -30,12 +30,6 @@ const PAGES = [
     text: "Qui vedrai gli impegni del mese, giorno per giorno.",
     title: "Calendario",
   },
-  {
-    route: "/impegni/6f1b7c0e-3c1d-4f6a-9d1e-2b7a5c8d9e10",
-    file: "impegno",
-    text: "Qui vedrai i dettagli di un impegno.",
-    title: "Impegno",
-  },
 ];
 
 test.describe("segnaposto «In arrivo»", () => {
@@ -48,10 +42,8 @@ test.describe("segnaposto «In arrivo»", () => {
     test.skip(!signedIn, "utente di test A non ancora creato");
   });
 
-  // One test (one sign-in) for the three pages.
-  test("segnaposto: /calendario/giorno, /calendario/mese, /impegni/<id>", async ({
-    page,
-  }) => {
+  // One test (one sign-in) for the two pages.
+  test("segnaposto: /calendario/giorno, /calendario/mese", async ({ page }) => {
     for (const p of PAGES) {
       await page.goto(p.route);
       await expect(
