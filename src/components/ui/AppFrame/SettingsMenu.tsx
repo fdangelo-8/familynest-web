@@ -1,15 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { getActiveSettingsItem } from "@/lib/app-routes";
 import { cx } from "../cx";
 import { Icon } from "../Icon/Icon";
 import { useNest } from "./NestProvider";
+import { useFramePathname } from "./useFramePathname";
 
 /** Settings side menu (`.menu-laterale`), desktop only: pages 26 to 29. */
 export function SettingsMenu() {
-  const pathname = usePathname();
+  const pathname = useFramePathname();
   const { nestName } = useNest();
   const active = getActiveSettingsItem(pathname);
 

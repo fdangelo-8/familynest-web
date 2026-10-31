@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import {
   NAV_ITEMS,
   getActiveNavItem,
@@ -11,10 +10,11 @@ import { cx } from "../cx";
 import { Icon } from "../Icon/Icon";
 import { NestSquare } from "../NestSquare/NestSquare";
 import { NotificationsLink, SearchLink } from "./IconLinks";
+import { useFramePathname } from "./useFramePathname";
 
 /** Desktop top navigation (`.nav-alto`). Hidden below 1024 px. */
 export function TopNav() {
-  const pathname = usePathname();
+  const pathname = useFramePathname();
   const active = getActiveNavItem(pathname, "desktop");
 
   return (
