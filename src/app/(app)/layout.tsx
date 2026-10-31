@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { AddShortcut } from "@/components/ui/AppFrame/AddShortcut";
 import { AppBar } from "@/components/ui/AppFrame/AppBar";
 import { BottomNav } from "@/components/ui/AppFrame/BottomNav";
 import { FrameError } from "@/components/ui/AppFrame/FrameError";
@@ -12,7 +13,13 @@ import { requireNest } from "@/lib/nest-frame";
 // calls `requireNest()` first (see src/lib/nest-frame.ts).
 // The session is checked on the server on every request (no middleware).
 // Reading the session is request-time data, so it sits inside <Suspense>.
-async function AppFrame({ children }: { children: React.ReactNode }) {
+async function AppFrame({
+  children,
+  modal,
+}: {
+  children: React.ReactNode;
+  modal: React.ReactNode;
+}) {
   // Redirects to /accesso or /onboarding when the user cannot see the frame.
   const frame = await requireNest();
 
@@ -24,20 +31,23 @@ async function AppFrame({ children }: { children: React.ReactNode }) {
     >
       <SkipLink />
       <SearchShortcut />
+      <AddShortcut />
       <AppBar />
       <TopNav />
       {frame.failed ? <FrameError /> : children}
       <BottomNav />
+      {frame.failed ? null : modal}
     </NestProvider>
   );
 }
 
 export default function AppLayout({
   children,
-}: Readonly<{ children: React.ReactNode }>) {
+  modal,
+}: Readonly<{ children: React.ReactNode; modal: React.ReactNode }>) {
   return (
     <Suspense fallback={null}>
-      <AppFrame>{children}</AppFrame>
+      <AppFrame modal={modal}>{children}</AppFrame>
     </Suspense>
   );
 }

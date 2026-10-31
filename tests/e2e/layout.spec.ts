@@ -301,7 +301,8 @@ const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
 
 const SCREENS: [route: string, h1: string, title: string][] = [
   ["/oggi", "Oggi", "FamilyNest · Oggi"],
-  ["/aggiungi", "Aggiungi", "FamilyNest · Aggiungi"],
+  // opened directly, Add is a sheet over Today (#164): the page h1 is Today's
+  ["/aggiungi", "Oggi", "FamilyNest · Aggiungi"],
   ["/calendario", "Calendario", "FamilyNest · Calendario"],
   ["/casa/spesa", "Casa", "FamilyNest · Casa · Spesa"],
   ["/casa/da-fare", "Casa", "FamilyNest · Casa · Da fare"],
@@ -526,21 +527,26 @@ test.describe("mobile 390 px", () => {
     const steps: [string, RegExp, string][] = [
       ["Calendario", /\/calendario$/, "Calendario"],
       ["Casa", /\/casa\/spesa$/, "Casa"],
-      ["Aggiungi", /\/aggiungi$/, "Oggi"],
       ["Oggi", /\/oggi$/, "Oggi"],
     ];
     for (const [name, url, current] of steps) {
       await mainNav(page).getByRole("link", { name, exact: true }).click();
       await expect(page).toHaveURL(url);
-      // "page" only on the exact address; /aggiungi highlights Oggi as "true"
       const active = mainNav(page).locator("[aria-current]");
       await expect(active).toHaveCount(1);
       await expect(active).toHaveText(current);
-      await expect(active).toHaveAttribute(
-        "aria-current",
-        name === "Aggiungi" ? "true" : "page",
-      );
+      await expect(active).toHaveAttribute("aria-current", "page");
     }
+    // "Aggiungi" opens a sheet over the page: the navigation below does not change (#164)
+    await mainNav(page)
+      .getByRole("link", { name: "Aggiungi", exact: true })
+      .click();
+    await expect(page).toHaveURL(/\/aggiungi$/);
+    await expect(page.getByRole("dialog", { name: "Aggiungi" })).toBeVisible();
+    const active = mainNav(page).locator("[aria-current]");
+    await expect(active).toHaveCount(1);
+    await expect(active).toHaveText("Oggi");
+    await expect(active).toHaveAttribute("aria-current", "page");
   });
 
   test("CA-9: /notifiche evidenzia Oggi, le altre rotte senza navigazione in basso", async ({

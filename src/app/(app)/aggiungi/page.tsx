@@ -1,14 +1,17 @@
 import type { Metadata } from "next";
-import { PlaceholderPage } from "@/components/ui/Placeholder/PlaceholderPage";
-import { requireNest } from "@/lib/nest-frame";
 import { PLACEHOLDERS } from "@/lib/app-routes";
+import { requireNest } from "@/lib/nest-frame";
+import OggiPage from "../oggi/page";
 
 export const metadata: Metadata = {
   title: PLACEHOLDERS["aggiungi"].browserTitle,
 };
 
+/**
+ * Today under the sheet. The sheet itself comes from the `@modal` slot. The
+ * page is Today's own page, so it follows Today when it is built (#30).
+ */
 export default async function Page() {
-  // Session and Nest check before anything else (the layout is not a guard).
   await requireNest();
-  return <PlaceholderPage pageKey="aggiungi" />;
+  return <OggiPage />;
 }
