@@ -78,7 +78,12 @@ async function loadPeople(): Promise<PeopleState> {
       userId: row.user_id,
     }));
     const me = people.find((p) => p.userId === userId);
-    return { status: "ready", people, meId: me?.id ?? null };
+    // The other people's user ids are not kept: only «who is me» is needed.
+    return {
+      status: "ready",
+      people: people.map((p) => ({ ...p, userId: null })),
+      meId: me?.id ?? null,
+    };
   } catch {
     return { status: "error" };
   }
@@ -497,7 +502,12 @@ export function AddSheet({ direct = false }: { direct?: boolean }) {
           role="group"
           aria-label="Tipo"
         >
-          <button type="button" className="selettore__voce" aria-pressed="true">
+          <button
+            type="button"
+            className="selettore__voce"
+            aria-pressed="true"
+            aria-disabled={saving || undefined}
+          >
             <Icon name="calendar" size="s" />
             Impegno
           </button>

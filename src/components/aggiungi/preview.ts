@@ -74,7 +74,8 @@ export function escortNotice(args: {
       const busy = event.masked
         ? event.authorMemberId === adult.id
         : event.memberIds.includes(adult.id) ||
-          event.escortMemberId === adult.id;
+          event.escortMemberId === adult.id ||
+          (event.visibility === "busy" && event.authorMemberId === adult.id);
       if (!busy) continue;
       const end = new Date(event.endsAt).getTime();
       if (lastEnd === null || end > lastEnd) lastEnd = end;
