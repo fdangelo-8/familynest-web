@@ -95,3 +95,7 @@
   max-height: none;
   scrollbar-width: none;
 }
+
+.esempio :global(.vista-giorno .giorno-persone__testa) {
+  position: static;
+}
