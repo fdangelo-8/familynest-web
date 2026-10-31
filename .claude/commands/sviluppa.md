@@ -77,6 +77,9 @@ Se in `docs/mockup/` c'è un mockup senza issue corrispondenti:
   - **File condivisi e database:** un solo lavoro `shared/*` e un solo lavoro `db/*` alla volta, mai in parallelo con altro lavoro sugli stessi file.
 - Lancia in parallelo solo lavori indipendenti (nello stesso messaggio più chiamate Agent).
 - Non passare mai segreti nei prompt.
+- **Riprendi l'agente invece di lanciarne uno nuovo** quando una correzione o un ricontrollo riguarda lo stesso lavoro: `SendMessage` all'agente che l'ha fatto, che ha già contesto e worktree.
+- **Ricontrolli piccoli con un solo tester.** Il primo giro di test di una PR lo fanno sempre tester funzionale e visivo in parallelo. Se poi la correzione è mirata (pochi punti, nessun cambio di aspetto o di flusso), basta il tester che ha dato `NON SUPERATO`: legge l'esito della CI sul nuovo commit e controlla i test legati ai punti corretti. L'esito `SUPERATO` dell'altro tester resta valido se i suoi test sono verdi nella stessa CI. Se la correzione cambia testo visibile, aspetto o flusso, rifanno il giro entrambi.
+- **Test mirati dello sviluppatore:** lo sviluppatore esegue i test di accessibilità ed e2e della sua pagina con il workflow `test-mirato` prima di consegnare. Una PR passa a `in-revisione` solo se l'esito dice quali spec ha eseguito e che sono verdi (o perché la pagina non ne ha ancora).
 
 Mappa compito → agente:
 
@@ -135,5 +138,8 @@ Aggiornato: <data ora> · Giro: <numero>
 Fermati quando non resta lavoro eseguibile (tutto pronto, in attesa di merge o bloccato). Prima di fermarti: aggiorna la issue di stato (con la prima riga `<!-- giro: nessuno attivo -->`) e scrivi un riepilogo finale di massimo 10 righe con cosa serve da Francesco.
 
 ## 9. Tieni il contesto leggero
+
+- **Non iscriverti all'attività delle PR degli agenti** (`subscribe_pr_activity`): ogni commento di Vercel ti sveglia e rilegge tutto il contesto. Se un'iscrizione arriva lo stesso, toglila con `unsubscribe_pr_activity`. Controlla lo stato delle PR quando un agente finisce, quando scrive Francesco e a ogni passaggio della sezione 2 (`node scripts/agenti/gh.mjs prs --state closed` per i merge).
+- **Test instabili:** appena un tester o la CI segnala un test che fallisce a caso, apri subito una issue di correzione e affidala a un tester. Un test instabile fa ripetere interi giri.
 
 Il tuo contesto deve durare molti giri: non leggere codice o diff (lo fanno revisore e tester), non ripetere gli esiti completi degli agenti, conserva solo numero di issue/PR, esito e prossima azione. Se il contesto si allunga troppo, aggiorna la issue di stato e chiudi il giro: il prossimo riparte da lì.

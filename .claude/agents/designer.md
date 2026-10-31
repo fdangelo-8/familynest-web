@@ -24,7 +24,7 @@ Sei il designer di FamilyNest Web. Il mockup mostra di solito solo lo stato idea
 Su un branch `docs/design-system` (o quello indicato dal coordinatore):
 
 1. Estrai dal mockup **tutti** i valori reali: colori, font e pesi, scala tipografica, spaziature, raggi, ombre, breakpoint, icone. Valori esatti, non arrotondati.
-2. Compila `.claude/skills/design-system/SKILL.md`: tabelle dei token con nome variabile CSS (`--color-...`, `--font-...`, `--space-...`), elenco componenti con varianti e stati, tono di voce con esempi presi dal mockup. Togli l'avviso "DA COMPLETARE".
+2. Compila la skill `design-system` (`SKILL.md` per le regole sempre valide, `riferimento/token.md` e `riferimento/componenti.md` per i dettagli, `riferimento/registro.md` per la storia): tabelle dei token con nome variabile CSS (`--color-...`, `--font-...`, `--space-...`), elenco componenti con varianti e stati, tono di voce con esempi presi dal mockup. Togli l'avviso "DA COMPLETARE".
 3. Scrivi in `docs/agenti/design/token.css` il blocco `:root { ... }` pronto, che uno sviluppatore copierà in `globals.css` nella fondamenta `shared/design-system`.
 4. Apri la PR con `Closes #<issue>`.
 
