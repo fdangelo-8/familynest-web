@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient as createBrowserClient } from "@/lib/supabase/client";
 import type { Database } from "@/types/database";
-import { type Instant } from "@/lib/datetime";
+import { isValidDayKey, toDayKey, type Instant } from "@/lib/datetime";
 
 /**
  * The only place where pages read the events of the Nest (issue #88, decision
@@ -153,4 +153,151 @@ export async function listHouseholdEvents(
     if (event) events.push(event);
   }
   return { ok: true, events };
+}
+
+/**
+ * Address of the detail page of one occurrence of an event (#19, #165):
+ * `/impegni/<id>?giorno=<Rome day the occurrence starts>`. Every link to the
+ * detail goes through here. Nothing else (title, names, place) is put in it.
+ */
+export function eventHref(id: string, startsAt: Instant): string {
+  return `/impegni/${encodeURIComponent(id)}?giorno=${toDayKey(startsAt)}`;
+}
+
+type Recurrence = Database["public"]["Enums"]["event_recurrence"];
+
+/** One occurrence of an event the reader sees in full, with the series data. */
+export type EventOccurrence = {
+  /** Event id: the same for every occurrence */
+  id: string;
+  /** Rome day the occurrence starts, `YYYY-MM-DD` */
+  occurrenceDate: string;
+  /** ISO instants (UTC) of this occurrence */
+  startsAt: string;
+  endsAt: string;
+  title: string;
+  location: string | null;
+  notes: string | null;
+  visibility: Visibility;
+  /** null if the author left the Nest */
+  authorMemberId: string | null;
+  escortMemberId: string | null;
+  /** Participants, in the order of the Nest members */
+  memberIds: string[];
+  recurrence: Recurrence;
+  /** ISO weekdays 1 = Monday ... 7 = Sunday (weekly series) */
+  recurrenceWeekdays: number[];
+  /** Last day of the series, `YYYY-MM-DD` */
+  recurrenceUntil: string | null;
+  /** First occurrence of the series */
+  seriesStartsAt: string;
+  seriesEndsAt: string;
+  /** This occurrence has values of its own */
+  isModified: boolean;
+};
+
+export type EventOccurrenceResult =
+  /** `occurrence` is null when there is nothing to show: no such event, not visible in full, or the day is not an occurrence (the database does not tell them apart) */
+  | { ok: true; occurrence: EventOccurrence | null }
+  /** The reading failed. No detail on purpose. */
+  | { ok: false };
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+type OccurrenceRow =
+  Database["public"]["Functions"]["get_event_occurrence"]["Returns"][number];
+
+/** Nullable columns that the generated types declare as non-null. */
+type RawOccurrence = Omit<
+  OccurrenceRow,
+  | "location"
+  | "notes"
+  | "author_member_id"
+  | "escort_member_id"
+  | "recurrence_until"
+  | "recurrence_weekdays"
+  | "member_ids"
+> & {
+  location: string | null;
+  notes: string | null;
+  author_member_id: string | null;
+  escort_member_id: string | null;
+  recurrence_until: string | null;
+  recurrence_weekdays: number[] | null;
+  member_ids: string[] | null;
+};
+
+function toOccurrence(raw: RawOccurrence): EventOccurrence | null {
+  if (
+    typeof raw.id !== "string" ||
+    typeof raw.title !== "string" ||
+    typeof raw.starts_at !== "string" ||
+    typeof raw.ends_at !== "string" ||
+    typeof raw.occurrence_date !== "string" ||
+    typeof raw.series_starts_at !== "string" ||
+    typeof raw.series_ends_at !== "string"
+  ) {
+    return null;
+  }
+  return {
+    id: raw.id,
+    occurrenceDate: raw.occurrence_date,
+    startsAt: raw.starts_at,
+    endsAt: raw.ends_at,
+    title: raw.title,
+    location: raw.location,
+    notes: raw.notes,
+    visibility: raw.visibility,
+    authorMemberId: raw.author_member_id,
+    escortMemberId: raw.escort_member_id,
+    memberIds: raw.member_ids ?? [],
+    recurrence: raw.recurrence,
+    recurrenceWeekdays: raw.recurrence_weekdays ?? [],
+    recurrenceUntil: raw.recurrence_until,
+    seriesStartsAt: raw.series_starts_at,
+    seriesEndsAt: raw.series_ends_at,
+    isModified: raw.is_modified === true,
+  };
+}
+
+/**
+ * Reads one occurrence of an event for the detail page: the database function
+ * `get_event_occurrence` returns a row only if the reader sees the event in
+ * full and `day` (`YYYY-MM-DD`, Rome) is a live occurrence.
+ *
+ * - `day` missing or not a real day: the occurrence in progress or the next
+ *   one, else the last one (decided by the database).
+ * - An `id` that is not a uuid is not sent: `{ ok: true, occurrence: null }`.
+ * - Never throws: a failure gives `{ ok: false }`, distinct from «not found».
+ * - Without `client` it uses the browser client; server code passes the one
+ *   from `@/lib/supabase/server`.
+ */
+export async function getEventOccurrence(
+  id: string,
+  day?: string | null,
+  client?: SupabaseClient<Database>,
+): Promise<EventOccurrenceResult> {
+  if (!UUID.test(id)) return { ok: true, occurrence: null };
+  const validDay = typeof day === "string" && isValidDayKey(day) ? day : null;
+
+  let rows: unknown;
+  try {
+    const supabase = client ?? createBrowserClient();
+    const { data, error } = await supabase.rpc("get_event_occurrence", {
+      p_event_id: id,
+      ...(validDay ? { p_day: validDay } : {}),
+    });
+    if (error || !Array.isArray(data)) return { ok: false };
+    rows = data;
+  } catch {
+    return { ok: false };
+  }
+
+  const first = (rows as unknown[])[0];
+  if (typeof first !== "object" || first === null) {
+    return { ok: true, occurrence: null };
+  }
+  const occurrence = toOccurrence(first as RawOccurrence);
+  // A row that cannot be read is an error, not «not found».
+  return occurrence ? { ok: true, occurrence } : { ok: false };
 }

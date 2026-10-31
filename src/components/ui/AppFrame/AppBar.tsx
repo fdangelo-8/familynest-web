@@ -4,6 +4,7 @@ import { getBarConfig } from "@/lib/app-routes";
 import { Lens } from "../Lens/Lens";
 import { NestSquare } from "../NestSquare/NestSquare";
 import { cx } from "../cx";
+import { BarActionSlot } from "./BarAction";
 import {
   BackLink,
   CloseLink,
@@ -49,7 +50,11 @@ export function AppBar() {
         <BackLink fallback={config.fallback} />
       )}
       <div className="barra__centro" />
-      <span className="barra__vuoto" aria-hidden="true" />
+      {config.kind === "detail" ? (
+        <BarActionSlot />
+      ) : (
+        <span className="barra__vuoto" aria-hidden="true" />
+      )}
     </header>
   );
 }
