@@ -3759,6 +3759,7 @@ main[tabindex="-1"]:focus {
 .btn-secondary[aria-disabled="true"],
 .btn-chiaro[aria-disabled="true"],
 .btn-tenue[aria-disabled="true"],
+.btn-pericolo-pieno[aria-disabled="true"],
 .btn-link[aria-disabled="true"] {
   opacity: var(--opacity-disabilitato);
   cursor: not-allowed;
@@ -4194,6 +4195,28 @@ button.riga-lista {
     white-space: normal;
     min-width: 0;
   }
+}
+
+/* Dettaglio impegno (#19, #165) */
+/* Giorno della fine, sotto l'orario grande: «(martedì 20)» */
+.prossimo__ora-fine {
+  display: block;
+  margin-top: var(--space-1);
+  font-family: var(--font-testo);
+  font-weight: var(--weight-medio);
+  font-size: var(--text-corpo-size);
+  line-height: var(--text-corpo-line);
+  letter-spacing: 0;
+  color: var(--color-inchiostro-2);
+}
+/* Note: gli a capo scritti restano, una parola lunghissima non esce dalla scheda */
+.tabella-dati__nota {
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+/* Velo del dialogo di conferma aperto sopra un foglio o una modale */
+.velo--sopra-foglio {
+  z-index: var(--z-foglio);
 }
 
 /* =========================================================

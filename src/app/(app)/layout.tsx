@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { AddShortcut } from "@/components/ui/AppFrame/AddShortcut";
 import { AppBar } from "@/components/ui/AppFrame/AppBar";
+import { BarActionProvider } from "@/components/ui/AppFrame/BarAction";
 import { BottomNav } from "@/components/ui/AppFrame/BottomNav";
 import { FrameError } from "@/components/ui/AppFrame/FrameError";
 import { NestProvider } from "@/components/ui/AppFrame/NestProvider";
@@ -29,14 +30,16 @@ async function AppFrame({
       members={frame.members}
       me={frame.me}
     >
-      <SkipLink />
-      <SearchShortcut />
-      <AddShortcut />
-      <AppBar />
-      <TopNav />
-      {frame.failed ? <FrameError /> : children}
-      <BottomNav />
-      {frame.failed ? null : modal}
+      <BarActionProvider>
+        <SkipLink />
+        <SearchShortcut />
+        <AddShortcut />
+        <AppBar />
+        <TopNav />
+        {frame.failed ? <FrameError /> : children}
+        <BottomNav />
+        {frame.failed ? null : modal}
+      </BarActionProvider>
     </NestProvider>
   );
 }
