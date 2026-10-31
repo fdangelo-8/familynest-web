@@ -8,11 +8,12 @@ import {
   type Route,
 } from "@playwright/test";
 import { safeNextPath } from "../../src/lib/auth/safe-next";
+import { BIANCHI, buildNest, D_ANGELO } from "../fixtures/casa";
 import {
-  skipReason,
-  usersConfigured,
-  type TestUserKey,
-} from "../fixtures/auth";
+  createThrowawayUser,
+  throwawayConfigured,
+  throwawaySkipReason,
+} from "../fixtures/throwaway-user";
 
 // Login and session (#11). [CI] tests intercept the browser requests to
 // Supabase (no real provider, no real mail). [CI-utenti] tests need the test
@@ -713,23 +714,44 @@ test.describe("parametro next (funzione pura)", () => {
 // [CI-utenti]
 // ---------------------------------------------------------------------------
 
-function email(user: TestUserKey) {
-  return process.env[`TEST_USER_${user}_EMAIL`] ?? "";
-}
+// Each [CI-utenti] test signs in with its OWN throwaway user. A magic link is
+// stored on the user row, so a second link generated for the same user
+// replaces the first: with the shared seed users, two workers (desktop and
+// mobile run the same test at the same time, and CI runs of different PRs
+// share the remote project) invalidated each other's links and the page ended
+// on /accesso/link-scaduto (#173).
 
-function needUsers(...users: TestUserKey[]) {
-  test.skip(!usersConfigured(...users), skipReason(...users));
+function needKeys() {
+  test.skip(!throwawayConfigured(), throwawaySkipReason);
   test.skip(!secretKey, "SUPABASE_SECRET_KEY non impostata");
 }
 
+type Resident = { email: string; cleanup: () => Promise<void> };
+
+/** A throwaway user with a Nest of his own (like Marco of Casa D'Angelo). */
+async function residentOf(
+  nestName: string,
+  members = D_ANGELO,
+): Promise<Resident> {
+  const { nest, cleanup } = await buildNest(nestName, members);
+  const owner = nest.users[members.find((m) => m.account)!.name]!;
+  return { email: owner.email, cleanup };
+}
+
+/** A throwaway user with no Nest (goes to /onboarding). */
+async function newcomer(): Promise<Resident> {
+  const user = await createThrowawayUser("Carla");
+  return { email: user.email, cleanup: () => user.remove() };
+}
+
 /** A valid link, generated with the admin API: no mail is sent. */
-async function magicLink(user: TestUserKey, next?: string) {
+async function magicLink(address: string, next?: string) {
   const admin = createClient(supabaseUrl as string, secretKey as string, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
   const { data, error } = await admin.auth.admin.generateLink({
     type: "magiclink",
-    email: email(user),
+    email: address,
   });
   expect(error).toBeNull();
   const hash = data.properties!.hashed_token;
@@ -738,8 +760,8 @@ async function magicLink(user: TestUserKey, next?: string) {
   }`;
 }
 
-async function enter(page: Page, user: TestUserKey, next?: string) {
-  await page.goto(await magicLink(user, next));
+async function enter(page: Page, address: string, next?: string) {
+  await page.goto(await magicLink(address, next));
 }
 
 async function cookieNames(context: BrowserContext) {
@@ -750,58 +772,83 @@ const NEST_A = "Apri Casa D'Angelo";
 
 test.describe("[CI-utenti] ritorno e sessione", () => {
   test("CA-24: il link di A porta a /oggi", async ({ page }) => {
-    needUsers("A");
-    await enter(page, "A");
-    await expect(page).toHaveURL(/\/oggi$/);
-    expect(page.url()).not.toContain("token_hash");
-    await expect(
-      page
-        .getByRole("button", { name: new RegExp(NEST_A) })
-        .or(page.getByRole("link", { name: new RegExp(NEST_A) }))
-        .first(),
-    ).toBeVisible();
+    needKeys();
+    const marco = await residentOf("Casa D'Angelo");
+    try {
+      await enter(page, marco.email);
+      await expect(page).toHaveURL(/\/oggi$/);
+      expect(page.url()).not.toContain("token_hash");
+      await expect(
+        page
+          .getByRole("button", { name: new RegExp(NEST_A) })
+          .or(page.getByRole("link", { name: new RegExp(NEST_A) }))
+          .first(),
+      ).toBeVisible();
+    } finally {
+      await marco.cleanup();
+    }
   });
 
   test("CA-25: il link di C porta a /onboarding", async ({ page }) => {
-    needUsers("C");
-    await enter(page, "C");
-    await expect(page).toHaveURL(/\/onboarding$/);
+    needKeys();
+    const carla = await newcomer();
+    try {
+      await enter(page, carla.email);
+      await expect(page).toHaveURL(/\/onboarding$/);
+    } finally {
+      await carla.cleanup();
+    }
   });
 
   test("CA-26: un link già usato porta a /accesso/link-scaduto", async ({
     page,
     browser,
   }) => {
-    needUsers("A");
-    const link = await magicLink("A");
-    await page.goto(link);
-    await expect(page).toHaveURL(/\/oggi$/);
+    needKeys();
+    const marco = await residentOf("Casa D'Angelo");
     const other = await browser.newContext();
-    const second = await other.newPage();
-    await second.goto(new URL(link, page.url()).toString());
-    await expect(second).toHaveURL(/\/accesso\/link-scaduto$/);
-    await second.goto(new URL("/oggi", page.url()).toString());
-    await expect(second).toHaveURL(/\/accesso$/);
-    await other.close();
+    try {
+      const link = await magicLink(marco.email);
+      await page.goto(link);
+      await expect(page).toHaveURL(/\/oggi$/);
+      const second = await other.newPage();
+      await second.goto(new URL(link, page.url()).toString());
+      await expect(second).toHaveURL(/\/accesso\/link-scaduto$/);
+      await second.goto(new URL("/oggi", page.url()).toString());
+      await expect(second).toHaveURL(/\/accesso$/);
+    } finally {
+      await other.close();
+      await marco.cleanup();
+    }
   });
 
   test("CA-29: next valido", async ({ page }) => {
-    needUsers("A");
-    await enter(page, "A", "/calendario");
-    await expect(page).toHaveURL(/\/calendario$/);
+    needKeys();
+    const marco = await residentOf("Casa D'Angelo");
+    try {
+      await enter(page, marco.email, "/calendario");
+      await expect(page).toHaveURL(/\/calendario$/);
+    } finally {
+      await marco.cleanup();
+    }
   });
 
   test("CA-30: next esterno si ignora", async ({ page, baseURL }) => {
-    needUsers("A");
-    for (const bad of [
-      "//esempio.invalid",
-      "https://esempio.invalid",
-      "/\\esempio.invalid",
-    ]) {
-      await enter(page, "A", bad);
-      await expect(page).toHaveURL(/\/oggi$/);
-      expect(new URL(page.url()).origin).toBe(new URL(baseURL!).origin);
-      await page.context().clearCookies();
+    needKeys();
+    const marco = await residentOf("Casa D'Angelo");
+    try {
+      for (const bad of [
+        "//esempio.invalid",
+        "https://esempio.invalid",
+        "/\\esempio.invalid",
+      ]) {
+        await enter(page, marco.email, bad);
+        await expect(page).toHaveURL(/\/oggi$/);
+        expect(new URL(page.url()).origin).toBe(new URL(baseURL!).origin);
+        await page.context().clearCookies();
+      }
+    } finally {
+      await marco.cleanup();
     }
   });
 
@@ -809,22 +856,29 @@ test.describe("[CI-utenti] ritorno e sessione", () => {
     page,
     baseURL,
   }) => {
-    needUsers("A", "C");
-    await enter(page, "A");
-    for (const route of [
-      "/accesso",
-      "/accesso/mail",
-      "/accesso/link-scaduto",
-    ]) {
-      await page.goto(route);
-      await expect(page).toHaveURL(/\/oggi$/);
-    }
+    needKeys();
+    const marco = await residentOf("Casa D'Angelo");
+    const carla = await newcomer();
     const other = await page.context().browser()!.newContext({ baseURL });
-    const cPage = await other.newPage();
-    await enter(cPage, "C");
-    await cPage.goto("/accesso");
-    await expect(cPage).toHaveURL(/\/onboarding$/);
-    await other.close();
+    try {
+      await enter(page, marco.email);
+      for (const route of [
+        "/accesso",
+        "/accesso/mail",
+        "/accesso/link-scaduto",
+      ]) {
+        await page.goto(route);
+        await expect(page).toHaveURL(/\/oggi$/);
+      }
+      const cPage = await other.newPage();
+      await enter(cPage, carla.email);
+      await cPage.goto("/accesso");
+      await expect(cPage).toHaveURL(/\/onboarding$/);
+    } finally {
+      await other.close();
+      await carla.cleanup();
+      await marco.cleanup();
+    }
   });
 
   test("CA-32: la sessione sopravvive alla chiusura del browser", async ({
@@ -832,17 +886,20 @@ test.describe("[CI-utenti] ritorno e sessione", () => {
     browser,
     baseURL,
   }) => {
-    needUsers("A");
-    await enter(page, "A");
-    const state = await page.context().storageState();
-    const reopened = await browser.newContext({
-      baseURL,
-      storageState: state,
-    });
-    const again = await reopened.newPage();
-    await again.goto("/oggi");
-    await expect(again).toHaveURL(/\/oggi$/);
-    await reopened.close();
+    needKeys();
+    const marco = await residentOf("Casa D'Angelo");
+    let reopened: BrowserContext | undefined;
+    try {
+      await enter(page, marco.email);
+      const state = await page.context().storageState();
+      reopened = await browser.newContext({ baseURL, storageState: state });
+      const again = await reopened.newPage();
+      await again.goto("/oggi");
+      await expect(again).toHaveURL(/\/oggi$/);
+    } finally {
+      await reopened?.close();
+      await marco.cleanup();
+    }
   });
 
   test("CA-33: token scaduto, rinnovo con il cookie salvato", async ({
@@ -850,117 +907,140 @@ test.describe("[CI-utenti] ritorno e sessione", () => {
     context,
     baseURL,
   }) => {
-    needUsers("A");
-    await enter(page, "A");
-    // Moves the expiry written in the session cookie into the past.
-    const cookies = await context.cookies();
-    const session = cookies.filter((c) =>
-      /^sb-.+-auth-token(\.\d+)?$/.test(c.name),
-    );
-    expect(session.length).toBeGreaterThan(0);
-    const joined = session
-      .sort((a, b) => a.name.localeCompare(b.name))
-      .map((c) => c.value)
-      .join("");
-    const raw = joined.startsWith("base64-")
-      ? Buffer.from(joined.slice(7), "base64url").toString("utf8")
-      : decodeURIComponent(joined);
-    const parsed = JSON.parse(raw) as Record<string, unknown>;
-    parsed["expires_at"] = Math.floor(Date.now() / 1000) - 3600;
-    const encoded =
-      "base64-" + Buffer.from(JSON.stringify(parsed)).toString("base64url");
-    const name = session[0]!.name.replace(/\.\d+$/, "");
-    await context.clearCookies();
-    await context.addCookies([
-      { name, value: encoded, url: baseURL!, sameSite: "Lax" },
-    ]);
-    const response = await page.goto("/oggi");
-    await expect(page).toHaveURL(/\/oggi$/);
-    expect(response?.status()).toBe(200);
-    // The response renews the session cookie: it sets a new auth cookie whose
-    // expiry is in the future again.
-    const renewed = await context.cookies();
-    const renewedSession = renewed
-      .filter((c) => /^sb-.+-auth-token(\.\d+)?$/.test(c.name))
-      .sort((a, b) => a.name.localeCompare(b.name));
-    expect(renewedSession.length).toBeGreaterThan(0);
-    const renewedJoined = renewedSession.map((c) => c.value).join("");
-    expect(renewedJoined).not.toBe(encoded);
-    const renewedRaw = renewedJoined.startsWith("base64-")
-      ? Buffer.from(renewedJoined.slice(7), "base64url").toString("utf8")
-      : decodeURIComponent(renewedJoined);
-    const renewedParsed = JSON.parse(renewedRaw) as Record<string, unknown>;
-    expect(Number(renewedParsed["expires_at"])).toBeGreaterThan(
-      Math.floor(Date.now() / 1000),
-    );
-    await page.goto("/calendario");
-    await expect(page).toHaveURL(/\/calendario$/);
+    needKeys();
+    const marco = await residentOf("Casa D'Angelo");
+    try {
+      await enter(page, marco.email);
+      // Moves the expiry written in the session cookie into the past.
+      const cookies = await context.cookies();
+      const session = cookies.filter((c) =>
+        /^sb-.+-auth-token(\.\d+)?$/.test(c.name),
+      );
+      expect(session.length).toBeGreaterThan(0);
+      const joined = session
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .map((c) => c.value)
+        .join("");
+      const raw = joined.startsWith("base64-")
+        ? Buffer.from(joined.slice(7), "base64url").toString("utf8")
+        : decodeURIComponent(joined);
+      const parsed = JSON.parse(raw) as Record<string, unknown>;
+      parsed["expires_at"] = Math.floor(Date.now() / 1000) - 3600;
+      const encoded =
+        "base64-" + Buffer.from(JSON.stringify(parsed)).toString("base64url");
+      const name = session[0]!.name.replace(/\.\d+$/, "");
+      await context.clearCookies();
+      await context.addCookies([
+        { name, value: encoded, url: baseURL!, sameSite: "Lax" },
+      ]);
+      const response = await page.goto("/oggi");
+      await expect(page).toHaveURL(/\/oggi$/);
+      expect(response?.status()).toBe(200);
+      // The response renews the session cookie: it sets a new auth cookie
+      // whose expiry is in the future again.
+      const renewed = await context.cookies();
+      const renewedSession = renewed
+        .filter((c) => /^sb-.+-auth-token(\.\d+)?$/.test(c.name))
+        .sort((a, b) => a.name.localeCompare(b.name));
+      expect(renewedSession.length).toBeGreaterThan(0);
+      const renewedJoined = renewedSession.map((c) => c.value).join("");
+      expect(renewedJoined).not.toBe(encoded);
+      const renewedRaw = renewedJoined.startsWith("base64-")
+        ? Buffer.from(renewedJoined.slice(7), "base64url").toString("utf8")
+        : decodeURIComponent(renewedJoined);
+      const renewedParsed = JSON.parse(renewedRaw) as Record<string, unknown>;
+      expect(Number(renewedParsed["expires_at"])).toBeGreaterThan(
+        Math.floor(Date.now() / 1000),
+      );
+      await page.goto("/calendario");
+      await expect(page).toHaveURL(/\/calendario$/);
+    } finally {
+      await marco.cleanup();
+    }
   });
 });
 
 test.describe("[CI-utenti] uscita e isolamento", () => {
   test("CA-34: «Esci» chiude la sessione", async ({ page, context }) => {
-    needUsers("A");
-    await enter(page, "A");
-    await page.goto("/profilo");
-    await clickUntil(page.getByRole("button", { name: "Esci" }), () =>
-      expect(page).toHaveURL(/\/accesso$/, { timeout: 3000 }),
-    );
-    expect(
-      (await cookieNames(context)).filter((n) => /^sb-.+-auth-token/.test(n)),
-    ).toEqual([]);
-    await page.goto("/oggi");
-    await expect(page).toHaveURL(/\/accesso$/);
+    needKeys();
+    const marco = await residentOf("Casa D'Angelo");
+    try {
+      await enter(page, marco.email);
+      await page.goto("/profilo");
+      await clickUntil(page.getByRole("button", { name: "Esci" }), () =>
+        expect(page).toHaveURL(/\/accesso$/, { timeout: 3000 }),
+      );
+      expect(
+        (await cookieNames(context)).filter((n) => /^sb-.+-auth-token/.test(n)),
+      ).toEqual([]);
+      await page.goto("/oggi");
+      await expect(page).toHaveURL(/\/accesso$/);
+    } finally {
+      await marco.cleanup();
+    }
   });
 
   test("CA-35: GET /auth/signout non chiude la sessione", async ({ page }) => {
-    needUsers("A");
-    await enter(page, "A");
-    const response = await page.request.get("/auth/signout");
-    expect(response.status()).toBe(405);
-    await page.goto("/oggi");
-    await expect(page).toHaveURL(/\/oggi$/);
+    needKeys();
+    const marco = await residentOf("Casa D'Angelo");
+    try {
+      await enter(page, marco.email);
+      const response = await page.request.get("/auth/signout");
+      expect(response.status()).toBe(405);
+      await page.goto("/oggi");
+      await expect(page).toHaveURL(/\/oggi$/);
+    } finally {
+      await marco.cleanup();
+    }
   });
 
   test("CA-36: B dopo A nello stesso browser", async ({ page }) => {
-    needUsers("A", "B");
-    await enter(page, "A");
-    await page.goto("/profilo");
-    await clickUntil(page.getByRole("button", { name: "Esci" }), () =>
-      expect(page).toHaveURL(/\/accesso$/, { timeout: 3000 }),
-    );
-    await enter(page, "B");
-    await expect(page).toHaveURL(/\/oggi$/);
-    await expect(
-      page
-        .getByRole("button", { name: /Apri Casa Bianchi/ })
-        .or(page.getByRole("link", { name: /Apri Casa Bianchi/ }))
-        .first(),
-    ).toBeVisible();
-    const text = await page.locator("body").innerText();
-    expect(text).not.toContain("Casa D'Angelo");
-    expect(text).not.toContain("Marco");
+    needKeys();
+    const marco = await residentOf("Casa D'Angelo");
+    const giulia = await residentOf("Casa Bianchi", BIANCHI);
+    try {
+      await enter(page, marco.email);
+      await page.goto("/profilo");
+      await clickUntil(page.getByRole("button", { name: "Esci" }), () =>
+        expect(page).toHaveURL(/\/accesso$/, { timeout: 3000 }),
+      );
+      await enter(page, giulia.email);
+      await expect(page).toHaveURL(/\/oggi$/);
+      await expect(
+        page
+          .getByRole("button", { name: /Apri Casa Bianchi/ })
+          .or(page.getByRole("link", { name: /Apri Casa Bianchi/ }))
+          .first(),
+      ).toBeVisible();
+      const text = await page.locator("body").innerText();
+      expect(text).not.toContain("Casa D'Angelo");
+      expect(text).not.toContain("Marco");
+    } finally {
+      await giulia.cleanup();
+      await marco.cleanup();
+    }
   });
 
   test("CA-37: B non riceve dati di A", async ({ page }) => {
-    needUsers("B");
-    const bodies: string[] = [];
-    page.on("response", async (response) => {
-      if (
-        new URL(response.url()).origin !==
-        new URL(page.url() || "http://x").origin
-      ) {
-        // Only the app's own responses are checked below.
-      }
-      const type = response.headers()["content-type"] ?? "";
-      if (/text|json/.test(type) && response.url().includes("/oggi")) {
-        bodies.push(await response.text().catch(() => ""));
-      }
-    });
-    await enter(page, "B");
-    await expect(page).toHaveURL(/\/oggi$/);
-    await page.reload();
-    expect(bodies.length).toBeGreaterThan(0);
-    for (const body of bodies) expect(body).not.toContain("Casa D'Angelo");
+    needKeys();
+    const marco = await residentOf("Casa D'Angelo");
+    const giulia = await residentOf("Casa Bianchi", BIANCHI);
+    try {
+      const bodies: string[] = [];
+      page.on("response", async (response) => {
+        const type = response.headers()["content-type"] ?? "";
+        if (/text|json/.test(type) && response.url().includes("/oggi")) {
+          bodies.push(await response.text().catch(() => ""));
+        }
+      });
+      await enter(page, giulia.email);
+      await expect(page).toHaveURL(/\/oggi$/);
+      await page.reload();
+      expect(bodies.length).toBeGreaterThan(0);
+      for (const body of bodies) expect(body).not.toContain("Casa D'Angelo");
+    } finally {
+      await giulia.cleanup();
+      await marco.cleanup();
+    }
   });
 });
