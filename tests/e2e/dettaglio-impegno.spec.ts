@@ -89,7 +89,7 @@ test.describe("scheda", () => {
       "Tutto il Nest",
       "Portare la cuffia",
     ]);
-    await expect(scheda.getByRole("term", { name: "Avviso" })).toHaveCount(0);
+    await expect(scheda.getByText("Avviso", { exact: true })).toHaveCount(0);
     await expect(page).toHaveTitle("FamilyNest · Impegno");
     await expect(
       page.getByRole("link", { name: "Calendario", exact: true }),
@@ -422,7 +422,7 @@ test.describe("chi lo apre e isolamento", () => {
     await openDetail(page, baseURL, bianchi, "Giulia", id, "2026-10-20");
     await expect(h1(page, "Sorpresa")).toBeVisible();
     await expect(
-      card(page).getByRole("term", { name: "Chi lo vede" }),
+      card(page).getByText("Chi lo vede", { exact: true }),
     ).toBeVisible();
     await expect(card(page).getByRole("definition").last()).toHaveText(
       "Solo io",

@@ -53,7 +53,7 @@ const NUOTO_RULE = "Si ripete ogni martedì e giovedì.";
 const AFTER_TEXT =
   "Puoi cambiare solo giovedì 22 ottobre oppure anche tutte le volte dopo, comprese quelle già cambiate a parte.";
 const BEFORE_TEXT = "Le volte prima restano come sono.";
-const SAME_TITLE = new RegExp(`^${NUOTO}$`);
+const SAME_TITLE = /^Nuoto$/;
 
 /** The «Nuoto» of Marco, opened on that day. */
 async function openNuoto(
@@ -225,7 +225,7 @@ test.describe("salvare tutti i prossimi", () => {
 
     await expect(editDialog(page)).toBeHidden();
     await expect(page).toHaveURL(urlOf(saved.id, "2026-10-22"));
-    await expect(card(page).getByRole("term", { name: "Ripete" })).toHaveCount(
+    await expect(card(page).getByText("Ripete", { exact: true })).toHaveCount(
       0,
     );
 

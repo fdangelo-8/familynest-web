@@ -231,6 +231,8 @@ test.describe("accessibilità degli stati", () => {
     await buttonOf(confirmDialog(page), "Elimina impegno").click();
     await expect(page).toHaveURL(/\/calendario\?settimana=2026-10-19$/);
     await expect(toastOf(page, "Eliminato:")).toBeVisible();
+    // The loading state and the page of the calendar coexist for a moment.
+    await expect(page.getByRole("main")).toHaveCount(1);
     await expectAccessible(page);
   });
 });

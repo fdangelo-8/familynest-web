@@ -182,7 +182,7 @@ test.describe("salvare un impegno che non si ripete", () => {
     await pressSave(page);
     await expect(editDialog(page)).toBeHidden();
     await expect(
-      card(page).getByRole("term", { name: "La porta" }),
+      card(page).getByText("La porta", { exact: true }),
     ).toBeVisible();
     await expect(
       card(page).getByRole("definition").filter({ hasText: "Anna" }),
@@ -195,9 +195,9 @@ test.describe("salvare un impegno che non si ripete", () => {
     await chipOf(dialog, "La porta", "Anna").click();
     await pressSave(page);
     await expect(editDialog(page)).toBeHidden();
-    await expect(
-      card(page).getByRole("term", { name: "La porta" }),
-    ).toHaveCount(0);
+    await expect(card(page).getByText("La porta", { exact: true })).toHaveCount(
+      0,
+    );
   });
 
   test("CA-32: se il salvataggio fallisce il modulo resta aperto, e si riprova", async ({
@@ -392,7 +392,7 @@ test.describe("errori del modulo", () => {
 
     await page.reload();
     await expect(h1(page, "Viaggio")).toBeVisible();
-    await expect(card(page).getByRole("term", { name: "Ripete" })).toHaveCount(
+    await expect(card(page).getByText("Ripete", { exact: true })).toHaveCount(
       0,
     );
     expect((await eventRow(bianchi, id))?.recurrence).toBe("none");
@@ -466,7 +466,7 @@ test.describe("chi può cambiare cosa", () => {
       to: "17:00",
       members: ["Leo"],
     });
-    await orphanEvent(bianchi, id);
+    await orphanEvent(bianchi, "Paolo");
     await openDetail(page, baseURL, bianchi, "Giulia", id, "2026-10-25");
     await expect(h1(page, "Gita al lago")).toBeVisible();
     const dialog = await openForm(page);

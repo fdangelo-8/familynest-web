@@ -250,11 +250,14 @@ export async function deleteEventAsOther(
 }
 
 /** The author leaves the Nest: the «Tutto il Nest» event stays without author. */
-export async function orphanEvent(nest: CasaNest, id: string): Promise<void> {
+export async function orphanEvent(
+  nest: CasaNest,
+  authorName: string,
+): Promise<void> {
   const { error } = await adminOf(nest)
-    .from("events")
-    .update({ author_member_id: null })
-    .eq("id", id);
+    .from("household_members")
+    .delete()
+    .eq("id", memberIdOf(nest, authorName));
   if (error) throw new Error("Autore di prova non tolto");
 }
 
