@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import {
   NAV_ITEMS,
   getActiveNavItem,
@@ -10,6 +9,7 @@ import {
 } from "@/lib/app-routes";
 import { cx } from "../cx";
 import { Icon, type IconName } from "../Icon/Icon";
+import { useFramePathname } from "./useFramePathname";
 
 const ICONS: Record<(typeof NAV_ITEMS)[number]["id"], IconName> = {
   oggi: "house",
@@ -19,7 +19,7 @@ const ICONS: Record<(typeof NAV_ITEMS)[number]["id"], IconName> = {
 
 /** Mobile bottom navigation with the "Aggiungi" button. Hidden from 1024 px. */
 export function BottomNav() {
-  const pathname = usePathname();
+  const pathname = useFramePathname();
   if (!hasBottomNav(pathname)) return null;
   const active = getActiveNavItem(pathname, "mobile");
 

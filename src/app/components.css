@@ -4172,6 +4172,30 @@ button.riga-lista {
   }
 }
 
+/* Testa del foglio con informazione e X a destra (#20, #164) */
+.foglio__testa-fine {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+/* Etichette riconosciute ancora vuote: la regione live resta nel DOM ma non occupa il gap (#20, #164) */
+.gruppo-chip[aria-live]:empty {
+  position: absolute;
+}
+/* Righe del riepilogo solo testo (Fase 1 di #20, #164) */
+.riga-opzione:not(button) {
+  cursor: default;
+}
+
+/* Titolo del periodo: sotto 1024 px va a capo invece di sbordare (#169) */
+@media (max-width: 1023px) {
+  .periodo h1,
+  .periodo h2 {
+    white-space: normal;
+    min-width: 0;
+  }
+}
+
 /* =========================================================
    CORNICE DELL'APP (fondamenta layout e navigazione, #10)
    Il mockup mette tutto dentro una cornice fissa: qui le regole
