@@ -87,16 +87,10 @@
   --strappo-avanzamento: calc(2 * var(--size-tocco));
 }
 
-/* Esempi di Calendario Giorno: la vista vera dipende dalla finestra e scorre
-   dentro di sé; qui ha altezza piena (la cattura a pagina intera non deve
-   cambiarla) e scorre solo in orizzontale, nell'esempio largo. */
+/* Esempi di Calendario Giorno: nella galleria la vista non scorre (altezza
+   piena). Nella pagina vera scorre dentro di sé; la cattura a pagina intera
+   dei contenitori che scorrono cambia altezza tra due scatti. */
 .esempio :global(.vista-giorno) {
   overflow: visible;
   max-height: none;
-}
-
-.esempio .vistaScorre {
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: none;
 }

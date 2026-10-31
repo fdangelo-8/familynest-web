@@ -1601,24 +1601,20 @@ const DAY_PEOPLE = [
 
 function DayGrid({
   columns,
-  wide,
   children,
 }: {
   columns: number;
-  wide?: boolean;
   children: ReactNode;
 }) {
   const people = DAY_PEOPLE.slice(0, columns);
   return (
     <div
-      className={`vista-giorno${wide ? ` ${styles.vistaScorre}` : ""}`}
+      className="vista-giorno"
       role="region"
       aria-label="Chi è dove, dalle 8:00 alle 23:00"
       tabIndex={0}
     >
-      <div
-        className={`giorno-persone persone-${columns}${wide ? " giorno-persone--larga" : ""}`}
-      >
+      <div className={`giorno-persone persone-${columns}`}>
         <div className="giorno-persone__testa" aria-hidden="true">
           <span />
           {people.map((p) => (
@@ -1655,8 +1651,8 @@ function DayGrid({
 function DayViewSection() {
   return (
     <Section id="giorno-persone" title="Calendario Giorno, chi è dove">
-      <Example caption="giorno-persone · 6 colonne (--larga)">
-        <DayGrid columns={6} wide>
+      <Example caption="giorno-persone · 6 colonne">
+        <DayGrid columns={6}>
           <a
             className="blocco-orario da-9-00 per-1 col-1 largo-1"
             href="#giorno-persone"
