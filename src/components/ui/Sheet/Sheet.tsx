@@ -87,6 +87,7 @@ function SheetContent({
       icon="x"
       small
       aria-label="Chiudi"
+      aria-disabled={locked}
       onClick={requestClose}
       data-testid="sheet-chiudi"
     />

@@ -4172,6 +4172,21 @@ button.riga-lista {
   }
 }
 
+/* Testa del foglio con informazione e X a destra (#20, #164) */
+.foglio__testa-fine {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+/* Etichette riconosciute ancora vuote: la regione live resta nel DOM ma non occupa il gap (#20, #164) */
+.gruppo-chip[aria-live]:empty {
+  position: absolute;
+}
+/* Righe del riepilogo solo testo (Fase 1 di #20, #164) */
+.riga-opzione:not(button) {
+  cursor: default;
+}
+
 /* =========================================================
    CORNICE DELL'APP (fondamenta layout e navigazione, #10)
    Il mockup mette tutto dentro una cornice fissa: qui le regole
@@ -4366,21 +4381,4 @@ body {
     align-items: center;
     gap: var(--space-5);
   }
-}
-
-/* #164: Sheet head with an `info` line. Info and close button sit together at the end. */
-.foglio__testa-fine {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-/* #164: a live region of chips with nothing recognised takes no space (no stray gap). */
-.gruppo-chip[aria-live]:empty {
-  display: none;
-}
-
-/* #164: an option row that is plain text (not a button) is not clickable. */
-.riga-opzione:not(button) {
-  cursor: default;
 }

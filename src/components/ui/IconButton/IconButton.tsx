@@ -13,6 +13,8 @@ export type IconButtonProps = {
   /** Shows the red dot (`.btn-icona__punto`) */
   dot?: boolean;
   disabled?: boolean;
+  /** Inactive but still focusable and announced (e.g. while saving): no change of look */
+  "aria-disabled"?: boolean;
   /** Toggle state, for example a pinned item */
   pressed?: boolean;
   type?: "button" | "submit";
@@ -32,6 +34,7 @@ export function IconButton({
   onClick,
   className,
   "aria-label": ariaLabel,
+  "aria-disabled": ariaDisabled,
   "data-testid": testId,
 }: IconButtonProps) {
   return (
@@ -45,6 +48,7 @@ export function IconButton({
       )}
       aria-label={ariaLabel}
       disabled={disabled}
+      aria-disabled={ariaDisabled || undefined}
       aria-pressed={pressed}
       onClick={onClick}
       data-testid={testId}

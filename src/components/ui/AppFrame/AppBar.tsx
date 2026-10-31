@@ -1,6 +1,5 @@
 "use client";
 
-import { usePathname } from "next/navigation";
 import { getBarConfig } from "@/lib/app-routes";
 import { Lens } from "../Lens/Lens";
 import { NestSquare } from "../NestSquare/NestSquare";
@@ -11,10 +10,11 @@ import {
   NotificationsLink,
   SearchLink,
 } from "./IconLinks";
+import { useFramePathname } from "./useFramePathname";
 
 /** Mobile top bar (`.barra`). Its shape follows the route. Hidden from 1024 px. */
 export function AppBar() {
-  const pathname = usePathname();
+  const pathname = useFramePathname();
   const config = getBarConfig(pathname);
 
   if (config.kind === "section") {
