@@ -416,7 +416,7 @@ test("blocchi della griglia da tastiera e pannello (desktop)", async ({
     await waitForData(page);
     const url = page.url();
     const block = page.getByRole("link", {
-      name: /^Tennis, mercoledì 21 ottobre/,
+      name: /^Tennis.*mercoledì 21 ottobre/,
     });
     await block.focus();
     await page.keyboard.press("Tab");
@@ -436,7 +436,7 @@ test("blocchi della griglia da tastiera e pannello (desktop)", async ({
     expect(page.url()).toBe(url);
 
     const other = page.getByRole("link", {
-      name: /^Calcetto, venerdì 23 ottobre/,
+      name: /^Calcetto.*venerdì 23 ottobre/,
     });
     await other.focus();
     await page.keyboard.press("Space");
