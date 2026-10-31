@@ -20,7 +20,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test:
+  # Not named "test": a check with the same name as the CI test job would
+  # shadow it in pr-checks and make a failed full suite look green.
+  test-mirato:
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 30
