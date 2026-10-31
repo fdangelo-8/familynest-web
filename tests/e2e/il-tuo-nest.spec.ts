@@ -10,6 +10,7 @@ import {
 } from "@playwright/test";
 import { formatAge } from "../../src/lib/datetime";
 import { signInAs, skipReason, usersConfigured } from "../fixtures/auth";
+import { waitForAnimationsToEnd } from "../fixtures/animations";
 import { SEED_HOME_A } from "../fixtures/invito";
 import {
   createThrowawayUser,
@@ -391,9 +392,9 @@ test.describe("contenuto", () => {
           .getByRole("link", { name: new RegExp(`^${name}`) }),
       ).toHaveAttribute("href", href);
     }
-    // fonts can still swap and move the page: wait for them, then read all
-    // the positions in one go so that no shift falls between two readings
-    await page.evaluate(() => document.fonts.ready);
+    // on mobile the page slides in (foglio-entra, 300 ms) and moves the links:
+    // wait for the animation, then read all the positions in one go
+    await waitForAnimationsToEnd(page);
     const ys = await page.evaluate(
       (hrefs) => {
         return hrefs.map((href) => {
