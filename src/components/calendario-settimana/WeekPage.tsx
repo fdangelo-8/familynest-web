@@ -419,6 +419,7 @@ function WeekContent({ nowMs }: { nowMs: number }) {
         <EventPanel
           selection={selection}
           members={members}
+          meId={meId}
           todayKey={todayKey}
         />
       ) : null}

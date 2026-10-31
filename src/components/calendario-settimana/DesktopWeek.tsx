@@ -289,10 +289,12 @@ export function WeekGrid({
 export function EventPanel({
   selection,
   members,
+  meId,
   todayKey,
 }: {
   selection: Selection;
   members: readonly Member[];
+  meId: string | null;
   todayKey: string;
 }) {
   const event = selection.event;
@@ -333,7 +335,7 @@ export function EventPanel({
           </span>
         </span>
         <span className="prossimo__nota">
-          <span>{panelPeople(event, people, members)}</span>
+          <span>{panelPeople(event, people, members, meId)}</span>
           {people.length > 0 && people.length <= MAX_AVATARS ? (
             <span
               className="avatar-gruppo"

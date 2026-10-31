@@ -100,6 +100,13 @@ export function joinNames(names: readonly string[]): string {
 
 const KIND_ORDER: Record<MemberKind, number> = { child: 0, adult: 1, pet: 2 };
 
+/** True for a «Solo io» in which I am the only participant (or nobody is). */
+export function isSoloTu(event: KeyedFullEvent, meId: string | null): boolean {
+  return (
+    event.visibility === "private" && event.memberIds.every((id) => id === meId)
+  );
+}
+
 /** Participants of an event: children first, then adults, then pets. */
 export function participantsOf(
   event: KeyedFullEvent,
@@ -130,9 +137,8 @@ export function eventInfo(
   const parts: string[] = [];
   const participants = participantsOf(event, members);
   const iAmIn = meId !== null && event.memberIds.includes(meId);
-  const onlyMeInside = event.memberIds.every((id) => id === meId);
 
-  if (event.visibility === "private" && onlyMeInside) {
+  if (isSoloTu(event, meId)) {
     parts.push("Solo tu");
   } else if (!iAmIn) {
     const names = participants
@@ -536,8 +542,9 @@ export function panelPeople(
   event: KeyedFullEvent,
   people: readonly Member[],
   members: readonly Member[],
+  meId: string | null,
 ): string {
-  if (event.visibility === "private") return "Solo tu";
+  if (isSoloTu(event, meId)) return "Solo tu";
   if (peopleTag(people, members) === "Tutto il Nest") return "Tutto il Nest";
   const names = people.map((member) => member.name);
   if (names.length > MAX_AVATARS) {
