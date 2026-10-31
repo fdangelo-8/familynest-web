@@ -333,7 +333,12 @@ async function focusedStop(page: Page) {
     const seen = el.dataset.tabVisited === "1";
     el.dataset.tabVisited = "1";
     const own = el.getAttribute("aria-label") ?? el.textContent ?? "";
-    const name = `${el.tagName.toLowerCase()}:${own.replace(/\s+/g, " ").trim().slice(0, 80)}`;
+    // The description (aria-describedby) is part of what is announced.
+    const described = (el.getAttribute("aria-describedby") ?? "")
+      .split(/\s+/)
+      .map((id) => document.getElementById(id)?.textContent ?? "")
+      .join(" ");
+    const name = `${el.tagName.toLowerCase()}:${`${own} ${described}`.replace(/\s+/g, " ").trim().slice(0, 160)}`;
     return { name, seen };
   });
 }
@@ -385,7 +390,7 @@ test("ordine del focus e nessuna trappola", async ({ page, baseURL }) => {
     if (isMobile(page)) {
       const giorno = index(/^a:Giorno/);
       const mese = index(/^a:Mese/);
-      const striscia = index(/^button:Martedì 20 ottobre/);
+      const striscia = index(/^button:Mar 20, martedì 20 ottobre/);
       const riga = index(/^a:.*Call con Acme/);
       expect(giorno).toBeLessThan(mese);
       expect(mese).toBeLessThan(striscia);
