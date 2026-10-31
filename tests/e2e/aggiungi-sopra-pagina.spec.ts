@@ -64,6 +64,22 @@ async function openAddOverPage(page: Page, route: string) {
   }).toPass();
 }
 
+/**
+ * After a direct close Today loads as a normal page: wait for the load and
+ * the real h1, then the first Tab goes to "Vai al contenuto".
+ */
+async function expectFirstTabOnSkipLink(page: Page) {
+  await page.waitForURL(/\/oggi$/, { waitUntil: "load" });
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Oggi" }),
+  ).toBeVisible();
+  await expect(page.locator("main")).toHaveCount(1);
+  await page.keyboard.press("Tab");
+  await expect(
+    page.getByRole("link", { name: "Vai al contenuto" }),
+  ).toBeFocused();
+}
+
 async function closeWithEscape(page: Page, backTo: RegExp) {
   await page.keyboard.press("Escape");
   await expect(dialogOf(page)).toHaveCount(0);
@@ -147,12 +163,7 @@ test.describe("Aggiungi sopra la pagina", () => {
       await expect(dialogOf(page)).toHaveCount(0, { timeout: 1000 });
     }).toPass();
     await expect(page).toHaveURL(/\/oggi$/);
-    // a normal page load: one main, and the first Tab goes to "Vai al contenuto"
-    await expect(page.locator("main")).toHaveCount(1);
-    await page.keyboard.press("Tab");
-    await expect(
-      page.getByRole("link", { name: "Vai al contenuto" }),
-    ).toBeFocused();
+    await expectFirstTabOnSkipLink(page);
   });
 });
 
@@ -284,12 +295,7 @@ test.describe("Aggiungi sopra la pagina: altri casi", () => {
     await page.goto("/aggiungi");
     await expect(dialogOf(page)).toBeVisible();
     await closeWithEscape(page, /\/oggi$/);
-    // a normal page load: one main, and the first Tab goes to "Vai al contenuto"
-    await expect(page.locator("main")).toHaveCount(1);
-    await page.keyboard.press("Tab");
-    await expect(
-      page.getByRole("link", { name: "Vai al contenuto" }),
-    ).toBeFocused();
+    await expectFirstTabOnSkipLink(page);
   });
 
   test("con il foglio aperto, Ctrl+K porta alla ricerca e il foglio sparisce", async ({
