@@ -110,7 +110,7 @@ test.describe("Aggiungi sopra la pagina", () => {
     await expect(addLink(page)).toBeFocused();
   });
 
-  test("fuoco: aperto direttamente, alla chiusura va su main (movimento ridotto)", async ({
+  test("fuoco: aperto direttamente, alla chiusura carica Oggi, primo Tab su «Vai al contenuto» (movimento ridotto)", async ({
     page,
   }) => {
     await page.goto("/aggiungi");
@@ -118,16 +118,19 @@ test.describe("Aggiungi sopra la pagina", () => {
     await page.keyboard.press("Escape");
     await expect(dialogOf(page)).toHaveCount(0);
     await expect(page).toHaveURL(/\/oggi$/);
-    // Loading and the page coexist for a moment: wait for the real Today page.
     await expect(
       page.getByRole("heading", { level: 1, name: "Oggi" }),
     ).toBeVisible();
-    await expect(page.getByRole("main")).toBeFocused();
+    await expect(page.locator("main")).toHaveCount(1);
+    await page.keyboard.press("Tab");
+    await expect(
+      page.getByRole("link", { name: "Vai al contenuto" }),
+    ).toBeFocused();
   });
 
   test.describe("con animazioni", () => {
     test.use({ reducedMotion: "no-preference" });
-    test("fuoco: aperto direttamente, alla chiusura va su main (con animazioni)", async ({
+    test("fuoco: aperto direttamente, alla chiusura carica Oggi, primo Tab su «Vai al contenuto» (con animazioni)", async ({
       page,
     }) => {
       await page.goto("/aggiungi");
@@ -138,7 +141,11 @@ test.describe("Aggiungi sopra la pagina", () => {
       await expect(
         page.getByRole("heading", { level: 1, name: "Oggi" }),
       ).toBeVisible();
-      await expect(page.getByRole("main")).toBeFocused();
+      await expect(page.locator("main")).toHaveCount(1);
+      await page.keyboard.press("Tab");
+      await expect(
+        page.getByRole("link", { name: "Vai al contenuto" }),
+      ).toBeFocused();
     });
   });
 

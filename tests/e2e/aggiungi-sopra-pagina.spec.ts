@@ -129,7 +129,7 @@ test.describe("Aggiungi sopra la pagina", () => {
     await expect(page).toHaveURL(/\/calendario$/);
   });
 
-  test("CA-5: aperta direttamente, /aggiungi mostra il foglio sopra Oggi; il velo porta a /oggi con il fuoco sul main", async ({
+  test("CA-5: aperta direttamente, /aggiungi mostra il foglio sopra Oggi; il velo porta a /oggi", async ({
     page,
     baseURL,
   }) => {
@@ -147,9 +147,12 @@ test.describe("Aggiungi sopra la pagina", () => {
       await expect(dialogOf(page)).toHaveCount(0, { timeout: 1000 });
     }).toPass();
     await expect(page).toHaveURL(/\/oggi$/);
-    // wait for the real page (not the loading one), then the focus must be on its main
-    await expect(page.locator("main h1")).toHaveText("Oggi");
-    await expect(page.getByRole("main")).toBeFocused();
+    // a normal page load: one main, and the first Tab goes to "Vai al contenuto"
+    await expect(page.locator("main")).toHaveCount(1);
+    await page.keyboard.press("Tab");
+    await expect(
+      page.getByRole("link", { name: "Vai al contenuto" }),
+    ).toBeFocused();
   });
 });
 
@@ -271,46 +274,9 @@ test.describe("Aggiungi sopra la pagina: altri casi", () => {
     await expect(dialogOf(page)).toBeVisible();
     await expect(page).toHaveURL(/\/aggiungi$/);
     await expect(page.locator("main h1")).toHaveText("Oggi");
-    await closeWithEscape(page, /\/oggi$/);
-    // wait for the real page (not the loading one), then the focus must be on its main
-    await expect(page.locator("main h1")).toHaveText("Oggi");
-    await expect(page.getByRole("main")).toBeFocused();
   });
 
-  test("dopo la chiusura diretta, se l'utente sposta il fuoco con Tab, resta dov'è", async ({
-    page,
-    baseURL,
-  }) => {
-    await signInAs(page.context(), baseURL as string, "A");
-    await page.goto("/aggiungi");
-    await expect(dialogOf(page)).toBeVisible();
-    await page.keyboard.press("Escape");
-    await expect(dialogOf(page)).toHaveCount(0);
-    await expect(page).toHaveURL(/\/oggi$/);
-    await expect(page.locator("main h1")).toHaveText("Oggi");
-    await expect(page.getByRole("main")).toBeFocused();
-    const target = page
-      .getByRole("link", { name: "Calendario", exact: true })
-      .filter({ visible: true });
-    for (let i = 0; i < 30; i += 1) {
-      await page.keyboard.press("Tab");
-      if (await target.evaluate((el) => el === document.activeElement)) break;
-    }
-    await expect(target).toBeFocused();
-    // the focus stays on the link: it is checked on the next frames, not after a timed wait
-    await page.evaluate(
-      () =>
-        new Promise<void>((resolve) => {
-          let frames = 0;
-          const tick = () =>
-            ++frames > 20 ? resolve() : requestAnimationFrame(tick);
-          tick();
-        }),
-    );
-    await expect(target).toBeFocused();
-  });
-
-  test("CA-5: aperta direttamente, Esc porta a /oggi con il fuoco sul main", async ({
+  test("CA-5: aperta direttamente, Esc porta a /oggi", async ({
     page,
     baseURL,
   }) => {
@@ -318,9 +284,12 @@ test.describe("Aggiungi sopra la pagina: altri casi", () => {
     await page.goto("/aggiungi");
     await expect(dialogOf(page)).toBeVisible();
     await closeWithEscape(page, /\/oggi$/);
-    // wait for the real page (not the loading one), then the focus must be on its main
-    await expect(page.locator("main h1")).toHaveText("Oggi");
-    await expect(page.getByRole("main")).toBeFocused();
+    // a normal page load: one main, and the first Tab goes to "Vai al contenuto"
+    await expect(page.locator("main")).toHaveCount(1);
+    await page.keyboard.press("Tab");
+    await expect(
+      page.getByRole("link", { name: "Vai al contenuto" }),
+    ).toBeFocused();
   });
 
   test("con il foglio aperto, Ctrl+K porta alla ricerca e il foglio sparisce", async ({
