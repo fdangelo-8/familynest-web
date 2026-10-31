@@ -2,6 +2,9 @@
 # Vercel "Ignored Build Step": exit 0 skips the deployment, exit 1 builds it.
 # The free plan allows 100 deployments a day, so previews are built only where
 # someone looks at them: main and page or shared branches with app changes.
+# An ignored build still counts as a deployment, so vercel.json also turns off
+# deployments entirely (git.deploymentEnabled) for branches that never need a
+# preview: admin, db, fix, docs, chore and the agents' local work branches.
 
 ref="${VERCEL_GIT_COMMIT_REF:-}"
 
