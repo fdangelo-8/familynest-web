@@ -28,7 +28,7 @@ import {
 import { DayRow } from "./Rows";
 import {
   MAX_AVATARS,
-  blockLabel,
+  blockDescription,
   endInDay,
   hoursSinceGridStart,
   layoutDay,
@@ -151,47 +151,48 @@ function BlockView({
       startInDay(full, view.day).getTime()) /
     60_000;
   const choose = () => onSelect(full, view.day.key);
+  const descriptionId = `blocco-desc-${full.id}-${view.day.key}`;
   return (
-    <a
-      href={`/impegni/${full.id}`}
-      className={cx(classes, selected && "blocco-orario--attivo")}
-      aria-label={blockLabel(
-        full,
-        view.day,
-        members,
-        minutes > SHORT_BLOCK_MINUTES ? range : undefined,
-      )}
-      aria-current={selected ? "true" : undefined}
-      onClick={(clickEvent) => {
-        if (!isPlainClick(clickEvent)) return;
-        clickEvent.preventDefault();
-        choose();
-      }}
-      onKeyDown={(keyEvent: KeyboardEvent) => {
-        if (keyEvent.key === " ") {
-          keyEvent.preventDefault();
+    <>
+      <a
+        href={`/impegni/${full.id}`}
+        className={cx(classes, selected && "blocco-orario--attivo")}
+        aria-describedby={descriptionId}
+        aria-current={selected ? "true" : undefined}
+        onClick={(clickEvent) => {
+          if (!isPlainClick(clickEvent)) return;
+          clickEvent.preventDefault();
           choose();
-        }
-      }}
-    >
-      <span className="blocco-orario__titolo">{full.title}</span>
-      {minutes > SHORT_BLOCK_MINUTES ? (
-        <span className="blocco-orario__ora">{range}</span>
-      ) : null}
-      {people.length > 0 && people.length <= MAX_AVATARS ? (
-        <span className="avatar-gruppo" aria-hidden="true">
-          {people.map((member) => (
-            <Avatar
-              key={member.id}
-              name={member.name}
-              color={member.color}
-              size="xs"
-              nameShown
-            />
-          ))}
-        </span>
-      ) : null}
-    </a>
+        }}
+        onKeyDown={(keyEvent: KeyboardEvent) => {
+          if (keyEvent.key === " ") {
+            keyEvent.preventDefault();
+            choose();
+          }
+        }}
+      >
+        <span className="blocco-orario__titolo">{full.title}</span>
+        {minutes > SHORT_BLOCK_MINUTES ? (
+          <span className="blocco-orario__ora">{range}</span>
+        ) : null}
+        {people.length > 0 && people.length <= MAX_AVATARS ? (
+          <span className="avatar-gruppo" aria-hidden="true">
+            {people.map((member) => (
+              <Avatar
+                key={member.id}
+                name={member.name}
+                color={member.color}
+                size="xs"
+                nameShown
+              />
+            ))}
+          </span>
+        ) : null}
+      </a>
+      <span id={descriptionId} hidden>
+        {blockDescription(full, view.day, members)}
+      </span>
+    </>
   );
 }
 

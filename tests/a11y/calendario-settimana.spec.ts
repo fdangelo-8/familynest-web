@@ -230,8 +230,8 @@ test("striscia dei giorni: frecce, Inizio, Fine, Invio e Spazio", async ({
         .map((n) => n.getAttribute("aria-label")),
     );
     expect(stops).toHaveLength(1);
-    expect(stops[0]).toContain("Martedì 20 ottobre");
-    await expect(tab(page, /^Martedì 20 ottobre/)).toHaveAttribute(
+    expect(stops[0]).toContain("martedì 20 ottobre");
+    await expect(tab(page, /^Mar 20, martedì 20 ottobre/)).toHaveAttribute(
       "aria-selected",
       "true",
     );
@@ -240,44 +240,44 @@ test("striscia dei giorni: frecce, Inizio, Fine, Invio e Spazio", async ({
     // the next one leaves the strip (no trap).
     await page.getByRole("link", { name: "Mese" }).focus();
     await page.keyboard.press("Tab");
-    await expect(tab(page, /^Martedì 20 ottobre/)).toBeFocused();
-    const ring = await focusRing(tab(page, /^Martedì 20 ottobre/));
+    await expect(tab(page, /^Mar 20, martedì 20 ottobre/)).toBeFocused();
+    const ring = await focusRing(tab(page, /^Mar 20, martedì 20 ottobre/));
     expect(ring.style).not.toBe("none");
     expect(ring.width).toBeGreaterThan(0);
 
     // Arrows move the focus, not the choice.
     await page.keyboard.press("ArrowRight");
-    await expect(tab(page, /^Mercoledì 21 ottobre/)).toBeFocused();
-    await expect(tab(page, /^Martedì 20 ottobre/)).toHaveAttribute(
+    await expect(tab(page, /^Mer 21, mercoledì 21 ottobre/)).toBeFocused();
+    await expect(tab(page, /^Mar 20, martedì 20 ottobre/)).toHaveAttribute(
       "aria-selected",
       "true",
     );
-    await expect(tab(page, /^Mercoledì 21 ottobre/)).toHaveAttribute(
+    await expect(tab(page, /^Mer 21, mercoledì 21 ottobre/)).toHaveAttribute(
       "aria-selected",
       "false",
     );
     expect(
-      (await focusRing(tab(page, /^Mercoledì 21 ottobre/))).style,
+      (await focusRing(tab(page, /^Mer 21, mercoledì 21 ottobre/))).style,
     ).not.toBe("none");
     await page.keyboard.press("ArrowLeft");
-    await expect(tab(page, /^Martedì 20 ottobre/)).toBeFocused();
+    await expect(tab(page, /^Mar 20, martedì 20 ottobre/)).toBeFocused();
     await page.keyboard.press("ArrowLeft");
-    await expect(tab(page, /^Lunedì 19 ottobre/)).toBeFocused();
+    await expect(tab(page, /^Lun 19, lunedì 19 ottobre/)).toBeFocused();
     await page.keyboard.press("ArrowLeft");
-    await expect(tab(page, /^Lunedì 19 ottobre/)).toBeFocused();
+    await expect(tab(page, /^Lun 19, lunedì 19 ottobre/)).toBeFocused();
 
     await page.keyboard.press("End");
-    await expect(tab(page, /^Domenica 25 ottobre/)).toBeFocused();
+    await expect(tab(page, /^Dom 25, domenica 25 ottobre/)).toBeFocused();
     await page.keyboard.press("ArrowRight");
-    await expect(tab(page, /^Domenica 25 ottobre/)).toBeFocused();
+    await expect(tab(page, /^Dom 25, domenica 25 ottobre/)).toBeFocused();
     await page.keyboard.press("Home");
-    await expect(tab(page, /^Lunedì 19 ottobre/)).toBeFocused();
+    await expect(tab(page, /^Lun 19, lunedì 19 ottobre/)).toBeFocused();
 
     // Still nothing chosen but today; the page did not move to another day.
     await expect(tabs.and(page.locator('[aria-selected="true"]'))).toHaveCount(
       1,
     );
-    await expect(tab(page, /^Martedì 20 ottobre/)).toHaveAttribute(
+    await expect(tab(page, /^Mar 20, martedì 20 ottobre/)).toHaveAttribute(
       "aria-selected",
       "true",
     );
@@ -285,13 +285,13 @@ test("striscia dei giorni: frecce, Inizio, Fine, Invio e Spazio", async ({
     // Enter chooses the day and brings its section into view.
     await page.keyboard.press("End");
     await page.keyboard.press("ArrowLeft");
-    await expect(tab(page, /^Sabato 24 ottobre/)).toBeFocused();
+    await expect(tab(page, /^Sab 24, sabato 24 ottobre/)).toBeFocused();
     await page.keyboard.press("Enter");
-    await expect(tab(page, /^Sabato 24 ottobre/)).toHaveAttribute(
+    await expect(tab(page, /^Sab 24, sabato 24 ottobre/)).toHaveAttribute(
       "aria-selected",
       "true",
     );
-    await expect(tab(page, /^Martedì 20 ottobre/)).toHaveAttribute(
+    await expect(tab(page, /^Mar 20, martedì 20 ottobre/)).toHaveAttribute(
       "aria-selected",
       "false",
     );
@@ -300,9 +300,9 @@ test("striscia dei giorni: frecce, Inizio, Fine, Invio e Spazio", async ({
     await expect(heading).toBeFocused();
 
     // Space does the same, from the strip again.
-    await tab(page, /^Venerdì 23 ottobre/).focus();
+    await tab(page, /^Ven 23, venerdì 23 ottobre/).focus();
     await page.keyboard.press("Space");
-    await expect(tab(page, /^Venerdì 23 ottobre/)).toHaveAttribute(
+    await expect(tab(page, /^Ven 23, venerdì 23 ottobre/)).toHaveAttribute(
       "aria-selected",
       "true",
     );
@@ -311,7 +311,7 @@ test("striscia dei giorni: frecce, Inizio, Fine, Invio e Spazio", async ({
     ).toBeInViewport();
 
     // The selected day is the one stop of the strip: the next Tab leaves it.
-    await tab(page, /^Venerdì 23 ottobre/).focus();
+    await tab(page, /^Ven 23, venerdì 23 ottobre/).focus();
     await page.keyboard.press("Tab");
     const inside = await strip.evaluate((el) =>
       el.contains(document.activeElement),
@@ -416,7 +416,7 @@ test("blocchi della griglia da tastiera e pannello (desktop)", async ({
     await waitForData(page);
     const url = page.url();
     const block = page.getByRole("link", {
-      name: /^Tennis.*mercoledì 21 ottobre/,
+      name: /^Tennis/,
     });
     await block.focus();
     await page.keyboard.press("Tab");
@@ -436,7 +436,7 @@ test("blocchi della griglia da tastiera e pannello (desktop)", async ({
     expect(page.url()).toBe(url);
 
     const other = page.getByRole("link", {
-      name: /^Calcetto.*venerdì 23 ottobre/,
+      name: /^Calcetto/,
     });
     await other.focus();
     await page.keyboard.press("Space");

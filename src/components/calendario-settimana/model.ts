@@ -12,6 +12,7 @@ import {
   addDaysToDayKey,
   formatDayNumber,
   formatLongDay,
+  formatShortWeekday,
   formatTime,
   fromFieldValues,
   getWeekDays,
@@ -66,14 +67,17 @@ export function dayHeadInfo(count: number, isToday: boolean): string {
   return isToday ? `${text} · oggi` : text;
 }
 
-/** `Martedì 20 ottobre, 6 impegni` (the lens decides the count). */
+/**
+ * `Mar 20, martedì 20 ottobre, 6 impegni` (the lens decides the count). It starts
+ * with the visible text of the tab («Mar» «20»), as WCAG 2.5.3 asks.
+ */
 export function tabLabel(
   day: CalendarDay,
   count: number | null,
   hasEvening: boolean,
   isToday = false,
 ): string {
-  const base = formatLongDay(day.start);
+  const base = `${formatShortWeekday(day.start)} ${Number(day.key.slice(8, 10))}, ${formatLongDay(day.start, { capitalized: false })}`;
   if (count === null) return base;
   const amount = count === 0 ? "nessun impegno" : formatImpegni(count);
   return `${base}${isToday ? ", oggi" : ""}, ${amount}${hasEvening ? ", liberi insieme la sera" : ""}`;
@@ -486,13 +490,15 @@ export function hoursSinceGridStart(
 
 /* ---------- Labels ---------- */
 
-/** Accessible name of a block: `Nuoto Sofia, martedì 20 ottobre, dalle 17:00 alle 18:30, con Sofia`. */
-export function blockLabel(
+/**
+ * Accessible description of a block: `martedì 20 ottobre, dalle 17:00 alle 18:30, con Sofia`.
+ * The accessible name is the visible text (title and time range), so it can
+ * never disagree with it (WCAG 2.5.3); the rest goes here.
+ */
+export function blockDescription(
   event: KeyedFullEvent,
   day: CalendarDay,
   members: readonly Member[],
-  /** The time range as written in the block, if it is shown */
-  shownRange?: string,
 ): string {
   const participants = participantsInNestOrder(event, members);
   let who = "";
@@ -505,7 +511,7 @@ export function blockLabel(
   } else if (participants.length > 0) {
     who = `, con ${joinNames(participants.map((member) => member.name))}`;
   }
-  return `${event.title}${shownRange ? ` ${shownRange}` : ""}, ${formatLongDay(day.start, { capitalized: false })}, dalle ${formatTime(startInDay(event, day))} alle ${formatTime(endInDay(event, day))}${who}${event.visibility === "private" ? ", visibile solo a te" : ""}`;
+  return `${formatLongDay(day.start, { capitalized: false })}, dalle ${formatTime(startInDay(event, day))} alle ${formatTime(endInDay(event, day))}${who}${event.visibility === "private" ? ", visibile solo a te" : ""}`;
 }
 
 /** `Settimana dal 19 al 25 ottobre` / `Settimana dal 26 ottobre all'1 novembre`. */

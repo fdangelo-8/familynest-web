@@ -91,8 +91,11 @@ function tabName(label: string, count: number): RegExp {
     count === 0
       ? "nessun impegno"
       : `${count} ${count === 1 ? "impegno" : "impegni"}`;
+  const weekday = label.split(" ")[0] ?? "";
+  const rest = label.slice(weekday.length + 1);
+  const prefix = `${weekday.slice(0, 3)} ${rest.split(" ")[0]}, ${weekday.toLowerCase()} ${rest}`;
   return new RegExp(
-    `^${escapeRe(label)}(, oggi)?, ${amount}(, liberi insieme la sera)?$`,
+    `^${escapeRe(prefix)}(, oggi)?, ${amount}(, liberi insieme la sera)?$`,
   );
 }
 const tab = (page: Page, label: string, count: number) =>
@@ -476,9 +479,11 @@ test.describe("settimane", () => {
     "CA-7: «Giorno» e «Mese» seguono il giorno scelto nella striscia",
     async ({ page, baseURL, bianchi }) => {
       await open(page, baseURL, bianchi);
-      await page.getByRole("tab", { name: /^Giovedì 22 ottobre/ }).click();
+      await page
+        .getByRole("tab", { name: /^Gio 22, giovedì 22 ottobre/ })
+        .click();
       await expect(
-        page.getByRole("tab", { name: /^Giovedì 22 ottobre/ }),
+        page.getByRole("tab", { name: /^Gio 22, giovedì 22 ottobre/ }),
       ).toHaveAttribute("aria-selected", "true");
       await expect(
         viewGroup(page).getByRole("link", { name: "Giorno" }),
@@ -569,11 +574,13 @@ test.describe("elenco mobile e striscia", () => {
       to: "23:00",
     });
     await open(page, baseURL, bianchi);
-    const friday = page.getByRole("tab", { name: /^Venerdì 23 ottobre/ });
+    const friday = page.getByRole("tab", {
+      name: /^Ven 23, venerdì 23 ottobre/,
+    });
     await friday.click();
     await expect(friday).toHaveAttribute("aria-selected", "true");
     await expect(
-      page.getByRole("tab", { name: /^Martedì 20 ottobre/ }),
+      page.getByRole("tab", { name: /^Mar 20, martedì 20 ottobre/ }),
     ).toHaveAttribute("aria-selected", "false");
     await expect(
       page.getByRole("heading", { level: 2, name: FRI_H, exact: true }),
@@ -689,7 +696,7 @@ test.describe("elenco mobile e striscia", () => {
     });
     await open(page, baseURL, bianchi);
     // The list starts from today: Monday is added by tapping its day.
-    await page.getByRole("tab", { name: /^Lunedì 19 ottobre/ }).click();
+    await page.getByRole("tab", { name: /^Lun 19, lunedì 19 ottobre/ }).click();
     const monday = dayRows(page, MON_H).filter({ hasText: "Cena lunga" });
     await expect(monday).toHaveCount(1);
     await expect(monday).toContainText("23:00");
@@ -929,7 +936,7 @@ test.describe("liberi insieme", () => {
       expect(await isInert(row), "non è un link").toBe(true);
       await expect(
         page
-          .getByRole("tab", { name: /^Martedì 20 ottobre/ })
+          .getByRole("tab", { name: /^Mar 20, martedì 20 ottobre/ })
           .locator('[data-insieme="true"]'),
       ).toHaveCount(1);
     } else {

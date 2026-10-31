@@ -80,7 +80,7 @@ export function DayStrip({
           >
             <span className="striscia-giorni__nome">
               {formatShortWeekday(day.day.start)}
-            </span>
+            </span>{" "}
             <span className="striscia-giorni__numero">
               {Number(day.day.key.slice(8, 10))}
             </span>
