@@ -35,7 +35,16 @@ test("mockup frames", async ({ page }, testInfo) => {
         continue;
       }
       for (const rule of Array.from(rules)) {
-        if (rule instanceof CSSFontFaceRule) out.push(rule.cssText);
+        if (rule instanceof CSSFontFaceRule) {
+          // Urls are relative to the stylesheet: make them absolute.
+          out.push(
+            rule.cssText.replace(
+              /url\((["']?)([^)"']+)\1\)/g,
+              (_all, _quote, url: string) =>
+                `url("${new URL(url, sheet.href ?? location.href).href}")`,
+            ),
+          );
+        }
       }
     }
     return out;
