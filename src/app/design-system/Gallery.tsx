@@ -94,7 +94,7 @@ export function Gallery() {
       <ListSection rowCards={rowCards} />
       <OverlaysSection />
       <StatesSection />
-      <DayViewSection />
+      {null && <DayViewSection />}
     </main>
   );
 }
