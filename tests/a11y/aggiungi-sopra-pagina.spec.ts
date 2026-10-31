@@ -110,7 +110,7 @@ test.describe("Aggiungi sopra la pagina", () => {
     await expect(addLink(page)).toBeFocused();
   });
 
-  test("fuoco: aperto direttamente, alla chiusura va su main", async ({
+  test("fuoco: aperto direttamente, alla chiusura va su main (movimento ridotto)", async ({
     page,
   }) => {
     await page.goto("/aggiungi");
@@ -123,6 +123,23 @@ test.describe("Aggiungi sopra la pagina", () => {
       page.getByRole("heading", { level: 1, name: "Oggi" }),
     ).toBeVisible();
     await expect(page.getByRole("main")).toBeFocused();
+  });
+
+  test.describe("con animazioni", () => {
+    test.use({ reducedMotion: "no-preference" });
+    test("fuoco: aperto direttamente, alla chiusura va su main (con animazioni)", async ({
+      page,
+    }) => {
+      await page.goto("/aggiungi");
+      await expect(dialogOf(page)).toBeVisible();
+      await page.keyboard.press("Escape");
+      await expect(dialogOf(page)).toHaveCount(0);
+      await expect(page).toHaveURL(/\/oggi$/);
+      await expect(
+        page.getByRole("heading", { level: 1, name: "Oggi" }),
+      ).toBeVisible();
+      await expect(page.getByRole("main")).toBeFocused();
+    });
   });
 
   test("area di tocco della X almeno 44 px", async ({ page }) => {
