@@ -45,9 +45,10 @@ const KIDS = ["Sofia", "Tommaso"];
 
 /** The day of the mockup (13-calendario-giorno, state «normale»), Tuesday 20. */
 export const TUESDAY: EventSpec[] = [
-  // «Scuola» is on Sofia and Tommaso only, like in the mockup (no escort).
+  // «Scuola» and «Nuoto Sofia» are on the children only, like in the mockup
+  // (no escort): Laura writes them, so the lens «Io» of Marco does not show them.
   {
-    who: "Marco",
+    who: "Laura",
     title: "Scuola",
     day: TUE,
     from: "8:15",
@@ -78,7 +79,7 @@ export const TUESDAY: EventSpec[] = [
     location: "Teams",
   },
   {
-    who: "Marco",
+    who: "Laura",
     title: "Nuoto Sofia",
     day: TUE,
     from: "17:00",

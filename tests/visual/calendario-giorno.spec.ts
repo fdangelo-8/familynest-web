@@ -289,6 +289,28 @@ test("sette persone: scorre solo la vista", async ({ page, baseURL }) => {
       );
       const viewBox = (await view.boundingBox())!;
       expect(hours.left).toBeLessThanOrEqual(viewBox.x + 4);
+
+      // The hours stay under the heads of the columns: no label is drawn over
+      // the (blank) head of the hours column (specification §10.5: fixed hours
+      // and blank space above them, background «carta»).
+      const bleeding = await page.evaluate(() => {
+        const head = document
+          .querySelector(".vista-giorno .giorno-persone__testa")!
+          .getBoundingClientRect();
+        const bad: string[] = [];
+        for (const label of document.querySelectorAll(".colonna-ore__ora")) {
+          const r = label.getBoundingClientRect();
+          const x = r.left + r.width / 2;
+          const y = r.top + r.height / 2;
+          if (y < head.top || y > head.bottom) continue;
+          const hit = document.elementFromPoint(x, y);
+          if (hit && hit.closest(".colonna-ore")) bad.push(label.textContent!);
+        }
+        return bad;
+      });
+      expect(bleeding, "ore disegnate sopra la testa delle colonne").toEqual(
+        [],
+      );
       await shootDay(page, "sette-persone-scorsa.png");
     } else {
       // All the columns side by side: nothing to scroll sideways.

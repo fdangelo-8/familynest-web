@@ -510,7 +510,10 @@ test("i blocchi da toccare sono alti almeno 44 px (mobile)", async ({
       const title = (
         await link.locator(".blocco-orario__titolo").innerText()
       ).trim();
-      await link.scrollIntoViewIfNeeded();
+      // At the centre of the view: the fixed navigation never covers the block.
+      await link.evaluate((el) =>
+        el.scrollIntoView({ block: "center", inline: "center" }),
+      );
       const box = (await link.boundingBox())!;
       expect(box.height, `altezza di «${title}»`).toBeGreaterThanOrEqual(44);
       // Two short events side by side share the column: the width of those
@@ -554,6 +557,7 @@ test("«Riprova» e «Aggiungi qualcosa» hanno l'area di tocco di 44 px (mobile
     await expect(retry).toBeVisible();
     expect(await hasTouchArea(retry), "Riprova").toBe(true);
   });
+  await context.setOffline(false);
   await withMockupNest([], async (nest) => {
     await openDay(page, baseURL, nest);
     await waitForDayData(page);
