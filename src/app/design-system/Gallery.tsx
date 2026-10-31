@@ -1611,7 +1611,7 @@ function DayGrid({
   const people = DAY_PEOPLE.slice(0, columns);
   return (
     <div
-      className="vista-giorno"
+      className={`vista-giorno${wide ? ` ${styles.vistaScorre}` : ""}`}
       role="region"
       aria-label="Chi è dove, dalle 8:00 alle 23:00"
       tabIndex={0}
