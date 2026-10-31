@@ -56,8 +56,18 @@ async function touchAreaReport(page: Page): Promise<Hit[]> {
         return !!t && el.contains(t);
       };
       let ok = true;
-      if (r.height < 44) ok = ok && hit(cx, cy - 21) && hit(cx, cy + 21);
-      if (r.width < 44) ok = ok && hit(cx - 21, cy) && hit(cx + 21, cy);
+      // The week arrows of /calendario sit side by side: their 44 px areas (the
+      // ::before) overlap in the middle, so only the outer edge is checked.
+      const arrow = /^Settimana (precedente|successiva)$/.exec(
+        el.getAttribute("aria-label") ?? "",
+      );
+      if (arrow) {
+        const outer = arrow[1] === "precedente" ? cx - 21.5 : cx + 21.5;
+        ok = hit(cx, cy - 21.5) && hit(cx, cy + 21.5) && hit(outer, cy);
+      } else {
+        if (r.height < 44) ok = ok && hit(cx, cy - 21) && hit(cx, cy + 21);
+        if (r.width < 44) ok = ok && hit(cx - 21, cy) && hit(cx + 21, cy);
+      }
       out.push({
         label: `${el.tagName.toLowerCase()}.${el.className} "${(el.getAttribute("aria-label") ?? el.textContent ?? "").trim().slice(0, 30)}"`,
         ok,
