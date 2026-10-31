@@ -10,6 +10,7 @@ import {
 } from "@playwright/test";
 import { formatAge } from "../../src/lib/datetime";
 import { signInAs, skipReason, usersConfigured } from "../fixtures/auth";
+import { waitForAnimationsToEnd } from "../fixtures/animations";
 import { SEED_HOME_A } from "../fixtures/invito";
 import {
   createThrowawayUser,
@@ -384,14 +385,25 @@ test.describe("contenuto", () => {
       ["Notifiche", "/notifiche"],
       ["Impostazioni della casa", "/impostazioni"],
     ] as const;
-    const ys: number[] = [];
     for (const [name, href] of expected) {
-      const link = page
-        .locator("main")
-        .getByRole("link", { name: new RegExp(`^${name}`) });
-      await expect(link).toHaveAttribute("href", href);
-      ys.push((await link.boundingBox())!.y);
+      await expect(
+        page
+          .locator("main")
+          .getByRole("link", { name: new RegExp(`^${name}`) }),
+      ).toHaveAttribute("href", href);
     }
+    // on mobile the page slides in (foglio-entra, 300 ms) and moves the links:
+    // wait for the animation, then read all the positions in one go
+    await waitForAnimationsToEnd(page);
+    const ys = await page.evaluate(
+      (hrefs) => {
+        return hrefs.map((href) => {
+          const link = document.querySelector(`main a[href="${href}"]`);
+          return link!.getBoundingClientRect().top;
+        });
+      },
+      expected.map(([, href]) => href),
+    );
     expect(ys).toEqual([...ys].sort((a, b) => a - b));
     await expect(
       page
