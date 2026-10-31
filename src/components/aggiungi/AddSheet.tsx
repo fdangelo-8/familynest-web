@@ -11,40 +11,45 @@ import { Sheet } from "../ui/Sheet/Sheet";
  * loading one coexist with the new one for a moment, and are then replaced:
  * so it waits for the address to be `/oggi` and for a single `main`, and
  * focuses again whenever the `main` element changes, until it has been stable.
- * It only moves the focus when it is free (nowhere, on the body, on the main it
- * set, or on an element no longer in the document): if the user has moved it
- * elsewhere, it stops and leaves it.
+ *
+ * It stops as soon as the user acts after the close (a key other than Escape,
+ * or a pointer press): from then on the focus is theirs. It does not look at
+ * `document.activeElement`: after the navigation the router itself may have
+ * focused something, and that is not a choice of the user.
  */
 function focusMainWhenReady() {
   let tries = 0;
   let stable = 0;
+  let userActed = false;
   let focused: HTMLElement | null = null;
+  const onKey = (event: KeyboardEvent) => {
+    if (event.key !== "Escape") userActed = true;
+  };
+  const onPointer = () => {
+    userActed = true;
+  };
+  document.addEventListener("keydown", onKey, true);
+  document.addEventListener("pointerdown", onPointer, true);
+  const stop = (id: number) => {
+    window.clearInterval(id);
+    document.removeEventListener("keydown", onKey, true);
+    document.removeEventListener("pointerdown", onPointer, true);
+  };
   const id = window.setInterval(() => {
     tries += 1;
+    if (userActed) return stop(id);
     const mains = document.querySelectorAll<HTMLElement>("main#contenuto");
     if (window.location.pathname === "/oggi" && mains.length === 1) {
       const main = mains[0]!;
-      const active = document.activeElement;
-      const free =
-        active === null ||
-        active === document.body ||
-        active === document.documentElement ||
-        active === focused ||
-        !document.contains(active);
-      if (!free) {
-        // the user moved the focus somewhere else: leave it there
-        window.clearInterval(id);
-        return;
-      }
-      if (main !== focused) {
+      if (main !== focused || document.activeElement !== main) {
+        if (main !== focused) stable = 0;
         main.focus();
         focused = main;
-        stable = 0;
       } else {
         stable += 1;
       }
     }
-    if (stable >= 5 || tries > 100) window.clearInterval(id);
+    if (stable >= 5 || tries > 100) stop(id);
   }, 50);
 }
 
