@@ -147,7 +147,9 @@ test.describe("Aggiungi sopra la pagina", () => {
       await expect(dialogOf(page)).toHaveCount(0, { timeout: 1000 });
     }).toPass();
     await expect(page).toHaveURL(/\/oggi$/);
-    await expect(page.locator("main#contenuto")).toBeFocused();
+    // wait for the real page (not the loading one), then the focus must be on its main
+    await expect(page.locator("main h1")).toHaveText("Oggi");
+    await expect(page.getByRole("main")).toBeFocused();
   });
 });
 
@@ -211,14 +213,16 @@ test.describe("Tasto N", () => {
 
     // with the focus in a text field: the letter is typed, nothing opens
     await page.goto("/casa/spesa");
-    const field = page.getByRole("textbox", { name: "Aggiungi alla spesa…" });
+    // the quick field is called "Cosa manca in casa?" while the list is empty
+    const field = page.getByRole("textbox", {
+      name: /^(Aggiungi alla spesa…|Cosa manca in casa\?)$/,
+    });
     await expect(field).toBeVisible();
     await openWithN(page);
     await closeWithEscape(page, /\/casa\/spesa$/);
-    expect(
-      await shortcutTakesN(page, 'input[aria-label="Aggiungi alla spesa…"]'),
-    ).toBe(false);
     await field.click();
+    await expect(field).toBeFocused();
+    expect(await shortcutTakesN(page, ":focus")).toBe(false);
     await page.keyboard.press("n");
     await expect(field).toHaveValue("n");
     await expect(dialogOf(page)).toHaveCount(0);
@@ -268,7 +272,9 @@ test.describe("Aggiungi sopra la pagina: altri casi", () => {
     await expect(page).toHaveURL(/\/aggiungi$/);
     await expect(page.locator("main h1")).toHaveText("Oggi");
     await closeWithEscape(page, /\/oggi$/);
-    await expect(page.locator("main#contenuto")).toBeFocused();
+    // wait for the real page (not the loading one), then the focus must be on its main
+    await expect(page.locator("main h1")).toHaveText("Oggi");
+    await expect(page.getByRole("main")).toBeFocused();
   });
 
   test("CA-5: aperta direttamente, Esc porta a /oggi con il fuoco sul main", async ({
@@ -279,7 +285,9 @@ test.describe("Aggiungi sopra la pagina: altri casi", () => {
     await page.goto("/aggiungi");
     await expect(dialogOf(page)).toBeVisible();
     await closeWithEscape(page, /\/oggi$/);
-    await expect(page.locator("main#contenuto")).toBeFocused();
+    // wait for the real page (not the loading one), then the focus must be on its main
+    await expect(page.locator("main h1")).toHaveText("Oggi");
+    await expect(page.getByRole("main")).toBeFocused();
   });
 
   test("con il foglio aperto, Ctrl+K porta alla ricerca e il foglio sparisce", async ({

@@ -488,6 +488,19 @@ test.describe("punto 8: Vai al contenuto", () => {
       ).toHaveCount(1);
       await expect(page.getByRole("main")).toHaveCount(1);
       await page.keyboard.press("Tab");
+      if (route === "/aggiungi") {
+        // opened directly it is a modal sheet over Today (#164): the focus is
+        // trapped inside it, so Tab never reaches the skip link behind it
+        await expect(
+          page.getByRole("dialog", { name: "Aggiungi" }),
+        ).toBeVisible();
+        expect(
+          await page.evaluate(
+            () => !!document.activeElement?.closest('[role="dialog"]'),
+          ),
+        ).toBe(true);
+        return;
+      }
       await expect(
         page.getByRole("link", { name: "Vai al contenuto" }),
       ).toBeFocused();
