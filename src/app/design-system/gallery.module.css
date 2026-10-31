@@ -86,3 +86,9 @@
 .strappoTrascinato {
   --strappo-avanzamento: calc(2 * var(--size-tocco));
 }
+
+/* Altezza fissa degli esempi di Calendario Giorno: quella della pagina vera
+   dipende dalla finestra, e la cattura a pagina intera la cambia. */
+.esempio :global(.vista-giorno) {
+  max-height: calc(8 * var(--size-ora-calendario));
+}
