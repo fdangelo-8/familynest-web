@@ -4187,6 +4187,15 @@ button.riga-lista {
   cursor: default;
 }
 
+/* Titolo del periodo: sotto 1024 px va a capo invece di sbordare (#169) */
+@media (max-width: 1023px) {
+  .periodo h1,
+  .periodo h2 {
+    white-space: normal;
+    min-width: 0;
+  }
+}
+
 /* =========================================================
    CORNICE DELL'APP (fondamenta layout e navigazione, #10)
    Il mockup mette tutto dentro una cornice fissa: qui le regole

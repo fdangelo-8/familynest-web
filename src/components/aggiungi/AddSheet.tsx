@@ -5,18 +5,31 @@ import { useState } from "react";
 import { useIsDesktop } from "../ui/overlay";
 import { Sheet } from "../ui/Sheet/Sheet";
 
-/** Moves the focus to the page's `main` once the new page has replaced the old one. */
+/**
+ * After a direct opening, moves the focus to the `main` of the new Today page.
+ * The old page's `main` (the one under the sheet) and, while streaming, the
+ * loading one coexist with the new one for a moment, and are then replaced:
+ * so it waits for the address to be `/oggi` and for a single `main`, and
+ * focuses again whenever the `main` element changes, until it has been stable.
+ */
 function focusMainWhenReady() {
   let tries = 0;
+  let stable = 0;
+  let focused: HTMLElement | null = null;
   const id = window.setInterval(() => {
     tries += 1;
-    const main = document.getElementById("contenuto");
-    if (window.location.pathname === "/oggi" && main) {
-      main.focus();
-      window.clearInterval(id);
-    } else if (tries > 40) {
-      window.clearInterval(id);
+    const mains = document.querySelectorAll<HTMLElement>("main#contenuto");
+    if (window.location.pathname === "/oggi" && mains.length === 1) {
+      const main = mains[0]!;
+      if (main !== focused) {
+        main.focus();
+        focused = main;
+        stable = 0;
+      } else {
+        stable += 1;
+      }
     }
+    if (stable >= 5 || tries > 100) window.clearInterval(id);
   }, 50);
 }
 
