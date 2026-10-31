@@ -275,6 +275,65 @@ test.describe("axe", () => {
   });
 });
 
+// --- names and descriptions ----------------------------------------------------
+
+test.describe("nomi e descrizioni", () => {
+  test("scheda: orario letto per esteso, indicazioni, freccia nascosta", async ({
+    page,
+  }, testInfo) => {
+    await open(page);
+    // The card is named by its title.
+    await expect(
+      page.getByRole("article", { name: "Nuoto Sofia" }),
+    ).toBeVisible();
+    // «17:00 – 18:30» is hidden from the readers, which get the sentence.
+    await expect(page.getByText("dalle 17:00 alle 18:30")).toBeAttached();
+    const directions = main(page).getByRole("link", {
+      name: "Indicazioni per Piscina comunale, Lissone, si apre in un'altra scheda",
+    });
+    await expect(directions).toHaveAttribute("target", "_blank");
+    expect(await directions.getAttribute("rel")).toContain("noopener");
+    if (!isMobile(testInfo.project.name)) {
+      // The arrow is text hidden from the readers: the name is only the words.
+      await expect(
+        main(page).getByRole("link", {
+          name: "Torna al calendario",
+          exact: true,
+        }),
+      ).toBeVisible();
+    }
+  });
+
+  test("«Chi lo vede»: la frase descrive il gruppo (live solo per l'autore)", async ({
+    page,
+  }) => {
+    await open(page, { row: CENA }, "2026-10-23");
+    await openForm(page);
+    const group = page.getByRole("group", { name: "Chi lo vede" });
+    const describedBy = await group.getAttribute("aria-describedby");
+    expect(describedBy).toBeTruthy();
+    const help = page.locator(`[id="${describedBy}"]`);
+    await expect(help).toHaveText("Lo vede tutto il Nest.");
+    await expect(help).toHaveAttribute("aria-live", "polite");
+    await group.getByRole("button", { name: "Occupato" }).click();
+    await expect(help).toHaveText("Gli altri vedono solo che sei occupato.");
+    await group.getByRole("button", { name: "Solo io" }).click();
+    await expect(help).toHaveText("Lo vedi solo tu e chi partecipa.");
+  });
+
+  test("«Chi lo vede» bloccato: nessuna regione live", async ({ page }) => {
+    await open(page, { row: RIUNIONE }, "2026-10-23");
+    await openForm(page);
+    const group = page.getByRole("group", { name: "Chi lo vede" });
+    const describedBy = await group.getAttribute("aria-describedby");
+    expect(describedBy).toBeTruthy();
+    await expect(page.locator(`[id="${describedBy}"]`)).not.toHaveAttribute(
+      "aria-live",
+      /.+/,
+    );
+  });
+});
+
 // --- keyboard -----------------------------------------------------------------
 
 /** What the focused element is, for the order of the focus. */
