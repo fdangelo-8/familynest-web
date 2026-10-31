@@ -3495,6 +3495,13 @@ button.riga-lista {
 .sep-4 {
   left: calc(100% / var(--persone) * 3);
 }
+
+/* =========================================================
+   STATI AGGIUNTI DAL DESIGNER (non disegnati nel mockup)
+   Solo token esistenti. Regole in più sulle stesse classi.
+   ========================================================= */
+
+/* Calendario Giorno (#26): colonne 5-10 e parti delle sovrapposizioni, stessa formula delle classi sopra */
 .persone-5 {
   --persone: 5;
 }
@@ -3606,11 +3613,6 @@ button.riga-lista {
   width: calc(100% / var(--persone) / 4 - var(--space-1));
   margin-left: calc(100% / var(--persone) / 4 * 3);
 }
-
-/* =========================================================
-   STATI AGGIUNTI DAL DESIGNER (non disegnati nel mockup)
-   Solo token esistenti. Regole in più sulle stesse classi.
-   ========================================================= */
 
 /* Cinque colori nuovi dei membri (#74): stesso schema delle classi sopra */
 .membro-lampone {
