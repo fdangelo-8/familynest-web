@@ -3759,7 +3759,6 @@ main[tabindex="-1"]:focus {
 .btn-secondary[aria-disabled="true"],
 .btn-chiaro[aria-disabled="true"],
 .btn-tenue[aria-disabled="true"],
-.btn-pericolo-pieno[aria-disabled="true"],
 .btn-link[aria-disabled="true"] {
   opacity: var(--opacity-disabilitato);
   cursor: not-allowed;
@@ -3799,7 +3798,12 @@ main[tabindex="-1"]:focus {
     background: var(--color-notte-2);
   }
   .btn-secondary:hover:not(:disabled, [aria-disabled="true"]),
-  .btn-icona:hover:not(:disabled, .btn-icona--carta, .btn-icona--piccolo),
+  .btn-icona:hover:not(
+      :disabled,
+      [aria-disabled="true"],
+      .btn-icona--carta,
+      .btn-icona--piccolo
+    ),
   .chip:hover:not(:disabled, [aria-pressed="true"], .chip--statico),
   .scelta:hover:not(:disabled) {
     background: var(--color-carta);
@@ -3837,7 +3841,12 @@ main[tabindex="-1"]:focus {
   background: var(--color-notte-2);
 }
 .btn-secondary:active:not(:disabled, [aria-disabled="true"]),
-.btn-icona:active:not(:disabled, .btn-icona--carta, .btn-icona--piccolo),
+.btn-icona:active:not(
+    :disabled,
+    [aria-disabled="true"],
+    .btn-icona--carta,
+    .btn-icona--piccolo
+  ),
 .scelta:active:not(:disabled) {
   background: var(--color-carta);
 }
@@ -4198,6 +4207,11 @@ button.riga-lista {
 }
 
 /* Dettaglio impegno (#19, #165) */
+/* Dialogo con un'azione in corso: i bottoni resi inattivi non cambiano aspetto */
+.dialogo__azioni[data-in-corso] [aria-disabled="true"] {
+  opacity: 1;
+  cursor: default;
+}
 /* Giorno della fine, sotto l'orario grande: «(martedì 20)» */
 .prossimo__ora-fine {
   display: block;

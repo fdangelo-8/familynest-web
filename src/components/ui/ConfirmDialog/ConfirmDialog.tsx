@@ -132,7 +132,10 @@ function ConfirmContent({
             {errorText}
           </Alert>
         ) : null}
-        <div className="dialogo__azioni">
+        <div
+          className="dialogo__azioni"
+          data-in-corso={busy !== null ? "" : undefined}
+        >
           {actions.map((action) => (
             <Button
               key={action.label}
