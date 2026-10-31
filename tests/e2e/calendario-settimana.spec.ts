@@ -72,9 +72,9 @@ const lensGroup = (page: Page) => page.getByRole("group", { name: LENS });
 const viewGroup = (page: Page) =>
   page.getByRole("group", { name: "Vista del calendario" });
 const nextWeek = (page: Page) =>
-  page.getByRole("button", { name: /^(Periodo|Settimana) successiv[oa]$/ });
+  page.getByRole("button", { name: /^Settimana successiva$/ });
 const previousWeek = (page: Page) =>
-  page.getByRole("button", { name: /^(Periodo|Settimana) precedente$/ });
+  page.getByRole("button", { name: /^Settimana precedente$/ });
 const mainNav = (page: Page) =>
   page.getByRole("navigation", { name: "Navigazione principale" });
 const retry = (page: Page) => page.getByRole("button", { name: "Riprova" });
@@ -87,9 +87,12 @@ const escapeRe = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 /** Name of a day of the strip: «Venerdì 23 ottobre, 1 impegno» (CA-9). */
 function tabName(label: string, count: number): RegExp {
-  const noun = count === 1 ? "impegno" : "impegni";
+  const amount =
+    count === 0
+      ? "nessun impegno"
+      : `${count} ${count === 1 ? "impegno" : "impegni"}`;
   return new RegExp(
-    `^${escapeRe(label)}(, oggi)?, ${count} ${noun}(, liberi insieme la sera)?$`,
+    `^${escapeRe(label)}(, oggi)?, ${amount}(, liberi insieme la sera)?$`,
   );
 }
 const tab = (page: Page, label: string, count: number) =>
@@ -356,6 +359,7 @@ test.describe("struttura", () => {
         await expect(strip.nth(index)).toContainText(name);
       }
       await expect(strip.nth(1)).toHaveAttribute("aria-selected", "true");
+      await expect(strip.nth(1)).not.toHaveAttribute("aria-current");
       await expect(
         page.getByRole("tab", { selected: true }),
         "uno solo selezionato",
@@ -365,14 +369,17 @@ test.describe("struttura", () => {
 
   only(
     "desktop",
-    "CA-4: su desktop «Mar, oggi», lente nel main e «Aggiungi»",
+    "CA-4: su desktop «Mar, oggi», lente nel main, «Aggiungi» solo nella navigazione",
     async ({ page, baseURL, bianchi }) => {
       await open(page, baseURL, bianchi);
       await expect(page.getByText("Mar, oggi")).toBeVisible();
       const main = page.getByRole("main");
       await expect(main.getByRole("group", { name: LENS })).toBeVisible();
+      // Decision of 31/10: no «Aggiungi» in the page header, only the one of
+      // the navigation at the top.
+      await expect(main.getByRole("link", { name: "Aggiungi" })).toHaveCount(0);
       await expect(
-        main.getByRole("link", { name: "Aggiungi" }),
+        mainNav(page).getByRole("link", { name: "Aggiungi" }),
       ).toHaveAttribute("href", "/aggiungi");
     },
   );
@@ -659,6 +666,8 @@ test.describe("elenco mobile e striscia", () => {
       endDay: TUE,
     });
     await open(page, baseURL, bianchi);
+    // The list starts from today: Monday is added by tapping its day.
+    await page.getByRole("tab", { name: /^Lunedì 19 ottobre/ }).click();
     const monday = dayRows(page, MON_H).filter({ hasText: "Cena lunga" });
     await expect(monday).toHaveCount(1);
     await expect(monday).toContainText("23:00");
@@ -751,13 +760,17 @@ test.describe("visibilità", () => {
     });
     const net = watchNetwork(page);
     await open(page, baseURL, bianchi, { lens: "nest" });
-    await expect(
-      page.getByRole("link", { name: /Riunione del lunedì/ }),
-    ).toBeVisible();
     if (isMobileProject()) {
+      await expect(tab(page, "Lunedì 19 ottobre", 1)).toBeVisible();
       await expect(tab(page, "Martedì 20 ottobre", 0)).toBeVisible();
       await expect(
-        daySection(page, TUE_H).getByText("0 impegni · oggi", { exact: true }),
+        daySection(page, TUE_H).getByText("niente in programma · oggi", {
+          exact: true,
+        }),
+      ).toBeVisible();
+    } else {
+      await expect(
+        page.getByRole("link", { name: /Riunione del lunedì/ }),
       ).toBeVisible();
     }
     await expectNoLeak(page, net, ["Prova privata"]);
@@ -827,24 +840,38 @@ test.describe("lente", () => {
     await expect(page.getByRole("link", { name: /Inglese/ })).toBeVisible();
   });
 
-  only(
-    "mobile",
-    "CA-20: con la lente «Io» l'«Occupato» di un altro è solo nel conteggio dei nascosti",
-    async ({ page, baseURL, bianchi }) => {
-      await createEvent(bianchi, "Paolo", {
-        title: "Impegno riservato",
-        day: TUE,
-        from: "9:00",
-        to: "15:00",
-        visibility: "busy",
-      });
-      await open(page, baseURL, bianchi);
-      await expect(daySection(page, TUE_H)).toContainText(
-        "1 impegno degli altri nascosto",
-      );
-      await expect(busyItem(page, "Paolo")).toHaveCount(0);
-    },
-  );
+  test("CA-20: con la lente «Io» e nessun impegno proprio c'è «Niente di tuo questa settimana»", async ({
+    page,
+    baseURL,
+    bianchi,
+  }) => {
+    await createEvent(bianchi, "Paolo", {
+      title: "Impegno riservato",
+      day: TUE,
+      from: "9:00",
+      to: "15:00",
+      visibility: "busy",
+    });
+    await open(page, baseURL, bianchi);
+    // Decision of 31/10: the empty state of the lens «Io» (designer §4.4).
+    await expect(
+      page.getByText("Niente di tuo questa settimana"),
+    ).toBeVisible();
+    await expect(
+      page.getByText(
+        /Gli altri del Nest ha 1 impegno: li vedi con la lente Nest\./,
+      ),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Aggiungi un impegno" }),
+    ).toHaveAttribute("href", "/aggiungi");
+    await expect(busyItem(page, "Paolo")).toHaveCount(0);
+    await page.getByRole("button", { name: "Mostra tutto il Nest" }).click();
+    await expect(
+      lensGroup(page).getByRole("button", { name: /Nest$/ }),
+    ).toHaveAttribute("aria-pressed", "true");
+    await expect(busyItem(page, "Paolo")).toBeVisible();
+  });
 });
 
 // ---------------------------------------------------------- liberi insieme
@@ -1151,7 +1178,8 @@ test.describe("griglia desktop e pannello", () => {
     const a = (await first.boundingBox())!;
     const b = (await second.boundingBox())!;
     expect(Math.abs(a.width - b.width)).toBeLessThanOrEqual(1);
-    expect(Math.abs(a.width - c.width / 2)).toBeLessThanOrEqual(2);
+    // ±4 px: the lanes of the mockup are 50% minus 4 px wide.
+    expect(Math.abs(a.width - c.width / 2)).toBeLessThanOrEqual(4);
     const [left, right] = a.x <= b.x ? [a, b] : [b, a];
     expect(left.x + left.width, "non si coprono").toBeLessThanOrEqual(
       right.x + 1,
@@ -1169,12 +1197,14 @@ test.describe("griglia desktop e pannello", () => {
       from: "19:30",
       to: "21:30",
       location: "Monza",
+      participants: ["Giulia", "Paolo", "Leo", "Anna"],
     });
     await open(page, baseURL, bianchi);
     const section = panel(page, "Impegno");
     await expect(section).toContainText("19:30");
     await expect(section).toContainText("Cena dai nonni");
     await expect(section).toContainText("Fino alle 21:30, Monza");
+    // The note shows the people (decision of 31/10): all of them = «Tutto il Nest».
     await expect(section).toContainText("Tutto il Nest");
     await expect(section.getByRole("link")).toHaveAttribute(
       "href",
@@ -1183,6 +1213,25 @@ test.describe("griglia desktop e pannello", () => {
     await expect(
       gridBlock(page, "Martedì 20 ottobre", "Cena dai nonni"),
     ).toHaveAttribute("aria-current", "true");
+  });
+
+  test("CA-30: la nota del pannello elenca le persone", async ({
+    page,
+    baseURL,
+    bianchi,
+  }) => {
+    await createEvent(bianchi, "Giulia", {
+      title: "Cena dai nonni",
+      day: TUE,
+      from: "19:30",
+      to: "21:30",
+      participants: ["Giulia", "Paolo"],
+    });
+    await open(page, baseURL, bianchi);
+    const section = panel(page, "Impegno");
+    await expect(section).toContainText("Cena dai nonni");
+    await expect(section).toContainText("Giulia e Paolo");
+    await expect(section).not.toContainText("Tutto il Nest");
   });
 
   test("CA-31: il clic su un blocco lo sceglie, «Occupato» e «Liberi insieme» no", async ({
@@ -1293,8 +1342,14 @@ test.describe("stato vuoto, caricamento, errori", () => {
       page.getByText("Questa settimana è ancora vuota"),
     ).toBeVisible();
     await expect(
-      page.getByRole("link", { name: "Aggiungi a mano" }),
+      page.getByRole("link", { name: "Aggiungi un impegno" }),
     ).toHaveAttribute("href", "/aggiungi");
+    // Provisional text until Calendari collegati (#34), decision of 31/10.
+    await expect(
+      page.getByText(
+        "Gli impegni che aggiungi compaiono qui, giorno per giorno.",
+      ),
+    ).toBeVisible();
     await expect(
       page.getByRole("link", { name: "Collega il calendario" }),
     ).toHaveCount(0);
@@ -1385,6 +1440,16 @@ test.describe("stato vuoto, caricamento, errori", () => {
     ).toBeVisible();
     await page.context().setOffline(true);
     await nextWeek(page).click();
+    // A week never read: its own notice, the arrows stay (decision of 31/10).
+    await expect(h1(page)).toHaveText("26 ottobre – 1 novembre");
+    await expect(
+      alerts(page).filter({
+        hasText:
+          "Non riusciamo a caricare questa settimana. Controlla la connessione e riprova.",
+      }),
+    ).toBeVisible();
+    await expect(previousWeek(page)).toBeVisible();
+    await expect(nextWeek(page)).toBeVisible();
     await previousWeek(page).click();
     await expect(h1(page)).toHaveText("19 – 25 ottobre");
   }
