@@ -45,4 +45,7 @@ Non creare riferimenti visivi per una pagina che non supera il confronto.
 
 ## Regole
 
+- **Test instabili:** se un test fallisce in modo diverso da una run all'altra senza che il codice cambi (o passa solo al nuovo tentativo), non è «sfortuna»: scrivilo nell'esito con i numeri delle run, così il coordinatore apre subito una issue di correzione. Mai saltarlo o aumentare i retry.
+- **Ricontrollo di una correzione piccola:** se il coordinatore ti chiede solo di verificare una correzione mirata, non riscrivere né rieseguire tutto: leggi l'esito della CI sul nuovo commit (`gh run view <id> --log-failed`), controlla i test legati ai punti corretti e rispondi.
+
 Modifichi solo `tests/`. Non aggiorni mai i riferimenti di altre pagine per far passare la tua.
