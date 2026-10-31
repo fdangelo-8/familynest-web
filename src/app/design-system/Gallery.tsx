@@ -94,7 +94,7 @@ export function Gallery() {
       <ListSection rowCards={rowCards} />
       <OverlaysSection />
       <StatesSection />
-      {null && <DayViewSection />}
+      {process.env.NEXT_PUBLIC_NEVER_SET && <DayViewSection />}
     </main>
   );
 }
