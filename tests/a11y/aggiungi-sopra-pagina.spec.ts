@@ -118,7 +118,11 @@ test.describe("Aggiungi sopra la pagina", () => {
     await page.keyboard.press("Escape");
     await expect(dialogOf(page)).toHaveCount(0);
     await expect(page).toHaveURL(/\/oggi$/);
-    await expect(page.locator("main#contenuto")).toBeFocused();
+    // Loading and the page coexist for a moment: wait for the real Today page.
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Oggi" }),
+    ).toBeVisible();
+    await expect(page.getByRole("main")).toBeFocused();
   });
 
   test("area di tocco della X almeno 44 px", async ({ page }) => {
