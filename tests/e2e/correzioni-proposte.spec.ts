@@ -106,6 +106,20 @@ async function touchFailures(page: Page): Promise<string[]> {
       )
         .trim()
         .slice(0, 30)}" ${Math.round(r.width)}x${Math.round(r.height)}`;
+      // The week arrows of /calendario sit side by side: their 44 px areas
+      // (the ::before) overlap in the middle, so the horizontal check looks
+      // only at the outer edge (LEZIONI: elementFromPoint, never the box).
+      const arrow = /^Settimana (precedente|successiva)$/.exec(
+        el.getAttribute("aria-label") ?? "",
+      );
+      if (arrow) {
+        const outer = arrow[1] === "precedente" ? cx - 21.5 : cx + 21.5;
+        if (!(hit(cx, cy - 21.5) && hit(cx, cy + 21.5))) {
+          failures.push(`${label}: area verticale < 44`);
+        }
+        if (!hit(outer, cy)) failures.push(`${label}: area orizzontale < 44`);
+        continue;
+      }
       if (r.height < 43.5 && !(hit(cx, cy - 21) && hit(cx, cy + 21))) {
         failures.push(`${label}: area verticale < 44`);
       }
