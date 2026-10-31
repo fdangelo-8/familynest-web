@@ -1656,7 +1656,7 @@ function DayViewSection() {
   return (
     <Section id="giorno-persone" title="Calendario Giorno, chi è dove">
       <Example caption="giorno-persone · 6 colonne (--larga)">
-        <DayGrid columns={6} wide>
+        <DayGrid columns={6}>
           <a
             className="blocco-orario da-9-00 per-1 col-1 largo-1"
             href="#giorno-persone"
