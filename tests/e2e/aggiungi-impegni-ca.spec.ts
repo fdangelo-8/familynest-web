@@ -8,6 +8,7 @@ import {
   dayRead,
   dialogOf,
   eventsOf,
+  failMembersList,
   fieldOf,
   labelsOf,
   listedFor,
@@ -302,12 +303,7 @@ test.describe("Aggiungi · Impegni · caricamento ed errori", () => {
   }) => {
     // Only the reading of the list of members (it asks for the names) fails:
     // the reading of the own member (`select=id`) must keep working.
-    await page.route(
-      (url) =>
-        url.pathname.endsWith("/rest/v1/household_members") &&
-        (url.searchParams.get("select") ?? "").includes("name"),
-      (route) => route.abort("failed"),
-    );
+    await failMembersList(page);
     await openAdd(page, baseURL, casa, "Marco");
     const dialog = dialogOf(page);
 
@@ -344,12 +340,7 @@ test.describe("Aggiungi · Impegni · caricamento ed errori", () => {
     casa,
   }) => {
     let failing = true;
-    await page.route(
-      (url) =>
-        url.pathname.endsWith("/rest/v1/household_members") &&
-        (url.searchParams.get("select") ?? "").includes("name"),
-      (route) => (failing ? route.abort("failed") : route.continue()),
-    );
+    await failMembersList(page, () => failing);
     await openAdd(page, baseURL, casa, "Marco");
     const dialog = dialogOf(page);
     await expect(alertsIn(dialog)).toContainText(MEMBERS_FAILED);

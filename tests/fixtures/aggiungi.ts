@@ -1,5 +1,12 @@
 import { expect, type Locator, type Page } from "@playwright/test";
-import { at1552, pauseClock, setClock, type CasaNest, type Day } from "./casa";
+import {
+  at1552,
+  CORS,
+  pauseClock,
+  setClock,
+  type CasaNest,
+  type Day,
+} from "./casa";
 
 // Helpers for the tests of Aggiungi · Impegni (#20, phase 1).
 //
@@ -253,4 +260,34 @@ export function plain(text: string): string {
   } catch {
     return text;
   }
+}
+
+/**
+ * Makes the reading of the LIST of the Nest members (the one that asks for the
+ * names) fail with a 500 while `failing()` is true. The reading of the own
+ * member (`select=id`, needed to save) is never touched. A 500 is used, not an
+ * aborted request: the data client retries a GET that never got an answer
+ * (1 s, 2 s, 4 s), so the page would show the error only after about 7 s.
+ */
+export async function failMembersList(
+  page: Page,
+  failing: () => boolean = () => true,
+): Promise<void> {
+  await page.route(
+    (url) =>
+      url.pathname.endsWith("/rest/v1/household_members") &&
+      (url.searchParams.get("select") ?? "").includes("name"),
+    async (route) => {
+      if (!failing() || route.request().method() === "OPTIONS") {
+        await route.continue();
+        return;
+      }
+      await route.fulfill({
+        status: 500,
+        contentType: "application/json",
+        headers: CORS,
+        body: JSON.stringify({ code: "XX000", message: "boom" }),
+      });
+    },
+  );
 }
