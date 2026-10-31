@@ -9,6 +9,7 @@ import { IconButton } from "@/components/ui/IconButton/IconButton";
 import { Lens, useLens } from "@/components/ui/Lens/Lens";
 import { useIsDesktop } from "@/components/ui/overlay";
 import { ErrorMain } from "@/components/ui/AppFrame/ErrorMain";
+import { VisuallyHidden } from "@/components/ui/VisuallyHidden/VisuallyHidden";
 import { SectionSwitcher } from "@/components/ui/SegmentedControl/SectionSwitcher";
 import { Skeleton, SkeletonGroup } from "@/components/ui/Skeleton/Skeleton";
 import {
@@ -87,16 +88,19 @@ function LoadingBody({ desktop }: { desktop: boolean }) {
     );
   }
   return (
-    <div className="colonna">
-      <SkeletonGroup>
+    <div className="colonna" aria-busy="true">
+      <VisuallyHidden>Caricamento in corso</VisuallyHidden>
+      <div className="gruppo-skeleton" aria-hidden="true">
         <Skeleton shape="testo-corto" />
         <Skeleton shape="riga" />
         <Skeleton shape="riga" />
         <Skeleton shape="riga" />
+      </div>
+      <div className="gruppo-skeleton" aria-hidden="true">
         <Skeleton shape="testo-corto" />
         <Skeleton shape="riga" />
         <Skeleton shape="riga" />
-      </SkeletonGroup>
+      </div>
     </div>
   );
 }
@@ -198,7 +202,10 @@ function WeekContent({ nowMs }: { nowMs: number }) {
     startOfDay(addDaysToDayKey(weekKey, 6)),
   );
   const showAlert = failed && entry !== undefined;
-  const showPageError = failed && entry === undefined;
+  // No reading ever worked on this page: the whole page is in error. After
+  // one worked, a week that cannot be read gets its own notice.
+  const showPageError = failed && entry === undefined && roster === null;
+  const showWeekError = failed && entry === undefined && roster !== null;
   const loading = !failed && entry === undefined;
   const everEmpty = view !== null && !view.hasAnyEvent;
   const adultsCount = members.filter((m) => m.kind === "adult").length;
@@ -238,7 +245,7 @@ function WeekContent({ nowMs }: { nowMs: number }) {
   // focus would be lost, so it goes to the title.
   const hadRetry = useRef(false);
   useEffect(() => {
-    const hasRetry = showAlert || showPageError;
+    const hasRetry = showAlert || showPageError || showWeekError;
     if (
       hadRetry.current &&
       !hasRetry &&
@@ -247,7 +254,7 @@ function WeekContent({ nowMs }: { nowMs: number }) {
       headingRef.current?.focus();
     }
     hadRetry.current = hasRetry;
-  }, [showAlert, showPageError]);
+  }, [showAlert, showPageError, showWeekError]);
 
   const alert = showAlert ? (
     <Alert
@@ -261,6 +268,21 @@ function WeekContent({ nowMs }: { nowMs: number }) {
     >
       Non riusciamo ad aggiornare il calendario. Vedi gli impegni salvati alle{" "}
       {formatTime(entry?.readAt ?? nowMs)}.
+    </Alert>
+  ) : null;
+
+  const weekError = showWeekError ? (
+    <Alert
+      variant="errore"
+      icon="wifi-off"
+      action={
+        <Button variant="link" loading={retrying} onClick={retry}>
+          Riprova
+        </Button>
+      }
+    >
+      Non riusciamo a caricare questa settimana. Controlla la connessione e
+      riprova.
     </Alert>
   ) : null;
 
@@ -367,6 +389,7 @@ function WeekContent({ nowMs }: { nowMs: number }) {
         />
         {alert}
         {loading ? <LoadingBody desktop={false} /> : null}
+        {weekError}
         {view && showEmpty ? emptyState : null}
         {view && !showEmpty ? (
           <DayList
@@ -415,6 +438,12 @@ function WeekContent({ nowMs }: { nowMs: number }) {
         </div>
       </div>
       {loading ? <LoadingBody desktop /> : null}
+      {weekError ? (
+        <div className="colonne colonne--pannello">
+          <div className="colonna">{weekError}</div>
+          <aside className="colonna" />
+        </div>
+      ) : null}
       {view ? (
         <div className="colonne colonne--pannello">
           <div className="colonna">

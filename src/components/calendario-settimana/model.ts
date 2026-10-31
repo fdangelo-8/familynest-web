@@ -71,11 +71,12 @@ export function tabLabel(
   day: CalendarDay,
   count: number | null,
   hasEvening: boolean,
+  isToday = false,
 ): string {
   const base = formatLongDay(day.start);
   if (count === null) return base;
   const amount = count === 0 ? "nessun impegno" : formatImpegni(count);
-  return `${base}, ${amount}${hasEvening ? ", liberi insieme la sera" : ""}`;
+  return `${base}${isToday ? ", oggi" : ""}, ${amount}${hasEvening ? ", liberi insieme la sera" : ""}`;
 }
 
 function escapeRegExp(text: string): string {
@@ -129,9 +130,9 @@ export function eventInfo(
   const parts: string[] = [];
   const participants = participantsOf(event, members);
   const iAmIn = meId !== null && event.memberIds.includes(meId);
-  const othersOnly = event.memberIds.every((id) => id === meId);
+  const onlyMeInside = event.memberIds.every((id) => id === meId);
 
-  if (event.visibility === "private" && othersOnly) {
+  if (event.visibility === "private" && onlyMeInside) {
     parts.push("Solo tu");
   } else if (!iAmIn) {
     const names = participants
@@ -173,13 +174,6 @@ export function peopleTag(
 
 /* ---------- Days ---------- */
 
-export type EveningInfo = {
-  evening: FreeEvening;
-  /** `Tu e Laura, fino a fine serata` pieces */
-  otherNames: string[];
-  adults: Member[];
-};
-
 export type DayView = {
   day: CalendarDay;
   isToday: boolean;
@@ -195,8 +189,7 @@ export type WeekView = {
   days: DayView[];
   /** Any visible event in the week, with any lens */
   hasAnyEvent: boolean;
-  /** Events of the others that the lens «Io» hides, in the whole week */
-  adults: Member[];
+  /** «Liberi insieme» of the week, in the order of the days */
   evenings: FreeEvening[];
 };
 
@@ -220,7 +213,6 @@ export function buildWeekView(input: {
   return {
     weekKey,
     hasAnyEvent: events.length > 0,
-    adults,
     evenings: days.flatMap((day) => {
       const evening = evenings.get(day.key);
       return evening ? [evening] : [];
@@ -537,4 +529,19 @@ export function dayHeading(view: DayView, weekKey: string): string {
   return formatDayNumber(view.day.start, {
     withMonth: view.day.key.slice(5, 7) !== weekKey.slice(5, 7),
   });
+}
+
+/** People of the panel note: `Tutto il Nest`, `Laura e Tommaso`, `Marco, Laura, Sofia e altri 2`. */
+export function panelPeople(
+  event: KeyedFullEvent,
+  people: readonly Member[],
+  members: readonly Member[],
+): string {
+  if (event.visibility === "private") return "Solo tu";
+  if (peopleTag(people, members) === "Tutto il Nest") return "Tutto il Nest";
+  const names = people.map((member) => member.name);
+  if (names.length > MAX_AVATARS) {
+    return `${names.slice(0, 3).join(", ")} e altri ${names.length - 3}`;
+  }
+  return joinNames(names);
 }

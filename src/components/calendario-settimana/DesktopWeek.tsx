@@ -14,7 +14,6 @@ import { Icon } from "@/components/ui/Icon/Icon";
 import { VisuallyHidden } from "@/components/ui/VisuallyHidden/VisuallyHidden";
 import {
   BUSY_TITLE,
-  VISIBILITY_LABELS,
   formatBusyLabel,
   formatFreeEveningWindow,
 } from "@/lib/calendar";
@@ -33,6 +32,7 @@ import {
   endInDay,
   hoursSinceGridStart,
   layoutDay,
+  panelPeople,
   participantsInNestOrder,
   startInDay,
   type Block,
@@ -48,7 +48,7 @@ export type Selection = { event: KeyedFullEvent; dayKey: string };
 export type OtherGroup = { dayKey: string; blockKey: string };
 
 const HOURS = Array.from({ length: 15 }, (_, index) => `${8 + index}:00`);
-const SHORT_BLOCK_MINUTES = 45;
+const SHORT_BLOCK_MINUTES = 30;
 
 /** The red line of the current time in the column of today. */
 function NowLine({ hours, label }: { hours: number; label: string }) {
@@ -170,7 +170,7 @@ function BlockView({
       }}
     >
       <span className="blocco-orario__titolo">{full.title}</span>
-      {minutes >= SHORT_BLOCK_MINUTES ? (
+      {minutes > SHORT_BLOCK_MINUTES ? (
         <span className="blocco-orario__ora">{range}</span>
       ) : null}
       {people.length > 0 && people.length <= MAX_AVATARS ? (
@@ -230,7 +230,7 @@ export function WeekGrid({
         );
       })}
       <div className="colonna-ore" aria-hidden="true">
-        {HOURS.slice(0, 15).map((hour) => (
+        {HOURS.map((hour) => (
           <span key={hour} className="colonna-ore__ora">
             {hour}
           </span>
@@ -333,7 +333,7 @@ export function EventPanel({
           </span>
         </span>
         <span className="prossimo__nota">
-          <span>{VISIBILITY_LABELS[event.visibility]}</span>
+          <span>{panelPeople(event, people, members)}</span>
           {people.length > 0 && people.length <= MAX_AVATARS ? (
             <span
               className="avatar-gruppo"

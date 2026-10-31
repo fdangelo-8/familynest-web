@@ -69,9 +69,13 @@ export function DayStrip({
               selected && "is-selezionato",
             )}
             aria-selected={selected}
-            aria-current={day.isToday ? "date" : undefined}
             tabIndex={selected ? 0 : -1}
-            aria-label={tabLabel(day.day, count, day.evening !== null)}
+            aria-label={tabLabel(
+              day.day,
+              count,
+              day.evening !== null,
+              day.isToday,
+            )}
             onClick={() => onSelect(day.day.key)}
           >
             <span className="striscia-giorni__nome">
