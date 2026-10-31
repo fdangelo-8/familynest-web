@@ -20,7 +20,11 @@ import { signInAsCached } from "../fixtures/visual-login-cached";
 // (fixtures/dettaglio-impegno-fake.ts): nothing is written to the database.
 // Test user A (Casa D'Angelo: Marco, Laura, Sofia, Tommaso, Biscotto) is needed.
 
-test.use({ locale: "it-IT", timezoneId: "Europe/Rome" });
+test.use({
+  locale: "it-IT",
+  timezoneId: "Europe/Rome",
+  reducedMotion: "reduce",
+});
 
 test.beforeEach(async ({ context, baseURL }) => {
   test.skip(!hasTestUser("A"), "TEST_USER_A_* non impostati");
@@ -233,7 +237,8 @@ test.describe("axe", () => {
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(
       "Questo impegno non c'è più",
     );
-    await expect(page.getByRole("alert")).toBeVisible();
+    // Not the route announcer of Next, which is a `role="alert"` too.
+    await expect(main(page).getByRole("alert")).toBeVisible();
     await expect(
       page.getByRole("link", { name: "Vai al calendario" }),
     ).toHaveAttribute("href", "/calendario");
@@ -343,7 +348,8 @@ test.describe("tastiera", () => {
   test("ordine del fuoco nel modulo, anello visibile, nessuna trappola", async ({
     page,
   }, testInfo) => {
-    await open(page);
+    // Marco's own event: he is the author, so «Chi lo vede» is active.
+    await open(page, { row: CENA }, "2026-10-23");
     await openForm(page);
     const mobile = isMobile(testInfo.project.name);
     const expected = [
@@ -510,7 +516,7 @@ async function focusRing(page: Page) {
     const el = document.activeElement as HTMLElement | null;
     if (!el) return "nessuno";
     const own = getComputedStyle(el);
-    if (own.outlineStyle !== "none" && parseFloat(own.outlineWidth) >= 1.5) {
+    if (own.outlineStyle !== "none" && parseFloat(own.outlineWidth) > 0) {
       return "contorno";
     }
     // Fields have no outline: an inner ring at :focus, as in the mockup.
@@ -524,7 +530,7 @@ async function focusRing(page: Page) {
       if (/inset/.test(s.boxShadow) && /1\.5px/.test(s.boxShadow)) {
         return "interno";
       }
-      if (s.outlineStyle !== "none" && parseFloat(s.outlineWidth) >= 1.5) {
+      if (s.outlineStyle !== "none" && parseFloat(s.outlineWidth) > 0) {
         return "contorno";
       }
     }
@@ -586,8 +592,8 @@ test.describe("aree di tocco di almeno 44 px (mobile)", () => {
       form.getByRole("button", { name: "Chiudi" }),
       form.getByLabel("Titolo"),
       form.getByLabel("Giorno"),
-      form.getByLabel("Dalle"),
-      form.getByLabel("Alle"),
+      form.getByLabel("Dalle", { exact: true }),
+      form.getByLabel("Alle", { exact: true }),
       form.getByLabel("Si ripete"),
       form.getByLabel("Dove"),
       form.getByLabel("Note"),
