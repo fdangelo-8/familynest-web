@@ -11,6 +11,9 @@ import { Sheet } from "../ui/Sheet/Sheet";
  * loading one coexist with the new one for a moment, and are then replaced:
  * so it waits for the address to be `/oggi` and for a single `main`, and
  * focuses again whenever the `main` element changes, until it has been stable.
+ * It only moves the focus when it is free (nowhere, on the body, on the main it
+ * set, or on an element no longer in the document): if the user has moved it
+ * elsewhere, it stops and leaves it.
  */
 function focusMainWhenReady() {
   let tries = 0;
@@ -21,6 +24,18 @@ function focusMainWhenReady() {
     const mains = document.querySelectorAll<HTMLElement>("main#contenuto");
     if (window.location.pathname === "/oggi" && mains.length === 1) {
       const main = mains[0]!;
+      const active = document.activeElement;
+      const free =
+        active === null ||
+        active === document.body ||
+        active === document.documentElement ||
+        active === focused ||
+        !document.contains(active);
+      if (!free) {
+        // the user moved the focus somewhere else: leave it there
+        window.clearInterval(id);
+        return;
+      }
       if (main !== focused) {
         main.focus();
         focused = main;
