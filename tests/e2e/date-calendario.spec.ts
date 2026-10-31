@@ -808,6 +808,8 @@ test.describe("stati CSS", () => {
   });
 });
 
+// /impegni/[id] has no placeholder any more: the page of issue #19 replaces it
+// (its tests are in dettaglio-impegno*.spec.ts).
 test.describe("segnaposto del calendario", () => {
   test("voci di PLACEHOLDERS", () => {
     for (const key of [
@@ -826,7 +828,6 @@ test.describe("segnaposto del calendario", () => {
   for (const [dir, key] of [
     ["calendario/giorno", "calendario-giorno"],
     ["calendario/mese", "calendario-mese"],
-    ["impegni/[id]", "impegno"],
   ] as const) {
     test(`la pagina ${dir} chiama requireNest e mostra il segnaposto`, () => {
       const file = `src/app/(app)/${dir}/page.tsx`;
@@ -843,7 +844,6 @@ test.describe("segnaposto con l'utente (Supabase locale)", () => {
   for (const route of [
     "/calendario/giorno?giorno=2026-10-22",
     "/calendario/mese?mese=2026-10",
-    "/impegni/00000000-0000-0000-0000-000000000000",
   ]) {
     test(`${route}: «In arrivo» con la voce Calendario attiva`, async ({
       page,

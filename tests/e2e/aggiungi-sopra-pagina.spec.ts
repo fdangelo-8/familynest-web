@@ -305,9 +305,19 @@ test.describe("Aggiungi sopra la pagina: altri casi", () => {
     test.skip(testInfo.project.name !== "desktop", "Scorciatoia da tastiera");
     await openPage(page, baseURL, "/calendario");
     await openAddOverPage(page, "/calendario");
+    const dialog = dialogOf(page);
+    // The phrase field has the focus: while typing, Ctrl+K does nothing.
+    await expect(
+      dialog.getByRole("textbox", { name: "Cosa vuoi aggiungere?" }),
+    ).toBeFocused();
+    await page.keyboard.press("Control+k");
+    await expect(dialog).toBeVisible();
+    await expect(page).toHaveURL(/\/aggiungi$/);
+    // Focus on a non-text element of the sheet: Ctrl+K opens the search.
+    await dialog.getByRole("button", { name: "Chiudi" }).focus();
     await page.keyboard.press("Control+k");
     await expect(page).toHaveURL(/\/ricerca$/);
-    await expect(dialogOf(page)).toHaveCount(0);
+    await expect(dialog).toHaveCount(0);
   });
 
   test("isolamento: l'utente del nucleo B apre Aggiungi sopra Oggi, la sua pagina", async ({

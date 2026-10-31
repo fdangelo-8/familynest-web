@@ -54,6 +54,7 @@ test.describe("cornice dell'app (utente A)", () => {
   test("«Vai al contenuto» con il fuoco", async ({ page }) => {
     await page.goto("/calendario");
     await expect(page.getByRole("main")).toBeVisible();
+    await expect(page.locator('[aria-busy="true"]')).toHaveCount(0);
     await settle(page);
     await page.keyboard.press("Tab");
     await expect(
@@ -67,6 +68,7 @@ test.describe("cornice dell'app (utente A)", () => {
     await page.setViewportSize({ width: 360, height: 800 });
     await page.goto("/calendario");
     await expect(page.getByRole("main")).toBeVisible();
+    await expect(page.locator('[aria-busy="true"]')).toHaveCount(0);
     await settle(page);
     await expect(page).toHaveScreenshot("calendario-360.png");
   });
