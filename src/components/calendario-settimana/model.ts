@@ -491,6 +491,8 @@ export function blockLabel(
   event: KeyedFullEvent,
   day: CalendarDay,
   members: readonly Member[],
+  /** The time range as written in the block, if it is shown */
+  shownRange?: string,
 ): string {
   const participants = participantsInNestOrder(event, members);
   let who = "";
@@ -503,7 +505,7 @@ export function blockLabel(
   } else if (participants.length > 0) {
     who = `, con ${joinNames(participants.map((member) => member.name))}`;
   }
-  return `${event.title}, ${formatLongDay(day.start, { capitalized: false })}, dalle ${formatTime(startInDay(event, day))} alle ${formatTime(endInDay(event, day))}${who}${event.visibility === "private" ? ", visibile solo a te" : ""}`;
+  return `${event.title}${shownRange ? ` ${shownRange}` : ""}, ${formatLongDay(day.start, { capitalized: false })}, dalle ${formatTime(startInDay(event, day))} alle ${formatTime(endInDay(event, day))}${who}${event.visibility === "private" ? ", visibile solo a te" : ""}`;
 }
 
 /** `Settimana dal 19 al 25 ottobre` / `Settimana dal 26 ottobre all'1 novembre`. */

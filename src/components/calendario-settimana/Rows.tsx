@@ -82,7 +82,6 @@ export function DayRow({
           "riga-evento",
           "riga-evento--insieme",
           "riga-evento--compatta",
-          past && "riga-evento--passato",
         )}
         data-passato={past ? "true" : undefined}
       >
@@ -113,7 +112,6 @@ export function DayRow({
           "riga-evento",
           "riga-evento--occupato",
           "riga-evento--compatta",
-          past && "riga-evento--passato",
         )}
         role="group"
         aria-label={`${formatBusyLabel(name)}, dalle ${start} alle ${formatTime(endInDay(event, day))}`}
@@ -138,16 +136,14 @@ export function DayRow({
   return (
     <Link
       href={`/impegni/${full.id}`}
-      className={cx(
-        "riga-evento",
-        "riga-evento--compatta",
-        past && "riga-evento--passato",
-      )}
+      className={cx("riga-evento", "riga-evento--compatta")}
       data-passato={past ? "true" : undefined}
     >
-      <span className="riga-evento__ora">{start}</span>
+      <span className={cx("riga-evento__ora", past && "t-secondario")}>
+        {start}
+      </span>
       <span className="riga-evento__testo">
-        <span className="riga-evento__titolo">
+        <span className={cx("riga-evento__titolo", past && "t-secondario")}>
           {full.title}
           {full.visibility === "private" ? (
             <>

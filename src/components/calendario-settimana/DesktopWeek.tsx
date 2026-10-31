@@ -155,7 +155,12 @@ function BlockView({
     <a
       href={`/impegni/${full.id}`}
       className={cx(classes, selected && "blocco-orario--attivo")}
-      aria-label={blockLabel(full, view.day, members)}
+      aria-label={blockLabel(
+        full,
+        view.day,
+        members,
+        minutes > SHORT_BLOCK_MINUTES ? range : undefined,
+      )}
       aria-current={selected ? "true" : undefined}
       onClick={(clickEvent) => {
         if (!isPlainClick(clickEvent)) return;
