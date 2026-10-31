@@ -99,3 +99,8 @@
 .esempio :global(.vista-giorno .giorno-persone__testa) {
   position: static;
 }
+
+.esempio :global(.vista-giorno) {
+  overflow: visible;
+  height: auto;
+}
