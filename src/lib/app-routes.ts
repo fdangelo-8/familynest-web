@@ -142,6 +142,11 @@ export function getBarConfig(pathname: string): BarConfig {
   ) {
     return { kind: "detail", fallback: "/nest" };
   }
+  // «Indietro» of an event goes to the calendar when there is no previous
+  // page of the app (#19).
+  if (matchesPrefix(pathname, "/impegni")) {
+    return { kind: "detail", fallback: "/calendario" };
+  }
   return { kind: "detail", fallback: "/oggi" };
 }
 

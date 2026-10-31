@@ -1313,6 +1313,7 @@ function OverlaysSection() {
                 onClick: () => setNestedDeleted((n) => n + 1),
               },
             ]}
+            aboveSheet
             data-testid="dialogo-annidato"
           />
         </Example>

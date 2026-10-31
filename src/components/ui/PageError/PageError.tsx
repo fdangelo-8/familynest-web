@@ -4,8 +4,7 @@ import { cx } from "../cx";
 import { Button } from "../Button/Button";
 import { Icon, type IconName } from "../Icon/Icon";
 
-export type PageErrorProps = {
-  onRetry: () => void;
+type PageErrorBase = {
   title?: string;
   text?: string;
   /** Icon in the circle (default `wifi-off`) */
@@ -20,9 +19,20 @@ export type PageErrorProps = {
   "data-testid"?: string;
 };
 
-/** Whole-page error (`.errore-pagina`) with a "Riprova" button. */
+export type PageErrorProps = PageErrorBase &
+  (
+    | { onRetry: () => void; action?: undefined }
+    /** A link in place of "Riprova", for errors where retrying makes no sense */
+    | {
+        action: { label: string; href: string; icon?: IconName };
+        onRetry?: undefined;
+      }
+  );
+
+/** Whole-page error (`.errore-pagina`) with a "Riprova" button, or with a link given as `action`. */
 export function PageError({
   onRetry,
+  action,
   title = "Questa pagina non si è caricata",
   text = "Controlla la connessione e riprova. Se il problema resta, torna a Oggi.",
   icon = "wifi-off",
@@ -44,15 +54,26 @@ export function PageError({
       </span>
       <Heading className="errore-pagina__titolo">{title}</Heading>
       <p className="errore-pagina__testo">{text}</p>
-      <Button
-        variant="secondary"
-        small
-        icon="rotate-cw"
-        loading={retrying}
-        onClick={onRetry}
-      >
-        Riprova
-      </Button>
+      {action ? (
+        <Button
+          variant="secondary"
+          small
+          icon={action.icon ?? "rotate-cw"}
+          href={action.href}
+        >
+          {action.label}
+        </Button>
+      ) : (
+        <Button
+          variant="secondary"
+          small
+          icon="rotate-cw"
+          loading={retrying}
+          onClick={onRetry}
+        >
+          Riprova
+        </Button>
+      )}
       {exit ? (
         <Button variant="link" href={exit.href}>
           {exit.label}

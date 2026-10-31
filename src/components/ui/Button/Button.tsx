@@ -39,6 +39,8 @@ export type ButtonProps = {
   icon?: IconName;
   loading?: boolean;
   disabled?: boolean;
+  /** Inactive but still focusable and announced (`aria-disabled`), e.g. while another action runs */
+  inactive?: boolean;
   /** With `href` the button is a link */
   href?: string;
   type?: "button" | "submit";
@@ -58,6 +60,7 @@ export function Button({
   icon,
   loading = false,
   disabled = false,
+  inactive: inactiveProp = false,
   href,
   type = "button",
   form,
@@ -66,7 +69,7 @@ export function Button({
   children,
   "data-testid": testId,
 }: ButtonProps) {
-  const inactive = disabled || loading;
+  const inactive = disabled || loading || inactiveProp;
   const classes = cx(
     VARIANT_CLASS[variant],
     full && "btn--pieno",
@@ -119,7 +122,7 @@ export function Button({
       className={classes}
       disabled={disabled}
       aria-busy={loading || undefined}
-      aria-disabled={loading || undefined}
+      aria-disabled={loading || inactiveProp || undefined}
       onClick={handleClick}
       data-testid={testId}
     >
