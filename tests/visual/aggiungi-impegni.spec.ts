@@ -1,5 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
-import { THURSDAY, installFakes } from "../fixtures/aggiungi-fake";
+import {
+  THURSDAY,
+  installFakes,
+  saveWithStoppedClock,
+} from "../fixtures/aggiungi-fake";
 import { hasTestUser } from "../fixtures/visual-login";
 import { signInAsCached } from "../fixtures/visual-login-cached";
 
@@ -59,9 +63,10 @@ async function settle(page: Page) {
 }
 
 /** The pointer and the caret away: the shot shows the resting state. */
-async function shoot(page: Page, name: string) {
+async function shoot(page: Page, name: string, clockStopped = false) {
   await page.mouse.move(0, 0);
-  await settle(page);
+  // With the clock stopped there are no animation frames to wait for
+  if (!clockStopped) await settle(page);
   await expect(page).toHaveScreenshot(name);
 }
 
@@ -166,16 +171,11 @@ test("toast dopo il salvataggio", async ({ page }) => {
   const { dialog, field } = await open(page);
   await field.pressSequentially(PHRASE);
   const submit = dialog.getByRole("button", { name: "Metti in giovedì 22" });
-  await expect(submit).toBeEnabled();
-  // Time stops: the toast (5 seconds) stays, the sheet gets the time to leave
-  await page.clock.pauseAt(new Date(NOW.getTime() + 10 * 60_000));
-  await submit.click();
-  await page.clock.runFor(1000);
-  await expect(dialog).toHaveCount(0);
+  await saveWithStoppedClock(page, dialog, submit, NOW);
   const toast = page.getByRole("status").filter({ hasText: "Messo in" });
   await expect(toast).toContainText(
     "Messo in giovedì 22: Nuoto Sofia alle 17:00.",
   );
   await expect(toast.getByRole("button", { name: "Annulla" })).toBeVisible();
-  await shoot(page, "toast-dopo-il-salvataggio.png");
+  await shoot(page, "toast-dopo-il-salvataggio.png", true);
 });

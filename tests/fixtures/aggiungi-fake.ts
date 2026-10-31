@@ -1,4 +1,4 @@
-import type { Page, Route } from "@playwright/test";
+import { expect, type Locator, type Page, type Route } from "@playwright/test";
 
 // Fakes for the tests of the Add sheet (#20): visual and accessibility specs.
 // Nothing is written to the database and the shots do not depend on what other
@@ -129,4 +129,26 @@ export async function installFakes(page: Page, options: Options = {}) {
   });
 
   return served;
+}
+
+/**
+ * Saves with the page clock stopped: the toast (5 seconds) stays on screen,
+ * and the sheet gets the time to leave. Leaves the clock stopped.
+ * (Timers of the page, requestAnimationFrame and axe do not run while it is stopped.)
+ */
+export async function saveWithStoppedClock(
+  page: Page,
+  dialog: Locator,
+  submit: Locator,
+  from: Date,
+) {
+  await expect(submit).toBeEnabled();
+  await page.clock.pauseAt(new Date(from.getTime() + 10 * 60_000));
+  await submit.click();
+  // The toast comes as soon as the answer arrives, then the sheet closes
+  await expect(page.locator(".toast")).toContainText("Messo in");
+  await expect(async () => {
+    await page.clock.runFor(250);
+    await expect(dialog).toHaveCount(0, { timeout: 300 });
+  }).toPass({ intervals: [100], timeout: 3000 });
 }

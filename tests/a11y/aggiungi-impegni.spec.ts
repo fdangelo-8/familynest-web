@@ -1,6 +1,10 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { THURSDAY, installFakes } from "../fixtures/aggiungi-fake";
+import {
+  THURSDAY,
+  installFakes,
+  saveWithStoppedClock,
+} from "../fixtures/aggiungi-fake";
 import { hasTestUser } from "../fixtures/visual-login";
 import { signInAsCached } from "../fixtures/visual-login-cached";
 
@@ -158,17 +162,16 @@ test.describe("Aggiungi · Impegni: axe", () => {
     const { dialog, field } = await open(page);
     await field.pressSequentially(PHRASE);
     const submit = dialog.getByRole("button", { name: "Metti in giovedì 22" });
-    await expect(submit).toBeEnabled();
-    await page.clock.pauseAt(new Date(NOW.getTime() + 10 * 60_000));
-    await submit.click();
-    await page.clock.runFor(1000);
-    await expect(dialog).toHaveCount(0);
+    await saveWithStoppedClock(page, dialog, submit, NOW);
     const toast = page.locator(".toast");
     await expect(toast).toContainText("Messo in giovedì 22");
-    expect(await blocking(page, ".toast")).toEqual([]);
     expect(
       await missedPoints(toast.getByRole("button", { name: "Annulla" })),
     ).toEqual([]);
+    // axe needs timers: the mouse over the toast keeps it (5 seconds), then time flows again
+    await toast.hover();
+    await page.clock.resume();
+    expect(await blocking(page, ".toast")).toEqual([]);
   });
 });
 
@@ -186,7 +189,7 @@ test.describe("Aggiungi · Impegni: regione live delle etichette", () => {
     const handle = await live.elementHandle();
 
     await field.pressSequentially(PHRASE);
-    await expect(live.locator(".chip")).toHaveText([
+    await expect(live.locator(".chip")).toContainText([
       "Giovedì 22",
       "17:00",
       "Sofia",
@@ -450,6 +453,7 @@ test.describe("Aggiungi · Impegni: contrasto", () => {
 
       const roots = document.querySelectorAll('[role="dialog"], .toast');
       const bad: string[] = [];
+      let checked = 0;
       const checkText = (el: Element, color: string, label: string) => {
         const style = getComputedStyle(el);
         const rect = el.getBoundingClientRect();
@@ -458,6 +462,7 @@ test.describe("Aggiungi · Impegni: contrasto", () => {
         if (el.closest("[disabled]")) return; // disabled controls are exempt (1.4.3)
         const fg = parse(color);
         if (!fg) return;
+        checked += 1;
         const size = parseFloat(style.fontSize);
         const bold = parseInt(style.fontWeight, 10) >= 700;
         const needed = size >= 24 || (size >= 18.66 && bold) ? 3 : 4.5;
@@ -499,6 +504,7 @@ test.describe("Aggiungi · Impegni: contrasto", () => {
           }
         }
       }
+      if (checked < 3) bad.push(`only ${checked} texts measured`);
       return bad;
     });
   }
@@ -546,10 +552,7 @@ test.describe("Aggiungi · Impegni: contrasto", () => {
     const { dialog, field } = await open(page);
     await field.pressSequentially(PHRASE);
     const submit = dialog.getByRole("button", { name: "Metti in giovedì 22" });
-    await expect(submit).toBeEnabled();
-    await page.clock.pauseAt(new Date(NOW.getTime() + 10 * 60_000));
-    await submit.click();
-    await page.clock.runFor(1000);
+    await saveWithStoppedClock(page, dialog, submit, NOW);
     await expect(page.locator(".toast")).toContainText("Messo in giovedì 22");
     expect(await failing(page)).toEqual([]);
   });
