@@ -3798,7 +3798,12 @@ main[tabindex="-1"]:focus {
     background: var(--color-notte-2);
   }
   .btn-secondary:hover:not(:disabled, [aria-disabled="true"]),
-  .btn-icona:hover:not(:disabled, .btn-icona--carta, .btn-icona--piccolo),
+  .btn-icona:hover:not(
+      :disabled,
+      [aria-disabled="true"],
+      .btn-icona--carta,
+      .btn-icona--piccolo
+    ),
   .chip:hover:not(:disabled, [aria-pressed="true"], .chip--statico),
   .scelta:hover:not(:disabled) {
     background: var(--color-carta);
@@ -3836,7 +3841,12 @@ main[tabindex="-1"]:focus {
   background: var(--color-notte-2);
 }
 .btn-secondary:active:not(:disabled, [aria-disabled="true"]),
-.btn-icona:active:not(:disabled, .btn-icona--carta, .btn-icona--piccolo),
+.btn-icona:active:not(
+    :disabled,
+    [aria-disabled="true"],
+    .btn-icona--carta,
+    .btn-icona--piccolo
+  ),
 .scelta:active:not(:disabled) {
   background: var(--color-carta);
 }
@@ -4194,6 +4204,33 @@ button.riga-lista {
     white-space: normal;
     min-width: 0;
   }
+}
+
+/* Dettaglio impegno (#19, #165) */
+/* Dialogo con un'azione in corso: i bottoni resi inattivi non cambiano aspetto */
+.dialogo__azioni[data-in-corso] [aria-disabled="true"] {
+  opacity: 1;
+  cursor: default;
+}
+/* Giorno della fine, sotto l'orario grande: «(martedì 20)» */
+.prossimo__ora-fine {
+  display: block;
+  margin-top: var(--space-1);
+  font-family: var(--font-testo);
+  font-weight: var(--weight-medio);
+  font-size: var(--text-corpo-size);
+  line-height: var(--text-corpo-line);
+  letter-spacing: 0;
+  color: var(--color-inchiostro-2);
+}
+/* Note: gli a capo scritti restano, una parola lunghissima non esce dalla scheda */
+.tabella-dati__nota {
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+/* Velo del dialogo di conferma aperto sopra un foglio o una modale */
+.velo--sopra-foglio {
+  z-index: var(--z-foglio);
 }
 
 /* =========================================================
