@@ -45,6 +45,7 @@ Errori già commessi (in questo progetto o in quelli precedenti dell'ecosistema)
 - Componente condiviso che riceve dalla pagina un elemento già pronto (avviso offline con «Riprova») invece dei dati (#119) → il componente condiviso possiede avviso, azioni e stato di caricamento; la pagina passa solo dati e callback.
 - Voce di menu di una sezione (Casa) con `aria-current="page"` anche sulle pagine interne → `"true"` per la sezione, `"page"` solo sull'indirizzo esatto della voce (`getNavAriaCurrent`).
 - Costante esportata da un modulo `"use client"` (es. `CHOOSABLE_COLORS` in `ColorChoice.tsx`) importata da codice server: diventa un riferimento client, non un valore (#130, di nuovo #146) → dal server si importano solo tipi (`import type`); i valori stanno in moduli senza `"use client"`.
+- Scorciatoia globale (Ctrl+K) ignorata quando il fuoco è in un campo di testo: un foglio con la textarea a fuoco all'apertura la disattiva (#172) → la specifica dice quale scorciatoia vale dal campo; i test la provano dal bottone «Chiudi» o da un elemento che non è un campo.
 
 ## Processo
 
@@ -73,6 +74,9 @@ Errori già commessi (in questo progetto o in quelli precedenti dell'ecosistema)
 - PR di una fondamenta `shared/*` con `Refs #n` nel corpo, e guard rosso → il guard vuole `Closes #<n>` nel corpo di ogni PR, anche delle fondamenta; `Refs` non basta (#124).
 - `pr-checks <n> --watch` subito dopo un push che dice «TUTTO VERDE» prima che partano i run del nuovo SHA → si aspetta che esistano i run del nuovo SHA (`gh run list`), poi si legge l'esito.
 - File temporanei con nomi uguali in una cartella usata da più agenti in parallelo si sovrascrivono → ogni file temporaneo ha un prefisso unico (numero di issue o PR) e sta nel proprio spazio di lavoro.
+- Sviluppatore che risponde FATTO senza aver eseguito i test della propria pagina → prima di FATTO lancia il workflow `test-mirato` sulle spec della pagina (`tests/e2e`, `tests/a11y`, `tests/visual`) e scrive l'esito nella PR (#177).
+- Test instabili che passano solo al secondo tentativo restano nascosti in CI → il tester li segnala con i numeri delle run e il coordinatore apre subito una issue (#177).
+- Requisito di un'issue che si perde nel riepilogo del coordinatore (testi della ripetizione) → il revisore confronta la PR con il requisito originale della issue, non con il riepilogo, e ogni elemento perso va deciso per iscritto prima del test (#170).
 
 ## Test
 
@@ -95,6 +99,13 @@ Errori già commessi (in questo progetto o in quelli precedenti dell'ecosistema)
 - Test di accessibilità sul fuoco che non trova l'anello su un campo con `outline: none` → l'anello su `:focus-within` del contenitore è ammesso solo se la specifica lo documenta, e il test controlla il contenitore, non il campo.
 - Due `<main>` nel documento per un attimo (React 19 in streaming: `loading` e pagina insieme) → i test aspettano l'h1 della pagina e poi cercano `getByRole("main")`; mai il primo `main` appena visibile.
 - Test di isolamento che cercano i Nest del seed per nome: altri test creano Nest usa e getta con lo stesso nome, e il risultato cambia (#155) → usare gli id fissi `SEED_HOME_A` e `SEED_HOME_B`; prima di verificare un'assenza si attende che la pagina sia caricata (un testo che non c'è ancora passa per assente).
+- Test di login con link magico su utenti seed condivisi da desktop e mobile in parallelo: ogni nuovo link annulla il precedente, e un test finiva su «link scaduto» (#175) → ogni test crea il proprio utente usa e getta e lo cancella nel `finally`.
+- axe `label-content-name-mismatch` (serious, WCAG 2.5.3) su tab e blocchi: il nome accessibile non comincia con il testo visibile, e axe conta anche le iniziali degli avatar `aria-hidden` dentro il controllo (#168) → il nome comincia con il testo visibile; i dettagli vanno in `aria-describedby`, non in `aria-label`.
+- Test che cliccano o premono un tasto prima che la pagina sia idratata passano per il motivo sbagliato: la navigazione nativa apre un'altra situazione (per esempio il foglio aperto direttamente) (#167) → prima del clic si aspetta un segnale di idratazione, si verifica il caso positivo e poi quelli negativi; mai attese a tempo.
+- `getByRole` con un nome parziale trova più elementi («Aggiungi» in «Aggiungi un impegno», blocco e scheda) (#167, #168) → usare `exact: true` o cercare dentro il contenitore, non `.first()`.
+- Test che simulano un errore su una tabella intercettando ogni richiesta a quella tabella rompono anche la lettura dell'id utente (#172) → intercettare solo la query dell'elenco; un GET senza risposta viene riprovato dal client a 1, 2 e 4 secondi, quindi si risponde subito con 500.
+- Test con orologio fermato (`page.clock.pauseAt`) che navigano: la pagina non parte dopo il `goto` (#168) → dopo ogni navigazione una funzione di supporto fa ripartire e rifermare l'orologio.
+- Pagina che passa da segnaposto a contenuto reale: cambiano i riferimenti visivi di altre pagine che la ritraggono, come cornice, layout a 800 px e «Vai al contenuto» (#168) → la PR elenca tutti i riferimenti che cambiano, e il tester visivo li rigenera e li controlla a occhio.
 
 ## Design
 
@@ -102,3 +113,4 @@ Errori già commessi (in questo progetto o in quelli precedenti dell'ecosistema)
 - Componente in caricamento con lo stile del disabilitato sembrava disabilitato → `aria-busy` e `aria-disabled` sono corretti, ma lo stile visivo del caricamento va separato da quello del disabilitato.
 - Frase sul comportamento nella guida del design system (es. dove appare il dialogo, «in basso» su mobile) scritta senza controllarla sul CSS → ogni frase di comportamento si verifica su `components.css` prima di approvare o correggere la guida.
 - Regole CSS nuove in fondo a `components.css`, fuori dal blocco del designer che la specifica indica (#114, #119), e descrizione della PR che dice il contrario → le regole vanno nel blocco «STATI AGGIUNTI DAL DESIGNER», nel punto indicato dalla specifica; la descrizione lo dichiara solo dopo averlo controllato.
+- Scorciatoia a una sola lettera (N) senza modo di spegnerla o cambiarla: contrasta con WCAG 2.1.4 (livello A) (#167) → la specifica prevede lo spegnimento, il cambio o un elemento a fuoco richiesto, e la decide il designer prima dello sviluppo.
