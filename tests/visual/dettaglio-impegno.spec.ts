@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import {
   CENA,
   NOW,
+  RIUNIONE,
   detailUrl,
   installEventFake,
   type EventFakeOptions,
@@ -92,6 +93,29 @@ test("modulo di modifica (foglio su mobile, modale su desktop)", async ({
   await open(page);
   await openForm(page);
   await shot(page, "modulo.png");
+});
+
+/** Scrolls the form to its last fields and buttons. */
+async function scrollFormToEnd(page: Page) {
+  await page
+    .getByRole("button", { name: "Elimina impegno" })
+    .scrollIntoViewIfNeeded();
+}
+
+test("modulo, in fondo: Chi lo vede, note e bottoni (autore)", async ({
+  page,
+}) => {
+  await open(page, { row: CENA }, { day: "2026-10-23" });
+  await openForm(page);
+  await scrollFormToEnd(page);
+  await shot(page, "modulo-in-fondo.png");
+});
+
+test("modulo con i campi bloccati (Occupato di un altro)", async ({ page }) => {
+  await open(page, { row: RIUNIONE }, { day: "2026-10-23" });
+  await openForm(page);
+  await scrollFormToEnd(page);
+  await shot(page, "modulo-bloccato.png");
 });
 
 test("modulo con gli errori dei campi", async ({ page }) => {
