@@ -4093,73 +4093,6 @@ div.blocco-orario {
   top: calc(var(--h) * var(--adesso-ore, 0));
 }
 
-/* Calendario Giorno «chi è dove» (#26, richiesta condivisa #182): la vista
-   scorre dentro di sé, con le teste delle persone ferme in alto. */
-.vista-giorno {
-  position: relative;
-  overflow: auto;
-  max-height: calc(
-    100dvh - var(--space-3) - var(--size-controllo) - env(safe-area-inset-top) -
-      var(--space-4) - var(--size-barra) - var(--space-6) -
-      env(safe-area-inset-bottom)
-  );
-  scroll-padding-top: calc(
-    2 * var(--space-2) + var(--size-avatar-m) + 2 * var(--space-1) +
-      var(--text-micro-line)
-  );
-}
-@media (min-width: 1024px) {
-  .vista-giorno {
-    max-height: calc(100dvh - var(--size-nav-desktop) - var(--space-6));
-  }
-}
-.vista-giorno .giorno-persone__testa {
-  position: sticky;
-  top: var(--space-0);
-  z-index: calc(var(--z-base) + 1);
-  background: var(--color-carta);
-  box-shadow: 0 var(--space-2) 0 var(--color-carta);
-}
-
-/* Da 5 persone, sotto 1024 px: colonne di almeno --size-colonna-giorni, si
-   scorre in orizzontale e le ore restano ferme a sinistra. */
-@media (max-width: 1023px) {
-  .giorno-persone--larga {
-    min-width: calc(
-      var(--size-colonna-ora) + var(--persone) * var(--size-colonna-giorni) +
-        (var(--persone) - 1) * var(--space-1)
-    );
-  }
-  .giorno-persone--larga .colonna-ore,
-  .giorno-persone--larga .giorno-persone__testa > span:first-child {
-    position: sticky;
-    left: var(--space-0);
-    z-index: calc(var(--z-base) + 1);
-    background: var(--color-carta);
-  }
-  .vista-giorno {
-    scroll-padding-left: var(--size-colonna-ora);
-  }
-}
-
-/* Nome nella testa della colonna: i nomi lunghi finiscono con i puntini */
-.giorno-persone__persona {
-  min-width: var(--space-0);
-}
-.giorno-persone__nome {
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Lucchetto prima del titolo di un impegno «Solo io» */
-.blocco-orario__lucchetto {
-  display: inline-block;
-  vertical-align: top;
-  margin-inline-end: var(--space-half);
-}
-
 /* Già fatti (Oggi): la freccia si capovolge quando la riga è aperta */
 .riga-gia-fatti[aria-expanded="true"] .icona:last-child {
   scale: 1 -1;
@@ -4411,6 +4344,73 @@ button.riga-lista {
 /* Velo del dialogo di conferma aperto sopra un foglio o una modale */
 .velo--sopra-foglio {
   z-index: var(--z-foglio);
+}
+
+/* Calendario Giorno «chi è dove» (#26, richiesta condivisa #182): la vista
+   scorre dentro di sé, con le teste delle persone ferme in alto. */
+.vista-giorno {
+  position: relative;
+  overflow: auto;
+  max-height: calc(
+    100dvh - var(--space-3) - var(--size-controllo) - env(safe-area-inset-top) -
+      var(--space-4) - var(--size-barra) - var(--space-6) -
+      env(safe-area-inset-bottom)
+  );
+  scroll-padding-top: calc(
+    2 * var(--space-2) + var(--size-avatar-m) + 2 * var(--space-1) +
+      var(--text-micro-line)
+  );
+}
+@media (min-width: 1024px) {
+  .vista-giorno {
+    max-height: calc(100dvh - var(--size-nav-desktop) - var(--space-6));
+  }
+}
+.vista-giorno .giorno-persone__testa {
+  position: sticky;
+  top: var(--space-0);
+  z-index: calc(var(--z-base) + 1);
+  background: var(--color-carta);
+  box-shadow: 0 var(--space-2) 0 var(--color-carta);
+}
+
+/* Da 5 persone, sotto 1024 px: colonne di almeno --size-colonna-giorni, si
+   scorre in orizzontale e le ore restano ferme a sinistra. */
+@media (max-width: 1023px) {
+  .giorno-persone--larga {
+    min-width: calc(
+      var(--size-colonna-ora) + var(--persone) * var(--size-colonna-giorni) +
+        (var(--persone) - 1) * var(--space-1)
+    );
+  }
+  .giorno-persone--larga .colonna-ore,
+  .giorno-persone--larga .giorno-persone__testa > span:first-child {
+    position: sticky;
+    left: var(--space-0);
+    z-index: calc(var(--z-base) + 1);
+    background: var(--color-carta);
+  }
+  .vista-giorno {
+    scroll-padding-left: var(--size-colonna-ora);
+  }
+}
+
+/* Nome nella testa della colonna: i nomi lunghi finiscono con i puntini */
+.giorno-persone__persona {
+  min-width: var(--space-0);
+}
+.giorno-persone__nome {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Lucchetto prima del titolo di un impegno «Solo io» */
+.blocco-orario__lucchetto {
+  display: inline-block;
+  vertical-align: top;
+  margin-inline-end: var(--space-half);
 }
 
 /* =========================================================
