@@ -4367,3 +4367,20 @@ body {
     gap: var(--space-5);
   }
 }
+
+/* #164: Sheet head with an `info` line. Info and close button sit together at the end. */
+.foglio__testa-fine {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* #164: a live region of chips with nothing recognised takes no space (no stray gap). */
+.gruppo-chip[aria-live]:empty {
+  display: none;
+}
+
+/* #164: an option row that is plain text (not a button) is not clickable. */
+.riga-opzione:not(button) {
+  cursor: default;
+}
