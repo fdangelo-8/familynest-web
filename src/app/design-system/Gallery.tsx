@@ -1601,9 +1601,11 @@ const DAY_PEOPLE = [
 
 function DayGrid({
   columns,
+  wide,
   children,
 }: {
   columns: number;
+  wide?: boolean;
   children: ReactNode;
 }) {
   const people = DAY_PEOPLE.slice(0, columns);
@@ -1614,7 +1616,9 @@ function DayGrid({
       aria-label="Chi è dove, dalle 8:00 alle 23:00"
       tabIndex={0}
     >
-      <div className={`giorno-persone persone-${columns}`}>
+      <div
+        className={`giorno-persone persone-${columns}${wide ? " giorno-persone--larga" : ""}`}
+      >
         <div className="giorno-persone__testa" aria-hidden="true">
           <span />
           {people.map((p) => (
@@ -1651,8 +1655,8 @@ function DayGrid({
 function DayViewSection() {
   return (
     <Section id="giorno-persone" title="Calendario Giorno, chi è dove">
-      <Example caption="giorno-persone · 6 colonne">
-        <DayGrid columns={6}>
+      <Example caption="giorno-persone--larga">
+        <DayGrid columns={6} wide>
           <a
             className="blocco-orario da-9-00 per-1 col-1 largo-1"
             href="#giorno-persone"
@@ -1673,7 +1677,7 @@ function DayViewSection() {
           </div>
         </DayGrid>
       </Example>
-      <Example caption="giorno-persone · parti sovrapposte (parte-2-1, parte-2-2)">
+      <Example caption="parte-2-1 e parte-2-2">
         <DayGrid columns={3}>
           <a
             className="blocco-orario da-10-00 per-2 col-1 largo-2"
@@ -1698,7 +1702,7 @@ function DayViewSection() {
           </a>
         </DayGrid>
       </Example>
-      <Example caption="blocco-orario__lucchetto · Solo io">
+      <Example caption="blocco-orario__lucchetto">
         <DayGrid columns={2}>
           <a
             className="blocco-orario da-9-00 per-1 col-1 largo-1"
