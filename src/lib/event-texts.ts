@@ -277,21 +277,3 @@ export function saveAllText(args: {
   if (!isFirst) parts.push("Le volte prima restano come sono.");
   return parts.filter(Boolean).join(" ");
 }
-
-/**
- * Text when «Si ripete» changed and «Salva solo questo» makes no sense:
- * `Si ripete ogni martedì e giovedì. La nuova ripetizione vale da martedì 20
- * ottobre in poi.`
- */
-export function saveNewRuleText(
-  info: RecurrenceInfo,
-  fromDay: string,
-  now: Instant,
-): string {
-  return [
-    formatRepeatSentence(info, now),
-    `La nuova ripetizione vale da ${formatDayInSentence(fromDay, now)} in poi.`,
-  ]
-    .filter(Boolean)
-    .join(" ");
-}

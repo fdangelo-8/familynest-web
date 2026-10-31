@@ -7,7 +7,6 @@ import {
   joinNames,
   saveAllText,
   saveChoiceText,
-  saveNewRuleText,
   type RecurrenceInfo,
 } from "../../src/lib/event-texts";
 
@@ -219,9 +218,17 @@ test.describe("dialoghi di salvataggio", () => {
       "Si ripete ogni lunedì. Anna ora non vede questo impegno: se la scegli in «La porta», lo vedrà da lunedì 26 ottobre in poi. Le volte prima restano come sono.",
     );
   });
-  test("ripetizione cambiata: solo «Salva tutti i prossimi»", () => {
-    expect(saveNewRuleText(NUOTO, "2026-10-20", NOW)).toBe(
-      "Si ripete ogni martedì e giovedì. La nuova ripetizione vale da martedì 20 ottobre in poi.",
+  test("una scelta: solo la ripetizione cambiata", () => {
+    expect(
+      saveAllText({
+        info: NUOTO,
+        fromDay: "2026-10-20",
+        isFirst: false,
+        changes: ["recurrence"],
+        now: NOW,
+      }),
+    ).toBe(
+      "Si ripete ogni martedì e giovedì. Hai cambiato la ripetizione: vale per tutte le volte da martedì 20 ottobre in poi. Le volte prima restano come sono.",
     );
   });
 });
