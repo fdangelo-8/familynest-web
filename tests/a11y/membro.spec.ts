@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { waitForAnimationsToEnd } from "../fixtures/animations";
 import { hasTestUser, signInAs } from "../fixtures/visual-login";
 import {
   throwawayConfigured,
@@ -23,13 +24,6 @@ type Key = "A" | "B" | "C";
 async function signIn(page: Page, key: Key | "B2") {
   const ok = await signInAs(page.context(), baseURL(), key as Key);
   test.skip(!ok, `Utente di prova ${key} non disponibile`);
-}
-
-/** Waits for every running animation (sheet, backdrop) to end: no fixed wait. */
-async function settled(page: Page) {
-  await page.evaluate(() =>
-    Promise.all(document.getAnimations().map((a) => a.finished)),
-  );
 }
 
 async function axe(page: Page) {
@@ -102,7 +96,7 @@ test.describe("utenti del seed", () => {
     });
     await expect(dialog).toBeVisible();
     await expect(dialog.getByRole("button", { name: "Annulla" })).toBeFocused();
-    await settled(page);
+    await waitForAnimationsToEnd(page);
     await axe(page);
     await page.keyboard.press("Escape");
     await expect(dialog).toBeHidden();
@@ -139,7 +133,7 @@ test.describe("utenti del seed", () => {
       await expect(dialog).toBeVisible();
       await expect(dialog.getByLabel("Nome")).toBeFocused();
       // axe must not read the backdrop halfway through its fade-in
-      await settled(page);
+      await waitForAnimationsToEnd(page);
       await axe(page);
       await page.keyboard.press("Escape");
       await expect(dialog).toBeHidden();
