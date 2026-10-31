@@ -39,6 +39,31 @@ async function openWithN(page: Page) {
   }).toPass();
 }
 
+const MARKER = "same-page";
+
+/**
+ * Opens Add from the "Aggiungi" link as a sheet over `route`. A click before
+ * hydration makes the browser load `/aggiungi` from scratch (direct mode): a
+ * marker set on `window` tells the two apart, and in that case the attempt
+ * starts again from `route`. No timed waits.
+ */
+async function openAddOverPage(page: Page, route: string) {
+  await expect(async () => {
+    if (new URL(page.url()).pathname !== route) await page.goto(route);
+    await expect(page.getByRole("main")).toBeVisible();
+    await page.evaluate((value) => {
+      (window as unknown as { __marker?: string }).__marker = value;
+    }, MARKER);
+    await addLink(page).click();
+    await expect(dialogOf(page)).toBeVisible({ timeout: 2000 });
+    const marker = await page.evaluate(
+      () => (window as unknown as { __marker?: string }).__marker,
+    );
+    if (marker !== MARKER)
+      throw new Error("page was reloaded, not intercepted");
+  }).toPass();
+}
+
 async function closeWithEscape(page: Page, backTo: RegExp) {
   await page.keyboard.press("Escape");
   await expect(dialogOf(page)).toHaveCount(0);
@@ -55,14 +80,8 @@ test.describe("Aggiungi sopra la pagina", () => {
     baseURL,
   }) => {
     await openPage(page, baseURL, "/calendario");
-    await page.evaluate(() => {
-      (window as unknown as { __marker: string }).__marker = "same-page";
-    });
     const link = addLink(page);
-    await expect(async () => {
-      await link.click();
-      await expect(dialogOf(page)).toBeVisible({ timeout: 1000 });
-    }).toPass();
+    await openAddOverPage(page, "/calendario");
     await expect(page).toHaveURL(/\/aggiungi$/);
     await expect(dialogOf(page).getByText("scrivi come parli")).toBeVisible();
     // no reload: the value set before opening is still there
@@ -86,10 +105,7 @@ test.describe("Aggiungi sopra la pagina", () => {
     baseURL,
   }, testInfo) => {
     await openPage(page, baseURL, "/calendario");
-    await expect(async () => {
-      await addLink(page).click();
-      await expect(dialogOf(page)).toBeVisible({ timeout: 1000 });
-    }).toPass();
+    await openAddOverPage(page, "/calendario");
     const active = page.getByRole("navigation", NAV).locator("[aria-current]");
     await expect(active).toHaveCount(1);
     await expect(active).toHaveText("Calendario");
@@ -107,10 +123,7 @@ test.describe("Aggiungi sopra la pagina", () => {
     baseURL,
   }) => {
     await openPage(page, baseURL, "/calendario");
-    await expect(async () => {
-      await addLink(page).click();
-      await expect(dialogOf(page)).toBeVisible({ timeout: 1000 });
-    }).toPass();
+    await openAddOverPage(page, "/calendario");
     await page.goBack();
     await expect(dialogOf(page)).toHaveCount(0);
     await expect(page).toHaveURL(/\/calendario$/);
@@ -187,10 +200,7 @@ test.describe("Tasto N", () => {
     test.skip(testInfo.project.name !== "mobile", "Solo sotto 1024 px");
     await openPage(page, baseURL, "/calendario");
     // wait for hydration with a real interaction before pressing "n"
-    await expect(async () => {
-      await addLink(page).click();
-      await expect(dialogOf(page)).toBeVisible({ timeout: 1000 });
-    }).toPass();
+    await openAddOverPage(page, "/calendario");
     await closeWithEscape(page, /\/calendario$/);
     await page.keyboard.press("n");
     await page.waitForTimeout(300);
