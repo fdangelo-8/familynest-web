@@ -36,6 +36,7 @@ import {
   retry,
   test,
   TUE,
+  SUN,
   WED,
   allBlocks,
   MON,
@@ -47,6 +48,8 @@ import {
 // calendario-giorno.spec.ts for the premises.
 
 test.use({ locale: "it-IT", timezoneId: "Europe/Rome" });
+
+const MON26 = "2026-10-26";
 
 // ------------------------------------------------------------ free evenings
 
@@ -389,17 +392,22 @@ test.describe("stati", () => {
   ) {
     await createEvent(bianchi, "Giulia", {
       title: "Riunione di team",
-      day: TUE,
+      day: SUN,
       from: "10:00",
       to: "11:00",
     });
-    await open(page, baseURL, bianchi, { pause: false });
+    await open(page, baseURL, bianchi, {
+      path: dayPath(SUN),
+      pause: false,
+    });
     await expect(blocks(page, "Riunione di team").first()).toBeVisible();
     await hydrated(page);
     await page.context().setOffline(true);
+    // Monday 26 is in another week, never read: the read fails offline.
     await nextDay(page).click();
+    await expect(h1(page)).toHaveText(dayTitle(MON26));
     await previousDay(page).click();
-    await expect(h1(page)).toHaveText(dayTitle(TUE));
+    await expect(h1(page)).toHaveText(dayTitle(SUN));
   }
 
   test("CA-35: offline restano gli impegni già letti con l'avviso, poi torna tutto", async ({
@@ -582,15 +590,21 @@ test.describe("accessibilità", () => {
   });
 
   test("CA-39: stato di errore offline", async ({ page, baseURL, bianchi }) => {
-    await withEvents(bianchi);
-    await open(page, baseURL, bianchi, { pause: false });
+    await createEvent(bianchi, "Giulia", {
+      title: "Riunione di team",
+      day: SUN,
+      from: "10:00",
+      to: "11:00",
+    });
+    await open(page, baseURL, bianchi, { path: dayPath(SUN), pause: false });
     await expect(blocks(page, "Riunione di team").first()).toBeVisible();
     await hydrated(page);
     try {
       await page.context().setOffline(true);
       await nextDay(page).click();
+      await expect(h1(page)).toHaveText(dayTitle(MON26));
       await previousDay(page).click();
-      await expect(h1(page)).toHaveText(dayTitle(TUE));
+      await expect(h1(page)).toHaveText(dayTitle(SUN));
       await expect(
         alerts(page).filter({ hasText: OFFLINE_ALERT }),
       ).toBeVisible();
