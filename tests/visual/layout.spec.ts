@@ -22,7 +22,7 @@ test.use({
 const PAGES = [
   { route: "/oggi", file: "oggi", h1: "Oggi" },
   { route: "/aggiungi", file: "aggiungi", h1: "Oggi" },
-  { route: "/calendario", file: "calendario", h1: "Calendario" },
+  { route: "/calendario", file: "calendario", h1: "19 – 25 ottobre" },
   { route: "/casa/spesa", file: "casa-spesa", h1: "Casa" },
   { route: "/notifiche", file: "notifiche", h1: "Notifiche" },
   { route: "/ricerca", file: "ricerca", h1: "Ricerca" },
@@ -62,6 +62,9 @@ async function open(page: import("@playwright/test").Page, route: string) {
   await page.goto(route);
   await expect(page.getByRole("main")).toBeVisible();
   if (isSpesa) await expect(page.getByTestId("spesa-riga")).toHaveCount(7);
+  // The week of Calendario reads its events in the browser: wait for them.
+  if (route === "/calendario")
+    await expect(page.locator('[aria-busy="true"]')).toHaveCount(0);
   await page.evaluate(() => document.fonts.ready);
 }
 
