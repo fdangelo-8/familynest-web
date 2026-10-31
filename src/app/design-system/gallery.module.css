@@ -33,6 +33,7 @@
 .esempio {
   display: grid;
   gap: var(--space-2);
+  grid-template-columns: minmax(0, 1fr);
   margin: var(--space-0);
   min-width: var(--space-0);
 }
@@ -84,4 +85,13 @@
 
 .strappoTrascinato {
   --strappo-avanzamento: calc(2 * var(--size-tocco));
+}
+
+/* Altezza fissa degli esempi di Calendario Giorno: quella della pagina vera
+   dipende dalla finestra, e la cattura a pagina intera la cambia. Senza barre
+   di scorrimento visibili, così non occupano spazio. */
+.esempio :global(.vista-giorno) {
+  height: calc(8 * var(--size-ora-calendario));
+  max-height: none;
+  scrollbar-width: none;
 }

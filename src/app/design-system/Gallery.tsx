@@ -94,6 +94,7 @@ export function Gallery() {
       <ListSection rowCards={rowCards} />
       <OverlaysSection />
       <StatesSection />
+      <DayViewSection />
     </main>
   );
 }
@@ -1584,5 +1585,139 @@ function StatesSection() {
         </Example>
       </Section>
     </>
+  );
+}
+
+const DAY_HOURS = Array.from({ length: 15 }, (_, i) => `${i + 8}:00`);
+
+const DAY_PEOPLE = [
+  { name: "Marco", label: "Tu", color: "pomodoro" },
+  { name: "Laura", label: "Laura", color: "glicine" },
+  { name: "Sofia", label: "Sofia", color: "salvia" },
+  { name: "Tommaso", label: "Tommaso", color: "cobalto" },
+  { name: "Giuseppina", label: "Giuseppina", color: "lampone" },
+  { name: "Anna", label: "Anna", color: "ceruleo" },
+] as const;
+
+function DayGrid({
+  columns,
+  wide,
+  children,
+}: {
+  columns: number;
+  wide?: boolean;
+  children: ReactNode;
+}) {
+  const people = DAY_PEOPLE.slice(0, columns);
+  return (
+    <div
+      className="vista-giorno"
+      role="region"
+      aria-label="Chi è dove, dalle 8:00 alle 23:00"
+      tabIndex={0}
+    >
+      <div
+        className={`giorno-persone persone-${columns}${wide ? " giorno-persone--larga" : ""}`}
+      >
+        <div className="giorno-persone__testa" aria-hidden="true">
+          <span />
+          {people.map((p) => (
+            <div key={p.name} className="giorno-persone__persona">
+              <Avatar name={p.name} color={p.color} size="m" nameShown />
+              <span className="giorno-persone__nome">{p.label}</span>
+            </div>
+          ))}
+        </div>
+        <div className="giorno-persone__corpo">
+          <div className="colonna-ore" aria-hidden="true">
+            {DAY_HOURS.map((h) => (
+              <span key={h} className="colonna-ore__ora">
+                {h}
+              </span>
+            ))}
+          </div>
+          <div className="area-orari ore-15">
+            {children}
+            {Array.from({ length: columns - 1 }, (_, i) => i + 2).map((k) => (
+              <span
+                key={k}
+                className={`area-orari__corsia sep-${k}`}
+                aria-hidden="true"
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DayViewSection() {
+  return (
+    <Section id="giorno-persone" title="Calendario Giorno, chi è dove">
+      <Example caption="giorno-persone--larga">
+        <DayGrid columns={6} wide>
+          <a
+            className="blocco-orario da-9-00 per-1 col-1 largo-1"
+            href="#giorno-persone"
+          >
+            <span className="blocco-orario__titolo">Palestra</span>
+            <span className="blocco-orario__ora">9:00 – 10:00</span>
+          </a>
+          <a
+            className="blocco-orario da-10-00 per-2 col-2 largo-2"
+            href="#giorno-persone"
+          >
+            <span className="blocco-orario__titolo">Dentista</span>
+            <span className="blocco-orario__ora">10:00 – 12:00</span>
+          </a>
+          <div className="blocco-orario blocco-orario--occupato da-9-00 per-3 col-6 largo-1">
+            <span className="blocco-orario__titolo">Occupato</span>
+            <span className="blocco-orario__ora">9:00 – 12:00</span>
+          </div>
+        </DayGrid>
+      </Example>
+      <Example caption="parte-2-1 e parte-2-2">
+        <DayGrid columns={3}>
+          <a
+            className="blocco-orario da-10-00 per-2 col-1 largo-2"
+            href="#giorno-persone"
+          >
+            <span className="blocco-orario__titolo">Cena dai nonni</span>
+            <span className="blocco-orario__ora">10:00 – 12:00</span>
+          </a>
+          <a
+            className="blocco-orario da-11-00 per-1 col-3 largo-1 parte-2-1"
+            href="#giorno-persone"
+          >
+            <span className="blocco-orario__titolo">Compiti</span>
+            <span className="blocco-orario__ora">11:00 – 12:00</span>
+          </a>
+          <a
+            className="blocco-orario da-11-00 per-1 col-3 largo-1 parte-2-2"
+            href="#giorno-persone"
+          >
+            <span className="blocco-orario__titolo">Basket</span>
+            <span className="blocco-orario__ora">11:00 – 12:00</span>
+          </a>
+        </DayGrid>
+      </Example>
+      <Example caption="blocco-orario__lucchetto">
+        <DayGrid columns={2}>
+          <a
+            className="blocco-orario da-9-00 per-1 col-1 largo-1"
+            href="#giorno-persone"
+          >
+            <span className="blocco-orario__titolo">
+              <span className="blocco-orario__lucchetto" aria-hidden="true">
+                <Icon name="lock" size="s" />
+              </span>
+              Colloquio
+            </span>
+            <span className="blocco-orario__ora">9:00 – 10:00</span>
+          </a>
+        </DayGrid>
+      </Example>
+    </Section>
   );
 }

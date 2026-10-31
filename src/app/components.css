@@ -3501,6 +3501,119 @@ button.riga-lista {
    Solo token esistenti. Regole in più sulle stesse classi.
    ========================================================= */
 
+/* Calendario Giorno (#26): colonne 5-10 e parti delle sovrapposizioni, stessa formula delle classi sopra */
+.persone-5 {
+  --persone: 5;
+}
+.col-5 {
+  left: calc(100% / var(--persone) * 4 + var(--space-half));
+}
+.largo-5 {
+  width: calc(100% / var(--persone) * 5 - var(--space-1));
+}
+.sep-5 {
+  left: calc(100% / var(--persone) * 4);
+}
+.persone-6 {
+  --persone: 6;
+}
+.col-6 {
+  left: calc(100% / var(--persone) * 5 + var(--space-half));
+}
+.largo-6 {
+  width: calc(100% / var(--persone) * 6 - var(--space-1));
+}
+.sep-6 {
+  left: calc(100% / var(--persone) * 5);
+}
+.persone-7 {
+  --persone: 7;
+}
+.col-7 {
+  left: calc(100% / var(--persone) * 6 + var(--space-half));
+}
+.largo-7 {
+  width: calc(100% / var(--persone) * 7 - var(--space-1));
+}
+.sep-7 {
+  left: calc(100% / var(--persone) * 6);
+}
+.persone-8 {
+  --persone: 8;
+}
+.col-8 {
+  left: calc(100% / var(--persone) * 7 + var(--space-half));
+}
+.largo-8 {
+  width: calc(100% / var(--persone) * 8 - var(--space-1));
+}
+.sep-8 {
+  left: calc(100% / var(--persone) * 7);
+}
+.persone-9 {
+  --persone: 9;
+}
+.col-9 {
+  left: calc(100% / var(--persone) * 8 + var(--space-half));
+}
+.largo-9 {
+  width: calc(100% / var(--persone) * 9 - var(--space-1));
+}
+.sep-9 {
+  left: calc(100% / var(--persone) * 8);
+}
+.persone-10 {
+  --persone: 10;
+}
+.col-10 {
+  left: calc(100% / var(--persone) * 9 + var(--space-half));
+}
+.largo-10 {
+  width: calc(100% / var(--persone) * 10 - var(--space-1));
+}
+.sep-10 {
+  left: calc(100% / var(--persone) * 9);
+}
+
+/* Parti di un blocco che si sovrappone ad altri nella stessa colonna: da usare
+   solo con largo-1, dopo le classi largo-*. N = parti, P = la parte del blocco. */
+.parte-2-1 {
+  width: calc(100% / var(--persone) / 2 - var(--space-1));
+  margin-left: calc(100% / var(--persone) / 2 * 0);
+}
+.parte-2-2 {
+  width: calc(100% / var(--persone) / 2 - var(--space-1));
+  margin-left: calc(100% / var(--persone) / 2 * 1);
+}
+.parte-3-1 {
+  width: calc(100% / var(--persone) / 3 - var(--space-1));
+  margin-left: calc(100% / var(--persone) / 3 * 0);
+}
+.parte-3-2 {
+  width: calc(100% / var(--persone) / 3 - var(--space-1));
+  margin-left: calc(100% / var(--persone) / 3 * 1);
+}
+.parte-3-3 {
+  width: calc(100% / var(--persone) / 3 - var(--space-1));
+  margin-left: calc(100% / var(--persone) / 3 * 2);
+}
+.parte-4-1 {
+  width: calc(100% / var(--persone) / 4 - var(--space-1));
+  margin-left: calc(100% / var(--persone) / 4 * 0);
+}
+.parte-4-2 {
+  width: calc(100% / var(--persone) / 4 - var(--space-1));
+  margin-left: calc(100% / var(--persone) / 4 * 1);
+}
+.parte-4-3 {
+  width: calc(100% / var(--persone) / 4 - var(--space-1));
+  margin-left: calc(100% / var(--persone) / 4 * 2);
+}
+.parte-4-4 {
+  width: calc(100% / var(--persone) / 4 - var(--space-1));
+  margin-left: calc(100% / var(--persone) / 4 * 3);
+}
+
 /* Cinque colori nuovi dei membri (#74): stesso schema delle classi sopra */
 .membro-lampone {
   --c: var(--color-membro-lampone);
@@ -4231,6 +4344,73 @@ button.riga-lista {
 /* Velo del dialogo di conferma aperto sopra un foglio o una modale */
 .velo--sopra-foglio {
   z-index: var(--z-foglio);
+}
+
+/* Calendario Giorno «chi è dove» (#26, richiesta condivisa #182): la vista
+   scorre dentro di sé, con le teste delle persone ferme in alto. */
+.vista-giorno {
+  position: relative;
+  overflow: auto;
+  max-height: calc(
+    100dvh - var(--space-3) - var(--size-controllo) - env(safe-area-inset-top) -
+      var(--space-4) - var(--size-barra) - var(--space-6) -
+      env(safe-area-inset-bottom)
+  );
+  scroll-padding-top: calc(
+    2 * var(--space-2) + var(--size-avatar-m) + 2 * var(--space-1) +
+      var(--text-micro-line)
+  );
+}
+@media (min-width: 1024px) {
+  .vista-giorno {
+    max-height: calc(100dvh - var(--size-nav-desktop) - var(--space-6));
+  }
+}
+.vista-giorno .giorno-persone__testa {
+  position: sticky;
+  top: var(--space-0);
+  z-index: calc(var(--z-base) + 1);
+  background: var(--color-carta);
+  box-shadow: 0 var(--space-2) 0 var(--color-carta);
+}
+
+/* Da 5 persone, sotto 1024 px: colonne di almeno --size-colonna-giorni, si
+   scorre in orizzontale e le ore restano ferme a sinistra. */
+@media (max-width: 1023px) {
+  .giorno-persone--larga {
+    min-width: calc(
+      var(--size-colonna-ora) + var(--persone) * var(--size-colonna-giorni) +
+        (var(--persone) - 1) * var(--space-1)
+    );
+  }
+  .giorno-persone--larga .colonna-ore,
+  .giorno-persone--larga .giorno-persone__testa > span:first-child {
+    position: sticky;
+    left: var(--space-0);
+    z-index: calc(var(--z-base) + 1);
+    background: var(--color-carta);
+  }
+  .vista-giorno {
+    scroll-padding-left: var(--size-colonna-ora);
+  }
+}
+
+/* Nome nella testa della colonna: i nomi lunghi finiscono con i puntini */
+.giorno-persone__persona {
+  min-width: var(--space-0);
+}
+.giorno-persone__nome {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Lucchetto prima del titolo di un impegno «Solo io» */
+.blocco-orario__lucchetto {
+  display: inline-block;
+  vertical-align: top;
+  margin-inline-end: var(--space-half);
 }
 
 /* =========================================================
