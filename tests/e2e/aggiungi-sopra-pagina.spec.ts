@@ -151,6 +151,33 @@ test.describe("Aggiungi sopra la pagina", () => {
   });
 });
 
+/**
+ * Sends a keydown of "n" straight to `selector` and tells whether the shortcut
+ * took it (it calls preventDefault only when it opens Add). Synchronous, so
+ * "nothing happens" is checked without timed waits.
+ */
+async function shortcutTakesN(
+  page: Page,
+  selector: string,
+  modifiers: { altKey?: boolean; ctrlKey?: boolean; metaKey?: boolean } = {},
+) {
+  return page.evaluate(
+    ([sel, mods]) => {
+      const target = document.querySelector(sel as string);
+      if (!target) throw new Error(`no element for ${String(sel)}`);
+      const event = new KeyboardEvent("keydown", {
+        key: "n",
+        bubbles: true,
+        cancelable: true,
+        ...(mods as object),
+      });
+      target.dispatchEvent(event);
+      return event.defaultPrevented;
+    },
+    [selector, modifiers] as const,
+  );
+}
+
 test.describe("Tasto N", () => {
   test.beforeEach(() => {
     test.skip(!usersConfigured("A"), skipReason("A"));
@@ -166,16 +193,19 @@ test.describe("Tasto N", () => {
     // first prove the shortcut is alive (page hydrated), then try the cases that must do nothing
     await openWithN(page);
     await expect(page).toHaveURL(/\/aggiungi$/);
-    // a dialog is open: "n" does nothing more
+    // a dialog is open: "n" is not taken and nothing is added to the history
     const historyBefore = await page.evaluate(() => history.length);
+    expect(await shortcutTakesN(page, "body")).toBe(false);
     await page.keyboard.press("n");
-    await page.waitForTimeout(300);
     await expect(dialogOf(page)).toHaveCount(1);
     expect(await page.evaluate(() => history.length)).toBe(historyBefore);
     await closeWithEscape(page, /\/calendario$/);
 
+    // modifiers: Alt, Ctrl and Cmd never open it
+    expect(await shortcutTakesN(page, "body", { altKey: true })).toBe(false);
+    expect(await shortcutTakesN(page, "body", { ctrlKey: true })).toBe(false);
+    expect(await shortcutTakesN(page, "body", { metaKey: true })).toBe(false);
     await page.keyboard.press("Alt+n");
-    await page.waitForTimeout(300);
     await expect(dialogOf(page)).toHaveCount(0);
     await expect(page).toHaveURL(/\/calendario$/);
 
@@ -185,15 +215,17 @@ test.describe("Tasto N", () => {
     await expect(field).toBeVisible();
     await openWithN(page);
     await closeWithEscape(page, /\/casa\/spesa$/);
+    expect(
+      await shortcutTakesN(page, 'input[aria-label="Aggiungi alla spesa…"]'),
+    ).toBe(false);
     await field.click();
     await page.keyboard.press("n");
-    await page.waitForTimeout(300);
     await expect(field).toHaveValue("n");
     await expect(dialogOf(page)).toHaveCount(0);
     await expect(page).toHaveURL(/\/casa\/spesa$/);
   });
 
-  test("su mobile «n» non apre Aggiungi", async ({
+  test("CA-7: su mobile «n» non apre Aggiungi", async ({
     page,
     baseURL,
   }, testInfo) => {
@@ -202,10 +234,99 @@ test.describe("Tasto N", () => {
     // wait for hydration with a real interaction before pressing "n"
     await openAddOverPage(page, "/calendario");
     await closeWithEscape(page, /\/calendario$/);
+    expect(await shortcutTakesN(page, "body")).toBe(false);
     await page.keyboard.press("n");
-    await page.waitForTimeout(300);
     await expect(dialogOf(page)).toHaveCount(0);
     await expect(page).toHaveURL(/\/calendario$/);
+  });
+});
+
+test.describe("Aggiungi sopra la pagina: altri casi", () => {
+  test.beforeEach(() => {
+    test.skip(!usersConfigured("A"), skipReason("A"));
+  });
+
+  test("CA-4: la X del foglio chiude e porta alla pagina di prima", async ({
+    page,
+    baseURL,
+  }) => {
+    await openPage(page, baseURL, "/calendario");
+    await openAddOverPage(page, "/calendario");
+    await dialogOf(page).getByRole("button", { name: "Chiudi" }).click();
+    await expect(dialogOf(page)).toHaveCount(0);
+    await expect(page).toHaveURL(/\/calendario$/);
+  });
+
+  test("CA-5: ricaricando con il foglio aperto, /aggiungi resta un foglio sopra Oggi", async ({
+    page,
+    baseURL,
+  }) => {
+    await openPage(page, baseURL, "/calendario");
+    await openAddOverPage(page, "/calendario");
+    await page.reload();
+    await expect(dialogOf(page)).toBeVisible();
+    await expect(page).toHaveURL(/\/aggiungi$/);
+    await expect(page.locator("main h1")).toHaveText("Oggi");
+    await closeWithEscape(page, /\/oggi$/);
+    await expect(page.locator("main#contenuto")).toBeFocused();
+  });
+
+  test("CA-5: aperta direttamente, Esc porta a /oggi con il fuoco sul main", async ({
+    page,
+    baseURL,
+  }) => {
+    await signInAs(page.context(), baseURL as string, "A");
+    await page.goto("/aggiungi");
+    await expect(dialogOf(page)).toBeVisible();
+    await closeWithEscape(page, /\/oggi$/);
+    await expect(page.locator("main#contenuto")).toBeFocused();
+  });
+
+  test("con il foglio aperto, Ctrl+K porta alla ricerca e il foglio sparisce", async ({
+    page,
+    baseURL,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "Scorciatoia da tastiera");
+    await openPage(page, baseURL, "/calendario");
+    await openAddOverPage(page, "/calendario");
+    await page.keyboard.press("Control+k");
+    await expect(page).toHaveURL(/\/ricerca$/);
+    await expect(dialogOf(page)).toHaveCount(0);
+  });
+
+  test("isolamento: l'utente del nucleo B apre Aggiungi sopra Oggi, la sua pagina", async ({
+    page,
+    baseURL,
+  }) => {
+    test.skip(!usersConfigured("B"), skipReason("B"));
+    await signInAs(page.context(), baseURL as string, "B");
+    await page.goto("/aggiungi");
+    await expect(dialogOf(page)).toBeVisible();
+    await expect(page.locator("main h1")).toHaveText("Oggi");
+  });
+});
+
+// The demo page needs no login: its member sheet is locked while it saves.
+test.describe("Sheet bloccato", () => {
+  test("durante il salvataggio la X ha aria-disabled e non chiude; a fine salvataggio il foglio si chiude", async ({
+    page,
+  }) => {
+    await page.goto("/design-system/membri");
+    await page.getByRole("button", { name: "Lento" }).click();
+    await page
+      .getByRole("button", { name: "Aggiungi una persona o un animale" })
+      .click();
+    const dialog = page.getByRole("dialog");
+    const close = dialog.getByRole("button", { name: "Chiudi" });
+    await expect(close).not.toHaveAttribute("aria-disabled", "true");
+    await dialog.getByLabel("Nome").fill("Rita");
+    const save = dialog.getByRole("button", { name: "Aggiungi Rita" });
+    await save.click();
+    await expect(save).toHaveAttribute("aria-busy", "true");
+    await expect(close).toHaveAttribute("aria-disabled", "true");
+    await close.click({ force: true });
+    await expect(dialog).toBeVisible();
+    await expect(dialog).toHaveCount(0);
   });
 });
 
