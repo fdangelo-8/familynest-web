@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useIsDesktop } from "../ui/overlay";
 import { Sheet } from "../ui/Sheet/Sheet";
 
 /** Moves the focus to the page's `main` once the new page has replaced the old one. */
@@ -29,12 +30,25 @@ function focusMainWhenReady() {
  */
 export function AddSheet({ direct = false }: { direct?: boolean }) {
   const router = useRouter();
+  const desktop = useIsDesktop();
   const [open, setOpen] = useState(true);
   return (
     <Sheet
       open={open}
       title="Aggiungi"
-      info="scrivi come parli"
+      info={
+        <>
+          scrivi come parli
+          {desktop ? (
+            <>
+              {" "}
+              <kbd className="kbd" aria-hidden="true">
+                esc
+              </kbd>
+            </>
+          ) : null}
+        </>
+      }
       onClose={() => {
         setOpen(false);
         if (direct) {
