@@ -98,10 +98,9 @@ function repetitionOf(
   if (values.repeat === "monthly") {
     return { recurrence: "monthly", weekdays: null, until };
   }
-  const weekdays =
-    values.repeat === "current"
-      ? shiftWeekdays(occ.recurrenceWeekdays, shift)
-      : [isoWeekdayOf(values.day)];
+  const weekdays = sameRule
+    ? shiftWeekdays(occ.recurrenceWeekdays, shift)
+    : [isoWeekdayOf(values.day)];
   return { recurrence: "weekly", weekdays, until };
 }
 

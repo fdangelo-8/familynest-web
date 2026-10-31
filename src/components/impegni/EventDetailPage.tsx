@@ -10,6 +10,8 @@ import { PageError } from "@/components/ui/PageError/PageError";
 import { Skeleton, SkeletonGroup } from "@/components/ui/Skeleton/Skeleton";
 import { useToast } from "@/components/ui/Toast/ToastProvider";
 import { VisuallyHidden } from "@/components/ui/VisuallyHidden/VisuallyHidden";
+import { startOfDay } from "@/lib/datetime";
+import { eventHref } from "@/lib/household-events";
 import { EditEventSheet } from "./EditEventSheet";
 import { EventCard } from "./EventCard";
 import { calendarHref, mapsUrl } from "./model";
@@ -73,7 +75,7 @@ export function EventDetailPage({
       window.history.replaceState(
         null,
         "",
-        `/impegni/${encodeURIComponent(saved.id)}?giorno=${saved.day}`,
+        eventHref(saved.id, startOfDay(saved.day)),
       );
       await reload(saved.id, saved.day);
       showToast({ text: "Modifiche salvate" });

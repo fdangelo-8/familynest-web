@@ -301,7 +301,7 @@ export function EventFormFields({
               aria-disabled={locks.visibility ? true : undefined}
               onClick={() => onChange({ visibility: choice.value })}
             >
-              <Icon name={choice.icon} />
+              <Icon name={choice.icon} size="s" />
               {choice.label}
             </button>
           ))}
