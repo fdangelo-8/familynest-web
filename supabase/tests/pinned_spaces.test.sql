@@ -1,7 +1,9 @@
 -- pinned_spaces: schema, privileges, isolation between households and between adults of
 -- the same household, anon, availability of the spaces, limit of six (only available
--- spaces count), pin twice without duplicates, unpin, cleanup when a member leaves and
--- when an account is deleted (issue #187, for #28, #29 and #30).
+-- spaces count), pin twice without duplicates, unpin, only POST, cleanup when a member
+-- leaves and when an account is deleted, with the household that stays and with the
+-- household that goes (issue #187, for #28, #29 and #30).
+-- D = dddddddd-…-01, a new account created here, becomes Laura (a1…02).
 -- Seed ids: A = Marco (Casa D'Angelo), B = Giulia (Casa Bianchi, admin),
 -- B2 = Paolo (Casa Bianchi, not admin), C = Chiara (no household).
 -- Members: Casa D'Angelo Marco a1…01, Laura a1…02 (adult without account), Sofia a1…03
@@ -12,7 +14,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(106);
+select plan(120);
 
 -- ---------------------------------------------------------------------------
 -- Schema
@@ -187,7 +189,18 @@ select throws_ok($$ select public.unpin_space(null) $$, '22004', null, 'unpinnin
 set local request.method to 'GET';
 select throws_ok($$ select public.pin_space('chores') $$, 'P0001', 'use POST', 'pin_space refuses GET');
 select throws_ok($$ select public.unpin_space('pets') $$, 'P0001', 'use POST', 'unpin_space refuses GET');
+set local request.method to 'HEAD';
+select throws_ok($$ select public.pin_space('chores') $$, 'P0001', 'use POST', 'pin_space refuses HEAD');
+select throws_ok($$ select public.unpin_space('pets') $$, 'P0001', 'use POST', 'unpin_space refuses HEAD');
+set local request.method to 'PUT';
+select throws_ok($$ select public.pin_space('chores') $$, 'P0001', 'use POST', 'pin_space refuses PUT');
+select throws_ok($$ select public.unpin_space('pets') $$, 'P0001', 'use POST', 'unpin_space refuses PUT');
 set local request.method to 'POST';
+select results_eq(
+  $$ select p.space::text from public.pinned_spaces p order by p.pinned_at $$,
+  $$ values ('pets'::text), ('meals'), ('hobbies') $$,
+  'the refused calls changed nothing'
+);
 
 -- ---------------------------------------------------------------------------
 -- Giulia (B): nothing of Casa D'Angelo exists for her
@@ -390,18 +403,65 @@ select results_eq(
 );
 
 -- ---------------------------------------------------------------------------
--- A member leaves the household: their pinned spaces are deleted
+-- A member leaves the household, which stays: only their pinned spaces are deleted.
+-- D (a new account, set up as the database owner) becomes Laura in Casa D'Angelo.
 -- ---------------------------------------------------------------------------
-set local request.jwt.claims to '{"sub":"bbbbbbbb-0000-4000-8000-000000000002","role":"authenticated"}';
+reset role;
+insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, created_at, updated_at)
+values ('00000000-0000-0000-0000-000000000000', 'dddddddd-0000-4000-8000-000000000001', 'authenticated',
+        'authenticated', 'utente-d@example.com', '{"full_name":"Laura Test"}', now(), now());
+update public.household_members
+set user_id = 'dddddddd-0000-4000-8000-000000000001', joined_at = now()
+where id = 'a1000000-0000-4000-8000-000000000002';
+
+set local role authenticated;
+set local request.jwt.claims to '{"sub":"dddddddd-0000-4000-8000-000000000001","role":"authenticated"}';
+select lives_ok($$ select public.pin_space('couple') $$, 'D (Laura) pins «Noi due»');
+select lives_ok($$ select public.pin_space('meals') $$, 'D (Laura) pins «A tavola»');
+select is_empty(
+  $$ select 1 from public.pinned_spaces p where p.member_id = 'a1000000-0000-4000-8000-000000000001' $$,
+  'D reads 0 pinned spaces of A (same household)'
+);
 select lives_ok(
-  $$ delete from public.household_members m where m.user_id = 'bbbbbbbb-0000-4000-8000-000000000002' $$,
-  'B2 leaves Casa Bianchi'
+  $$ delete from public.household_members m where m.user_id = 'dddddddd-0000-4000-8000-000000000001' $$,
+  'D (Laura) leaves Casa D''Angelo'
 );
 
 reset role;
+select ok(
+  exists (select 1 from public.households h where h.id = '11111111-1111-4111-8111-111111111111'),
+  'Casa D''Angelo stays after Laura leaves'
+);
+select is_empty(
+  $$ select 1 from public.pinned_spaces p where p.member_id = 'a1000000-0000-4000-8000-000000000002' $$,
+  'the pinned spaces of Laura are deleted when she leaves'
+);
+select results_eq(
+  $$ select count(*)::integer from public.pinned_spaces p where p.member_id = 'a1000000-0000-4000-8000-000000000001' $$,
+  $$ values (5) $$,
+  'the pinned spaces of A stay'
+);
+
+-- ---------------------------------------------------------------------------
+-- The account of an adult who is not the only one of the household is deleted: the
+-- household stays, only their pinned spaces are deleted.
+-- ---------------------------------------------------------------------------
+select results_eq(
+  $$ select count(*)::integer from public.pinned_spaces p where p.member_id = 'b1000000-0000-4000-8000-000000000002' $$,
+  $$ values (1) $$,
+  'B2 has one pinned space before the deletion'
+);
+select lives_ok(
+  $$ delete from auth.users where id = 'bbbbbbbb-0000-4000-8000-000000000002' $$,
+  'the account of B2 (Paolo) is deleted'
+);
+select ok(
+  exists (select 1 from public.households h where h.id = '22222222-2222-4222-8222-222222222222'),
+  'Casa Bianchi stays'
+);
 select is_empty(
   $$ select 1 from public.pinned_spaces p where p.member_id = 'b1000000-0000-4000-8000-000000000002' $$,
-  'the pinned spaces of B2 are deleted when he leaves'
+  'the pinned spaces of B2 are deleted with his account'
 );
 select results_eq(
   $$ select count(*)::integer from public.pinned_spaces p where p.member_id = 'b1000000-0000-4000-8000-000000000001' $$,
@@ -423,16 +483,15 @@ select results_eq(
 );
 
 -- ---------------------------------------------------------------------------
--- An account is deleted: its pinned spaces are deleted
+-- The account of the only adult with an account is deleted: the household goes, and
+-- with it the pinned spaces
 -- ---------------------------------------------------------------------------
 select lives_ok(
   $$ delete from auth.users where id = 'aaaaaaaa-0000-4000-8000-000000000001' $$,
   'the account of A is deleted'
 );
 select is_empty(
-  $$ select 1 from public.pinned_spaces p
-     where p.member_id = 'a1000000-0000-4000-8000-000000000001'
-        or p.household_id = '11111111-1111-4111-8111-111111111111' $$,
+  $$ select 1 from public.pinned_spaces p where p.member_id = 'a1000000-0000-4000-8000-000000000001' $$,
   'the pinned spaces of A are deleted with the account'
 );
 select lives_ok(
