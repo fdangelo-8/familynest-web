@@ -215,7 +215,7 @@ test.describe("dialoghi di salvataggio", () => {
         now: NOW,
       }),
     ).toBe(
-      "Si ripete ogni lunedì. Anna ora non vede questo impegno: se la scegli in «La porta», lo vedrà da lunedì 26 ottobre in poi. Le volte prima restano come sono.",
+      "Si ripete ogni lunedì. Anna ora non vede questo impegno: se scegli Anna in «La porta», lo vedrà da lunedì 26 ottobre in poi. Le volte prima restano come sono.",
     );
   });
   test("una scelta: solo la ripetizione cambiata", () => {

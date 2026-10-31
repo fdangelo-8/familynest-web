@@ -624,26 +624,15 @@ export function allDialogText(
   const fromDay = newRule
     ? values.day
     : addDaysToDayKey(occ.occurrenceDate, shiftOf(occ, values));
-  const day = formatDayInSentence(fromDay, now);
-  const base = saveAllText({
+  return saveAllText({
     info: recurrenceInfoOf(occ),
     fromDay,
-    // The sentence about the escort and the last one are added below, with
-    // the name repeated instead of «la» (decision of 31/10 on CA-52).
-    isFirst: true,
+    isFirst: isFirstOccurrence(occ),
     changes: kind.changes,
     toNever: kind.toNever,
-    escortUnseen: null,
+    escortUnseen: kind.escortUnseen,
     now,
   });
-  const parts = [base];
-  if (kind.escortUnseen) {
-    parts.push(
-      `${kind.escortUnseen} ora non vede questo impegno: se scegli ${kind.escortUnseen} in «La porta», lo vedrà da ${day} in poi.`,
-    );
-  }
-  if (!isFirstOccurrence(occ)) parts.push("Le volte prima restano come sono.");
-  return parts.join(" ");
 }
 
 /** Error under «La porta» when the database refuses an escort who does not see the event. */

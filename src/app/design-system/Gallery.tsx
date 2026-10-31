@@ -194,6 +194,16 @@ function ButtonsSection() {
             Metti in giovedì 22
           </Button>
         </Example>
+        <Example caption="btn-primary--freccia · con arrowIcon">
+          <Button
+            arrow
+            arrowIcon="arrow-up-right"
+            type="submit"
+            data-testid="btn-primary-freccia-diagonale"
+          >
+            Aggiungi 2 cose
+          </Button>
+        </Example>
         <Example caption="btn-primary · normale">
           <Button icon="check" onClick={bump} data-testid="btn-primary-normale">
             Salva
@@ -586,6 +596,7 @@ function ControlsSection() {
   const [paperView, setPaperView] = useState("figlio");
   const [chipA, setChipA] = useState(false);
   const [chipB, setChipB] = useState(false);
+  const [chipPrivate, setChipPrivate] = useState(false);
   const [roundEmpty, setRoundEmpty] = useState(false);
   const [roundFull, setRoundFull] = useState(true);
   const [roundRow1, setRoundRow1] = useState(false);
@@ -648,6 +659,13 @@ function ControlsSection() {
             disabled
             aria-label="Preso: Uova"
             data-testid="tondo-disabilitato"
+          />
+        </Example>
+        <Example caption="tondo-spunta · decorativo, senza bottone">
+          <span
+            className="tondo-spunta"
+            aria-hidden="true"
+            data-testid="tondo-decorativo"
           />
         </Example>
         <Example caption="tondo-spunta · in una lista">
@@ -739,6 +757,21 @@ function ControlsSection() {
             data-testid="selettore-carta"
           />
         </Example>
+        <Example caption="selettore · con icona (da 1024 px)">
+          <SegmentedControl
+            aria-label="Tipo"
+            paper
+            value="spesa"
+            onChange={() => undefined}
+            options={[
+              { value: "impegno", label: "Impegno", icon: "calendar" },
+              { value: "da-fare", label: "Da fare", icon: "square-check" },
+              { value: "spesa", label: "Spesa", icon: "shopping-basket" },
+              { value: "scadenza", label: "Scadenza", icon: "file-clock" },
+            ]}
+            data-testid="selettore-icone"
+          />
+        </Example>
         <Example caption="selettore · con selettore__conteggio">
           <SegmentedControl
             aria-label="Sezione della casa"
@@ -811,6 +844,30 @@ function ControlsSection() {
           <Chip pressed count={5} onClick={() => undefined}>
             Tutto
           </Chip>
+        </Example>
+        <Example caption="chip · azione, senza aria-pressed">
+          <Chip
+            action
+            icon={chipPrivate ? "lock" : "users"}
+            onClick={() => setChipPrivate((v) => !v)}
+            data-testid="chip-azione"
+          >
+            {chipPrivate ? "Lo vedi solo tu" : "Lo vede tutto il Nest"}
+          </Chip>
+        </Example>
+        <Example caption="chip--con-togli · chip__togli">
+          <span className="chip chip--statico chip--con-togli">
+            <Icon name="calendar" size="s" />
+            Entro venerdì 23
+            <button
+              type="button"
+              className="chip__togli"
+              aria-label="Togli la data"
+              data-testid="chip-togli"
+            >
+              <Icon name="x" size="s" />
+            </button>
+          </span>
         </Example>
         <Example caption="chip · disabilitato">
           <Chip disabled>Solo adulti</Chip>
@@ -1320,6 +1377,14 @@ function OverlaysSection() {
         </Example>
       </Section>
       <Section id="modale" title="Modale">
+        <Example caption="modale__piede--fine · solo il bottone di invio">
+          <div
+            className="modale__piede modale__piede--fine"
+            data-testid="modale-piede-fine"
+          >
+            <Button>Aggiungi</Button>
+          </div>
+        </Example>
         <Example caption="modale · stesso contenuto del foglio">
           <p className="t-nota t-secondario">
             Da 1024 px il foglio diventa una modale centrata, con lo stesso

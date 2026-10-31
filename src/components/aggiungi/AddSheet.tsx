@@ -32,7 +32,6 @@ import { cx } from "../ui/cx";
 import { Icon } from "../ui/Icon/Icon";
 import { useIsDesktop } from "../ui/overlay";
 import { Sheet } from "../ui/Sheet/Sheet";
-import { Spinner } from "../ui/Spinner/Spinner";
 import { useToast } from "../ui/Toast/ToastProvider";
 import { AddPreview, type DayState } from "./AddPreview";
 import {
@@ -380,23 +379,17 @@ export function AddSheet({ direct = false }: { direct?: boolean }) {
 
   const buttonLabel = submitLabel(phrase, parsed, todayKey);
   const submitButton = (
-    <button
+    <Button
       type="submit"
       form={formId}
-      className={cx(
-        "btn-primary btn-primary--freccia",
-        !desktop && "btn--pieno",
-        saving && "is-caricamento",
-      )}
+      arrow
+      arrowIcon="arrow-up-right"
+      full={!desktop}
+      loading={saving}
       disabled={empty}
-      aria-busy={saving || undefined}
-      aria-disabled={saving || undefined}
     >
-      <span className="btn__testo">{buttonLabel}</span>
-      <span className="btn__icona-box">
-        {saving ? <Spinner /> : <Icon name="arrow-up-right" />}
-      </span>
-    </button>
+      {buttonLabel}
+    </Button>
   );
 
   const examples = (
@@ -452,13 +445,10 @@ export function AddSheet({ direct = false }: { direct?: boolean }) {
       closeRequested={closeRequested}
       onClose={handleClose}
       side={side}
+      footerEnd
       footer={
         desktop ? (
-          <>
-            {/* Keeps the button on the right: the foot spreads its children apart */}
-            <span aria-hidden="true" />
-            {submitButton}
-          </>
+          submitButton
         ) : (
           <>
             {submitButton}
@@ -471,7 +461,7 @@ export function AddSheet({ direct = false }: { direct?: boolean }) {
         )
       }
     >
-      <form id={formId} className="modulo-membro" onSubmit={onSubmit}>
+      <form id={formId} className="modulo-foglio" onSubmit={onSubmit}>
         <div className={cx("campo", error && "campo--errore")}>
           <label className="visivamente-nascosto" htmlFor={fieldId}>
             Cosa vuoi aggiungere?
