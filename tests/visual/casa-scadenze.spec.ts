@@ -35,8 +35,12 @@ test.beforeEach(async ({ context, baseURL }) => {
 async function open(page: Page, options: FakeOptions, ready = true) {
   await page.clock.install({ time: NOW });
   // Casa reads the three lists on every page: the other two are faked too.
-  await installSpesaFake(page, { items: NORMAL_LIST });
-  await installTodosFake(page, { todos: NORMAL_TODOS });
+  // While the deadlines are held the other two are held as well: when they
+  // finish first, the tabs show their counts and the filter chips appear, so
+  // the loading shot would depend on who answers first.
+  const reads = options.reads === "slow" ? "slow" : "ok";
+  await installSpesaFake(page, { items: NORMAL_LIST, reads });
+  await installTodosFake(page, { todos: NORMAL_TODOS, reads });
   const fake = await installScadenzeFake(page, options);
   await page.goto("/casa/scadenze");
   if (ready) {
