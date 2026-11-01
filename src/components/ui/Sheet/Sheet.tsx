@@ -22,6 +22,8 @@ export type SheetProps = {
   children: ReactNode;
   /** Actions at the bottom. Mobile: after the content. Desktop: `.modale__piede`. */
   footer?: ReactNode;
+  /** Desktop: the foot holds only the main button, kept on the right (`.modale__piede--fine`) */
+  footerEnd?: boolean;
   /** Short line next to the close button in the head (`.foglio__info`), e.g. a hint and a `kbd` */
   info?: ReactNode;
   /** Optional side column (`.modale__lato`) on desktop. Without it the modal is single (`.modale--singola`). */
@@ -55,6 +57,7 @@ function SheetContent({
   title,
   children,
   footer,
+  footerEnd,
   info,
   side,
   tall,
@@ -176,7 +179,13 @@ function SheetContent({
           </div>
           {children}
           {footer ? (
-            <div className={desktop ? "modale__piede" : "foglio__piede"}>
+            <div
+              className={
+                desktop
+                  ? cx("modale__piede", footerEnd && "modale__piede--fine")
+                  : "foglio__piede"
+              }
+            >
               {footer}
             </div>
           ) : null}
