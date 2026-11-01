@@ -1923,7 +1923,9 @@ function EditableRowsSection() {
                 <span className="riga-scadenza__unita">giorni</span>
               </span>
               <span className="riga-lista__testo">
-                <span className="riga-lista__titolo">Iscrizione al centro estivo</span>
+                <span className="riga-lista__titolo">
+                  Iscrizione al centro estivo
+                </span>
                 <span className="riga-lista__info">Mercoledì 4 novembre</span>
               </span>
               <span />
