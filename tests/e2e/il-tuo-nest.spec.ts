@@ -420,7 +420,10 @@ test.describe("contenuto", () => {
     }
     await porta.click();
     await expect(page).toHaveURL(/\/esplora$/);
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Esplora");
+    // real page since #28: see tests/e2e/esplora.spec.ts
+    await expect(page.getByRole("heading", { level: 1 })).toHaveAccessibleName(
+      "Cosa può fare la vostra casa",
+    );
   });
 
   test("CA-10: desktop con navigazione alta, senza X e due colonne", async ({
