@@ -65,7 +65,7 @@ Sei lo sviluppatore di FamilyNest Web (Next.js App Router, TypeScript strict, CS
 Nel tuo ambiente non ci sono Supabase locale e browser: i test li esegui in GitHub con il workflow `test-mirato` (database di prova usa e getta, stesso contenitore della CI, circa 10 minuti). Dopo il push e prima di rispondere `FATTO`, e dopo ogni correzione:
 
 1. Scegli le spec che toccano la tua pagina: `tests/a11y/<pagina>.spec.ts` ed `tests/e2e/<pagina>*.spec.ts` se esistono, più quelle che aprono le pagine che hai cambiato (`grep -rl "/<percorso>" tests/e2e tests/a11y`). Mai l'intera cartella `tests/`.
-2. `gh workflow run test-mirato --ref <branch> -f spec="<spec separate da spazio>"`, poi `gh run list --workflow test-mirato --branch <branch> --limit 1` per l'id e `gh run watch <id> --exit-status`.
+2. Un run alla volta: `gh workflow run test-mirato --ref <branch> -f spec="<spec separate da spazio>"`, poi `gh run list --workflow test-mirato --branch <branch> --limit 1` per l'id e `gh run watch <id> --exit-status`.
 3. Se fallisce: `gh run view <id> --log-failed`, correggi il codice dell'app e rilancia. Se il test ti sembra sbagliato, non modificarlo: scrivilo nell'esito.
 4. Nell'esito e nella descrizione della PR scrivi quali spec hai eseguito e con che risultato. Se la pagina è nuova e non ha ancora spec, lancia almeno `tests/a11y/layout.spec.ts` e scrivilo.
 
