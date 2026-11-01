@@ -576,8 +576,9 @@ export async function expectCard(
   expected: { number: string; unit?: string; day?: string; title?: string },
 ): Promise<void> {
   const card = sheet(page).card;
+  // The hidden «, urgente» sits inside the number element when it applies.
   await expect(card.locator(".riga-scadenza__numero")).toHaveText(
-    expected.number,
+    new RegExp(`^${expected.number}(\\s*,\\s*urgente)?$`),
   );
   if (expected.unit !== undefined) {
     await expect(card.locator(".riga-scadenza__unita")).toHaveText(
@@ -597,7 +598,8 @@ export async function expectGone(page: Page): Promise<void> {
   const s = sheet(page, "edit");
   await expect(s.dialog.getByText(GONE_TITLE, { exact: true })).toBeVisible();
   await expect(s.dialog.getByText(GONE_TEXT, { exact: true })).toBeVisible();
-  await expect(s.button("Chiudi")).toBeVisible();
+  // The sheet's own «X» is also named «Chiudi»: the button of the message has a test id.
+  await expect(s.dialog.getByTestId("aggiungi-gone-chiudi")).toBeVisible();
   await expect(s.dialog.getByRole("textbox")).toHaveCount(0);
 }
 

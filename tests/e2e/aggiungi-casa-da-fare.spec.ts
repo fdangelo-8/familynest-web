@@ -76,7 +76,7 @@ test.describe("Aggiungi · Da fare · creazione", () => {
     await openAddFromNav(page, baseURL, casa, "Marco");
     const s = sheet(page);
     await s.field.fill("comprare la cuffia per Sofia entro giovedì");
-    await expect(labelText(page, "Per Sofia")).toBeVisible();
+    await expect(labelText(page, /Per Sofia$/)).toBeVisible();
     await s.button("Aggiungi ai da fare").click();
 
     await expect(

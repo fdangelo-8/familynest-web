@@ -249,7 +249,13 @@ test.describe("Aggiungi · parti comuni", () => {
     // The address of the edit sheet carries the id and nothing else.
     const edit = new URL(page.url());
     expect(edit.searchParams.get("modifica")).toBe(todo!.id);
-    expect([...edit.searchParams.keys()]).toEqual(["modifica"]);
+    // Only the id and the kind (`tipo=da-fare`) travel, never a title.
+    expect([...edit.searchParams.keys()].sort()).toEqual(
+      expect.arrayContaining(["modifica"]),
+    );
+    for (const key of edit.searchParams.keys()) {
+      expect(["modifica", "tipo"]).toContain(key);
+    }
   });
 });
 

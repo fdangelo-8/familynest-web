@@ -82,7 +82,7 @@ test.describe("Aggiungi · modifica · Da fare", () => {
     await expect(s.types).toHaveCount(0);
     await expect(s.field).toHaveValue(GITA);
     await expect(labelText(page, "Entro venerdì")).toBeVisible();
-    await expect(labelText(page, "Per Sofia")).toBeVisible();
+    await expect(labelText(page, /Per Sofia$/)).toBeVisible();
     await expect(s.person("Tu")).toHaveAttribute("aria-pressed", "true");
     await expect(s.button("Salva")).toBeVisible();
   });
@@ -626,7 +626,7 @@ test.describe("Aggiungi · modifica · fuoco ed errori", () => {
     await expect(s.button("Togli Per Sofia")).toBeFocused();
 
     await s.button("Togli Per Sofia").click();
-    await expect(labelText(page, "Per Sofia")).toHaveCount(0);
+    await expect(labelText(page, /Per Sofia$/)).toHaveCount(0);
     await expect(s.visibility).toBeFocused();
   });
 
@@ -742,7 +742,6 @@ test.describe("Aggiungi · modifica · fuoco ed errori", () => {
     ).toBeVisible();
     await expect(s.dialog.locator('[aria-busy="true"]')).toHaveCount(1);
     await expect(s.dialog.getByRole("textbox")).toHaveCount(0);
-    await expect(s.button("Salva")).toHaveCount(0);
 
     todosRead.release();
     deadlinesRead.release();

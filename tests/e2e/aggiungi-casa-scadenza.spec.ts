@@ -127,7 +127,7 @@ test.describe("Aggiungi · Scadenza · creazione", () => {
     await s.field.fill("rinnovo carta d'identità di Sofia il 15 marzo");
 
     await expect(s.type("Scadenza")).toHaveAttribute("aria-pressed", "true");
-    await expect(labelText(page, "Sofia")).toBeVisible();
+    await expect(labelText(page, /Sofia$/)).toBeVisible();
     await s.button("Aggiungi alle scadenze").click();
 
     await expect(toastOf(page)).toBeVisible();
@@ -311,18 +311,20 @@ test.describe("Aggiungi · Scadenza · anteprima", () => {
     await s.type("Scadenza").click();
 
     await s.field.fill("bollo auto scade oggi");
-    await expect(s.card.locator(".riga-scadenza__numero")).toHaveText("Oggi");
+    await expect(s.card.locator(".riga-scadenza__numero")).toHaveText(
+      /^Oggi\b/,
+    );
     await expect(s.card.locator(".riga-scadenza__giorni")).toHaveText(
       /^Oggi\s*,\s*urgente$/,
     );
     await expect(s.card.getByText(/urgente/)).toHaveCount(1);
 
     await s.field.fill("scade il 7 dicembre");
-    await expect(s.card.locator(".riga-scadenza__numero")).toHaveText("48");
+    await expect(s.card.locator(".riga-scadenza__numero")).toHaveText(/^48$/);
     await expect(s.card.getByText(/urgente/)).toHaveCount(0);
 
     await s.field.fill("scade il 30 ottobre");
-    await expect(s.card.locator(".riga-scadenza__numero")).toHaveText("10");
+    await expect(s.card.locator(".riga-scadenza__numero")).toHaveText(/^10\b/);
     await expect(s.card.getByText(/urgente/)).toHaveCount(1);
   });
 });
