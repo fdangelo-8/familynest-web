@@ -170,7 +170,6 @@ export type PlaceholderKey =
   | "casa-da-fare"
   | "casa-scadenze"
   | "nest"
-  | "esplora"
   | "notifiche"
   | "ricerca"
   | "profilo"
@@ -273,13 +272,6 @@ export const PLACEHOLDERS: Record<PlaceholderKey, PlaceholderDef> = {
     browserTitle: "FamilyNest · Il tuo Nest",
     icon: "users",
     text: `Qui troverai le persone di casa, Esplora e le impostazioni. ${COMING}`,
-    backToToday: true,
-  },
-  esplora: {
-    title: "Esplora",
-    browserTitle: "FamilyNest · Esplora",
-    icon: "compass",
-    text: "Qui scoprirai cosa può fare la vostra casa. Stiamo preparando questa pagina.",
     backToToday: true,
   },
   notifiche: {

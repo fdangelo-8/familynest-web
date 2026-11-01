@@ -95,6 +95,7 @@ export function Gallery() {
       <OverlaysSection />
       <StatesSection />
       <DayViewSection />
+      <EditableRowsSection />
     </main>
   );
 }
@@ -1859,6 +1860,78 @@ function DayViewSection() {
             <span className="blocco-orario__ora">9:00 – 10:00</span>
           </a>
         </DayGrid>
+      </Example>
+    </Section>
+  );
+}
+
+function EditableRowsSection() {
+  return (
+    <Section id="righe-modifica" title="Righe di Casa che aprono Modifica">
+      <Example caption="riga-lista--modificabile">
+        <ul className="scheda lista" data-testid="righe-modificabili">
+          <li className="riga-lista riga-lista--modificabile">
+            <Checkbox
+              checked={false}
+              onChange={() => {}}
+              aria-label="Segna come fatto: Chiamare il commercialista"
+            />
+            <span className="riga-lista__testo">
+              <button type="button" className="riga-lista__titolo">
+                Chiamare il commercialista
+              </button>
+              <span className="riga-lista__info">Entro giovedì</span>
+            </span>
+            <Avatar name="Laura" color="glicine" nameShown />
+          </li>
+          <li className="riga-lista riga-lista--modificabile">
+            <Checkbox
+              checked={false}
+              onChange={() => {}}
+              aria-label="Segna come fatto: Preparare lo zaino"
+            />
+            <span className="riga-lista__testo">
+              <button type="button" className="riga-lista__titolo">
+                Preparare lo zaino
+              </button>
+            </span>
+            <span />
+          </li>
+        </ul>
+      </Example>
+      <Example caption="a.riga-scadenza">
+        <ul className="scheda lista" data-testid="righe-scadenza">
+          <li>
+            <a className="riga-scadenza" href="#righe-modifica">
+              <span className="riga-scadenza__giorni">
+                <span className="riga-scadenza__numero">3</span>
+                <span className="riga-scadenza__unita">giorni</span>
+              </span>
+              <span className="riga-lista__testo">
+                <span className="riga-lista__titolo">
+                  Rinnovo assicurazione
+                </span>
+                <span className="riga-lista__info">Giovedì 23 ottobre</span>
+              </span>
+              <span />
+            </a>
+          </li>
+          <li>
+            <a className="riga-scadenza" href="#righe-modifica">
+              <span className="riga-scadenza__giorni">
+                <span className="riga-scadenza__numero">12</span>
+                <span className="riga-scadenza__unita">giorni</span>
+              </span>
+              <span className="riga-lista__testo">
+                <span className="riga-lista__titolo">
+                  Iscrizione al centro estivo
+                </span>
+                <span className="riga-lista__info">Mercoledì 4 novembre</span>
+              </span>
+              <span />
+            </a>
+          </li>
+        </ul>
       </Example>
     </Section>
   );

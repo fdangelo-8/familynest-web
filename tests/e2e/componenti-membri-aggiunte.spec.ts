@@ -549,7 +549,7 @@ test.describe("Esplora «In arrivo»", () => {
     await expect(page).toHaveURL(/\/accesso$/);
   });
 
-  test("A: titolo, bussola, testo e ritorno a Oggi", async ({
+  test("A: titolo e intestazione della pagina vera (#28), non il segnaposto", async ({
     page,
     baseURL,
   }) => {
@@ -560,16 +560,13 @@ test.describe("Esplora «In arrivo»", () => {
     await expect(page).toHaveTitle("FamilyNest · Esplora");
     await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
     await expect(
-      page.getByRole("heading", { level: 1, name: "Esplora", exact: true }),
+      page.getByRole("heading", {
+        level: 1,
+        name: "Cosa può fare la vostra casa",
+        exact: true,
+      }),
     ).toBeVisible();
-    const placeholder = page.getByTestId("pagina-segnaposto");
-    await expect(placeholder).toContainText("In arrivo");
-    await expect(placeholder).toContainText(
-      "Qui scoprirai cosa può fare la vostra casa. Stiamo preparando questa pagina.",
-    );
-    await expect(placeholder.locator("svg").first()).toBeVisible();
-    await placeholder.getByRole("link", { name: "Torna a Oggi" }).click();
-    await expect(page).toHaveURL(/\/oggi$/);
+    await expect(page.getByTestId("pagina-segnaposto")).toHaveCount(0);
   });
 
   test("la navigazione principale c'è; su mobile «Oggi» è la voce collegata", async ({
@@ -579,6 +576,7 @@ test.describe("Esplora «In arrivo»", () => {
     withUser("A");
     await signInAs(page.context(), baseURL as string, "A");
     await page.goto("/esplora");
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     const nav = page
       .getByRole("navigation", { name: "Navigazione principale" })
       .filter({ visible: true });
@@ -601,7 +599,11 @@ test.describe("Esplora «In arrivo»", () => {
     await signInAs(page.context(), baseURL as string, "B");
     await page.goto("/esplora");
     await expect(
-      page.getByRole("heading", { level: 1, name: "Esplora", exact: true }),
+      page.getByRole("heading", {
+        level: 1,
+        name: "Cosa può fare la vostra casa",
+        exact: true,
+      }),
     ).toBeVisible();
     // the Nest square is in the top navigation of the desktop layout only
     if (testInfo.project.name === "desktop") {

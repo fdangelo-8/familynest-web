@@ -6,24 +6,19 @@ import {
 } from "../fixtures/calendar-states-harness";
 import { hasTestUser, signInAs } from "../fixtures/visual-login";
 
-// Dates and calendar (#88, PR #100): the "In arrivo" pages of
-// /calendario/giorno and /calendario/mese (/impegni/<id> is the real page since #19), and the CSS states
+// Dates and calendar (#88, PR #100): the "In arrivo" page of
+// /calendario/mese (/impegni/<id> is the real page since #19, /calendario/giorno
+// since #26: its tests are in calendario-giorno.spec.ts), and the CSS states
 // for #25 (Calendario) and #30 (Oggi): hover and pressed on rows, cards, day
 // strip, time blocks and steps, the "adesso" line and the "Già fatti" arrow.
 // No page uses those classes yet, so they are shown on a test page
 // (tests/fixtures/calendar-states-harness.ts, markup copied from the mockup)
 // mounted on a public page. At 390 and 1280 px (projects).
-// The placeholders need test user A (without TEST_USER_A_* they are skipped).
+// The placeholder needs test user A (without TEST_USER_A_* they are skipped).
 
 test.use({ locale: "it-IT", timezoneId: "Europe/Rome" });
 
 const PAGES = [
-  {
-    route: "/calendario/giorno",
-    file: "calendario-giorno",
-    text: "Qui vedrai gli impegni di un giorno, ora per ora.",
-    title: "Calendario",
-  },
   {
     route: "/calendario/mese",
     file: "calendario-mese",
@@ -42,8 +37,8 @@ test.describe("segnaposto «In arrivo»", () => {
     test.skip(!signedIn, "utente di test A non ancora creato");
   });
 
-  // One test (one sign-in) for the two pages.
-  test("segnaposto: /calendario/giorno, /calendario/mese", async ({ page }) => {
+  // One test (one sign-in) for the placeholder pages left.
+  test("segnaposto: /calendario/mese", async ({ page }) => {
     for (const p of PAGES) {
       await page.goto(p.route);
       await expect(

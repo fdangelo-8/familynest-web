@@ -446,6 +446,8 @@ test.describe("segnaposto", () => {
     if (route === "/nest") continue;
     // /calendario is no longer a placeholder (#25): see tests/e2e/calendario-settimana.spec.ts.
     if (route === "/calendario") continue;
+    // /esplora is no longer a placeholder (#28): see tests/e2e/esplora.spec.ts.
+    if (route === "/esplora") continue;
     test(`CA-6: A apre ${route}: stato 200, un solo h1 «${h1}», titolo, segnaposto`, async ({
       page,
       baseURL,

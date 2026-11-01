@@ -35,8 +35,12 @@ test.beforeEach(async ({ context, baseURL }) => {
 async function open(page: Page, options: FakeOptions, ready = true) {
   await page.clock.install({ time: NOW });
   // Casa reads the three lists on every page: the other two are faked too.
-  await installSpesaFake(page, { items: NORMAL_LIST });
-  await installTodosFake(page, { todos: NORMAL_TODOS });
+  // While the deadlines are held the other two are held as well: all three
+  // lists stay slow so that the loading shot is deterministic. (The cause of
+  // the one failure seen on 1 November, #210, was not reproduced.)
+  const reads = options.reads === "slow" ? "slow" : "ok";
+  await installSpesaFake(page, { items: NORMAL_LIST, reads });
+  await installTodosFake(page, { todos: NORMAL_TODOS, reads });
   const fake = await installScadenzeFake(page, options);
   await page.goto("/casa/scadenze");
   if (ready) {

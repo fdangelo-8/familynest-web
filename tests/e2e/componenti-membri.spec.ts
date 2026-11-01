@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { formatAge } from "../../src/lib/datetime";
-import { PLACEHOLDERS, getBarConfig } from "../../src/lib/app-routes";
+import { getBarConfig } from "../../src/lib/app-routes";
 
 // Shared part of #85: ColorChoice, formatAge, MemberSheet, "Esplora" placeholder.
 
@@ -26,18 +26,7 @@ test.describe("formatAge", () => {
   });
 });
 
-test.describe("segnaposto di Esplora", () => {
-  test("titolo, icona e testo", () => {
-    const def = PLACEHOLDERS["esplora"];
-    expect(def.title).toBe("Esplora");
-    expect(def.browserTitle).toBe("FamilyNest · Esplora");
-    expect(def.icon).toBe("compass");
-    expect(def.text).toBe(
-      "Qui scoprirai cosa può fare la vostra casa. Stiamo preparando questa pagina.",
-    );
-    expect(def.backToToday).toBe(true);
-  });
-
+test.describe("barra di Il tuo Nest", () => {
   test("la X del Nest ha ancora /oggi come ripiego", () => {
     expect(getBarConfig("/nest")).toEqual({ kind: "close", href: "/oggi" });
   });
