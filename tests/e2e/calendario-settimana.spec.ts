@@ -1272,7 +1272,7 @@ test.describe("griglia desktop e pannello", () => {
     await expect(section).toContainText("Tutto il Nest");
     await expect(section.getByRole("link")).toHaveAttribute(
       "href",
-      `/impegni/${id}`,
+      `/impegni/${id}?giorno=${TUE}`,
     );
     await expect(
       gridBlock(page, "Martedì 20 ottobre", "Cena dai nonni"),
