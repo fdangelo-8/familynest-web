@@ -377,10 +377,21 @@ test.describe("tastiera e fuoco", () => {
     const checkbox = page.getByRole("checkbox", {
       name: `Segna come fatto: ${FIRMARE}`,
     });
-    await page.keyboard.press("Tab"); // makes :focus-visible apply
-    await checkbox.focus();
-    await page.keyboard.press("Shift+Tab");
-    await page.keyboard.press("Tab");
+    // Walk the page with Tab from the top until the checkbox gets the focus.
+    // Nothing is assumed about what comes before it, and a lost focus (the
+    // list re-renders after the first read) only restarts the walk.
+    await expect
+      .poll(
+        async () => {
+          if (await checkbox.evaluate((el) => el === document.activeElement)) {
+            return true;
+          }
+          await page.keyboard.press("Tab");
+          return false;
+        },
+        { timeout: 15_000, intervals: [0] },
+      )
+      .toBe(true);
     await expect(checkbox).toBeFocused();
     expect(await hasFocusRing(checkbox)).toBe(true);
     await page.keyboard.press("Space");
