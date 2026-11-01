@@ -4459,7 +4459,7 @@ button.riga-lista {
   content: "";
   position: absolute;
   inset: 0;
-  border-radius: inherit;
+  border-radius: var(--radius-l);
 }
 .scheda-modulo__link:focus-visible {
   outline: none;
@@ -4478,9 +4478,13 @@ button.riga-lista {
    su «Noi due» fondo notte-2, icona notte */
 @media (hover: hover) {
   .scheda-modulo,
-  .scheda-modulo__icona,
-  .puntina {
+  .scheda-modulo__icona {
     transition: background var(--durata-rapida) var(--curva);
+  }
+  .puntina {
+    transition:
+      background var(--durata-rapida) var(--curva),
+      color var(--durata-rapida) var(--curva);
   }
   .scheda-modulo:has(> .scheda-modulo__link:hover) {
     background: var(--color-carta);
@@ -4510,31 +4514,43 @@ button.riga-lista {
 }
 
 /* Passaggio del mouse e premuto della puntina, nei 4 casi: vuota o piena, su
-   scheda chiara o su «Noi due» */
+   scheda chiara o su «Noi due». Non su una puntina disabilitata. */
 @media (hover: hover) {
-  .puntina:not([aria-pressed="true"]):hover {
+  .puntina:not(:disabled, [aria-disabled="true"], [aria-pressed="true"]):hover {
     background: var(--color-carta);
   }
-  .puntina[aria-pressed="true"]:hover {
+  .puntina[aria-pressed="true"]:not(:disabled, [aria-disabled="true"]):hover {
     background: var(--color-notte-2);
   }
-  .scheda-modulo--scura .puntina:not([aria-pressed="true"]):hover {
+  .scheda-modulo--scura
+    .puntina:not(
+      :disabled,
+      [aria-disabled="true"],
+      [aria-pressed="true"]
+    ):hover {
     background: var(--color-notte-2);
   }
-  .scheda-modulo--scura .puntina[aria-pressed="true"]:hover {
+  .scheda-modulo--scura
+    .puntina[aria-pressed="true"]:not(:disabled, [aria-disabled="true"]):hover {
     background: var(--color-latte-2);
   }
 }
-.puntina:not([aria-pressed="true"]):active {
+.puntina:not(:disabled, [aria-disabled="true"], [aria-pressed="true"]):active {
   background: var(--color-carta);
 }
-.puntina[aria-pressed="true"]:active {
+.puntina[aria-pressed="true"]:not(:disabled, [aria-disabled="true"]):active {
   background: var(--color-notte-2);
 }
-.scheda-modulo--scura .puntina:not([aria-pressed="true"]):active {
+.scheda-modulo--scura
+  .puntina:not(
+    :disabled,
+    [aria-disabled="true"],
+    [aria-pressed="true"]
+  ):active {
   background: var(--color-notte-2);
 }
-.scheda-modulo--scura .puntina[aria-pressed="true"]:active {
+.scheda-modulo--scura
+  .puntina[aria-pressed="true"]:not(:disabled, [aria-disabled="true"]):active {
   background: var(--color-latte-2);
 }
 

@@ -83,6 +83,13 @@ test.describe("catalogo degli spazi", () => {
     expect(getSpacePromise("pets", { petNames: ["Fido", "Micia"] })).toBe(
       "Per Fido, Micia e per chi ha quattro zampe.",
     );
+    // without names: a sensible text, never a placeholder
+    for (const key of ["children", "pets"] as const) {
+      expect(getSpacePromise(key)).not.toMatch(/[‹›]/);
+      expect(
+        getSpacePromise(key, { childNames: [], petNames: [] }),
+      ).not.toMatch(/[‹›]/);
+    }
     expect(getSpacePromise("meals")).toBe(
       "Cosa mangiamo questa settimana, senza pensarci ogni sera.",
     );
