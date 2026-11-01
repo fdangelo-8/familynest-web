@@ -54,7 +54,11 @@ function Row({
   ) : null;
   return (
     <li
-      className={cx("riga-lista", done && "riga-lista--fatto")}
+      className={cx(
+        "riga-lista",
+        done && "riga-lista--fatto",
+        !todo.id.startsWith("tmp-") && "riga-lista--modificabile",
+      )}
       data-item-key={todo.key}
       data-testid="da-fare-riga"
     >
