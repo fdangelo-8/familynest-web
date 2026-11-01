@@ -4,7 +4,7 @@ import { mountHarness } from "../fixtures/calendar-states-harness";
 import { hasTestUser, signInAs } from "../fixtures/visual-login";
 
 // Accessibility of dates and calendar (#88, PR #100): the "In arrivo" pages of
-// /calendario/giorno, /calendario/mese and /impegni/<id>, and the CSS states
+// /calendario/mese (since #26 /calendario/giorno is the real page: calendario-giorno.spec.ts; /impegni/<id> since #19), and the CSS states
 // for #25 and #30 (rows, cards, day strip, time blocks, steps) shown on the
 // test page of tests/fixtures/calendar-states-harness.ts: axe in every state
 // (resting, hover and pressed), focus order and ring, touch areas.
@@ -67,10 +67,7 @@ async function touchAreaIs44(page: Page, target: Locator) {
 // ---------------------------------------------------------------------------
 // "In arrivo" pages.
 
-const PAGES = [
-  { route: "/calendario/giorno", h1: "Calendario", lens: true },
-  { route: "/calendario/mese", h1: "Calendario", lens: true },
-];
+const PAGES = [{ route: "/calendario/mese", h1: "Calendario", lens: true }];
 
 test.describe("segnaposto «In arrivo»", () => {
   test.use({ reducedMotion: "reduce" });
