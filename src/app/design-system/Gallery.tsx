@@ -96,6 +96,7 @@ export function Gallery() {
       <StatesSection />
       <DayViewSection />
       <EditableRowsSection />
+      <MonthSection />
     </main>
   );
 }
@@ -1932,6 +1933,118 @@ function EditableRowsSection() {
             </a>
           </li>
         </ul>
+      </Example>
+    </Section>
+  );
+}
+
+const MONTH_WEEK = [
+  { day: "27", label: "27 ottobre", dots: [] as string[] },
+  { day: "28", label: "28 ottobre", dots: ["salvia"] },
+  { day: "29", label: "29 ottobre", dots: ["pomodoro", "glicine", "cobalto"] },
+  {
+    day: "30",
+    label: "30 ottobre",
+    dots: ["pomodoro", "glicine", "salvia", "cobalto", "zafferano", "peonia"],
+  },
+  { day: "31", label: "31 ottobre", dots: [] as string[] },
+  { day: "1", label: "1 novembre", dots: [] as string[] },
+  { day: "2", label: "2 novembre", dots: [] as string[] },
+];
+
+function MonthDots({ dots }: { dots: readonly string[] }) {
+  return (
+    <span
+      className={`griglia-mese__punti${dots.length > 4 ? " griglia-mese__punti--molti" : ""}`}
+    >
+      {dots.map((color) => (
+        <span
+          key={color}
+          className={`avatar avatar--punto membro-${color}`}
+          aria-hidden="true"
+        />
+      ))}
+      {dots.length > 4 ? (
+        <span className="griglia-mese__altri" aria-hidden="true" />
+      ) : null}
+    </span>
+  );
+}
+
+function MonthRow({ loading }: { loading?: boolean }) {
+  return (
+    <div className="griglia-mese">
+      <div className="griglia-mese__riga">
+        {["L", "M", "M", "G", "V", "S", "D"].map((letter, index) => (
+          <span
+            key={index}
+            className="griglia-mese__intestazione"
+            aria-hidden="true"
+          >
+            {letter}
+          </span>
+        ))}
+      </div>
+      <div className="griglia-mese__riga">
+        {MONTH_WEEK.map((cell, index) => (
+          <button
+            key={cell.label}
+            type="button"
+            className={[
+              "griglia-mese__cella",
+              index >= 5 ? "griglia-mese__cella--weekend" : "",
+              index === 5 ? "griglia-mese__cella--festa" : "",
+              index === 2 ? "griglia-mese__cella--selezionata" : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            aria-label={cell.label}
+          >
+            <span className="griglia-mese__numero">{cell.day}</span>
+            <MonthDots dots={loading ? [] : cell.dots} />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function MonthSection() {
+  return (
+    <Section id="griglia-mese" title="Calendario Mese">
+      <Example caption="griglia-mese__altri">
+        <MonthRow />
+      </Example>
+      <Example caption="griglia in caricamento">
+        <MonthRow loading />
+      </Example>
+      <Example caption="contorno dei punti">
+        <div className="griglia-mese">
+          <div className="griglia-mese__riga">
+            <button
+              type="button"
+              className="griglia-mese__cella"
+              aria-label="15 novembre"
+            >
+              <span className="griglia-mese__numero">15</span>
+              <MonthDots dots={["zafferano", "peonia", "salvia"]} />
+            </button>
+          </div>
+        </div>
+      </Example>
+      <Example caption="periodo--con-oggi">
+        <div className="periodo periodo--con-oggi">
+          <h3 className="t-titolo-pagina">Dicembre 2026</h3>
+          <div className="periodo__frecce">
+            <IconButton icon="chevron-left" aria-label="Mese precedente" />
+            <IconButton icon="chevron-right" aria-label="Mese successivo" />
+          </div>
+          <div className="periodo__oggi">
+            <Link href="#griglia-mese" className="btn-link">
+              Oggi
+            </Link>
+          </div>
+        </div>
       </Example>
     </Section>
   );

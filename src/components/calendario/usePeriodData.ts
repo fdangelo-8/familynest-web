@@ -10,9 +10,9 @@ import { keyEvents, type KeyedEvent, type Roster } from "./model";
 
 type Client = SupabaseClient<Database>;
 
-export type WeekEntry = {
+export type PeriodEntry = {
   events: KeyedEvent[];
-  /** Epoch ms of the last successful read of this week */
+  /** Epoch ms of the last successful read of this period */
   readAt: number;
 };
 
@@ -37,11 +37,11 @@ async function readRoster(client: Client): Promise<Roster | null> {
   return { members: members.data, meId: me.data?.id ?? null };
 }
 
-export type WeekData = {
-  /** Events of the week, once read at least one time */
-  entry: WeekEntry | undefined;
+export type PeriodData = {
+  /** Events of the period, once read at least one time */
+  entry: PeriodEntry | undefined;
   roster: Roster | null;
-  /** The last reading of this week did not succeed */
+  /** The last reading of this period did not succeed */
   failed: boolean;
   /** «Riprova» is running */
   retrying: boolean;
@@ -49,13 +49,14 @@ export type WeekData = {
 };
 
 /**
- * Reads the events of a week in the browser (so the page owns its loading and
- * error states). Weeks already read stay in memory while the page is open and
- * are read again at each change of week, with «Riprova» and when the network
- * comes back.
+ * Reads the events of a period (a week, a day, a month grid) in the browser, so
+ * the page owns its loading and error states. `periodKey` is the day key of the
+ * first day and `days` how many days to read (at most 42). Periods already read
+ * stay in memory while the page is open and are read again at each change of
+ * period, with «Riprova» and when the network comes back.
  */
-export function useWeekData(weekKey: string): WeekData {
-  const [entries, setEntries] = useState<Record<string, WeekEntry>>({});
+export function usePeriodData(periodKey: string, days: number): PeriodData {
+  const [entries, setEntries] = useState<Record<string, PeriodEntry>>({});
   const [failures, setFailures] = useState<Record<string, boolean>>({});
   const [roster, setRoster] = useState<Roster | null>(null);
   const [retrying, setRetrying] = useState(false);
@@ -64,20 +65,22 @@ export function useWeekData(weekKey: string): WeekData {
   const rosterRef = useRef<Roster | null>(null);
   const clientRef = useRef<Client | null>(null);
   const sequence = useRef<Record<string, number>>({});
-  const currentKey = useRef(weekKey);
+  const currentKey = useRef(periodKey);
+  const currentDays = useRef(days);
 
   useEffect(() => {
     entriesRef.current = entries;
   }, [entries]);
   useEffect(() => {
-    currentKey.current = weekKey;
-  }, [weekKey]);
+    currentKey.current = periodKey;
+    currentDays.current = days;
+  }, [periodKey, days]);
 
   const read = useCallback(
-    async (key: string, keepFailure = false): Promise<void> => {
+    async (key: string, length: number, keepFailure = false): Promise<void> => {
       const mine = (sequence.current[key] ?? 0) + 1;
       sequence.current[key] = mine;
-      // A week never read goes back to loading while it is read again.
+      // A period never read goes back to loading while it is read again.
       await Promise.resolve();
       if (!keepFailure && !entriesRef.current[key]) {
         setFailures((current) =>
@@ -92,7 +95,7 @@ export function useWeekData(weekKey: string): WeekData {
         const [result, members] = await Promise.all([
           listHouseholdEvents(
             startOfDay(key),
-            startOfDay(addDaysToDayKey(key, 7)),
+            startOfDay(addDaysToDayKey(key, length)),
             client,
           ),
           rosterRef.current
@@ -106,7 +109,7 @@ export function useWeekData(weekKey: string): WeekData {
       } catch {
         events = null;
       }
-      // A newer reading of the same week wins.
+      // A newer reading of the same period wins.
       if (sequence.current[key] !== mine) return;
       if (events === null || nextRoster === null) {
         setFailures((current) => ({ ...current, [key]: true }));
@@ -126,12 +129,12 @@ export function useWeekData(weekKey: string): WeekData {
   );
 
   useEffect(() => {
-    void read(weekKey);
-  }, [read, weekKey]);
+    void read(periodKey, days);
+  }, [read, periodKey, days]);
 
-  // The network goes away or comes back: read the open week again.
+  // The network goes away or comes back: read the open period again.
   useEffect(() => {
-    const reload = () => void read(currentKey.current);
+    const reload = () => void read(currentKey.current, currentDays.current);
     window.addEventListener("online", reload);
     window.addEventListener("offline", reload);
     return () => {
@@ -142,13 +145,15 @@ export function useWeekData(weekKey: string): WeekData {
 
   const retry = useCallback(() => {
     setRetrying(true);
-    void read(currentKey.current, true).finally(() => setRetrying(false));
+    void read(currentKey.current, currentDays.current, true).finally(() =>
+      setRetrying(false),
+    );
   }, [read]);
 
   return {
-    entry: entries[weekKey],
+    entry: entries[periodKey],
     roster,
-    failed: failures[weekKey] === true,
+    failed: failures[periodKey] === true,
     retrying,
     retry,
   };

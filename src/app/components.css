@@ -4638,6 +4638,76 @@ button.riga-lista {
   background: var(--color-latte-2);
 }
 
+/* Calendario Mese (#27, richiesta condivisa #189): righe della griglia, punti
+   oltre 4, passaggio e premuto sulle celle, link «Oggi» e contorno dei punti. */
+.griglia-mese__riga {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+}
+.griglia-mese__altri {
+  display: none;
+  width: var(--size-punto-membro);
+  height: var(--size-punto-membro);
+  border-radius: var(--radius-tondo);
+  background: var(--color-inchiostro-2);
+  margin-left: calc(-1 * var(--space-half));
+}
+@media (max-width: 767px) {
+  .griglia-mese__punti--molti .avatar:nth-child(n + 4) {
+    display: none;
+  }
+  .griglia-mese__punti--molti .griglia-mese__altri {
+    display: block;
+  }
+}
+/* Contorno di ogni punto, compreso «e altri»: al posto dell'anello color carta */
+.griglia-mese__punti .avatar.avatar--punto,
+.griglia-mese__cella--selezionata .griglia-mese__punti .avatar.avatar--punto,
+.griglia-mese__punti .griglia-mese__altri {
+  box-shadow: 0 0 0 var(--border-sottile) var(--color-filo-campo);
+}
+/* Passaggio e premuto: cornice senza fondo, così i contrasti restano quelli
+   a riposo (il numero rosso di una festa sul fondo carta-2 non arriva a 4,5:1) */
+@media (hover: hover) {
+  .griglia-mese__cella {
+    transition: box-shadow var(--durata-rapida) var(--curva);
+  }
+  button.griglia-mese__cella:not(.griglia-mese__cella--selezionata):hover {
+    border-radius: var(--radius-m);
+    border-top-color: transparent;
+    box-shadow: inset 0 0 0 var(--border-sottile) var(--color-filo-2);
+  }
+}
+button.griglia-mese__cella:not(.griglia-mese__cella--selezionata):active {
+  border-radius: var(--radius-m);
+  border-top-color: transparent;
+  box-shadow: inset 0 0 0 var(--border-sottile) var(--color-filo-2);
+}
+button.griglia-mese__cella--selezionata {
+  cursor: default;
+}
+/* Il fuoco sta sopra le celle vicine */
+.griglia-mese__cella:focus-visible {
+  position: relative;
+  z-index: calc(var(--z-base) + 1);
+}
+/* Link «Oggi» quando si guarda un altro mese: dopo le frecce, su una riga sua
+   fino a 1023 px */
+.periodo--con-oggi {
+  flex-wrap: wrap;
+  row-gap: var(--space-0);
+}
+.periodo__oggi {
+  display: flex;
+}
+@media (max-width: 1023px) {
+  .periodo__oggi {
+    flex-basis: 100%;
+    justify-content: flex-end;
+  }
+}
+
 /* =========================================================
    CORNICE DELL'APP (fondamenta layout e navigazione, #10)
    Il mockup mette tutto dentro una cornice fissa: qui le regole

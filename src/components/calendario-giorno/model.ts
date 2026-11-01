@@ -10,13 +10,16 @@ import {
 } from "@/lib/datetime";
 import type { FullEvent } from "@/lib/household-events";
 import {
+  QUARTERS,
+  heightClass,
+  startClass,
   joinNames,
   participantsInNestOrder,
   peopleTag,
   type KeyedEvent,
   type KeyedFullEvent,
   type Member,
-} from "@/components/calendario-settimana/model";
+} from "@/components/calendario/model";
 
 /**
  * Pure rules of the day view «chi è dove» (issue #26): who has a column, which
@@ -78,22 +81,7 @@ export function buildColumns(input: {
 
 /* ---------- Position classes ---------- */
 
-const QUARTERS = 60;
 const QUARTER_MS = 15 * 60_000;
-
-function heightClass(quarters: number): string {
-  const whole = Math.floor(quarters / 4);
-  const rest = quarters % 4;
-  return rest === 0
-    ? `per-${whole}`
-    : `per-${whole}-${["", "25", "5", "75"][rest]}`;
-}
-
-function startClass(quarter: number): string {
-  const hour = 8 + Math.floor(quarter / 4);
-  const minutes = String((quarter % 4) * 15).padStart(2, "0");
-  return `da-${hour}-${minutes}`;
-}
 
 /**
  * First and last quarter of an hour of a block, inside the 8:00-23:00 grid.

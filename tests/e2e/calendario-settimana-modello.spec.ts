@@ -1,10 +1,10 @@
 import { expect, test } from "@playwright/test";
+import { panelPeople } from "../../src/components/calendario-settimana/model";
 import {
   eventInfo,
-  panelPeople,
   type KeyedFullEvent,
   type Member,
-} from "../../src/components/calendario-settimana/model";
+} from "../../src/components/calendario/model";
 
 // Pure functions: no browser needed.
 

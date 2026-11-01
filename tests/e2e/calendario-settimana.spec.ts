@@ -519,7 +519,36 @@ test.describe("elenco mobile e striscia", () => {
     await expect(row).toContainText("20:00");
     await expect(row).toContainText("Via Roma 1");
     await expect(row.getByRole("img", { name: "Giulia, Paolo" })).toBeVisible();
-    await expect(row).toHaveAttribute("href", `/impegni/${id}`);
+    await expect(row).toHaveAttribute("href", `/impegni/${id}?giorno=${FRI}`);
+  });
+
+  test("#190: la riga della volta di giovedì apre il dettaglio di giovedì", async ({
+    page,
+    baseURL,
+    bianchi,
+  }) => {
+    const id = await createEvent(bianchi, "Giulia", {
+      title: "Nuoto ripetuto",
+      day: TUE,
+      from: "18:00",
+      to: "19:00",
+      weekdays: [2, 4],
+    });
+    await open(page, baseURL, bianchi);
+    const tuesday = dayRows(page, TUE_H).filter({ hasText: "Nuoto ripetuto" });
+    const thursday = dayRows(page, THU_H).filter({
+      hasText: "Nuoto ripetuto",
+    });
+    await expect(tuesday).toHaveAttribute(
+      "href",
+      `/impegni/${id}?giorno=${TUE}`,
+    );
+    await expect(thursday).toHaveAttribute(
+      "href",
+      `/impegni/${id}?giorno=${THU}`,
+    );
+    await thursday.click();
+    await expect(page).toHaveURL(new RegExp(`/impegni/${id}\\?giorno=${THU}$`));
   });
 
   test("CA-9: i numeri della striscia e delle teste contano gli impegni, con al massimo 4 punti", async ({
@@ -766,7 +795,7 @@ test.describe("visibilità", () => {
     await open(page, baseURL, bianchi, { who: "Paolo" });
     const link = page.getByRole("link", { name: new RegExp(SECRET_TITLE) });
     await expect(link).toBeVisible();
-    await expect(link).toHaveAttribute("href", `/impegni/${id}`);
+    await expect(link).toHaveAttribute("href", `/impegni/${id}?giorno=${TUE}`);
   });
 
   test("CA-17: il «Solo io» di un altro non c'è, in nessuna forma", async ({
