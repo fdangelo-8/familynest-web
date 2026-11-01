@@ -40,11 +40,23 @@ test.describe("Aggiungi · Impegni", () => {
       dialog.getByRole("textbox", { name: "Cosa vuoi aggiungere?" }),
     ).toBeFocused();
     const type = dialog.getByRole("group", { name: "Tipo" });
-    await expect(type.getByRole("button")).toHaveCount(1);
+    // Since #22 the selector has the four types; Impegno is the one chosen.
+    await expect(type.getByRole("button")).toHaveText([
+      "Impegno",
+      "Da fare",
+      "Spesa",
+      "Scadenza",
+    ]);
     await expect(type.getByRole("button", { name: "Impegno" })).toHaveAttribute(
       "aria-pressed",
       "true",
     );
+    for (const other of ["Da fare", "Spesa", "Scadenza"]) {
+      await expect(type.getByRole("button", { name: other })).toHaveAttribute(
+        "aria-pressed",
+        "false",
+      );
+    }
     await expect(
       dialog.getByRole("button", { name: "Aggiungi" }),
     ).toBeDisabled();

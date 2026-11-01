@@ -1249,7 +1249,11 @@ test.describe("isolamento tra nuclei", () => {
     const uuid = /[0-9a-f]{8}-[0-9a-f]{4}-/i;
     const all = [...hrefs.bell, ...hrefs.add, ...hrefs.skip].map(String);
     for (const href of all) {
-      expect(href).not.toContain("?");
+      // Since #22 «Aggiungi una cosa da fare» opens Add with a fixed type
+      // (`?tipo=da-fare`): the only query allowed, it carries no data.
+      expect(
+        href.replace(/\?tipo=(spesa|da-fare|scadenza)$/, ""),
+      ).not.toContain("?");
       expect(href).not.toMatch(uuid);
     }
     expect(hrefs.bell.length).toBeGreaterThan(0);

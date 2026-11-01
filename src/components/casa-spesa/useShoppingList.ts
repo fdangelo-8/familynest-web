@@ -9,6 +9,7 @@ import {
   type RefObject,
 } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { subscribeListsChanged } from "@/components/aggiungi/coordination";
 import { useToast } from "@/components/ui/Toast/ToastProvider";
 import { createClient } from "@/lib/supabase/client";
 import type { Database } from "@/types/database";
@@ -611,6 +612,12 @@ export function useShoppingList({
     return () => {
       document.removeEventListener("visibilitychange", handleVisible);
     };
+  }, [scheduleRefetch, status]);
+
+  // Aggiungi added or took away things: read again without waiting for realtime.
+  useEffect(() => {
+    if (status !== "ready") return;
+    return subscribeListsChanged("shopping", scheduleRefetch);
   }, [scheduleRefetch, status]);
 
   // Safety net: no realtime channel -> read again every few seconds.

@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo } from "react";
+import { editHref, rememberOpener } from "@/components/aggiungi/coordination";
 import { Alert } from "@/components/ui/Alert/Alert";
 import { Avatar } from "@/components/ui/Avatar/Avatar";
 import { Button } from "@/components/ui/Button/Button";
@@ -11,15 +13,37 @@ import { VisuallyHidden } from "@/components/ui/VisuallyHidden/VisuallyHidden";
 import { toView, type DeadlineView } from "./model";
 import type { DeadlinesList } from "./useDeadlines";
 
-function Row({ view }: { view: DeadlineView }) {
+/** Marks the group headings the focus can land on. */
+export const DEADLINE_HEADING = '[data-focus="scadenze-heading"]';
+
+function openEditor(id: string, group: string) {
+  const desktop = window.matchMedia("(min-width: 1024px)").matches;
+  const other = group === "overdue" ? "upcoming" : "overdue";
+  rememberOpener({
+    kind: "deadlines",
+    id,
+    primary: `[data-edit-id="${CSS.escape(id)}"]`,
+    fallbacks: [
+      `[data-group="${group}"] ${DEADLINE_HEADING}`,
+      `[data-group="${other}"] ${DEADLINE_HEADING}`,
+      desktop ? '[data-casa-column="scadenze"] h2' : "h1",
+    ],
+  });
+}
+
+function Row({ view, group }: { view: DeadlineView; group: string }) {
   const { deadline, howMuch, urgent, avatar, hiddenNote } = view;
   const avatarNode = avatar ? (
     <Avatar name={avatar.name} color={avatar.color} nameShown />
   ) : null;
   return (
     <li data-testid="scadenza-riga">
-      {/* Not interactive until the Aggiungi page (#22) opens it for editing. */}
-      <div className="riga-scadenza">
+      <Link
+        className="riga-scadenza"
+        href={editHref("scadenza", deadline.id)}
+        data-edit-id={deadline.id}
+        onClick={() => openEditor(deadline.id, group)}
+      >
         <span className="riga-scadenza__giorni">
           <span
             className={cx(
@@ -63,27 +87,26 @@ function Row({ view }: { view: DeadlineView }) {
         ) : (
           avatarNode
         )}
-      </div>
+      </Link>
     </li>
   );
 }
 
-/** Marks the group headings the focus can land on (#22 will use it). */
-export const DEADLINE_HEADING = '[data-focus="scadenze-heading"]';
-
 function Group({
   testId,
+  group,
   title,
   info,
   views,
 }: {
   testId: string;
+  group: string;
   title: string;
   info: string;
   views: ReadonlyArray<DeadlineView>;
 }) {
   return (
-    <section className="sezione" data-testid={testId}>
+    <section className="sezione" data-group={group} data-testid={testId}>
       <div className="sezione__testa">
         <h3
           className="sezione__titolo"
@@ -96,7 +119,7 @@ function Group({
       </div>
       <ul className="scheda lista">
         {views.map((view) => (
-          <Row key={view.deadline.id} view={view} />
+          <Row key={view.deadline.id} view={view} group={group} />
         ))}
       </ul>
     </section>
@@ -151,7 +174,7 @@ export function DeadlinesColumn({
         title="Nessuna scadenza"
         text="Documenti, bollo, assicurazioni, abbonamenti: aggiungili e vedi sempre quanto manca."
         actions={
-          <Button full href="/aggiungi">
+          <Button full href="/aggiungi?tipo=scadenza">
             Aggiungi una scadenza
           </Button>
         }
@@ -165,6 +188,7 @@ export function DeadlinesColumn({
       {overdue.length > 0 ? (
         <Group
           testId="scadenze-scadute"
+          group="overdue"
           title="Scadute"
           info={String(overdue.length)}
           views={overdue}
@@ -173,6 +197,7 @@ export function DeadlinesColumn({
       {upcoming.length > 0 ? (
         <Group
           testId="scadenze-prossime"
+          group="upcoming"
           title="Prossime"
           info="in ordine di data"
           views={upcoming}

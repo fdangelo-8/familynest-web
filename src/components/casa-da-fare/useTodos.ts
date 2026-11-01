@@ -15,6 +15,10 @@ import {
   readSettleMs,
   type Identity,
 } from "@/components/casa-spesa/useShoppingList";
+import {
+  notifyListsRefreshed,
+  subscribeListsChanged,
+} from "@/components/aggiungi/coordination";
 import { useToast } from "@/components/ui/Toast/ToastProvider";
 import { createClient } from "@/lib/supabase/client";
 import type { Database } from "@/types/database";
@@ -300,6 +304,7 @@ export function useTodos({
     }
     setNetworkDown(false);
     applyRead(result.rows, result.members);
+    notifyListsRefreshed("todos");
   }, [applyRead, getClient, queueIsBusy]);
 
   const resolveId = useCallback((id: string): string | null => {
@@ -461,6 +466,12 @@ export function useTodos({
       cancelled = true;
     };
   }, [applyRead, getClient, attempt]);
+
+  // Aggiungi saved, changed or removed a thing: read again.
+  useEffect(
+    () => subscribeListsChanged("todos", () => void refetch()),
+    [refetch],
+  );
 
   // Browser connection.
   useEffect(() => {

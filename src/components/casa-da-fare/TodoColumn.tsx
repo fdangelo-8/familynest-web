@@ -1,6 +1,8 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useMemo } from "react";
+import { editHref, rememberOpener } from "@/components/aggiungi/coordination";
 import { Avatar } from "@/components/ui/Avatar/Avatar";
 import { Button } from "@/components/ui/Button/Button";
 import { Checkbox } from "@/components/ui/Checkbox/Checkbox";
@@ -37,11 +39,14 @@ function Row({
   info,
   assignee,
   onToggle,
+  onEdit,
 }: {
   todo: Todo;
   info: ReturnType<typeof todoInfo>;
   assignee: TodoMember | undefined;
   onToggle: (key: string) => void;
+  /** Opens the sheet to edit it (a thing not saved yet has no button) */
+  onEdit: (todo: Todo) => void;
 }) {
   const done = todo.doneAt !== null;
   const avatar = assignee ? (
@@ -49,7 +54,11 @@ function Row({
   ) : null;
   return (
     <li
-      className={cx("riga-lista", done && "riga-lista--fatto")}
+      className={cx(
+        "riga-lista",
+        done && "riga-lista--fatto",
+        !todo.id.startsWith("tmp-") && "riga-lista--modificabile",
+      )}
       data-item-key={todo.key}
       data-testid="da-fare-riga"
     >
@@ -63,7 +72,19 @@ function Row({
         }
       />
       <span className="riga-lista__testo">
-        <span className="riga-lista__titolo">{todo.title}</span>
+        {todo.id.startsWith("tmp-") ? (
+          <span className="riga-lista__titolo">{todo.title}</span>
+        ) : (
+          <button
+            type="button"
+            className="riga-lista__titolo"
+            data-edit-id={todo.id}
+            aria-label={`Modifica: ${todo.title}`}
+            onClick={() => onEdit(todo)}
+          >
+            {todo.title}
+          </button>
+        )}
         {info ? (
           <span
             className={cx(
@@ -111,6 +132,7 @@ export function TodoColumn({
   onQuickChange: (value: string) => void;
   desktop: boolean;
 }) {
+  const router = useRouter();
   const { todos, members, settling, filter, meMemberId, now } = list;
   const membersById = useMemo(
     () => new Map(members.map((member) => [member.id, member])),
@@ -135,7 +157,17 @@ export function TodoColumn({
   const filterName =
     filter === "me" ? null : (membersById.get(filter)?.name ?? "");
 
-  const renderRows = (rows: Todo[]) => (
+  const openEditor = (todo: Todo, group: string) => {
+    rememberOpener({
+      kind: "todos",
+      id: todo.id,
+      primary: `[data-edit-id="${CSS.escape(todo.id)}"]`,
+      fallbacks: [`[data-group="${group}"] ${TODO_HEADING}`, "h1"],
+    });
+    router.push(editHref("da-fare", todo.id));
+  };
+
+  const renderRows = (rows: Todo[], group: string) => (
     <ul className="scheda lista">
       {rows.map((todo) => {
         const shownOpen = isShownOpen(todo, settling);
@@ -148,6 +180,7 @@ export function TodoColumn({
               todo.assigneeId ? membersById.get(todo.assigneeId) : undefined
             }
             onToggle={list.toggleTodo}
+            onEdit={(item) => openEditor(item, group)}
           />
         );
       })}
@@ -162,7 +195,7 @@ export function TodoColumn({
         title="Niente da fare, per ora"
         text="Le cose da fare della casa compaiono qui, con chi se ne occupa e per quando."
         actions={
-          <Button href="/aggiungi" full>
+          <Button href="/aggiungi?tipo=da-fare" full>
             Aggiungi una cosa da fare
           </Button>
         }
@@ -202,27 +235,39 @@ export function TodoColumn({
     content = (
       <>
         {groups.thisWeek.length > 0 ? (
-          <section className="sezione" data-testid="da-fare-questa-settimana">
+          <section
+            className="sezione"
+            data-group="thisWeek"
+            data-testid="da-fare-questa-settimana"
+          >
             <SectionHead
               title="Questa settimana"
               info={String(groups.thisWeek.length)}
             />
-            {renderRows(groups.thisWeek)}
+            {renderRows(groups.thisWeek, "thisWeek")}
           </section>
         ) : null}
         {groups.later.length > 0 ? (
-          <section className="sezione" data-testid="da-fare-piu-avanti">
+          <section
+            className="sezione"
+            data-group="later"
+            data-testid="da-fare-piu-avanti"
+          >
             <SectionHead
               title="Più avanti"
               info={String(groups.later.length)}
             />
-            {renderRows(groups.later)}
+            {renderRows(groups.later, "later")}
           </section>
         ) : null}
         {groups.done.length > 0 ? (
-          <section className="sezione" data-testid="da-fare-fatti">
+          <section
+            className="sezione"
+            data-group="done"
+            data-testid="da-fare-fatti"
+          >
             <SectionHead title="Fatti" info="ultimi 7 giorni" />
-            {renderRows(groups.done)}
+            {renderRows(groups.done, "done")}
           </section>
         ) : null}
       </>

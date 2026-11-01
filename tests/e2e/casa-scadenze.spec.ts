@@ -513,7 +513,7 @@ test.describe("righe, ordine e testi", () => {
     await expect(avatarOf(page, "Rinnovo del domino")).toHaveCount(0);
   });
 
-  test("CA-15: le righe non sono né link né bottoni (fino alla #22)", async ({
+  test("CA-15: da #22 le righe sono collegamenti al foglio di modifica, senza bottoni", async ({
     page,
     baseURL,
     casa,
@@ -521,10 +521,14 @@ test.describe("righe, ordine e testi", () => {
     await seedBase(casa);
     await open(page, baseURL, casa);
     for (const title of [CARTA, BISCOTTO, BOLLO, CASA]) {
-      await expect(page.getByRole("link", { name: title })).toHaveCount(0);
-      await expect(page.getByRole("button", { name: title })).toHaveCount(0);
+      const link = col(page).getByRole("link").filter({ hasText: title });
+      await expect(link).toHaveCount(1);
+      await expect(link).toHaveAttribute(
+        "href",
+        /^\/aggiungi\?(tipo=scadenza&)?modifica=[0-9a-f-]{36}$/,
+      );
     }
-    await expect(col(page).getByRole("link")).toHaveCount(0);
+    await expect(col(page).getByRole("link")).toHaveCount(4);
     await expect(col(page).getByRole("button")).toHaveCount(0);
   });
 

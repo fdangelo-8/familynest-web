@@ -60,7 +60,7 @@ export async function installFakes(page: Page, options: Options = {}) {
   const { events = [], save = "ok", people = "ok" } = options;
   let resolveNames: (names: Names) => void = () => {};
   const names = new Promise<Names>((resolve) => (resolveNames = resolve));
-  const served = { events: 0 };
+  const served = { events: 0, names };
 
   await page.route("**/rest/v1/household_members*", async (route) => {
     const select = new URL(route.request().url()).searchParams.get("select");
@@ -141,12 +141,13 @@ export async function saveWithStoppedClock(
   dialog: Locator,
   submit: Locator,
   from: Date,
+  toastText = "Messo in",
 ) {
   await expect(submit).toBeEnabled();
   await page.clock.pauseAt(new Date(from.getTime() + 10 * 60_000));
   await submit.click();
   // The toast comes as soon as the answer arrives, then the sheet closes
-  await expect(page.locator(".toast")).toContainText("Messo in");
+  await expect(page.locator(".toast")).toContainText(toastText);
   await expect(async () => {
     await page.clock.runFor(250);
     await expect(dialog).toHaveCount(0, { timeout: 300 });

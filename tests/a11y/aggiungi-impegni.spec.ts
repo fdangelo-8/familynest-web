@@ -242,29 +242,37 @@ test.describe("Aggiungi · Impegni: fuoco", () => {
     });
   }
 
-  test("ordine con il campo vuoto: Chiudi, campo, Impegno, esempio", async ({
+  test("ordine con il campo vuoto: Chiudi, campo, i quattro tipi, i quattro esempi", async ({
     page,
   }) => {
     await installFakes(page);
     await open(page);
     await page.keyboard.press("Shift+Tab");
     const order = [await focused(page)];
-    for (let i = 0; i < 3; i += 1) {
+    for (let i = 0; i < 9; i += 1) {
       await page.keyboard.press("Tab");
       order.push(await focused(page));
     }
-    // The submit button is disabled: it is skipped
+    // The submit button is disabled: it is skipped. Since #22 there are four
+    // types and four examples (under the button on mobile, in the side column
+    // on desktop: the same order).
     expect(order).toEqual([
       "Chiudi",
       "Cosa vuoi aggiungere?",
       "Impegno",
+      "Da fare",
+      "Spesa",
+      "Scadenza",
       EXAMPLE,
+      "latte e pane",
+      "Laura deve chiamare la nonna",
+      "bollo auto scade il 7 dicembre",
     ]);
     await page.keyboard.press("Tab");
     expect(await focused(page)).toBe("Chiudi");
   });
 
-  test("ordine con la frase: Chiudi, campo, Impegno, invio; le righe dell'anteprima non prendono il fuoco", async ({
+  test("ordine con la frase: Chiudi, campo, i quattro tipi, invio; le righe dell'anteprima non prendono il fuoco", async ({
     page,
   }) => {
     await installFakes(page, { events: THURSDAY });
@@ -275,7 +283,7 @@ test.describe("Aggiungi · Impegni: fuoco", () => {
     ).toHaveCount(1);
     await page.keyboard.press("Shift+Tab");
     const order = [await focused(page)];
-    for (let i = 0; i < 3; i += 1) {
+    for (let i = 0; i < 6; i += 1) {
       await page.keyboard.press("Tab");
       order.push(await focused(page));
     }
@@ -283,6 +291,9 @@ test.describe("Aggiungi · Impegni: fuoco", () => {
       "Chiudi",
       "Cosa vuoi aggiungere?",
       "Impegno",
+      "Da fare",
+      "Spesa",
+      "Scadenza",
       "Metti in giovedì 22",
     ]);
     // Nothing else after the button: the next Tab goes back to the start
@@ -316,7 +327,8 @@ test.describe("Aggiungi · Impegni: fuoco", () => {
     const type = dialog.getByRole("button", { name: "Impegno" });
     await expect(type).toBeFocused();
     expect((await ring(type)).outline).toBe(true);
-    await page.keyboard.press("Tab");
+    // The other three types, then the first example (the submit button is disabled)
+    for (let i = 0; i < 4; i += 1) await page.keyboard.press("Tab");
     const example = page.getByRole("button", { name: EXAMPLE });
     await expect(example).toBeFocused();
     expect((await ring(example)).outline).toBe(true);
@@ -324,10 +336,9 @@ test.describe("Aggiungi · Impegni: fuoco", () => {
     await example.press("Enter");
     const submit = dialog.getByRole("button", { name: "Metti in venerdì 23" });
     await expect(submit).toBeEnabled();
+    // Back to Chiudi, then field, Impegno, Da fare, Spesa, Scadenza, submit
     await page.keyboard.press("Shift+Tab");
-    await page.keyboard.press("Tab");
-    await page.keyboard.press("Tab");
-    await page.keyboard.press("Tab");
+    for (let i = 0; i < 6; i += 1) await page.keyboard.press("Tab");
     await expect(submit).toBeFocused();
     expect((await ring(submit)).outline).toBe(true);
   });
