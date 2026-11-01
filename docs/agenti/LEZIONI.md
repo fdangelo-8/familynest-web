@@ -20,6 +20,8 @@ Errori già commessi (in questo progetto o in quelli precedenti dell'ecosistema)
 - Funzione del database chiamabile da anonimo (anteprima invito) con un blocco «solo POST» che rifiuta solo `GET` → il blocco rifiuta tutto ciò che non è `POST` (`HEAD`, `PUT`…) prima di leggere dati, e i test provano ogni metodo diverso da `POST` (#112).
 - Divisione di una serie di impegni fatta con più scritture separate: un errore a metà lascia un impegno «fantasma» con le sue note (#120) → ogni operazione che spezza una serie è una sola funzione `security definer` che scrive tutto in una transazione; il test conta le copie dopo un errore forzato.
 - Test pgTAP in `supabase/tests/` scritti dal tester o dal coordinatore → li scrive solo l'architetto dati nel branch `db/*`, perché gli hook lo impongono; il tester funzionale indica i casi mancanti nella PR, senza scriverli.
+- Limite di righe per adulto (per esempio sei spazi fissati) controllato con un conteggio prima dell'insert → due richieste vicine lo superano: la funzione prende `pg_advisory_xact_lock` per membro prima di contare e inserire (#192).
+- Modifica di una serie settimanale che manda solo il giorno del modulo → la serie cambia giorno (da lunedì a mercoledì): se la regola resta la stessa si mandano i giorni della serie spostati di quanto si è spostata la volta aperta; il giorno del modulo solo quando la regola cambia (#174).
 
 ## Sviluppo
 
@@ -46,6 +48,9 @@ Errori già commessi (in questo progetto o in quelli precedenti dell'ecosistema)
 - Voce di menu di una sezione (Casa) con `aria-current="page"` anche sulle pagine interne → `"true"` per la sezione, `"page"` solo sull'indirizzo esatto della voce (`getNavAriaCurrent`).
 - Costante esportata da un modulo `"use client"` (es. `CHOOSABLE_COLORS` in `ColorChoice.tsx`) importata da codice server: diventa un riferimento client, non un valore (#130, di nuovo #146) → dal server si importano solo tipi (`import type`); i valori stanno in moduli senza `"use client"`.
 - Scorciatoia globale (Ctrl+K) ignorata quando il fuoco è in un campo di testo: un foglio con la textarea a fuoco all'apertura la disattiva (#172) → la specifica dice quale scorciatoia vale dal campo; i test la provano dal bottone «Chiudi» o da un elemento che non è un campo.
+- Costante o funzione generica spostata in un modulo condiviso (`URGENT_DAYS`) che collide con una uguale di una pagina → nel modulo condiviso i nomi sono specifici (`DEADLINE_URGENT_DAYS`) (#193).
+- Classe CSS condivisa rinominata senza cercarne tutti gli usi → prima si cerca in `src/`, `tests/` e nelle PR aperte, e il cambio di nome va in un solo passo con tutti gli usi (#193).
+- Stessa frase scritta a mano in due funzioni (`allDialogText` e `saveAllText`): dopo una decisione una delle due resta indietro → la frase sta in una sola funzione in `src/lib/`, usata da tutte le pagine (#193).
 
 ## Processo
 
@@ -65,6 +70,10 @@ Errori già commessi (in questo progetto o in quelli precedenti dell'ecosistema)
 - Push con `check` o `build` rotti dopo un push di soli file di test → si lancia `npm run check` e `npm run build` prima di ogni push, anche per file di test.
 - Suite Playwright completa (circa 20 minuti) a ogni push di ogni PR, con i minuti di Actions finiti il 29/10 e la CI bloccata fino al 1° novembre → la suite completa gira sempre su `main` e sulle PR con etichetta `in-test` o `pronta-per-francesco`, letta a inizio run; a ogni altro push girano solo `check` e `build`. Se l'etichetta arriva senza un nuovo push, si rilancia l'ultima run (#97, decisione di Francesco del 29/10, vedi `ARCHITETTURA.md` §9). Un solo push per lavoro, dopo i controlli in locale (#83).
 - Gruppo di concorrenza `remote-test-data` con una sola run in attesa: una nuova annulla quella in attesa, e il `test` annullato resta senza esito (#93) → il coordinatore rilancia a mano solo la suite annullata, quando la coda si libera; mai un job fallito.
+- Job di un workflow con lo stesso nome della suite completa (`test`): `pr-checks` tiene un solo controllo per nome, e il test mirato nascondeva una suite rossa («TUTTO VERDE» su #184) → il job mirato ha un nome suo (#186).
+- Vercel conta anche le build ignorate nel limite di 100 deployment al giorno del piano gratuito → per i rami senza anteprima si usa `git.deploymentEnabled` in `vercel.json` (#183).
+- Due `test-mirato` sullo stesso branch si annullano a vicenda (gruppo di concorrenza per ref) → si lanciano a turno, uno alla volta.
+- Branch temporaneo creato sul remoto (per un test o una prova) → gli agenti non possono cancellarlo: niente branch temporanei sul remoto, solo locali o il branch della propria PR.
 - `npm run check` nella copia principale che fallisce con migliaia di errori dalle copie di lavoro degli agenti (`.claude/worktrees/`, build `.next` incluse), perché la configurazione flat di ESLint non legge `.gitignore` → `.claude/worktrees/**` è escluso da ESLint (#93, #97).
 - Agente senza worktree che fa `git checkout` nella copia principale e cambia il branch sotto gli altri (successo il 29/10) → niente cambi di branch nella copia principale: si lavora solo nel proprio worktree.
 - Script o file nello scratchpad condiviso tra agenti: uno script condiviso ha portato più agenti a scrivere sul Supabase remoto → ogni agente lavora solo dentro il proprio worktree, mai script o file in cartelle condivise.
@@ -106,6 +115,9 @@ Errori già commessi (in questo progetto o in quelli precedenti dell'ecosistema)
 - Test che simulano un errore su una tabella intercettando ogni richiesta a quella tabella rompono anche la lettura dell'id utente (#172) → intercettare solo la query dell'elenco; un GET senza risposta viene riprovato dal client a 1, 2 e 4 secondi, quindi si risponde subito con 500.
 - Test con orologio fermato (`page.clock.pauseAt`) che navigano: la pagina non parte dopo il `goto` (#168) → dopo ogni navigazione una funzione di supporto fa ripartire e rifermare l'orologio.
 - Pagina che passa da segnaposto a contenuto reale: cambiano i riferimenti visivi di altre pagine che la ritraggono, come cornice, layout a 800 px e «Vai al contenuto» (#168) → la PR elenca tutti i riferimenti che cambiano, e il tester visivo li rigenera e li controlla a occhio.
+- Test che misurano posizioni o colori mentre un foglio o un velo entra con un'animazione (300 ms, `foglio-entra`, `appare`) falliscono a caso, e `force: true` salta il controllo di stabilità → prima di cliccare, misurare o lanciare axe si aspetta `waitForAnimationsToEnd` (`tests/fixtures/animations.ts`), che ignora le animazioni infinite (spinner, scheletri) (#179, #181, #199).
+- Test che blocca tutte le richieste a una pagina blocca anche il prefetch di Next, e la schermata di caricamento non compare mai → si blocca solo la navigazione vera e si lascia passare il prefetch (#199).
+- Didascalia nel font dei codici che va a capo solo dal secondo scatto → due catture diverse e screenshot instabile: didascalie corte, che stanno su una riga (#184).
 
 ## Design
 
@@ -114,3 +126,5 @@ Errori già commessi (in questo progetto o in quelli precedenti dell'ecosistema)
 - Frase sul comportamento nella guida del design system (es. dove appare il dialogo, «in basso» su mobile) scritta senza controllarla sul CSS → ogni frase di comportamento si verifica su `components.css` prima di approvare o correggere la guida.
 - Regole CSS nuove in fondo a `components.css`, fuori dal blocco del designer che la specifica indica (#114, #119), e descrizione della PR che dice il contrario → le regole vanno nel blocco «STATI AGGIUNTI DAL DESIGNER», nel punto indicato dalla specifica; la descrizione lo dichiara solo dopo averlo controllato.
 - Scorciatoia a una sola lettera (N) senza modo di spegnerla o cambiarla: contrasta con WCAG 2.1.4 (livello A) (#167) → la specifica prevede lo spegnimento, il cambio o un elemento a fuoco richiesto, e la decide il designer prima dello sviluppo.
+- Regole nuove nel blocco del designer, in un tratto dove un test vieta i `px` (anche nelle media query di `date-calendario.spec.ts`) → si usano solo token; le regole nuove vanno in fondo al blocco «STATI AGGIUNTI DAL DESIGNER», tra i segnaposti che i test usano come confine (#184).
+- Elemento figlio di una griglia senza colonne definite (come `.esempio` della galleria) che prende la larghezza del contenuto → la vista interna non scorre, scorre la pagina; il contenitore della griglia ha `grid-template-columns: minmax(0, 1fr)` (#184).

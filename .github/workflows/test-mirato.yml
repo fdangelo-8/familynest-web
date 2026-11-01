@@ -16,7 +16,10 @@ permissions:
   contents: read
 
 concurrency:
-  group: test-mirato-${{ github.ref }}
+  # One group per branch and spec list: two testers running different specs on
+  # the same branch no longer cancel each other; repeating the same specs still
+  # replaces the older run.
+  group: test-mirato-${{ github.ref }}-${{ inputs.spec }}
   cancel-in-progress: true
 
 jobs:
