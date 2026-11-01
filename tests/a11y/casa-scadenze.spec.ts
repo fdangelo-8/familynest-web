@@ -341,29 +341,34 @@ test.describe("aree di tocco e tastiera", () => {
     expect(await hasTouchArea(retry, 44)).toBe(true);
   });
 
-  test("le righe non ricevono il fuoco: Tab non entra nella lista", async ({
+  test("le righe sono un collegamento alla modifica: uno per riga, con il fuoco da tastiera (#22)", async ({
     page,
     baseURL,
     casa,
   }) => {
     await seed(casa);
     await open(page, baseURL, casa);
+    const rows = col(page).getByTestId("scadenza-riga");
+    const links = col(page).locator("ul a.riga-scadenza");
+    // One link per row, and nothing else focusable in the list
+    expect(await links.count()).toBe(await rows.count());
     await expect(
-      col(page).locator("a[href], button, [tabindex]:not([tabindex='-1'])"),
+      col(page).locator("ul button, ul [tabindex]:not([tabindex='-1'])"),
     ).toHaveCount(0);
-    for (let i = 0; i < 12; i++) {
-      await page.keyboard.press("Tab");
-      const inside = await page.evaluate(
-        () =>
-          !!document.activeElement?.closest(
-            'section[aria-label="Scadenze"] ul',
-          ),
+    for (let i = 0; i < (await links.count()); i++) {
+      const href = (await links.nth(i).getAttribute("href")) ?? "";
+      expect(href).toMatch(
+        /^\/aggiungi\?tipo=scadenza&modifica=[0-9a-f-]{36}$/,
       );
-      expect(inside).toBe(false);
     }
+    // The first link takes the focus with Tab, in the order of the page
+    await links.first().focus();
+    await expect(links.first()).toBeFocused();
+    await page.keyboard.press("Tab");
+    if ((await links.count()) > 1) await expect(links.nth(1)).toBeFocused();
   });
 
-  test("su mobile il fuoco va dalle voci del selettore alla navigazione in basso (nessun controllo nella lista)", async ({
+  test("su mobile dalla voce «Scadenze» del selettore il fuoco passa al primo collegamento della lista (#22)", async ({
     page,
     baseURL,
     casa,
@@ -380,9 +385,7 @@ test.describe("aree di tocco e tastiera", () => {
       switcher(page).getByRole("button", { name: /^Scadenze/ }),
     ).toBeFocused();
     await page.keyboard.press("Tab");
-    const insideList = await page.evaluate(
-      () => !!document.activeElement?.closest("ul.scheda"),
-    );
-    expect(insideList).toBe(false);
+    // Since #22 the rows are links: the next stop is the first of them
+    await expect(col(page).locator("ul a.riga-scadenza").first()).toBeFocused();
   });
 });
