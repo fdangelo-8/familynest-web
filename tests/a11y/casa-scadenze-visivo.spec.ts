@@ -166,20 +166,25 @@ test("righe: testi nascosti per i lettori di schermo, pallino decorativo", async
   );
 });
 
-test("le righe non sono controlli: niente link né bottoni, fuori dall'ordine del focus", async ({
+test("le righe sono un collegamento alla modifica (#22): un link per riga, nessun bottone", async ({
   page,
 }) => {
   await open(page, { deadlines: NORMAL_DEADLINES });
   const rows = page.getByTestId("scadenza-riga");
-  await expect(rows.locator("a, button, [tabindex]")).toHaveCount(0);
-  const cursor = await rows
-    .first()
-    .locator(".riga-scadenza")
-    .evaluate((el) => getComputedStyle(el).cursor);
-  expect(cursor).not.toBe("pointer");
-  // axe sees the deadlines in the list, not as links.
+  const count = await rows.count();
+  expect(count).toBeGreaterThan(0);
+  // Each row is one link, and nothing else in it takes the focus.
+  await expect(rows.locator("a")).toHaveCount(count);
+  await expect(rows.locator("button, [tabindex]")).toHaveCount(0);
+  for (let i = 0; i < count; i++) {
+    await expect(rows.nth(i).locator("a")).toHaveAttribute(
+      "href",
+      /^\/aggiungi\?tipo=scadenza&modifica=.+/,
+    );
+  }
+  // axe and screen readers see the deadline as a link named with its content.
   await expect(page.getByRole("link", { name: /Bollo dell'auto/ })).toHaveCount(
-    0,
+    1,
   );
 });
 
@@ -287,25 +292,28 @@ async function tabThrough(page: Page, max = 90) {
   return seen;
 }
 
-test("ordine del focus con le righe: nessuna riga riceve il focus, nessuna trappola", async ({
+test("ordine del focus con le righe: ogni riga è un collegamento nell'ordine della pagina, nessuna trappola", async ({
   page,
 }, testInfo) => {
   await open(page, { deadlines: NORMAL_DEADLINES });
   const seen = await tabThrough(page);
   console.log(`[focus ${testInfo.project.name}]`, JSON.stringify(seen));
   expect(seen[0]).toBe("Vai al contenuto");
-  // None of the focused things is a deadline.
-  for (const label of seen) {
-    expect(label).not.toMatch(/Bollo|Assicurazione|Rinnovo/);
-  }
-  // The order of §6 of the specification.
+  // Since #22 every row takes the focus once (it is a link), in the page order.
+  const rows = seen
+    .map((label, index) => ({ label, index }))
+    .filter(({ label }) => /Bollo|Assicurazione|Rinnovo/.test(label));
+  expect(rows.length).toBe(await page.getByTestId("scadenza-riga").count());
+  // The order of §6 of the specification: the rows come after the switcher
+  // and before the navigation at the bottom.
   if (isMobile(testInfo.project.name)) {
     const idx = (re: RegExp) => seen.findIndex((l) => re.test(l));
     expect(idx(/Cerca nel Nest/)).toBeGreaterThan(0);
     expect(idx(/^Spesa/)).toBeGreaterThan(idx(/Cerca nel Nest/));
     expect(idx(/^Da fare/)).toBe(idx(/^Spesa/) + 1);
     expect(idx(/^Scadenze/)).toBe(idx(/^Da fare/) + 1);
-    expect(idx(/^Oggi/)).toBeGreaterThan(idx(/^Scadenze/));
+    expect(rows[0]!.index).toBeGreaterThan(idx(/^Scadenze/));
+    expect(idx(/^Oggi/)).toBeGreaterThan(rows[rows.length - 1]!.index);
   } else {
     expect(seen.length).toBeGreaterThan(5);
   }
