@@ -1,9 +1,12 @@
 import type { MemberColor } from "@/components/ui/Avatar/Avatar";
 import {
   dayAndMonth,
+  daysUntilDay,
   formatDeadline,
-  romeDayNumber,
+  howMuch,
+  isUrgent,
   startOfDay,
+  type HowMuch,
   type Instant,
 } from "@/lib/datetime";
 
@@ -26,12 +29,6 @@ export type DeadlineMember = {
   color: MemberColor;
 };
 
-/** A deadline is urgent from 14 days before it (the mockup draws 14 as urgent). */
-export const URGENT_DAYS = 14;
-/** Up to this many days the number counts days; beyond, it counts months. */
-const DAYS_LIMIT = 60;
-const DAYS_PER_MONTH = 30;
-
 function compareStrings(a: string, b: string): number {
   return a < b ? -1 : a > b ? 1 : 0;
 }
@@ -43,56 +40,6 @@ export function byDueDate(a: Deadline, b: Deadline): number {
     compareStrings(a.createdAt, b.createdAt) ||
     compareStrings(a.id, b.id)
   );
-}
-
-/** Calendar days from today (Rome) to the due day, negative if it is gone. */
-export function daysUntil(dueDate: string, now: Instant): number {
-  return romeDayNumber(startOfDay(dueDate)) - romeDayNumber(now);
-}
-
-export function isUrgent(days: number): boolean {
-  return days <= URGENT_DAYS;
-}
-
-export type HowMuch = {
-  /** The big number, or the word "Oggi" */
-  number: string;
-  /** Unit under the number; null for "Oggi" */
-  unit: string | null;
-  /** The number is a word: it uses the smaller type */
-  word: boolean;
-};
-
-/** How much is left (or how late it is), as the big number and its unit. */
-export function howMuch(days: number): HowMuch {
-  if (days === 0) return { number: "Oggi", unit: null, word: true };
-  if (days < 0) {
-    const late = -days;
-    if (late > DAYS_LIMIT) {
-      return {
-        number: String(Math.floor(late / DAYS_PER_MONTH)),
-        unit: "mesi fa",
-        word: false,
-      };
-    }
-    return {
-      number: String(late),
-      unit: late === 1 ? "giorno fa" : "giorni fa",
-      word: false,
-    };
-  }
-  if (days > DAYS_LIMIT) {
-    return {
-      number: String(Math.floor(days / DAYS_PER_MONTH)),
-      unit: "mesi",
-      word: false,
-    };
-  }
-  return {
-    number: String(days),
-    unit: days === 1 ? "giorno" : "giorni",
-    word: false,
-  };
 }
 
 /** `3 novembre`, or `20 gennaio 2027` when the year is not the current one. */
@@ -125,7 +72,7 @@ export function toView(
   meId: string | null,
   now: Instant,
 ): DeadlineView {
-  const days = daysUntil(deadline.dueDate, now);
+  const days = daysUntilDay(deadline.dueDate, now);
   const assignee = deadline.assigneeId
     ? (membersById.get(deadline.assigneeId) ?? null)
     : null;

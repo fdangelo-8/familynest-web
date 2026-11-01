@@ -4,8 +4,13 @@ import { Icon, type IconName } from "../Icon/Icon";
 
 export type ChipProps = {
   children: ReactNode;
-  /** Pressed state. Several chips can be pressed together. */
+  /** Pressed state. Several chips can be pressed together. Ignored with `action`. */
   pressed?: boolean;
+  /**
+   * Plain action button: looks like an unpressed chip and has no
+   * `aria-pressed`. For a button whose name already says its state.
+   */
+  action?: boolean;
   onClick?: () => void;
   /** Person chip (`.chip--persona`): put an `Avatar` as `leading` */
   person?: boolean;
@@ -23,6 +28,7 @@ export type ChipProps = {
 export function Chip({
   children,
   pressed = false,
+  action,
   onClick,
   person,
   leading,
@@ -62,7 +68,7 @@ export function Chip({
     <button
       type="button"
       className={classes}
-      aria-pressed={pressed}
+      aria-pressed={action ? undefined : pressed}
       disabled={disabled}
       onClick={onClick}
       data-testid={testId}

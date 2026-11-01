@@ -271,7 +271,7 @@ export function saveAllText(args: {
   }
   if (escortUnseen) {
     parts.push(
-      `${escortUnseen} ora non vede questo impegno: se la scegli in «La porta», lo vedrà da ${day} in poi.`,
+      `${escortUnseen} ora non vede questo impegno: se scegli ${escortUnseen} in «La porta», lo vedrà da ${day} in poi.`,
     );
   }
   if (!isFirst) parts.push("Le volte prima restano come sono.");

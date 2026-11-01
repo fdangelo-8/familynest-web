@@ -3722,7 +3722,8 @@ button.riga-lista {
 .tondo-spunta,
 .selettore__voce,
 .toggle,
-.chip {
+.chip,
+.chip__togli {
   position: relative;
 }
 .btn-icona--piccolo::before,
@@ -3741,7 +3742,8 @@ button.riga-lista {
 .tondo-spunta::before,
 .selettore__voce::before,
 .toggle::before,
-.chip::before {
+.chip::before,
+.chip__togli::before {
   content: "";
   position: absolute;
   top: 50%;
@@ -3860,6 +3862,7 @@ main[tabindex="-1"]:focus {
 
 /* Disabilitato esteso a tutti i controlli */
 .chip:disabled,
+.chip__togli:disabled,
 .casella:disabled,
 .tondo-spunta:disabled,
 .selettore__voce:disabled,
@@ -3890,6 +3893,7 @@ main[tabindex="-1"]:focus {
   .btn-tenue,
   .btn-icona,
   .chip,
+  .chip__togli,
   .scelta,
   .selettore__voce,
   .btn-tratteggiato,
@@ -3922,6 +3926,7 @@ main[tabindex="-1"]:focus {
     background: var(--color-carta);
   }
   .btn-tenue:hover:not(:disabled, [aria-disabled="true"]),
+  .chip__togli:hover:not(:disabled),
   .btn-icona--carta:hover:not(:disabled),
   .btn-icona--piccolo:hover:not(:disabled) {
     background: var(--color-carta-2);
@@ -3964,6 +3969,7 @@ main[tabindex="-1"]:focus {
   background: var(--color-carta);
 }
 .btn-tenue:active:not(:disabled, [aria-disabled="true"]),
+.chip__togli:active:not(:disabled),
 .btn-icona--carta:active:not(:disabled),
 .btn-icona--piccolo:active:not(:disabled),
 .btn-tratteggiato:active:not(:disabled) {
@@ -4120,9 +4126,10 @@ div.blocco-orario {
   display: contents;
 }
 
-/* Foglio dei membri (#85): il modulo sta dentro il corpo del foglio e lascia
-   al corpo la disposizione dei campi; il bottone di salvataggio sta fuori, nel piede. */
-.modulo-membro {
+/* Modulo dentro un foglio (#85, #20, #166): il modulo sta dentro il corpo del
+   foglio e lascia al corpo la disposizione dei campi; il bottone di invio sta
+   fuori, nel piede (attributo form). Era .modulo-membro. */
+.modulo-foglio {
   display: contents;
 }
 
@@ -4310,6 +4317,33 @@ button.riga-lista {
   cursor: default;
 }
 
+/* Aggiungi · Spesa, Da fare e Scadenze (#22, richiesta condivisa #166) */
+/* Cerchio decorativo dell'anteprima: non è un bottone, il cursore resta normale */
+.tondo-spunta:not(button) {
+  cursor: default;
+}
+/* Piede della modale con il solo bottone di invio: a destra */
+.modale__piede--fine {
+  justify-content: flex-end;
+}
+/* Etichetta capita con il bottone per toglierla («Togli la data») */
+.chip--con-togli {
+  padding-right: var(--space-1);
+}
+.chip__togli {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: var(--space-6);
+  height: var(--space-6);
+  padding: var(--space-0);
+  border: 0;
+  border-radius: var(--radius-tondo);
+  background: transparent;
+  color: var(--color-inchiostro-2);
+  cursor: pointer;
+}
+
 /* Titolo del periodo: sotto 1024 px va a capo invece di sbordare (#169) */
 @media (max-width: 1023px) {
   .periodo h1,
@@ -4366,10 +4400,11 @@ button.riga-lista {
     max-height: calc(100dvh - var(--size-nav-desktop) - var(--space-6));
   }
 }
+/* Teste sopra le ore ferme (z-index base + 1), che stanno sopra i blocchi */
 .vista-giorno .giorno-persone__testa {
   position: sticky;
   top: var(--space-0);
-  z-index: calc(var(--z-base) + 1);
+  z-index: calc(var(--z-base) + 2);
   background: var(--color-carta);
   box-shadow: 0 var(--space-2) 0 var(--color-carta);
 }
