@@ -328,7 +328,7 @@ test.describe("Aggiungi · Spesa, Da fare, Scadenza: fuoco", () => {
 
   test("ordine in Da fare: campo, tipi, visibilità, persone, invio", async ({
     page,
-  }) => {
+  }, testInfo) => {
     const { dialog } = await write(page, "Da fare", "chiamare la nonna");
     await dialog.getByRole("textbox").focus();
     await page.keyboard.press("Shift+Tab");
@@ -345,8 +345,12 @@ test.describe("Aggiungi · Spesa, Da fare, Scadenza: fuoco", () => {
       "Aggiungi ai da fare",
     ]);
     expect(rings).toEqual(rings.map(() => true));
+    // After the button: on desktop the examples of the side column (they stay
+    // while a type is being written), on mobile the start of the sheet
     await page.keyboard.press("Tab");
-    expect(await focused(page)).toBe("Chiudi");
+    expect(await focused(page)).toBe(
+      isDesktop(testInfo) ? "cena da Marta venerdì alle 20" : "Chiudi",
+    );
   });
 
   test("ordine in Scadenza: campo, tipi, visibilità, persone, avvisi, invio", async ({
