@@ -1,4 +1,5 @@
 import { type Locator, type Page } from "@playwright/test";
+import { waitForAnimationsToEnd } from "../fixtures/animations";
 import { expect, isMobileProject, test } from "../fixtures/casa";
 import {
   MEMBERS_FAILED,
@@ -310,7 +311,9 @@ test.describe("Aggiungi · Impegni · caricamento ed errori", () => {
     const alert = alertsIn(dialog);
     await expect(alert).toContainText(MEMBERS_FAILED);
     await expect(alert.getByRole("button", { name: "Riprova" })).toBeVisible();
-    // Under the type selector.
+    // Under the type selector. On mobile the sheet slides up: measure both
+    // boxes once it has stopped, or they are read at different heights.
+    await waitForAnimationsToEnd(page);
     const typeBox = await dialog
       .getByRole("group", { name: "Tipo" })
       .boundingBox();
