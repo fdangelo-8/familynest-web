@@ -4400,10 +4400,11 @@ button.riga-lista {
     max-height: calc(100dvh - var(--size-nav-desktop) - var(--space-6));
   }
 }
+/* Teste sopra le ore ferme (z-index base + 1), che stanno sopra i blocchi */
 .vista-giorno .giorno-persone__testa {
   position: sticky;
   top: var(--space-0);
-  z-index: calc(var(--z-base) + 1);
+  z-index: calc(var(--z-base) + 2);
   background: var(--color-carta);
   box-shadow: 0 var(--space-2) 0 var(--color-carta);
 }
