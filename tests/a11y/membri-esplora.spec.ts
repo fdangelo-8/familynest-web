@@ -37,11 +37,19 @@ async function focusRingVisible(page: Page) {
   return page.evaluate(() => {
     const el = document.activeElement as HTMLElement | null;
     if (!el || el === document.body) return false;
-    const s = getComputedStyle(el);
-    return (
-      (s.outlineStyle !== "none" && parseFloat(s.outlineWidth) > 0) ||
-      s.boxShadow !== "none"
-    );
+    const ringOn = (node: Element) => {
+      const s = getComputedStyle(node);
+      return (
+        (s.outlineStyle !== "none" && parseFloat(s.outlineWidth) > 0) ||
+        s.boxShadow !== "none"
+      );
+    };
+    // The link of an Esplora card draws the ring on the whole card.
+    if (el.classList.contains("scheda-modulo__link")) {
+      const cardEl = el.closest(".scheda-modulo");
+      return !!cardEl && ringOn(cardEl);
+    }
+    return ringOn(el);
   });
 }
 
