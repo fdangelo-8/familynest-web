@@ -1573,6 +1573,83 @@ function StatesSection() {
             </div>
           </div>
         </Example>
+        <Example caption="gruppo-skeleton · aria-live">
+          <SkeletonGroup aria-live="polite" data-testid="gruppo-skeleton-live">
+            <Skeleton shape="scheda" />
+          </SkeletonGroup>
+        </Example>
+      </Section>
+
+      <Section id="scheda-modulo" title="Scheda di uno spazio">
+        <Example caption="scheda-modulo__link · puntina vuota">
+          <div className="scheda-modulo" data-testid="scheda-modulo">
+            <div className="scheda-modulo__alto">
+              <span className="scheda-modulo__icona">
+                <Icon name="utensils" />
+              </span>
+              <button
+                type="button"
+                className="puntina"
+                aria-pressed="false"
+                aria-label="Fissa A tavola in Oggi"
+              >
+                <Icon name="pin" />
+              </button>
+            </div>
+            <Link className="scheda-modulo__link" href="/design-system">
+              <span className="scheda-modulo__titolo">A tavola</span>
+              <span className="scheda-modulo__promessa">
+                Cosa mangiamo questa settimana.
+              </span>
+            </Link>
+          </div>
+        </Example>
+        <Example caption="puntina piena">
+          <div className="scheda-modulo">
+            <div className="scheda-modulo__alto">
+              <span className="scheda-modulo__icona">
+                <Icon name="leaf" />
+              </span>
+              <button
+                type="button"
+                className="puntina"
+                aria-pressed="true"
+                aria-label="Togli Stare bene da Oggi"
+              >
+                <Icon name="pin" />
+              </button>
+            </div>
+            <Link className="scheda-modulo__link" href="/design-system">
+              <span className="scheda-modulo__titolo">Stare bene</span>
+              <span className="scheda-modulo__promessa">
+                Prendersi cura di sé.
+              </span>
+            </Link>
+          </div>
+        </Example>
+        <Example caption="scheda-modulo--scura">
+          <div className="scheda-modulo scheda-modulo--scura">
+            <div className="scheda-modulo__alto">
+              <span className="scheda-modulo__icona">
+                <Icon name="heart-handshake" />
+              </span>
+              <button
+                type="button"
+                className="puntina"
+                aria-pressed="false"
+                aria-label="Fissa Noi due in Oggi"
+              >
+                <Icon name="pin" />
+              </button>
+            </div>
+            <Link className="scheda-modulo__link" href="/design-system">
+              <span className="scheda-modulo__titolo">Noi due</span>
+              <span className="scheda-modulo__promessa">
+                Il vostro tempo, le vostre date.
+              </span>
+            </Link>
+          </div>
+        </Example>
       </Section>
 
       <Section id="avviso" title="Avviso">

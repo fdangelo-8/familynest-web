@@ -95,3 +95,14 @@ Decisione di Francesco del 28/10: fino a 10 membri per Nest, ognuno con il suo c
 ### Classi senza componente React (per ora)
 
 Si usano direttamente come classi nelle pagine; se una pagina vuole un componente React lo chiede con una issue `richiesta-condivisa`. Barra e navigazione (`.barra`, `.quadrato-nest`, `.nav-basso`, `.btn-aggiungi`, `.nav-alto`, `.menu-laterale`) appartengono alla fondamenta «layout e navigazione». Le altre: `.lente`, `.periodo`, `.tacche-passi`, `.pagina`, `.pagina-desktop`, `.colonne`, `.colonna`, `.intestazione`, `.intestazione-desktop`, `.sezione`, `.sottotitolo-gruppo`, `.prossimo`, `.contatore`, `.scheda-modulo`, `.puntina`, `.porta`, `.spazi-fissati`, `.scheda-spazio`, `.sintesi`, `.parola`, `.tabella-dati`, `.riga-opzione`, `.riga-evento`, `.riga-gia-fatti`, `.riga-scadenza`, `.riga-notifica`, `.riga-regalo`, `.foto`, `.scheda-regalo`, `.strappo`, `.pallino-urgente`, `.kbd`, `.logo-marchio`, `.anteprima-avatar`, `.cerchi-membri`, `.scelta-colore`, `.campo-frase`, `.campo-ricerca`, `.evidenzia`, `.scelta`, `.gruppo-scelte`, `.palette`, il calendario (`.striscia-giorni`, `.griglia-mese`, `.giorno-persone`, `.colonna-ore`, `.area-orari`, `.blocco-orario`, `.linea-adesso`, `.griglia-settimana`) e l'onboarding (`.split-onboarding`, `.passo-onboarding`, `.schermo-notte`, `.marchio`, `.adesivi`, `.adesivo`, `.claim`, `.citazione`, `.legale`, `.codice-invito`, `.qr`, `.lista-partenza`, `.passo-partenza`, `.profilo-testa`).
+
+### Scheda di uno spazio in Esplora (#28, richiesta condivisa #188)
+
+Classi nel blocco del designer di `components.css`, sulla scheda del mockup (`li.scheda-modulo` con `.scheda-modulo__alto`, `.puntina`):
+
+- `.scheda-modulo__link`: il link con nome e promessa. Il suo `::after` copre tutta la scheda; la puntina (bottone a parte, mai dentro il link) sta sopra con `z-index: var(--z-base)`. Il link non ha anello suo.
+- Focus da tastiera: l'anello `--color-info` è sulla scheda intera (`.scheda-modulo:has(> .scheda-modulo__link:focus-visible)`), anche su «Noi due» (sta fuori dalla scheda, sulla pagina chiara).
+- Passaggio del mouse (solo `@media (hover: hover)`) e premuto (`:active`, anche touch) della scheda: fondo `--color-carta`, icona `--color-carta-2`. Su `.scheda-modulo--scura`: fondo `--color-notte-2`, icona `--color-notte`.
+- Passaggio e premuto della puntina, 4 casi: vuota su scheda chiara → `--color-carta`; piena su scheda chiara → `--color-notte-2`; vuota su «Noi due» → `--color-notte-2`; piena su «Noi due» → `--color-latte-2`.
+- `SkeletonGroup` accetta la prop facoltativa `aria-live="polite"` (annuncia la fine del caricamento); senza, l'attributo non c'è.
+- `src/lib/spaces.ts` (senza `"use client"`) è il catalogo dei 10 spazi: nome, promessa, icona, variante larga o scura. Le classi di variante seguono lo spazio, non la posizione.
