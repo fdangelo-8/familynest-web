@@ -4027,6 +4027,90 @@ main[tabindex="-1"]:focus {
   background-clip: padding-box;
 }
 
+/* Casa · Da fare: il titolo apre Modifica (#22, richiesta condivisa #204).
+   Area di tocco sulla colonna del testo, alta quanto la riga (minimo la misura di tocco);
+   a riposo l'aspetto non cambia. */
+.riga-lista--modificabile > .riga-lista__testo {
+  position: relative;
+}
+.riga-lista--modificabile button.riga-lista__titolo {
+  justify-self: start;
+  -webkit-tap-highlight-color: transparent;
+}
+.riga-lista--modificabile button.riga-lista__titolo::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: max(100% + 2 * var(--space-2), var(--size-tocco));
+  transform: translateY(-50%);
+}
+/* Il fondo dello stato resta dentro il filo e segue gli angoli (come #133) */
+.scheda > .riga-lista--modificabile {
+  border: var(--border-sottile) solid transparent;
+  border-top-width: var(--space-0);
+  border-bottom-width: var(--space-0);
+  padding: var(--space-2) calc(var(--space-4) - var(--border-sottile));
+  background-clip: padding-box;
+}
+.scheda > .riga-lista--modificabile:first-child {
+  border-top-width: var(--border-sottile);
+  padding-top: calc(var(--space-2) - var(--border-sottile));
+  border-top-left-radius: var(--radius-l);
+  border-top-right-radius: var(--radius-l);
+}
+.scheda > .riga-lista--modificabile:last-child {
+  border-bottom-width: var(--border-sottile);
+  padding-bottom: calc(var(--space-2) - var(--border-sottile));
+}
+.scheda
+  > .riga-lista--modificabile:last-child:has(
+    > .riga-lista__testo > button.riga-lista__titolo:is(:hover, :active)
+  ) {
+  border-bottom-left-radius: var(--radius-l);
+  border-bottom-right-radius: var(--radius-l);
+}
+
+/* Casa · Scadenze: la riga è un collegamento a Modifica (#22, richiesta
+   condivisa #204). Il fondo dello stato resta dentro il filo (come #133). */
+.scheda > li > a.riga-scadenza {
+  border: var(--border-sottile) solid transparent;
+  border-bottom-width: var(--space-0);
+  padding: calc(var(--space-3) - var(--border-sottile))
+    calc(var(--space-4) - var(--border-sottile)) var(--space-3);
+  background-clip: padding-box;
+}
+.scheda > li:first-child > a.riga-scadenza {
+  border-top-left-radius: var(--radius-l);
+  border-top-right-radius: var(--radius-l);
+}
+.scheda > li:last-child > a.riga-scadenza {
+  border-bottom-width: var(--border-sottile);
+  padding-bottom: calc(var(--space-3) - var(--border-sottile));
+  border-bottom-left-radius: var(--radius-l);
+  border-bottom-right-radius: var(--radius-l);
+}
+
+@media (hover: hover) {
+  .riga-lista--modificabile,
+  .scheda a.riga-scadenza {
+    transition: background-color var(--durata-rapida) var(--curva);
+  }
+  .riga-lista--modificabile:has(
+    > .riga-lista__testo > button.riga-lista__titolo:hover
+  ),
+  .scheda a.riga-scadenza:hover {
+    background-color: var(--color-carta);
+  }
+}
+.riga-lista--modificabile:has(
+  > .riga-lista__testo > button.riga-lista__titolo:active
+),
+.scheda a.riga-scadenza:active {
+  background-color: var(--color-carta);
+}
+
 /* #133: testa del profilo in caricamento. .intestazione prende tutta la
    larghezza disponibile, così titolo e testo-corto (70% e 35%) si vedono, e
    allinea gli scheletri come la testa: al centro, o a sinistra con --riga. */
