@@ -374,7 +374,7 @@ function EditEventSheetOpen({
       >
         <form
           id={formId}
-          className="modulo-membro"
+          className="modulo-foglio"
           method="post"
           noValidate
           onSubmit={onSubmit}

@@ -35,6 +35,8 @@ export type ButtonProps = {
   small?: boolean;
   /** Primary button with the arrow box on the right (`.btn-primary--freccia`) */
   arrow?: boolean;
+  /** Icon of the arrow box with `arrow` (default `arrow-right`) */
+  arrowIcon?: IconName;
   /** Optional icon on the left */
   icon?: IconName;
   loading?: boolean;
@@ -57,6 +59,7 @@ export function Button({
   full,
   small,
   arrow,
+  arrowIcon = "arrow-right",
   icon,
   loading = false,
   disabled = false,
@@ -85,7 +88,7 @@ export function Button({
       <span className="btn__testo">{children}</span>
       {arrow ? (
         <span className="btn__icona-box">
-          {loading ? <Spinner /> : <Icon name="arrow-right" />}
+          {loading ? <Spinner /> : <Icon name={arrowIcon} />}
         </span>
       ) : null}
     </>

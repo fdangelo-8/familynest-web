@@ -543,3 +543,62 @@ export function formatFirstDeadline(
       : `il primo scade ${withPreposition(comingDeadline(due, now))}`;
   return capitalizeIf(text, capitalized);
 }
+
+/** A deadline is urgent from 14 days before it (the mockup draws 14 as urgent). */
+export const URGENT_DAYS = 14;
+/** Up to this many days the countdown counts days; beyond, it counts months. */
+const COUNTDOWN_DAYS_LIMIT = 60;
+const DAYS_PER_MONTH = 30;
+
+/** Calendar days from today (Rome) to the day `YYYY-MM-DD`, negative if it is gone. */
+export function daysUntilDay(dayKey: string, now: Instant): number {
+  return romeDayNumber(startOfDay(dayKey)) - romeDayNumber(now);
+}
+
+export function isUrgent(days: number): boolean {
+  return days <= URGENT_DAYS;
+}
+
+export type HowMuch = {
+  /** The big number, or the word "Oggi" */
+  number: string;
+  /** Unit under the number; null for "Oggi" */
+  unit: string | null;
+  /** The number is a word: it uses the smaller type */
+  word: boolean;
+};
+
+/**
+ * The countdown of a deadline as the big number and its unit: `3 giorni`,
+ * `Oggi`, `2 giorni fa`, `4 mesi` (from `days`, see `daysUntilDay`).
+ */
+export function howMuch(days: number): HowMuch {
+  if (days === 0) return { number: "Oggi", unit: null, word: true };
+  if (days < 0) {
+    const late = -days;
+    if (late > COUNTDOWN_DAYS_LIMIT) {
+      return {
+        number: String(Math.floor(late / DAYS_PER_MONTH)),
+        unit: "mesi fa",
+        word: false,
+      };
+    }
+    return {
+      number: String(late),
+      unit: late === 1 ? "giorno fa" : "giorni fa",
+      word: false,
+    };
+  }
+  if (days > COUNTDOWN_DAYS_LIMIT) {
+    return {
+      number: String(Math.floor(days / DAYS_PER_MONTH)),
+      unit: "mesi",
+      word: false,
+    };
+  }
+  return {
+    number: String(days),
+    unit: days === 1 ? "giorno" : "giorni",
+    word: false,
+  };
+}

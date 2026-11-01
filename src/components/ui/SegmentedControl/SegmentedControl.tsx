@@ -1,10 +1,13 @@
 "use client";
 
 import { cx } from "../cx";
+import { Icon, type IconName } from "../Icon/Icon";
 
 export type SegmentedOption<T extends string> = {
   value: T;
   label: string;
+  /** Optional icon before the label; the sheet hides it below 1024 px */
+  icon?: IconName;
   /** Optional count shown after the label */
   count?: number;
   /** Not selectable (native `disabled` plus `aria-disabled`) */
@@ -55,6 +58,7 @@ export function SegmentedControl<T extends string>({
           aria-disabled={option.disabled ? true : undefined}
           onClick={() => onChange(option.value)}
         >
+          {option.icon ? <Icon name={option.icon} size="s" /> : null}
           {option.label}
           {option.count !== undefined ? (
             <span className="selettore__conteggio">{option.count}</span>
