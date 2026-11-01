@@ -3,8 +3,9 @@ import { hasTestUser, signInAs } from "../fixtures/visual-login";
 
 // PR #94 (#85): references of the shared member components (colour choice
 // with ten colours, MemberSheet in add, edit and invite mode with its error
-// and saving states) on /design-system/membri, and of the "In arrivo" page
-// of /esplora. Runs on both projects (mobile 390 px, desktop 1280 px).
+// and saving states) on /design-system/membri, and of the close X of /nest.
+// Runs on both projects (mobile 390 px, desktop 1280 px). /esplora has its own
+// references in esplora.spec.ts (#28).
 // The sheets are captured as the dialog element, so the references do not
 // depend on the layout of the test page behind the veil.
 
@@ -184,26 +185,11 @@ test("#85: salvataggio in corso", async ({ page }) => {
   );
 });
 
-test.describe("/esplora «In arrivo» (utente A)", () => {
+test.describe("/nest (utente A)", () => {
   test.beforeEach(async ({ context, baseURL }) => {
     test.skip(!hasTestUser("A"), "TEST_USER_A_* non impostati");
     const signedIn = await signInAs(context, baseURL!, "A");
     test.skip(!signedIn, "utente di test A non ancora creato");
-  });
-
-  test("#85: /esplora con l'icona bussola", async ({ page }) => {
-    await page.goto("/esplora");
-    await expect(
-      page.getByRole("heading", { level: 1, name: "Esplora" }),
-    ).toBeVisible();
-    await expect(
-      page.getByText(
-        "Qui scoprirai cosa può fare la vostra casa. Stiamo preparando questa pagina.",
-      ),
-    ).toBeVisible();
-    await page.evaluate(() => document.fonts.ready);
-    await page.mouse.move(0, 0);
-    await expect(page).toHaveScreenshot("esplora.png");
   });
 
   test("#85: /nest su mobile con la X «Chiudi»", async ({ page }, testInfo) => {

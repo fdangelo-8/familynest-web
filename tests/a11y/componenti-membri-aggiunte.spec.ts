@@ -8,7 +8,7 @@ import {
 } from "../fixtures/auth";
 
 // Added by the functional tester for #85 (PR #94): more states of the shared
-// parts, the "In arrivo" page of /esplora, focus ring and touch targets.
+// parts, the page of /esplora, focus ring and touch targets.
 
 test.use({ reducedMotion: "reduce" });
 
@@ -25,13 +25,19 @@ function withUser(...users: TestUserKey[]) {
   test.skip(!usersConfigured(...users), skipReason(...users));
 }
 
-test("a11y: Esplora «In arrivo» (A)", async ({ page, baseURL }) => {
+test("a11y: Esplora (A)", async ({ page, baseURL }) => {
   withUser("A");
   await signInAs(page.context(), baseURL as string, "A");
   await page.goto("/esplora");
   await expect(
-    page.getByRole("heading", { level: 1, name: "Esplora", exact: true }),
+    page.getByRole("heading", {
+      level: 1,
+      name: "Cosa può fare la vostra casa",
+    }),
   ).toBeVisible();
+  await expect(page.locator("ul.griglia-moduli:visible > li")).toHaveCount(10, {
+    timeout: 20_000,
+  });
   expect(await seriousViolations(page)).toEqual([]);
   const ids = await page.evaluate(() =>
     Array.from(document.querySelectorAll("[id]")).map((n) => n.id),

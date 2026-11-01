@@ -6,7 +6,7 @@ import { hasTestUser, signInAs } from "../fixtures/visual-login";
 // the visual and accessibility tester. On top of the developer's suite
 // (componenti-membri.spec.ts): every state of the sheet, keyboard in the
 // colour radiogroup and in the sheet, visible focus, 44 px touch areas on
-// mobile, and the "In arrivo" page of /esplora.
+// mobile, and the real page of /esplora (#28; it used to be a placeholder).
 
 test.use({
   locale: "it-IT",
@@ -37,11 +37,19 @@ async function focusRingVisible(page: Page) {
   return page.evaluate(() => {
     const el = document.activeElement as HTMLElement | null;
     if (!el || el === document.body) return false;
-    const s = getComputedStyle(el);
-    return (
-      (s.outlineStyle !== "none" && parseFloat(s.outlineWidth) > 0) ||
-      s.boxShadow !== "none"
-    );
+    const ringOn = (node: Element) => {
+      const s = getComputedStyle(node);
+      return (
+        (s.outlineStyle !== "none" && parseFloat(s.outlineWidth) > 0) ||
+        s.boxShadow !== "none"
+      );
+    };
+    // The link of an Esplora card draws the ring on the whole card.
+    if (el.classList.contains("scheda-modulo__link")) {
+      const cardEl = el.closest(".scheda-modulo");
+      return !!cardEl && ringOn(cardEl);
+    }
+    return ringOn(el);
   });
 }
 
@@ -309,38 +317,42 @@ test.describe("foglio: aree di tocco da 44 px (mobile)", () => {
   });
 });
 
-test.describe("/esplora «In arrivo» e «Chiudi» di /nest (utente A)", () => {
+test.describe("/esplora e «Chiudi» di /nest (utente A)", () => {
   test.beforeEach(async ({ context, baseURL }) => {
     test.skip(!hasTestUser("A"), "TEST_USER_A_* non impostati");
     const signedIn = await signInAs(context, baseURL!, "A");
     test.skip(!signedIn, "utente di test A non ancora creato");
   });
 
-  test("/esplora: axe, un solo h1, icona decorativa, tastiera", async ({
-    page,
-  }) => {
+  test("/esplora: axe, un solo h1, puntine, tastiera", async ({ page }) => {
     await page.goto("/esplora");
     await expect(
-      page.getByRole("heading", { level: 1, name: "Esplora" }),
+      page.getByRole("heading", {
+        level: 1,
+        name: "Cosa può fare la vostra casa",
+      }),
     ).toBeVisible();
+    await expect(page.locator("ul.griglia-moduli:visible > li")).toHaveCount(
+      10,
+      { timeout: 20_000 },
+    );
     await expect(page.locator("h1:visible")).toHaveCount(1);
-    await expect(
-      page.getByText(
-        "Qui scoprirai cosa può fare la vostra casa. Stiamo preparando questa pagina.",
-      ),
-    ).toBeVisible();
     expect(await seriousViolations(page)).toEqual([]);
 
-    // The compass is decorative.
-    const icon = page.locator("main svg use[href='#i-compass']");
-    await expect(icon).toHaveCount(1);
-    await expect(
-      page.locator("main svg:has(use[href='#i-compass'])"),
-    ).toHaveAttribute("aria-hidden", "true");
+    // Every pin is a button with aria-pressed, with a decorative icon.
+    const pinButtons = page.locator("ul.griglia-moduli:visible button");
+    await expect(pinButtons).toHaveCount(10);
+    for (const button of await pinButtons.all()) {
+      await expect(button).toHaveAttribute("aria-pressed", /^(true|false)$/);
+      await expect(button.locator("svg")).toHaveAttribute(
+        "aria-hidden",
+        "true",
+      );
+    }
 
     // Every focus stop shows a ring and the page has no trap.
     const seen = new Set<string>();
-    for (let i = 0; i < 16; i += 1) {
+    for (let i = 0; i < 40; i += 1) {
       await page.keyboard.press("Tab");
       const stop = await page.evaluate(() => {
         const el = document.activeElement;
@@ -355,14 +367,17 @@ test.describe("/esplora «In arrivo» e «Chiudi» di /nest (utente A)", () => {
     expect(seen.size).toBeGreaterThan(2);
   });
 
-  test("/esplora: «Torna a Oggi» e voci della navigazione da 44 px (mobile)", async ({
+  test("/esplora: voci della navigazione da 44 px (mobile)", async ({
     page,
   }, testInfo) => {
     test.skip(testInfo.project.name !== "mobile", "solo a 390 px");
     await page.goto("/esplora");
-    const back = page.getByRole("link", { name: "Torna a Oggi" });
-    await expect(back).toBeVisible();
-    expect(await hasTouchArea(back)).toBe(true);
+    await expect(
+      page.getByRole("heading", {
+        level: 1,
+        name: "Cosa può fare la vostra casa",
+      }),
+    ).toBeVisible();
     const nav = page.getByRole("navigation", {
       name: "Navigazione principale",
     });
