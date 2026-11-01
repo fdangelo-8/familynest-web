@@ -4448,6 +4448,96 @@ button.riga-lista {
   margin-inline-end: var(--space-half);
 }
 
+/* Scheda di uno spazio in Esplora (#28, richiesta condivisa #188): il link copre
+   tutta la scheda con un ::after, la puntina (un bottone a parte) resta sopra. */
+.scheda-modulo__link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+.scheda-modulo__link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+.scheda-modulo__link:focus-visible {
+  outline: none;
+}
+.scheda-modulo .puntina {
+  z-index: var(--z-base);
+}
+/* Anello di focus sulla scheda intera, anche su «Noi due» (sta fuori dalla
+   scheda, sulla pagina chiara) */
+.scheda-modulo:has(> .scheda-modulo__link:focus-visible) {
+  outline: var(--border-medio) solid var(--color-info);
+  outline-offset: var(--space-half);
+}
+
+/* Passaggio del mouse e premuto della scheda: fondo carta, icona carta-2;
+   su «Noi due» fondo notte-2, icona notte */
+@media (hover: hover) {
+  .scheda-modulo,
+  .scheda-modulo__icona,
+  .puntina {
+    transition: background var(--durata-rapida) var(--curva);
+  }
+  .scheda-modulo:has(> .scheda-modulo__link:hover) {
+    background: var(--color-carta);
+  }
+  .scheda-modulo:has(> .scheda-modulo__link:hover) .scheda-modulo__icona {
+    background: var(--color-carta-2);
+  }
+  .scheda-modulo--scura:has(> .scheda-modulo__link:hover) {
+    background: var(--color-notte-2);
+  }
+  .scheda-modulo--scura:has(> .scheda-modulo__link:hover)
+    .scheda-modulo__icona {
+    background: var(--color-notte);
+  }
+}
+.scheda-modulo:has(> .scheda-modulo__link:active) {
+  background: var(--color-carta);
+}
+.scheda-modulo:has(> .scheda-modulo__link:active) .scheda-modulo__icona {
+  background: var(--color-carta-2);
+}
+.scheda-modulo--scura:has(> .scheda-modulo__link:active) {
+  background: var(--color-notte-2);
+}
+.scheda-modulo--scura:has(> .scheda-modulo__link:active) .scheda-modulo__icona {
+  background: var(--color-notte);
+}
+
+/* Passaggio del mouse e premuto della puntina, nei 4 casi: vuota o piena, su
+   scheda chiara o su «Noi due» */
+@media (hover: hover) {
+  .puntina:not([aria-pressed="true"]):hover {
+    background: var(--color-carta);
+  }
+  .puntina[aria-pressed="true"]:hover {
+    background: var(--color-notte-2);
+  }
+  .scheda-modulo--scura .puntina:not([aria-pressed="true"]):hover {
+    background: var(--color-notte-2);
+  }
+  .scheda-modulo--scura .puntina[aria-pressed="true"]:hover {
+    background: var(--color-latte-2);
+  }
+}
+.puntina:not([aria-pressed="true"]):active {
+  background: var(--color-carta);
+}
+.puntina[aria-pressed="true"]:active {
+  background: var(--color-notte-2);
+}
+.scheda-modulo--scura .puntina:not([aria-pressed="true"]):active {
+  background: var(--color-notte-2);
+}
+.scheda-modulo--scura .puntina[aria-pressed="true"]:active {
+  background: var(--color-latte-2);
+}
+
 /* =========================================================
    CORNICE DELL'APP (fondamenta layout e navigazione, #10)
    Il mockup mette tutto dentro una cornice fissa: qui le regole

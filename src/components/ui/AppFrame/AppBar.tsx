@@ -51,7 +51,11 @@ export function AppBar() {
       )}
       <div className="barra__centro" />
       {config.kind === "detail" ? (
-        <BarActionSlot />
+        config.search ? (
+          <SearchLink />
+        ) : (
+          <BarActionSlot />
+        )
       ) : (
         <span className="barra__vuoto" aria-hidden="true" />
       )}

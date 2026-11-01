@@ -115,7 +115,12 @@ export type BarConfig =
       /** Icon links on the right, in order */
       actions: ReadonlyArray<"search" | "bell">;
     }
-  | { kind: "detail"; fallback: string }
+  | {
+      kind: "detail";
+      fallback: string;
+      /** Link «Cerca nel Nest» on the right, instead of the page's own action */
+      search?: boolean;
+    }
   | { kind: "close"; href: string };
 
 /** Shape of the mobile top bar for a route. */
@@ -141,6 +146,10 @@ export function getBarConfig(pathname: string): BarConfig {
     ])
   ) {
     return { kind: "detail", fallback: "/nest" };
+  }
+  // Esplora (#28): «Indietro» to the Nest, «Cerca nel Nest» on the right.
+  if (pathname === "/esplora") {
+    return { kind: "detail", fallback: "/nest", search: true };
   }
   // «Indietro» of an event goes to the calendar when there is no previous
   // page of the app (#19).

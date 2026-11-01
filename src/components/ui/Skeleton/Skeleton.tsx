@@ -32,6 +32,8 @@ export type SkeletonGroupProps = {
   /** Hidden text read by screen readers */
   label?: string;
   className?: string;
+  /** "polite": a screen reader announces it when the loading ends */
+  "aria-live"?: "polite";
   "data-testid"?: string;
 };
 
@@ -39,12 +41,14 @@ export function SkeletonGroup({
   children,
   label = "Caricamento in corso",
   className,
+  "aria-live": ariaLive,
   "data-testid": testId,
 }: SkeletonGroupProps) {
   return (
     <div
       className={cx("gruppo-skeleton", className)}
       aria-busy="true"
+      aria-live={ariaLive}
       data-testid={testId}
     >
       <VisuallyHidden>{label}</VisuallyHidden>
