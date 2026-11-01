@@ -24,6 +24,8 @@ export type EventSpec = {
   /** Name of the adult who accompanies */
   escort?: string;
   location?: string;
+  /** ISO weekdays (1 = Monday) of a weekly repetition; one must be the day of the start */
+  weekdays?: number[];
 };
 
 function instant(day: Day, time: string): Date {
@@ -59,6 +61,9 @@ export async function createEvent(
     ends_at: endsAt,
     visibility: spec.visibility ?? "household",
     escort_member_id: spec.escort ? memberId(spec.escort) : null,
+    ...(spec.weekdays
+      ? { recurrence: "weekly" as const, recurrence_weekdays: spec.weekdays }
+      : {}),
   });
   if (error) throw new Error("Impegno di prova non creato");
   // No chained select after a write (LEZIONI): the id is read separately.

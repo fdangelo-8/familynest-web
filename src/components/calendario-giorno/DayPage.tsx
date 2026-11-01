@@ -14,7 +14,11 @@ import { PageError } from "@/components/ui/PageError/PageError";
 import { SectionSwitcher } from "@/components/ui/SegmentedControl/SectionSwitcher";
 import { Skeleton, SkeletonGroup } from "@/components/ui/Skeleton/Skeleton";
 import { hasTodayLinkOnError } from "@/lib/app-routes";
-import { eventsOfDay, formatHiddenCount } from "@/lib/calendar";
+import {
+  VISIBILITY_LABELS,
+  eventsOfDay,
+  formatHiddenCount,
+} from "@/lib/calendar";
 import {
   addDaysToDayKey,
   formatDayNumber,
@@ -28,15 +32,17 @@ import {
   startOfDay,
   toDayKey,
 } from "@/lib/datetime";
+import { buildWeekView } from "@/components/calendario-settimana/model";
 import {
-  buildWeekView,
   type KeyedFullEvent,
   type Member,
-} from "@/components/calendario-settimana/model";
-import { useNowMinute } from "@/components/calendario-settimana/useNowMinute";
-import { useWeekData } from "@/components/calendario-settimana/useWeekData";
+} from "@/components/calendario/model";
+import { useNowMinute } from "@/components/calendario/useNowMinute";
+import { usePeriodData } from "@/components/calendario/usePeriodData";
 import { DayGrid } from "./DayGrid";
-import { EventPanel, EveningsPanel, OthersPanel } from "./DayPanels";
+import { EventPanel } from "@/components/calendario/EventPanel";
+import { EveningsPanel } from "@/components/calendario/EveningsPanel";
+import { OthersPanel } from "./DayPanels";
 import {
   buildColumns,
   dayAnnouncement,
@@ -44,6 +50,7 @@ import {
   emptyDayText,
   isFull,
   layoutDayGrid,
+  panelInfo,
   type GridPiece,
 } from "./model";
 
@@ -116,7 +123,7 @@ function DayContent({ nowMs }: { nowMs: number }) {
   const weekKey = getWeekStartKey(dayKey);
   const day = useMemo(() => getCalendarDay(dayKey), [dayKey]);
 
-  const { entry, roster, failed, retrying, retry } = useWeekData(weekKey);
+  const { entry, roster, failed, retrying, retry } = usePeriodData(weekKey, 7);
   const members = roster?.members ?? EMPTY_MEMBERS;
   const meId = roster?.meId ?? null;
 
@@ -456,7 +463,12 @@ function DayContent({ nowMs }: { nowMs: number }) {
           nowMs={nowMs}
         />
       ) : chosen ? (
-        <EventPanel event={chosen} dayKey={dayKey} members={members} />
+        <EventPanel
+          event={chosen}
+          members={members}
+          info={panelInfo(chosen, dayKey)}
+          note={VISIBILITY_LABELS[chosen.visibility]}
+        />
       ) : null
     ) : null;
 

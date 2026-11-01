@@ -9,7 +9,8 @@ import {
   formatBusyLabel,
   formatFreeEveningRow,
 } from "@/lib/calendar";
-import { formatTime, type CalendarDay } from "@/lib/datetime";
+import { formatTime, formatWeekParam, type CalendarDay } from "@/lib/datetime";
+import { eventHref } from "@/lib/household-events";
 import {
   MAX_AVATARS,
   endInDay,
@@ -66,25 +67,21 @@ export function DayRow({
   members,
   meId,
   nowMs,
+  eveningLinksToWeek = false,
 }: {
   item: DayItem;
   day: CalendarDay;
   members: readonly Member[];
   meId: string | null;
   nowMs: number;
+  /** «Liberi insieme» is a link to the week of the day (the month view) */
+  eveningLinksToWeek?: boolean;
 }) {
   if (item.kind === "insieme") {
     const adults = members.filter((member) => member.kind === "adult");
     const past = isPast(item.evening.end.getTime(), nowMs);
-    return (
-      <div
-        className={cx(
-          "riga-evento",
-          "riga-evento--insieme",
-          "riga-evento--compatta",
-        )}
-        data-passato={past ? "true" : undefined}
-      >
+    const content = (
+      <>
         <span className="riga-evento__ora">
           {formatTime(item.evening.start)}
         </span>
@@ -95,6 +92,27 @@ export function DayRow({
           </span>
         </span>
         <People people={adults} members={members} />
+      </>
+    );
+    const classes = cx(
+      "riga-evento",
+      "riga-evento--insieme",
+      "riga-evento--compatta",
+    );
+    if (eveningLinksToWeek) {
+      return (
+        <Link
+          href={`/calendario?settimana=${formatWeekParam(day.start)}`}
+          className={classes}
+          data-passato={past ? "true" : undefined}
+        >
+          {content}
+        </Link>
+      );
+    }
+    return (
+      <div className={classes} data-passato={past ? "true" : undefined}>
+        {content}
       </div>
     );
   }
@@ -135,7 +153,7 @@ export function DayRow({
   const info = eventInfo(full, members, meId);
   return (
     <Link
-      href={`/impegni/${full.id}`}
+      href={eventHref(full.id, full.startsAt)}
       className={cx("riga-evento", "riga-evento--compatta")}
       data-passato={past ? "true" : undefined}
     >

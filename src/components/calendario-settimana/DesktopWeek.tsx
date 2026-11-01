@@ -1,46 +1,35 @@
 "use client";
 
-import Link from "next/link";
-import {
-  useLayoutEffect,
-  useRef,
-  type KeyboardEvent,
-  type MouseEvent,
-} from "react";
+import { type KeyboardEvent, type MouseEvent } from "react";
+import { NowLine } from "@/components/calendario/NowLine";
 import { Avatar } from "@/components/ui/Avatar/Avatar";
 import { cx } from "@/components/ui/cx";
-import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
-import { Icon } from "@/components/ui/Icon/Icon";
-import { VisuallyHidden } from "@/components/ui/VisuallyHidden/VisuallyHidden";
-import {
-  BUSY_TITLE,
-  formatBusyLabel,
-  formatFreeEveningWindow,
-} from "@/lib/calendar";
+import { BUSY_TITLE, formatBusyLabel } from "@/lib/calendar";
 import {
   formatDayNumber,
   formatLongDay,
   formatShortWeekday,
   formatTime,
   formatTimeRange,
-  toDayKey,
 } from "@/lib/datetime";
-import { DayRow } from "./Rows";
+import { eventHref } from "@/lib/household-events";
+import { DayRow } from "@/components/calendario/Rows";
 import {
-  MAX_AVATARS,
   blockDescription,
-  endInDay,
   hoursSinceGridStart,
   layoutDay,
-  panelPeople,
-  participantsInNestOrder,
-  startInDay,
   type Block,
   type DayView,
-  type KeyedFullEvent,
-  type Member,
   type WeekView,
 } from "./model";
+import {
+  MAX_AVATARS,
+  endInDay,
+  participantsInNestOrder,
+  startInDay,
+  type KeyedFullEvent,
+  type Member,
+} from "@/components/calendario/model";
 
 /** An event chosen in the grid: the event and the day of the block. */
 export type Selection = { event: KeyedFullEvent; dayKey: string };
@@ -49,17 +38,6 @@ export type OtherGroup = { dayKey: string; blockKey: string };
 
 const HOURS = Array.from({ length: 15 }, (_, index) => `${8 + index}:00`);
 const SHORT_BLOCK_MINUTES = 30;
-
-/** The red line of the current time in the column of today. */
-function NowLine({ hours, label }: { hours: number; label: string }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  useLayoutEffect(() => {
-    ref.current?.style.setProperty("--adesso-ore", String(hours));
-  }, [hours]);
-  return (
-    <span ref={ref} className="linea-adesso" role="img" aria-label={label} />
-  );
-}
 
 function isPlainClick(event: MouseEvent): boolean {
   return !(
@@ -155,7 +133,7 @@ function BlockView({
   return (
     <>
       <a
-        href={`/impegni/${full.id}`}
+        href={eventHref(full.id, full.startsAt)}
         className={cx(classes, selected && "blocco-orario--attivo")}
         aria-describedby={descriptionId}
         aria-current={selected ? "true" : undefined}
@@ -291,80 +269,6 @@ export function WeekGrid({
   );
 }
 
-/** «Impegno»: the chosen event, as a card that opens the detail. */
-export function EventPanel({
-  selection,
-  members,
-  meId,
-  todayKey,
-}: {
-  selection: Selection;
-  members: readonly Member[];
-  meId: string | null;
-  todayKey: string;
-}) {
-  const event = selection.event;
-  const people = participantsInNestOrder(event, members);
-  const until = `fino alle ${formatTime(event.endsAt)}`;
-  const sameDay = toDayKey(event.startsAt) === todayKey;
-  const info = [
-    sameDay
-      ? `${until.charAt(0).toLocaleUpperCase("it-IT")}${until.slice(1)}`
-      : `${formatDayNumber(event.startsAt)}, ${until}`,
-    event.location,
-  ]
-    .filter(Boolean)
-    .join(", ");
-  return (
-    <section className="sezione">
-      <div className="sezione__testa">
-        <h2 className="sezione__titolo">Impegno</h2>
-        <span className="sezione__info">tocca un altro per cambiare</span>
-      </div>
-      <Link
-        href={`/impegni/${event.id}`}
-        className="scheda scheda--evidenza prossimo"
-      >
-        <span className="prossimo__alto">
-          <span className="prossimo__ora">{formatTime(event.startsAt)}</span>
-          <span className="prossimo__dati">
-            <span className="prossimo__titolo">
-              {event.title}
-              {event.visibility === "private" ? (
-                <>
-                  <Icon name="lock" size="s" />
-                  <VisuallyHidden>Visibile solo a te</VisuallyHidden>
-                </>
-              ) : null}
-            </span>
-            <span className="prossimo__info">{info}</span>
-          </span>
-        </span>
-        <span className="prossimo__nota">
-          <span>{panelPeople(event, people, members, meId)}</span>
-          {people.length > 0 && people.length <= MAX_AVATARS ? (
-            <span
-              className="avatar-gruppo"
-              role="img"
-              aria-label={people.map((member) => member.name).join(", ")}
-            >
-              {people.map((member) => (
-                <Avatar
-                  key={member.id}
-                  name={member.name}
-                  color={member.color}
-                  size="m"
-                  nameShown
-                />
-              ))}
-            </span>
-          ) : null}
-        </span>
-      </Link>
-    </section>
-  );
-}
-
 /** «Altri impegni»: the events a crowded stretch of the grid could not show. */
 export function OthersPanel({
   group,
@@ -405,75 +309,6 @@ export function OthersPanel({
           />
         ))}
       </div>
-    </section>
-  );
-}
-
-/** «Serate libere insieme»: one line per evening, none of them a control. */
-export function EveningsPanel({
-  view,
-  hasAnyEvent,
-}: {
-  view: WeekView;
-  hasAnyEvent: boolean;
-}) {
-  if (!hasAnyEvent) {
-    return (
-      <section className="sezione">
-        <div className="sezione__testa">
-          <h2 className="sezione__titolo">Serate libere insieme</h2>
-        </div>
-        <EmptyState
-          icon="heart"
-          title="Ancora niente da calcolare"
-          text="Le serate in cui siete tutti liberi compaiono qui."
-          actions={null}
-        />
-      </section>
-    );
-  }
-  if (view.evenings.length === 0) {
-    return (
-      <section className="sezione">
-        <div className="sezione__testa">
-          <h2 className="sezione__titolo">Serate libere insieme</h2>
-        </div>
-        <EmptyState
-          icon="heart"
-          title="Nessuna serata libera insieme"
-          text="Questa settimana ogni sera qualcuno ha un impegno."
-          actions={null}
-        />
-      </section>
-    );
-  }
-  return (
-    <section className="sezione">
-      <div className="sezione__testa">
-        <h2 className="sezione__titolo">Serate libere insieme</h2>
-        <span className="sezione__info">
-          {view.evenings.length} questa settimana
-        </span>
-      </div>
-      <ul className="scheda lista">
-        {view.evenings.map((evening) => (
-          <li key={evening.dayKey}>
-            <div className="riga-lista">
-              <span className="icona-riquadro icona-riquadro--insieme">
-                <Icon name="heart" />
-              </span>
-              <span className="riga-lista__testo">
-                <span className="riga-lista__titolo">
-                  {formatDayNumber(evening.start)}
-                </span>
-                <span className="riga-lista__info">
-                  {formatFreeEveningWindow(evening)}
-                </span>
-              </span>
-            </div>
-          </li>
-        ))}
-      </ul>
     </section>
   );
 }

@@ -1,13 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import {
-  Fragment,
-  useLayoutEffect,
-  useRef,
-  type KeyboardEvent,
-  type MouseEvent,
-} from "react";
+import { Fragment, type KeyboardEvent, type MouseEvent } from "react";
+import { NowLine } from "@/components/calendario/NowLine";
 import { Avatar } from "@/components/ui/Avatar/Avatar";
 import { cx } from "@/components/ui/cx";
 import { Icon } from "@/components/ui/Icon/Icon";
@@ -15,12 +10,12 @@ import { VisuallyHidden } from "@/components/ui/VisuallyHidden/VisuallyHidden";
 import { BUSY_TITLE, formatBusyLabel } from "@/lib/calendar";
 import { formatTime, formatTimeRange, type CalendarDay } from "@/lib/datetime";
 import { eventHref } from "@/lib/household-events";
+import { hoursSinceGridStart } from "@/components/calendario-settimana/model";
 import {
-  hoursSinceGridStart,
   eveningOthers,
   type KeyedFullEvent,
   type Member,
-} from "@/components/calendario-settimana/model";
+} from "@/components/calendario/model";
 import {
   blockDetails,
   eveningDetails,
@@ -31,23 +26,6 @@ import {
 const HOURS = Array.from({ length: 15 }, (_, index) => `${8 + index}:00`);
 /** Events up to this long show only the title on desktop (the mockup «Scuola»). */
 const SHORT_BLOCK_MINUTES = 30;
-
-/** The red line of the current time. The position is a CSS variable, never `style=`. */
-function NowLine({ hours, label }: { hours: number; label: string }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  useLayoutEffect(() => {
-    ref.current?.style.setProperty("--adesso-ore", String(hours));
-  }, [hours]);
-  return (
-    <span
-      ref={ref}
-      className="linea-adesso"
-      role="img"
-      aria-label={label}
-      data-testid="linea-adesso"
-    />
-  );
-}
 
 function isPlainClick(event: MouseEvent): boolean {
   return !(

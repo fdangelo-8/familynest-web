@@ -397,6 +397,78 @@ export function formatMonthParam(value: Instant): string {
   return `${year}-${pad(month)}`;
 }
 
+/* ---------- Months in Rome (calendar, issue #27) ---------- */
+
+const MONTH_PARAM = /^(\d{4})-(\d{2})$/;
+
+/** Day key of the first day of the month that contains `dayKey`. */
+export function getMonthStartKey(dayKey: string): string {
+  return `${dayKey.slice(0, 7)}-01`;
+}
+
+/** Day key of the first day of the month before the one of `dayKey`. */
+export function getPreviousMonthKey(dayKey: string): string {
+  return getMonthStartKey(addDaysToDayKey(getMonthStartKey(dayKey), -1));
+}
+
+/** Day key of the first day of the month after the one of `dayKey`. */
+export function getNextMonthKey(dayKey: string): string {
+  const first = getMonthStartKey(dayKey);
+  return getMonthStartKey(addDaysToDayKey(first, daysInMonthOf(first)));
+}
+
+function daysInMonthOf(dayKey: string): number {
+  const year = Number(dayKey.slice(0, 4));
+  const month = Number(dayKey.slice(5, 7));
+  return new Date(Date.UTC(year, month, 0)).getUTCDate();
+}
+
+/**
+ * Reads the `mese` parameter (`YYYY-MM`). A valid month gives that month;
+ * anything else gives the month of `now`, silently. Returns the day key of the
+ * first day of the month.
+ */
+export function parseMonthParam(
+  value: string | string[] | null | undefined,
+  now: Instant = new Date(),
+): string {
+  const raw = Array.isArray(value) ? value[0] : value;
+  if (typeof raw === "string") {
+    const match = MONTH_PARAM.exec(raw);
+    if (match && isValidDayKey(`${raw}-01`)) return `${raw}-01`;
+  }
+  return getMonthStartKey(toDayKey(now));
+}
+
+/**
+ * Days shown by the month grid: from the Monday of the week of the 1st to the
+ * Sunday of the week of the last day, so 28, 35 or 42 days. `monthKey` is any
+ * day key of the month.
+ */
+export function getMonthGridDays(monthKey: string): CalendarDay[] {
+  const first = getMonthStartKey(monthKey);
+  const last = addDaysToDayKey(first, daysInMonthOf(first) - 1);
+  const gridStart = getWeekStartKey(first);
+  const gridEnd = addDaysToDayKey(getWeekStartKey(last), 6);
+  const count = Math.round(
+    (Date.UTC(
+      Number(gridEnd.slice(0, 4)),
+      Number(gridEnd.slice(5, 7)) - 1,
+      Number(gridEnd.slice(8, 10)),
+    ) -
+      Date.UTC(
+        Number(gridStart.slice(0, 4)),
+        Number(gridStart.slice(5, 7)) - 1,
+        Number(gridStart.slice(8, 10)),
+      )) /
+      MS_PER_DAY +
+      1,
+  );
+  return Array.from({ length: count }, (_, index) =>
+    getCalendarDay(addDaysToDayKey(gridStart, index)),
+  );
+}
+
 /** `10:00 – 11:00` (24 h, hour without leading zero, as `formatTime`). */
 export function formatTimeRange(start: Instant, end: Instant): string {
   return `${formatTime(start)} – ${formatTime(end)}`;

@@ -24,8 +24,6 @@ import {
 } from "@/lib/datetime";
 import { setLens } from "@/lib/lens";
 import {
-  EventPanel,
-  EveningsPanel,
   OthersPanel,
   WeekGrid,
   type OtherGroup,
@@ -35,13 +33,20 @@ import { DayList, DayStrip } from "./MobileWeek";
 import {
   buildWeekView,
   defaultSelection,
+  panelPeople,
   weekAnnouncement,
+  weekPanelInfo,
   type DayView,
+} from "./model";
+import {
+  participantsInNestOrder,
   type KeyedFullEvent,
   type Member,
-} from "./model";
-import { useNowMinute } from "./useNowMinute";
-import { useWeekData } from "./useWeekData";
+} from "@/components/calendario/model";
+import { useNowMinute } from "@/components/calendario/useNowMinute";
+import { EventPanel } from "@/components/calendario/EventPanel";
+import { EveningsPanel } from "@/components/calendario/EveningsPanel";
+import { usePeriodData } from "@/components/calendario/usePeriodData";
 
 const EMPTY_MEMBERS: readonly Member[] = [];
 
@@ -117,7 +122,7 @@ function WeekContent({ nowMs }: { nowMs: number }) {
   const weekDays = useMemo(() => getWeekDays(weekKey), [weekKey]);
   const containsToday = weekDays.some((day) => day.key === todayKey);
 
-  const { entry, roster, failed, retrying, retry } = useWeekData(weekKey);
+  const { entry, roster, failed, retrying, retry } = usePeriodData(weekKey, 7);
   const members = roster?.members ?? EMPTY_MEMBERS;
   const meId = roster?.meId ?? null;
 
@@ -417,14 +422,22 @@ function WeekContent({ nowMs }: { nowMs: number }) {
         />
       ) : selection ? (
         <EventPanel
-          selection={selection}
+          event={selection.event}
           members={members}
-          meId={meId}
-          todayKey={todayKey}
+          info={weekPanelInfo(selection.event, todayKey)}
+          note={panelPeople(
+            selection.event,
+            participantsInNestOrder(selection.event, members),
+            members,
+            meId,
+          )}
         />
       ) : null}
       {adultsCount >= 2 ? (
-        <EveningsPanel view={view} hasAnyEvent={view.hasAnyEvent} />
+        <EveningsPanel
+          evenings={view.evenings}
+          hasAnyEvent={view.hasAnyEvent}
+        />
       ) : null}
     </>
   ) : null;

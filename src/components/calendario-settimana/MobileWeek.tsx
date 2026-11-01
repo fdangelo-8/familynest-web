@@ -5,16 +5,16 @@ import { cx } from "@/components/ui/cx";
 import { Icon } from "@/components/ui/Icon/Icon";
 import { formatHiddenCount } from "@/lib/calendar";
 import { formatShortWeekday } from "@/lib/datetime";
-import { DayRow } from "./Rows";
+import { DayRow } from "@/components/calendario/Rows";
 import {
   dayHeading,
   dayHeadInfo,
   dayItems,
   tabLabel,
   type DayView,
-  type Member,
   type WeekView,
 } from "./model";
+import { type Member } from "@/components/calendario/model";
 
 /** Strip of the seven days (`role="tablist"`). Without a view it is the loading strip. */
 export function DayStrip({
