@@ -364,6 +364,51 @@ test("aree di tocco di almeno 44 px (mobile)", async ({
   }
 });
 
+test("il titolo «Modifica: …» ha 44 px di area di tocco e non copre la casella (mobile, #204)", async ({
+  page,
+  baseURL,
+  casa,
+}) => {
+  test.skip(!isMobileProject(), "area di tocco: solo mobile");
+  await seed(casa);
+  await open(page, baseURL, casa);
+  await page.evaluate(() => window.scrollTo(0, 0));
+  const row = rowOf(page, FIRMARE);
+  await row.scrollIntoViewIfNeeded();
+  const title = row.getByRole("button", { name: `Modifica: ${FIRMARE}` });
+  const checkbox = row.getByRole("checkbox");
+  const column = row.locator(".riga-lista__testo");
+  // The touch area is the column of the text, at least 44 px high, centered on it
+  // (a transparent ::before): the points on its edges must land on the button.
+  const box = (await column.boundingBox())!;
+  const cx = box.x + box.width / 2;
+  const cy = box.y + box.height / 2;
+  const points = [
+    [cx, cy],
+    [box.x + 2, cy],
+    [box.x + box.width - 2, cy],
+    [cx, cy - 21],
+    [cx, cy + 21],
+  ];
+  const missed = await title.evaluate((el, pts) => {
+    const out: string[] = [];
+    for (const [x, y] of pts as number[][]) {
+      const hit = document.elementFromPoint(x!, y!);
+      if (!hit || !(el === hit || el.contains(hit))) {
+        out.push(
+          `(${Math.round(x!)}, ${Math.round(y!)}) -> ${hit ? `${hit.tagName.toLowerCase()}.${String(hit.className)}` : "nothing"}`,
+        );
+      }
+    }
+    return out;
+  }, points);
+  expect(missed).toEqual([]);
+  // The checkbox keeps its own 44 px: the two areas do not overlap.
+  expect(await hasTouchArea(checkbox, 44)).toBe(true);
+  const checkboxBox = (await checkbox.boundingBox())!;
+  expect(checkboxBox.x + checkboxBox.width).toBeLessThanOrEqual(box.x + 1);
+});
+
 // --- keyboard and focus -------------------------------------------------------
 
 test.describe("tastiera e fuoco", () => {
