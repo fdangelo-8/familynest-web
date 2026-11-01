@@ -11,8 +11,6 @@ import type { ParsedPhrase, PhraseSlot } from "./parse-phrase";
 
 export const TITLE_MAX_LENGTH = 100;
 
-export const EXAMPLE_PHRASE = "cena da Marta venerdì alle 20";
-
 export const SAVE_FAILED_TEXT =
   "Non siamo riusciti a salvare l'impegno. Controlla la connessione e riprova.";
 export const UNDO_FAILED_TEXT =

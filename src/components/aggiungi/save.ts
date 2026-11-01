@@ -196,21 +196,28 @@ export async function createDeadline(
   return { status: "ok", findId: () => lookup };
 }
 
-/** The newest row of the author with this title: the one just created. */
+/**
+ * The newest row of the author with this title: the one just created. The
+ * query never carries the title (it would end up in addresses and logs): it
+ * asks for the author's latest rows and compares the title here. Without the
+ * author there is no «Annulla», so it can never touch someone else's thing.
+ */
 async function findNewestId(
   supabase: Client,
   table: "todos" | "deadlines",
   title: string,
   meId: string | null,
 ): Promise<string | null> {
+  if (!meId) return null;
   try {
-    let query = supabase.from(table).select("id").eq("title", title);
-    if (meId) query = query.eq("created_by_member_id", meId);
-    const { data, error } = await query
+    const { data, error } = await supabase
+      .from(table)
+      .select("id, title")
+      .eq("created_by_member_id", meId)
       .order("created_at", { ascending: false })
-      .limit(1);
-    if (error || !data || data.length === 0) return null;
-    return data[0]!.id;
+      .limit(20);
+    if (error || !data) return null;
+    return data.find((row) => row.title === title)?.id ?? null;
   } catch {
     return null;
   }

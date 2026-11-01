@@ -88,7 +88,6 @@ import {
   updateDeadline,
   updateTodo,
   type DeadlineRecord,
-  type DeadlineValues,
   type TodoRecord,
   type TodoValues,
   type WriteResult,
@@ -799,10 +798,50 @@ export function AddSheet({
     };
   }
 
+  /** The values of a new Da fare or Scadenza, read from the phrase with these people. */
+  function newValues(
+    list: readonly NestPerson[],
+    me: string | null,
+  ): TodoValues & { reminders: number[] } {
+    const read =
+      type === "da-fare"
+        ? parseTodo(phrase, todayKey, list, me)
+        : parseDeadline(phrase, todayKey, list, me);
+    const about =
+      "forId" in read ? read.forId : "aboutId" in read ? read.aboutId : null;
+    const auto = read.assigneeWritten
+      ? read.assigneeId
+      : type === "scadenza"
+        ? me
+        : null;
+    const chosen = assigneeManual !== undefined ? assigneeManual : auto;
+    return {
+      title: read.title,
+      dueDate: read.dueDate,
+      assigneeId: chosen,
+      forId: about,
+      isPrivate: isPrivate && (chosen === null || chosen === me),
+      reminders,
+    };
+  }
+
   // ----- Save: Da fare and Scadenza, new
   async function submitThing() {
-    const values = currentValues();
     const kind: ListKind = type === "da-fare" ? "todos" : "deadlines";
+    const supabase = createClient();
+    let authorId = meId;
+    let list: readonly NestPerson[] = people;
+    if (peopleState.status === "loading" && peopleLoad.current) {
+      // Names written before the people were read would be lost: wait for them.
+      savingRef.current = true;
+      setSaving(true);
+      const loaded = await peopleLoad.current;
+      if (loaded.status === "ready") {
+        authorId = loaded.meId;
+        list = loaded.people;
+      }
+    }
+    const values = newValues(list, authorId);
     const problem =
       type === "da-fare"
         ? validateTodo(values.title)
@@ -813,6 +852,8 @@ export function AddSheet({
             checkPast: true,
           });
     if (problem) {
+      savingRef.current = false;
+      setSaving(false);
       fail(problem);
       return;
     }
@@ -820,12 +861,10 @@ export function AddSheet({
     savingRef.current = true;
     setSaving(true);
     setSaveFailed(false);
-    const supabase = createClient();
-    let authorId = meId;
-    if (peopleState.status === "loading" && peopleLoad.current) {
-      const loaded = await peopleLoad.current;
-      if (loaded.status === "ready") authorId = loaded.meId;
-    }
+    const otherPerson =
+      values.assigneeId && values.assigneeId !== authorId
+        ? list.find((person) => person.id === values.assigneeId)
+        : undefined;
 
     const created =
       type === "da-fare"
@@ -860,10 +899,10 @@ export function AddSheet({
     };
     if (type === "da-fare") {
       showToast(
-        otherName
+        otherPerson
           ? {
               text: "Dato a",
-              emphasis: otherName,
+              emphasis: otherPerson.name,
               after: `: ${values.title}.`,
               onUndo,
             }
@@ -894,10 +933,9 @@ export function AddSheet({
     const supabase = createClient();
     return kind === "da-fare"
       ? updateTodo(supabase, id, values)
-      : updateDeadline(supabase, id, {
-          ...values,
-          dueDate: values.dueDate ?? "",
-        } as DeadlineValues);
+      : values.dueDate === null
+        ? "failed"
+        : updateDeadline(supabase, id, { ...values, dueDate: values.dueDate });
   }
 
   async function submitEdit() {
@@ -1559,6 +1597,7 @@ export function AddSheet({
             onClick: doDelete,
           },
         ]}
+        errorText={DELETE_FAILED_TEXT}
         data-testid="aggiungi-elimina-dialogo"
       />
     </>

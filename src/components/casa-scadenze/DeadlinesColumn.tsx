@@ -176,7 +176,7 @@ export function DeadlinesColumn({
         title="Nessuna scadenza"
         text="Documenti, bollo, assicurazioni, abbonamenti: aggiungili e vedi sempre quanto manca."
         actions={
-          <Button full href="/aggiungi">
+          <Button full href="/aggiungi?tipo=scadenza">
             Aggiungi una scadenza
           </Button>
         }

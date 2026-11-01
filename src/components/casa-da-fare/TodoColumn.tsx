@@ -45,7 +45,7 @@ function Row({
   info: ReturnType<typeof todoInfo>;
   assignee: TodoMember | undefined;
   onToggle: (key: string) => void;
-  /** Opens the sheet to edit it; absent while the thing is not saved yet */
+  /** Opens the sheet to edit it (a thing not saved yet has no button) */
   onEdit: (todo: Todo) => void;
 }) {
   const done = todo.doneAt !== null;

@@ -31,7 +31,7 @@ export const GONE_TITLE = "Questa cosa non c'è più";
 export const GONE_TEXT = "Forse l'ha tolta qualcun altro.";
 export const GONE_ALERT_TEXT = `${GONE_TITLE}. ${GONE_TEXT}`;
 export const LOAD_FAILED_TEXT =
-  "Non riusciamo ad aprirla. Controlla la connessione e riprova.";
+  "Non riusciamo a caricare questa cosa. Controlla la connessione e riprova.";
 
 export const UNDO_EDIT_FAILED_TEXT =
   "Non siamo riusciti ad annullare. Le modifiche sono rimaste.";
