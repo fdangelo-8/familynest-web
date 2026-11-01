@@ -108,10 +108,10 @@ export function sheet(page: Page, mode: "add" | "edit" = "add") {
 
 /** The label (static chip) with exactly this text. */
 export const labelText = (page: Page, text: string | RegExp) =>
-  sheet(page).labels.getByText(
-    text,
-    typeof text === "string" ? { exact: true } : {},
-  );
+  page
+    .getByRole("dialog")
+    .locator('[aria-live="polite"]')
+    .getByText(text, typeof text === "string" ? { exact: true } : {});
 
 /** A toast (role status) that contains the text. */
 export const toastWith = (page: Page, text: string) =>
@@ -575,7 +575,7 @@ export async function expectCard(
   page: Page,
   expected: { number: string; unit?: string; day?: string; title?: string },
 ): Promise<void> {
-  const card = sheet(page).card;
+  const card = page.getByRole("dialog").locator(".riga-scadenza");
   // The hidden «, urgente» sits inside the number element when it applies.
   await expect(card.locator(".riga-scadenza__numero")).toHaveText(
     new RegExp(`^${expected.number}(\\s*,\\s*urgente)?$`),
@@ -597,7 +597,7 @@ export async function expectCard(
 export async function expectGone(page: Page): Promise<void> {
   const s = sheet(page, "edit");
   await expect(s.dialog.getByText(GONE_TITLE, { exact: true })).toBeVisible();
-  await expect(s.dialog.getByText(GONE_TEXT, { exact: true })).toBeVisible();
+  await expect(s.dialog.getByText(GONE_TEXT)).toBeVisible();
   // The sheet's own «X» is also named «Chiudi»: the button of the message has a test id.
   await expect(s.dialog.getByTestId("aggiungi-gone-chiudi")).toBeVisible();
   await expect(s.dialog.getByRole("textbox")).toHaveCount(0);

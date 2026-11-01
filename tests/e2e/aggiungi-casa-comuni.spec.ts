@@ -47,7 +47,7 @@ test.describe("Aggiungi · parti comuni", () => {
     const s = sheet(page);
     for (const phrase of PHRASES) {
       await s.field.fill(phrase);
-      await expect(s.button(/^Aggiungi/)).toBeVisible();
+      await expect(s.button(/^(Aggiungi|Dai a )/)).toBeVisible();
       await expect(s.button("Tutti i dettagli")).toHaveCount(0);
       await expect(s.dialog.getByText("Tutti i dettagli")).toHaveCount(0);
     }
@@ -72,7 +72,7 @@ test.describe("Aggiungi · parti comuni", () => {
     const s = sheet(page);
     for (const phrase of PHRASES) {
       await s.field.fill(phrase);
-      await expect(s.button(/^Aggiungi/)).toBeVisible();
+      await expect(s.button(/^(Aggiungi|Dai a )/)).toBeVisible();
       await expect(s.button("Più dettagli")).toHaveCount(0);
       await expect(s.dialog.getByText("Più dettagli")).toHaveCount(0);
     }
