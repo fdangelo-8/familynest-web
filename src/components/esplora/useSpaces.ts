@@ -42,28 +42,34 @@ type ReadResult =
 async function readEverything(): Promise<ReadResult> {
   try {
     const supabase = createClient();
-    const [members, pinned] = await Promise.all([
-      // Only what the page shows: no birth date.
+    const [people, adults, pinned] = await Promise.all([
+      // Only names and colours of children and pets: no birth date.
       supabase
         .from("household_members")
         .select("name, color, kind")
+        .in("kind", ["child", "pet"])
         .order("created_at", { ascending: true })
         .order("id", { ascending: true }),
+      // Adults are only counted: their names never reach the browser.
+      supabase
+        .from("household_members")
+        .select("id", { count: "exact", head: true })
+        .eq("kind", "adult"),
       getPinnedSpaces(supabase),
     ]);
-    if (members.error || pinned.error) return { ok: false };
+    if (people.error || adults.error || pinned.error) return { ok: false };
     return {
       ok: true,
       data: {
         counts: {
-          adults: members.data.filter((m) => m.kind === "adult").length,
-          children: members.data.filter((m) => m.kind === "child").length,
-          pets: members.data.filter((m) => m.kind === "pet").length,
+          adults: adults.count ?? 0,
+          children: people.data.filter((m) => m.kind === "child").length,
+          pets: people.data.filter((m) => m.kind === "pet").length,
         },
-        children: members.data
+        children: people.data
           .filter((m) => m.kind === "child")
           .map(({ name, color }) => ({ name, color })),
-        pets: members.data
+        pets: people.data
           .filter((m) => m.kind === "pet")
           .map(({ name, color }) => ({ name, color })),
       },
