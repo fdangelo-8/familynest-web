@@ -194,6 +194,7 @@ test.describe("Aggiungi · Spesa", () => {
     await expect(toTake(page).locator(".riga-lista__quantita")).toHaveText([
       "1 kg",
       "2 l",
+      "", // Pane: the row of the page always has the (empty) quantity cell
     ]);
   });
 
@@ -254,6 +255,8 @@ test.describe("Aggiungi · Spesa", () => {
       .toEqual(["Latte"]);
     await expect(toastOf(page)).toHaveCount(0);
 
+    // The paused clock would keep the next page from starting (LEZIONI).
+    await page.clock.resume();
     await page.goto("/casa/spesa");
     await expect(titlesOf(toTake(page))).toHaveText(["Latte"], {
       timeout: 20_000,
