@@ -128,6 +128,11 @@ export function focusAfterSheet(
     for (const selector of selectors) {
       const target = firstVisible(selector);
       if (target) {
+        // A heading is not focusable by itself (the visible h1 may be the bar's).
+        const isHeading = /^h[1-6]$/i.test(target.tagName);
+        if (isHeading && !target.hasAttribute("tabindex")) {
+          target.setAttribute("tabindex", "-1");
+        }
         target.focus();
         return;
       }

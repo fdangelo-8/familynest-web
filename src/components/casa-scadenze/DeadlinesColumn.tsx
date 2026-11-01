@@ -26,9 +26,7 @@ function openEditor(id: string, group: string) {
     fallbacks: [
       `[data-group="${group}"] ${DEADLINE_HEADING}`,
       `[data-group="${other}"] ${DEADLINE_HEADING}`,
-      desktop
-        ? '[data-casa-column="scadenze"] h2'
-        : '[data-focus="casa-title"]',
+      desktop ? '[data-casa-column="scadenze"] h2' : "h1",
     ],
   });
 }

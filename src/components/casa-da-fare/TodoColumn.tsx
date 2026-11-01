@@ -158,10 +158,7 @@ export function TodoColumn({
       kind: "todos",
       id: todo.id,
       primary: `[data-edit-id="${CSS.escape(todo.id)}"]`,
-      fallbacks: [
-        `[data-group="${group}"] ${TODO_HEADING}`,
-        '[data-focus="casa-title"]',
-      ],
+      fallbacks: [`[data-group="${group}"] ${TODO_HEADING}`, "h1"],
     });
     router.push(editHref("da-fare", todo.id));
   };
