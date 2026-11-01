@@ -61,11 +61,20 @@ async function focusRingVisible(page: Page) {
   return page.evaluate(() => {
     const el = document.activeElement as HTMLElement | null;
     if (!el || el === document.body) return false;
-    const s = getComputedStyle(el);
-    return (
-      (s.outlineStyle !== "none" && parseFloat(s.outlineWidth) > 0) ||
-      s.boxShadow !== "none"
-    );
+    const ringOn = (node: Element) => {
+      const s = getComputedStyle(node);
+      return (
+        (s.outlineStyle !== "none" && parseFloat(s.outlineWidth) > 0) ||
+        s.boxShadow !== "none"
+      );
+    };
+    // The link of a card draws the ring on the whole card (the link itself has
+    // no outline): see `.scheda-modulo:has(> .scheda-modulo__link:focus-visible)`.
+    if (el.classList.contains("scheda-modulo__link")) {
+      const cardEl = el.closest(".scheda-modulo");
+      return !!cardEl && ringOn(cardEl);
+    }
+    return ringOn(el);
   });
 }
 
@@ -268,7 +277,7 @@ test.describe("la puntina", () => {
       await openEsplora(page, 10);
       for (const name of CATALOGUE) {
         const button = pin(page, name);
-        await button.scrollIntoViewIfNeeded();
+        await button.evaluate((el) => el.scrollIntoView({ block: "center" }));
         expect(await hasTouchArea(button), `puntina di ${name}`).toBe(true);
         const box = (await card(page, name).getByRole("link").boundingBox())!;
         expect(box.height, `scheda di ${name}`).toBeGreaterThanOrEqual(44);
