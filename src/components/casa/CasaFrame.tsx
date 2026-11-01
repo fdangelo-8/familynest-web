@@ -279,7 +279,13 @@ export function CasaFrame({
       <div className="intestazione-desktop">
         <div className="intestazione">
           <p className="intestazione__sopra">{nestName}</p>
-          <h1 className="intestazione__titolo t-titolo-pagina">Casa</h1>
+          <h1
+            className="intestazione__titolo t-titolo-pagina"
+            tabIndex={-1}
+            data-focus="casa-title"
+          >
+            Casa
+          </h1>
         </div>
         {filter ? <PersonFilter layout="desktop" {...filter} /> : null}
       </div>
@@ -315,7 +321,9 @@ export function CasaFrame({
                 aria-label={section.title}
               >
                 <div className={cx("sezione__testa", "casa-testa-colonna")}>
-                  <h2 className="sezione__titolo">{section.title}</h2>
+                  <h2 className="sezione__titolo" tabIndex={-1}>
+                    {section.title}
+                  </h2>
                   {column?.info ? (
                     <span className="sezione__info">{column.info}</span>
                   ) : null}

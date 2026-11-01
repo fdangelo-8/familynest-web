@@ -1,6 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  notifyListsRefreshed,
+  subscribeListsChanged,
+} from "@/components/aggiungi/coordination";
 import { createClient } from "@/lib/supabase/client";
 import { byDueDate, type Deadline, type DeadlineMember } from "./model";
 
@@ -91,11 +95,21 @@ export function useDeadlines(): DeadlinesList {
   const [meId, setMeId] = useState<string | null>(null);
   const [retrying, setRetrying] = useState(false);
   const running = useRef(false);
+  const again = useRef(false);
 
   const load = useCallback(async () => {
-    if (running.current) return;
+    if (running.current) {
+      // A change arrived while reading: read once more when this one ends.
+      again.current = true;
+      return;
+    }
     running.current = true;
-    const result = await readEverything();
+    let result = await readEverything();
+    // Changes that arrived during the read: read once more, the last one counts.
+    while (again.current) {
+      again.current = false;
+      result = await readEverything();
+    }
     running.current = false;
     if (!result.ok) {
       setStatus("error");
@@ -104,15 +118,21 @@ export function useDeadlines(): DeadlinesList {
       setMembers(result.members);
       setMeId(result.meId);
       setStatus("ready");
+      notifyListsRefreshed("deadlines");
     }
     setRetrying(false);
   }, []);
 
   useEffect(() => {
     // Reads once when the page opens.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     void load();
   }, [load]);
+
+  // Aggiungi saved, changed or removed a deadline: read again.
+  useEffect(
+    () => subscribeListsChanged("deadlines", () => void load()),
+    [load],
+  );
 
   const retry = useCallback(() => {
     setRetrying(true);
