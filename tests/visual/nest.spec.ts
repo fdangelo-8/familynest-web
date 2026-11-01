@@ -348,6 +348,13 @@ test.describe("con un utente usa e getta", () => {
     let release: () => void = () => {};
     const gate = new Promise<void>((resolve) => (release = resolve));
     await page.route(/\/nest\?_rsc=/, async (route) => {
+      // Next also prefetches the page (loading shell) while the link is
+      // clicked: hold only the real navigation, or the shell never arrives
+      // and the loading state is not shown.
+      if (route.request().headers()["next-router-prefetch"]) {
+        await route.continue();
+        return;
+      }
       await gate;
       await route.continue();
     });
