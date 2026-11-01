@@ -75,9 +75,9 @@ function Row({
             type="button"
             className="riga-lista__titolo"
             data-edit-id={todo.id}
+            aria-label={`Modifica: ${todo.title}`}
             onClick={() => onEdit(todo)}
           >
-            <VisuallyHidden>Modifica: </VisuallyHidden>
             {todo.title}
           </button>
         )}
