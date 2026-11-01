@@ -162,12 +162,14 @@ test.describe("blocchi", () => {
     const school = await expectOneBlock(page, "Scuola");
     const { top, height } = await offsetAndHeight(page, school);
     if (isMobileProject()) {
+      await expect(timeOf(school)).not.toHaveClass(/visivamente-nascosto/);
       await expect(timeOf(school)).toBeVisible();
       await expect(timeOf(school)).toHaveText("8:15 – 8:45");
       near(top, 12, 4);
       near(height, 46, 4);
     } else {
-      await expect(timeOf(school)).toBeHidden();
+      // The time stays in the text for screen readers: it is only not drawn.
+      await expect(timeOf(school)).toHaveClass(/visivamente-nascosto/);
       near(height, 21, 4);
     }
     const gym = await expectOneBlock(page, "Palestra");

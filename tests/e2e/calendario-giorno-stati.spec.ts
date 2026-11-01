@@ -100,6 +100,15 @@ test.describe("liberi insieme", () => {
     "CA-27: le serate libere portano al loro giorno, tranne quella già mostrata",
     async ({ page, baseURL, bianchi }) => {
       await evening(bianchi);
+      // Wednesday needs a visible event of its own: an empty day shows the
+      // «Giornata libera» state with an empty panel (requirement §8), so the
+      // row of Tuesday could not be checked after the click.
+      await createEvent(bianchi, "Giulia", {
+        title: "Palestra",
+        day: WED,
+        from: "9:00",
+        to: "10:00",
+      });
       await open(page, baseURL, bianchi);
       const section = panel(page, "Serate libere insieme");
       await expect(section).toContainText("7 questa settimana");
@@ -524,6 +533,8 @@ test.describe("isolamento tra Nest", () => {
 
 // ------------------------------------------------------------ accessibility
 
+// axe waits on timers: with the clock stopped it never answers, so these
+// tests leave the clock running.
 test.describe("accessibilità", () => {
   async function withEvents(bianchi: CasaNest) {
     await createEvent(bianchi, "Giulia", {
@@ -554,7 +565,7 @@ test.describe("accessibilità", () => {
     bianchi,
   }) => {
     await withEvents(bianchi);
-    await open(page, baseURL, bianchi, { lens: "io" });
+    await open(page, baseURL, bianchi, { lens: "io", pause: false });
     await expect(blocks(page, "Riunione di team").first()).toBeVisible();
     await expectAccessible(page);
   });
@@ -565,13 +576,13 @@ test.describe("accessibilità", () => {
     bianchi,
   }) => {
     await withEvents(bianchi);
-    await open(page, baseURL, bianchi, { lens: "nest" });
+    await open(page, baseURL, bianchi, { lens: "nest", pause: false });
     await expect(busyBlocks(page)).toHaveCount(1);
     await expectAccessible(page);
   });
 
   test("CA-39: stato vuoto", async ({ page, baseURL, bianchi }) => {
-    await open(page, baseURL, bianchi);
+    await open(page, baseURL, bianchi, { pause: false });
     await expect(page.getByText("Giornata libera")).toBeVisible();
     await expectAccessible(page);
   });
@@ -580,7 +591,7 @@ test.describe("accessibilità", () => {
     await withEvents(bianchi);
     const held = await holdReads(page);
     try {
-      await open(page, baseURL, bianchi, { settle: false });
+      await open(page, baseURL, bianchi, { settle: false, pause: false });
       await expect(busyLoading(page).first()).toBeVisible();
       expect(await axeProblems(page)).toEqual([]);
       expect(await noDuplicateIds(page)).toEqual([]);
