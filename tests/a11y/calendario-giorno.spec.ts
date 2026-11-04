@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { waitForAnimationsToEnd } from "../fixtures/animations";
 import {
   DAY_WEEK,
   SEVEN,
@@ -637,11 +638,15 @@ test("contrasto: testi principali e axe color-contrast", async ({
     }
 
     // The same, as axe measures it, on both lenses.
+    await waitForAnimationsToEnd(page);
     expect(await violations(page, ["color-contrast"])).toEqual([]);
     await lensIo(page).click();
     await expect(
       page.getByRole("button", { name: /Io$/, pressed: true }).first(),
     ).toBeVisible();
+    // The lens button changes background and colour with a CSS transition:
+    // axe must not read it halfway (light text on the old light background).
+    await waitForAnimationsToEnd(page);
     expect(await violations(page, ["color-contrast"])).toEqual([]);
   });
 });
