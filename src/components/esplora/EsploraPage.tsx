@@ -6,6 +6,7 @@ import { Avatar } from "@/components/ui/Avatar/Avatar";
 import { Icon } from "@/components/ui/Icon/Icon";
 import { PageError } from "@/components/ui/PageError/PageError";
 import { Skeleton, SkeletonGroup } from "@/components/ui/Skeleton/Skeleton";
+import { getPinLabel } from "@/lib/pin-texts";
 import {
   getAvailableSpaces,
   getSpacePromise,
@@ -113,11 +114,7 @@ export function EsploraPage() {
                         type="button"
                         className="puntina"
                         aria-pressed={isPinned}
-                        aria-label={
-                          isPinned
-                            ? `Togli ${space.name} da Oggi`
-                            : `Fissa ${space.name} in Oggi`
-                        }
+                        aria-label={getPinLabel(space.name, isPinned)}
                         ref={(node) => {
                           if (node) buttonRefs.current.set(space.key, node);
                           else buttonRefs.current.delete(space.key);

@@ -49,7 +49,11 @@ export function AppBar() {
       ) : (
         <BackLink fallback={config.fallback} />
       )}
-      <div className="barra__centro" />
+      <div className="barra__centro">
+        {config.kind === "detail" && config.title ? (
+          <p className="barra__titolo">{config.title}</p>
+        ) : null}
+      </div>
       {config.kind === "detail" ? (
         config.search ? (
           <SearchLink />

@@ -148,7 +148,9 @@ test.describe("regole di navigazione (funzioni pure)", () => {
     expect(mobile("/casa/spesa")).toBe("casa");
     expect(mobile("/casa/scadenze")).toBe("casa");
     expect(mobile("/notifiche")).toBe("oggi");
-    expect(mobile("/esplora/palestra")).toBe("oggi");
+    expect(mobile("/esplora")).toBe("oggi");
+    expect(mobile("/esplora/a-tavola")).toBe("oggi");
+    expect(mobile("/esplora/palestra")).toBeNull();
     expect(mobile("/figli/sofia")).toBe("oggi");
     expect(mobile("/ricerca")).toBeNull();
     expect(mobile("/nest")).toBeNull();
@@ -232,6 +234,7 @@ test.describe("regole di navigazione (funzioni pure)", () => {
     expect(getBarConfig("/profilo")).toEqual({
       kind: "detail",
       fallback: "/nest",
+      title: "Il tuo profilo",
     });
     expect(getBarConfig("/notifiche")).toEqual({
       kind: "detail",

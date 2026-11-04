@@ -4,6 +4,8 @@
  * placeholder pages. Pure functions, no React.
  */
 
+import { SPACES } from "@/lib/spaces";
+
 export type NavItem = "oggi" | "calendario" | "casa";
 export type Viewport = "mobile" | "desktop";
 
@@ -30,6 +32,15 @@ function matchesAny(pathname: string, bases: readonly string[]): boolean {
 // list, not a prefix).
 const CASA_ROUTES = ["/casa/spesa", "/casa/da-fare", "/casa/scadenze"];
 
+// The ten «In arrivo» pages of Esplora (#29): explicit list, not a prefix, so
+// that an address like /esplora/palestra is not highlighted.
+const SPACE_ROUTES: readonly string[] = SPACES.map((space) => space.href);
+
+/** `/esplora/<space>` for one of the ten spaces of the catalogue. */
+export function isSpaceRoute(pathname: string): boolean {
+  return SPACE_ROUTES.includes(pathname);
+}
+
 /** Known Casa pages only: an unknown address under /casa is a 404, not Casa. */
 export function isCasaRoute(pathname: string): boolean {
   return matchesAny(pathname, CASA_ROUTES);
@@ -44,7 +55,11 @@ export function getActiveNavItem(
   if (isCasaRoute(pathname)) return "casa";
   if (matchesAny(pathname, ["/oggi", "/aggiungi"])) return "oggi";
   if (viewport === "mobile") {
-    if (matchesAny(pathname, ["/esplora", "/figli", "/notifiche"])) {
+    if (
+      pathname === "/esplora" ||
+      isSpaceRoute(pathname) ||
+      matchesAny(pathname, ["/figli", "/notifiche"])
+    ) {
       return "oggi";
     }
   } else if (matchesPrefix(pathname, "/ricerca")) {
@@ -120,6 +135,8 @@ export type BarConfig =
       fallback: string;
       /** Link «Cerca nel Nest» on the right, instead of the page's own action */
       search?: boolean;
+      /** Title in the middle: a `p`, not a heading (the page has its own h1) */
+      title?: string;
     }
   | { kind: "close"; href: string };
 
@@ -137,19 +154,25 @@ export function getBarConfig(pathname: string): BarConfig {
   if (matchesPrefix(pathname, "/nest")) {
     return { kind: "close", href: "/oggi" };
   }
-  if (
-    matchesAny(pathname, [
-      "/profilo",
-      "/calendari-collegati",
-      "/impostazioni",
-      "/membri",
-    ])
-  ) {
+  // «Il tuo profilo» (#38) and «Impostazioni» (#41) say where you are.
+  if (matchesPrefix(pathname, "/profilo")) {
+    return { kind: "detail", fallback: "/nest", title: "Il tuo profilo" };
+  }
+  if (matchesPrefix(pathname, "/impostazioni")) {
+    return { kind: "detail", fallback: "/nest", title: "Impostazioni" };
+  }
+  // «Profilo di un figlio» (#31) is under /figli: back to the Nest.
+  if (matchesAny(pathname, ["/calendari-collegati", "/membri", "/figli"])) {
     return { kind: "detail", fallback: "/nest" };
   }
   // Esplora (#28): «Indietro» to the Nest, «Cerca nel Nest» on the right.
   if (pathname === "/esplora") {
     return { kind: "detail", fallback: "/nest", search: true };
+  }
+  // «In arrivo» of a space (#29): «Indietro» to Esplora, no search link: on
+  // the right there is the puntina (the page's own action).
+  if (isSpaceRoute(pathname)) {
+    return { kind: "detail", fallback: "/esplora" };
   }
   // «Indietro» of an event goes to the calendar when there is no previous
   // page of the app (#19).

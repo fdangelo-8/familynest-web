@@ -674,3 +674,83 @@ export function howMuch(days: number): HowMuch {
     word: false,
   };
 }
+
+/* ---------- Children profile (#31): birthday and school days ---------- */
+
+function isLeapYear(year: number): boolean {
+  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+}
+
+/** Day key of the birthday in `year`; 29 February becomes 28 in common years. */
+function birthdayInYear(month: number, day: number, year: number): string {
+  const safeDay = month === 2 && day === 29 && !isLeapYear(year) ? 28 : day;
+  return `${year}-${pad(month)}-${pad(safeDay)}`;
+}
+
+/**
+ * Calendar days (Rome) from today to the next birthday: 0 if it is today,
+ * at most 365. `birthDate` is a `YYYY-MM-DD` calendar day. Born on 29 February:
+ * in common years the birthday is 28 February. Returns `null` when
+ * `birthDate` is not a valid day.
+ */
+export function daysUntilBirthday(
+  birthDate: string,
+  now: Instant = new Date(),
+): number | null {
+  if (!isValidDayKey(birthDate)) return null;
+  const month = Number(birthDate.slice(5, 7));
+  const day = Number(birthDate.slice(8, 10));
+  const today = toDayKey(now);
+  const year = Number(today.slice(0, 4));
+  let next = birthdayInYear(month, day, year);
+  if (next < today) next = birthdayInYear(month, day, year + 1);
+  return daysUntilDay(next, now);
+}
+
+const WEEKDAY_NAMES = [
+  "lunedì",
+  "martedì",
+  "mercoledì",
+  "giovedì",
+  "venerdì",
+  "sabato",
+  "domenica",
+] as const;
+
+/**
+ * Text of the school days (ISO weekdays, 1 = Monday ... 7 = Sunday):
+ * one day «Il lunedì» / «La domenica»; three or more days in a row
+ * «Dal lunedì al venerdì» / «Dal lunedì alla domenica»; any other case a list
+ * «Lunedì e martedì», «Lunedì, mercoledì e venerdì». Empty if no valid day.
+ */
+export function formatSchoolDays(days: readonly number[]): string {
+  const sorted = [...new Set(days)]
+    .filter((day) => Number.isInteger(day) && day >= 1 && day <= 7)
+    .sort((a, b) => a - b);
+  const names = sorted.map((day) => WEEKDAY_NAMES[day - 1] ?? "");
+  const first = names[0];
+  const last = names[names.length - 1];
+  const firstDay = sorted[0];
+  const lastDay = sorted[sorted.length - 1];
+  if (
+    first === undefined ||
+    last === undefined ||
+    firstDay === undefined ||
+    lastDay === undefined
+  ) {
+    return "";
+  }
+  if (names.length === 1) {
+    return lastDay === 7 ? `La ${first}` : `Il ${first}`;
+  }
+  if (names.length >= 3 && lastDay - firstDay === names.length - 1) {
+    return lastDay === 7
+      ? `Dal ${first} alla ${last}`
+      : `Dal ${first} al ${last}`;
+  }
+  const list =
+    names.length === 2
+      ? `${first} e ${last}`
+      : `${names.slice(0, -1).join(", ")} e ${last}`;
+  return capitalize(list);
+}

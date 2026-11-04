@@ -23,6 +23,8 @@ type BarActionSpec = {
   label: string;
   /** Visible and announced as inactive, does nothing (e.g. while loading) */
   inactive: boolean;
+  /** Two-state button (e.g. a pin): `aria-pressed`. Undefined = plain button */
+  pressed?: boolean;
 };
 
 type BarActionContextValue = {
@@ -61,12 +63,15 @@ export function BarAction({
   icon,
   label,
   inactive = false,
+  pressed,
   onClick,
 }: {
   icon: IconName;
   /** Accessible name, written as the action */
   label: string;
   inactive?: boolean;
+  /** Two-state button: `aria-pressed`. The label changes with the state. */
+  pressed?: boolean;
   onClick: () => void;
 }) {
   const context = useContext(BarActionContext);
@@ -78,9 +83,9 @@ export function BarAction({
   });
 
   useEffect(() => {
-    setAction?.({ icon, label, inactive });
+    setAction?.({ icon, label, inactive, pressed });
     return () => setAction?.(null);
-  }, [setAction, icon, label, inactive]);
+  }, [setAction, icon, label, inactive, pressed]);
 
   useEffect(() => () => setOnPress?.(null), [setOnPress]);
 
@@ -99,6 +104,7 @@ export function BarActionSlot() {
       icon={action.icon}
       aria-label={action.label}
       aria-disabled={action.inactive}
+      pressed={action.pressed}
       onClick={action.inactive ? undefined : context.press}
     />
   );

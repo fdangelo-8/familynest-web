@@ -931,12 +931,12 @@ test.describe("punto 11: aria-current", () => {
       expect(value("/impegni/123", viewport, "calendario")).toBe("true");
       expect(value("/casa/da-fare", viewport, "casa")).toBe("true");
     }
-    expect(value("/esplora/x", "mobile", "oggi")).toBe("true");
+    expect(value("/esplora/a-tavola", "mobile", "oggi")).toBe("true");
     expect(value("/figli/x", "mobile", "oggi")).toBe("true");
-    expect(getActiveNavItem("/esplora/x", "desktop")).toBeNull();
+    expect(getActiveNavItem("/esplora/a-tavola", "desktop")).toBeNull();
     expect(getActiveNavItem("/figli/x", "desktop")).toBeNull();
     for (const item of ["oggi", "calendario", "casa"] as const) {
-      expect(value("/esplora/x", "desktop", item)).toBeUndefined();
+      expect(value("/esplora/a-tavola", "desktop", item)).toBeUndefined();
       expect(value("/figli/x", "desktop", item)).toBeUndefined();
     }
     expect(value("/oggi", "mobile", "oggi")).toBe("page");

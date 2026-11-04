@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Alert } from "@/components/ui/Alert/Alert";
 import { Button } from "@/components/ui/Button/Button";
 import { cx } from "@/components/ui/cx";
 import { Icon } from "@/components/ui/Icon/Icon";
@@ -58,12 +59,16 @@ function ErrorNotice({
  */
 export function AccessScreen({
   initialError,
+  accountDeleted = false,
 }: {
   initialError: AccessError | null;
+  /** Arriving from «Elimina l'account» (#38): a calm notice, not an error */
+  accountDeleted?: boolean;
 }) {
   const [error, setError] = useState<AccessError | null>(initialError);
   const [fromServer, setFromServer] = useState(initialError !== null);
   const [loading, setLoading] = useState<Provider | null>(null);
+  const [showDeleted, setShowDeleted] = useState(accountDeleted);
   const busy = useRef(false);
 
   // Coming back from the provider with the browser's back button: the page
@@ -83,6 +88,7 @@ export function AccessScreen({
     if (busy.current) return;
     setFromServer(false);
     setError(null);
+    setShowDeleted(false);
     if (!navigator.onLine) {
       setError({ provider, cancelled: false });
       return;
@@ -109,6 +115,8 @@ export function AccessScreen({
 
   const notice = error ? (
     <ErrorNotice error={error} focusOnMount={fromServer} onRetry={retry} />
+  ) : showDeleted ? (
+    <Alert variant="ok">Il tuo account è stato eliminato.</Alert>
   ) : null;
 
   function providerButton(

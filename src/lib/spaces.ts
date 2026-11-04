@@ -10,6 +10,8 @@ import type { Database } from "@/types/database";
 /** Same values as the `space_key` enum of the database. */
 export type SpaceKey = Database["public"]["Enums"]["space_key"];
 
+export type SpaceRow = { icon: IconName; text: string };
+
 export type SpaceDef = {
   key: SpaceKey;
   /** Address of the «In arrivo» page of the space (#29) */
@@ -18,6 +20,12 @@ export type SpaceDef = {
   /** Fixed promise. Crescere and Zampe get theirs from `getSpacePromise`. */
   promise: string;
   icon: IconName;
+  /**
+   * The three rows of the «In arrivo» page (#29): what the space will hold.
+   * PROVISIONAL: the texts are the designer's proposal, except A tavola
+   * (mockup); they stay until Francesco approves or changes them.
+   */
+  rows: readonly SpaceRow[];
   /** Wide card (two columns) */
   wide: boolean;
   /** Dark card */
@@ -35,6 +43,11 @@ export const SPACES: readonly SpaceDef[] = [
     name: "A tavola",
     promise: "Cosa mangiamo questa settimana, senza pensarci ogni sera.",
     icon: "utensils",
+    rows: [
+      { icon: "calendar-range", text: "Il piano dei pasti della settimana" },
+      { icon: "book-open", text: "Ricette adatte a chi vive con te" },
+      { icon: "shopping-basket", text: "La spesa che si scrive da sola" },
+    ],
     wide: true,
     dark: false,
   },
@@ -44,6 +57,11 @@ export const SPACES: readonly SpaceDef[] = [
     name: "Noi due",
     promise: "Il vostro tempo, le vostre liste, le vostre date.",
     icon: "heart-handshake",
+    rows: [
+      { icon: "calendar-check", text: "Una serata per voi, ogni settimana" },
+      { icon: "square-check", text: "Le liste che tenete solo per voi" },
+      { icon: "gift", text: "Date da ricordare e idee regalo" },
+    ],
     wide: false,
     dark: true,
   },
@@ -53,6 +71,11 @@ export const SPACES: readonly SpaceDef[] = [
     name: "Stare bene",
     promise: "Prendersi cura di sé e degli altri.",
     icon: "leaf",
+    rows: [
+      { icon: "repeat", text: "Le abitudini che volete tenere" },
+      { icon: "sun", text: "Un momento per te, ogni giorno" },
+      { icon: "heart", text: "Chi ha bisogno di una mano" },
+    ],
     wide: false,
     dark: false,
   },
@@ -62,6 +85,11 @@ export const SPACES: readonly SpaceDef[] = [
     name: "Tempo insieme",
     promise: "Il tempo libero che avete, usato bene.",
     icon: "sun",
+    rows: [
+      { icon: "users", text: "Quando siete liberi tutti insieme" },
+      { icon: "sunrise", text: "Idee per il weekend, vicino a casa" },
+      { icon: "ticket", text: "Uscite da fare, con i biglietti" },
+    ],
     wide: false,
     dark: false,
   },
@@ -71,6 +99,11 @@ export const SPACES: readonly SpaceDef[] = [
     name: "Passioni",
     promise: "Quello che ti piace fare, con il suo posto.",
     icon: "sparkles",
+    rows: [
+      { icon: "repeat", text: "Gli orari di corsi e allenamenti" },
+      { icon: "headphones", text: "Libri, film e dischi da recuperare" },
+      { icon: "palette", text: "Quello che ti serve, in una lista" },
+    ],
     wide: false,
     dark: false,
   },
@@ -80,6 +113,11 @@ export const SPACES: readonly SpaceDef[] = [
     name: "Casa in ordine",
     promise: "Chi fa cosa, e niente sfugge.",
     icon: "sparkle",
+    rows: [
+      { icon: "users", text: "Chi fa cosa, a turno" },
+      { icon: "repeat", text: "Le faccende che si ripetono" },
+      { icon: "bell", text: "Un promemoria a chi tocca" },
+    ],
     wide: false,
     dark: false,
   },
@@ -89,6 +127,11 @@ export const SPACES: readonly SpaceDef[] = [
     name: "Progetti",
     promise: "Traslochi, lavori, grandi cambiamenti, un passo alla volta.",
     icon: "route",
+    rows: [
+      { icon: "route", text: "Un progetto alla volta, a tappe" },
+      { icon: "square-check", text: "Le cose da fare per ogni tappa" },
+      { icon: "briefcase", text: "Preventivi, contatti e scadenze" },
+    ],
     wide: true,
     dark: false,
   },
@@ -98,6 +141,11 @@ export const SPACES: readonly SpaceDef[] = [
     name: "Conti chiari",
     promise: "Chi ha pagato cosa, senza discussioni.",
     icon: "scale",
+    rows: [
+      { icon: "scale", text: "Chi ha pagato cosa, segnato subito" },
+      { icon: "users", text: "Le spese di casa, divise tra voi" },
+      { icon: "check", text: "Quanto manca per andare in pari" },
+    ],
     wide: false,
     dark: false,
   },
@@ -107,6 +155,11 @@ export const SPACES: readonly SpaceDef[] = [
     name: "Crescere",
     promise: "Tutto sui vostri figli, in un posto solo.",
     icon: "sprout",
+    rows: [
+      { icon: "book-open", text: "Scuola, classe e orario" },
+      { icon: "phone", text: "I contatti delle maestre" },
+      { icon: "gift", text: "Taglie e lista dei desideri" },
+    ],
     wide: false,
     dark: false,
   },
@@ -116,10 +169,20 @@ export const SPACES: readonly SpaceDef[] = [
     name: "Zampe",
     promise: "Per i vostri animali e per chi ha quattro zampe.",
     icon: "paw-print",
+    rows: [
+      { icon: "repeat", text: "Pappa e passeggiate, a turno" },
+      { icon: "calendar-check", text: "Le visite dal veterinario" },
+      { icon: "shopping-basket", text: "Il cibo che sta per finire" },
+    ],
     wide: false,
     dark: false,
   },
 ];
+
+/** The space of an address `/esplora/<slug>`; undefined if it is not one of the ten. */
+export function getSpaceByHref(pathname: string): SpaceDef | undefined {
+  return SPACES.find((space) => space.href === pathname);
+}
 
 /** Members of the Nest by kind, counting also adults without an account. */
 export type MemberCounts = {

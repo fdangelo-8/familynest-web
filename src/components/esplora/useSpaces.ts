@@ -10,6 +10,7 @@ import {
 } from "react";
 import { useToast } from "@/components/ui/Toast/ToastProvider";
 import { getPinnedSpaces, pinSpace, unpinSpace } from "@/lib/pinned-spaces";
+import { getPinToastText } from "@/lib/pin-texts";
 import {
   countPinnedAvailable,
   isPinLimitError,
@@ -151,13 +152,7 @@ export function useSpaces(buttonRefs: RefObject<Map<SpaceKey, HTMLElement>>) {
   );
 
   const showLimit = useCallback(
-    (key: SpaceKey) =>
-      showToast({
-        icon: null,
-        text: "Puoi fissare al massimo sei spazi: togline uno per fissare",
-        emphasis: nameOf(key),
-        after: ".",
-      }),
+    (key: SpaceKey) => showToast(getPinToastText("limit", nameOf(key))),
     [showToast],
   );
 
@@ -184,12 +179,12 @@ export function useSpaces(buttonRefs: RefObject<Map<SpaceKey, HTMLElement>>) {
         showLimit(key);
         return;
       }
-      showToast({
-        icon: null,
-        text: "Non siamo riusciti ad annullare:",
-        emphasis: nameOf(key),
-        after: wasPinning ? " resta in Oggi." : " non è più in Oggi.",
-      });
+      showToast(
+        getPinToastText(
+          wasPinning ? "undo-failed-stays" : "undo-failed-gone",
+          nameOf(key),
+        ),
+      );
     },
     [focusButton, setSpace, showLimit, showToast],
   );
@@ -219,20 +214,13 @@ export function useSpaces(buttonRefs: RefObject<Map<SpaceKey, HTMLElement>>) {
           showLimit(key);
           return;
         }
-        showToast({
-          icon: null,
-          text: pinning
-            ? "Non siamo riusciti a fissare"
-            : "Non siamo riusciti a togliere",
-          emphasis: name,
-          after: ". Riprova tra qualche secondo.",
-        });
+        showToast(
+          getPinToastText(pinning ? "pin-failed" : "unpin-failed", name),
+        );
         return;
       }
       showToast({
-        icon: "pin",
-        lead: name,
-        text: pinning ? "fissato in fondo a Oggi." : "tolto da Oggi.",
+        ...getPinToastText(pinning ? "pinned" : "unpinned", name),
         onUndo: () => void undo(key, pinning),
       });
     },

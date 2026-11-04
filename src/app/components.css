@@ -4708,6 +4708,125 @@ button.griglia-mese__cella--selezionata {
   }
 }
 
+/* Impostazioni della casa (#41): la sezione raggiunta con un'ancora
+   (/impostazioni#notifiche) si ferma sotto la barra ferma */
+.sezione--ancora {
+  scroll-margin-top: calc(
+    var(--space-3) + env(safe-area-inset-top) + var(--size-controllo) +
+      var(--space-5)
+  );
+}
+@media (min-width: 1024px) {
+  .sezione--ancora {
+    scroll-margin-top: calc(var(--size-nav-desktop) + var(--space-6));
+  }
+}
+
+/* Il tuo profilo (#38): nome o mail più lunghi della riga vanno a capo invece
+   di uscire (vale anche per #18) */
+.profilo-testa .t-titolo-pagina,
+.profilo-testa .intestazione__sotto {
+  overflow-wrap: anywhere;
+}
+
+/* Profilo di un figlio (#31) */
+
+/* Link nella testa di una sezione («Vedi nel calendario»): aspetto di
+   .sezione__info; area di 44 px che sale verso l'alto, così non copre la
+   prima riga della scheda sotto (8 px più giù). */
+.sezione__link {
+  position: relative;
+}
+.sezione__link::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: max(100%, var(--size-tocco));
+  height: var(--size-tocco);
+  transform: translateX(-50%);
+}
+@media (hover: hover) {
+  .sezione__link {
+    transition: color var(--durata-rapida) var(--curva);
+  }
+  .sezione__link:hover {
+    color: var(--color-inchiostro);
+  }
+}
+.sezione__link:active {
+  color: var(--color-inchiostro);
+}
+
+/* Azione nella testa del profilo, solo da 1024 px (sotto c'è la barra) */
+.profilo-testa__azione {
+  display: none;
+}
+@media (min-width: 1024px) {
+  .profilo-testa--riga:has(> .profilo-testa__azione) {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+  .profilo-testa__azione {
+    display: inline-flex;
+  }
+}
+
+/* Gruppi di campi dentro un modulo */
+.modulo-gruppo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+}
+.modulo-gruppo--sezione {
+  padding-top: var(--space-4);
+  box-shadow: inset 0 var(--border-sottile) 0 var(--color-filo);
+}
+
+/* Tre campi corti affiancati (taglie) */
+.campo-doppio--tre {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* Esplora · Spazio in arrivo (#29): intervallo del mockup mobile fino a
+   1023 px; da 1024 px resta quello di .sezione */
+@media (max-width: 1023px) {
+  .spazio-arrivo {
+    gap: var(--space-6);
+  }
+}
+/* Riga dell'icona: l'icona a sinistra, la puntina desktop a destra */
+.spazio-arrivo__alto {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+/* Solo da 1024 px: link «← Esplora» e puntina della pagina */
+@media (max-width: 1023px) {
+  .spazio-arrivo__desktop {
+    display: none;
+  }
+}
+/* Scheletro del bottone a tutta larghezza */
+.skeleton--bottone {
+  height: var(--size-azione);
+  border-radius: var(--radius-m);
+}
+/* Puntina fissata (bottone icona premuto): pieno, come .puntina fissata */
+.btn-icona[aria-pressed="true"] {
+  background: var(--color-inchiostro);
+  color: var(--color-latte);
+  box-shadow: none;
+}
+@media (hover: hover) {
+  .btn-icona[aria-pressed="true"]:hover:not(:disabled, [aria-disabled="true"]) {
+    background: var(--color-notte-2);
+  }
+}
+.btn-icona[aria-pressed="true"]:active:not(:disabled, [aria-disabled="true"]) {
+  background: var(--color-notte-2);
+}
+
 /* =========================================================
    CORNICE DELL'APP (fondamenta layout e navigazione, #10)
    Il mockup mette tutto dentro una cornice fissa: qui le regole
