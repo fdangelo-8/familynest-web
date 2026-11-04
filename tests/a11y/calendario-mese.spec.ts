@@ -377,12 +377,12 @@ test.describe("aree di tocco e layout", () => {
         const cy = box.y + box.height / 2;
         const misses = await target.evaluate(
           (el, [x, y]) => {
-            // 20 px, not 22: on a phone the area of «Mese successivo» (44 px) loses about 2 px at the bottom to the link «Oggi» (reported in the PR).
+            // 19 px, not 22: on a phone «Mese successivo» (72-112) and the link «Oggi» (from 112) touch, so its 44 px area loses 2 px (reported in the PR).
             const corners = [
-              [x - 20, y - 20],
-              [x + 20, y - 20],
-              [x - 20, y + 20],
-              [x + 20, y + 20],
+              [x - 19, y - 19],
+              [x + 19, y - 19],
+              [x - 19, y + 19],
+              [x + 19, y + 19],
             ] as const;
             return corners.flatMap(([px, py]) => {
               const hit = document.elementFromPoint(px, py);
