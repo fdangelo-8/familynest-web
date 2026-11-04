@@ -24,7 +24,7 @@ for (const state of STATES) {
       waitUntil: "load",
     });
     await page.evaluate(() => document.fonts.ready);
-    const section = page.locator(`#09-oggi--${state}`);
+    const section = page.locator(`[data-stato="${state}"]`);
     for (const [frame, width] of [
       [".frame-mobile", 390],
       [".frame-desktop", 1280],
