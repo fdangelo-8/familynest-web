@@ -3,11 +3,13 @@ name: CI
 # Runs on pull requests and on main only: a push to a branch with an open pull
 # request is covered by the pull_request run, so it never runs twice.
 #
-# To save Actions minutes the Playwright suite (the `test` job, about 20 minutes)
-# runs on a pull request only while it has the `in-test` or `pronta-per-francesco`
-# label; before that a push runs only `check` and `build`, and agents run the suites
-# locally. The labels are read when the run starts, so after adding `in-test` to a
-# pull request with no new push, re-running its latest CI run starts the suite.
+# Build phase (Francesco's decision of 04/11): to go faster the full Playwright suite
+# (the `test` job, about 30 minutes) runs on a pull request only while it has the
+# `suite-completa` label, which the coordinator adds once, when a page is finished.
+# Testers run their own specs with the test-mirato workflow. On main the suite runs
+# after every merge and is never cancelled by the next one. The labels are read when
+# the run starts, so after adding `suite-completa` with no new push, re-run the latest
+# CI run of the pull request.
 on:
   pull_request:
     branches: [main]
@@ -17,7 +19,8 @@ on:
 # A new push cancels the run still in progress for the same pull request or branch.
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  # On main every merge keeps its own run: the full suite after each merge is the safety net.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -45,7 +48,7 @@ jobs:
       # - app: build and Playwright tests, skipped when only docs/** (except docs/mockup/,
       #   which the tests read) or *.md files change;
       # - visual: visual tests, only when something they render or depend on changes.
-      # - tests: Playwright suite, only while the pull request is in-test or pronta-per-francesco.
+      # - tests: Playwright suite, only while the pull request has the suite-completa label.
       - name: Detect changes
         id: changes
         env:
@@ -63,7 +66,7 @@ jobs:
           fi
           # Current labels, not the ones in the event: a re-run sees a label added later.
           tests=false
-          if gh api "repos/$REPO/pulls/$PR" --jq '.labels[].name' | grep -Eqx 'in-test|pronta-per-francesco'; then
+          if gh api "repos/$REPO/pulls/$PR" --jq '.labels[].name' | grep -Eqx 'suite-completa'; then
             tests=true
           fi
           echo "tests=$tests" >> "$GITHUB_OUTPUT"
@@ -86,7 +89,7 @@ jobs:
             echo ""
             echo "Test visivi: $([ "$visual" = true ] && echo "sì" || echo "no, nessun file visivo cambiato")"
             echo ""
-            echo "Suite Playwright: $([ "$tests" = true ] && echo "sì" || echo "no, la PR non è ancora in-test")"
+            echo "Suite Playwright: $([ "$tests" = true ] && echo "sì" || echo "no, la PR non ha l'etichetta suite-completa")"
             echo ""
           } >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/checkout@v4
