@@ -1,4 +1,13 @@
-import { expect, test, type Locator } from "@playwright/test";
+import type { Locator } from "@playwright/test";
+import { expect, test } from "../fixtures/casa";
+import {
+  PHRASE,
+  dialogOf,
+  eventsOf,
+  fieldOf,
+  openAdd,
+} from "../fixtures/aggiungi";
+import { chooseLens, lensButton } from "../fixtures/preferenze";
 import {
   COLOR_NETWORK_ERROR,
   COLOR_SERVER_ERROR,
@@ -348,42 +357,39 @@ test.describe("Come usi l'app: scelte", () => {
 // ------------------------------------------- effetti fuori da questa pagina
 
 test.describe("effetti su Oggi e su Aggiungi", () => {
-  // The frame (Oggi, Aggiungi) does not read these preferences yet: they wait
-  // for the shared requests 1 and 2 of the issue. The bodies are ready so the
-  // criteria can be checked as soon as the frame reads them.
-  test("CA-20: «All'apertura» = «Nest» apre Oggi sulla lente «Nest» in una sessione nuova", async ({
+  test("CA-20: «All'apertura» = «Nest» scelto nel profilo apre Oggi sulla lente «Nest» alla prossima apertura", async ({
     page,
     baseURL,
     browser,
   }) => {
     needsThrowaway();
-    test.fixme(
-      true,
-      "CA-20 dipende dalla richiesta condivisa 1: la cornice non legge ancora start_lens",
-    );
     await withMemberNest(async ({ user }) => {
       await user.signInContext(page.context(), baseURL as string);
       await openProfile(page);
       await valueOf(page, "All'apertura").click();
       await radioIn(sheetOf(page, "All'apertura"), /^Nest/).click();
+      await expect(valueOf(page, "All'apertura")).toHaveText("Nest");
       await expect
         .poll(async () => (await profileOf(user.id))?.start_lens)
         .toBe("nest");
 
-      const fresh = await browser.newContext({ baseURL });
+      // A new session of the browser: the lens starts from the profile.
+      const fresh = await browser.newContext({
+        baseURL,
+        viewport: page.viewportSize() ?? undefined,
+      });
       try {
         await user.signInContext(fresh, baseURL as string);
         const oggi = await fresh.newPage();
         await oggi.goto("/oggi");
-        const lens = oggi.getByRole("group", {
-          name: "Punto di vista: solo tu o tutto il Nest",
-        });
-        await expect(
-          lens.getByRole("button", { name: /Nest$/ }),
-        ).toHaveAttribute("aria-pressed", "true");
-        await lens.getByRole("button", { name: /Io$/ }).click();
+        await expect(lensButton(oggi, "Nest")).toHaveAttribute(
+          "aria-pressed",
+          "true",
+        );
+        // Touching «Io» holds after a reload in the same session.
+        await chooseLens(oggi, "Io");
         await oggi.reload();
-        await expect(lens.getByRole("button", { name: /Io$/ })).toHaveAttribute(
+        await expect(lensButton(oggi, "Io")).toHaveAttribute(
           "aria-pressed",
           "true",
         );
@@ -393,11 +399,39 @@ test.describe("effetti su Oggi e su Aggiungi", () => {
     });
   });
 
-  test("CA-21: l'impegno aggiunto prende la visibilità predefinita (Io) o «Tutto il Nest» (lente Nest)", async () => {
-    needsThrowaway();
-    test.fixme(
-      true,
-      "CA-21 dipende dalla richiesta condivisa 2: Aggiungi non legge ancora default_event_visibility",
-    );
+  test("CA-21: la visibilità scelta nel profilo vale in Aggiungi con la lente «Io», non con «Nest»", async ({
+    page,
+    baseURL,
+    casa,
+  }) => {
+    const marco = casa.users["Marco"]!;
+    await casa.signIn(page, baseURL, "Marco");
+    await openProfile(page);
+    await valueOf(page, "Visibilità predefinita").click();
+    await radioIn(sheetOf(page, "Visibilità predefinita"), /^Solo io/).click();
+    await expect(valueOf(page, "Visibilità predefinita")).toHaveText("Solo io");
+    await expect
+      .poll(async () => (await profileOf(marco.id))?.default_event_visibility)
+      .toBe("private");
+
+    const save = async (lens: "io" | "nest") => {
+      const add = await page.context().newPage();
+      await openAdd(add, baseURL, casa, "Marco", { lens });
+      await fieldOf(add).fill(PHRASE);
+      await dialogOf(add)
+        .getByRole("button", { name: "Metti in giovedì 22" })
+        .click();
+      await expect(dialogOf(add)).toHaveCount(0);
+      await add.close();
+    };
+
+    await save("io");
+    await expect
+      .poll(async () => (await eventsOf(casa)).map((r) => r.visibility))
+      .toEqual(["private"]);
+    await save("nest");
+    await expect
+      .poll(async () => (await eventsOf(casa)).map((r) => r.visibility).sort())
+      .toEqual(["household", "private"]);
   });
 });
