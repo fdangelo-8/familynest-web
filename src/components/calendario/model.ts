@@ -111,11 +111,14 @@ export function eventInfo(
 
   if (event.escortMemberId) {
     const escort = members.find((member) => member.id === event.escortMemberId);
-    const phrase = formatEscortPhrase(
-      escort?.name ?? null,
-      event.memberIds.length > 1,
-    );
-    if (phrase) parts.push(phrase);
+    if (escort) {
+      parts.push(
+        formatEscortPhrase(
+          { kind: "member", name: escort.name },
+          event.memberIds.length > 1,
+        ),
+      );
+    }
   }
   return parts.join(", ");
 }

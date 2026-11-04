@@ -1523,3 +1523,31 @@ test.describe("correzioni approvate (#52)", () => {
     ).toEqual([]);
   });
 });
+
+test.describe("riga passata leggibile (#241)", () => {
+  for (const id of ["riga-passata-normale", "riga-passata-insieme"]) {
+    test(`${id}: opacità 1 e testo secondario`, async ({ page }) => {
+      const row = page.getByTestId(id);
+      const read = (sel: string | null) =>
+        (sel ? row.locator(sel) : row).evaluate((el) => {
+          const probe = document.createElement("span");
+          probe.style.color = "var(--color-inchiostro-2)";
+          document.body.appendChild(probe);
+          const expected = getComputedStyle(probe).color;
+          probe.remove();
+          const cs = getComputedStyle(el);
+          return { opacity: cs.opacity, color: cs.color, expected };
+        });
+      for (const sel of [
+        null,
+        ".riga-evento__ora",
+        ".riga-evento__titolo",
+        ".riga-evento__info",
+      ]) {
+        const r = await read(sel);
+        expect(r.opacity).toBe("1");
+        expect(r.color).toBe(r.expected);
+      }
+    });
+  }
+});

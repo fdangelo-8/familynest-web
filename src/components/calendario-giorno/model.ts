@@ -452,14 +452,13 @@ function escortText(
   meId: string | null,
 ): string {
   if (!event.escortMemberId) return "";
-  const isMe = event.escortMemberId === meId;
+  const many = event.memberIds.length > 1;
+  if (event.escortMemberId === meId) {
+    return `, ${formatEscortPhrase({ kind: "me" }, many)}`;
+  }
   const escort = members.find((member) => member.id === event.escortMemberId);
-  const phrase = formatEscortPhrase(
-    escort?.name ?? null,
-    event.memberIds.length > 1,
-    isMe,
-  );
-  return phrase ? `, ${phrase}` : "";
+  if (!escort) return "";
+  return `, ${formatEscortPhrase({ kind: "member", name: escort.name }, many)}`;
 }
 
 /**

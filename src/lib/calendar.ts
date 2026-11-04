@@ -51,18 +51,15 @@ export function formatBusyAccessibleName(
 /**
  * Sentence of who takes the children to an event: «la porta Laura», «li porta
  * Marco», «la porti tu», «li porti tu». `many` is true when the event has more
- * than one person. `isMe` is true when the escort is the person looking (then
- * it reads «tu»; pass false to always use the name). Without an escort name and
- * not me: empty string. The only place where this sentence is written.
+ * than one person. The caller decides who the escort is (and what to do when
+ * the escort is not found). The only place where this sentence is written.
  */
 export function formatEscortPhrase(
-  escortName: string | null,
+  escort: { kind: "me" } | { kind: "member"; name: string },
   many: boolean,
-  isMe = false,
 ): string {
-  if (isMe) return many ? "li porti tu" : "la porti tu";
-  if (!escortName) return "";
-  return many ? `li porta ${escortName}` : `la porta ${escortName}`;
+  if (escort.kind === "me") return many ? "li porti tu" : "la porti tu";
+  return many ? `li porta ${escort.name}` : `la porta ${escort.name}`;
 }
 
 /* ---------- Lens ---------- */
