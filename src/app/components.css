@@ -4827,6 +4827,28 @@ button.griglia-mese__cella--selezionata {
   background: var(--color-notte-2);
 }
 
+/* Oggi (#30, richiesta condivisa 231): le due disposizioni stanno nel codice,
+   ciascuna nascosta dall'altra parte (sotto / da 1024 px, come
+   .casa-solo-mobile e .casa-solo-desktop); l'elenco dei passi della lista di
+   partenza è una griglia senza stile di elenco. */
+@media (min-width: 1024px) {
+  .oggi-solo-mobile {
+    display: none;
+  }
+}
+@media (max-width: 1023px) {
+  .oggi-solo-desktop {
+    display: none;
+  }
+}
+.lista-partenza__passi {
+  display: grid;
+  gap: var(--space-1);
+  margin: var(--space-0);
+  padding: var(--space-0);
+  list-style: none;
+}
+
 /* =========================================================
    CORNICE DELL'APP (fondamenta layout e navigazione, #10)
    Il mockup mette tutto dentro una cornice fissa: qui le regole

@@ -8,18 +8,13 @@ import {
   useMemo,
   useRef,
   useState,
-  useSyncExternalStore,
   type FormEvent,
   type KeyboardEvent,
   type ReactNode,
 } from "react";
 import { flushSync } from "react-dom";
 import { notifyEventsChanged } from "../../lib/events-changed";
-import {
-  getLensSnapshot,
-  getServerLensSnapshot,
-  subscribeLens,
-} from "../../lib/lens";
+import { VISIBILITY_LABELS, type EventVisibility } from "../../lib/calendar";
 import {
   daysUntilDay,
   formatDeadline,
@@ -36,6 +31,8 @@ import {
 } from "../../lib/household-events";
 import { createClient } from "../../lib/supabase/client";
 import { nameKey } from "../casa-spesa/model";
+import { useNest } from "../ui/AppFrame/NestProvider";
+import { useLens } from "../ui/Lens/Lens";
 import { Alert } from "../ui/Alert/Alert";
 import { Avatar } from "../ui/Avatar/Avatar";
 import { Button } from "../ui/Button/Button";
@@ -223,11 +220,11 @@ export function AddSheet({
   const router = useRouter();
   const desktop = useIsDesktop();
   const { showToast } = useToast();
-  const lens = useSyncExternalStore(
-    subscribeLens,
-    getLensSnapshot,
-    getServerLensSnapshot,
-  );
+  const [lens] = useLens();
+  const { defaultVisibility } = useNest();
+  // Lens «Nest»: everyone sees it. Lens «Io»: the visibility chosen in the profile.
+  const newEventVisibility: EventVisibility =
+    lens === "nest" ? "household" : defaultVisibility;
   const isEdit = editId !== null;
 
   const uid = useId();
@@ -696,7 +693,7 @@ export function AddSheet({
         p_title: parsed.title,
         p_starts_at: slot.startsAt.toISOString(),
         p_ends_at: slot.endsAt.toISOString(),
-        p_visibility: getLensSnapshot() === "nest" ? "household" : "busy",
+        p_visibility: newEventVisibility,
         p_member_ids: ids,
       });
       if (rpcError || typeof data !== "string") throw new Error("not saved");
@@ -1511,7 +1508,7 @@ export function AddSheet({
               <Icon name="eye" />
               <span className="riga-opzione__nome">Chi lo vede</span>
               <span className="riga-opzione__valore">
-                {lens === "nest" ? "Tutto il Nest" : "Occupato"}
+                {VISIBILITY_LABELS[newEventVisibility]}
               </span>
             </div>
           </div>
