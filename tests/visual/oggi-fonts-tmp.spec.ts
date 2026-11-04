@@ -9,7 +9,7 @@ import { signInAsCached } from "../fixtures/visual-login-cached";
 
 test.use({ locale: "it-IT", timezoneId: "Europe/Rome" });
 
-const SELECTORS = [
+const _UNUSED = [
   ".riga-lista__titolo",
   ".sezione__titolo",
   ".riga-evento__titolo",
@@ -19,27 +19,33 @@ const SELECTORS = [
 ];
 
 async function probe(page: Page) {
-  return page.evaluate((selectors) => {
+  return page.evaluate(() => {
     const out: Record<string, unknown> = {};
-    for (const selector of selectors) {
-      const el = Array.from(document.querySelectorAll(selector)).find(
-        (e) => (e as HTMLElement).offsetWidth > 0,
-      ) as HTMLElement | undefined;
-      if (!el) {
-        out[selector] = "none";
-        continue;
-      }
-      const s = getComputedStyle(el);
-      const range = document.createRange();
-      range.selectNodeContents(el);
-      out[selector] =
-        `${el.textContent?.trim().slice(0, 24)} | ${s.fontFamily.slice(0, 40)} | w${s.fontWeight} | ${s.fontSize} | ls ${s.letterSpacing} | var ${s.fontVariationSettings} | width ${Math.round(range.getBoundingClientRect().width)}`;
+    const span = document.createElement("span");
+    span.style.cssText =
+      "position:absolute;visibility:hidden;white-space:nowrap;font-size:15px;font-family:'Host Grotesk'";
+    span.textContent = "Chiamare il commercialista";
+    document.body.appendChild(span);
+    for (const w of [400, 500, 600, 650, 700]) {
+      span.style.fontWeight = String(w);
+      out[`w${w}`] = span.getBoundingClientRect().width;
     }
-    out.fonts = Array.from(document.fonts)
-      .map((f) => `${f.family}:${f.weight}:${f.status}`)
-      .join(" ; ");
+    span.remove();
+    const rules: string[] = [];
+    for (const sheet of Array.from(document.styleSheets)) {
+      try {
+        for (const rule of Array.from(sheet.cssRules)) {
+          if (rule.constructor.name === "CSSFontFaceRule") {
+            rules.push(rule.cssText.replace(/\s+/g, " ").slice(0, 260));
+          }
+        }
+      } catch {
+        rules.push("blocked sheet");
+      }
+    }
+    out.rules = rules;
     return out;
-  }, SELECTORS);
+  });
 }
 
 test("fonts: mockup", async ({ page }, testInfo) => {
