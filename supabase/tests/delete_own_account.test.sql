@@ -120,6 +120,10 @@ values ('f9000000-0000-4000-8000-000000000001', 'bbbbbbbb-0000-4000-8000-0000000
         '{"sub":"bbbbbbbb-0000-4000-8000-000000000001","email":"utente-b@example.com"}', 'email', now(), now());
 insert into auth.sessions (id, user_id, created_at, updated_at)
 values ('fa000000-0000-4000-8000-000000000001', 'bbbbbbbb-0000-4000-8000-000000000001', now(), now());
+-- A refresh token without session (user_id is text, no foreign key).
+insert into auth.refresh_tokens (instance_id, token, user_id, revoked, created_at, updated_at)
+values ('00000000-0000-0000-0000-000000000000', 'test-token-b-218', 'bbbbbbbb-0000-4000-8000-000000000001',
+        false, now(), now());
 
 -- Raises in a before delete trigger: an error half way through a deletion.
 create function public.test_forced_failure()
@@ -148,8 +152,8 @@ select ok(
   'delete_own_account is security definer with an empty search_path'
 );
 select is(
-  (select p.proargtypes::regtype[]::text from pg_proc p where p.oid = 'public.delete_own_account(boolean)'::regprocedure),
-  '{boolean}',
+  (select oidvectortypes(p.proargtypes) from pg_proc p where p.oid = 'public.delete_own_account(boolean)'::regprocedure),
+  'boolean',
   'its only parameter is the expected outcome: no way to name another account'
 );
 select ok(
@@ -160,8 +164,11 @@ select ok(
 select ok(
   (select has_table_privilege(pg_get_userbyid(p.proowner), 'auth.audit_log_entries', 'delete')
       and has_table_privilege(pg_get_userbyid(p.proowner), 'auth.flow_state', 'delete')
+      and has_table_privilege(pg_get_userbyid(p.proowner), 'auth.refresh_tokens', 'delete')
+      and (to_regclass('auth.scim_users') is null
+           or has_table_privilege(pg_get_userbyid(p.proowner), 'auth.scim_users', 'delete'))
    from pg_proc p where p.oid = 'public.delete_own_account(boolean)'::regprocedure),
-  'the owner of delete_own_account can delete from the Auth log and the sign-in flows'
+  'the owner of delete_own_account can delete from the Auth log, sign-in flows, refresh tokens and SCIM links'
 );
 -- Every other table of the auth schema with a user_id loses its rows with the account.
 select is_empty(
@@ -170,7 +177,7 @@ select is_empty(
      join pg_class r on r.relname = c.table_name and r.relnamespace = 'auth'::regnamespace and r.relkind in ('r', 'p')
      where c.table_schema = 'auth'
        and c.column_name = 'user_id'
-       and c.table_name <> 'flow_state'
+       and c.table_name not in ('flow_state', 'refresh_tokens', 'scim_users')
        and not exists (
          select 1
          from pg_constraint k
@@ -181,7 +188,7 @@ select is_empty(
            and k.confdeltype = 'c'
            and a.attname = 'user_id'
        ) $$,
-  'every table of the auth schema with a user_id is cleaned: on delete cascade, or flow_state (deleted by the function)'
+  'every table of the auth schema with a user_id is cleaned: on delete cascade, or deleted by the function'
 );
 select has_function('public', 'get_account_deletion_outcome', array[]::name[], 'get_account_deletion_outcome() exists');
 select is(
@@ -345,8 +352,9 @@ select ok(
   exists (select 1 from auth.audit_log_entries a where a.id = 'f7000000-0000-4000-8000-000000000001')
   and exists (select 1 from auth.flow_state f where f.id = 'f8000000-0000-4000-8000-000000000001')
   and exists (select 1 from auth.identities i where i.user_id = 'bbbbbbbb-0000-4000-8000-000000000001')
-  and exists (select 1 from auth.sessions x where x.user_id = 'bbbbbbbb-0000-4000-8000-000000000001'),
-  'CA-38: her Auth log entry, sign-in flow, identity and session still exist'
+  and exists (select 1 from auth.sessions x where x.user_id = 'bbbbbbbb-0000-4000-8000-000000000001')
+  and exists (select 1 from auth.refresh_tokens r where r.token = 'test-token-b-218'),
+  'CA-38: her Auth log entry, sign-in flow, identity, session and refresh token still exist'
 );
 select results_eq(
   $$ select m.name, m.is_admin from public.household_members m
@@ -400,8 +408,9 @@ select is_empty(
   $$ select 'log' from auth.audit_log_entries a where a.payload ->> 'actor_id' = 'bbbbbbbb-0000-4000-8000-000000000001'
      union all select 'flow' from auth.flow_state f where f.user_id = 'bbbbbbbb-0000-4000-8000-000000000001'
      union all select 'identity' from auth.identities i where i.user_id = 'bbbbbbbb-0000-4000-8000-000000000001'
-     union all select 'session' from auth.sessions x where x.user_id = 'bbbbbbbb-0000-4000-8000-000000000001' $$,
-  'her Auth log entries (email, IP), sign-in flows, identities and sessions are deleted'
+     union all select 'session' from auth.sessions x where x.user_id = 'bbbbbbbb-0000-4000-8000-000000000001'
+     union all select 'refresh' from auth.refresh_tokens r where r.user_id = 'bbbbbbbb-0000-4000-8000-000000000001' $$,
+  'her Auth log entries (email, IP), sign-in flows, identities, sessions and refresh tokens are deleted'
 );
 select ok(
   exists (select 1 from auth.audit_log_entries a where a.id = 'f7000000-0000-4000-8000-000000000002')

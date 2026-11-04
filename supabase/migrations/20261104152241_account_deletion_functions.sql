@@ -13,6 +13,10 @@
 --   deleted explicitly (review of PR #226);
 -- - auth.flow_state: the PKCE sign-in flows of the account (user_id without foreign key),
 --   deleted explicitly; their SAML relay states go with them (on delete cascade);
+-- - auth.refresh_tokens: user_id is text without foreign key; the tokens linked to a session
+--   go with the session, the others (session_id null) are deleted explicitly;
+-- - auth.scim_users (only in the Auth versions that have it): the SCIM link of the account,
+--   user_id without on delete cascade, deleted explicitly;
 -- - auth.users: the account, with identities, sessions, refresh tokens, MFA factors and
 --   one-time tokens (foreign keys of the auth schema, on delete cascade). The browser
 --   session cannot be refreshed any more; the app also clears the cookies right after.
@@ -114,6 +118,14 @@ begin
 
   delete from auth.flow_state f
   where f.user_id = v_uid;
+
+  delete from auth.refresh_tokens r
+  where r.user_id = v_uid::text;
+
+  -- Not every version of Supabase Auth has this table (it is resolved only when it exists).
+  if to_regclass('auth.scim_users') is not null then
+    execute 'delete from auth.scim_users s where s.user_id::text = $1' using v_uid::text;
+  end if;
 
   delete from auth.users u
   where u.id = v_uid;
