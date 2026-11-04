@@ -166,12 +166,16 @@ test("desktop: «← Esplora» ha il testo centrato nella colonna", async ({
     const box = (await back.boundingBox())!;
     const main = (await page.locator("main").boundingBox())!;
     expect(Math.round(box.width)).toBe(720);
-    expect(await back.evaluate((n) => getComputedStyle(n).textAlign)).toBe(
-      "center",
-    );
+    // The link is as wide as the column and its text sits in the middle.
+    const text = await back.evaluate((node) => {
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      const rect = range.getBoundingClientRect();
+      return { x: rect.x, width: rect.width };
+    });
     expect(
-      await back.evaluate((n) => getComputedStyle(n).justifyContent),
-    ).toMatch(/center/);
+      Math.abs(text.x + text.width / 2 - (box.x + box.width / 2)),
+    ).toBeLessThan(2);
     expect(
       Math.abs(box.x + box.width / 2 - (main.x + main.width / 2)),
     ).toBeLessThan(2);
