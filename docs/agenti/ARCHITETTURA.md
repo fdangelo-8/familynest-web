@@ -82,7 +82,7 @@ Revisione e test rimandano allo sviluppatore; al quarto rientro la pagina divent
 | `docs/agenti/LEZIONI.md`, `APP.md`                              | Documentalista                                            | —                           |
 | Issue "Stato del lavoro"                                        | Coordinatore                                              | —                           |
 
-Una modifica condivisa alla volta. Dopo ogni merge condiviso tutti i branch attivi si riallineano a `main`. Prima del merge la suite completa deve passare.
+Una modifica condivisa alla volta. **Fase di build** (decisione di Francesco del 04/11, valida finché l'app non va in produzione): un branch si riallinea a `main` solo se ha un conflitto o se gli servono pezzi appena uniti. La suite completa gira una volta sola per pagina, quando la pagina è finita (etichetta `suite-completa`), e su `main` dopo ogni merge. Se `main` diventa rosso, la correzione viene prima di tutto. In produzione si torna alla regola piena: riallineamento dopo ogni merge condiviso e suite completa prima di ogni merge.
 
 ## 6. Database: come cambia senza dare password agli agenti
 
@@ -123,17 +123,17 @@ Modifiche a `.claude/` (configurazione), `.github/` e `CLAUDE.md` si fanno solo 
 
 ## 9. Test
 
-| Tipo             | Chi               | Dove                                          | Quando                                                     |
-| ---------------- | ----------------- | --------------------------------------------- | ---------------------------------------------------------- |
-| Statici          | Sviluppatore      | `npm run check`, `npm run build`              | Hook a fine turno + CI                                     |
-| E2E              | Tester funzionale | `tests/e2e/<pagina>.spec.ts`                  | CI su `main` e sulle PR `in-test` o `pronta-per-francesco` |
-| RLS e isolamento | Architetto dati   | `supabase/tests/*.sql` (pgTAP)                | CI `db`                                                    |
-| Visivi           | Tester visivo     | `tests/visual/<pagina>.spec.ts` + riferimenti | CI su `main` e sulle PR `in-test` o `pronta-per-francesco` |
-| Accessibilità    | Tester visivo     | `tests/a11y/<pagina>.spec.ts`                 | CI su `main` e sulle PR `in-test` o `pronta-per-francesco` |
+| Tipo             | Chi               | Dove                                          | Quando                                       |
+| ---------------- | ----------------- | --------------------------------------------- | -------------------------------------------- |
+| Statici          | Sviluppatore      | `npm run check`, `npm run build`              | Hook a fine turno + CI                       |
+| E2E              | Tester funzionale | `tests/e2e/<pagina>.spec.ts`                  | CI su `main` e sulle PR con `suite-completa` |
+| RLS e isolamento | Architetto dati   | `supabase/tests/*.sql` (pgTAP)                | CI `db`                                      |
+| Visivi           | Tester visivo     | `tests/visual/<pagina>.spec.ts` + riferimenti | CI su `main` e sulle PR con `suite-completa` |
+| Accessibilità    | Tester visivo     | `tests/a11y/<pagina>.spec.ts`                 | CI su `main` e sulle PR con `suite-completa` |
 
 Prima di rispondere FATTO lo sviluppatore lancia `test-mirato` sulle spec della sua pagina e scrive l'esito nella PR; il workflow non tocca `main` né il progetto remoto.
 
-Utenti di test: almeno due nuclei familiari distinti, creati dallo script di seed. La suite completa gira su `main` e sulle PR con etichetta `in-test` o `pronta-per-francesco`; a ogni altro push girano solo `check` e `build` (decisione di Francesco del 29/10, #83 e #97).
+Utenti di test: almeno due nuclei familiari distinti, creati dallo script di seed. La suite completa gira su `main` dopo ogni merge e sulle PR con etichetta `suite-completa`, una volta per pagina finita; a ogni altro push girano solo `check` e `build`, e i tester usano `test-mirato` (decisioni di Francesco del 29/10, #83 e #97, e del 04/11).
 
 ## 10. Definizione di fatto e blocchi
 

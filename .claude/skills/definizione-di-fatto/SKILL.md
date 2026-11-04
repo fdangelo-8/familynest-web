@@ -11,8 +11,8 @@ description: Checklist FamilyNest per decidere se una pagina o un lavoro è fini
 - [ ] Revisione `APPROVATA` senza problemi di sicurezza o privacy aperti
 - [ ] Test visivo `SUPERATO` su desktop (1280) e mobile (390), screenshot nella PR
 - [ ] Nessuna violazione di accessibilità serious o critical
-- [ ] CI tutta verde, inclusa la suite delle pagine già chiuse
-- [ ] Branch allineato all'ultimo `main`
+- [ ] CI tutta verde; per una pagina, anche la suite completa (etichetta `suite-completa`), eseguita una volta sola
+- [ ] Branch senza conflitti con `main`. In fase di build non serve riallinearlo dopo ogni merge: lo controlla la suite di `main` (decisione di Francesco del 04/11)
 - [ ] Stati vuoto, caricamento, errore e successo implementati come da specifica del designer
 - [ ] Nessuna proposta del designer applicata senza approvazione
 - [ ] Issue "Stato del lavoro" aggiornata dal coordinatore
