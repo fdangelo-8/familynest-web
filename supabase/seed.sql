@@ -166,3 +166,21 @@ values
   ('b5000000-0000-4000-8000-000000000002', '22222222-2222-4222-8222-222222222222', 'Rinnovo del passaporto',
    (now() at time zone 'Europe/Rome')::date + 60, null, 'b1000000-0000-4000-8000-000000000002',
    'b1000000-0000-4000-8000-000000000002', null, true, now() - interval '2 days' + interval '1 minute');
+
+-- School, sizes and teachers of a child (issue #219, for page #31): the data of the mockup
+-- for Sofia; Tommaso and Leo have none (empty profile). Invented phone number, no address of
+-- the school, no health data (D1). The time of the sizes is set by the database. Page tests
+-- use their own throwaway households and never change these rows.
+insert into public.child_profiles (
+  id, household_id, member_id, school_name, school_class, school_starts_at, school_ends_at, school_days,
+  school_note, shoe_size, clothing_size, pajama_size
+)
+values
+  ('a6000000-0000-4000-8000-000000000001', '11111111-1111-4111-8111-111111111111',
+   'a1000000-0000-4000-8000-000000000003', 'scuola Manzoni', '4ª B', '08:15', '16:15', '{1,2,3,4,5}',
+   'mensa compresa', '33', '9–10', '140');
+
+insert into public.child_teachers (id, household_id, member_id, sort_order, name, subject, phone)
+values
+  ('a7000000-0000-4000-8000-000000000001', '11111111-1111-4111-8111-111111111111',
+   'a1000000-0000-4000-8000-000000000003', 1, 'Maestra Bianchi', 'Italiano e storia', '039 000 0000');

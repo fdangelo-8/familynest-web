@@ -9,6 +9,134 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      child_profiles: {
+        Row: {
+          clothing_size: string | null;
+          created_at: string;
+          household_id: string;
+          id: string;
+          member_id: string;
+          member_kind: Database["public"]["Enums"]["member_kind"];
+          pajama_size: string | null;
+          school_class: string | null;
+          school_days: number[];
+          school_ends_at: string | null;
+          school_name: string | null;
+          school_note: string | null;
+          school_starts_at: string | null;
+          shoe_size: string | null;
+          sizes_updated_at: string | null;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          clothing_size?: string | null;
+          created_at?: string;
+          household_id?: string;
+          id?: string;
+          member_id: string;
+          member_kind?: Database["public"]["Enums"]["member_kind"];
+          pajama_size?: string | null;
+          school_class?: string | null;
+          school_days?: number[];
+          school_ends_at?: string | null;
+          school_name?: string | null;
+          school_note?: string | null;
+          school_starts_at?: string | null;
+          shoe_size?: string | null;
+          sizes_updated_at?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          clothing_size?: string | null;
+          created_at?: string;
+          household_id?: string;
+          id?: string;
+          member_id?: string;
+          member_kind?: Database["public"]["Enums"]["member_kind"];
+          pajama_size?: string | null;
+          school_class?: string | null;
+          school_days?: number[];
+          school_ends_at?: string | null;
+          school_name?: string | null;
+          school_note?: string | null;
+          school_starts_at?: string | null;
+          shoe_size?: string | null;
+          sizes_updated_at?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "child_profiles_household_id_fkey";
+            columns: ["household_id"];
+            isOneToOne: false;
+            referencedRelation: "households";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "child_profiles_member_fkey";
+            columns: ["member_id", "household_id", "member_kind"];
+            isOneToOne: false;
+            referencedRelation: "household_members";
+            referencedColumns: ["id", "household_id", "kind"];
+          },
+        ];
+      };
+      child_teachers: {
+        Row: {
+          created_at: string;
+          household_id: string;
+          id: string;
+          member_id: string;
+          member_kind: Database["public"]["Enums"]["member_kind"];
+          name: string;
+          phone: string | null;
+          sort_order: number;
+          subject: string | null;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          household_id?: string;
+          id?: string;
+          member_id: string;
+          member_kind?: Database["public"]["Enums"]["member_kind"];
+          name: string;
+          phone?: string | null;
+          sort_order: number;
+          subject?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          household_id?: string;
+          id?: string;
+          member_id?: string;
+          member_kind?: Database["public"]["Enums"]["member_kind"];
+          name?: string;
+          phone?: string | null;
+          sort_order?: number;
+          subject?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "child_teachers_household_id_fkey";
+            columns: ["household_id"];
+            isOneToOne: false;
+            referencedRelation: "households";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "child_teachers_member_fkey";
+            columns: ["member_id", "household_id", "member_kind"];
+            isOneToOne: false;
+            referencedRelation: "household_members";
+            referencedColumns: ["id", "household_id", "kind"];
+          },
+        ];
+      };
       deadlines: {
         Row: {
           assignee_member_id: string | null;
@@ -901,6 +1029,25 @@ export type Database = {
           isOneToOne: false;
           isSetofReturn: true;
         };
+      };
+      save_child_profile: {
+        Args: {
+          p_birth_date?: string;
+          p_clothing_size?: string;
+          p_color: Database["public"]["Enums"]["member_color"];
+          p_member_id: string;
+          p_name: string;
+          p_pajama_size?: string;
+          p_school_class?: string;
+          p_school_days?: number[];
+          p_school_ends_at?: string;
+          p_school_name?: string;
+          p_school_note?: string;
+          p_school_starts_at?: string;
+          p_shoe_size?: string;
+          p_teachers: Json;
+        };
+        Returns: undefined;
       };
       set_notification_preference: {
         Args: {
