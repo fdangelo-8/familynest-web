@@ -57,7 +57,9 @@ test("fonts: app", async ({ page, context, baseURL }, testInfo) => {
   await page.clock.setFixedTime(oggiNow("normale"));
   await installOggiFake(page, { scenario: "normale" });
   await page.goto("/oggi");
-  await expect(page.locator('[aria-busy="true"]')).toHaveCount(0);
+  await expect(
+    page.getByText("Call con Acme").locator("visible=true").first(),
+  ).toBeVisible();
   await page.evaluate(() => document.fonts.ready);
   const info = await probe(page);
   expect(JSON.stringify(info, null, 1)).toBe("APP");

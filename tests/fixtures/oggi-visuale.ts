@@ -16,8 +16,14 @@ export const OGGI_NOW = new Date("2026-10-20T15:52:00+02:00");
 /** For «tutto-fatto»: the evening is over too (22:30). */
 export const OGGI_LATE = new Date("2026-10-20T22:30:00+02:00");
 
+/** For «invitato»: the evening is over (23:10), so today has nothing left. */
+export const OGGI_NIGHT = new Date("2026-10-20T23:10:00+02:00");
+
 export function oggiNow(scenario: OggiScenario | undefined): Date {
-  return scenario === "tutto-fatto" ? OGGI_LATE : OGGI_NOW;
+  if (scenario === "tutto-fatto") return OGGI_LATE;
+  // Nothing is left today: «Domani» takes the place of «Oggi» on mobile.
+  if (scenario === "invitato") return OGGI_NIGHT;
+  return OGGI_NOW;
 }
 
 export type OggiScenario =
@@ -82,6 +88,8 @@ type FakeEvent = {
   escort?: string;
   who: string[];
   location?: string | null;
+  /** «Occupato» of someone else: the database sends only start, end and author */
+  masked?: boolean;
 };
 
 type FakeTodo = {
@@ -101,11 +109,42 @@ type Scenario = {
   welcome: string | null;
   starterOpen: boolean;
   invited: string[];
+  /** Pinned spaces of Marco (the mockup shows none in «vuoto» and the summary) */
+  pinned: string[];
 };
 
 const rome = (value: string) => new Date(`${value}:00+02:00`).toISOString();
 
+// The «Occupato» of Laura (masked: they only count for «Liberi insieme») leave
+// Friday and Sunday as the only free evenings, like the mockup.
 const WEEK: FakeEvent[] = [
+  {
+    title: "",
+    from: "2026-10-21T17:00",
+    to: "2026-10-21T23:00",
+    visibility: "busy",
+    author: "Laura",
+    who: [],
+    masked: true,
+  },
+  {
+    title: "",
+    from: "2026-10-22T17:00",
+    to: "2026-10-22T20:30",
+    visibility: "busy",
+    author: "Laura",
+    who: [],
+    masked: true,
+  },
+  {
+    title: "",
+    from: "2026-10-24T17:00",
+    to: "2026-10-24T20:00",
+    visibility: "busy",
+    author: "Laura",
+    who: [],
+    masked: true,
+  },
   {
     title: "Tennis",
     from: "2026-10-21T20:00",
@@ -117,7 +156,7 @@ const WEEK: FakeEvent[] = [
   {
     title: "Yoga",
     from: "2026-10-22T20:30",
-    to: "2026-10-22T21:30",
+    to: "2026-10-22T22:30",
     author: "Laura",
     who: ["Laura"],
     location: "Studio Respiro",
@@ -225,6 +264,7 @@ const SCENARIOS: Record<OggiScenario, Scenario> = {
     welcome: null,
     starterOpen: false,
     invited: [],
+    pinned: ["meals"],
   },
   vuoto: {
     events: [],
@@ -234,6 +274,7 @@ const SCENARIOS: Record<OggiScenario, Scenario> = {
     welcome: null,
     starterOpen: true,
     invited: ["Laura"],
+    pinned: [],
   },
   invitato: {
     events: [
@@ -253,6 +294,7 @@ const SCENARIOS: Record<OggiScenario, Scenario> = {
     welcome: "Laura",
     starterOpen: false,
     invited: [],
+    pinned: [],
   },
   "tutto-fatto": {
     events: [
@@ -274,6 +316,7 @@ const SCENARIOS: Record<OggiScenario, Scenario> = {
     welcome: null,
     starterOpen: false,
     invited: [],
+    pinned: ["meals"],
   },
 };
 
@@ -348,16 +391,16 @@ export async function installOggiFake(
         route,
         200,
         scenario.events.map((event, index) => ({
-          id: uuid(100 + index),
+          id: event.masked ? null : uuid(100 + index),
           starts_at: rome(event.from),
           ends_at: rome(event.to),
           visibility: event.visibility ?? "household",
           author_member_id: idOf(event.author ?? "Marco"),
-          title: event.title,
-          location: event.location ?? null,
-          escort_member_id: idOf(event.escort),
-          member_ids: event.who.map((name) => idOf(name)),
-          is_masked: false,
+          title: event.masked ? null : event.title,
+          location: event.masked ? null : (event.location ?? null),
+          escort_member_id: event.masked ? null : idOf(event.escort),
+          member_ids: event.masked ? null : event.who.map((name) => idOf(name)),
+          is_masked: event.masked === true,
         })),
       );
     },
@@ -479,7 +522,11 @@ export async function installOggiFake(
   });
 
   await handle("**/rest/v1/pinned_spaces*", everything, (route) =>
-    json(route, 200, [{ space: "meals" }]),
+    json(
+      route,
+      200,
+      scenario.pinned.map((space) => ({ space })),
+    ),
   );
 
   return { release, ticked: () => ticked };
