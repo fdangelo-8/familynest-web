@@ -2,7 +2,6 @@ import { watchNetwork } from "../fixtures/calendario";
 import {
   at,
   chooseLens,
-  eventRows,
   ev,
   expect,
   expectNeverSeen,
@@ -35,7 +34,8 @@ test.describe("lente e visibilità", () => {
       "true",
     );
     await expect(sec(page, "Prossimo")).toHaveCount(0);
-    await expect(sec(page, "Dopo")).toHaveCount(0);
+    // «Liberi insieme» is in both lenses: «Dopo» may exist, but not with that event.
+    await expect(sec(page, "Dopo")).not.toContainText(title);
 
     await chooseLens(page, "Nest");
     await expect(lensButton(page, "Nest")).toHaveAttribute(
@@ -120,7 +120,9 @@ test.describe("lente e visibilità", () => {
     await expect(
       page.getByRole("group", { name: /ha un impegno/ }),
     ).toHaveCount(0);
-    expect(await eventRows(sec(page, "Dopo")).count()).toBe(0);
+    await expect(
+      sec(page, "Dopo").locator("a.riga-evento:not(.riga-evento--insieme)"),
+    ).toHaveCount(0);
   });
 });
 
@@ -148,13 +150,9 @@ test.describe("isolamento tra nuclei", () => {
     await casa.todo("Marco", { title: mine.todo, assignee: "Marco" });
     await casa.deadline("Marco", { title: mine.deadline, due: d(5) });
     await casa.shopping("Marco", [mine.shopping]);
-    // The space «A tavola» pinned by Marco, written with the administrative key.
-    const { error } = await casa.users["Marco"]!.admin.from(
-      "pinned_spaces",
-    ).insert({
-      household_id: casa.householdId,
-      member_id: casa.members["Marco"]!,
-      space: "meals",
+    // The space «A tavola» pinned by Marco.
+    const { error } = await casa.users["Marco"]!.client.rpc("pin_space", {
+      p_space: "meals",
     });
     if (error) throw new Error("Spazio fissato di prova non scritto");
 
