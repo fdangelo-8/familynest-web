@@ -45,11 +45,14 @@ test.describe("giornata libera e domani", () => {
     baseURL,
     casa,
   }) => {
+    // «Solo io»: an event for everybody, tomorrow, would give today a «Liberi
+    // insieme» in this Nest of two adults, and today would not be empty.
     await ev(casa, "Marco", {
       title: "Cena fuori",
       day: d(1),
       from: "20:00",
       to: "22:00",
+      visibility: "private",
     });
     await open(page, baseURL, casa, "Marco");
     const domani = sec(page, "Domani");
