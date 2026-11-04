@@ -227,6 +227,9 @@ async function main() {
   const now = Date.now();
   const ago = (ms: number) => new Date(now - ms).toISOString();
   const thirtyDays = 30 * DAY_MS;
+  // Both Nests have the starter list of page #30 already completed, as in
+  // supabase/seed.sql, so the page tests of the normal state never see it.
+  const starterListCompletedAt = ago(29 * DAY_MS);
   {
     const { error } = await supabase.from("households").insert([
       {
@@ -234,12 +237,14 @@ async function main() {
         name: "Casa D'Angelo",
         household_type: "family_with_children",
         created_at: ago(thirtyDays),
+        starter_list_completed_at: starterListCompletedAt,
       },
       {
         id: HOME_B,
         name: "Casa Bianchi",
         household_type: "family_with_children",
         created_at: ago(thirtyDays),
+        starter_list_completed_at: starterListCompletedAt,
       },
     ]);
     if (error) fail(`cannot create Nests (${error.message}).`);

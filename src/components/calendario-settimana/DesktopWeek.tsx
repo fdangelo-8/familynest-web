@@ -4,7 +4,7 @@ import { type KeyboardEvent, type MouseEvent } from "react";
 import { NowLine } from "@/components/calendario/NowLine";
 import { Avatar } from "@/components/ui/Avatar/Avatar";
 import { cx } from "@/components/ui/cx";
-import { BUSY_TITLE, formatBusyLabel } from "@/lib/calendar";
+import { BUSY_TITLE, formatBusyAccessibleName } from "@/lib/calendar";
 import {
   formatDayNumber,
   formatLongDay,
@@ -104,7 +104,11 @@ function BlockView({
       <div
         className={cx(classes, "blocco-orario--occupato")}
         role="group"
-        aria-label={`${formatBusyLabel(name)}, dalle ${formatTime(startInDay(event, view.day))} alle ${formatTime(endInDay(event, view.day))}`}
+        aria-label={formatBusyAccessibleName(
+          name,
+          startInDay(event, view.day),
+          endInDay(event, view.day),
+        )}
       >
         <span className="blocco-orario__titolo">{BUSY_TITLE}</span>
         <span className="blocco-orario__ora">{range}</span>

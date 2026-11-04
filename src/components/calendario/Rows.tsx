@@ -6,7 +6,7 @@ import { Tag } from "@/components/ui/Tag/Tag";
 import { VisuallyHidden } from "@/components/ui/VisuallyHidden/VisuallyHidden";
 import {
   BUSY_TITLE,
-  formatBusyLabel,
+  formatBusyAccessibleName,
   formatFreeEveningRow,
 } from "@/lib/calendar";
 import { formatTime, formatWeekParam, type CalendarDay } from "@/lib/datetime";
@@ -132,7 +132,11 @@ export function DayRow({
           "riga-evento--compatta",
         )}
         role="group"
-        aria-label={`${formatBusyLabel(name)}, dalle ${start} alle ${formatTime(endInDay(event, day))}`}
+        aria-label={formatBusyAccessibleName(
+          name,
+          startInDay(event, day),
+          endInDay(event, day),
+        )}
         data-passato={past ? "true" : undefined}
       >
         <span className="riga-evento__ora">{start}</span>
