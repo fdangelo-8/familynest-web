@@ -111,7 +111,7 @@ select ok(
 select has_function('public', 'mark_notifications_read', array['uuid[]'], 'mark_notifications_read exists');
 select has_function('public', 'count_unread_notifications', 'count_unread_notifications exists');
 select has_function(
-  'public', 'run_notification_job', array['notification_job', 'timestamp with time zone'],
+  'public', 'run_notification_job', array['notification_job', 'uuid', 'timestamp with time zone'],
   'run_notification_job exists'
 );
 select ok(
@@ -172,9 +172,9 @@ select ok(
   'only signed-in users mark and count their notifications'
 );
 select ok(
-  not has_function_privilege('anon', 'public.run_notification_job(public.notification_job, timestamptz)', 'execute')
-  and not has_function_privilege('authenticated', 'public.run_notification_job(public.notification_job, timestamptz)', 'execute')
-  and has_function_privilege('service_role', 'public.run_notification_job(public.notification_job, timestamptz)', 'execute'),
+  not has_function_privilege('anon', 'public.run_notification_job(public.notification_job, uuid, timestamptz)', 'execute')
+  and not has_function_privilege('authenticated', 'public.run_notification_job(public.notification_job, uuid, timestamptz)', 'execute')
+  and has_function_privilege('service_role', 'public.run_notification_job(public.notification_job, uuid, timestamptz)', 'execute'),
   'the jobs for the tests: service_role only'
 );
 select ok(
@@ -186,11 +186,11 @@ select ok(
   and not has_function_privilege('authenticated', 'private.notification_actor(uuid)', 'execute')
   and not has_function_privilege('authenticated', 'private.household_events_for_member(uuid, timestamptz, timestamptz)', 'execute')
   and not has_function_privilege('authenticated', 'private.free_together_start(uuid, date)', 'execute')
-  and not has_function_privilege('authenticated', 'private.notifications_free_together(timestamptz)', 'execute')
-  and not has_function_privilege('authenticated', 'private.notifications_deadline_reminders(timestamptz)', 'execute')
-  and not has_function_privilege('authenticated', 'private.notifications_shopping_digest(timestamptz)', 'execute')
-  and not has_function_privilege('authenticated', 'private.purge_notifications(timestamptz)', 'execute')
-  and not has_function_privilege('authenticated', 'private.run_scheduled_notification_jobs()', 'execute'),
+  and not has_function_privilege('authenticated', 'private.notifications_free_together(timestamptz, uuid)', 'execute')
+  and not has_function_privilege('authenticated', 'private.notifications_deadline_reminders(timestamptz, uuid)', 'execute')
+  and not has_function_privilege('authenticated', 'private.notifications_shopping_digest(timestamptz, uuid)', 'execute')
+  and not has_function_privilege('authenticated', 'private.purge_notifications(timestamptz, uuid)', 'execute')
+  and not has_function_privilege('authenticated', 'private.run_scheduled_notification_jobs(timestamptz)', 'execute'),
   'triggers, helpers and jobs cannot be called by the app'
 );
 select ok(
@@ -431,7 +431,7 @@ select throws_ok(
   'anon cannot mark notifications'
 );
 select throws_ok(
-  $$ select public.run_notification_job('purge', now()) $$,
+  $$ select public.run_notification_job('purge', '22222222-2222-4222-8222-222222222222', now()) $$,
   '42501', null,
   'anon cannot run a job'
 );
@@ -471,7 +471,7 @@ select throws_ok(
 );
 select throws_ok($$ delete from public.notifications $$, '42501', null, 'the app cannot delete notifications');
 select throws_ok(
-  $$ select public.run_notification_job('purge', now()) $$,
+  $$ select public.run_notification_job('purge', '22222222-2222-4222-8222-222222222222', now()) $$,
   '42501', null,
   'a signed-in user cannot run a job'
 );

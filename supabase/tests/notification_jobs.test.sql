@@ -1,6 +1,7 @@
 -- The jobs of the notifications (issue #229, for page #39), run with
--- public.run_notification_job() by service_role for a given instant, as the tests of the
--- page do: deadlines at 9:00 (CA-12, CA-13, CA-14, CA-45), shopping at 19:00 (CA-20),
+-- public.run_notification_job() by service_role for one household and a given instant, as
+-- the tests of the page do; the other household never changes (review of PR #237):
+-- deadlines at 9:00 (CA-12, CA-13, CA-14, CA-45), shopping at 19:00 (CA-20),
 -- «Liberi insieme» at 8:00 (CA-18, CA-19, «Occupato» of someone else, shortest window,
 -- empty week), the cleanup (CA-24), idempotency, and the calendar of one member used by
 -- «Liberi insieme» (same rows as list_household_events).
@@ -11,7 +12,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(51);
+select plan(65);
 
 delete from public.deadlines;
 
@@ -20,29 +21,34 @@ delete from public.deadlines;
 -- ---------------------------------------------------------------------------
 set local role service_role;
 select throws_ok(
-  $$ select public.run_notification_job(null, now()) $$,
+  $$ select public.run_notification_job(null, '22222222-2222-4222-8222-222222222222', now()) $$,
   '22023', null,
   'a job is required'
 );
 select throws_ok(
-  $$ select public.run_notification_job('purge', null) $$,
+  $$ select public.run_notification_job('purge', null, now()) $$,
+  '22023', null,
+  'a household is required: the function for the tests never touches every household'
+);
+select throws_ok(
+  $$ select public.run_notification_job('purge', '22222222-2222-4222-8222-222222222222', null) $$,
   '22023', null,
   'an instant is required'
 );
 select throws_ok(
-  $$ select public.run_notification_job('purge', 'infinity') $$,
+  $$ select public.run_notification_job('purge', '22222222-2222-4222-8222-222222222222', 'infinity') $$,
   '22023', null,
   'the instant is finite'
 );
 set local request.method to 'GET';
 select throws_ok(
-  $$ select public.run_notification_job('purge', now()) $$,
+  $$ select public.run_notification_job('purge', '22222222-2222-4222-8222-222222222222', now()) $$,
   'P0001', 'use POST',
   'run_notification_job refuses GET'
 );
 set local request.method to 'HEAD';
 select throws_ok(
-  $$ select public.run_notification_job('purge', now()) $$,
+  $$ select public.run_notification_job('purge', '22222222-2222-4222-8222-222222222222', now()) $$,
   'P0001', 'use POST',
   'run_notification_job refuses HEAD'
 );
@@ -77,9 +83,20 @@ values
 
 set local role service_role;
 select is(
-  public.run_notification_job('deadline_reminders', '2026-10-20 09:00+02'),
-  13,
-  'the job of 9:00 creates 13 notifications'
+  public.run_notification_job('deadline_reminders', '22222222-2222-4222-8222-222222222222', '2026-10-20 09:00+02'),
+  12,
+  'the job of 9:00 for Casa Bianchi creates 12 notifications'
+);
+reset role;
+select is_empty(
+  $$ select 1 from public.notifications n where n.household_id = '11111111-1111-4111-8111-111111111111' $$,
+  'the job for Casa Bianchi creates nothing in Casa D''Angelo (its deadline is due too)'
+);
+set local role service_role;
+select is(
+  public.run_notification_job('deadline_reminders', '11111111-1111-4111-8111-111111111111', '2026-10-20 09:00+02'),
+  1,
+  'the same job for Casa D''Angelo creates its one notification'
 );
 reset role;
 select results_eq(
@@ -110,12 +127,12 @@ select ok(
 );
 set local role service_role;
 select is(
-  public.run_notification_job('deadline_reminders', '2026-10-20 09:05+02'),
+  public.run_notification_job('deadline_reminders', '22222222-2222-4222-8222-222222222222', '2026-10-20 09:05+02'),
   0,
   'CA-12: run again the same day, the job creates nothing'
 );
 select is(
-  public.run_notification_job('deadline_reminders', '2026-10-21 09:00+02'),
+  public.run_notification_job('deadline_reminders', '22222222-2222-4222-8222-222222222222', '2026-10-21 09:00+02'),
   0,
   'CA-13: on 21 October (6 days before) no reminder is due'
 );
@@ -176,7 +193,7 @@ reset role;
 
 set local role service_role;
 select is(
-  public.run_notification_job('shopping_digest', now() + interval '1 minute'),
+  public.run_notification_job('shopping_digest', '22222222-2222-4222-8222-222222222222', now() + interval '1 minute'),
   0,
   'CA-20: with «Spesa» off (the default) nobody is notified'
 );
@@ -187,17 +204,17 @@ select lives_ok($$ select public.set_notification_preference('shopping', true) $
 reset role;
 set local role service_role;
 select is(
-  public.run_notification_job('shopping_digest', now() + interval '1 minute'),
+  public.run_notification_job('shopping_digest', '22222222-2222-4222-8222-222222222222', now() + interval '1 minute'),
   1,
   'CA-20: the job of 19:00 creates one notification'
 );
 select is(
-  public.run_notification_job('shopping_digest', now() + interval '1 minute'),
+  public.run_notification_job('shopping_digest', '22222222-2222-4222-8222-222222222222', now() + interval '1 minute'),
   0,
   'run again, it creates nothing'
 );
 select is(
-  public.run_notification_job('shopping_digest', now() + interval '25 hours'),
+  public.run_notification_job('shopping_digest', '22222222-2222-4222-8222-222222222222', now() + interval '25 hours'),
   0,
   'additions older than 24 hours do not count'
 );
@@ -231,10 +248,16 @@ values
   ('9e000000-0000-4000-8000-000000000001', 'b1000000-0000-4000-8000-000000000002', '22222222-2222-4222-8222-222222222222'),
   ('9e000000-0000-4000-8000-000000000002', 'b1000000-0000-4000-8000-000000000001', '22222222-2222-4222-8222-222222222222'),
   ('9e000000-0000-4000-8000-000000000002', 'b1000000-0000-4000-8000-000000000002', '22222222-2222-4222-8222-222222222222');
+-- Casa D'Angelo (Marco and Laura, adults): one morning event of Marco in the same week,
+-- so that Marco has a free evening on Wednesday 21 when the job runs for his household.
+insert into public.events (id, household_id, author_member_id, title, starts_at, ends_at, visibility)
+values
+  ('9e000000-0000-4000-8000-000000000010', '11111111-1111-4111-8111-111111111111', 'a1000000-0000-4000-8000-000000000001',
+   'Colazione', '2026-10-22 08:00+02', '2026-10-22 09:00+02', 'household');
 
 set local role service_role;
 select is(
-  public.run_notification_job('free_together', '2026-10-20 08:00+02'),
+  public.run_notification_job('free_together', '22222222-2222-4222-8222-222222222222', '2026-10-20 08:00+02'),
   2,
   'CA-18: the job of 8:00 creates one notification for Giulia and one for Paolo'
 );
@@ -247,23 +270,39 @@ select results_eq(
         '2026-10-20 08:00+02'::timestamptz, true),
        ('b1000000-0000-4000-8000-000000000002'::uuid, '2026-10-23'::date, '2026-10-23 18:00+02'::timestamptz,
         '2026-10-20 08:00+02'::timestamptz, true) $$,
-  'CA-18, CA-19: Friday 23 from 18:00 for both (busy Wednesday and Thursday; the «Solo io» of Paolo makes nobody busy); Marco, with nothing in his week, gets none'
+  'CA-18, CA-19: Friday 23 from 18:00 for both (busy Wednesday and Thursday; the «Solo io» of Paolo makes nobody busy); nothing for Marco, of another household'
 );
 set local role service_role;
 select is(
-  public.run_notification_job('free_together', '2026-10-20 08:10+02'),
+  public.run_notification_job('free_together', '11111111-1111-4111-8111-111111111111', '2026-10-20 08:00+02'),
+  1,
+  'the same job for Casa D''Angelo creates the notification of Marco'
+);
+reset role;
+select results_eq(
+  $$ select n.household_id, n.recipient_member_id, n.evening_date, n.free_from
+     from public.notifications n
+     where n.kind = 'free_together' and n.household_id = '11111111-1111-4111-8111-111111111111' $$,
+  $$ values ('11111111-1111-4111-8111-111111111111'::uuid, 'a1000000-0000-4000-8000-000000000001'::uuid,
+             '2026-10-21'::date, '2026-10-21 18:00+02'::timestamptz) $$,
+  'Marco: Wednesday 21 from 18:00, only in his household'
+);
+set local role service_role;
+select is(
+  public.run_notification_job('free_together', '22222222-2222-4222-8222-222222222222', '2026-10-20 08:10+02'),
   0,
   'CA-18: run again the same day, it creates nothing'
 );
 select is(
-  public.run_notification_job('free_together', '2026-10-21 08:00+02'),
+  public.run_notification_job('free_together', '22222222-2222-4222-8222-222222222222', '2026-10-21 08:00+02'),
   2,
   'the job of Wednesday 21 announces the next evening not yet announced'
 );
 reset role;
 select results_eq(
   $$ select n.recipient_member_id, n.evening_date, count(*)::integer
-     from public.notifications n where n.kind = 'free_together'
+     from public.notifications n
+     where n.kind = 'free_together' and n.household_id = '22222222-2222-4222-8222-222222222222'
      group by n.recipient_member_id, n.evening_date
      order by n.recipient_member_id, n.evening_date $$,
   $$ values
@@ -281,9 +320,10 @@ select is(
   'Giulia reads her two «Liberi insieme»'
 );
 set local request.jwt.claims to '{"sub":"aaaaaaaa-0000-4000-8000-000000000001","role":"authenticated"}';
-select is_empty(
-  $$ select 1 from public.notifications n where n.kind = 'free_together' $$,
-  'Marco reads none of Casa Bianchi'
+select results_eq(
+  $$ select n.recipient_member_id from public.notifications n where n.kind = 'free_together' $$,
+  $$ values ('a1000000-0000-4000-8000-000000000001'::uuid) $$,
+  'Marco reads only his own «Liberi insieme», none of Casa Bianchi'
 );
 reset role;
 
@@ -331,7 +371,7 @@ set local request.jwt.claims to '{}';
 
 set local role service_role;
 select is(
-  public.run_notification_job('free_together', '2026-11-02 08:00+01'),
+  public.run_notification_job('free_together', '22222222-2222-4222-8222-222222222222', '2026-11-02 08:00+01'),
   1,
   'the job of Monday 2 November creates one notification (Paolo has it off)'
 );
@@ -365,7 +405,7 @@ where e.id in ('9e000000-0000-4000-8000-000000000005', '9e000000-0000-4000-8000-
 
 set local role service_role;
 select is(
-  public.run_notification_job('free_together', '2026-11-09 08:00+01'),
+  public.run_notification_job('free_together', '22222222-2222-4222-8222-222222222222', '2026-11-09 08:00+01'),
   1,
   'the job of Monday 9 November creates one notification'
 );
@@ -380,7 +420,7 @@ select results_eq(
 -- A week with nothing visible: no window (rule of the calendar).
 set local role service_role;
 select is(
-  public.run_notification_job('free_together', '2026-11-16 08:00+01'),
+  public.run_notification_job('free_together', '22222222-2222-4222-8222-222222222222', '2026-11-16 08:00+01'),
   0,
   'nothing visible in the week of the evening: no «Liberi insieme»'
 );
@@ -395,14 +435,14 @@ values
    'Palestra', '2026-11-17 10:00+01', '2026-11-17 11:00+01', 'household');
 set local role service_role;
 select is(
-  public.run_notification_job('free_together', '2026-11-16 08:00+01'),
+  public.run_notification_job('free_together', '11111111-1111-4111-8111-111111111111', '2026-11-16 08:00+01'),
   0,
   'a household with one adult has no «Liberi insieme»'
 );
 reset role;
 select is(
   (select count(*)::integer from public.notifications n where n.recipient_member_id = 'a1000000-0000-4000-8000-000000000001'
-     and n.kind = 'free_together'),
+     and n.kind = 'free_together' and n.created_on = '2026-11-16'),
   0,
   'Marco, the only adult left, gets none'
 );
@@ -418,13 +458,36 @@ values
    'b1000000-0000-4000-8000-000000000002', 5, now() - interval '29 days');
 insert into private.shopping_additions (household_id, member_id, created_at)
 values ('22222222-2222-4222-8222-222222222222', 'b1000000-0000-4000-8000-000000000001', now() - interval '3 days');
+-- The same in Casa D'Angelo: the cleanup of Casa Bianchi must not touch them.
+insert into public.notifications (household_id, recipient_member_id, kind, deadline_id, days_before, created_at)
+values ('11111111-1111-4111-8111-111111111111', 'a1000000-0000-4000-8000-000000000001', 'deadline_reminder',
+        '9b000000-0000-4000-8000-000000000009', 30, now() - interval '31 days');
+insert into private.shopping_additions (household_id, member_id, created_at)
+values ('11111111-1111-4111-8111-111111111111', 'a1000000-0000-4000-8000-000000000001', now() - interval '3 days');
 
 set local role service_role;
 select ok(
-  public.run_notification_job('purge', now()) >= 1,
-  'CA-24: the cleanup deletes the old notifications'
+  public.run_notification_job('purge', '22222222-2222-4222-8222-222222222222', now()) >= 1,
+  'CA-24: the cleanup of Casa Bianchi deletes its old notifications'
 );
 reset role;
+select ok(
+  exists (select 1 from public.notifications n
+          where n.household_id = '11111111-1111-4111-8111-111111111111' and n.created_at < now() - interval '30 days')
+  and exists (select 1 from private.shopping_additions s
+              where s.household_id = '11111111-1111-4111-8111-111111111111' and s.created_at < now() - interval '2 days'),
+  'the cleanup of Casa Bianchi deletes nothing of Casa D''Angelo'
+);
+set local role service_role;
+select ok(
+  public.run_notification_job('purge', '11111111-1111-4111-8111-111111111111', now()) >= 1,
+  'the cleanup of Casa D''Angelo deletes its old notifications'
+);
+reset role;
+select is_empty(
+  $$ select 1 from public.notifications n where n.created_at < now() - interval '30 days' $$,
+  'after both cleanups no notification older than 30 days is left'
+);
 select results_eq(
   $$ select n.item_count from public.notifications n
      where n.kind = 'shopping_added' and n.created_at < now() - interval '1 day' $$,
@@ -449,15 +512,47 @@ select is(
 );
 
 -- ---------------------------------------------------------------------------
--- The hourly job of pg_cron runs (whatever the hour of Rome is now)
+-- The hourly job of pg_cron: the hour of Rome decides, in winter (CET, UTC+1) and in
+-- summer (CEST, UTC+2). Last section: these runs touch every household.
 -- ---------------------------------------------------------------------------
-select has_function('private', 'run_scheduled_notification_jobs', 'the scheduled entry point exists');
+select has_function('private', 'run_scheduled_notification_jobs', array['timestamp with time zone'],
+  'the scheduled entry point exists');
+select is(
+  private.run_scheduled_notification_jobs('2026-11-03 07:00Z'),
+  'free_together'::public.notification_job,
+  'winter: 07:00 UTC is 8:00 in Rome, «Liberi insieme»'
+);
+select is(
+  private.run_scheduled_notification_jobs('2026-07-15 06:00Z'),
+  'free_together'::public.notification_job,
+  'summer: 06:00 UTC is 8:00 in Rome, «Liberi insieme»'
+);
+select is(
+  private.run_scheduled_notification_jobs('2026-07-15 07:00Z'),
+  'deadline_reminders'::public.notification_job,
+  'summer: 07:00 UTC is 9:00 in Rome, the deadlines'
+);
+select is(
+  private.run_scheduled_notification_jobs('2026-01-15 18:00Z'),
+  'shopping_digest'::public.notification_job,
+  'winter: 18:00 UTC is 19:00 in Rome, the shopping'
+);
+select is(
+  private.run_scheduled_notification_jobs('2026-07-15 01:00Z'),
+  'purge'::public.notification_job,
+  'summer: 01:00 UTC is 3:00 in Rome, the cleanup'
+);
+select is(
+  private.run_scheduled_notification_jobs('2026-11-03 06:00Z'),
+  null::public.notification_job,
+  'winter: 06:00 UTC is 7:00 in Rome, no job'
+);
 select lives_ok(
   $$ select private.run_scheduled_notification_jobs() $$,
-  'the scheduled entry point runs as the database owner, like pg_cron'
+  'the scheduled entry point runs now as the database owner, like pg_cron'
 );
 select ok(
-  (select p.prosecdef = false from pg_proc p where p.oid = 'private.run_scheduled_notification_jobs()'::regprocedure),
+  (select p.prosecdef = false from pg_proc p where p.oid = 'private.run_scheduled_notification_jobs(timestamptz)'::regprocedure),
   'the scheduled entry point is not security definer (pg_cron runs it as the owner)'
 );
 

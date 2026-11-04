@@ -45,11 +45,11 @@ revoke execute on function private.notification_recipient_wants(uuid, public.not
   from public, anon, authenticated;
 revoke execute on function private.notification_actor(uuid) from public, anon, authenticated;
 revoke execute on function private.free_together_start(uuid, date) from public, anon, authenticated;
-revoke execute on function private.notifications_free_together(timestamptz) from public, anon, authenticated;
-revoke execute on function private.notifications_deadline_reminders(timestamptz) from public, anon, authenticated;
-revoke execute on function private.notifications_shopping_digest(timestamptz) from public, anon, authenticated;
-revoke execute on function private.purge_notifications(timestamptz) from public, anon, authenticated;
-revoke execute on function private.run_scheduled_notification_jobs() from public, anon, authenticated;
+revoke execute on function private.notifications_free_together(timestamptz, uuid) from public, anon, authenticated;
+revoke execute on function private.notifications_deadline_reminders(timestamptz, uuid) from public, anon, authenticated;
+revoke execute on function private.notifications_shopping_digest(timestamptz, uuid) from public, anon, authenticated;
+revoke execute on function private.purge_notifications(timestamptz, uuid) from public, anon, authenticated;
+revoke execute on function private.run_scheduled_notification_jobs(timestamptz) from public, anon, authenticated;
 
 -- Used by the select policy, evaluated as the reader. The private schema is not exposed
 -- by the Data API: the app cannot call it as RPC.
@@ -66,10 +66,10 @@ revoke execute on function public.count_unread_notifications() from public, anon
 grant execute on function public.mark_notifications_read(uuid[]) to authenticated;
 grant execute on function public.count_unread_notifications() to authenticated;
 
--- The jobs for the tests: administrative key and database owner only.
-revoke execute on function public.run_notification_job(public.notification_job, timestamptz)
+-- The jobs for the tests, one household at a time: administrative key and database owner only.
+revoke execute on function public.run_notification_job(public.notification_job, uuid, timestamptz)
   from public, anon, authenticated;
-grant execute on function public.run_notification_job(public.notification_job, timestamptz) to service_role;
+grant execute on function public.run_notification_job(public.notification_job, uuid, timestamptz) to service_role;
 
 -- ---------------------------------------------------------------------------
 -- Policies

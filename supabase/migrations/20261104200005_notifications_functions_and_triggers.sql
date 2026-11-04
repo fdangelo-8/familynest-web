@@ -424,8 +424,11 @@ $$;
 -- 7 days later (Europe/Rome days of p_at) with a window as that adult sees it, for which
 -- they have no notification yet. At most one per adult and day: run again the same day,
 -- it creates nothing (unique indexes). Created at p_at. Returns how many it created.
+-- Every job and the cleanup take p_household_id: only that household is touched; null =
+-- every household, used only by private.run_scheduled_notification_jobs() (pg_cron),
+-- never by the public function for the tests (review of PR #237).
 -- ---------------------------------------------------------------------------
-create or replace function private.notifications_free_together(p_at timestamptz)
+create or replace function private.notifications_free_together(p_at timestamptz, p_household_id uuid)
 returns integer
 language plpgsql
 volatile
@@ -444,6 +447,7 @@ begin
     from public.household_members m
     where m.kind = 'adult'
       and m.user_id is not null
+      and (p_household_id is null or m.household_id = p_household_id)
       and private.notification_recipient_wants(m.id, 'free_together')
       and not exists (
         select 1
@@ -492,7 +496,7 @@ $$;
 -- Always on (no switch, decision of the coordinator of 04/11). Run again the same day it
 -- creates nothing (unique index). Created at p_at. Returns how many it created.
 -- ---------------------------------------------------------------------------
-create or replace function private.notifications_deadline_reminders(p_at timestamptz)
+create or replace function private.notifications_deadline_reminders(p_at timestamptz, p_household_id uuid)
 returns integer
 language plpgsql
 volatile
@@ -509,7 +513,8 @@ begin
     on m.household_id = d.household_id
    and m.kind = 'adult'
    and m.user_id is not null
-  where d.due_date in (v_today, v_today + 1, v_today + 7, v_today + 30)
+  where (p_household_id is null or d.household_id = p_household_id)
+    and d.due_date in (v_today, v_today + 1, v_today + 7, v_today + 30)
     and (d.due_date - v_today) = any (d.reminder_days)
     and case
       when exists (
@@ -538,7 +543,7 @@ $$;
 -- person per notification. Run again the same day it creates nothing (unique index).
 -- Created at p_at. Returns how many it created.
 -- ---------------------------------------------------------------------------
-create or replace function private.notifications_shopping_digest(p_at timestamptz)
+create or replace function private.notifications_shopping_digest(p_at timestamptz, p_household_id uuid)
 returns integer
 language plpgsql
 volatile
@@ -554,6 +559,7 @@ begin
     from private.shopping_additions s
     where s.created_at > p_at - interval '24 hours'
       and s.created_at <= p_at
+      and (p_household_id is null or s.household_id = p_household_id)
     group by s.household_id, s.member_id
   ) a
   join public.household_members m
@@ -574,7 +580,7 @@ $$;
 -- records of the shopping additions older than 2 days (the job of 19:00 needs 24 hours).
 -- Returns how many notifications it deleted.
 -- ---------------------------------------------------------------------------
-create or replace function private.purge_notifications(p_at timestamptz)
+create or replace function private.purge_notifications(p_at timestamptz, p_household_id uuid)
 returns integer
 language plpgsql
 volatile
@@ -584,53 +590,66 @@ declare
   v_deleted integer;
 begin
   delete from public.notifications n
-  where n.created_at < p_at - interval '30 days';
+  where n.created_at < p_at - interval '30 days'
+    and (p_household_id is null or n.household_id = p_household_id);
   get diagnostics v_deleted = row_count;
 
   delete from private.shopping_additions s
-  where s.created_at < p_at - interval '2 days';
+  where s.created_at < p_at - interval '2 days'
+    and (p_household_id is null or s.household_id = p_household_id);
 
   return v_deleted;
 end;
 $$;
 
 -- ---------------------------------------------------------------------------
--- Run by pg_cron at minute 0 of every hour (schedule migration). pg_cron counts in UTC;
--- the hour of Rome decides, so the jobs keep their time of Rome also with daylight saving
--- time: 8:00 «Liberi insieme», 9:00 deadlines, 19:00 shopping, 3:00 cleanup. Every job is
--- idempotent: a late or repeated run within the same hour creates nothing twice.
+-- Run by pg_cron at minute 0 of every hour (schedule migration), for every household.
+-- pg_cron counts in UTC; the hour of Rome of p_at decides, so the jobs keep their time of
+-- Rome also with daylight saving time: 8:00 «Liberi insieme», 9:00 deadlines, 19:00
+-- shopping, 3:00 cleanup. Every job is idempotent: a late or repeated run within the same
+-- hour creates nothing twice. Returns the job it ran, or null when that hour has none
+-- (pgTAP checks a winter and a summer hour).
 -- ---------------------------------------------------------------------------
-create or replace function private.run_scheduled_notification_jobs()
-returns void
+create or replace function private.run_scheduled_notification_jobs(p_at timestamptz default now())
+returns public.notification_job
 language plpgsql
 volatile
 set search_path = ''
 as $$
 declare
-  v_at timestamptz := now();
-  v_hour integer := extract(hour from (now() at time zone 'Europe/Rome'))::integer;
+  v_hour integer := extract(hour from (p_at at time zone 'Europe/Rome'))::integer;
 begin
   if v_hour = 8 then
-    perform private.notifications_free_together(v_at);
+    perform private.notifications_free_together(p_at, null);
+    return 'free_together';
   elsif v_hour = 9 then
-    perform private.notifications_deadline_reminders(v_at);
+    perform private.notifications_deadline_reminders(p_at, null);
+    return 'deadline_reminders';
   elsif v_hour = 19 then
-    perform private.notifications_shopping_digest(v_at);
+    perform private.notifications_shopping_digest(p_at, null);
+    return 'shopping_digest';
   elsif v_hour = 3 then
-    perform private.purge_notifications(v_at);
+    perform private.purge_notifications(p_at, null);
+    return 'purge';
   end if;
+  return null;
 end;
 $$;
 
 -- ---------------------------------------------------------------------------
--- RPC for the tests of page #39 (requirement of #229 point 5): runs one job as if it ran
--- at the instant p_at (default now). Returns how many notifications it created (deleted
--- for the cleanup). Executable only by service_role (administrative key) and the database
--- owner, never by authenticated or anon (grants). Security definer: the jobs read and
--- write tables of every household and the private schema. Only POST through the Data API.
+-- RPC for the tests of page #39 (requirement of #229 point 5): runs one job for ONE
+-- household (p_household_id, required) as if it ran at the instant p_at (default now).
+-- Nothing of the other households is created or deleted (review of PR #237: the page
+-- tests run in parallel with their own throwaway households, and the administrative key
+-- of the project must never write notifications for every family). Returns how many
+-- notifications it created (deleted for the cleanup). Executable only by service_role
+-- (administrative key) and the database owner, never by authenticated or anon (grants).
+-- Security definer: the jobs read and write the private schema. Only POST through the
+-- Data API.
 -- ---------------------------------------------------------------------------
 create or replace function public.run_notification_job(
   p_job public.notification_job,
+  p_household_id uuid,
   p_at timestamptz default now()
 )
 returns integer
@@ -643,15 +662,15 @@ begin
   if coalesce(current_setting('request.method', true), '') not in ('', 'POST') then
     raise exception 'use POST' using errcode = 'P0001';
   end if;
-  if p_job is null or p_at is null or not isfinite(p_at) then
-    raise exception 'invalid job or instant' using errcode = '22023';
+  if p_job is null or p_household_id is null or p_at is null or not isfinite(p_at) then
+    raise exception 'invalid job, household or instant' using errcode = '22023';
   end if;
 
   return case p_job
-    when 'free_together' then private.notifications_free_together(p_at)
-    when 'deadline_reminders' then private.notifications_deadline_reminders(p_at)
-    when 'shopping_digest' then private.notifications_shopping_digest(p_at)
-    when 'purge' then private.purge_notifications(p_at)
+    when 'free_together' then private.notifications_free_together(p_at, p_household_id)
+    when 'deadline_reminders' then private.notifications_deadline_reminders(p_at, p_household_id)
+    when 'shopping_digest' then private.notifications_shopping_digest(p_at, p_household_id)
+    when 'purge' then private.purge_notifications(p_at, p_household_id)
   end;
 end;
 $$;
