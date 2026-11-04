@@ -247,24 +247,28 @@ test.describe("aree di tocco", () => {
         if (box.width === 0 || box.height === 0) continue;
         // Links inside a sentence (empty states) are exempt («in linea»).
         if (el.closest(".stato-vuoto__testo")) continue;
-        const cx = box.left + box.width / 2;
-        const cy = box.top + box.height / 2;
-        const points: Array<[number, number]> = [
-          [cx - MIN / 2 + 2, cy - MIN / 2 + 2],
-          [cx + MIN / 2 - 2, cy - MIN / 2 + 2],
-          [cx - MIN / 2 + 2, cy + MIN / 2 - 2],
-          [cx + MIN / 2 - 2, cy + MIN / 2 - 2],
-        ];
-        const reaches = (x: number, y: number) => {
-          const hit = document.elementFromPoint(x, y);
-          return hit !== null && (el.contains(hit) || hit.contains(el));
-        };
+        // Where a touch really reaches the control (a transparent ::before
+        // counts): sample around the box and take the box of the hits.
         const bigEnough = box.width >= MIN && box.height >= MIN;
-        const inside = (x: number, y: number) =>
-          x >= box.left && x <= box.right && y >= box.top && y <= box.bottom;
-        const ok = bigEnough
-          ? true
-          : points.every(([x, y]) => inside(x, y) || reaches(x, y));
+        let ok = bigEnough;
+        if (!bigEnough) {
+          let minX = Infinity;
+          let maxX = -Infinity;
+          let minY = Infinity;
+          let maxY = -Infinity;
+          for (let x = box.left - MIN; x <= box.right + MIN; x += 2) {
+            for (let y = box.top - MIN; y <= box.bottom + MIN; y += 2) {
+              const hit = document.elementFromPoint(x, y);
+              if (hit !== null && el.contains(hit)) {
+                minX = Math.min(minX, x);
+                maxX = Math.max(maxX, x);
+                minY = Math.min(minY, y);
+                maxY = Math.max(maxY, y);
+              }
+            }
+          }
+          ok = maxX - minX >= MIN - 2 && maxY - minY >= MIN - 2;
+        }
         if (!ok) {
           found.push(
             `${el.tagName} "${(el.getAttribute("aria-label") ?? el.textContent ?? "").trim().slice(0, 40)}" ${Math.round(box.width)}x${Math.round(box.height)}`,

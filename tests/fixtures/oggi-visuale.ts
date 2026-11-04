@@ -145,7 +145,7 @@ const TODAY_FULL: FakeEvent[] = [
     from: "2026-10-20T08:15",
     to: "2026-10-20T13:00",
     author: "Laura",
-    escort: "Marco",
+    escort: "Laura",
     who: ["Sofia", "Tommaso"],
   },
   {

@@ -25,11 +25,14 @@ for (const state of STATES) {
     });
     await page.evaluate(() => document.fonts.ready);
     const section = page.locator(`#09-oggi--${state}`);
-    await expect(section.locator(".frame-mobile")).toHaveScreenshot(
-      `mockup-${state}-390.png`,
-    );
-    await expect(section.locator(".frame-desktop")).toHaveScreenshot(
-      `mockup-${state}-1280.png`,
-    );
+    for (const [frame, width] of [
+      [".frame-mobile", 390],
+      [".frame-desktop", 1280],
+    ] as const) {
+      const box = await section.locator(frame).boundingBox();
+      expect(box).not.toBeNull();
+      const image = await page.screenshot({ fullPage: true, clip: box! });
+      expect(image).toMatchSnapshot(`mockup-${state}-${width}.png`);
+    }
   });
 }
