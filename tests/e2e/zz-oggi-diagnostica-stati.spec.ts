@@ -177,7 +177,7 @@ test("toggle todo, offline", async ({ page, baseURL, casa }, testInfo) => {
   expect(1).toBe(2);
 });
 
-test("loading and page error", async ({ page, baseURL, casa }, testInfo) => {
+test("page error and part error", async ({ page, baseURL, casa }, testInfo) => {
   test.setTimeout(120_000);
   await createEvent(casa, "Marco", {
     title: "Call",
@@ -186,23 +186,13 @@ test("loading and page error", async ({ page, baseURL, casa }, testInfo) => {
     to: "17:00",
     members: ["Marco"],
   });
+  await casa.todo("Marco", { title: "Una cosa", assignee: "Marco", due: d(1) });
   await setClock(page, at1552(T));
   await casa.signIn(page, baseURL, "Marco");
-  await page.route("**/rest/v1/**", async (route) => {
-    if (route.request().method() === "OPTIONS") return route.continue();
-    await new Promise((r) => setTimeout(r, 6000));
-    return route.continue();
-  });
-  await page.goto("/oggi");
-  await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible({
-    timeout: 30_000,
-  });
-  await page.waitForTimeout(2500);
-  await dump(page, testInfo, "caricamento");
-  await page.unroute("**/rest/v1/**");
-  await page.waitForTimeout(8000);
+  let failing = true;
   const fail = async (route: import("@playwright/test").Route) => {
     if (route.request().method() === "OPTIONS") return route.continue();
+    if (!failing) return route.continue();
     return route.fulfill({
       status: 500,
       contentType: "application/json",
@@ -218,15 +208,31 @@ test("loading and page error", async ({ page, baseURL, casa }, testInfo) => {
   ]) {
     await page.route(pattern, fail);
   }
-  await page.reload();
+  await page.goto("/oggi");
   await expect(page.getByText("Questa pagina non si è caricata")).toBeVisible({
     timeout: 30_000,
   });
   await dump(page, testInfo, "errore-pagina");
-  // only todos fail
-  await page.unroute("**/rest/v1/rpc/list_household_events*");
-  await page.unroute("**/rest/v1/deadlines*");
-  await page.unroute("**/rest/v1/shopping_items*");
+  failing = false;
+  await page.getByRole("button", { name: "Riprova" }).click();
+  await expect(
+    page
+      .getByRole("heading", { level: 2, name: "Prossimo" })
+      .locator("visible=true"),
+  ).toBeVisible({ timeout: 30_000 });
+  await dump(page, testInfo, "dopo-riprova");
+  // only the things to do fail
+  const failTodos = async (route: import("@playwright/test").Route) => {
+    if (route.request().method() === "OPTIONS") return route.continue();
+    return route.fulfill({
+      status: 500,
+      contentType: "application/json",
+      headers: CORS,
+      body: JSON.stringify({ code: "XX000", message: "boom" }),
+    });
+  };
+  await page.unroute("**/rest/v1/todos*");
+  await page.route("**/rest/v1/todos*", failTodos);
   await page.reload();
   await expect(
     page
@@ -234,6 +240,40 @@ test("loading and page error", async ({ page, baseURL, casa }, testInfo) => {
       .locator("visible=true"),
   ).toBeVisible({ timeout: 30_000 });
   await dump(page, testInfo, "errore-parte");
+  await page.unroute("**/rest/v1/todos*");
+  await page
+    .getByRole("button", { name: "Riprova" })
+    .locator("visible=true")
+    .click();
+  await expect(page.getByText("Una cosa").locator("visible=true")).toBeVisible({
+    timeout: 30_000,
+  });
+  await dump(page, testInfo, "errore-parte-risolto");
+  expect(1).toBe(2);
+});
+
+test("loading", async ({ page, baseURL, casa }, testInfo) => {
+  test.setTimeout(120_000);
+  await createEvent(casa, "Marco", {
+    title: "Call",
+    day: T,
+    from: "16:00",
+    to: "17:00",
+    members: ["Marco"],
+  });
+  await setClock(page, at1552(T));
+  await casa.signIn(page, baseURL, "Marco");
+  await page.route("**/rest/v1/**", async (route) => {
+    if (route.request().method() === "OPTIONS") return route.continue();
+    await new Promise((r) => setTimeout(r, 5000));
+    return route.continue().catch(() => {});
+  });
+  await page.goto("/oggi");
+  await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible({
+    timeout: 30_000,
+  });
+  await page.waitForTimeout(2500);
+  await dump(page, testInfo, "caricamento");
   expect(1).toBe(2);
 });
 
@@ -258,5 +298,33 @@ test("all done at night", async ({ page, baseURL, casa }, testInfo) => {
   await open(page, casa, baseURL);
   await settled(page);
   await dump(page, testInfo, "tutto-finito");
+  expect(1).toBe(2);
+});
+
+test("realtime shopping", async ({ page, baseURL, casa }, testInfo) => {
+  test.setTimeout(120_000);
+  await casa.shopping("Marco", ["Latte", "pane"]);
+  await createEvent(casa, "Marco", {
+    title: "Call",
+    day: T,
+    from: "16:00",
+    to: "17:00",
+    members: ["Marco"],
+  });
+  await setClock(page, at1552(T));
+  await open(page, casa, baseURL);
+  await settled(page);
+  const row = page
+    .locator("li")
+    .filter({ hasText: "Cose da comprare" })
+    .locator("visible=true");
+  await expect(row).toContainText("2");
+  await casa.shopping("Marco", ["Uova"]);
+  const started = Date.now();
+  await expect(row).toContainText("3", { timeout: 15_000 });
+  writeFileSync(
+    testInfo.outputPath("realtime.txt"),
+    `ms: ${Date.now() - started}`,
+  );
   expect(1).toBe(2);
 });
