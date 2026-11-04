@@ -191,7 +191,10 @@ test.describe("Impostazioni della casa: utenti del seed", () => {
         const el = document.activeElement as HTMLElement | null;
         if (!el || el === document.body) return "";
         if (!el.closest("main")) return "";
+        // Rows: the title only (the avatar initial and the tag are not the name).
+        const title = el.querySelector(".riga-lista__titolo")?.textContent;
         return (
+          title ||
           el.getAttribute("aria-label") ||
           (el.textContent ?? "").replace(/\s+/g, " ").trim()
         );
@@ -210,7 +213,7 @@ test.describe("Impostazioni della casa: utenti del seed", () => {
     );
     const start = inMain.findIndex((l) => l.startsWith("Marco, tu"));
     expect(start).toBeGreaterThanOrEqual(0);
-    const order = inMain.slice(start).map((l) => l.split(" Invito")[0]!);
+    const order = inMain.slice(start);
     expect(order[0]).toMatch(/^Marco, tu/);
     expect(order[1]).toMatch(/^Laura/);
     // Children have no link: the next stop is the pet, then the five switches.
