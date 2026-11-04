@@ -4,55 +4,45 @@ import {
   HARNESS_HTML,
   mountHarness,
 } from "../fixtures/calendar-states-harness";
-import { hasTestUser, signInAs } from "../fixtures/visual-login";
+import {
+  MONTH_EVENTS,
+  openMonth,
+  waitForMonth,
+} from "./calendario-mese-helpers";
+import {
+  shoot,
+  throwawayConfigured,
+  throwawaySkipReason,
+  withNest,
+} from "./calendario-settimana-helpers";
 
-// Dates and calendar (#88, PR #100): the "In arrivo" page of
-// /calendario/mese (/impegni/<id> is the real page since #19, /calendario/giorno
-// since #26: its tests are in calendario-giorno.spec.ts), and the CSS states
-// for #25 (Calendario) and #30 (Oggi): hover and pressed on rows, cards, day
-// strip, time blocks and steps, the "adesso" line and the "Già fatti" arrow.
+// Dates and calendar (#88, PR #100): the page /calendario/mese (an "In arrivo"
+// placeholder until #27; /impegni/<id> is the real page since #19,
+// /calendario/giorno since #26: its tests are in calendario-giorno.spec.ts),
+// and the CSS states for #25 (Calendario) and #30 (Oggi): hover and pressed on
+// rows, cards, day strip, time blocks and steps, the "adesso" line and the
+// "Già fatti" arrow.
 // No page uses those classes yet, so they are shown on a test page
 // (tests/fixtures/calendar-states-harness.ts, markup copied from the mockup)
 // mounted on a public page. At 390 and 1280 px (projects).
-// The placeholder needs test user A (without TEST_USER_A_* they are skipped).
+// The month page uses a throwaway Nest (without the test configuration it is skipped).
 
 test.use({ locale: "it-IT", timezoneId: "Europe/Rome" });
 
-const PAGES = [
-  {
-    route: "/calendario/mese",
-    file: "calendario-mese",
-    text: "Qui vedrai gli impegni del mese, giorno per giorno.",
-    title: "Calendario",
-  },
-];
-
-test.describe("segnaposto «In arrivo»", () => {
+test.describe("pagina Mese", () => {
   test.use({ reducedMotion: "reduce" });
+  test.setTimeout(180_000);
 
-  test.beforeEach(async ({ page, context, baseURL }) => {
-    test.skip(!hasTestUser("A"), "TEST_USER_A_* non impostati");
-    await page.clock.setFixedTime(new Date("2026-10-20T15:00:00+02:00"));
-    const signedIn = await signInAs(context, baseURL!, "A");
-    test.skip(!signedIn, "utente di test A non ancora creato");
-  });
-
-  // One test (one sign-in) for the placeholder pages left.
-  test("segnaposto: /calendario/mese", async ({ page }) => {
-    for (const p of PAGES) {
-      await page.goto(p.route);
-      await expect(
-        page.getByRole("heading", { level: 1, name: p.title }),
-      ).toBeVisible();
-      await expect(page.getByText("In arrivo", { exact: true })).toBeVisible();
-      await expect(page.getByText(p.text)).toBeVisible();
-      await expect(
-        page.getByRole("link", { name: "Torna a Oggi" }),
-      ).toBeVisible();
-      await page.evaluate(() => document.fonts.ready);
-      await page.mouse.move(0, 0);
-      await expect(page).toHaveScreenshot(`${p.file}.png`);
-    }
+  // The reference «calendario-mese.png» (it was the «In arrivo» placeholder):
+  // now the page of the month in its normal state. The other states are in
+  // calendario-mese.spec.ts.
+  test("pagina Mese: /calendario/mese", async ({ page, baseURL }) => {
+    test.skip(!throwawayConfigured(), throwawaySkipReason);
+    await withNest(MONTH_EVENTS, async (nest) => {
+      await openMonth(page, baseURL, nest, { lens: "nest" });
+      await waitForMonth(page);
+      await shoot(page, "calendario-mese.png");
+    });
   });
 });
 
