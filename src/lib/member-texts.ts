@@ -35,3 +35,10 @@ export const MEMBER_BIRTH_HELP =
 export const MEMBER_COLOR_LABEL = "Colore";
 export const MEMBER_COLOR_HELP = "I colori spenti sono già di qualcun altro.";
 export const MEMBER_SAVE_LABEL = "Salva le modifiche";
+
+/** The three choices of «Chi è», in order. */
+export const MEMBER_KIND_OPTIONS = [
+  { value: "adult", label: "Adulto" },
+  { value: "child", label: "Figlio o figlia" },
+  { value: "pet", label: "Animale" },
+] as const;

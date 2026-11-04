@@ -11,6 +11,7 @@ import {
   MEMBER_DATE_ERROR,
   MEMBER_FAILURE_TEXT,
   MEMBER_KIND_LABEL,
+  MEMBER_KIND_OPTIONS,
   MEMBER_NAME_ERROR,
   MEMBER_NAME_LABEL,
   MEMBER_NAME_MAX_LENGTH,
@@ -90,11 +91,8 @@ export const INVITE_PROVISIONAL_INTRO =
 export const NAME_MAX_LENGTH = MEMBER_NAME_MAX_LENGTH;
 const LONG_NAME = 20;
 
-const KIND_OPTIONS: ReadonlyArray<{ value: MemberKind; label: string }> = [
-  { value: "adult", label: "Adulto" },
-  { value: "child", label: "Figlio o figlia" },
-  { value: "pet", label: "Animale" },
-];
+const KIND_OPTIONS: ReadonlyArray<{ value: MemberKind; label: string }> =
+  MEMBER_KIND_OPTIONS;
 
 type Failure = MemberFailure;
 

@@ -4794,14 +4794,14 @@ button.griglia-mese__cella--selezionata {
     gap: var(--space-6);
   }
 }
-/* Riga dell'icona: l'icona a sinistra, la puntina desktop a destra */
+/* Riga dell'icona dello spazio */
 .spazio-arrivo__alto {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
 }
-/* Solo da 1024 px: link «← Esplora» e puntina della pagina */
+/* Solo da 1024 px: link «← Esplora» (su desktop la pagina non ha la puntina) */
 @media (max-width: 1023px) {
   .spazio-arrivo__desktop {
     display: none;

@@ -2134,18 +2134,18 @@ function PageParts() {
           </div>
         </section>
       </Example>
-      <Example caption="spazio-arrivo · alto, parti solo desktop, scheletro del bottone">
+      <Example caption="spazio-arrivo · link solo desktop, scheletro del bottone">
         <div className="sezione spazio-arrivo" data-testid="spazio-arrivo">
+          <Link
+            href="#pezzi-pagine"
+            className="btn-link btn-link--secondario spazio-arrivo__desktop"
+          >
+            <span aria-hidden="true">←</span> Esplora
+          </Link>
           <div className="spazio-arrivo__alto">
             <span className="stato-vuoto__icona" aria-hidden="true">
               <Icon name="utensils" />
             </span>
-            <IconButton
-              icon="pin"
-              pressed
-              className="spazio-arrivo__desktop"
-              aria-label="Togli A tavola da Oggi"
-            />
           </div>
           <span className="etichetta">
             <Icon name="hourglass" size="s" />

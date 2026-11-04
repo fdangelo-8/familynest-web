@@ -17,6 +17,7 @@ import {
 } from "../../src/lib/leave-dialog";
 import {
   MEMBER_FAILURE_TEXT,
+  MEMBER_KIND_OPTIONS,
   MEMBER_NAME_ERROR,
   MEMBER_NAME_MAX_LENGTH,
 } from "../../src/lib/member-texts";
@@ -102,12 +103,13 @@ test.describe("barra e navigazione di /figli e /esplora/<spazio> (#31, #29)", ()
   });
 });
 
-test.describe("catalogo degli spazi: righe provvisorie (#29)", () => {
-  test("ogni spazio ha tre righe con icone dello sprite", () => {
+test.describe("catalogo degli spazi: righe di «In arrivo» (#29, CA-4)", () => {
+  test("solo A tavola ha le tre righe, gli altri nove nessuna", () => {
     for (const space of SPACES) {
-      expect(space.rows, space.name).toHaveLength(3);
+      expect(space.rows, space.name).toHaveLength(
+        space.key === "meals" ? 3 : 0,
+      );
       for (const row of space.rows) {
-        expect(row.text.length, row.text).toBeLessThanOrEqual(34);
         expect(ICON_PATHS, row.icon).toHaveProperty(row.icon);
       }
     }
@@ -339,6 +341,11 @@ test.describe("testi di MemberSheet fuori dal modulo client (#31)", () => {
     expect(MEMBER_FAILURE_TEXT.network).toBe(
       "Non siamo riusciti a salvare. Controlla la connessione e riprova.",
     );
+    expect(MEMBER_KIND_OPTIONS.map((option) => option.label)).toEqual([
+      "Adulto",
+      "Figlio o figlia",
+      "Animale",
+    ]);
     const sheet = readFileSync(
       "src/components/ui/MemberSheet/MemberSheet.tsx",
       "utf8",

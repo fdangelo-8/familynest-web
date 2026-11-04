@@ -22,8 +22,8 @@ export type SpaceDef = {
   icon: IconName;
   /**
    * The three rows of the «In arrivo» page (#29): what the space will hold.
-   * PROVISIONAL: the texts are the designer's proposal, except A tavola
-   * (mockup); they stay until Francesco approves or changes them.
+   * Only A tavola has them (mockup). The other nine are empty (the page shows
+   * no list) until Francesco approves the designer's proposal in the #29.
    */
   rows: readonly SpaceRow[];
   /** Wide card (two columns) */
@@ -57,11 +57,7 @@ export const SPACES: readonly SpaceDef[] = [
     name: "Noi due",
     promise: "Il vostro tempo, le vostre liste, le vostre date.",
     icon: "heart-handshake",
-    rows: [
-      { icon: "calendar-check", text: "Una serata per voi, ogni settimana" },
-      { icon: "square-check", text: "Le liste che tenete solo per voi" },
-      { icon: "gift", text: "Date da ricordare e idee regalo" },
-    ],
+    rows: [],
     wide: false,
     dark: true,
   },
@@ -71,11 +67,7 @@ export const SPACES: readonly SpaceDef[] = [
     name: "Stare bene",
     promise: "Prendersi cura di sé e degli altri.",
     icon: "leaf",
-    rows: [
-      { icon: "repeat", text: "Le abitudini che volete tenere" },
-      { icon: "sun", text: "Un momento per te, ogni giorno" },
-      { icon: "heart", text: "Chi ha bisogno di una mano" },
-    ],
+    rows: [],
     wide: false,
     dark: false,
   },
@@ -85,11 +77,7 @@ export const SPACES: readonly SpaceDef[] = [
     name: "Tempo insieme",
     promise: "Il tempo libero che avete, usato bene.",
     icon: "sun",
-    rows: [
-      { icon: "users", text: "Quando siete liberi tutti insieme" },
-      { icon: "sunrise", text: "Idee per il weekend, vicino a casa" },
-      { icon: "ticket", text: "Uscite da fare, con i biglietti" },
-    ],
+    rows: [],
     wide: false,
     dark: false,
   },
@@ -99,11 +87,7 @@ export const SPACES: readonly SpaceDef[] = [
     name: "Passioni",
     promise: "Quello che ti piace fare, con il suo posto.",
     icon: "sparkles",
-    rows: [
-      { icon: "repeat", text: "Gli orari di corsi e allenamenti" },
-      { icon: "headphones", text: "Libri, film e dischi da recuperare" },
-      { icon: "palette", text: "Quello che ti serve, in una lista" },
-    ],
+    rows: [],
     wide: false,
     dark: false,
   },
@@ -113,11 +97,7 @@ export const SPACES: readonly SpaceDef[] = [
     name: "Casa in ordine",
     promise: "Chi fa cosa, e niente sfugge.",
     icon: "sparkle",
-    rows: [
-      { icon: "users", text: "Chi fa cosa, a turno" },
-      { icon: "repeat", text: "Le faccende che si ripetono" },
-      { icon: "bell", text: "Un promemoria a chi tocca" },
-    ],
+    rows: [],
     wide: false,
     dark: false,
   },
@@ -127,11 +107,7 @@ export const SPACES: readonly SpaceDef[] = [
     name: "Progetti",
     promise: "Traslochi, lavori, grandi cambiamenti, un passo alla volta.",
     icon: "route",
-    rows: [
-      { icon: "route", text: "Un progetto alla volta, a tappe" },
-      { icon: "square-check", text: "Le cose da fare per ogni tappa" },
-      { icon: "briefcase", text: "Preventivi, contatti e scadenze" },
-    ],
+    rows: [],
     wide: true,
     dark: false,
   },
@@ -141,11 +117,7 @@ export const SPACES: readonly SpaceDef[] = [
     name: "Conti chiari",
     promise: "Chi ha pagato cosa, senza discussioni.",
     icon: "scale",
-    rows: [
-      { icon: "scale", text: "Chi ha pagato cosa, segnato subito" },
-      { icon: "users", text: "Le spese di casa, divise tra voi" },
-      { icon: "check", text: "Quanto manca per andare in pari" },
-    ],
+    rows: [],
     wide: false,
     dark: false,
   },
@@ -155,11 +127,7 @@ export const SPACES: readonly SpaceDef[] = [
     name: "Crescere",
     promise: "Tutto sui vostri figli, in un posto solo.",
     icon: "sprout",
-    rows: [
-      { icon: "book-open", text: "Scuola, classe e orario" },
-      { icon: "phone", text: "I contatti delle maestre" },
-      { icon: "gift", text: "Taglie e lista dei desideri" },
-    ],
+    rows: [],
     wide: false,
     dark: false,
   },
@@ -169,11 +137,7 @@ export const SPACES: readonly SpaceDef[] = [
     name: "Zampe",
     promise: "Per i vostri animali e per chi ha quattro zampe.",
     icon: "paw-print",
-    rows: [
-      { icon: "repeat", text: "Pappa e passeggiate, a turno" },
-      { icon: "calendar-check", text: "Le visite dal veterinario" },
-      { icon: "shopping-basket", text: "Il cibo che sta per finire" },
-    ],
+    rows: [],
     wide: false,
     dark: false,
   },
