@@ -203,7 +203,7 @@ test.describe("eliminazione", () => {
       const dialog = await openDeleteDialog(page);
       await inDialog(dialog, "Elimina l'account").click();
       await expect(page).toHaveURL(DELETED_URL);
-      await expect(page.getByText(DELETED_NOTICE)).toBeVisible();
+      await expect(page.getByText(DELETED_NOTICE).first()).toBeVisible();
 
       // The cookies are deleted by the answer; no sign-out call is made.
       const response = await answered;
@@ -282,7 +282,7 @@ test.describe("eliminazione", () => {
       ]);
       await inDialog(dialog, "Esci e cancella la casa").click();
       await expect(page).toHaveURL(DELETED_URL);
-      await expect(page.getByText(DELETED_NOTICE)).toBeVisible();
+      await expect(page.getByText(DELETED_NOTICE).first()).toBeVisible();
 
       expect(await authUserExists(user.id)).toBe(false);
       expect(await householdExists(householdId)).toBe(false);
