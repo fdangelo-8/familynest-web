@@ -1527,6 +1527,7 @@ test.describe("correzioni approvate (#52)", () => {
 test.describe("riga passata leggibile (#241)", () => {
   for (const id of ["riga-passata-normale", "riga-passata-insieme"]) {
     test(`${id}: opacità 1 e testo secondario`, async ({ page }) => {
+      await page.goto("/design-system?pezzi-pagine=1");
       const row = page.getByTestId(id);
       const read = (sel: string | null) =>
         (sel ? row.locator(sel) : row).evaluate((el) => {
