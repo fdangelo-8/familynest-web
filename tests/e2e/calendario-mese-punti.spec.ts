@@ -158,7 +158,16 @@ test.describe("punti", () => {
       ...KIDS.map((name, i): MemberSpec => ({
         name,
         kind: "child",
-        color: (["salvia", "zafferano", "glicine"] as const)[i % 3]!,
+        color: (
+          [
+            "zafferano",
+            "lampone",
+            "ceruleo",
+            "peonia",
+            "basilico",
+            "cannella",
+          ] as const
+        )[i]!, // unique in a Nest
       })),
     ];
 
