@@ -836,7 +836,8 @@ insert into public.notifications (household_id, recipient_member_id, kind, actor
 select '22222222-2222-4222-8222-222222222222', 'b1000000-0000-4000-8000-000000000001', 'todo_assigned',
        'b1000000-0000-4000-8000-000000000002', t.id, now() - make_interval(mins => g)
 from public.todos t, generate_series(1, 120) as g
-where t.title = 'Firmare autorizzazione gita';
+where t.title = 'Firmare autorizzazione gita'
+  and t.household_id = '22222222-2222-4222-8222-222222222222';
 set local role authenticated;
 select is(public.count_unread_notifications(), 100, 'the bell counts at most the 100 most recent, as the page shows');
 reset role;
