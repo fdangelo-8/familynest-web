@@ -460,11 +460,15 @@ test.describe("punto 8: Vai al contenuto", () => {
     expect(documentRequests).toEqual([]);
 
     // The first activatable element inside <main> (if any) is the next stop.
+    // Pages with two layouts (Oggi, #30) keep the hidden one in the DOM: only
+    // the elements that are on screen can take the focus.
     const firstInMain = await page.evaluate(() => {
       const main = document.querySelector("main")!;
-      const candidate = main.querySelector<HTMLElement>(
-        'a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])',
-      );
+      const candidate = Array.from(
+        main.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])',
+        ),
+      ).find((element) => element.getClientRects().length > 0);
       return candidate
         ? (
             candidate.getAttribute("aria-label") ??
@@ -1219,17 +1223,23 @@ test.describe("isolamento tra nuclei", () => {
     "Biscotto",
   ];
 
+  const FIXED_EXAMPLE = "nuoto Sofia giovedì alle 17";
+
   async function expectNothingOfA(page: Page, route: string, withAdd: boolean) {
     await openFrame(page, route);
     const square = page.getByRole("link", {
       name: "Apri Casa Bianchi: membri, Esplora e impostazioni",
     });
     await expect(square.first()).toBeAttached();
-    const html = await page.content();
+    // The fixed example of the quick-add field of Oggi («nuoto Sofia giovedì
+    // alle 17», text of the mockup) is not data of the Nest of A.
+    const html = (await page.content()).replaceAll(FIXED_EXAMPLE, "");
     for (const word of FORBIDDEN) {
       expect(html, `${route} contiene ${word}`).not.toContain(word);
     }
-    const raw = await (await page.context().request.get(route)).text();
+    const raw = (
+      await (await page.context().request.get(route)).text()
+    ).replaceAll(FIXED_EXAMPLE, "");
     for (const word of FORBIDDEN) {
       expect(raw, `${route} (HTML grezzo) contiene ${word}`).not.toContain(
         word,
