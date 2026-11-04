@@ -35,7 +35,7 @@ const PAGES = [
   {
     route: "/impostazioni",
     file: "impostazioni",
-    h1: "Impostazioni della casa",
+    h1: "Casa D'Angelo",
   },
   { route: "/membri", file: "membri", h1: "Chi c’è" },
 ];
