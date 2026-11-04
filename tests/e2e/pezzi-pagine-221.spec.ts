@@ -22,6 +22,11 @@ import {
   MEMBER_NAME_MAX_LENGTH,
 } from "../../src/lib/member-texts";
 import { getPinLabel, getPinToastText } from "../../src/lib/pin-texts";
+import {
+  addSpaceInterest,
+  getSpaceInterests,
+  removeSpaceInterest,
+} from "../../src/lib/space-interests";
 import { SPACES, getSpaceByHref } from "../../src/lib/spaces";
 
 // Shared pieces for the pages #29, #31, #38 and #41 (request #221). Pure
@@ -400,5 +405,54 @@ test.describe("CSS nuovo nel blocco del designer (#221)", () => {
     expect(normalized).toContain(
       '.btn-icona[aria-pressed="true"]:active:not(:disabled, [aria-disabled="true"]) { background: var(--color-notte-2); }',
     );
+  });
+});
+
+test.describe("avvisi degli spazi (#29, space-interests.ts)", () => {
+  type Call = { fn: string; args: unknown };
+  function fakeClient(
+    result: { data?: unknown; error: unknown },
+    calls: Call[],
+  ) {
+    return {
+      rpc: (fn: string, args: unknown) => {
+        calls.push({ fn, args });
+        return Promise.resolve({ error: result.error });
+      },
+      from: () => ({
+        select: () => Promise.resolve(result),
+      }),
+    } as never;
+  }
+
+  test("registrare e togliere mandano solo la chiave dello spazio", async () => {
+    const calls: Call[] = [];
+    const client = fakeClient({ error: null }, calls);
+    expect(await addSpaceInterest(client, "meals")).toEqual({ error: null });
+    expect(await removeSpaceInterest(client, "meals")).toEqual({ error: null });
+    expect(calls).toEqual([
+      { fn: "add_space_interest", args: { p_space: "meals" } },
+      { fn: "remove_space_interest", args: { p_space: "meals" } },
+    ]);
+  });
+
+  test("l'errore (FN002) viene restituito, non nascosto", async () => {
+    const error = { code: "FN002" };
+    const client = fakeClient({ error }, []);
+    expect(await addSpaceInterest(client, "pets")).toEqual({ error });
+  });
+
+  test("leggere gli avvisi: elenco o errore", async () => {
+    const ok = fakeClient(
+      { data: [{ space: "meals" }, { space: "couple" }], error: null },
+      [],
+    );
+    expect(await getSpaceInterests(ok)).toEqual({
+      error: null,
+      spaces: ["meals", "couple"],
+    });
+    const error = { code: "X" };
+    const ko = fakeClient({ data: null, error }, []);
+    expect(await getSpaceInterests(ko)).toEqual({ error, spaces: null });
   });
 });
