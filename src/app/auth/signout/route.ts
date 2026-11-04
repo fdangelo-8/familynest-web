@@ -1,16 +1,13 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import {
+  clearSessionCookies,
+  DELETE_COOKIE_OPTIONS,
+} from "@/lib/auth/session-cookies";
 import { getPublicEnv } from "@/lib/env";
 
 // Sign out. POST only: a GET answers 405, so no external link can sign
 // anyone out.
-const SESSION_COOKIE =
-  /^sb-.+-auth-token(\.\d+)?$|^sb-.+-auth-token-code-verifier$/;
-
-// `maxAge: 0` is dropped when the cookie is serialised, so a cookie is deleted
-// with an `expires` in the past (same path as the session cookies).
-const DELETE_OPTIONS = { path: "/", maxAge: 0, expires: new Date(0) } as const;
-
 export async function POST(request: NextRequest) {
   // A form posted from another site is refused.
   const origin = request.headers.get("origin");
@@ -35,7 +32,10 @@ export async function POST(request: NextRequest) {
             if (value) {
               response.cookies.set(name, value, options);
             } else {
-              response.cookies.set(name, "", { ...options, ...DELETE_OPTIONS });
+              response.cookies.set(name, "", {
+                ...options,
+                ...DELETE_COOKIE_OPTIONS,
+              });
             }
           }
         },
@@ -47,10 +47,6 @@ export async function POST(request: NextRequest) {
     // Even if Supabase does not answer, the cookies below are deleted anyway.
   }
 
-  for (const cookie of request.cookies.getAll()) {
-    if (SESSION_COOKIE.test(cookie.name)) {
-      response.cookies.set(cookie.name, "", DELETE_OPTIONS);
-    }
-  }
+  clearSessionCookies(request, response);
   return response;
 }

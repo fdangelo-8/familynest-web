@@ -23,6 +23,14 @@ function readError(params: Record<string, string | string[] | undefined>) {
   return error;
 }
 
+// `?account=eliminato` is set after «Elimina l'account» (#38): a signal without
+// personal data. Any other value is ignored.
+function readAccountDeleted(
+  params: Record<string, string | string[] | undefined>,
+): boolean {
+  return first(params.account) === "eliminato";
+}
+
 export default async function AccessoPage({
   searchParams,
 }: {
@@ -31,5 +39,10 @@ export default async function AccessoPage({
   // Someone who is already signed in never sees the sign-in page.
   await redirectIfSignedIn();
   const params = await searchParams;
-  return <AccessScreen initialError={readError(params)} />;
+  return (
+    <AccessScreen
+      initialError={readError(params)}
+      accountDeleted={readAccountDeleted(params)}
+    />
+  );
 }

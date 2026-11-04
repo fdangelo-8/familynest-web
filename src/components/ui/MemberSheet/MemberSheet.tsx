@@ -2,7 +2,23 @@
 
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { toDateFieldValue } from "@/lib/datetime";
-import { HOUSEHOLD_FULL_MESSAGE } from "@/lib/household-limits";
+import {
+  MEMBER_BIRTH_HELP,
+  MEMBER_BIRTH_LABEL,
+  MEMBER_COLOR_HELP,
+  MEMBER_COLOR_LABEL,
+  MEMBER_COLOR_TAKEN_ERROR,
+  MEMBER_DATE_ERROR,
+  MEMBER_FAILURE_TEXT,
+  MEMBER_KIND_LABEL,
+  MEMBER_KIND_OPTIONS,
+  MEMBER_NAME_ERROR,
+  MEMBER_NAME_LABEL,
+  MEMBER_NAME_MAX_LENGTH,
+  MEMBER_NAME_PLACEHOLDER,
+  MEMBER_SAVE_LABEL,
+  type MemberFailure,
+} from "@/lib/member-texts";
 import { Alert } from "../Alert/Alert";
 import { Button } from "../Button/Button";
 import {
@@ -72,28 +88,18 @@ export type MemberSheetProps = {
 export const INVITE_PROVISIONAL_INTRO =
   "Per ora aggiungi questa persona al Nest con nome e colore: il modo per mandarle l'invito lo stiamo preparando.";
 
-export const NAME_MAX_LENGTH = 40;
+export const NAME_MAX_LENGTH = MEMBER_NAME_MAX_LENGTH;
 const LONG_NAME = 20;
 
-const KIND_OPTIONS: ReadonlyArray<{ value: MemberKind; label: string }> = [
-  { value: "adult", label: "Adulto" },
-  { value: "child", label: "Figlio o figlia" },
-  { value: "pet", label: "Animale" },
-];
+const KIND_OPTIONS: ReadonlyArray<{ value: MemberKind; label: string }> =
+  MEMBER_KIND_OPTIONS;
 
-type Failure = "network" | "server" | "full";
+type Failure = MemberFailure;
 
-const FAILURE_TEXT: Record<Failure, string> = {
-  network: "Non siamo riusciti a salvare. Controlla la connessione e riprova.",
-  server:
-    "Non siamo riusciti a salvare per un problema nostro. Riprova tra qualche minuto.",
-  full: HOUSEHOLD_FULL_MESSAGE,
-};
-
-const NAME_ERROR = "Scrivi il nome per continuare.";
-const DATE_ERROR = "Questa data è nel futuro: scegli un giorno fino a oggi.";
-const COLOR_TAKEN_ERROR =
-  "Questo colore l'ha appena preso qualcun altro: scegline un altro.";
+const FAILURE_TEXT = MEMBER_FAILURE_TEXT;
+const NAME_ERROR = MEMBER_NAME_ERROR;
+const DATE_ERROR = MEMBER_DATE_ERROR;
+const COLOR_TAKEN_ERROR = MEMBER_COLOR_TAKEN_ERROR;
 
 /**
  * Sheet to add or change a member of the Nest (mobile: bottom sheet; from
@@ -167,7 +173,7 @@ function MemberSheetOpen({
       ? "Invita qualcuno"
       : "Aggiungi una persona";
   const primaryLabel = editing
-    ? "Salva le modifiche"
+    ? MEMBER_SAVE_LABEL
     : invite
       ? "Continua"
       : trimmed && trimmed.length <= LONG_NAME
@@ -315,8 +321,8 @@ function MemberSheetOpen({
 
         <TextField
           id={nameId}
-          label="Nome"
-          placeholder="Come si chiama?"
+          label={MEMBER_NAME_LABEL}
+          placeholder={MEMBER_NAME_PLACEHOLDER}
           maxLength={NAME_MAX_LENGTH}
           autoComplete="off"
           value={name}
@@ -326,10 +332,10 @@ function MemberSheetOpen({
 
         {invite ? null : (
           <div className="campo">
-            <span className="campo__etichetta">Chi è</span>
+            <span className="campo__etichetta">{MEMBER_KIND_LABEL}</span>
             <SegmentedControl
               paper
-              aria-label="Chi è"
+              aria-label={MEMBER_KIND_LABEL}
               describedBy={kindHelp ? kindHelpId : undefined}
               value={kind}
               onChange={setKind}
@@ -349,8 +355,8 @@ function MemberSheetOpen({
         {showDate ? (
           <DateField
             id={`${base}-nascita`}
-            label="Data di nascita"
-            help="Serve a calcolare l'età e a ricordare il compleanno."
+            label={MEMBER_BIRTH_LABEL}
+            help={MEMBER_BIRTH_HELP}
             max={toDateFieldValue(new Date())}
             value={birthDate}
             error={dateError}
@@ -362,9 +368,9 @@ function MemberSheetOpen({
           ref={colorRef}
           className={colorError ? "campo campo--errore" : "campo"}
         >
-          <span className="campo__etichetta">Colore</span>
+          <span className="campo__etichetta">{MEMBER_COLOR_LABEL}</span>
           <ColorChoice
-            aria-label="Colore"
+            aria-label={MEMBER_COLOR_LABEL}
             alignStart
             value={color}
             onChange={(next) => {
@@ -377,7 +383,7 @@ function MemberSheetOpen({
             idPrefix={`${base}-colore`}
           />
           <p className="campo__aiuto" id={colorHelpId}>
-            I colori spenti sono già di qualcun altro.
+            {MEMBER_COLOR_HELP}
           </p>
           {colorError ? (
             <p className="campo__errore" id={colorErrorId} role="alert">

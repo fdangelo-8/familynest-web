@@ -10,6 +10,8 @@ import type { Database } from "@/types/database";
 /** Same values as the `space_key` enum of the database. */
 export type SpaceKey = Database["public"]["Enums"]["space_key"];
 
+export type SpaceRow = { icon: IconName; text: string };
+
 export type SpaceDef = {
   key: SpaceKey;
   /** Address of the «In arrivo» page of the space (#29) */
@@ -18,6 +20,12 @@ export type SpaceDef = {
   /** Fixed promise. Crescere and Zampe get theirs from `getSpacePromise`. */
   promise: string;
   icon: IconName;
+  /**
+   * The three rows of the «In arrivo» page (#29): what the space will hold.
+   * Only A tavola has them (mockup). The other nine are empty (the page shows
+   * no list) until Francesco approves the designer's proposal in the #29.
+   */
+  rows: readonly SpaceRow[];
   /** Wide card (two columns) */
   wide: boolean;
   /** Dark card */
@@ -35,6 +43,11 @@ export const SPACES: readonly SpaceDef[] = [
     name: "A tavola",
     promise: "Cosa mangiamo questa settimana, senza pensarci ogni sera.",
     icon: "utensils",
+    rows: [
+      { icon: "calendar-range", text: "Il piano dei pasti della settimana" },
+      { icon: "book-open", text: "Ricette adatte a chi vive con te" },
+      { icon: "shopping-basket", text: "La spesa che si scrive da sola" },
+    ],
     wide: true,
     dark: false,
   },
@@ -44,6 +57,7 @@ export const SPACES: readonly SpaceDef[] = [
     name: "Noi due",
     promise: "Il vostro tempo, le vostre liste, le vostre date.",
     icon: "heart-handshake",
+    rows: [],
     wide: false,
     dark: true,
   },
@@ -53,6 +67,7 @@ export const SPACES: readonly SpaceDef[] = [
     name: "Stare bene",
     promise: "Prendersi cura di sé e degli altri.",
     icon: "leaf",
+    rows: [],
     wide: false,
     dark: false,
   },
@@ -62,6 +77,7 @@ export const SPACES: readonly SpaceDef[] = [
     name: "Tempo insieme",
     promise: "Il tempo libero che avete, usato bene.",
     icon: "sun",
+    rows: [],
     wide: false,
     dark: false,
   },
@@ -71,6 +87,7 @@ export const SPACES: readonly SpaceDef[] = [
     name: "Passioni",
     promise: "Quello che ti piace fare, con il suo posto.",
     icon: "sparkles",
+    rows: [],
     wide: false,
     dark: false,
   },
@@ -80,6 +97,7 @@ export const SPACES: readonly SpaceDef[] = [
     name: "Casa in ordine",
     promise: "Chi fa cosa, e niente sfugge.",
     icon: "sparkle",
+    rows: [],
     wide: false,
     dark: false,
   },
@@ -89,6 +107,7 @@ export const SPACES: readonly SpaceDef[] = [
     name: "Progetti",
     promise: "Traslochi, lavori, grandi cambiamenti, un passo alla volta.",
     icon: "route",
+    rows: [],
     wide: true,
     dark: false,
   },
@@ -98,6 +117,7 @@ export const SPACES: readonly SpaceDef[] = [
     name: "Conti chiari",
     promise: "Chi ha pagato cosa, senza discussioni.",
     icon: "scale",
+    rows: [],
     wide: false,
     dark: false,
   },
@@ -107,6 +127,7 @@ export const SPACES: readonly SpaceDef[] = [
     name: "Crescere",
     promise: "Tutto sui vostri figli, in un posto solo.",
     icon: "sprout",
+    rows: [],
     wide: false,
     dark: false,
   },
@@ -116,10 +137,16 @@ export const SPACES: readonly SpaceDef[] = [
     name: "Zampe",
     promise: "Per i vostri animali e per chi ha quattro zampe.",
     icon: "paw-print",
+    rows: [],
     wide: false,
     dark: false,
   },
 ];
+
+/** The space of an address `/esplora/<slug>`; undefined if it is not one of the ten. */
+export function getSpaceByHref(pathname: string): SpaceDef | undefined {
+  return SPACES.find((space) => space.href === pathname);
+}
 
 /** Members of the Nest by kind, counting also adults without an account. */
 export type MemberCounts = {

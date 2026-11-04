@@ -76,13 +76,19 @@ function subscribeNever() {
 
 // #133: the clickable-row cards for the hover tests are shown only with
 // ?righe-scheda=1, so the reference of the whole gallery does not change.
-export function Gallery() {
-  const rowCards = useSyncExternalStore(
+// #221: the examples of the page parts (profile of a child, «In arrivo»,
+// Impostazioni) are shown only with ?pezzi-pagine=1, for the same reason.
+function useQueryFlag(name: string): boolean {
+  return useSyncExternalStore(
     subscribeNever,
-    () =>
-      new URLSearchParams(window.location.search).get("righe-scheda") === "1",
+    () => new URLSearchParams(window.location.search).get(name) === "1",
     () => false,
   );
+}
+
+export function Gallery() {
+  const rowCards = useQueryFlag("righe-scheda");
+  const pageParts = useQueryFlag("pezzi-pagine");
   return (
     <main className={styles.pagina}>
       <h1 className="t-titolo-pagina">Design system</h1>
@@ -97,6 +103,7 @@ export function Gallery() {
       <DayViewSection />
       <EditableRowsSection />
       <MonthSection />
+      {pageParts ? <PageParts /> : null}
     </main>
   );
 }
@@ -2043,6 +2050,116 @@ function MonthSection() {
             <Link href="#griglia-mese" className="btn-link">
               Oggi
             </Link>
+          </div>
+        </div>
+      </Example>
+    </Section>
+  );
+}
+
+function PageParts() {
+  return (
+    <Section id="pezzi-pagine" title="Pezzi delle pagine (#29, #31, #38, #41)">
+      <Example caption="sezione__link · link nella testa di una sezione">
+        <div className="sezione" data-testid="sezione-link">
+          <div className="sezione__testa">
+            <h3 className="sezione__titolo">Questa settimana</h3>
+            <Link href="#pezzi-pagine" className="sezione__info sezione__link">
+              Vedi nel calendario
+            </Link>
+          </div>
+          <List className="scheda">
+            <ListRow href="#pezzi-pagine">
+              <span className="riga-lista__ora">Gio</span>
+              <span className="riga-lista__testo">
+                <span className="riga-lista__titolo">Nuoto Sofia</span>
+                <span className="riga-lista__info">
+                  Giovedì alle 17:00, piscina comunale
+                </span>
+              </span>
+            </ListRow>
+          </List>
+        </div>
+      </Example>
+      <Example caption="profilo-testa__azione · solo da 1024 px">
+        <div
+          className="profilo-testa profilo-testa--riga"
+          data-testid="profilo-testa-azione"
+        >
+          <Avatar name="Sofia" color="salvia" size="xl" />
+          <div className="intestazione">
+            <h3 className="intestazione__titolo t-titolo-pagina">Sofia</h3>
+            <p className="intestazione__sotto">9 anni · Figlio o figlia</p>
+          </div>
+          <button
+            type="button"
+            className="btn-secondary btn--piccolo profilo-testa__azione"
+            aria-haspopup="dialog"
+          >
+            <Icon name="pencil" size="s" />
+            Modifica il profilo
+            <VisuallyHidden> di Sofia</VisuallyHidden>
+          </button>
+        </div>
+      </Example>
+      <Example caption="modulo-gruppo e modulo-gruppo--sezione">
+        <form className="modulo-gruppo" data-testid="modulo-gruppi">
+          <TextField label="Nome" defaultValue="Sofia" />
+          <div className="modulo-gruppo modulo-gruppo--sezione">
+            <TextField
+              label="Nome della scuola"
+              placeholder="Es. scuola Manzoni"
+            />
+            <TextField label="Classe" placeholder="Es. 4ª B" />
+          </div>
+        </form>
+      </Example>
+      <Example caption="campo-doppio--tre · tre campi corti">
+        <div
+          className="campo-doppio campo-doppio--tre"
+          data-testid="campo-doppio-tre"
+        >
+          <TextField label="Scarpe" placeholder="Es. 33" />
+          <TextField label="Vestiti" placeholder="Es. 9–10" />
+          <TextField label="Pigiama" placeholder="Es. 140" />
+        </div>
+      </Example>
+      <Example caption="sezione--ancora · si ferma sotto la barra">
+        <section
+          id="notifiche-esempio"
+          className="sezione sezione--ancora"
+          aria-labelledby="notifiche-esempio-titolo"
+          data-testid="sezione-ancora"
+        >
+          <div className="sezione__testa">
+            <h3 className="sezione__titolo" id="notifiche-esempio-titolo">
+              Notifiche
+            </h3>
+          </div>
+        </section>
+      </Example>
+      <Example caption="spazio-arrivo · link solo desktop, scheletro del bottone">
+        <div className="colonna" data-testid="spazio-arrivo">
+          <Link
+            href="#pezzi-pagine"
+            className="btn-link btn-link--secondario spazio-arrivo__desktop"
+          >
+            <span aria-hidden="true">←</span> Esplora
+          </Link>
+          <div className="sezione spazio-arrivo">
+            <div className="spazio-arrivo__alto">
+              <span className="stato-vuoto__icona" aria-hidden="true">
+                <Icon name="utensils" />
+              </span>
+            </div>
+            <span className="etichetta">
+              <Icon name="hourglass" size="s" />
+              In arrivo
+            </span>
+            <h3 className="t-display">A tavola</h3>
+            <SkeletonGroup data-testid="skeleton-bottone">
+              <Skeleton shape="bottone" />
+            </SkeletonGroup>
           </div>
         </div>
       </Example>

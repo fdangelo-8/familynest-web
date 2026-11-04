@@ -3,7 +3,14 @@ import { cx } from "../cx";
 import { VisuallyHidden } from "../VisuallyHidden/VisuallyHidden";
 
 export type SkeletonShape =
-  "testo" | "testo-corto" | "titolo" | "riga" | "scheda" | "cerchio" | "grande";
+  | "testo"
+  | "testo-corto"
+  | "titolo"
+  | "riga"
+  | "scheda"
+  | "cerchio"
+  | "grande"
+  | "bottone";
 
 export type SkeletonProps = {
   shape?: SkeletonShape;
