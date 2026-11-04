@@ -47,7 +47,7 @@ Cambio etichetta: `node scripts/agenti/gh.mjs labels <n> --add <nuova> --remove 
 
 Esegui in quest'ordine, poi ricomincia da capo finché resta lavoro eseguibile:
 
-1. **Merge avvenuti** dall'ultimo giro: per ogni PR unita, se ha toccato file condivisi o database, chiedi a ogni branch attivo di riallinearsi (sviluppatore, compito "riallinea"). Raccogli le PR unite per il documentalista.
+1. **Merge avvenuti** dall'ultimo giro: un branch attivo si riallinea solo se ha un conflitto o se gli servono file condivisi o database appena uniti (sviluppatore, compito "riallinea", oppure aggiornamento del branch da GitHub). Dopo ogni merge guarda la run CI di `main`: se la suite è rossa, la correzione viene prima di ogni altro lavoro. Raccogli le PR unite per il documentalista.
 2. **Risposte di Francesco:** su una `bloccata` con risposta → applica la decisione nella issue, togli `bloccata`, rimetti lo stato giusto. Su una `proposta-design` approvata → il designer aggiorna la specifica e si apre una issue per l'implementazione; rifiutata → chiudi la proposta.
 3. **Correzioni chieste da Francesco** su una PR `pronta-per-francesco` → torna a `in-sviluppo` con quei punti.
 4. **PR da far avanzare:** `in-revisione` → revisore; `in-test` → tester funzionale e tester visivo **in parallelo**. I tester partono solo dopo `APPROVATA`: in 2 PR su 3 il revisore chiede correzioni.
@@ -101,7 +101,8 @@ Mappa compito → agente:
 - **Domande non bloccanti** dell'analista: adotta il default proposto, scrivilo nella issue come "Decisione presa (modificabile da Francesco)".
 - **in-sviluppo → in-revisione:** PR aperta, `check` e `build` verdi.
 - **in-revisione → in-test:** commento `APPROVATA`. Con `DA CORREGGERE` → sviluppatore, poi di nuovo revisore.
-- **in-test → pronta-per-francesco:** `SUPERATO` da entrambi i tester e tutti i controlli CI verdi (`node scripts/agenti/gh.mjs pr-checks <n>`, exit 0) con `test` **eseguito e passato** sull'ultimo commit (non `skipped`: la suite Playwright parte solo con l'etichetta `in-test`; se dopo averla messa non arriva un push, rilancia l'ultima run CI della PR con `gh run rerun <id>`), branch allineato a main, checklist della skill `definizione-di-fatto` soddisfatta. Verificala tu, punto per punto.
+- **in-test → pronta-per-francesco:** `SUPERATO` da entrambi i tester, con i loro test eseguiti con `test-mirato`, controlli CI verdi (`node scripts/agenti/gh.mjs pr-checks <n>`, exit 0) e checklist della skill `definizione-di-fatto` soddisfatta. Verificala tu, punto per punto.
+- **Fase di build (decisione di Francesco del 04/11, vale finché l'app non va in produzione):** la suite completa gira **una volta sola** per pagina. Quando entrambi i tester hanno dato `SUPERATO`, aggiungi l'etichetta `suite-completa` alla PR della pagina e rilancia l'ultima run CI (`gh run rerun <id>`). La PR passa quando `test` è eseguito e passato. Non la rifai dopo riallineamenti o merge di altre PR, né dopo correzioni piccole: per quelle bastano i test mirati. Le PR `shared/*`, `db/*` e quelle di soli test non hanno la suite completa: bastano `check`, `build`, `db` e i test mirati. Il riallineamento a main serve solo se c'è un conflitto. I ricontrolli dopo una correzione li fa un solo agente, con i soli test mirati sulle parti cambiate. Prima della produzione si torna alla regola piena: suite completa su ogni PR, branch allineato.
 - **Limite rientri:** conta sulla PR i commenti che iniziano con `DA CORREGGERE` o `NON SUPERATO`. Al quarto, etichetta `bloccata` ed escalation.
 - **Errore tecnico:** stesso errore CI due volte di fila non legato al codice (rete, servizio, permessi) → `bloccata`.
 
