@@ -32,7 +32,7 @@ import { SPACES } from "../../src/lib/spaces";
 
 // Esplora · «In arrivo» (#29): access, content, loading, error, navigation and
 // privacy of the page `/esplora/<spazio>`. Criteria CA-1 ... CA-7, CA-18,
-// CA-23 ... CA-29 and CA-35. The seed users (Marco, Giulia, Paolo, the user
+// CA-23 ... CA-29 and CA-35 (reads of the page, frame excluded). The seed users (Marco, Giulia, Paolo, the user
 // without a Nest) are only read; the tests that write are in
 // esplora-spazio-avvisami.spec.ts and use throwaway users.
 
@@ -418,12 +418,15 @@ test.describe("navigazione e disposizione", () => {
 
 // ------------------------------------------------------------------- privacy
 
-test("CA-35: nelle risposte di rete di Crescere non ci sono birth_date, date di nascita né «Laura»", async ({
+test("CA-35: le letture della pagina di Crescere non portano date di nascita, colori, altri nomi né dati degli account", async ({
   page,
   baseURL,
 }) => {
   test.skip(!usersConfigured("A"), skipReason("A"));
-  // The dates of the two children, read by Marco himself (administrator).
+  // The name and colour of the members shown by the common frame (the square
+  // of the Nest) are allowed (decision of the coordinator, #29): this test
+  // looks at what the page reads by itself (REST calls of the browser) and at
+  // the content of `main`, not at the whole document.
   const marco = await seedClient("A");
   const { data: kids } = await marco
     .from("household_members")
@@ -435,8 +438,7 @@ test("CA-35: nelle risposte di rete di Crescere non ci sono birth_date, date di 
 
   const bodies: Promise<{ url: string; text: string }>[] = [];
   page.on("response", (response) => {
-    const type = response.request().resourceType();
-    if (type === "document" || type === "fetch" || type === "xhr") {
+    if (response.url().includes("/rest/v1/")) {
       bodies.push(
         response.text().then(
           (text) => ({ url: response.url(), text }),
@@ -455,11 +457,20 @@ test("CA-35: nelle risposte di rete di Crescere non ci sono birth_date, date di 
   ).toBeVisible();
   const responses = await Promise.all(bodies);
   expect(responses.length).toBeGreaterThan(0);
-  // each leak is reported with the address of the response and a short
-  // excerpt, so that a failure says where the data travels
+  // the page reads the names of the children and nothing else of the members
+  expect(
+    responses.some(({ url }) => url.includes("/rest/v1/household_members")),
+  ).toBe(true);
   const leaks: string[] = [];
   for (const { url, text } of responses) {
-    for (const needle of ["birth_date", "Laura", ...dates]) {
+    for (const needle of [
+      "birth_date",
+      "color",
+      "user_id",
+      "Laura",
+      "Biscotto",
+      ...dates,
+    ]) {
       const at = text.indexOf(needle);
       if (at >= 0) {
         leaks.push(
@@ -469,4 +480,8 @@ test("CA-35: nelle risposte di rete di Crescere non ci sono birth_date, date di 
     }
   }
   expect(leaks).toEqual([]);
+  const mainText = await page.getByRole("main").innerText();
+  for (const needle of ["Laura", "Biscotto", "birth_date", ...dates]) {
+    expect(mainText).not.toContain(needle);
+  }
 });
