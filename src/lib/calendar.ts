@@ -36,8 +36,8 @@ export function formatBusyLabel(name: string): string {
 }
 
 /**
- * Accessible name of an «Occupato» of someone else, from the times shown in
- * the row or block (already cut to the day): `Paolo ha un impegno, dalle 9:00
+ * Accessible name of an «Occupato» of someone else, from the start and end
+ * shown in the row or block (already cut to the day): `Paolo ha un impegno, dalle 9:00
  * alle 15:00`. The only place where this sentence is written.
  */
 export function formatBusyAccessibleName(

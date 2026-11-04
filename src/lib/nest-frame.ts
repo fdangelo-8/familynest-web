@@ -19,7 +19,7 @@ const FAILED: NestFrameData = {
   members: [],
   me: null,
   startLens: "io",
-  defaultVisibility: "busy",
+  defaultVisibility: "private",
   failed: true,
 };
 
@@ -66,6 +66,14 @@ async function loadNestFrame(): Promise<NestFrameData> {
 
   if (household.error || !household.data || members.error) return FAILED;
 
+  const preferences: NestPreferences =
+    profile.error || !profile.data
+      ? { startLens: "io", defaultVisibility: "private" }
+      : {
+          startLens: profile.data.start_lens,
+          defaultVisibility: profile.data.default_event_visibility,
+        };
+
   const me = members.data.find((m) => m.user_id === userId);
   return {
     nestName: household.data.name,
@@ -75,10 +83,10 @@ async function loadNestFrame(): Promise<NestFrameData> {
       color: m.color,
     })),
     me: me ? { name: me.name, color: me.color } : null,
-    // A failed read of the preferences never breaks the frame: start from
-    // «Io» and from «Occupato», as before the preferences existed.
-    startLens: profile.data?.start_lens ?? "io",
-    defaultVisibility: profile.data?.default_event_visibility ?? "busy",
+    // A failed read of the preferences never breaks the frame, and never
+    // widens what others see: start from «Io» and from «Solo io».
+    startLens: preferences.startLens,
+    defaultVisibility: preferences.defaultVisibility,
     failed: false,
   };
 }

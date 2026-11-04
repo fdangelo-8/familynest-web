@@ -1,5 +1,4 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { createClient as createBrowserClient } from "@/lib/supabase/client";
 import type { Database } from "@/types/database";
 
 /**
@@ -20,11 +19,11 @@ export type MemberWelcome =
 
 /** Reads the welcome of the signed-in member. Never throws. */
 export async function readMemberWelcome(
-  client?: SupabaseClient<Database>,
+  client: SupabaseClient<Database>,
 ): Promise<MemberWelcome> {
   let rows: unknown;
   try {
-    const supabase = client ?? createBrowserClient();
+    const supabase = client;
     const { data, error } = await supabase.rpc("current_member_welcome");
     if (error || !Array.isArray(data)) return { status: "error" };
     rows = data;
