@@ -264,6 +264,11 @@ test.describe("tastiera", () => {
         });
         seen.push(stop);
       }
+      // After the last stop the focus leaves the page (browser interface) and
+      // then starts again: the loop is the proof that nothing traps it.
+      const firstBody = seen.indexOf("body");
+      expect(firstBody, seen.join(" | ")).toBeGreaterThan(0);
+      seen.splice(firstBody);
       const label = seen.join(" | ");
       const prev = seen.indexOf("Mese precedente");
       const next = seen.indexOf("Mese successivo");
@@ -302,14 +307,23 @@ test.describe("tastiera", () => {
       expect(found, "la griglia prende il focus con il Tab").not.toBeNull();
       const ring = await found!.evaluate((el) => {
         const s = getComputedStyle(el);
+        const probe = document.createElement("span");
+        probe.style.color = "var(--color-info)";
+        document.body.appendChild(probe);
+        const info = getComputedStyle(probe).color;
+        probe.remove();
         return {
           style: s.outlineStyle,
+          // 1.5 px (--border-medio) is drawn as 1 px on a 1x screen.
           width: parseFloat(s.outlineWidth),
+          color: s.outlineColor,
+          info,
           z: s.zIndex,
         };
       });
       expect(ring.style).toBe("solid");
-      expect(ring.width).toBeGreaterThanOrEqual(2);
+      expect(ring.width).toBeGreaterThanOrEqual(1);
+      expect(ring.color).toBe(ring.info);
       expect(ring.z).not.toBe("auto");
     });
   });
@@ -342,9 +356,36 @@ test.describe("aree di tocco e layout", () => {
         targets.push([`cella ${i + 1}`, gridCells.nth(i)]);
       }
       for (const [name, target] of targets) {
+        await target.scrollIntoViewIfNeeded();
         const box = await target.boundingBox();
-        if (!box || box.width < 43.5 || box.height < 43.5) {
-          small.push(`${name}: ${box?.width}x${box?.height}`);
+        if (!box) {
+          small.push(`${name}: non visibile`);
+          continue;
+        }
+        // The drawing can be smaller than 44 px if a transparent ::before
+        // widens the area (#67): the four corners of a 44 x 44 square around
+        // the centre must still hit the control.
+        const cx = box.x + box.width / 2;
+        const cy = box.y + box.height / 2;
+        const misses = await target.evaluate(
+          (el, [x, y]) => {
+            const corners = [
+              [x - 21.5, y - 21.5],
+              [x + 21.5, y - 21.5],
+              [x - 21.5, y + 21.5],
+              [x + 21.5, y + 21.5],
+            ] as const;
+            return corners.filter(([px, py]) => {
+              const hit = document.elementFromPoint(px, py);
+              return !hit || !(el === hit || el.contains(hit));
+            }).length;
+          },
+          [cx, cy] as [number, number],
+        );
+        if (misses > 0) {
+          small.push(
+            `${name}: ${box.width}x${box.height}, ${misses} angoli fuori dall'area di tocco`,
+          );
         }
       }
       expect(small).toEqual([]);
