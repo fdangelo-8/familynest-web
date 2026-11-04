@@ -227,11 +227,27 @@ function OggiContent({ nowMs }: { nowMs: number }) {
     }
     wasOffline.current = showOffline;
   }, [showOffline]);
+  const focusedEvent = useRef<string | null>(null);
   const trackFocus = (event: FocusEvent<HTMLElement>) => {
-    offlineHadFocus.current =
-      event.target instanceof Element &&
-      event.target.closest("[data-oggi-offline]") !== null;
+    const target = event.target instanceof Element ? event.target : null;
+    offlineHadFocus.current = target?.closest("[data-oggi-offline]") != null;
+    focusedEvent.current =
+      target?.closest("[data-event-key]")?.getAttribute("data-event-key") ??
+      null;
   };
+  // Every minute the rows are sorted again. A row with the focus that has just
+  // ended moves into «Già fatti»: the focus goes to that button.
+  useEffect(() => {
+    const key = focusedEvent.current;
+    if (!key || !eventsView) return;
+    const active = document.activeElement;
+    if (active && active !== document.body) return;
+    if (!eventsView.finished.some((event) => event.key === key)) return;
+    focusedEvent.current = null;
+    visible(
+      rootRef.current?.querySelectorAll<HTMLElement>(".riga-gia-fatti") ?? [],
+    )?.focus();
+  }, [eventsView]);
 
   const ctx: Ctx = {
     nowMs,

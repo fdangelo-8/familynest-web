@@ -6,7 +6,8 @@ import {
   test,
   expect,
 } from "../fixtures/casa";
-import { createEvent } from "../fixtures/impegni";
+import AxeBuilder from "@axe-core/playwright";
+import { createEvent, duplicateIds } from "../fixtures/impegni";
 import { writeFileSync } from "node:fs";
 
 // TEMPORARY diagnostic of the developer of #30: screenshots and DOM dumps as
@@ -139,6 +140,44 @@ for (const lens of ["io", "nest"] as const) {
       return clone.outerHTML;
     });
     const visibleText = await page.locator("main").innerText();
+    const axeReport: string[] = [];
+    const runAxe = async (label: string) => {
+      const results = await new AxeBuilder({ page }).analyze();
+      axeReport.push(
+        `${label}: ` +
+          JSON.stringify(
+            results.violations.map((v) => ({
+              id: v.id,
+              impact: v.impact,
+              targets: v.nodes.map((n) => n.target.join(" ")).slice(0, 4),
+            })),
+          ),
+      );
+    };
+    await runAxe("axe");
+    axeReport.push(`dup ids: ${JSON.stringify(await duplicateIds(page))}`);
+    axeReport.push(`h1 visible: ${await page.locator("h1:visible").count()}`);
+    const button = page.locator(".riga-gia-fatti:visible");
+    await button.click();
+    await page.waitForTimeout(500);
+    axeReport.push(
+      `gia fatti: expanded=${await button.getAttribute("aria-expanded")} controls=${await button.getAttribute("aria-controls")} rows=${await page.locator(".riga-evento--passato:visible").count()}`,
+    );
+    await page.screenshot({
+      path: testInfo.outputPath(`oggi-${lens}-aperto.png`),
+      fullPage: true,
+    });
+    await runAxe("axe aperto");
+    const box = page.locator("[role=checkbox]:visible").first();
+    if ((await box.count()) > 0) {
+      await box.click();
+      await page.waitForTimeout(400);
+      await runAxe("axe toast");
+    }
+    writeFileSync(
+      testInfo.outputPath(`oggi-${lens}-axe.txt`),
+      axeReport.join("\n"),
+    );
     writeFileSync(testInfo.outputPath(`oggi-${lens}.html`), html);
     writeFileSync(
       testInfo.outputPath(`oggi-${lens}.txt`),

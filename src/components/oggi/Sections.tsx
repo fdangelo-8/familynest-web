@@ -263,6 +263,7 @@ function EventRow({
     <Link
       href={eventHref(event.id, event.startsAt)}
       className={cx("riga-evento", past && "riga-evento--passato")}
+      data-event-key={event.key}
     >
       <span className="riga-evento__ora">
         {formatTime(startInDay(event, day))}
@@ -345,6 +346,7 @@ export function ProssimoSection({
       <Link
         href={eventHref(event.id, event.startsAt)}
         className="scheda scheda--evidenza prossimo"
+        data-event-key={event.key}
       >
         <span className="prossimo__alto">
           <span className="prossimo__ora">{formatTime(event.startsAt)}</span>
