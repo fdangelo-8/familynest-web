@@ -217,7 +217,10 @@ const SCENARIOS: Record<OggiScenario, Scenario> = {
     ],
     shopping: ["Latte", "Pane", "Mele", "Uova"],
     deadlines: [
-      { title: "Rinnovo carta d'identità di Sofia", due: "2026-11-03" },
+      // 5 days: «Nel Nest» only shows a deadline within 7 days (the mockup
+      // has 14, the requirement says 7).
+      { title: "Rinnovo carta d'identità di Sofia", due: "2026-10-25" },
+      { title: "Bollo dell'auto", due: "2026-12-07" },
     ],
     welcome: null,
     starterOpen: false,
