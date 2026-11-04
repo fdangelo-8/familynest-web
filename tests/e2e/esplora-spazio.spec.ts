@@ -433,11 +433,16 @@ test("CA-35: nelle risposte di rete di Crescere non ci sono birth_date, date di 
     .map((row) => row.birth_date as string | null)
     .filter((value): value is string => !!value);
 
-  const bodies: Promise<string>[] = [];
+  const bodies: Promise<{ url: string; text: string }>[] = [];
   page.on("response", (response) => {
     const type = response.request().resourceType();
     if (type === "document" || type === "fetch" || type === "xhr") {
-      bodies.push(response.text().catch(() => ""));
+      bodies.push(
+        response.text().then(
+          (text) => ({ url: response.url(), text }),
+          () => ({ url: response.url(), text: "" }),
+        ),
+      );
     }
   });
   await signInAs(page.context(), baseURL as string, "A");
@@ -448,11 +453,20 @@ test("CA-35: nelle risposte di rete di Crescere non ci sono birth_date, date di 
       "Tutto su Sofia e Tommaso, in un posto solo. Stiamo preparando questo spazio.",
     ),
   ).toBeVisible();
-  const texts = await Promise.all(bodies);
-  expect(texts.length).toBeGreaterThan(0);
-  for (const text of texts) {
-    expect(text).not.toContain("birth_date");
-    expect(text).not.toContain("Laura");
-    for (const date of dates) expect(text).not.toContain(date);
+  const responses = await Promise.all(bodies);
+  expect(responses.length).toBeGreaterThan(0);
+  // each leak is reported with the address of the response and a short
+  // excerpt, so that a failure says where the data travels
+  const leaks: string[] = [];
+  for (const { url, text } of responses) {
+    for (const needle of ["birth_date", "Laura", ...dates]) {
+      const at = text.indexOf(needle);
+      if (at >= 0) {
+        leaks.push(
+          `${url} contiene «${needle}»: …${text.slice(Math.max(0, at - 60), at + 60)}…`,
+        );
+      }
+    }
   }
+  expect(leaks).toEqual([]);
 });
