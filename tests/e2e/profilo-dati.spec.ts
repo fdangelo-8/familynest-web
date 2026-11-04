@@ -85,7 +85,9 @@ test.describe("file «I tuoi dati»", () => {
       expect(file.text).not.toContain("Prova coro");
       expect(file.text).not.toContain("Pane");
       expect(file.text).not.toContain(u2.email);
-      expect(file.text).not.toMatch(UUID);
+      // The mail of the throwaway user is made with a uuid: it is the person's
+      // own mail and is taken out; no other identifier may be left.
+      expect(file.text.split(ctx.user.email).join("")).not.toMatch(UUID);
     });
   });
 
@@ -121,24 +123,24 @@ test.describe("file «I tuoi dati»", () => {
     await withRita(async (ctx) => {
       const { user, u2 } = ctx;
       // U: «Spesa» on (the other four stay as they are) and an interest in
-      // the space «children».
+      // the space «chores» (the database only accepts a space the Nest can have).
       const mine = await user.client.rpc("set_notification_preference", {
         p_preference: "shopping",
         p_enabled: true,
       });
       expect(mine.error).toBeNull();
       const mineSpace = await user.client.rpc("add_space_interest", {
-        p_space: "children",
+        p_space: "chores",
       });
       expect(mineSpace.error).toBeNull();
-      // Rita: «Impegni» off and an interest in the space «pets».
+      // Rita: «Impegni» off and an interest in the space «projects».
       const hers = await u2.client.rpc("set_notification_preference", {
         p_preference: "events",
         p_enabled: false,
       });
       expect(hers.error).toBeNull();
       const herSpace = await u2.client.rpc("add_space_interest", {
-        p_space: "pets",
+        p_space: "projects",
       });
       expect(herSpace.error).toBeNull();
 
@@ -153,7 +155,7 @@ test.describe("file «I tuoi dati»", () => {
         sintesi_del_mattino: true,
       });
       expect(file.json.avvisi_degli_spazi.map((s) => s.spazio)).toEqual([
-        "children",
+        "chores",
       ]);
     });
   });
