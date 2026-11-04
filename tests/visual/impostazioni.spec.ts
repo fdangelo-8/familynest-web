@@ -126,7 +126,7 @@ test.describe("con un utente usa e getta", () => {
   });
 
   test("#41: nome del Nest di 60 caratteri", async ({ page }) => {
-    const name = "Casa della famiglia De Santis in via dei Tigli numero 12 B";
+    const name = "Casa della famiglia De Santis in via dei Tigli numero 12 bis";
     expect(name).toHaveLength(60);
     user = await userWithNest(page, { name });
     await openSettings(page, name);
@@ -169,7 +169,7 @@ test.describe("con un utente usa e getta", () => {
       else await route.continue();
     });
     const toggle = page.getByRole("switch", { name: "Spesa" });
-    const alert = page.getByRole("alert");
+    const alert = page.locator("main").getByRole("alert");
     await expect(async () => {
       if (!(await alert.isVisible())) await toggle.click();
       await expect(alert).toBeVisible({ timeout: 3000 });
