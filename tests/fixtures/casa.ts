@@ -188,17 +188,7 @@ export async function colorOf(target: Locator): Promise<string> {
 // ---------------------------------------------------------------------- Nests
 
 type Kind = "adult" | "child" | "pet";
-type Color =
-  | "pomodoro"
-  | "glicine"
-  | "salvia"
-  | "cobalto"
-  | "zafferano"
-  | "lampone"
-  | "ceruleo"
-  | "peonia"
-  | "basilico"
-  | "cannella";
+type Color = "pomodoro" | "glicine" | "salvia" | "cobalto" | "zafferano";
 
 export type MemberSpec = {
   name: string;

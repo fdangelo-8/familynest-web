@@ -375,16 +375,20 @@ test.describe("aree di tocco e layout", () => {
               [x - 21.5, y + 21.5],
               [x + 21.5, y + 21.5],
             ] as const;
-            return corners.filter(([px, py]) => {
+            return corners.flatMap(([px, py]) => {
               const hit = document.elementFromPoint(px, py);
-              return !hit || !(el === hit || el.contains(hit));
-            }).length;
+              if (hit && (el === hit || el.contains(hit))) return [];
+              const what = hit
+                ? `${hit.tagName.toLowerCase()}.${String(hit.className)}`
+                : "fuori dalla finestra";
+              return [`(${Math.round(px)},${Math.round(py)}) ${what}`];
+            });
           },
           [cx, cy] as [number, number],
         );
-        if (misses > 0) {
+        if (misses.length > 0) {
           small.push(
-            `${name}: ${box.width}x${box.height}, ${misses} angoli fuori dall'area di tocco`,
+            `${name}: ${box.width}x${box.height} a (${Math.round(box.x)},${Math.round(box.y)}), fuori dall'area di tocco: ${misses.join("; ")}`,
           );
         }
       }
