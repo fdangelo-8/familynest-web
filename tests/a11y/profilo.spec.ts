@@ -39,6 +39,10 @@ async function axe(page: Page) {
   ).toEqual([]);
 }
 
+/** The alerts of the page (the route announcer of Next is a `role="alert"` too). */
+const alerts = (page: Page) =>
+  page.locator('[role="alert"]:not(#__next-route-announcer__)');
+
 const dialog = (page: Page) => page.getByRole("alertdialog");
 
 const freeColor = (page: Page) =>
@@ -246,11 +250,11 @@ test.describe("pagina (utente A)", () => {
     await failWrites(page, "household_members", "server");
     await failWrites(page, "profiles", "network");
     await freeColor(page).click();
-    await expect(page.getByRole("alert")).toHaveCount(1);
+    await expect(alerts(page)).toHaveCount(1);
     await page.getByRole("button", { name: /^All'apertura/ }).click();
     await page.getByRole("radio", { name: /^Nest/ }).click();
     // One alert per block: colour and preferences together.
-    await expect(page.getByRole("alert")).toHaveCount(2);
+    await expect(alerts(page)).toHaveCount(2);
     await axe(page);
   });
 
@@ -267,9 +271,7 @@ test.describe("pagina (utente A)", () => {
     await expect(row).toHaveAttribute("aria-disabled", "true");
     await axe(page);
     release();
-    await expect(page.getByRole("alert")).toContainText(
-      "per un problema nostro",
-    );
+    await expect(alerts(page)).toContainText("per un problema nostro");
     await axe(page);
     await page.unroute("**/profilo/dati");
     const download = page.waitForEvent("download");

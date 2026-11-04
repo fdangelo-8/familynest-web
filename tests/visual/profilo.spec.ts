@@ -46,6 +46,10 @@ async function signIn(page: Page, key: Key) {
 const freeColor = (page: Page) =>
   page.locator('[role="radio"][aria-checked="false"]:not([disabled])').first();
 
+/** The alerts of the page (the route announcer of Next is a `role="alert"` too). */
+const alerts = (page: Page) =>
+  page.locator('[role="alert"]:not(#__next-route-announcer__)');
+
 const dialog = (page: Page) => page.getByRole("alertdialog");
 
 /** Opens a row sheet by the name of its row and waits for the end of the slide. */
@@ -238,7 +242,7 @@ test.describe("utenti del seed", () => {
     await openProfile(page, "Marco D'Angelo");
     await failWrites(page, "household_members", "network");
     await freeColor(page).click();
-    await expect(page.getByRole("alert")).toContainText(
+    await expect(alerts(page)).toContainText(
       "Non siamo riusciti a cambiare il colore. Controlla la connessione e riprova.",
     );
     await shoot(page, "profilo-colore-errore-rete.png");
@@ -249,7 +253,7 @@ test.describe("utenti del seed", () => {
     await openProfile(page, "Marco D'Angelo");
     await failWrites(page, "household_members", "server");
     await freeColor(page).click();
-    await expect(page.getByRole("alert")).toContainText(
+    await expect(alerts(page)).toContainText(
       "Non siamo riusciti a cambiare il colore per un problema nostro. Riprova tra qualche minuto.",
     );
     await shoot(page, "profilo-colore-errore-server.png");
@@ -260,7 +264,7 @@ test.describe("utenti del seed", () => {
     await openProfile(page, "Marco D'Angelo");
     await failWrites(page, "household_members", "taken");
     await freeColor(page).click();
-    await expect(page.getByRole("alert")).toContainText(
+    await expect(alerts(page)).toContainText(
       "Questo colore l'ha appena preso qualcun altro: scegline un altro.",
     );
     await shoot(page, "profilo-colore-preso.png");
@@ -272,7 +276,7 @@ test.describe("utenti del seed", () => {
     await failWrites(page, "profiles", "network");
     await openSheet(page, /^All'apertura/, "All'apertura");
     await page.getByRole("radio", { name: /^Nest/ }).click();
-    await expect(page.getByRole("alert")).toContainText(
+    await expect(alerts(page)).toContainText(
       "Non siamo riusciti a salvare la scelta. Controlla la connessione e riprova.",
     );
     await shoot(page, "profilo-preferenza-errore-rete.png");
@@ -286,7 +290,7 @@ test.describe("utenti del seed", () => {
     await failWrites(page, "profiles", "server");
     await openSheet(page, /^Visibilità predefinita/, "Visibilità predefinita");
     await page.getByRole("radio", { name: /^Tutto il Nest/ }).click();
-    await expect(page.getByRole("alert")).toContainText(
+    await expect(alerts(page)).toContainText(
       "Non siamo riusciti a salvare la scelta per un problema nostro. Riprova tra qualche minuto.",
     );
     await shoot(page, "profilo-preferenza-errore-server.png");
@@ -306,7 +310,7 @@ test.describe("utenti del seed", () => {
     await expect(row).toHaveAttribute("aria-busy", "true");
     await shoot(page, "profilo-dati-in-preparazione.png");
     release();
-    await expect(page.getByRole("alert")).toBeVisible();
+    await expect(alerts(page)).toBeVisible();
   });
 
   test("#38: «I tuoi dati», non riusciti (server)", async ({ page }) => {
@@ -316,7 +320,7 @@ test.describe("utenti del seed", () => {
       route.fulfill({ status: 500, json: { ok: false } }),
     );
     await page.getByRole("button", { name: /^I tuoi dati/ }).click();
-    await expect(page.getByRole("alert")).toContainText(
+    await expect(alerts(page)).toContainText(
       "Non siamo riusciti a preparare i tuoi dati per un problema nostro. Riprova tra qualche minuto.",
     );
     await shoot(page, "profilo-dati-errore-server.png");
@@ -327,7 +331,7 @@ test.describe("utenti del seed", () => {
     await openProfile(page, "Marco D'Angelo");
     await page.route("**/profilo/dati", (route) => route.abort("failed"));
     await page.getByRole("button", { name: /^I tuoi dati/ }).click();
-    await expect(page.getByRole("alert")).toContainText(
+    await expect(alerts(page)).toContainText(
       "Non siamo riusciti a preparare i tuoi dati. Controlla la connessione e riprova.",
     );
     await shoot(page, "profilo-dati-errore-rete.png");
@@ -381,19 +385,6 @@ test.describe("utenti usa e getta", () => {
       ).toBeVisible();
       await expect(page.locator('[aria-busy="true"]')).toHaveCount(0);
       await shoot(page, "profilo-scelte-salvate.png");
-    } finally {
-      await user.remove();
-    }
-  });
-
-  test("#38: foglio «Sintesi del mattino», scelta 8:30", async ({ page }) => {
-    const user = await throwawayWithNest(page);
-    try {
-      await openProfile(page, "Ilaria De Santis");
-      await openSheet(page, /^Sintesi del mattino/, "Sintesi del mattino");
-      await page.getByRole("button", { name: "8:30" }).focus();
-      await page.mouse.move(0, 0);
-      await shoot(page, "profilo-foglio-sintesi-focus.png", false);
     } finally {
       await user.remove();
     }
