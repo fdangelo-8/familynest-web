@@ -48,6 +48,23 @@ export function formatBusyAccessibleName(
   return `${formatBusyLabel(name)}, dalle ${formatTime(start)} alle ${formatTime(end)}`;
 }
 
+/**
+ * Sentence of who takes the children to an event: «la porta Laura», «li porta
+ * Marco», «la porti tu», «li porti tu». `many` is true when the event has more
+ * than one person. `isMe` is true when the escort is the person looking (then
+ * it reads «tu»; pass false to always use the name). Without an escort name and
+ * not me: empty string. The only place where this sentence is written.
+ */
+export function formatEscortPhrase(
+  escortName: string | null,
+  many: boolean,
+  isMe = false,
+): string {
+  if (isMe) return many ? "li porti tu" : "la porti tu";
+  if (!escortName) return "";
+  return many ? `li porta ${escortName}` : `la porta ${escortName}`;
+}
+
 /* ---------- Lens ---------- */
 
 export type LensChoice = "io" | "nest";

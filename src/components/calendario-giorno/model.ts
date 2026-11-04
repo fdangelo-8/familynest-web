@@ -1,4 +1,8 @@
-import { formatWithYou, type FreeEvening } from "@/lib/calendar";
+import {
+  formatEscortPhrase,
+  formatWithYou,
+  type FreeEvening,
+} from "@/lib/calendar";
 import {
   formatDayNumber,
   formatLongDay,
@@ -448,13 +452,14 @@ function escortText(
   meId: string | null,
 ): string {
   if (!event.escortMemberId) return "";
-  const many = event.memberIds.length > 1;
-  if (event.escortMemberId === meId) {
-    return many ? ", li porti tu" : ", la porti tu";
-  }
+  const isMe = event.escortMemberId === meId;
   const escort = members.find((member) => member.id === event.escortMemberId);
-  if (!escort) return "";
-  return many ? `, li porta ${escort.name}` : `, la porta ${escort.name}`;
+  const phrase = formatEscortPhrase(
+    escort?.name ?? null,
+    event.memberIds.length > 1,
+    isMe,
+  );
+  return phrase ? `, ${phrase}` : "";
 }
 
 /**
