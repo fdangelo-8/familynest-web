@@ -1,9 +1,11 @@
--- delete_own_account() and get_account_deletion_outcome() (issue #218, for page #38
+-- delete_own_account(p_expect_household_deletion) and get_account_deletion_outcome() (issue #218, for page #38
 -- «Il tuo profilo», CA-35, CA-36, CA-38, CA-39, CA-40): schema and privileges, only POST,
 -- anon, only the account of the caller, nothing changed by an error half way, administrator
 -- succession (the adult with an account who joined first), household kept with other
 -- adults with an account, household deleted with all its data when none is left, cascades
--- on the personal and shared data of the account.
+-- on the personal and shared data of the account, Supabase Auth log, sign-in flows,
+-- identities and sessions of the account (review of PR #226), refusal when the outcome
+-- changed after the dialog was opened.
 -- Seed ids: A = Marco (Casa D'Angelo, only adult with an account, admin), B = Giulia (Casa
 -- Bianchi, only admin), B2 = Paolo (Casa Bianchi, joined 20 days ago), C = Chiara (no
 -- household). Members: Casa D'Angelo Marco a1…01, Laura a1…02 (adult without account,
@@ -19,7 +21,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(80);
+select plan(92);
 
 -- ---------------------------------------------------------------------------
 -- Setup (as database owner)
@@ -95,6 +97,30 @@ update public.profiles
 set start_lens = 'nest', morning_digest_time = '06:30', default_event_visibility = 'private'
 where id = 'bbbbbbbb-0000-4000-8000-000000000001';
 
+-- Supabase Auth rows of the accounts: log entries (Giulia, Marco), sign-in flows (Giulia,
+-- Marco), an identity and a session of Giulia.
+insert into auth.audit_log_entries (instance_id, id, payload, created_at, ip_address)
+values
+  ('00000000-0000-0000-0000-000000000000', 'f7000000-0000-4000-8000-000000000001',
+   '{"action":"login","actor_id":"bbbbbbbb-0000-4000-8000-000000000001","actor_username":"utente-b@example.com"}',
+   now(), '192.0.2.10'),
+  ('00000000-0000-0000-0000-000000000000', 'f7000000-0000-4000-8000-000000000002',
+   '{"action":"login","actor_id":"aaaaaaaa-0000-4000-8000-000000000001","actor_username":"utente-a@example.com"}',
+   now(), '192.0.2.20');
+insert into auth.flow_state (id, user_id, auth_code, code_challenge_method, code_challenge, provider_type,
+                             authentication_method, created_at, updated_at)
+values
+  ('f8000000-0000-4000-8000-000000000001', 'bbbbbbbb-0000-4000-8000-000000000001', 'code-b', 's256',
+   'challenge-b', 'email', 'magiclink', now(), now()),
+  ('f8000000-0000-4000-8000-000000000002', 'aaaaaaaa-0000-4000-8000-000000000001', 'code-a', 's256',
+   'challenge-a', 'email', 'magiclink', now(), now());
+insert into auth.identities (id, provider_id, user_id, identity_data, provider, created_at, updated_at)
+values ('f9000000-0000-4000-8000-000000000001', 'bbbbbbbb-0000-4000-8000-000000000001',
+        'bbbbbbbb-0000-4000-8000-000000000001',
+        '{"sub":"bbbbbbbb-0000-4000-8000-000000000001","email":"utente-b@example.com"}', 'email', now(), now());
+insert into auth.sessions (id, user_id, created_at, updated_at)
+values ('fa000000-0000-4000-8000-000000000001', 'bbbbbbbb-0000-4000-8000-000000000001', now(), now());
+
 -- Raises in a before delete trigger: an error half way through a deletion.
 create function public.test_forced_failure()
 returns trigger
@@ -109,22 +135,53 @@ $$;
 -- ---------------------------------------------------------------------------
 -- Schema and privileges
 -- ---------------------------------------------------------------------------
-select has_function('public', 'delete_own_account', array[]::name[], 'delete_own_account() exists');
+select has_function('public', 'delete_own_account', array['boolean'], 'delete_own_account(boolean) exists');
 select is(
   (select count(*)::integer from pg_proc p
    where p.pronamespace = 'public'::regnamespace and p.proname = 'delete_own_account'),
   1,
-  'delete_own_account has a single version, without parameters (no way to name another account)'
+  'delete_own_account has a single version'
 );
 select ok(
   (select p.prosecdef and p.proconfig @> array['search_path=""']
-   from pg_proc p where p.oid = 'public.delete_own_account()'::regprocedure),
+   from pg_proc p where p.oid = 'public.delete_own_account(boolean)'::regprocedure),
   'delete_own_account is security definer with an empty search_path'
+);
+select is(
+  (select p.proargtypes::regtype[]::text from pg_proc p where p.oid = 'public.delete_own_account(boolean)'::regprocedure),
+  '{boolean}',
+  'its only parameter is the expected outcome: no way to name another account'
 );
 select ok(
   (select has_table_privilege(pg_get_userbyid(p.proowner), 'auth.users', 'delete')
-   from pg_proc p where p.oid = 'public.delete_own_account()'::regprocedure),
+   from pg_proc p where p.oid = 'public.delete_own_account(boolean)'::regprocedure),
   'the owner of delete_own_account can delete accounts'
+);
+select ok(
+  (select has_table_privilege(pg_get_userbyid(p.proowner), 'auth.audit_log_entries', 'delete')
+      and has_table_privilege(pg_get_userbyid(p.proowner), 'auth.flow_state', 'delete')
+   from pg_proc p where p.oid = 'public.delete_own_account(boolean)'::regprocedure),
+  'the owner of delete_own_account can delete from the Auth log and the sign-in flows'
+);
+-- Every other table of the auth schema with a user_id loses its rows with the account.
+select is_empty(
+  $$ select c.table_name
+     from information_schema.columns c
+     join pg_class r on r.relname = c.table_name and r.relnamespace = 'auth'::regnamespace and r.relkind in ('r', 'p')
+     where c.table_schema = 'auth'
+       and c.column_name = 'user_id'
+       and c.table_name <> 'flow_state'
+       and not exists (
+         select 1
+         from pg_constraint k
+         join pg_attribute a on a.attrelid = k.conrelid and a.attnum = any (k.conkey)
+         where k.conrelid = r.oid
+           and k.contype = 'f'
+           and k.confrelid = 'auth.users'::regclass
+           and k.confdeltype = 'c'
+           and a.attname = 'user_id'
+       ) $$,
+  'every table of the auth schema with a user_id is cleaned: on delete cascade, or flow_state (deleted by the function)'
 );
 select has_function('public', 'get_account_deletion_outcome', array[]::name[], 'get_account_deletion_outcome() exists');
 select is(
@@ -138,12 +195,12 @@ select ok(
   'get_account_deletion_outcome runs as the caller and never writes (stable)'
 );
 select ok(
-  not has_function_privilege('anon', 'public.delete_own_account()', 'execute')
+  not has_function_privilege('anon', 'public.delete_own_account(boolean)', 'execute')
   and not has_function_privilege('anon', 'public.get_account_deletion_outcome()', 'execute'),
   'anon cannot call the account deletion functions'
 );
 select ok(
-  has_function_privilege('authenticated', 'public.delete_own_account()', 'execute')
+  has_function_privilege('authenticated', 'public.delete_own_account(boolean)', 'execute')
   and has_function_privilege('authenticated', 'public.get_account_deletion_outcome()', 'execute'),
   'signed-in users can call the account deletion functions'
 );
@@ -159,28 +216,28 @@ select ok(
 set local role anon;
 set local request.jwt.claims to '{"role":"anon"}';
 select throws_ok(
-  $$ select public.delete_own_account() $$,
+  $$ select public.delete_own_account(false) $$,
   '42501', null, 'CA-39: anon cannot delete an account'
 );
 
 set local role authenticated;
 set local request.jwt.claims to '{"role":"authenticated"}';
 select throws_ok(
-  $$ select public.delete_own_account() $$,
+  $$ select public.delete_own_account(false) $$,
   '42501', 'not authenticated', 'a token without a user deletes nothing'
 );
 
 set local request.jwt.claims to '{"sub":"bbbbbbbb-0000-4000-8000-000000000001","role":"authenticated"}';
 set local request.method to 'GET';
-select throws_ok($$ select public.delete_own_account() $$, 'P0001', 'use POST', 'CA-39: GET is refused');
+select throws_ok($$ select public.delete_own_account(false) $$, 'P0001', 'use POST', 'CA-39: GET is refused');
 set local request.method to 'HEAD';
-select throws_ok($$ select public.delete_own_account() $$, 'P0001', 'use POST', 'CA-39: HEAD is refused');
+select throws_ok($$ select public.delete_own_account(false) $$, 'P0001', 'use POST', 'CA-39: HEAD is refused');
 set local request.method to 'PUT';
-select throws_ok($$ select public.delete_own_account() $$, 'P0001', 'use POST', 'CA-39: PUT is refused');
+select throws_ok($$ select public.delete_own_account(false) $$, 'P0001', 'use POST', 'CA-39: PUT is refused');
 set local request.method to 'PATCH';
-select throws_ok($$ select public.delete_own_account() $$, 'P0001', 'use POST', 'PATCH is refused');
+select throws_ok($$ select public.delete_own_account(false) $$, 'P0001', 'use POST', 'PATCH is refused');
 set local request.method to 'DELETE';
-select throws_ok($$ select public.delete_own_account() $$, 'P0001', 'use POST', 'DELETE is refused');
+select throws_ok($$ select public.delete_own_account(false) $$, 'P0001', 'use POST', 'DELETE is refused');
 set local request.method to 'POST';
 
 reset role;
@@ -226,6 +283,41 @@ select is_empty(
 );
 
 -- ---------------------------------------------------------------------------
+-- The outcome changed after the dialog was opened: nothing is deleted
+-- ---------------------------------------------------------------------------
+set local request.jwt.claims to '{"sub":"bbbbbbbb-0000-4000-8000-000000000001","role":"authenticated"}';
+select throws_ok(
+  $$ select public.delete_own_account(true) $$,
+  'FN003', 'account deletion outcome changed',
+  'Giulia expected Casa Bianchi to be deleted, but other adults with an account are left: refused'
+);
+select throws_ok(
+  $$ select public.delete_own_account(null) $$,
+  '22004', null, 'the expected outcome is required'
+);
+set local request.jwt.claims to '{"sub":"aaaaaaaa-0000-4000-8000-000000000001","role":"authenticated"}';
+select throws_ok(
+  $$ select public.delete_own_account(false) $$,
+  'FN003', 'account deletion outcome changed',
+  'Marco expected Casa D''Angelo to stay, but it would be deleted: refused'
+);
+set local request.jwt.claims to '{"sub":"cccccccc-0000-4000-8000-000000000001","role":"authenticated"}';
+select throws_ok(
+  $$ select public.delete_own_account(true) $$,
+  'FN003', 'account deletion outcome changed',
+  'Chiara has no household to delete: true is refused'
+);
+
+reset role;
+select is(
+  (select count(*)::integer from auth.users u
+   where u.id in ('aaaaaaaa-0000-4000-8000-000000000001', 'bbbbbbbb-0000-4000-8000-000000000001',
+                  'cccccccc-0000-4000-8000-000000000001')),
+  3,
+  'the refused calls deleted no account'
+);
+
+-- ---------------------------------------------------------------------------
 -- CA-38: an error half way (Giulia: succession path) changes nothing
 -- ---------------------------------------------------------------------------
 reset role;
@@ -236,7 +328,7 @@ create trigger test_forced_failure
 set local role authenticated;
 set local request.jwt.claims to '{"sub":"bbbbbbbb-0000-4000-8000-000000000001","role":"authenticated"}';
 select throws_ok(
-  $$ select public.delete_own_account() $$,
+  $$ select public.delete_own_account(false) $$,
   'P0001', 'forced failure', 'CA-38: the deletion of Giulia fails half way'
 );
 
@@ -248,6 +340,13 @@ select ok(
   and exists (select 1 from public.profiles p
               where p.id = 'bbbbbbbb-0000-4000-8000-000000000001' and p.start_lens = 'nest'),
   'CA-38: the account and the profile of Giulia still exist'
+);
+select ok(
+  exists (select 1 from auth.audit_log_entries a where a.id = 'f7000000-0000-4000-8000-000000000001')
+  and exists (select 1 from auth.flow_state f where f.id = 'f8000000-0000-4000-8000-000000000001')
+  and exists (select 1 from auth.identities i where i.user_id = 'bbbbbbbb-0000-4000-8000-000000000001')
+  and exists (select 1 from auth.sessions x where x.user_id = 'bbbbbbbb-0000-4000-8000-000000000001'),
+  'CA-38: her Auth log entry, sign-in flow, identity and session still exist'
 );
 select results_eq(
   $$ select m.name, m.is_admin from public.household_members m
@@ -277,9 +376,9 @@ select ok(
 -- ---------------------------------------------------------------------------
 set local role authenticated;
 set local request.jwt.claims to '{"sub":"bbbbbbbb-0000-4000-8000-000000000001","role":"authenticated"}';
-select lives_ok($$ select public.delete_own_account() $$, 'CA-35: Giulia deletes her account');
+select lives_ok($$ select public.delete_own_account(false) $$, 'CA-35: Giulia deletes her account');
 select lives_ok(
-  $$ select public.delete_own_account() $$,
+  $$ select public.delete_own_account(false) $$,
   'a second call with the same token deletes nothing and gives no error'
 );
 select is_empty(
@@ -296,6 +395,18 @@ select is_empty(
 select is_empty(
   $$ select 1 from public.profiles p where p.id = 'bbbbbbbb-0000-4000-8000-000000000001' $$,
   'CA-35: her profile with the preferences is deleted'
+);
+select is_empty(
+  $$ select 'log' from auth.audit_log_entries a where a.payload ->> 'actor_id' = 'bbbbbbbb-0000-4000-8000-000000000001'
+     union all select 'flow' from auth.flow_state f where f.user_id = 'bbbbbbbb-0000-4000-8000-000000000001'
+     union all select 'identity' from auth.identities i where i.user_id = 'bbbbbbbb-0000-4000-8000-000000000001'
+     union all select 'session' from auth.sessions x where x.user_id = 'bbbbbbbb-0000-4000-8000-000000000001' $$,
+  'her Auth log entries (email, IP), sign-in flows, identities and sessions are deleted'
+);
+select ok(
+  exists (select 1 from auth.audit_log_entries a where a.id = 'f7000000-0000-4000-8000-000000000002')
+  and exists (select 1 from auth.flow_state f where f.id = 'f8000000-0000-4000-8000-000000000002'),
+  'the Auth log entry and the sign-in flow of Marco are kept'
 );
 select is_empty(
   $$ select 1 from public.household_members m
@@ -409,7 +520,7 @@ select results_eq(
   $$ values (false, null::uuid) $$,
   'Paolo: Casa Bianchi would stay (Rita), nobody changes role'
 );
-select lives_ok($$ select public.delete_own_account() $$, 'Paolo deletes his account');
+select lives_ok($$ select public.delete_own_account(false) $$, 'Paolo deletes his account');
 
 reset role;
 
@@ -442,7 +553,7 @@ select results_eq(
   $$ values (true, null::uuid) $$,
   'Rita is the last adult with an account: Casa Bianchi would be deleted'
 );
-select lives_ok($$ select public.delete_own_account() $$, 'Rita deletes her account');
+select lives_ok($$ select public.delete_own_account(true) $$, 'Rita deletes her account');
 
 reset role;
 
@@ -455,6 +566,7 @@ select is_empty(
      union all select 'invitations' from public.invitations x where x.household_id = '22222222-2222-4222-8222-222222222222'
      union all select 'events' from public.events x where x.household_id = '22222222-2222-4222-8222-222222222222'
      union all select 'event_members' from public.event_members x where x.household_id = '22222222-2222-4222-8222-222222222222'
+     union all select 'event_exceptions' from public.event_exceptions x where x.household_id = '22222222-2222-4222-8222-222222222222'
      union all select 'shopping' from public.shopping_items x where x.household_id = '22222222-2222-4222-8222-222222222222'
      union all select 'todos' from public.todos x where x.household_id = '22222222-2222-4222-8222-222222222222'
      union all select 'deadlines' from public.deadlines x where x.household_id = '22222222-2222-4222-8222-222222222222'
@@ -479,7 +591,7 @@ select results_eq(
 -- ---------------------------------------------------------------------------
 set local role authenticated;
 set local request.jwt.claims to '{"sub":"cccccccc-0000-4000-8000-000000000001","role":"authenticated"}';
-select lives_ok($$ select public.delete_own_account() $$, 'Chiara (no household) deletes her account');
+select lives_ok($$ select public.delete_own_account(false) $$, 'Chiara (no household) deletes her account');
 
 reset role;
 
@@ -504,7 +616,7 @@ create trigger test_forced_failure
 set local role authenticated;
 set local request.jwt.claims to '{"sub":"aaaaaaaa-0000-4000-8000-000000000001","role":"authenticated"}';
 select throws_ok(
-  $$ select public.delete_own_account() $$,
+  $$ select public.delete_own_account(true) $$,
   'P0001', 'forced failure', 'CA-38: the deletion of Marco fails while deleting Casa D''Angelo'
 );
 
@@ -538,7 +650,7 @@ select ok(
 -- ---------------------------------------------------------------------------
 set local role authenticated;
 set local request.jwt.claims to '{"sub":"aaaaaaaa-0000-4000-8000-000000000001","role":"authenticated"}';
-select lives_ok($$ select public.delete_own_account() $$, 'CA-36: Marco deletes his account');
+select lives_ok($$ select public.delete_own_account(true) $$, 'CA-36: Marco deletes his account');
 
 reset role;
 
@@ -546,6 +658,11 @@ select ok(
   not exists (select 1 from auth.users u where u.id = 'aaaaaaaa-0000-4000-8000-000000000001')
   and not exists (select 1 from public.profiles p where p.id = 'aaaaaaaa-0000-4000-8000-000000000001'),
   'CA-36: the account and the profile of Marco are deleted'
+);
+select is_empty(
+  $$ select 1 from auth.audit_log_entries a where a.payload ->> 'actor_id' = 'aaaaaaaa-0000-4000-8000-000000000001'
+     union all select 1 from auth.flow_state f where f.user_id = 'aaaaaaaa-0000-4000-8000-000000000001' $$,
+  'CA-36: his Auth log entry and sign-in flow are deleted'
 );
 select is_empty(
   $$ select 1 from public.households h where h.id = '11111111-1111-4111-8111-111111111111' $$,
@@ -587,6 +704,8 @@ select is_empty(
 select is_empty(
   $$ select 1 from public.household_members
      union all select 1 from public.events
+     union all select 1 from public.event_members
+     union all select 1 from public.event_exceptions
      union all select 1 from public.todos
      union all select 1 from public.deadlines
      union all select 1 from public.shopping_items

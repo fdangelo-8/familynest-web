@@ -804,7 +804,7 @@ export type Database = {
         Returns: undefined;
       };
       delete_own_account: {
-        Args: Record<PropertyKey, never>;
+        Args: { p_expect_household_deletion: boolean };
         Returns: undefined;
       };
       get_account_deletion_outcome: {
