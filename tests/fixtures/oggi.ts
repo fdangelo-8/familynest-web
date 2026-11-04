@@ -350,6 +350,8 @@ export async function tabNeverEnters(page: Page, row: Locator): Promise<void> {
 // ------------------------------------------------------------ accessibility
 
 export async function axeProblems(page: Page): Promise<string[]> {
+  // axe waits on timers that a stopped clock never fires.
+  await page.clock.resume().catch(() => {});
   const results = await new AxeBuilder({ page }).analyze();
   return results.violations
     .filter((v) => ["serious", "critical"].includes(v.impact ?? ""))
