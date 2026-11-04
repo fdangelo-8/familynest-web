@@ -1,4 +1,9 @@
-import { formatTime, fromFieldValues, type CalendarDay } from "@/lib/datetime";
+import {
+  formatTime,
+  fromFieldValues,
+  type CalendarDay,
+  type Instant,
+} from "@/lib/datetime";
 import type {
   FullEvent,
   HouseholdEvent,
@@ -28,6 +33,19 @@ export const BUSY_TITLE = "Occupato";
 /** Text of the «Occupato» of another person: no gender, no detail. */
 export function formatBusyLabel(name: string): string {
   return `${name} ha un impegno`;
+}
+
+/**
+ * Accessible name of an «Occupato» of someone else, from the times shown in
+ * the row or block (already cut to the day): `Paolo ha un impegno, dalle 9:00
+ * alle 15:00`. The only place where this sentence is written.
+ */
+export function formatBusyAccessibleName(
+  name: string,
+  start: Instant,
+  end: Instant,
+): string {
+  return `${formatBusyLabel(name)}, dalle ${formatTime(start)} alle ${formatTime(end)}`;
 }
 
 /* ---------- Lens ---------- */

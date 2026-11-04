@@ -4,19 +4,27 @@ export const LENS_STORAGE_KEY = "familynest.lens";
 
 const listeners = new Set<() => void>();
 
-/** Lens kept for the browser session (sessionStorage); "io" otherwise. */
-export function getLensSnapshot(): Lens {
+/** Lens chosen in the profile (`profiles.start_lens`); "io" if it could not be read. */
+export const DEFAULT_START_LENS: Lens = "io";
+
+/**
+ * Lens kept for the browser session (sessionStorage) if the person already
+ * touched it in this session; otherwise the one chosen in the profile.
+ */
+export function getLensSnapshot(startLens: Lens = DEFAULT_START_LENS): Lens {
   try {
-    return window.sessionStorage.getItem(LENS_STORAGE_KEY) === "nest"
-      ? "nest"
-      : "io";
+    const stored = window.sessionStorage.getItem(LENS_STORAGE_KEY);
+    return stored === "io" || stored === "nest" ? stored : startLens;
   } catch {
-    return "io";
+    return startLens;
   }
 }
 
-export function getServerLensSnapshot(): Lens {
-  return "io";
+/** The server cannot see the session: the first render starts from the profile. */
+export function getServerLensSnapshot(
+  startLens: Lens = DEFAULT_START_LENS,
+): Lens {
+  return startLens;
 }
 
 export function subscribeLens(listener: () => void): () => void {

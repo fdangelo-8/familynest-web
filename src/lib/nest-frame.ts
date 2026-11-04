@@ -3,9 +3,9 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import type { NestMember, NestSelf } from "@/lib/nest-types";
+import type { NestMember, NestPreferences, NestSelf } from "@/lib/nest-types";
 
-export type NestFrameData = {
+export type NestFrameData = NestPreferences & {
   /** null when the data could not be read (technical error) */
   nestName: string | null;
   /** First 4 members; the name is set only for the first 3 */
@@ -18,6 +18,8 @@ const FAILED: NestFrameData = {
   nestName: null,
   members: [],
   me: null,
+  startLens: "io",
+  defaultVisibility: "busy",
   failed: true,
 };
 
@@ -43,7 +45,7 @@ async function loadNestFrame(): Promise<NestFrameData> {
   if (householdError) return FAILED;
   if (!householdId) redirect("/onboarding");
 
-  const [household, members] = await Promise.all([
+  const [household, members, profile] = await Promise.all([
     supabase
       .from("households")
       .select("name")
@@ -55,6 +57,11 @@ async function loadNestFrame(): Promise<NestFrameData> {
       .eq("household_id", householdId)
       .order("created_at", { ascending: true })
       .order("id", { ascending: true }),
+    supabase
+      .from("profiles")
+      .select("start_lens, default_event_visibility")
+      .eq("id", userId)
+      .maybeSingle(),
   ]);
 
   if (household.error || !household.data || members.error) return FAILED;
@@ -68,6 +75,10 @@ async function loadNestFrame(): Promise<NestFrameData> {
       color: m.color,
     })),
     me: me ? { name: me.name, color: me.color } : null,
+    // A failed read of the preferences never breaks the frame: start from
+    // «Io» and from «Occupato», as before the preferences existed.
+    startLens: profile.data?.start_lens ?? "io",
+    defaultVisibility: profile.data?.default_event_visibility ?? "busy",
     failed: false,
   };
 }

@@ -9,3 +9,9 @@ export type NestMember = {
 
 /** The member linked to the signed-in user (lens "Io") */
 export type NestSelf = { name: string; color: MemberColor };
+
+/** Lens chosen in the profile, and the visibility a new event starts with */
+export type NestPreferences = {
+  startLens: "io" | "nest";
+  defaultVisibility: "private" | "busy" | "household";
+};
