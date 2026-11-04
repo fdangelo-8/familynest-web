@@ -193,7 +193,9 @@ export function QuickAdd() {
       <span className="campo-rapido__piu">
         <Icon name="plus" />
       </span>
-      <span className="campo-rapido__input t-secondario">
+      {/* Not `.campo-rapido__input`: that class stretches to the height of a real
+          field (`align-self: stretch`) and the text of a span would stay on top. */}
+      <span className="t-secondario">
         Aggiungi un impegno, una spesa o una cosa da fare. Es. «nuoto Sofia
         giovedì alle 17»
       </span>
