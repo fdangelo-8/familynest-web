@@ -521,21 +521,30 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string;
+          default_event_visibility: Database["public"]["Enums"]["event_visibility"];
           display_name: string | null;
           id: string;
+          morning_digest_time: string;
+          start_lens: Database["public"]["Enums"]["lens"];
           updated_at: string;
         };
         ComputedFields: never;
         Insert: {
           created_at?: string;
+          default_event_visibility?: Database["public"]["Enums"]["event_visibility"];
           display_name?: string | null;
           id: string;
+          morning_digest_time?: string;
+          start_lens?: Database["public"]["Enums"]["lens"];
           updated_at?: string;
         };
         Update: {
           created_at?: string;
+          default_event_visibility?: Database["public"]["Enums"]["event_visibility"];
           display_name?: string | null;
           id?: string;
+          morning_digest_time?: string;
+          start_lens?: Database["public"]["Enums"]["lens"];
           updated_at?: string;
         };
         Relationships: [];
@@ -794,6 +803,17 @@ export type Database = {
         };
         Returns: undefined;
       };
+      delete_own_account: {
+        Args: Record<PropertyKey, never>;
+        Returns: undefined;
+      };
+      get_account_deletion_outcome: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          deletes_household: boolean;
+          next_admin_member_id: string;
+        }[];
+      };
       get_event_occurrence: {
         Args: { p_day?: string; p_event_id: string };
         Returns: {
@@ -948,6 +968,7 @@ export type Database = {
         "single" | "couple" | "family_with_children" | "roommates";
       invitation_preview_status: "valid" | "invalid";
       invitation_status: "pending" | "accepted" | "revoked";
+      lens: "io" | "nest";
       member_color:
         | "pomodoro"
         | "glicine"
@@ -1114,6 +1135,7 @@ export const Constants = {
       household_type: ["single", "couple", "family_with_children", "roommates"],
       invitation_preview_status: ["valid", "invalid"],
       invitation_status: ["pending", "accepted", "revoked"],
+      lens: ["io", "nest"],
       member_color: [
         "pomodoro",
         "glicine",
