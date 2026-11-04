@@ -130,7 +130,8 @@ jobs:
     needs: [check, build]
     if: needs.check.outputs.app == 'true' && needs.check.outputs.tests == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    # The suite grows with every page: 45 minutes were no longer enough (#232).
+    timeout-minutes: 90
     # Each run has its own throwaway local Supabase: migrations, seed and test
     # users are created here and discarded with the runner. Runs of different
     # pull requests share no data, so they need no queue, and the tests never
