@@ -13,6 +13,13 @@ import type { Page, Route } from "@playwright/test";
 
 export const OGGI_NOW = new Date("2026-10-20T15:52:00+02:00");
 
+/** For «tutto-fatto»: the evening is over too (22:30). */
+export const OGGI_LATE = new Date("2026-10-20T22:30:00+02:00");
+
+export function oggiNow(scenario: OggiScenario | undefined): Date {
+  return scenario === "tutto-fatto" ? OGGI_LATE : OGGI_NOW;
+}
+
 export type OggiScenario =
   /** Mockup «normale»: a full day */
   | "normale"
@@ -245,7 +252,19 @@ const SCENARIOS: Record<OggiScenario, Scenario> = {
     invited: [],
   },
   "tutto-fatto": {
-    events: TODAY_FULL.filter((e) => e.to <= "2026-10-20T15:00"),
+    events: [
+      ...TODAY_FULL.filter(
+        (e) => e.title === "Palestra" || e.title === "Scuola",
+      ),
+      {
+        title: "Cena dai nonni",
+        from: "2026-10-20T18:00",
+        to: "2026-10-20T22:15",
+        author: "Marco",
+        who: ["Marco", "Laura", "Sofia", "Tommaso"],
+        location: "Monza",
+      },
+    ],
     todos: [],
     shopping: [],
     deadlines: [],

@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import {
-  OGGI_NOW,
+  oggiNow,
   installOggiFake,
   type OggiFakeOptions,
 } from "../fixtures/oggi-visuale";
@@ -21,8 +21,12 @@ test.beforeEach(async ({ context, baseURL }) => {
   test.skip(!signedIn, "utente di test A non ancora creato (#55)");
 });
 
+/** The first visible match: the page has two layouts, one is always hidden. */
+const shown = (page: Page, text: string | RegExp) =>
+  page.getByText(text).locator("visible=true").first();
+
 async function open(page: Page, options: OggiFakeOptions, ready = true) {
-  await page.clock.setFixedTime(OGGI_NOW);
+  await page.clock.setFixedTime(oggiNow(options.scenario));
   await installOggiFake(page, options);
   await page.goto("/oggi");
   await expect(page.getByRole("main")).toBeVisible();
@@ -58,7 +62,7 @@ async function chooseNest(page: Page) {
 test.describe("axe", () => {
   test("normale: lente «Io»", async ({ page }) => {
     await open(page, { scenario: "normale" });
-    await expect(page.getByText("Call con Acme")).toBeVisible();
+    await expect(shown(page, "Call con Acme")).toBeVisible();
     expect(await seriousViolations(page)).toEqual([]);
     // One visible h1: the greeting.
     await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
@@ -67,26 +71,28 @@ test.describe("axe", () => {
   test("normale: lente «Nest»", async ({ page }) => {
     await open(page, { scenario: "normale" });
     await chooseNest(page);
-    await expect(page.getByText("Firmare autorizzazione gita")).toBeVisible();
+    await expect(shown(page, "Firmare autorizzazione gita")).toBeVisible();
     expect(await seriousViolations(page)).toEqual([]);
   });
 
   test("vuoto: il primo giorno", async ({ page }) => {
     await open(page, { scenario: "vuoto" });
-    await expect(page.getByText("Giornata libera, per ora")).toBeVisible();
+    await expect(shown(page, "Giornata libera, per ora")).toBeVisible();
     expect(await seriousViolations(page)).toEqual([]);
   });
 
   test("caricamento", async ({ page }) => {
     await open(page, { scenario: "normale", events: "slow" }, false);
-    await expect(page.locator('[aria-busy="true"]').first()).toBeVisible();
+    await expect(
+      page.locator('[aria-busy="true"]').locator("visible=true").first(),
+    ).toBeVisible();
     expect(await seriousViolations(page)).toEqual([]);
   });
 
   test("errore: offline", async ({ page, context }) => {
     await open(page, { scenario: "normale" });
     await context.setOffline(true);
-    await expect(page.getByText(/^Sei offline\./).first()).toBeVisible();
+    await expect(shown(page, /^Sei offline\./)).toBeVisible();
     expect(await seriousViolations(page)).toEqual([]);
   });
 
@@ -115,13 +121,13 @@ test.describe("axe", () => {
 
   test("per oggi è tutto", async ({ page }) => {
     await open(page, { scenario: "tutto-fatto" });
-    await expect(page.getByText("Per oggi è tutto")).toBeVisible();
+    await expect(shown(page, "Per oggi è tutto")).toBeVisible();
     expect(await seriousViolations(page)).toEqual([]);
   });
 
   test("errore di una parte: cose da fare", async ({ page }) => {
     await open(page, { scenario: "normale", todos: "error" });
-    await expect(page.getByText("Call con Acme")).toBeVisible();
+    await expect(shown(page, "Call con Acme")).toBeVisible();
     await expect(page.getByRole("button", { name: "Riprova" })).toBeVisible();
     expect(await seriousViolations(page)).toEqual([]);
   });
@@ -155,7 +161,7 @@ test.describe("tastiera", () => {
     page,
   }, testInfo) => {
     await open(page, { scenario: "normale" });
-    await expect(page.getByText("Call con Acme")).toBeVisible();
+    await expect(shown(page, "Call con Acme")).toBeVisible();
     await page.evaluate(() => (document.activeElement as HTMLElement)?.blur());
     await page.mouse.move(0, 0);
 
@@ -220,7 +226,7 @@ test.describe("aree di tocco", () => {
   }, testInfo) => {
     test.skip(testInfo.project.name !== "mobile", "solo su telefono");
     await open(page, { scenario: "normale" });
-    await expect(page.getByText("Call con Acme")).toBeVisible();
+    await expect(shown(page, "Call con Acme")).toBeVisible();
     // The window as tall as the page: elementFromPoint only sees what is in view.
     const base = page.viewportSize()!;
     const height = await page.evaluate(
