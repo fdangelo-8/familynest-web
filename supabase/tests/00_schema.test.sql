@@ -55,8 +55,8 @@ select columns_are(
 );
 select columns_are(
   'public', 'profiles',
-  array['id', 'display_name', 'created_at', 'updated_at'],
-  'profiles has exactly the planned columns (no email)'
+  array['id', 'display_name', 'created_at', 'updated_at', 'start_lens', 'morning_digest_time', 'default_event_visibility'],
+  'profiles has exactly the planned columns (no email; three preferences of #218)'
 );
 select is_empty(
   $$
