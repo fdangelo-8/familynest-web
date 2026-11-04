@@ -276,7 +276,7 @@ test.describe("avvisami", () => {
 // ------------------------------------------------------------ puntina (mobile)
 
 test.describe("puntina su mobile", () => {
-  test.beforeEach((_args, testInfo) => {
+  test.beforeEach(({}, testInfo) => {
     test.skip(!isMobile(testInfo.project.name), PUNTINA_REASON);
   });
 
