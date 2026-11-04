@@ -11,7 +11,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(116);
+select plan(121);
 
 -- ---------------------------------------------------------------------------
 -- Schema
@@ -199,8 +199,8 @@ select results_eq(
   $$ values (true, false, false, false, false) $$,
   'only «Impegni» changed'
 );
-select ok(
-  (select p.updated_at >= p.created_at from public.notification_preferences p),
+select has_trigger(
+  'public', 'notification_preferences', 'notification_preferences_set_updated_at',
   'updated_at is kept by the database'
 );
 
@@ -338,6 +338,45 @@ select results_eq(
   $$ select p.member_id, p.assigned_todos, p.free_together from public.notification_preferences p $$,
   $$ values ('b1000000-0000-4000-8000-000000000002'::uuid, false, true) $$,
   'B2 reads only his own row'
+);
+
+-- ---------------------------------------------------------------------------
+-- Giulia (B), the administrator, against the row Paolo (B2) already has: the choices
+-- are personal also towards the administrator (issue #217, point 3)
+-- ---------------------------------------------------------------------------
+set local request.jwt.claims to '{"sub":"bbbbbbbb-0000-4000-8000-000000000001","role":"authenticated"}';
+
+select is_empty(
+  $$ select 1 from public.notification_preferences p where p.member_id = 'b1000000-0000-4000-8000-000000000002' $$,
+  'B (admin) reads 0 rows of B2'
+);
+select results_eq(
+  $$ with u as (update public.notification_preferences p set assigned_todos = true, shopping = true
+               where p.member_id = 'b1000000-0000-4000-8000-000000000002' returning 1)
+     select count(*)::integer from u $$,
+  $$ values (0) $$,
+  'B (admin) cannot change the row of B2'
+);
+select results_eq(
+  $$ with d as (delete from public.notification_preferences p
+               where p.member_id = 'b1000000-0000-4000-8000-000000000002' returning 1)
+     select count(*)::integer from d $$,
+  $$ values (0) $$,
+  'B (admin) cannot delete the row of B2'
+);
+select throws_ok(
+  $$ insert into public.notification_preferences (member_id, shopping)
+     values ('b1000000-0000-4000-8000-000000000002', true) $$,
+  '42501', null,
+  'B (admin) cannot write a row for the member of B2'
+);
+
+set local request.jwt.claims to '{"sub":"bbbbbbbb-0000-4000-8000-000000000002","role":"authenticated"}';
+select results_eq(
+  $$ select p.member_id, p.events, p.assigned_todos, p.shopping, p.free_together, p.morning_digest
+     from public.notification_preferences p $$,
+  $$ values ('b1000000-0000-4000-8000-000000000002'::uuid, true, false, false, true, true) $$,
+  'read by B2, his row is unchanged after the attempts of the administrator'
 );
 
 reset role;
