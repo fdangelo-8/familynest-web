@@ -34,6 +34,7 @@ import {
   formatTime,
   formatTimeUntil,
   getWeekStartKey,
+  howMuch,
   type CalendarDay,
 } from "@/lib/datetime";
 import { eventHref } from "@/lib/household-events";
@@ -353,7 +354,7 @@ export function ProssimoSection({
           <span className="prossimo__dati">
             <span className="prossimo__titolo">{event.title}</span>
             <span className="prossimo__info">
-              {untilInfo(event, ctx.members, view.today)}
+              {untilInfo(event, ctx.members, view.today, false, false)}
             </span>
           </span>
         </span>
@@ -536,24 +537,15 @@ export function DomaniSection({
         }
       />
       <div className={columns ? "colonne colonne--due" : "sezione"}>
-        {view.tomorrowEvents.map((event) =>
-          event.masked ? (
-            <OccupatoRow
-              key={event.key}
-              event={event}
-              members={ctx.members}
-              day={view.tomorrow}
-            />
-          ) : (
-            <EventRow
-              key={event.key}
-              event={event as KeyedFullEvent}
-              members={ctx.members}
-              day={view.tomorrow}
-              info={eventInfo(event as KeyedFullEvent, ctx.members, ctx.meId)}
-            />
-          ),
-        )}
+        {view.tomorrowEvents.map((event) => (
+          <EventRow
+            key={event.key}
+            event={event as KeyedFullEvent}
+            members={ctx.members}
+            day={view.tomorrow}
+            info={eventInfo(event as KeyedFullEvent, ctx.members, ctx.meId)}
+          />
+        ))}
       </div>
     </section>
   );
@@ -933,7 +925,7 @@ export function CasaSection({
       <Link key={key} href="/casa/scadenze" className="scheda contatore">
         <span className="contatore__etichetta">Scadenza</span>
         <span className="contatore__numero">
-          {deadlineNumber(view.days)}
+          {howMuch(view.days).number}
           {view.urgent ? (
             <span className="pallino-urgente" aria-hidden="true" />
           ) : null}
@@ -985,16 +977,10 @@ export function CasaSection({
   );
 }
 
-function deadlineNumber(days: number): string {
-  if (days === 0) return "Oggi";
-  return String(days > 60 ? Math.floor(days / 30) : days);
-}
-
 function deadlineInfo(view: HouseView["shared"][number]): string {
   const title = `«${view.deadline.title}»`;
-  if (view.days === 0) return `Oggi: ${title}`;
-  if (view.days > 60) return `mesi a ${title}`;
-  return view.days === 1 ? `giorno a ${title}` : `giorni a ${title}`;
+  const { unit } = howMuch(view.days);
+  return unit === null ? `Oggi: ${title}` : `${unit} a ${title}`;
 }
 
 /* ---------- I tuoi spazi ---------- */

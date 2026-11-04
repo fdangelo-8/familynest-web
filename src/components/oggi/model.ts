@@ -216,8 +216,9 @@ export function buildEventsView(input: {
   const todayEmpty = todayEvents.length === 0 && eveningOpen === null;
   const allDone = finished.length > 0 && prossimo === null && dopo.length === 0;
 
-  const tomorrowEvents = lensEvents.filter((event) =>
-    touchesDay(event, tomorrow),
+  // The «Occupato» of the others are only in «Dopo» and «Già fatti».
+  const tomorrowEvents = lensEvents.filter(
+    (event) => !event.masked && touchesDay(event, tomorrow),
   );
 
   const othersToday = events.flatMap((event) => {
@@ -349,13 +350,14 @@ export function untilInfo(
   members: readonly Member[],
   day: CalendarDay,
   inProgress = false,
+  withEscort = true,
 ): string {
   const end = new Date(Math.min(endMs(event), day.end.getTime()));
   const parts = [
     `${inProgress ? "In corso, fino" : "Fino"} alle ${formatTime(end)}`,
   ];
   if (event.location) parts.push(event.location);
-  const escort = escortText(event, members);
+  const escort = withEscort ? escortText(event, members) : "";
   if (escort) parts.push(escort);
   return parts.join(", ");
 }

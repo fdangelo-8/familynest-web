@@ -393,7 +393,7 @@ function OggiContent({ nowMs }: { nowMs: number }) {
             <Lens />
           </div>
           {offlineAlert}
-          <QuickAdd />
+          {ready ? <QuickAdd /> : null}
           {ready ? (
             <>
               {starterOrSummary("d-")}

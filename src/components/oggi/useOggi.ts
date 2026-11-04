@@ -417,6 +417,14 @@ export function useOggi(
     (id: string) => {
       waits.current.get(id)?.cancel();
       waits.current.delete(id);
+      // The tick may already be in the database and a reading may have taken
+      // the thing away: it comes back at its place, in the same render.
+      const entry = doneRef.current.get(id);
+      const todos = dataRef.current.todos;
+      if (entry && todos && !todos.some((todo) => todo.id === id)) {
+        dataRef.current = { ...dataRef.current, todos: [...todos, entry.todo] };
+        setData(dataRef.current);
+      }
       setDone((current) => {
         const next = new Map(current);
         next.delete(id);
