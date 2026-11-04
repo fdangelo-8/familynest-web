@@ -4827,7 +4827,7 @@ button.griglia-mese__cella--selezionata {
   background: var(--color-notte-2);
 }
 
-/* Oggi (#30, richiesta condivisa #231): le due disposizioni stanno nel codice,
+/* Oggi (#30, richiesta condivisa 231): le due disposizioni stanno nel codice,
    ciascuna nascosta dall'altra parte (sotto / da 1024 px, come
    .casa-solo-mobile e .casa-solo-desktop); l'elenco dei passi della lista di
    partenza è una griglia senza stile di elenco. */
