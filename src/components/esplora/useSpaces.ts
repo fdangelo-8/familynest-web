@@ -39,18 +39,48 @@ export type SpacesStatus = "loading" | "ready" | "error";
 type ReadResult =
   { ok: true; data: SpacesData; pinned: SpaceKey[] } | { ok: false };
 
-/** Reads members and my pinned spaces in the browser (RLS applies). */
-async function readEverything(): Promise<ReadResult> {
+type PersonRow = {
+  kind: string;
+  name?: string;
+  color?: NestPerson["color"];
+};
+
+function toPerson({ name, color }: PersonRow): NestPerson {
+  return { name: name ?? "", color: color ?? "pomodoro" };
+}
+
+/** Children and pets of the Nest; null when they cannot be read. */
+
+async function readPeople(
+  supabase: ReturnType<typeof createClient>,
+  withNames: boolean,
+): Promise<PersonRow[] | null> {
+  const base = supabase.from("household_members");
+  const { data, error } = withNames
+    ? await base
+        .select("name, color, kind")
+        .in("kind", ["child", "pet"])
+        .order("created_at", { ascending: true })
+        .order("id", { ascending: true })
+    : await base
+        .select("kind")
+        .in("kind", ["child", "pet"])
+        .order("created_at", { ascending: true })
+        .order("id", { ascending: true });
+  return error ? null : data;
+}
+
+/**
+ * Reads members and my pinned spaces in the browser (RLS applies). Without
+ * `withNames` only the kinds are read: the names of children and pets reach
+ * the browser only where the page needs them.
+ */
+async function readEverything(withNames: boolean): Promise<ReadResult> {
   try {
     const supabase = createClient();
     const [people, adults, pinned] = await Promise.all([
       // Only names and colours of children and pets: no birth date.
-      supabase
-        .from("household_members")
-        .select("name, color, kind")
-        .in("kind", ["child", "pet"])
-        .order("created_at", { ascending: true })
-        .order("id", { ascending: true }),
+      readPeople(supabase, withNames),
       // Adults are only counted: their names never reach the browser.
       supabase
         .from("household_members")
@@ -58,21 +88,17 @@ async function readEverything(): Promise<ReadResult> {
         .eq("kind", "adult"),
       getPinnedSpaces(supabase),
     ]);
-    if (people.error || adults.error || pinned.error) return { ok: false };
+    if (!people || adults.error || pinned.error) return { ok: false };
     return {
       ok: true,
       data: {
         counts: {
           adults: adults.count ?? 0,
-          children: people.data.filter((m) => m.kind === "child").length,
-          pets: people.data.filter((m) => m.kind === "pet").length,
+          children: people.filter((m) => m.kind === "child").length,
+          pets: people.filter((m) => m.kind === "pet").length,
         },
-        children: people.data
-          .filter((m) => m.kind === "child")
-          .map(({ name, color }) => ({ name, color })),
-        pets: people.data
-          .filter((m) => m.kind === "pet")
-          .map(({ name, color }) => ({ name, color })),
+        children: people.filter((m) => m.kind === "child").map(toPerson),
+        pets: people.filter((m) => m.kind === "pet").map(toPerson),
       },
       pinned: pinned.spaces,
     };
@@ -89,7 +115,11 @@ function nameOf(key: SpaceKey): string {
  * Loads the Nest members and my pinned spaces, and pins / unpins with an
  * optimistic puntina, a toast with «Annulla» and the limit of six.
  */
-export function useSpaces(buttonRefs: RefObject<Map<SpaceKey, HTMLElement>>) {
+export function useSpaces(
+  buttonRefs: RefObject<Map<SpaceKey, HTMLElement>>,
+  /** Read the names of children and pets (default). «In arrivo» asks only for Crescere and Zampe. */
+  { withNames = true }: { withNames?: boolean } = {},
+) {
   const { showToast } = useToast();
   const [status, setStatus] = useState<SpacesStatus>("loading");
   const [data, setData] = useState<SpacesData | null>(null);
@@ -124,23 +154,23 @@ export function useSpaces(buttonRefs: RefObject<Map<SpaceKey, HTMLElement>>) {
 
   useEffect(() => {
     let cancelled = false;
-    void readEverything().then((result) => {
+    void readEverything(withNames).then((result) => {
       if (!cancelled) apply(result);
     });
     return () => {
       cancelled = true;
     };
-  }, [apply]);
+  }, [apply, withNames]);
 
   /** Tries again; calls `onLoaded` when the page is ready. */
   const retry = useCallback(
     (onLoaded: () => void) => {
       startRetry(async () => {
-        const result = await readEverything();
+        const result = await readEverything(withNames);
         if (apply(result)) onLoaded();
       });
     },
-    [apply],
+    [apply, withNames],
   );
 
   const setSpace = useCallback(
