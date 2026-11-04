@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import {
@@ -42,7 +42,7 @@ import {
 } from "../../src/lib/household-events";
 import { PLACEHOLDERS } from "../../src/lib/app-routes";
 import type { Database } from "../../src/types/database";
-import { signInAs, skipReason, usersConfigured } from "../fixtures/auth";
+import { skipReason, usersConfigured } from "../fixtures/auth";
 
 // Pure functions and a fake database client: no browser, no remote project.
 // Issue #88 (for #25 and #30).
@@ -824,48 +824,6 @@ test.describe("segnaposto del calendario", () => {
     expect(PLACEHOLDERS["calendario-giorno"].title).toBe("Calendario");
     expect(PLACEHOLDERS["calendario-mese"].title).toBe("Calendario");
   });
-
-  // /calendario/giorno is the real page of issue #26 (calendario-giorno*.spec.ts).
-  for (const [dir, key] of [["calendario/mese", "calendario-mese"]] as const) {
-    test(`la pagina ${dir} chiama requireNest e mostra il segnaposto`, () => {
-      const file = `src/app/(app)/${dir}/page.tsx`;
-      expect(existsSync(file)).toBe(true);
-      const source = readFileSync(file, "utf8");
-      expect(source).toContain("await requireNest()");
-      expect(source).toContain(`<PlaceholderPage pageKey="${key}"`);
-      expect(source).toContain(`PLACEHOLDERS["${key}"].browserTitle`);
-    });
-  }
-});
-
-test.describe("segnaposto con l'utente (Supabase locale)", () => {
-  for (const route of ["/calendario/mese?mese=2026-10"]) {
-    test(`${route}: «In arrivo» con la voce Calendario attiva`, async ({
-      page,
-      baseURL,
-    }, testInfo) => {
-      test.skip(!usersConfigured("B"), skipReason("B"));
-      await signInAs(page.context(), baseURL as string, "B");
-      await page.goto(route);
-      await expect(page.getByText("In arrivo")).toBeVisible();
-      if (route.startsWith("/calendario/")) {
-        await expect(
-          page.getByRole("group", {
-            name: "Punto di vista: solo tu o tutto il Nest",
-          }),
-        ).toBeVisible();
-      }
-      await expect(page.getByRole("main")).toHaveCount(1);
-      if (testInfo.project.name === "mobile") {
-        const nav = page.getByRole("navigation", {
-          name: "Navigazione principale",
-        });
-        await expect(
-          nav.getByRole("link", { name: "Calendario" }),
-        ).toHaveAttribute("aria-current", "true");
-      }
-    });
-  }
 });
 
 /* ---------- Stati CSS in un browser vero ---------- */

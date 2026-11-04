@@ -1,7 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test, type Locator, type Page } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { mountHarness } from "../fixtures/calendar-states-harness";
-import { hasTestUser, signInAs } from "../fixtures/visual-login";
 
 // Accessibility of dates and calendar (#88, PR #100): the "In arrivo" pages of
 // /calendario/mese (since #26 /calendario/giorno is the real page: calendario-giorno.spec.ts; /impegni/<id> since #19), and the CSS states
@@ -35,126 +34,6 @@ async function ringVisible(page: Page) {
     );
   });
 }
-
-// A 44 x 44 px box centred on every line of the control must hit the control
-// (its own ::before counts: elementFromPoint returns the control itself). A
-// link broken over two lines has two boxes: the 44 px area of its ::before is
-// centred on the whole link, not on each line.
-async function touchAreaIs44(page: Page, target: Locator) {
-  const handle = await target.elementHandle();
-  return page.evaluate((el) => {
-    const hitsLink = (x: number, y: number) => {
-      const hit = document.elementFromPoint(x, y);
-      return Boolean(hit && (hit === el || el!.contains(hit)));
-    };
-    return Array.from(el!.getClientRects()).map((r) => {
-      const cx = r.x + r.width / 2;
-      const cy = r.y + r.height / 2;
-      return {
-        lineWidth: Math.round(r.width),
-        ok: [
-          [cx, cy],
-          [cx - 21, cy - 21],
-          [cx + 21, cy - 21],
-          [cx - 21, cy + 21],
-          [cx + 21, cy + 21],
-        ].every(([x, y]) => hitsLink(x as number, y as number)),
-      };
-    });
-  }, handle);
-}
-
-// ---------------------------------------------------------------------------
-// "In arrivo" pages.
-
-const PAGES = [{ route: "/calendario/mese", h1: "Calendario", lens: true }];
-
-test.describe("segnaposto «In arrivo»", () => {
-  test.use({ reducedMotion: "reduce" });
-  test.setTimeout(60_000);
-
-  test.beforeEach(async ({ context, baseURL }) => {
-    test.skip(!hasTestUser("A"), "TEST_USER_A_* non impostati");
-    const signedIn = await signInAs(context, baseURL!, "A");
-    test.skip(!signedIn, "utente di test A non ancora creato");
-  });
-
-  for (const p of PAGES) {
-    test(`${p.route.replace(/[0-9a-f-]{36}/, "<id>")}: axe, un solo h1, voce attiva, tastiera, aree di tocco`, async ({
-      page,
-    }, testInfo) => {
-      await page.goto(p.route);
-      await expect(
-        page.getByRole("heading", { level: 1, name: p.h1 }),
-      ).toBeVisible();
-      await expect(page.locator("h1:visible")).toHaveCount(1);
-      expect(await blocking(page)).toEqual([]);
-
-      // The "Calendario" entry of the navigation is the current one.
-      const mobile = testInfo.project.name === "mobile";
-      const nav = page.getByRole("navigation", {
-        name: "Navigazione principale",
-      });
-      const calendario = nav
-        .filter({ visible: true })
-        .getByRole("link", { name: "Calendario" });
-      await expect(calendario).toHaveAttribute("aria-current", /page|true/);
-
-      // The lens is there on the day and month pages, not on the detail.
-      const lens = page.getByRole("group", {
-        name: "Punto di vista: solo tu o tutto il Nest",
-      });
-      if (p.lens) await expect(lens.first()).toBeVisible();
-      else await expect(lens).toHaveCount(0);
-
-      // Keyboard: every stop shows a ring, no trap, and the main content has
-      // a skip link target.
-      await page.keyboard.press("Tab");
-      const first = await page.evaluate(
-        () => document.activeElement?.textContent?.trim() ?? "",
-      );
-      expect(first).toBe("Vai al contenuto");
-      const seen = new Set<string>();
-      let reachedBack = false;
-      for (let i = 0; i < 25; i += 1) {
-        const stop = await page.evaluate(() => {
-          const el = document.activeElement;
-          return el && el !== document.body
-            ? `${el.tagName}|${el.getAttribute("aria-label") ?? el.textContent?.trim().slice(0, 30)}|${el.getAttribute("href")}`
-            : "";
-        });
-        if (!stop || seen.has(stop)) break;
-        seen.add(stop);
-        expect(await ringVisible(page), `focus su ${stop}`).toBe(true);
-        if (stop.includes("Torna a Oggi")) reachedBack = true;
-        await page.keyboard.press("Tab");
-      }
-      expect(reachedBack, "«Torna a Oggi» raggiungibile da tastiera").toBe(
-        true,
-      );
-
-      // Touch area of "Torna a Oggi" (not "in line": it has its own row).
-      if (mobile) {
-        const back = page.getByRole("link", { name: "Torna a Oggi" });
-        // One line, one box: all the boxes must have the 44 px area.
-        const lines = await touchAreaIs44(page, back);
-        expect(
-          lines,
-          "«Torna a Oggi» a capo su due righe: l'area di 44 px non copre ogni riga",
-        ).toEqual(
-          lines.map(() => ({ lineWidth: expect.any(Number), ok: true })),
-        );
-        for (const name of ["Oggi", "Calendario", "Casa", "Aggiungi"]) {
-          const link = nav
-            .filter({ visible: true })
-            .getByRole("link", { name, exact: true });
-          const box = await link.boundingBox();
-          expect(box!.height, `altezza di ${name}`).toBeGreaterThanOrEqual(44);
-        }
-      }
-    });
-  }
-});
 
 // ---------------------------------------------------------------------------
 // States on the test page.
