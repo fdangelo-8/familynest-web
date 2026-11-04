@@ -534,6 +534,46 @@ export type Database = {
           },
         ];
       };
+      space_interests: {
+        Row: {
+          created_at: string;
+          household_id: string;
+          id: string;
+          member_id: string;
+          space: Database["public"]["Enums"]["space_key"];
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          household_id?: string;
+          id?: string;
+          member_id: string;
+          space: Database["public"]["Enums"]["space_key"];
+        };
+        Update: {
+          created_at?: string;
+          household_id?: string;
+          id?: string;
+          member_id?: string;
+          space?: Database["public"]["Enums"]["space_key"];
+        };
+        Relationships: [
+          {
+            foreignKeyName: "space_interests_household_id_fkey";
+            columns: ["household_id"];
+            isOneToOne: false;
+            referencedRelation: "households";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "space_interests_member_fkey";
+            columns: ["member_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "household_members";
+            referencedColumns: ["id", "household_id"];
+          },
+        ];
+      };
       todos: {
         Row: {
           assignee_member_id: string | null;
@@ -628,6 +668,10 @@ export type Database = {
           p_token: string;
         };
         Returns: string;
+      };
+      add_space_interest: {
+        Args: { p_space: Database["public"]["Enums"]["space_key"] };
+        Returns: undefined;
       };
       clear_checked_shopping_items: {
         Args: { item_ids: string[] };
@@ -750,6 +794,10 @@ export type Database = {
         Args: { p_space: Database["public"]["Enums"]["space_key"] };
         Returns: undefined;
       };
+      remove_space_interest: {
+        Args: { p_space: Database["public"]["Enums"]["space_key"] };
+        Returns: undefined;
+      };
       restore_shopping_items: {
         Args: { item_ids: string[] };
         Returns: {
@@ -768,6 +816,14 @@ export type Database = {
           isOneToOne: false;
           isSetofReturn: true;
         };
+      };
+      space_interest_counts: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          adults: number;
+          households: number;
+          space: Database["public"]["Enums"]["space_key"];
+        }[];
       };
       undo_added_shopping_items: {
         Args: { item_ids: string[] };
