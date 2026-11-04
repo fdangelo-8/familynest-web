@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 import { cx } from "../cx";
 import { Avatar } from "../Avatar/Avatar";
 import { useNest } from "../AppFrame/NestProvider";
@@ -12,12 +12,24 @@ import {
   type Lens as LensValue,
 } from "@/lib/lens";
 
-/** Current lens, shared by the whole app. Always "io" until the browser tab chooses. */
+/**
+ * Current lens, shared by the whole app. Until the person touches it in this
+ * browser session it is the one chosen in the profile (also on the server).
+ */
 export function useLens(): [LensValue, (lens: LensValue) => void] {
+  const { startLens } = useNest();
+  const getSnapshot = useCallback(
+    () => getLensSnapshot(startLens),
+    [startLens],
+  );
+  const getServerSnapshot = useCallback(
+    () => getServerLensSnapshot(startLens),
+    [startLens],
+  );
   const lens = useSyncExternalStore(
     subscribeLens,
-    getLensSnapshot,
-    getServerLensSnapshot,
+    getSnapshot,
+    getServerSnapshot,
   );
   return [lens, setLens];
 }

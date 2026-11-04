@@ -26,8 +26,9 @@ for (const id of [
   "campo-doppio-tre",
   "sezione-ancora",
   "spazio-arrivo",
+  "oggi-disposizioni",
 ]) {
-  test(`#221: esempio ${id}`, async ({ page }) => {
+  test(`#221 / #231: esempio ${id}`, async ({ page }) => {
     const example = page.getByTestId(id);
     await example.scrollIntoViewIfNeeded();
     await page.mouse.move(0, 0);

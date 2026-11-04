@@ -7,7 +7,7 @@ import { Avatar } from "@/components/ui/Avatar/Avatar";
 import { cx } from "@/components/ui/cx";
 import { Icon } from "@/components/ui/Icon/Icon";
 import { VisuallyHidden } from "@/components/ui/VisuallyHidden/VisuallyHidden";
-import { BUSY_TITLE, formatBusyLabel } from "@/lib/calendar";
+import { BUSY_TITLE, formatBusyAccessibleName } from "@/lib/calendar";
 import { formatTime, formatTimeRange, type CalendarDay } from "@/lib/datetime";
 import { eventHref } from "@/lib/household-events";
 import { hoursSinceGridStart } from "@/components/calendario-settimana/model";
@@ -130,7 +130,11 @@ function PieceView({
         </span>
         {piece.primary ? (
           <VisuallyHidden>
-            {`${formatBusyLabel(author?.name ?? "")}, dalle ${formatTime(event.startsAt)} alle ${formatTime(event.endsAt)}`}
+            {formatBusyAccessibleName(
+              author?.name ?? "",
+              event.startsAt,
+              event.endsAt,
+            )}
           </VisuallyHidden>
         ) : null}
       </div>
