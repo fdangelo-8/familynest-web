@@ -8,7 +8,9 @@
 --   generated types) and are executable only by the database owner (grants migration);
 -- - public.search_household() is `security definer` like list_household_events(): it
 --   must read the «Occupato» events of the others, which RLS hides, to return them
---   masked. It applies the visibility rules itself, on the caller's household only.
+--   masked. The rules of the events come from private.household_event_rows_for_member()
+--   (previous migration); those of things to do and deadlines are the ones of their
+--   select policies, on the caller's household only.
 -- Execute grants are in the search_household_grants migration.
 
 -- ---------------------------------------------------------------------------
@@ -28,15 +30,24 @@ $$;
 -- characters. A null title never matches.
 create or replace function private.search_matches(p_title text, p_words text[])
 returns boolean
-language sql
+-- plpgsql: the title is normalised once, not once per word.
+language plpgsql
 stable
 set search_path = ''
 as $$
-  select p_title is not null and not exists (
+declare
+  v_title text;
+begin
+  if p_title is null then
+    return false;
+  end if;
+  v_title := private.search_normalize(p_title);
+  return not exists (
     select 1
     from unnest(p_words) as w (word)
-    where strpos(private.search_normalize(p_title), w.word) = 0
+    where strpos(v_title, w.word) = 0
   );
+end;
 $$;
 
 -- ---------------------------------------------------------------------------
@@ -57,13 +68,14 @@ $$;
 -- Rows, at most 20 per kind, in the order of the groups of the page (events, deadlines,
 -- things to do, shopping items) and, inside a kind, in the order of §6 of #40;
 -- sort_index is the position inside the kind (1 … 20):
--- - event: one row per occurrence, with the same visibility rules as
---   list_household_events() (private.household_events_for_member): exceptions applied, a
+-- - event: one row per occurrence, read from private.household_event_rows_for_member(),
+--   the same function behind list_household_events(), so the rules are the same and
+--   live in one place: exceptions applied, a
 --   modified occurrence with its own title, place, escort and times, removed occurrences
 --   never; «Solo io» events of the others never (unless the caller is a participant or
 --   the escort: then they are the caller's too, and returned in full); «Occupato» events
---   of the others masked (is_masked = true, only start, end, day, visibility and author;
---   id, title, place, participants, escort and repetition null).
+--   of the others masked (is_masked = true, only start, end, day and author; id, title,
+--   place, participants, escort, repetition and visibility null).
 --   With a text, «Occupato» events of the others are not returned at all: they are
 --   dropped before any comparison, so their title is never compared with the text.
 --   They appear only in a search without text (period and/or person), masked.
@@ -219,137 +231,32 @@ begin
     end if;
 
     return query
-      with candidates as (
-        -- Same candidates as private.household_events_for_member().
-        select
-          e.*,
-          (
-            e.author_member_id is not distinct from v_member_id
-            or e.escort_member_id is not distinct from v_member_id
-            or exists (
-              select 1
-              from public.event_members em
-              where em.event_id = e.id
-                and em.member_id = v_member_id
-            )
-          ) as involved
-        from public.events e
-        where e.household_id = v_household_id
-          and (
-            (
-              e.starts_at < v_to
-              and (
-                (e.recurrence = 'none' and e.ends_at > v_from)
-                or (
-                  e.recurrence <> 'none'
-                  and (
-                    e.recurrence_until is null
-                    or e.recurrence_until >= (v_from at time zone 'Europe/Rome')::date - 8
-                  )
-                )
-              )
-            )
-            -- An occurrence moved into the period from far away.
-            or exists (
-              select 1
-              from public.event_exceptions x
-              where x.event_id = e.id
-                and not x.is_cancelled
-                and x.starts_at < v_to
-                and x.ends_at > v_from
-            )
-          )
-      ),
-      visible as (
-        select
-          c.*,
-          -- Fail closed: anything not provably involved is treated as not involved.
-          (c.visibility <> 'household' and not coalesce(c.involved, false)) as masked
-        from candidates c
-        -- «Solo io» of the others: never.
-        where coalesce(c.involved, false) or c.visibility <> 'private'
-      ),
-      searchable as (
-        -- With a text, «Occupato» events of the others are dropped here, before any
-        -- comparison with their title.
-        select v.*
-        from visible v
-        where not (v_has_text and v.masked)
-      ),
-      occurrences as (
-        select
-          s.id as event_id,
-          s.masked,
-          s.visibility,
-          s.author_member_id,
-          s.recurrence,
-          s.recurrence_weekdays,
-          s.starts_at as series_starts_at,
-          o.occurrence_start,
-          o.occurrence_end,
-          -- Masked rows lose every detail here.
-          case
-            when s.masked then null
-            when o.is_modified then o.occurrence_title
-            else s.title
-          end as occurrence_title,
-          case
-            when s.masked then null
-            when o.is_modified then o.occurrence_location
-            else s.location
-          end as occurrence_location,
-          case
-            when s.masked then null
-            when o.is_modified then o.occurrence_escort_member_id
-            else s.escort_member_id
-          end as occurrence_escort_member_id
-        from searchable s
-        cross join lateral private.event_occurrences(
-          s.id,
-          s.starts_at,
-          s.ends_at,
-          s.recurrence,
-          s.recurrence_weekdays,
-          s.recurrence_until,
-          v_from,
-          v_to
-        ) as o (
-          occurrence_date,
-          occurrence_start,
-          occurrence_end,
-          is_modified,
-          occurrence_title,
-          occurrence_location,
-          occurrence_notes,
-          occurrence_escort_member_id
-        )
+      with base as (
+        -- The rows of the calendar as the caller sees it: the visibility rules live only in
+        -- private.household_event_rows_for_member(), shared with list_household_events()
+        -- and the notifications. Masked rows arrive there already without title, place,
+        -- participants, escort and repetition. With a text they are dropped here, before
+        -- any comparison, any limit and any count.
+        select r.*
+        from private.household_event_rows_for_member(v_member_id, v_from, v_to) as r
+        where not (v_has_text and r.is_masked)
       ),
       matched as (
-        select o.*
-        from occurrences o
-        where o.occurrence_start < v_to
-          and o.occurrence_end > v_from
-          and (
+        select b.*
+        from base b
+        where (
             not v_has_text
             or case
-              when o.masked then false
-              else private.search_matches(o.occurrence_title, v_words)
+              when b.is_masked then false
+              else private.search_matches(b.title, v_words)
             end
           )
           and (
             p_member_id is null
-            or o.author_member_id = p_member_id
+            or b.author_member_id = p_member_id
             or (
-              not o.masked
-              and (
-                o.occurrence_escort_member_id = p_member_id
-                or exists (
-                  select 1
-                  from public.event_members em
-                  where em.event_id = o.event_id
-                    and em.member_id = p_member_id
-                )
-              )
+              not b.is_masked
+              and (b.escort_member_id = p_member_id or p_member_id = any (b.member_ids))
             )
           )
       ),
@@ -358,45 +265,35 @@ begin
           m.*,
           row_number() over (
             partition by m.event_id
-            order by m.occurrence_start, m.occurrence_end
+            order by m.starts_at, m.ends_at
           ) as series_rank
         from matched m
       ),
       ranked as (
         select
           p.*,
-          row_number() over (order by p.occurrence_start, p.occurrence_end, p.event_id) as rank_in_kind
+          row_number() over (order by p.starts_at, p.ends_at, p.event_id) as rank_in_kind
         from per_series p
         where p.series_rank <= c_max_per_series
       )
       select
         'event'::public.search_result_kind,
         r.rank_in_kind::integer,
-        case when r.masked then null else r.event_id end,
-        case when r.masked then null else r.occurrence_title end,
-        r.occurrence_start,
-        r.occurrence_end,
-        (r.occurrence_start at time zone 'Europe/Rome')::date,
-        r.visibility,
-        r.masked,
+        r.id,
+        r.title,
+        r.starts_at,
+        r.ends_at,
+        (r.starts_at at time zone 'Europe/Rome')::date,
+        -- Masked rows: only start, end, day and author (and is_masked).
+        case when r.is_masked then null else r.visibility end,
+        r.is_masked,
         r.author_member_id,
-        case
-          when r.masked then null
-          else coalesce(
-            (
-              select array_agg(em.member_id order by m.created_at, m.id)
-              from public.event_members em
-              join public.household_members m on m.id = em.member_id
-              where em.event_id = r.event_id
-            ),
-            array[]::uuid[]
-          )
-        end,
-        case when r.masked then null else r.occurrence_escort_member_id end,
-        case when r.masked then null else r.occurrence_location end,
-        case when r.masked then null else r.recurrence end,
-        case when r.masked then null else r.recurrence_weekdays end,
-        case when r.masked then null else (r.series_starts_at at time zone 'Europe/Rome')::date end,
+        r.member_ids,
+        r.escort_member_id,
+        r.location,
+        r.recurrence,
+        r.recurrence_weekdays,
+        (r.series_starts_at at time zone 'Europe/Rome')::date,
         null::date,
         null::boolean,
         null::uuid,

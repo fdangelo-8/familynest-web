@@ -10,7 +10,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(72);
+select plan(79);
 
 -- ---------------------------------------------------------------------------
 -- Data
@@ -99,6 +99,42 @@ values
    (now() at time zone 'Europe/Rome')::date + 4, false, 'Ballo', null, null,
    (((now() at time zone 'Europe/Rome')::date + 4) + time '17:00') at time zone 'Europe/Rome',
    (((now() at time zone 'Europe/Rome')::date + 4) + time '18:30') at time zone 'Europe/Rome');
+
+-- «Occupato» of Paolo with Giulia participant: she sees it in full.
+insert into public.events (id, household_id, author_member_id, title, starts_at, ends_at, visibility)
+values (
+  'b9000000-0000-4000-8000-000000000009', '22222222-2222-4222-8222-222222222222',
+  'b1000000-0000-4000-8000-000000000002', 'Zumba occupato con Giulia',
+  (((now() at time zone 'Europe/Rome')::date + 7) + time '15:00') at time zone 'Europe/Rome',
+  (((now() at time zone 'Europe/Rome')::date + 7) + time '16:00') at time zone 'Europe/Rome',
+  'busy'
+);
+insert into public.event_members (event_id, member_id, household_id)
+values ('b9000000-0000-4000-8000-000000000009', 'b1000000-0000-4000-8000-000000000001',
+        '22222222-2222-4222-8222-222222222222');
+
+-- «Pilates»: weekly from day 20 for 3 weeks; the occurrence of day 27 moved to day 3
+-- (an occurrence moved into a period from far away).
+insert into public.events (
+  id, household_id, author_member_id, title, starts_at, ends_at, visibility, recurrence, recurrence_weekdays,
+  recurrence_until
+)
+values (
+  'b9000000-0000-4000-8000-000000000010', '22222222-2222-4222-8222-222222222222',
+  'b1000000-0000-4000-8000-000000000001', 'Pilates',
+  (((now() at time zone 'Europe/Rome')::date + 20) + time '18:00') at time zone 'Europe/Rome',
+  (((now() at time zone 'Europe/Rome')::date + 20) + time '19:00') at time zone 'Europe/Rome',
+  'household', 'weekly', array[extract(isodow from (now() at time zone 'Europe/Rome')::date + 20)::smallint], (now() at time zone 'Europe/Rome')::date + 41
+);
+insert into public.event_exceptions (
+  event_id, household_id, occurrence_date, is_cancelled, title, starts_at, ends_at
+)
+values (
+  'b9000000-0000-4000-8000-000000000010', '22222222-2222-4222-8222-222222222222', (now() at time zone 'Europe/Rome')::date + 27, false,
+  'Pilates spostato',
+  (((now() at time zone 'Europe/Rome')::date + 3) + time '19:00') at time zone 'Europe/Rome',
+  (((now() at time zone 'Europe/Rome')::date + 3) + time '20:00') at time zone 'Europe/Rome'
+);
 
 -- Casa D'Angelo: an event, a thing to do, a deadline and a shopping item with «zumba».
 insert into public.events (id, household_id, author_member_id, title, starts_at, ends_at, visibility)
@@ -193,8 +229,11 @@ select ok(
 );
 select ok(
   not has_function_privilege('authenticated', 'private.search_matches(text, text[])', 'execute')
-  and not has_function_privilege('authenticated', 'private.search_normalize(text)', 'execute'),
-  'the helpers are not executable by authenticated'
+  and not has_function_privilege('authenticated', 'private.search_normalize(text)', 'execute')
+  and not has_function_privilege('authenticated', 'private.household_event_rows_for_member(uuid, timestamptz, timestamptz)', 'execute')
+  and not has_function_privilege('anon', 'private.household_event_rows_for_member(uuid, timestamptz, timestamptz)', 'execute')
+  and not has_function_privilege('authenticated', 'private.household_events_for_member(uuid, timestamptz, timestamptz)', 'execute'),
+  'the helpers and the rows of the calendar are not executable by the API roles'
 );
 select is_empty(
   $$
@@ -291,6 +330,7 @@ select results_eq(
       ('Zumba gara', 3),
       ('Zumba Leo', 5),
       ('Zumba insieme', 7),
+      ('Zumba occupato con Giulia', 7),
       ('Zumba accompagnata', 8),
       ('Zumba mia occupata', 9)
   $$,
@@ -303,8 +343,8 @@ select is(
 );
 select is(
   (select count(*)::integer from public.search_household('occupat', p_kinds => array['event']::public.search_result_kind[])),
-  1,
-  'occupat: only Giulia''s own «Occupato» («Zumba occupato» and «Turno occupato» of Paolo never)'
+  2,
+  'occupat: Giulia''s own «Occupato» and the one she takes part in («Zumba occupato» and «Turno occupato» of Paolo never)'
 );
 select is(
   (select count(*)::integer
@@ -323,8 +363,8 @@ select is(
      'zumba',
      p_member_id => 'b1000000-0000-4000-8000-000000000002',
      p_kinds => array['event']::public.search_result_kind[])),
-  2,
-  'zumba with Paolo: only his «Solo io» events Giulia is part of, never his «Occupato»'
+  3,
+  'zumba with Paolo: only his events Giulia is part of, never his other «Occupato»'
 );
 select results_eq(
   $$
@@ -374,6 +414,10 @@ select is_empty(
   $$ select 1 from public.search_household('%%') $$,
   '«%» is a plain character, not a wildcard'
 );
+select is_empty(
+  $$ select 1 from public.search_household('__') $$,
+  '«_» is a plain character, not a wildcard'
+);
 select is(
   (select count(*)::integer from public.search_household('ritmo', p_kinds => array['event']::public.search_result_kind[])),
   20,
@@ -407,11 +451,11 @@ select results_eq(
   $$
     values (
       null::uuid, null::text, null::text, null::uuid[], null::uuid, null::public.event_recurrence, null::smallint[],
-      null::date, 'busy'::public.event_visibility, true, 'b1000000-0000-4000-8000-000000000002'::uuid, 6,
+      null::date, null::public.event_visibility, true, 'b1000000-0000-4000-8000-000000000002'::uuid, 6,
       interval '1 hour'
     )
   $$,
-  'a period: the «Occupato» of Paolo is a masked row with only start, end, day and author'
+  'a period: the «Occupato» of Paolo is a masked row with only start, end, day and author (no visibility)'
 );
 select is(
   (select count(*)::integer
@@ -548,7 +592,7 @@ select results_eq(
 select results_eq(
   $$ select kind, count(*)::integer from public.search_household('zumba') group by kind order by kind $$,
   $$
-    values ('event'::public.search_result_kind, 6), ('deadline', 2), ('todo', 3), ('shopping_item', 20)
+    values ('event'::public.search_result_kind, 7), ('deadline', 2), ('todo', 3), ('shopping_item', 20)
   $$,
   'zumba: counts per kind without the things of the others'
 );
@@ -608,6 +652,98 @@ select is(
 select is_empty($$ select 1 from public.search_household('caffe zumba') $$, 'caffe zumba does not find it');
 
 -- ---------------------------------------------------------------------------
+-- Equivalence with the calendar (review of PR #239): without a text and without any
+-- limit reached, the events of the search are the rows of the calendar. The periods
+-- cover own events, «Tutto il Nest», «Solo io» of the others, «Solo io» with the caller
+-- participant and escort, «Occupato» of the others, «Occupato» with the caller
+-- participant, a removed, a modified and a moved occurrence. Run as the owner (the
+-- private function is not executable by the API roles), with the session of the user.
+-- ---------------------------------------------------------------------------
+reset role;
+set local request.jwt.claims to '{"sub":"bbbbbbbb-0000-4000-8000-000000000001","role":"authenticated"}';
+select bag_eq(
+  $$
+    select starts_at, ends_at, visibility, author_member_id, is_masked, id, title, location, escort_member_id, member_ids
+    from public.search_household(
+      p_from => (now() at time zone 'Europe/Rome')::date + 2, p_to => (now() at time zone 'Europe/Rome')::date + 4, p_kinds => array['event']::public.search_result_kind[])
+  $$,
+  $$
+    select starts_at, ends_at, case when is_masked then null else visibility end, author_member_id, is_masked, id,
+           title, location, escort_member_id, member_ids
+    from private.household_events_for_member(
+      'b1000000-0000-4000-8000-000000000001',
+      ((now() at time zone 'Europe/Rome')::date + 2)::timestamp at time zone 'Europe/Rome',
+      ((now() at time zone 'Europe/Rome')::date + 5)::timestamp at time zone 'Europe/Rome')
+  $$,
+  'equivalence with the calendar: Giulia, days 2 to 4'
+);
+select is(
+  (select count(*)::integer
+   from public.search_household(
+     p_from => (now() at time zone 'Europe/Rome')::date + 2, p_to => (now() at time zone 'Europe/Rome')::date + 4, p_kinds => array['event']::public.search_result_kind[])),
+  9,
+  'equivalence with the calendar: Giulia, days 2 to 4 has rows (no limit reached)'
+);
+select bag_eq(
+  $$
+    select starts_at, ends_at, visibility, author_member_id, is_masked, id, title, location, escort_member_id, member_ids
+    from public.search_household(
+      p_from => (now() at time zone 'Europe/Rome')::date + 6, p_to => (now() at time zone 'Europe/Rome')::date + 8, p_kinds => array['event']::public.search_result_kind[])
+  $$,
+  $$
+    select starts_at, ends_at, case when is_masked then null else visibility end, author_member_id, is_masked, id,
+           title, location, escort_member_id, member_ids
+    from private.household_events_for_member(
+      'b1000000-0000-4000-8000-000000000001',
+      ((now() at time zone 'Europe/Rome')::date + 6)::timestamp at time zone 'Europe/Rome',
+      ((now() at time zone 'Europe/Rome')::date + 9)::timestamp at time zone 'Europe/Rome')
+  $$,
+  'equivalence with the calendar: Giulia, days 6 to 8'
+);
+select is(
+  (select count(*)::integer
+   from public.search_household(
+     p_from => (now() at time zone 'Europe/Rome')::date + 6, p_to => (now() at time zone 'Europe/Rome')::date + 8, p_kinds => array['event']::public.search_result_kind[])),
+  13,
+  'equivalence with the calendar: Giulia, days 6 to 8 has rows (no limit reached)'
+);
+set local request.jwt.claims to '{"sub":"bbbbbbbb-0000-4000-8000-000000000002","role":"authenticated"}';
+select bag_eq(
+  $$
+    select starts_at, ends_at, visibility, author_member_id, is_masked, id, title, location, escort_member_id, member_ids
+    from public.search_household(
+      p_from => (now() at time zone 'Europe/Rome')::date + 2, p_to => (now() at time zone 'Europe/Rome')::date + 4, p_kinds => array['event']::public.search_result_kind[])
+  $$,
+  $$
+    select starts_at, ends_at, case when is_masked then null else visibility end, author_member_id, is_masked, id,
+           title, location, escort_member_id, member_ids
+    from private.household_events_for_member(
+      'b1000000-0000-4000-8000-000000000002',
+      ((now() at time zone 'Europe/Rome')::date + 2)::timestamp at time zone 'Europe/Rome',
+      ((now() at time zone 'Europe/Rome')::date + 5)::timestamp at time zone 'Europe/Rome')
+  $$,
+  'equivalence with the calendar: Paolo, days 2 to 4'
+);
+select bag_eq(
+  $$
+    select starts_at, ends_at, visibility, author_member_id, is_masked, id, title, location, escort_member_id, member_ids
+    from public.search_household(
+      p_from => (now() at time zone 'Europe/Rome')::date + 6, p_to => (now() at time zone 'Europe/Rome')::date + 8, p_kinds => array['event']::public.search_result_kind[])
+  $$,
+  $$
+    select starts_at, ends_at, case when is_masked then null else visibility end, author_member_id, is_masked, id,
+           title, location, escort_member_id, member_ids
+    from private.household_events_for_member(
+      'b1000000-0000-4000-8000-000000000002',
+      ((now() at time zone 'Europe/Rome')::date + 6)::timestamp at time zone 'Europe/Rome',
+      ((now() at time zone 'Europe/Rome')::date + 9)::timestamp at time zone 'Europe/Rome')
+  $$,
+  'equivalence with the calendar: Paolo, days 6 to 8'
+);
+set local role authenticated;
+set local request.jwt.claims to '{"sub":"bbbbbbbb-0000-4000-8000-000000000001","role":"authenticated"}';
+
+-- ---------------------------------------------------------------------------
 -- Isolation
 -- ---------------------------------------------------------------------------
 select is_empty(
@@ -636,8 +772,8 @@ select results_eq(
 );
 select is(
   (select count(*)::integer from public.search_household('zumba occupato', p_kinds => array['event']::public.search_result_kind[])),
-  1,
-  'Paolo: his own «Occupato» in full'
+  2,
+  'Paolo: his own «Occupato» events in full'
 );
 
 -- Marco (Casa D'Angelo).
