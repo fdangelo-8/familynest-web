@@ -15,7 +15,6 @@ import {
   mainOf,
   needsThrowaway,
   needsUsers,
-  openProfile,
   profileOf,
   rowOf,
   subtitle,
