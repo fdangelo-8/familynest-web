@@ -2091,11 +2091,15 @@ function PageParts() {
             <h3 className="intestazione__titolo t-titolo-pagina">Sofia</h3>
             <p className="intestazione__sotto">9 anni · Figlio o figlia</p>
           </div>
-          <IconButton
-            icon="pencil"
-            className="profilo-testa__azione"
-            aria-label="Modifica il profilo di Sofia"
-          />
+          <button
+            type="button"
+            className="btn-secondary btn--piccolo profilo-testa__azione"
+            aria-haspopup="dialog"
+          >
+            <Icon name="pencil" size="s" />
+            Modifica il profilo
+            <VisuallyHidden> di Sofia</VisuallyHidden>
+          </button>
         </div>
       </Example>
       <Example caption="modulo-gruppo e modulo-gruppo--sezione">
@@ -2135,26 +2139,28 @@ function PageParts() {
         </section>
       </Example>
       <Example caption="spazio-arrivo · link solo desktop, scheletro del bottone">
-        <div className="sezione spazio-arrivo" data-testid="spazio-arrivo">
+        <div className="colonna">
           <Link
             href="#pezzi-pagine"
             className="btn-link btn-link--secondario spazio-arrivo__desktop"
           >
             <span aria-hidden="true">←</span> Esplora
           </Link>
-          <div className="spazio-arrivo__alto">
-            <span className="stato-vuoto__icona" aria-hidden="true">
-              <Icon name="utensils" />
+          <div className="sezione spazio-arrivo" data-testid="spazio-arrivo">
+            <div className="spazio-arrivo__alto">
+              <span className="stato-vuoto__icona" aria-hidden="true">
+                <Icon name="utensils" />
+              </span>
+            </div>
+            <span className="etichetta">
+              <Icon name="hourglass" size="s" />
+              In arrivo
             </span>
+            <h3 className="t-display">A tavola</h3>
+            <SkeletonGroup data-testid="skeleton-bottone">
+              <Skeleton shape="bottone" />
+            </SkeletonGroup>
           </div>
-          <span className="etichetta">
-            <Icon name="hourglass" size="s" />
-            In arrivo
-          </span>
-          <h3 className="t-display">A tavola</h3>
-          <SkeletonGroup data-testid="skeleton-bottone">
-            <Skeleton shape="bottone" />
-          </SkeletonGroup>
         </div>
       </Example>
     </Section>
