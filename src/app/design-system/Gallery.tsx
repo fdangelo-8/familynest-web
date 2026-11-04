@@ -2139,14 +2139,14 @@ function PageParts() {
         </section>
       </Example>
       <Example caption="spazio-arrivo · link solo desktop, scheletro del bottone">
-        <div className="colonna">
+        <div className="colonna" data-testid="spazio-arrivo">
           <Link
             href="#pezzi-pagine"
             className="btn-link btn-link--secondario spazio-arrivo__desktop"
           >
             <span aria-hidden="true">←</span> Esplora
           </Link>
-          <div className="sezione spazio-arrivo" data-testid="spazio-arrivo">
+          <div className="sezione spazio-arrivo">
             <div className="spazio-arrivo__alto">
               <span className="stato-vuoto__icona" aria-hidden="true">
                 <Icon name="utensils" />
