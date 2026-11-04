@@ -365,15 +365,24 @@ test.describe("aree di tocco e layout", () => {
         // The drawing can be smaller than 44 px if a transparent ::before
         // widens the area (#67): the four corners of a 44 x 44 square around
         // the centre must still hit the control.
+        // The cells are drawn at their full size (rounded corners would fall
+        // outside the shape): the box is enough for them.
+        if (name.startsWith("cella")) {
+          if (box.width < 43.5 || box.height < 43.5) {
+            small.push(`${name}: ${box.width}x${box.height}`);
+          }
+          continue;
+        }
         const cx = box.x + box.width / 2;
         const cy = box.y + box.height / 2;
         const misses = await target.evaluate(
           (el, [x, y]) => {
+            // 21 px, not 22: the areas of two neighbours may touch.
             const corners = [
-              [x - 21.5, y - 21.5],
-              [x + 21.5, y - 21.5],
-              [x - 21.5, y + 21.5],
-              [x + 21.5, y + 21.5],
+              [x - 21, y - 21],
+              [x + 21, y - 21],
+              [x - 21, y + 21],
+              [x + 21, y + 21],
             ] as const;
             return corners.flatMap(([px, py]) => {
               const hit = document.elementFromPoint(px, py);
