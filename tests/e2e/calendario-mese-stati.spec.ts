@@ -32,7 +32,6 @@ import {
   next,
   NOV1,
   OFFLINE_ALERT,
-  open,
   openMonth,
   prev,
   retry,
@@ -64,7 +63,7 @@ test.describe("caricamento ed errori", () => {
     bianchi,
   }) => {
     const held = await holdReads(page);
-    await open(page, baseURL, bianchi, { settle: false });
+    await openMonth(page, baseURL, bianchi, { settle: false });
     await expect(h1(page)).toHaveText("Ottobre 2026");
     await expect(prev(page)).toBeVisible();
     await expect(next(page)).toBeVisible();
@@ -82,7 +81,7 @@ test.describe("caricamento ed errori", () => {
     bianchi,
   }) => {
     const reads = await failReads(page);
-    await open(page, baseURL, bianchi, { settle: false });
+    await openMonth(page, baseURL, bianchi, { settle: false });
     await expect(retry(page)).toBeVisible();
     const text = (await page.locator("body").textContent()) ?? "";
     for (const detail of ["fake failure", "XX000", "PGRST", "Error:"]) {
@@ -361,12 +360,21 @@ test.describe("accessibilità", () => {
 
   test("CA-35: con il punto grigio «e altri»", async ({ page, baseURL }) => {
     const kids = ["Bea", "Carlo", "Dario", "Elisa", "Fabio", "Gina"];
+    // The colour is unique inside a Nest: the 6 not used by Casa Bianchi.
+    const COLORS = [
+      "zafferano",
+      "lampone",
+      "ceruleo",
+      "peonia",
+      "basilico",
+      "cannella",
+    ] as const;
     const specs: MemberSpec[] = [
       ...BIANCHI,
       ...kids.map((name): MemberSpec => ({
         name,
         kind: "child",
-        color: "salvia",
+        color: COLORS[kids.indexOf(name)]!,
       })),
     ];
     const { nest, cleanup } = await buildNest("Casa Bianchi", specs);
@@ -402,7 +410,7 @@ test.describe("accessibilità", () => {
     await withEvents(bianchi);
     const held = await holdReads(page);
     try {
-      await open(page, baseURL, bianchi, { settle: false, pause: false });
+      await openMonth(page, baseURL, bianchi, { settle: false, pause: false });
       await expect(busyLoading(page).first()).toBeAttached();
       await expectAccessibleMese(page);
     } finally {
@@ -446,7 +454,7 @@ test.describe("accessibilità", () => {
 
   test("CA-35: errore di pagina", async ({ page, baseURL, bianchi }) => {
     await failReads(page);
-    await open(page, baseURL, bianchi, { settle: false, pause: false });
+    await openMonth(page, baseURL, bianchi, { settle: false, pause: false });
     await expect(retry(page)).toBeVisible();
     await expectAccessibleMese(page);
   });
