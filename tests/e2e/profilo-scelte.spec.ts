@@ -66,7 +66,7 @@ test.describe("colore", () => {
     });
   });
 
-  test("CA-11: con le frecce il fuoco e la scelta passano a «Lampone» e si salva; Tab esce dal gruppo", async ({
+  test("CA-11: con le frecce il fuoco e la scelta passano al colore dopo «Pomodoro» e si salva; Tab esce dal gruppo", async ({
     page,
     baseURL,
   }) => {
@@ -75,16 +75,26 @@ test.describe("colore", () => {
       await user.signInContext(page.context(), baseURL as string);
       await openProfile(page);
       await waitHydrated(colorRadio(page, "Pomodoro"));
+      // In a Nest where nobody else has a colour the circle after «Pomodoro» is
+      // the second of the base order («Glicine»); with other colours taken it
+      // is the next free one (for Marco: «Lampone»). The test reads it.
+      const radios = colorGroup(page).getByRole("radio");
+      const next = radios.nth(1);
+      const nextName = (await next.getAttribute("aria-label")) as string;
+      expect(nextName).toBeTruthy();
+      expect(nextName).not.toMatch(/già usato/);
+
       await colorRadio(page, "Pomodoro").focus();
       await expect(colorRadio(page, "Pomodoro")).toBeFocused();
 
       await page.keyboard.press("ArrowRight");
-      await expect(colorRadio(page, "Lampone")).toBeFocused();
-      await expect(colorRadio(page, "Lampone")).toHaveAttribute(
+      await expect(next).toBeFocused();
+      await expect(next).toHaveAttribute("aria-checked", "true");
+      await expect(colorRadio(page, "Pomodoro")).toHaveAttribute(
         "aria-checked",
-        "true",
+        "false",
       );
-      await expect.poll(() => colorOf(user.id)).toBe("lampone");
+      await expect.poll(() => colorOf(user.id)).toBe(nextName.toLowerCase());
 
       await page.keyboard.press("Tab");
       await expect(colorGroup(page).locator(":focus")).toHaveCount(0);
