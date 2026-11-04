@@ -100,10 +100,13 @@ test.describe("galleria: pezzi delle pagine (#221)", () => {
     const row = page.getByTestId("campo-doppio-tre");
     await expect(row).toBeVisible();
     const columns = await row.evaluate((el) =>
-      getComputedStyle(el).gridTemplateColumns.split(" "),
+      getComputedStyle(el)
+        .gridTemplateColumns.split(" ")
+        .map((value) => parseFloat(value)),
     );
     expect(columns).toHaveLength(3);
-    expect(new Set(columns).size).toBe(1);
+    // fractional widths can differ by a hundredth of a pixel
+    expect(Math.max(...columns) - Math.min(...columns)).toBeLessThan(1);
   });
 
   test("sezione--ancora: si ferma sotto la barra (scroll-margin-top)", async ({
