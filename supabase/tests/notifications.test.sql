@@ -839,7 +839,9 @@ from public.todos t, generate_series(1, 120) as g
 where t.title = 'Firmare autorizzazione gita'
   and t.household_id = '22222222-2222-4222-8222-222222222222';
 set local role authenticated;
-select is(public.count_unread_notifications(), 100, 'the bell counts at most the 100 most recent, as the page shows');
+-- The 100 most recent: the 3 unread of the events, the 2 read of the things to do (created
+-- now) and 95 of the 120: 98 not read.
+select is(public.count_unread_notifications(), 98, 'the bell counts only among the 100 most recent, as the page shows');
 reset role;
 delete from public.notifications n where n.created_at < now() and n.kind = 'todo_assigned' and n.created_at > now() - interval '3 hours';
 
