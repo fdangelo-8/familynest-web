@@ -423,6 +423,61 @@ export type Database = {
           },
         ];
       };
+      notification_preferences: {
+        Row: {
+          assigned_todos: boolean;
+          created_at: string;
+          events: boolean;
+          free_together: boolean;
+          household_id: string;
+          id: string;
+          member_id: string;
+          morning_digest: boolean;
+          shopping: boolean;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          assigned_todos?: boolean;
+          created_at?: string;
+          events?: boolean;
+          free_together?: boolean;
+          household_id?: string;
+          id?: string;
+          member_id: string;
+          morning_digest?: boolean;
+          shopping?: boolean;
+          updated_at?: string;
+        };
+        Update: {
+          assigned_todos?: boolean;
+          created_at?: string;
+          events?: boolean;
+          free_together?: boolean;
+          household_id?: string;
+          id?: string;
+          member_id?: string;
+          morning_digest?: boolean;
+          shopping?: boolean;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "notification_preferences_household_id_fkey";
+            columns: ["household_id"];
+            isOneToOne: false;
+            referencedRelation: "households";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "notification_preferences_member_fkey";
+            columns: ["member_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "household_members";
+            referencedColumns: ["id", "household_id"];
+          },
+        ];
+      };
       pinned_spaces: {
         Row: {
           household_id: string;
@@ -761,6 +816,16 @@ export type Database = {
           visibility: Database["public"]["Enums"]["event_visibility"];
         }[];
       };
+      get_notification_preferences: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          assigned_todos: boolean;
+          events: boolean;
+          free_together: boolean;
+          morning_digest: boolean;
+          shopping: boolean;
+        }[];
+      };
       invitation_preview: {
         Args: { p_token: string };
         Returns: {
@@ -816,6 +881,13 @@ export type Database = {
           isOneToOne: false;
           isSetofReturn: true;
         };
+      };
+      set_notification_preference: {
+        Args: {
+          p_enabled: boolean;
+          p_preference: Database["public"]["Enums"]["notification_preference"];
+        };
+        Returns: undefined;
       };
       space_interest_counts: {
         Args: Record<PropertyKey, never>;
@@ -888,6 +960,12 @@ export type Database = {
         | "basilico"
         | "cannella";
       member_kind: "adult" | "child" | "pet";
+      notification_preference:
+        | "events"
+        | "assigned_todos"
+        | "shopping"
+        | "free_together"
+        | "morning_digest";
       space_key:
         | "meals"
         | "couple"
@@ -1049,6 +1127,13 @@ export const Constants = {
         "cannella",
       ],
       member_kind: ["adult", "child", "pet"],
+      notification_preference: [
+        "events",
+        "assigned_todos",
+        "shopping",
+        "free_together",
+        "morning_digest",
+      ],
       space_key: [
         "meals",
         "couple",
