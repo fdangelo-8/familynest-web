@@ -4,8 +4,10 @@ import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { Alert } from "@/components/ui/Alert/Alert";
 import { BarAction } from "@/components/ui/AppFrame/BarAction";
 import { Button } from "@/components/ui/Button/Button";
+import { cx } from "@/components/ui/cx";
 import { Icon } from "@/components/ui/Icon/Icon";
 import { Skeleton, SkeletonGroup } from "@/components/ui/Skeleton/Skeleton";
+import { Spinner } from "@/components/ui/Spinner/Spinner";
 import { useToast } from "@/components/ui/Toast/ToastProvider";
 import { getPinLabel } from "@/lib/pin-texts";
 import {
@@ -13,16 +15,9 @@ import {
   getSpaceInterests,
   removeSpaceInterest,
 } from "@/lib/space-interests";
-import {
-  getSpacePromise,
-  SPACES,
-  type SpaceDef,
-  type SpaceKey,
-} from "@/lib/spaces";
+import { getSpacePromise, SPACES, type SpaceKey } from "@/lib/spaces";
 import { createClient } from "@/lib/supabase/client";
-import { useSpaces } from "./useSpaces";
-
-const INTEREST_BUTTON = "space-interest";
+import { useSpaces, type NamesRead } from "./useSpaces";
 
 type InterestState =
   | { status: "loading" }
@@ -41,13 +36,21 @@ async function readInterest(key: SpaceKey): Promise<InterestState> {
 
 /** Esplora · «In arrivo»: what a space promises, «Avvisami» and the puntina. */
 export function SpaceComingPage({ spaceKey }: { spaceKey: SpaceKey }) {
-  const space = SPACES.find((item) => item.key === spaceKey) as SpaceDef;
+  const space = SPACES.find((item) => item.key === spaceKey);
+  if (!space) throw new Error("Unknown space");
   const { showToast } = useToast();
-  const sectionRef = useRef<HTMLDivElement>(null);
-  const needsNames = spaceKey === "children" || spaceKey === "pets";
+  const interestRef = useRef<HTMLButtonElement>(null);
+  // Only the names the promise needs: children for Crescere, pets for Zampe.
+  const names: NamesRead =
+    spaceKey === "children"
+      ? "children"
+      : spaceKey === "pets"
+        ? "pets"
+        : "none";
+  const needsNames = names !== "none";
 
   // The puntina of the bar is outside the page: «Annulla» focuses it by query.
-  const buttonRefs = useRef(new Map<SpaceKey, HTMLElement>());
+  const buttonRefs = useRef(new Map<SpaceKey, { focus: () => void }>());
   useEffect(() => {
     const map = buttonRefs.current;
     map.set(spaceKey, {
@@ -55,13 +58,13 @@ export function SpaceComingPage({ spaceKey }: { spaceKey: SpaceKey }) {
         document
           .querySelector<HTMLElement>(".barra button[aria-pressed]")
           ?.focus(),
-    } as HTMLElement);
+    });
     return () => {
       map.delete(spaceKey);
     };
   }, [spaceKey]);
 
-  const pins = useSpaces(buttonRefs, { withNames: needsNames });
+  const pins = useSpaces(buttonRefs, names);
   const [interest, setInterest] = useState<InterestState>({
     status: "loading",
   });
@@ -101,19 +104,9 @@ export function SpaceComingPage({ spaceKey }: { spaceKey: SpaceKey }) {
   useEffect(() => {
     if (status === "ready" && focusAfterRetry.current) {
       focusAfterRetry.current = false;
-      sectionRef.current
-        ?.querySelector<HTMLElement>(`[data-testid="${INTEREST_BUTTON}"]`)
-        ?.focus();
+      interestRef.current?.focus();
     }
   }, [status]);
-
-  // `Button` has no `aria-pressed`: it is set on the same element, which is
-  // never unmounted, so the focus stays on it.
-  useEffect(() => {
-    sectionRef.current
-      ?.querySelector(`[data-testid="${INTEREST_BUTTON}"]`)
-      ?.setAttribute("aria-pressed", String(interestOn));
-  }, [interestOn, status]);
 
   const toggleInterest = useCallback(async () => {
     if (savingRef.current || interest.status !== "ready") return;
@@ -162,10 +155,39 @@ export function SpaceComingPage({ spaceKey }: { spaceKey: SpaceKey }) {
 
   const isPinned = pins.pinned.includes(spaceKey);
   const promise = `${getSpacePromise(spaceKey, {
-    childNames: pins.data?.children.map((p) => p.name),
-    petNames: pins.data?.pets.map((p) => p.name),
+    childNames: pins.data?.children ?? undefined,
+    petNames: pins.data?.pets ?? undefined,
   })} Stiamo preparando questo spazio.`;
-  const waitingForNames = needsNames && status === "loading";
+  const loading = status === "loading";
+
+  const rows =
+    space.rows.length > 0 ? (
+      <ul className="scheda lista">
+        {space.rows.map((row) => (
+          <li key={row.text} className="riga-lista">
+            <span className="icona-riquadro">
+              <Icon name={row.icon} />
+            </span>
+            <span className="riga-lista__testo">
+              <span className="riga-lista__titolo">{row.text}</span>
+            </span>
+          </li>
+        ))}
+      </ul>
+    ) : null;
+
+  const head = (
+    <>
+      <span className="stato-vuoto__icona" aria-hidden="true">
+        <Icon name={space.icon} />
+      </span>
+      <span className="etichetta">
+        <Icon name="hourglass" size="s" />
+        In arrivo
+      </span>
+      <h1 className="t-display">{space.name}</h1>
+    </>
+  );
 
   return (
     <main
@@ -188,42 +210,27 @@ export function SpaceComingPage({ spaceKey }: { spaceKey: SpaceKey }) {
       >
         <span aria-hidden="true">←</span> Esplora
       </Button>
-      <div ref={sectionRef} className="sezione spazio-arrivo">
-        <span className="stato-vuoto__icona" aria-hidden="true">
-          <Icon name={space.icon} />
-        </span>
-        <span className="etichetta">
-          <Icon name="hourglass" size="s" />
-          In arrivo
-        </span>
-        <h1 className="t-display">{space.name}</h1>
-        {waitingForNames ? (
-          <>
+      <div className="sezione spazio-arrivo">
+        {head}
+        {loading && needsNames ? (
+          // One busy area: the two lines of the promise, the rows and the button.
+          <SkeletonGroup aria-live="polite">
             <Skeleton shape="testo" />
             <Skeleton shape="testo-corto" />
-          </>
-        ) : (
-          <p className="t-corpo t-secondario">{promise}</p>
-        )}
-        {space.rows.length > 0 ? (
-          <ul className="scheda lista">
-            {space.rows.map((row) => (
-              <li key={row.text} className="riga-lista">
-                <span className="icona-riquadro">
-                  <Icon name={row.icon} />
-                </span>
-                <span className="riga-lista__testo">
-                  <span className="riga-lista__titolo">{row.text}</span>
-                </span>
-              </li>
-            ))}
-          </ul>
-        ) : null}
-        {status === "loading" ? (
-          <SkeletonGroup aria-live="polite">
+            {rows}
             <Skeleton shape="bottone" />
           </SkeletonGroup>
-        ) : null}
+        ) : (
+          <>
+            <p className="t-corpo t-secondario">{promise}</p>
+            {rows}
+            {loading ? (
+              <SkeletonGroup aria-live="polite">
+                <Skeleton shape="bottone" />
+              </SkeletonGroup>
+            ) : null}
+          </>
+        )}
         {status === "error" ? (
           <Alert
             variant="errore"
@@ -238,18 +245,30 @@ export function SpaceComingPage({ spaceKey }: { spaceKey: SpaceKey }) {
           </Alert>
         ) : null}
         {status === "ready" ? (
-          <Button
-            variant={interestOn ? "secondary" : "primary"}
-            full
-            icon={interestOn ? "check" : "bell"}
-            loading={saving}
+          <button
+            ref={interestRef}
+            type="button"
+            className={cx(
+              interestOn ? "btn-secondary" : "btn-primary",
+              "btn--pieno",
+              saving && "is-caricamento",
+            )}
+            aria-pressed={interestOn}
+            aria-busy={saving || undefined}
+            aria-disabled={saving || undefined}
             onClick={() => void toggleInterest()}
-            data-testid={INTEREST_BUTTON}
           >
-            {interestOn
-              ? "Ti avvisiamo appena è pronto"
-              : "Avvisami quando è pronto"}
-          </Button>
+            {saving ? (
+              <Spinner />
+            ) : (
+              <Icon name={interestOn ? "check" : "bell"} />
+            )}
+            <span className="btn__testo">
+              {interestOn
+                ? "Ti avvisiamo appena è pronto"
+                : "Avvisami quando è pronto"}
+            </span>
+          </button>
         ) : null}
       </div>
     </main>
