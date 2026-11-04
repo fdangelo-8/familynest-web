@@ -1145,6 +1145,7 @@ export type Database = {
       run_notification_job: {
         Args: {
           p_at?: string;
+          p_household_id: string;
           p_job: Database["public"]["Enums"]["notification_job"];
         };
         Returns: number;
