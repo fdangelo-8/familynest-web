@@ -100,3 +100,32 @@ test("a11y: esempio «Spazio in arrivo», link solo da desktop e senza trappole"
     await expect(link).toBeHidden();
   }
 });
+
+test("a11y: disposizioni di Oggi, una sola visibile per larghezza, e passi in elenco", async ({
+  page,
+}, testInfo) => {
+  const example = page.getByTestId("oggi-disposizioni");
+  await example.scrollIntoViewIfNeeded();
+  const isDesktop = testInfo.project.name === "desktop";
+  await expect(page.getByTestId("oggi-solo-mobile")).toBeVisible({
+    visible: !isDesktop,
+  });
+  await expect(page.getByTestId("oggi-solo-desktop")).toBeVisible({
+    visible: isDesktop,
+  });
+  const steps = page.getByTestId("lista-passi");
+  await expect(steps.getByRole("listitem")).toHaveCount(2);
+  const style = await steps.evaluate((el) => {
+    const cs = getComputedStyle(el);
+    return { display: cs.display, list: cs.listStyleType, gap: cs.rowGap };
+  });
+  expect(style).toEqual({ display: "grid", list: "none", gap: "4px" });
+  const results = await new AxeBuilder({ page })
+    .include('[data-testid="oggi-disposizioni"]')
+    .analyze();
+  expect(
+    results.violations.filter((v) =>
+      ["serious", "critical"].includes(v.impact ?? ""),
+    ),
+  ).toEqual([]);
+});
