@@ -11,7 +11,7 @@ import type {
  * Writes of «Il tuo profilo» (#38), made from the browser with the user's own
  * session: the database rules (RLS) decide, and the filter is always the
  * person's own row (an administrator could otherwise touch every member).
- * An error with a database code reached the server; one without it did not.
+ * Status 0 means no answer arrived (network); any other error is the server's.
  */
 
 export type SaveResult = { ok: true } | { ok: false; reason: Failure };
@@ -26,8 +26,9 @@ async function myUserId(
   return data.session?.user.id ?? null;
 }
 
-function failureOf(error: { code?: string | null }): Failure {
-  return error.code ? "server" : "network";
+/** `status` 0: no answer arrived (network). Any other error is the server's. */
+function failureOf(status: number): Failure {
+  return status === 0 ? "network" : "server";
 }
 
 /** Colour of the person's own member row. `23505`: someone took it first. */
@@ -38,13 +39,16 @@ export async function saveColor(
     const supabase = createClient();
     const userId = await myUserId(supabase);
     if (!userId) return { ok: false, reason: "server" };
-    const { error } = await supabase
+    const { error, status, count } = await supabase
       .from("household_members")
-      .update({ color })
+      .update({ color }, { count: "exact" })
       .eq("user_id", userId);
-    if (!error) return { ok: true };
+    if (!error) {
+      // No row touched (for example refused by the rules): not saved.
+      return count === 0 ? { ok: false, reason: "server" } : { ok: true };
+    }
     if (error.code === "23505") return { ok: false, reason: "taken" };
-    return { ok: false, reason: failureOf(error) };
+    return { ok: false, reason: failureOf(status) };
   } catch {
     return { ok: false, reason: "network" };
   }
@@ -63,11 +67,12 @@ export async function savePreference(
     const supabase = createClient();
     const userId = await myUserId(supabase);
     if (!userId) return { ok: false, reason: "server" };
-    const { error } = await supabase
+    const { error, status, count } = await supabase
       .from("profiles")
-      .update(patch)
+      .update(patch, { count: "exact" })
       .eq("id", userId);
-    return error ? { ok: false, reason: failureOf(error) } : { ok: true };
+    if (error) return { ok: false, reason: failureOf(status) };
+    return count === 0 ? { ok: false, reason: "server" } : { ok: true };
   } catch {
     return { ok: false, reason: "network" };
   }
@@ -93,7 +98,7 @@ export async function downloadMyData(): Promise<SaveResult> {
     document.body.append(link);
     link.click();
     link.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 0);
+    setTimeout(() => URL.revokeObjectURL(url), 10_000);
     return { ok: true };
   } catch {
     return { ok: false, reason: "network" };

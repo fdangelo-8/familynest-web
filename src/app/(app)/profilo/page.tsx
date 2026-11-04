@@ -36,13 +36,15 @@ async function load(frame: NestFrameData): Promise<Loaded> {
   if (frame.failed || !frame.nestName) return { status: "error" };
   const supabase = await createClient();
 
-  const { data: userData, error: userError } = await supabase.auth.getUser();
+  const [userResult, householdResult] = await Promise.all([
+    supabase.auth.getUser(),
+    supabase.rpc("current_household_id"),
+  ]);
+  const { data: userData, error: userError } = userResult;
   if (userError || !userData.user) return { status: "error" };
   const user = userData.user;
 
-  const { data: householdId, error: householdError } = await supabase.rpc(
-    "current_household_id",
-  );
+  const { data: householdId, error: householdError } = householdResult;
   if (householdError || !householdId) return { status: "error" };
 
   const [profile, members, outcome] = await Promise.all([

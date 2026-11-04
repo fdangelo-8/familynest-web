@@ -112,45 +112,60 @@ export async function buildExport(
   const namesOf = (ids: ReadonlyArray<string>): string[] =>
     ids.flatMap((id) => nameOf(id) ?? []);
 
-  const [events, todos, deadlines, shopping, pinned] = await Promise.all([
-    supabase
-      .from("events")
-      .select(
-        "id, title, location, starts_at, ends_at, visibility, recurrence, recurrence_until, recurrence_weekdays, notes, escort_member_id",
-      )
-      .eq("author_member_id", me.id)
-      .order("starts_at", { ascending: true }),
-    supabase
-      .from("todos")
-      .select(
-        "title, due_date, is_private, assignee_member_id, for_member_id, done_at",
-      )
-      .eq("created_by_member_id", me.id)
-      .order("created_at", { ascending: true }),
-    supabase
-      .from("deadlines")
-      .select(
-        "title, due_date, note, is_private, assignee_member_id, for_member_id, reminder_days",
-      )
-      .eq("created_by_member_id", me.id)
-      .order("due_date", { ascending: true }),
-    supabase
-      .from("shopping_items")
-      .select("name, quantity, created_at, checked_at")
-      .eq("added_by_member_id", me.id)
-      .order("created_at", { ascending: true }),
-    supabase
-      .from("pinned_spaces")
-      .select("space, pinned_at")
-      .eq("member_id", me.id)
-      .order("pinned_at", { ascending: true }),
-  ]);
+  const [events, todos, deadlines, shopping, pinned, notifications, interests] =
+    await Promise.all([
+      supabase
+        .from("events")
+        .select(
+          "id, title, location, starts_at, ends_at, visibility, recurrence, recurrence_until, recurrence_weekdays, notes, escort_member_id",
+        )
+        .eq("author_member_id", me.id)
+        .order("starts_at", { ascending: true }),
+      supabase
+        .from("todos")
+        .select(
+          "title, due_date, is_private, assignee_member_id, for_member_id, done_at",
+        )
+        .eq("created_by_member_id", me.id)
+        .order("created_at", { ascending: true }),
+      supabase
+        .from("deadlines")
+        .select(
+          "title, due_date, note, is_private, assignee_member_id, for_member_id, reminder_days",
+        )
+        .eq("created_by_member_id", me.id)
+        .order("due_date", { ascending: true }),
+      supabase
+        .from("shopping_items")
+        .select("name, quantity, created_at, checked_at")
+        .eq("added_by_member_id", me.id)
+        .order("created_at", { ascending: true }),
+      supabase
+        .from("pinned_spaces")
+        .select("space, pinned_at")
+        .eq("member_id", me.id)
+        .order("pinned_at", { ascending: true }),
+      supabase
+        .from("notification_preferences")
+        .select(
+          "events, assigned_todos, shopping, free_together, morning_digest",
+        )
+        .eq("member_id", me.id)
+        .maybeSingle(),
+      supabase
+        .from("space_interests")
+        .select("space, created_at")
+        .eq("member_id", me.id)
+        .order("created_at", { ascending: true }),
+    ]);
   if (
     events.error ||
     todos.error ||
     deadlines.error ||
     shopping.error ||
-    pinned.error
+    pinned.error ||
+    notifications.error ||
+    interests.error
   ) {
     return null;
   }
@@ -212,6 +227,15 @@ export async function buildExport(
         profile.data.default_event_visibility,
       ),
     },
+    preferenze_di_notifica: notifications.data
+      ? {
+          impegni: notifications.data.events,
+          cose_da_fare_assegnate: notifications.data.assigned_todos,
+          spesa: notifications.data.shopping,
+          liberi_insieme: notifications.data.free_together,
+          sintesi_del_mattino: notifications.data.morning_digest,
+        }
+      : null,
     nest: {
       nome: household.data.name,
       il_tuo_nome: me.name,
@@ -259,6 +283,10 @@ export async function buildExport(
       quantita: s.quantity,
       aggiunta_il: romeDateTime(s.created_at),
       presa_il: dateTimeOrNull(s.checked_at),
+    })),
+    avvisi_degli_spazi: interests.data.map((i) => ({
+      spazio: i.space,
+      dal: romeDateTime(i.created_at),
     })),
     spazi_fissati: pinned.data.map((p) => ({
       spazio: p.space,

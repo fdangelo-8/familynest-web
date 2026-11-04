@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Alert } from "@/components/ui/Alert/Alert";
 import { Avatar } from "@/components/ui/Avatar/Avatar";
 import {
@@ -134,9 +134,11 @@ export function ProfileView({
     [takenColors],
   );
 
+  // TEMPORARY until the shared request #236 adds the `busy` prop to
+  // `ColorChoice`; then the page passes the prop and this effect goes.
   // `ColorChoice` has no `aria-busy`: the group is marked here. It stays
   // active (not disabled), so whoever uses the arrows does not lose the focus.
-  useEffect(() => {
+  useLayoutEffect(() => {
     const group = headRef.current?.querySelector('[role="radiogroup"]');
     if (!group) return;
     if (colorBusy) group.setAttribute("aria-busy", "true");
@@ -238,7 +240,10 @@ export function ProfileView({
     if (!result.ok) {
       showPref(key, before);
       setPrefError(result.reason);
+      return;
     }
+    // The frame reads the starting lens and the visibility again.
+    router.refresh();
   }
 
   /* ---------- «I tuoi dati» ---------- */

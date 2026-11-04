@@ -20,8 +20,23 @@ import { readOutlook } from "../outlook";
  */
 const NO_STORE = { "Cache-Control": "no-store" };
 
-function json(body: unknown, status: number): NextResponse {
-  return NextResponse.json(body, { status, headers: NO_STORE });
+type Refreshed = Array<{
+  name: string;
+  value: string;
+  options?: Parameters<NextResponse["cookies"]["set"]>[2];
+}>;
+
+/** `refreshed`: cookies the session client renewed, kept when nothing was deleted. */
+function json(
+  body: unknown,
+  status: number,
+  refreshed: Refreshed = [],
+): NextResponse {
+  const response = NextResponse.json(body, { status, headers: NO_STORE });
+  for (const { name, value, options } of refreshed) {
+    response.cookies.set(name, value, options);
+  }
+  return response;
 }
 
 export async function POST(request: NextRequest) {
@@ -45,10 +60,14 @@ export async function POST(request: NextRequest) {
     return json({ ok: false }, 400);
   }
 
+  // A token renewed by `getUser()` must not be lost when nothing is deleted
+  // (409, 500): the browser would keep a refresh token already used. After a
+  // deletion the cookies are removed instead.
+  const refreshed: Refreshed = [];
   try {
     const { supabaseUrl, supabasePublishableKey } = getPublicEnv();
-    // The client reads the session from the request. It never writes cookies:
-    // the response below deletes them, and nothing may put one back.
+    // The client reads the session from the request. Renewed cookies are only
+    // kept in `refreshed`: the answer decides whether to send them.
     const supabase = createServerClient<Database>(
       supabaseUrl,
       supabasePublishableKey,
@@ -57,13 +76,15 @@ export async function POST(request: NextRequest) {
           getAll() {
             return request.cookies.getAll();
           },
-          setAll() {},
+          setAll(cookiesToSet) {
+            refreshed.push(...cookiesToSet);
+          },
         },
       },
     );
 
     const { data, error: userError } = await supabase.auth.getUser();
-    if (userError || !data.user) return json({ ok: false }, 401);
+    if (userError || !data.user) return json({ ok: false }, 401, refreshed);
 
     const { error } = await supabase.rpc("delete_own_account", {
       p_expect_household_deletion: expectHouseholdDeletion,
@@ -73,16 +94,16 @@ export async function POST(request: NextRequest) {
       if (error.code === "FN003") {
         const outlook = await readOutlook(supabase, data.user.id);
         return outlook
-          ? json({ ok: false, changed: true, outlook }, 409)
-          : json({ ok: false }, 500);
+          ? json({ ok: false, changed: true, outlook }, 409, refreshed)
+          : json({ ok: false }, 500, refreshed);
       }
-      return json({ ok: false }, 500);
+      return json({ ok: false }, 500, refreshed);
     }
 
     const response = json({ ok: true }, 200);
     clearSessionCookies(request, response);
     return response;
   } catch {
-    return json({ ok: false }, 500);
+    return json({ ok: false }, 500, refreshed);
   }
 }
