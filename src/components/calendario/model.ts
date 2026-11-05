@@ -1,5 +1,5 @@
 import type { MemberColor } from "@/components/ui/Avatar/Avatar";
-import { compareEvents } from "@/lib/calendar";
+import { compareEvents, formatEscortPhrase } from "@/lib/calendar";
 import type { FreeEvening } from "@/lib/calendar";
 import type { CalendarDay } from "@/lib/datetime";
 import type { FullEvent, HouseholdEvent } from "@/lib/household-events";
@@ -113,9 +113,10 @@ export function eventInfo(
     const escort = members.find((member) => member.id === event.escortMemberId);
     if (escort) {
       parts.push(
-        event.memberIds.length > 1
-          ? `li porta ${escort.name}`
-          : `la porta ${escort.name}`,
+        formatEscortPhrase(
+          { kind: "member", name: escort.name },
+          event.memberIds.length > 1,
+        ),
       );
     }
   }
