@@ -50,8 +50,16 @@ jobs:
             case "$p" in *[!A-Za-z0-9._/-]*) echo "::error::invalid characters in spec: $p"; exit 1 ;; esac
           done
 
+      # The runner sometimes has a database port still busy: try up to three times.
       - name: Start throwaway Supabase
-        run: npx supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor
+        run: |
+          for attempt in 1 2 3; do
+            npx supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor && exit 0
+            echo "::warning::Supabase non è partito (tentativo $attempt), riprovo."
+            npx supabase stop --no-backup || true
+            sleep 10
+          done
+          exit 1
 
       # Same as the CI test job: local URL and keys, and test users with passwords
       # generated for this run. Nothing comes from secrets.
