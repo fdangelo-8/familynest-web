@@ -57,7 +57,7 @@ async function withNest(
   try {
     const created = await user.client.rpc("create_household", {
       name: "Casa De Santis",
-      household_type: type,
+      household_type: type === "adults-only" ? "couple" : type,
       member_name: "Ilaria",
       color: "pomodoro",
     });
