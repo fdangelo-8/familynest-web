@@ -50,6 +50,7 @@ Se vedi un miglioramento reale (usabilità, chiarezza, coerenza), scrivilo in `d
 - Fedeltà al mockup: non correggerlo dentro la specifica, proponilo a parte.
 - Niente estetica da template: niente gradienti decorativi, card inclinate, CTA generiche, icone senza etichetta dove servono parole.
 - Non scrivere codice dell'app.
+- **Specifica compatta** (decisione di Francesco del 05/11, per usare meno token): il commento con la specifica resta sotto i 15.000 caratteri. Scrivi solo ciò che il mockup non dice già (stati mancanti, differenze, testi nuovi, accessibilità); non descrivere di nuovo ciò che si vede nel mockup. CSS e tabelle lunghe vanno in `docs/specifiche/<issue>-<pagina>-grafica.md`, citato dal commento.
 
 ## Esito
 
