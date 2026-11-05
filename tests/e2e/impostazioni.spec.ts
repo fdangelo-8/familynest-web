@@ -340,19 +340,6 @@ test.describe("contenuto", () => {
   }) => {
     needsUsers("A");
     await signIn(page, baseURL, "A");
-    await page.goto("/nest");
-    await expect(h1(page)).toBeVisible();
-    const nestLinks = {
-      sofia: await page
-        .getByRole("main")
-        .getByRole("link", { name: /Sofia/ })
-        .evaluateAll((els) => els.map((el) => el.getAttribute("href"))),
-      tommaso: await page
-        .getByRole("main")
-        .getByRole("link", { name: /Tommaso/ })
-        .evaluateAll((els) => els.map((el) => el.getAttribute("href"))),
-    };
-
     await openSettings(page, NEST_A);
     const people = peopleSection(page);
     await expect(
@@ -365,10 +352,10 @@ test.describe("contenuto", () => {
     await expect(
       people.getByRole("link", { name: /^Biscotto/ }),
     ).toHaveAttribute("href", `/membri/${IDS.biscotto}`);
-    // The children lead where they lead in «Il tuo Nest» (today: nowhere).
+    // Since #31 the children lead to their profile, as in «Il tuo Nest».
     for (const [name, expected] of [
-      ["Sofia", nestLinks.sofia],
-      ["Tommaso", nestLinks.tommaso],
+      ["Sofia", ["/figli/a1000000-0000-4000-8000-000000000003"]],
+      ["Tommaso", ["/figli/a1000000-0000-4000-8000-000000000004"]],
     ] as const) {
       const links = people.getByRole("link", { name: new RegExp(`^${name}`) });
       expect(
