@@ -318,9 +318,10 @@ test.describe("con un utente usa e getta", () => {
         (n, i) =>
           i >= from && (typeof want === "string" ? n === want : want.test(n)),
       );
-      expect(at, `«${String(want)}» dopo la posizione ${from}`).toBeGreaterThan(
-        -1,
-      );
+      expect(
+        at,
+        `«${String(want)}» dopo la posizione ${from} in ${JSON.stringify(names)}`,
+      ).toBeGreaterThan(-1);
       from = at + 1;
     }
   });

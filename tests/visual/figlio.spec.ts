@@ -136,6 +136,21 @@ test.describe("con un utente usa e getta", () => {
     await shoot(page, "figlio-modulo-maestre.png", false);
   });
 
+  test("#31: modulo di modifica, in fondo (taglie e salvataggio)", async ({
+    page,
+  }) => {
+    const nest = await childNest(page, "complete");
+    user = nest.user;
+    await openChild(page, nest.childId);
+    await editButton(page).click();
+    await expect(editDialog(page)).toBeVisible();
+    await waitForAnimationsToEnd(page);
+    await editDialog(page)
+      .getByRole("button", { name: "Salva le modifiche" })
+      .scrollIntoViewIfNeeded();
+    await shoot(page, "figlio-modulo-fondo.png", false);
+  });
+
   test("#31: modulo con errori, in alto", async ({ page }) => {
     const nest = await childNest(page, "complete");
     user = nest.user;
