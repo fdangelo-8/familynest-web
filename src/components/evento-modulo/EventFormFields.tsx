@@ -19,6 +19,7 @@ import {
   type EventFormValues,
   type EventMember,
   type FieldKey,
+  type FocusKey,
   type FormErrors,
   type Locks,
   type RepeatChoice,
@@ -26,7 +27,7 @@ import {
 
 /**
  * The fields of the full event form: «Modifica impegno» in the detail page
- * and, later, «Più dettagli» of Aggiungi (#20, #171). It only shows and
+ * and «Nuovo impegno» of Aggiungi (#20, #171). It only shows and
  * reports: the page that owns it decides when to check and what to save.
  */
 export type EventFormFieldsProps = {
@@ -60,8 +61,8 @@ const VISIBILITY_CHOICES: ReadonlyArray<{
 ];
 
 /** Id of a field of the form, to move the focus to it. */
-export function fieldId(prefix: string, key: FieldKey): string {
-  const names: Record<FieldKey, string> = {
+export function fieldId(prefix: string, key: FocusKey): string {
+  const names: Record<FocusKey, string> = {
     title: "titolo",
     day: "giorno",
     from: "dalle",
@@ -69,12 +70,13 @@ export function fieldId(prefix: string, key: FieldKey): string {
     repeat: "ripete",
     people: "chi",
     escort: "porta",
+    visibility: "vede",
   };
   return `${prefix}-${names[key]}`;
 }
 
 /** Moves the focus to a field: the input, or the right chip of a group. */
-export function focusField(prefix: string, key: FieldKey): void {
+export function focusField(prefix: string, key: FocusKey): void {
   const element = document.getElementById(fieldId(prefix, key));
   if (!element) return;
   if (element.getAttribute("role") === "group") {
@@ -286,6 +288,7 @@ export function EventFormFields({
         {/* The same group as `SegmentedControl`, with the icons of the mockup,
             which the shared component cannot show yet. */}
         <div
+          id={fieldId(idPrefix, "visibility")}
           role="group"
           aria-label="Chi lo vede"
           aria-describedby={visibilityTextId}
