@@ -149,7 +149,7 @@ test.describe("Dettaglio impegno importato e «Anche su»", () => {
     );
   }
 
-  async function openForm(page: Page) {
+  async function openForm(page: Page, imported = false) {
     await page
       .getByRole("main")
       .getByRole("button", { name: "Modifica" })
@@ -157,7 +157,8 @@ test.describe("Dettaglio impegno importato e «Anche su»", () => {
     await expect(
       page.getByRole("dialog", { name: "Modifica impegno" }),
     ).toBeVisible();
-    await expect(page.getByLabel("Titolo")).toBeFocused();
+    // An imported event has the title locked: the focus is not on it.
+    if (!imported) await expect(page.getByLabel("Titolo")).toBeFocused();
   }
 
   const IMPORTED: CalendarSide = {
@@ -180,7 +181,7 @@ test.describe("Dettaglio impegno importato e «Anche su»", () => {
     page,
   }) => {
     await open(page, IMPORTED);
-    await openForm(page);
+    await openForm(page, true);
     expect(await seriousViolations(page)).toEqual([]);
   });
 

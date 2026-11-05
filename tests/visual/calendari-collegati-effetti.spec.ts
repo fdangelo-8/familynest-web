@@ -160,7 +160,7 @@ test.describe("Dettaglio impegno importato e «Anche su»", () => {
     return fake;
   }
 
-  async function openForm(page: Page) {
+  async function openForm(page: Page, imported = false) {
     await page
       .getByRole("main")
       .getByRole("button", { name: "Modifica" })
@@ -168,7 +168,16 @@ test.describe("Dettaglio impegno importato e «Anche su»", () => {
     await expect(
       page.getByRole("dialog", { name: "Modifica impegno" }),
     ).toBeVisible();
-    await expect(page.getByLabel("Titolo")).toBeFocused();
+    // An imported event has the title locked: the focus is not on it.
+    if (!imported) await expect(page.getByLabel("Titolo")).toBeFocused();
+  }
+
+  /** The switch inside the view: the sheet of the phone scrolls inside itself. */
+  async function revealSwitch(page: Page) {
+    await page
+      .getByRole("switch", { name: "Anche su Google", exact: true })
+      .scrollIntoViewIfNeeded();
+    await waitForAnimationsToEnd(page);
   }
 
   async function shot(page: Page, name: string) {
@@ -196,7 +205,7 @@ test.describe("Dettaglio impegno importato e «Anche su»", () => {
     page,
   }) => {
     await open(page, IMPORTED);
-    await openForm(page);
+    await openForm(page, true);
     await expect(
       page.getByRole("dialog", { name: "Modifica impegno" }),
     ).toContainText("Si cambia su Google");
@@ -211,6 +220,7 @@ test.describe("Dettaglio impegno importato e «Anche su»", () => {
     await expect(
       page.getByRole("switch", { name: "Anche su Google", exact: true }),
     ).toBeVisible();
+    await revealSwitch(page);
     await shot(page, "anche-su-spenta.png");
   });
 
@@ -225,6 +235,7 @@ test.describe("Dettaglio impegno importato e «Anche su»", () => {
     await expect(
       page.getByRole("switch", { name: "Anche su Google", exact: true }),
     ).toHaveAttribute("aria-checked", "true");
+    await revealSwitch(page);
     await shot(page, "anche-su-accesa.png");
   });
 
@@ -239,6 +250,7 @@ test.describe("Dettaglio impegno importato e «Anche su»", () => {
     await expect(
       page.getByRole("switch", { name: "Anche su Google", exact: true }),
     ).toBeDisabled();
+    await revealSwitch(page);
     await shot(page, "anche-su-da-ricollegare.png");
   });
 
@@ -257,6 +269,10 @@ test.describe("Dettaglio impegno importato e «Anche su»", () => {
     await page.getByRole("button", { name: "Salva le modifiche" }).click();
     await expect(page.getByTestId("anche-su-errore")).toBeVisible();
     await expect(page.getByRole("dialog")).toHaveCount(0);
+    // The toast «Modifiche salvate» goes away by itself: shoot the resting page.
+    await expect(
+      page.getByRole("status").filter({ hasText: "Modifiche salvate" }),
+    ).toHaveCount(0, { timeout: 20_000 });
     await shot(page, "anche-su-errore.png");
   });
 
@@ -275,6 +291,10 @@ test.describe("Dettaglio impegno importato e «Anche su»", () => {
     await expect(
       page.getByRole("dialog", { name: "Modifica impegno" }).getByRole("alert"),
     ).toBeVisible();
+    await page
+      .getByRole("dialog", { name: "Modifica impegno" })
+      .getByRole("alert")
+      .scrollIntoViewIfNeeded();
     await shot(page, "anche-su-errore-modulo.png");
   });
 });
@@ -316,6 +336,20 @@ test.describe("righe «Calendari collegati» di Profilo e Nest", () => {
         page.getByRole("heading", { level: 1 }).locator("visible=true").first(),
       ).toBeVisible();
       await page.evaluate(() => document.fonts.ready);
+      // The throwaway user has a random mail: put back the one of the mockup.
+      await page.evaluate(() => {
+        for (const el of document.querySelectorAll("main *")) {
+          if (
+            el.children.length === 0 &&
+            /@example\.test/.test(el.textContent ?? "")
+          ) {
+            el.textContent = (el.textContent ?? "").replace(
+              /\S+@example\.test/,
+              "marco.dangelo@gmail.com",
+            );
+          }
+        }
+      });
       await waitForAnimationsToEnd(page);
       await page.mouse.move(0, 0);
       await expect(page).toHaveScreenshot("profilo-calendari.png", {
