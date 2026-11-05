@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ReactNode, Ref } from "react";
 import { cx } from "../cx";
 import { Icon, type IconName } from "../Icon/Icon";
 
@@ -18,6 +18,12 @@ export type AlertProps = {
   icon?: IconName;
   /** Optional action on the right, for example a "Riprova" button */
   action?: ReactNode;
+  /** Live region role: `alert` (default for errors) or `status` (default for the others) */
+  role?: "alert" | "status";
+  /** Ref of the box, to move the focus to it (with `tabIndex={-1}`) */
+  alertRef?: Ref<HTMLDivElement>;
+  /** `-1` lets the code focus the box without adding a tab stop */
+  tabIndex?: -1;
   className?: string;
   "data-testid"?: string;
 };
@@ -28,6 +34,9 @@ export function Alert({
   children,
   icon,
   action,
+  role,
+  alertRef,
+  tabIndex,
   className,
   "data-testid": testId,
 }: AlertProps) {
@@ -39,7 +48,9 @@ export function Alert({
         !action && "avviso--senza-azione",
         className,
       )}
-      role={variant === "errore" ? "alert" : "status"}
+      ref={alertRef}
+      role={role ?? (variant === "errore" ? "alert" : "status")}
+      tabIndex={tabIndex}
       data-testid={testId}
     >
       <Icon name={icon ?? VARIANT_ICON[variant]} />

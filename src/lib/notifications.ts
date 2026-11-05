@@ -118,16 +118,15 @@ export type ListNotificationsResult =
   /** No detail on purpose: it could carry titles and names. */
   | { ok: false; reason: NotificationFailure };
 
-type ErrorLike = { code?: string; message?: string } | null;
-
 /**
- * A request that never got an answer (offline, DNS, cut) has no PostgREST
- * code; every answer of the server has one.
+ * `status` 0: no answer arrived (network); so does a browser that knows it is
+ * offline. Any other answer, with an error, is the server's.
  */
-function failureOf(error: ErrorLike): NotificationFailure {
-  return error && typeof error.code === "string" && error.code !== ""
-    ? "server"
-    : "network";
+function failureOf(status: number): NotificationFailure {
+  if (typeof navigator !== "undefined" && navigator.onLine === false) {
+    return "network";
+  }
+  return status === 0 ? "network" : "server";
 }
 
 class OccurrenceReadFailed extends Error {}
@@ -262,14 +261,14 @@ export async function listNotifications(
   let rows: RawNotification[];
   try {
     const supabase = client ?? createBrowserClient();
-    const { data, error } = await supabase
+    const { data, error, status } = await supabase
       .from("notifications")
       .select(COLUMNS)
       .gte("created_at", since)
       .order("created_at", { ascending: false })
       .order("id", { ascending: false })
       .limit(NOTIFICATION_MAX);
-    if (error) return { ok: false, reason: failureOf(error) };
+    if (error) return { ok: false, reason: failureOf(status) };
     if (!Array.isArray(data)) return { ok: false, reason: "server" };
     rows = data as unknown as RawNotification[];
   } catch {
@@ -353,8 +352,10 @@ export async function countUnreadNotifications(
 ): Promise<CountNotificationsResult> {
   try {
     const supabase = client ?? createBrowserClient();
-    const { data, error } = await supabase.rpc("count_unread_notifications");
-    if (error) return { ok: false, reason: failureOf(error) };
+    const { data, error, status } = await supabase.rpc(
+      "count_unread_notifications",
+    );
+    if (error) return { ok: false, reason: failureOf(status) };
     if (typeof data !== "number" || !Number.isFinite(data) || data < 0) {
       return { ok: false, reason: "server" };
     }
@@ -387,10 +388,10 @@ export async function markNotificationsRead(
   try {
     const supabase = client ?? createBrowserClient();
     for (let start = 0; start < unique.length; start += MARK_READ_MAX) {
-      const { error } = await supabase.rpc("mark_notifications_read", {
+      const { error, status } = await supabase.rpc("mark_notifications_read", {
         p_ids: unique.slice(start, start + MARK_READ_MAX),
       });
-      if (error) return { ok: false, reason: failureOf(error) };
+      if (error) return { ok: false, reason: failureOf(status) };
     }
     return { ok: true };
   } catch {

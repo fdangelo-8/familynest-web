@@ -54,7 +54,11 @@ function rpcClient(
   reply: (
     name: string,
     args: unknown,
-  ) => { data?: unknown; error?: { code?: string; message?: string } | null },
+  ) => {
+    data?: unknown;
+    status?: number;
+    error?: { code?: string; message?: string } | null;
+  },
 ) {
   const calls: { name: string; args: unknown }[] = [];
   const client = {
@@ -64,6 +68,7 @@ function rpcClient(
       return Promise.resolve({
         data: answer.data ?? null,
         error: answer.error ?? null,
+        status: answer.status ?? (answer.error ? 500 : 200),
       });
     },
   } as unknown as Client;
@@ -384,6 +389,7 @@ test.describe("notifiche (#39)", () => {
       reason: "server",
     });
     const network = rpcClient(() => ({
+      status: 0,
       error: { code: "", message: "TypeError: Failed to fetch" },
     }));
     expect(await countUnreadNotifications(network.client)).toEqual({
@@ -421,7 +427,7 @@ test.describe("notifiche (#39)", () => {
       ok: false,
       reason: "server",
     });
-    const offline = rpcClient(() => ({ error: { code: "" } }));
+    const offline = rpcClient(() => ({ status: 0, error: { code: "" } }));
     expect(await markNotificationsRead([ID(1)], offline.client)).toEqual({
       ok: false,
       reason: "network",
@@ -432,6 +438,7 @@ test.describe("notifiche (#39)", () => {
   function listClient(
     rows: unknown[] | null,
     error: { code?: string } | null = null,
+    status = error ? 500 : 200,
     occurrences: Record<string, unknown[]> = {},
   ) {
     const calls: string[] = [];
@@ -442,7 +449,7 @@ test.describe("notifiche (#39)", () => {
         calls.push(method);
         filters.push(args);
         return method === "limit"
-          ? Promise.resolve({ data: rows, error })
+          ? Promise.resolve({ data: rows, error, status })
           : chain;
       };
     }
@@ -550,7 +557,7 @@ test.describe("notifiche (#39)", () => {
       series_ends_at: "2026-10-01T17:30:00Z",
       is_modified: true,
     };
-    const { client, calls, filters } = listClient(rows, null, {
+    const { client, calls, filters } = listClient(rows, null, 200, {
       [`${ID(30)}|2026-11-12`]: [occurrence],
     });
     const result = await listNotifications(
@@ -668,7 +675,7 @@ test.describe("notifiche (#39)", () => {
     ];
     const { client } = listClient(rows);
     (client as unknown as { rpc: unknown }).rpc = () =>
-      Promise.resolve({ data: null, error: { code: "XX000" } });
+      Promise.resolve({ data: null, error: { code: "XX000" }, status: 500 });
     expect(await listNotifications(client)).toEqual({
       ok: false,
       reason: "server",
@@ -681,10 +688,16 @@ test.describe("notifiche (#39)", () => {
       ok: false,
       reason: "server",
     });
-    const network = listClient(null, { code: "" });
+    const network = listClient(null, { code: "" }, 0);
     expect(await listNotifications(network.client)).toEqual({
       ok: false,
       reason: "network",
+    });
+    // The answer of the server decides, not the error code.
+    const noCode = listClient(null, { code: "" }, 500);
+    expect(await listNotifications(noCode.client)).toEqual({
+      ok: false,
+      reason: "server",
     });
     const throwing = {
       from: () => {

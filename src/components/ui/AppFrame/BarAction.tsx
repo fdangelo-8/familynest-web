@@ -27,7 +27,7 @@ type BarActionSpec = {
   /** Two-state button (e.g. a pin): `aria-pressed`. Undefined = plain button */
   pressed?: boolean;
   /** The button opens a dialog (`aria-haspopup`) */
-  haspopup?: "dialog";
+  haspopup?: "dialog" | "menu" | true;
   /** With an address the action is a link, not a button (no `onClick`) */
   href?: string;
 };
@@ -70,7 +70,7 @@ type BarActionProps = {
   /** Accessible name, written as the action */
   label: string;
   /** The action opens a dialog: `aria-haspopup` */
-  "aria-haspopup"?: "dialog";
+  "aria-haspopup"?: "dialog" | "menu" | true;
 } & (
   | {
       href?: undefined;
