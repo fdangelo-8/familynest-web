@@ -5,6 +5,7 @@ import { BarActionProvider } from "@/components/ui/AppFrame/BarAction";
 import { BottomNav } from "@/components/ui/AppFrame/BottomNav";
 import { FrameError } from "@/components/ui/AppFrame/FrameError";
 import { NestProvider } from "@/components/ui/AppFrame/NestProvider";
+import { NotificationCountProvider } from "@/components/ui/AppFrame/NotificationCount";
 import { SkipLink } from "@/components/ui/AppFrame/SkipLink";
 import { SearchShortcut } from "@/components/ui/AppFrame/SearchShortcut";
 import { TopNav } from "@/components/ui/AppFrame/TopNav";
@@ -32,16 +33,18 @@ async function AppFrame({
       startLens={frame.startLens}
       defaultVisibility={frame.defaultVisibility}
     >
-      <BarActionProvider>
-        <SkipLink />
-        <SearchShortcut />
-        <AddShortcut />
-        <AppBar />
-        <TopNav />
-        {frame.failed ? <FrameError /> : children}
-        <BottomNav />
-        {frame.failed ? null : modal}
-      </BarActionProvider>
+      <NotificationCountProvider initialCount={frame.unreadNotifications}>
+        <BarActionProvider>
+          <SkipLink />
+          <SearchShortcut />
+          <AddShortcut />
+          <AppBar />
+          <TopNav />
+          {frame.failed ? <FrameError /> : children}
+          <BottomNav />
+          {frame.failed ? null : modal}
+        </BarActionProvider>
+      </NotificationCountProvider>
     </NestProvider>
   );
 }

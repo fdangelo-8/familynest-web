@@ -48,6 +48,20 @@ export function formatBusyAccessibleName(
   return `${formatBusyLabel(name)}, dalle ${formatTime(start)} alle ${formatTime(end)}`;
 }
 
+/**
+ * Sentence of who takes the children to an event: «la porta Laura», «li porta
+ * Marco», «la porti tu», «li porti tu». `many` is true when the event has more
+ * than one person. The caller decides who the escort is (and what to do when
+ * the escort is not found). The only place where this sentence is written.
+ */
+export function formatEscortPhrase(
+  escort: { kind: "me" } | { kind: "member"; name: string },
+  many: boolean,
+): string {
+  if (escort.kind === "me") return many ? "li porti tu" : "la porti tu";
+  return many ? `li porta ${escort.name}` : `la porta ${escort.name}`;
+}
+
 /* ---------- Lens ---------- */
 
 export type LensChoice = "io" | "nest";

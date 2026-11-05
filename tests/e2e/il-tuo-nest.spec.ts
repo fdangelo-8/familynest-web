@@ -409,7 +409,7 @@ test.describe("contenuto", () => {
       page
         .locator("main")
         .getByRole("link", { name: /^Impostazioni della casa/ }),
-    ).toContainText("Piano, membri, aspetto");
+    ).toContainText("Chi c’è e notifiche");
     for (const absent of [
       "Profili dei figli",
       "spazi da scoprire",

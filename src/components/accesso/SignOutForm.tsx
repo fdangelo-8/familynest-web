@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button/Button";
+import { clearAllRecentSearches } from "@/lib/recent-searches";
 
 /**
  * "Esci": POST to /auth/signout (the only way: a GET does nothing). Closes the
@@ -23,7 +24,11 @@ export function SignOutForm() {
     <form
       method="post"
       action="/auth/signout"
-      onSubmit={() => setLoading(true)}
+      onSubmit={() => {
+        // The recent searches stay in this browser only: they leave with the person.
+        clearAllRecentSearches();
+        setLoading(true);
+      }}
     >
       <Button
         type="submit"

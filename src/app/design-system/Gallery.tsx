@@ -2124,6 +2124,84 @@ function PageParts() {
           <TextField label="Pigiama" placeholder="Es. 140" />
         </div>
       </Example>
+      <Example caption="a.parola · parola--insieme · parola--a-capo (sintesi di Notifiche, #39)">
+        <section
+          className="scheda scheda--evidenza sintesi"
+          aria-label="Il tuo martedì"
+          data-testid="sintesi-parole"
+        >
+          <p className="sintesi__frase">
+            Alle{" "}
+            <Link href="#pezzi-pagine" className="parola">
+              16:00
+            </Link>{" "}
+            hai{" "}
+            <Link
+              href="#pezzi-pagine"
+              className="parola parola--a-capo"
+              data-testid="parola-a-capo"
+            >
+              Riunione di condominio con tutti i vicini del palazzo
+            </Link>
+            , poi tu e Laura siete{" "}
+            <Link href="#pezzi-pagine" className="parola parola--insieme">
+              liberi dalle 21:30
+            </Link>
+            .
+          </p>
+        </section>
+      </Example>
+      <Example caption="Ricerca (#40): campo con anello, numero dei chip, palette con risultati che scorrono, stato vuoto con testo lungo">
+        <div className="colonna" data-testid="ricerca-pezzi">
+          <form className="campo-ricerca" role="search">
+            <Icon name="search" />
+            <label className="visivamente-nascosto" htmlFor="galleria-ricerca">
+              Cerca nel Nest
+            </label>
+            <input
+              id="galleria-ricerca"
+              type="search"
+              className="campo-ricerca__input"
+              placeholder="Cerca nel Nest"
+              autoComplete="off"
+            />
+          </form>
+          <ChipGroup aria-label="Filtra i risultati">
+            <Chip count={3}>Impegni</Chip>
+            <Chip count={2} pressed>
+              Spesa
+            </Chip>
+          </ChipGroup>
+          <div data-testid="palette-esempio">
+            <div className="palette__risultati" data-testid="palette-risultati">
+              <div className="palette__gruppo">
+                <p className="palette__gruppo-titolo">Impegni</p>
+                <ul className="lista">
+                  <li>
+                    <div className="riga-lista">
+                      <span className="riga-lista__testo">
+                        <span className="riga-lista__titolo">Nuoto Sofia</span>
+                      </span>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div className="palette__piede">
+              <span>↑ ↓ per scorrere</span>
+              <span>↵ per aprire</span>
+              <span>esc per chiudere</span>
+            </div>
+          </div>
+          <EmptyState
+            large
+            data-testid="vuoto-lungo"
+            title="Niente per «aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa»"
+            text="Prova con un’altra parola."
+            actions={<Button variant="secondary">Cerca ancora</Button>}
+          />
+        </div>
+      </Example>
       <Example caption="sezione--ancora · si ferma sotto la barra">
         <section
           id="notifiche-esempio"
@@ -2160,6 +2238,30 @@ function PageParts() {
             <SkeletonGroup data-testid="skeleton-bottone">
               <Skeleton shape="bottone" />
             </SkeletonGroup>
+          </div>
+        </div>
+      </Example>
+      <Example caption="riga-evento--passato (testo secondario, senza opacità)">
+        <div className="colonna" data-testid="riga-passata">
+          <div
+            className="riga-evento riga-evento--compatta riga-evento--passato"
+            data-testid="riga-passata-normale"
+          >
+            <span className="riga-evento__ora">8:00</span>
+            <span className="riga-evento__testo">
+              <span className="riga-evento__titolo">Scuola Sofia</span>
+              <span className="riga-evento__info">la porta Laura</span>
+            </span>
+          </div>
+          <div
+            className="riga-evento riga-evento--compatta riga-evento--insieme riga-evento--passato"
+            data-testid="riga-passata-insieme"
+          >
+            <span className="riga-evento__ora">19:00</span>
+            <span className="riga-evento__testo">
+              <span className="riga-evento__titolo">Cena dai nonni</span>
+              <span className="riga-evento__info">li porta Marco</span>
+            </span>
           </div>
         </div>
       </Example>
