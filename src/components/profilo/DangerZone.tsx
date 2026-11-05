@@ -2,8 +2,9 @@
 
 import { useRef, useState } from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog/ConfirmDialog";
-import { Icon } from "@/components/ui/Icon/Icon";
+import { Button } from "@/components/ui/Button/Button";
 import { getLeaveDialogCopy } from "@/lib/leave-dialog";
+import { clearLens } from "@/lib/lens";
 import { clearAllRecentSearches } from "@/lib/recent-searches";
 import type { DeletionOutlook } from "./model";
 
@@ -77,6 +78,7 @@ export function DangerZone({
       if (response.type === "opaqueredirect" || response.ok) {
         // The recent searches stay in this browser only: they leave with the person.
         clearAllRecentSearches();
+        clearLens();
         window.location.replace("/accesso");
         return UNTIL_THE_PAGE_CHANGES();
       }
@@ -107,6 +109,7 @@ export function DangerZone({
 
     if (response.ok) {
       clearAllRecentSearches();
+      clearLens();
       // `replace`: going back never returns to a page of an account that is gone.
       window.location.replace(AFTER_DELETION);
       return UNTIL_THE_PAGE_CHANGES();
@@ -136,22 +139,20 @@ export function DangerZone({
   return (
     <>
       <div className="dialogo__azioni">
-        {/* `Button` has no `aria-haspopup`: same markup, written here */}
-        <button
-          type="button"
-          className="btn-secondary btn--pieno"
+        <Button
+          variant="secondary"
+          full
+          icon="log-out"
           aria-haspopup="dialog"
           onClick={() => {
             setSignOutError(undefined);
             setSignOutOpen(true);
           }}
         >
-          <Icon name="log-out" />
-          <span className="btn__testo">Esci</span>
-        </button>
-        <button
-          type="button"
-          className="btn-pericolo"
+          Esci
+        </Button>
+        <Button
+          variant="pericolo"
           aria-haspopup="dialog"
           onClick={() => {
             setDeleteError(undefined);
@@ -159,7 +160,7 @@ export function DangerZone({
           }}
         >
           Elimina l&apos;account
-        </button>
+        </Button>
       </div>
 
       <ConfirmDialog

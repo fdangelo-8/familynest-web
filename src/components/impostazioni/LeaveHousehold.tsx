@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
 import { leaveHousehold } from "@/app/(app)/impostazioni/actions";
+import { Button } from "@/components/ui/Button/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog/ConfirmDialog";
 import {
   getLeaveButtonLabel,
@@ -55,17 +56,15 @@ export function LeaveHousehold({
 
   return (
     <>
-      {/* `Button` has no `aria-haspopup` or `aria-describedby`: same markup, written here */}
-      <button
-        type="button"
-        className="btn-pericolo"
+      <Button
+        variant="pericolo"
         aria-haspopup="dialog"
         aria-describedby={blocked ? noteId : undefined}
         disabled={blocked}
         onClick={() => setOpen(true)}
       >
-        <span className="btn__testo">{getLeaveButtonLabel(householdName)}</span>
-      </button>
+        {getLeaveButtonLabel(householdName)}
+      </Button>
       {blocked ? (
         <div className="intestazione--centro">
           <p className="t-nota t-secondario" id={noteId}>

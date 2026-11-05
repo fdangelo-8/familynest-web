@@ -16,6 +16,7 @@ import type {
   TakenColor,
 } from "@/components/ui/ColorChoice/ColorChoice";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog/ConfirmDialog";
+import { Button } from "@/components/ui/Button/Button";
 import { cx } from "@/components/ui/cx";
 import { Icon } from "@/components/ui/Icon/Icon";
 import {
@@ -510,20 +511,14 @@ export function MemberView({
               {removeError(name)[removalError]}
             </Alert>
           ) : null}
-          {/* `Button` has no `aria-haspopup`: same markup, written here */}
-          <button
-            type="button"
-            className={cx("btn-pericolo", removing && "is-caricamento")}
+          <Button
+            variant="pericolo"
             aria-haspopup="dialog"
-            aria-busy={removing || undefined}
-            aria-disabled={removing || undefined}
-            onClick={() => {
-              if (!removing) setConfirming(true);
-            }}
+            loading={removing}
+            onClick={() => setConfirming(true)}
           >
-            {removing ? <Spinner /> : null}
-            <span className="btn__testo">{`Togli ${name} dal Nest`}</span>
-          </button>
+            {`Togli ${name} dal Nest`}
+          </Button>
           <ConfirmDialog
             open={confirming}
             onClose={() => setConfirming(false)}
