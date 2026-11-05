@@ -131,16 +131,10 @@ test.describe("etichetta della fonte", () => {
     baseURL,
   }) => {
     needsFake();
-    const hour = Number(
-      new Intl.DateTimeFormat("en-GB", {
-        timeZone: "Europe/Rome",
-        hour: "2-digit",
-        hourCycle: "h23",
-      }).format(new Date()),
-    );
-    test.skip(hour >= 21, "L'impegno tra un'ora sarebbe domani");
     await withLinkerRita(baseURL, async (u) => {
-      await linkedWithVisit(browser, u, "household", hour + 1);
+      // The visit is at 9:30 and the page thinks it is 8:30, whatever the hour of the run.
+      await linkedWithVisit(browser, u, "household", 9);
+      await page.clock.setFixedTime(new Date(at(today(), 8, 30)));
 
       await u.signIn(page);
       await page.goto("/oggi");
