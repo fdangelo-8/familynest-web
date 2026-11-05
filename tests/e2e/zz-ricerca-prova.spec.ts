@@ -34,6 +34,34 @@ test.describe("prova #40 (2)", () => {
     const tag = desktop ? "d" : "m";
     await signInAs(page.context(), baseURL as string, "A");
     const calls = rpcCalls(page);
+    await page.addInitScript(() => {
+      const w = window as unknown as { __nav: string[] };
+      w.__nav = [];
+      const t0 = performance.now();
+      for (const name of [
+        "back",
+        "forward",
+        "go",
+        "pushState",
+        "replaceState",
+      ] as const) {
+        const orig = history[name].bind(history) as (...a: unknown[]) => void;
+        (history as unknown as Record<string, unknown>)[name] = (
+          ...a: unknown[]
+        ) => {
+          w.__nav.push(
+            `${Math.round(performance.now() - t0)} ${name} ${String(a[2] ?? "")} ${(
+              new Error().stack ?? ""
+            )
+              .split("\n")
+              .slice(2, 5)
+              .map((l) => l.trim().slice(0, 90))
+              .join(" < ")}`,
+          );
+          return orig(...a);
+        };
+      }
+    });
     const urls: string[] = [];
     page.on("request", (r) => urls.push(r.url()));
 
@@ -106,6 +134,7 @@ test.describe("prova #40 (2)", () => {
       "recenti: salva con aggiungilo, ricarica, cancella e annulla",
       async () => {
         if (!/\/ricerca$/.test(page.url())) await open();
+        await page.waitForTimeout(1500);
         const recents = page.getByTestId("ricerca-recenti");
         note(`${tag}: recenti visibili=${await recents.count()}`);
         if ((await recents.count()) > 0) {
@@ -198,7 +227,10 @@ test.describe("prova #40 (2)", () => {
             ),
           );
         }
-        note(`${tag}: timeline=${JSON.stringify(timeline)}`);
+        note(`${tag}: timeline=${JSON.stringify(timeline.slice(0, 4))}`);
+        note(
+          `${tag}: nav=${JSON.stringify(await page.evaluate(() => (window as unknown as { __nav: string[] }).__nav.slice(-14)))}`,
+        );
       });
     } else {
       await step("mobile: Annulla porta alla pagina di prima", async () => {
