@@ -130,6 +130,12 @@ jobs:
     needs: [check, build]
     if: needs.check.outputs.app == 'true' && needs.check.outputs.tests == 'true'
     runs-on: ubuntu-latest
+    # The suite is split into three parts that run at the same time (about 20
+    # minutes instead of 50). Each part has its own runner and throwaway Supabase.
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
     # The suite grows with every page: 45 minutes were no longer enough (#232).
     timeout-minutes: 90
     # Each run has its own throwaway local Supabase: migrations, seed and test
@@ -144,8 +150,16 @@ jobs:
           cache: npm
       - run: npm ci
 
+      # The runner sometimes has a database port still busy: try up to three times.
       - name: Start throwaway Supabase
-        run: npx supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor
+        run: |
+          for attempt in 1 2 3; do
+            npx supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor && exit 0
+            echo "::warning::Supabase non è partito (tentativo $attempt), riprovo."
+            npx supabase stop --no-backup || true
+            sleep 10
+          done
+          exit 1
 
       # Local URL and keys, and test users with passwords generated for this run,
       # written to a file for the Playwright container. Nothing comes from secrets.
@@ -179,18 +193,18 @@ jobs:
 
       # Same image as the visual references, so screenshots render the same way.
       # Keep in sync with the @playwright/test version in package.json.
-      # One Playwright run for all suites, so the app is built once.
+      # One Playwright run per part; --shard splits the files evenly.
       - name: Playwright
         run: |
           docker run --rm --network host --ipc host \
             --env-file "$RUNNER_TEMP/test.env" -e CI=true \
             -v "$GITHUB_WORKSPACE:/work" -w /work \
             mcr.microsoft.com/playwright:v1.64.1-noble \
-            npx playwright test tests/e2e tests/a11y ${{ needs.check.outputs.visual == 'true' && 'tests/visual' || '' }}
+            npx playwright test --shard=${{ matrix.shard }}/3 tests/e2e tests/a11y ${{ needs.check.outputs.visual == 'true' && 'tests/visual' || '' }}
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.shard }}
           path: |
             playwright-report/
             test-results/

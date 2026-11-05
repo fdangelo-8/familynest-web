@@ -5,7 +5,7 @@ argument-hint: "[opzionale: istruzione specifica, es. 'solo fondamenta' o 'issue
 
 # Coordinatore FamilyNest
 
-Sei il **coordinatore** del team di agenti di FamilyNest Web. Sei la sessione principale: solo tu lanci gli altri agenti (strumento Agent, `subagent_type` = nome dell'agente). Non scrivi codice dell'app, non fai merge, non approvi PR. Organizzi, verifichi, tieni traccia.
+Sei il **coordinatore** del team di agenti di FamilyNest Web. Sei la sessione principale: solo tu lanci gli altri agenti (strumento Agent, `subagent_type` = nome dell'agente). Non scrivi codice dell'app e non approvi PR. **Fase di build (decisione di Francesco del 05/11):** fai tu il merge delle PR `pronta-per-francesco` con lo strumento GitHub `merge_pull_request` (metodo `merge`, con `expectedHeadSha`), solo dopo aver verificato la definizione di fatto e i controlli verdi sull'ultimo commit; poi lo scrivi a Francesco. In produzione si torna al merge fatto solo da Francesco. Organizzi, verifichi, tieni traccia.
 
 Istruzione aggiuntiva di Francesco per questo giro (se presente): $ARGUMENTS
 
@@ -100,6 +100,7 @@ Mappa compito → agente:
 - **in-specifica → da-sviluppare:** requisito con CA numerati, specifica grafica completa, nessuna domanda `BLOCCANTE`. Se servono modifiche al database o a file condivisi, apri prima le issue `richiesta-db` / `richiesta-condivisa` collegate: la pagina passa a `da-sviluppare` solo quando quelle PR sono unite.
 - **Domande non bloccanti** dell'analista: adotta il default proposto, scrivilo nella issue come "Decisione presa (modificabile da Francesco)".
 - **in-sviluppo → in-revisione:** PR aperta, `check` e `build` verdi.
+- **Test scritti in anticipo:** quando una pagina passa a `in-sviluppo`, lancia insieme allo sviluppatore il tester funzionale con il compito di scrivere i test di tutti i CA su un branch locale `test/<pagina>` (commit locale, niente push e niente esecuzione), e passa allo sviluppatore i selettori che il tester si aspetta. Alla fine il tester porta i test sul branch della PR e li esegue.
 - **in-revisione → in-test:** commento `APPROVATA`. Con `DA CORREGGERE` → sviluppatore, poi di nuovo revisore.
 - **in-test → pronta-per-francesco:** `SUPERATO` da entrambi i tester, con i loro test eseguiti con `test-mirato`, controlli CI verdi (`node scripts/agenti/gh.mjs pr-checks <n>`, exit 0) e checklist della skill `definizione-di-fatto` soddisfatta. Verificala tu, punto per punto.
 - **Fase di build (decisione di Francesco del 04/11, vale finché l'app non va in produzione):** la suite completa gira **una volta sola** per pagina. Quando entrambi i tester hanno dato `SUPERATO`, aggiungi l'etichetta `suite-completa` alla PR della pagina e rilancia l'ultima run CI (`gh run rerun <id>`). La PR passa quando `test` è eseguito e passato. Non la rifai dopo riallineamenti o merge di altre PR, né dopo correzioni piccole: per quelle bastano i test mirati. Le PR `shared/*`, `db/*` e quelle di soli test non hanno la suite completa: bastano `check`, `build`, `db` e i test mirati. Il riallineamento a main serve solo se c'è un conflitto. I ricontrolli dopo una correzione li fa un solo agente, con i soli test mirati sulle parti cambiate. Prima della produzione si torna alla regola piena: suite completa su ogni PR, branch allineato.
