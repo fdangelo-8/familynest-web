@@ -12,6 +12,7 @@ import {
 } from "react";
 import { clearLinkResult } from "@/app/onboarding/calendario/actions";
 import { Brand, Claim, Stickers } from "@/components/accesso/parts";
+import type { LinkResult } from "@/lib/calendar-sync/oauth";
 import { Alert } from "@/components/ui/Alert/Alert";
 import { Button } from "@/components/ui/Button/Button";
 import { Icon, type IconName } from "@/components/ui/Icon/Icon";
@@ -34,7 +35,7 @@ export type CalendarRow = {
 /** How the last link ended (the short cookie of #34 §10). */
 export type CalendarNotice = {
   provider: ProviderId;
-  result: "linked" | "denied" | "no_calendar_permission" | "limit" | "failed";
+  result: LinkResult;
 };
 
 export type CalendarStepProps = {
@@ -70,10 +71,18 @@ const ASSURANCES: { icon: IconName; title: string; text: string }[] = [
   },
 ];
 
+/** The account is there: the row says «Collegato», no notice is needed. */
+function isLinked(notice: CalendarNotice): boolean {
+  return notice.result === "linked" || notice.result === "already_linked";
+}
+
 function noticeText(notice: CalendarNotice): string {
   const name = NAMES[notice.provider];
   if (notice.result === "no_calendar_permission") {
     return `${name} ci ha dato l'accesso all'account ma non al calendario. Riprova e lascia la spunta su «Calendario».`;
+  }
+  if (notice.result === "admin_approval") {
+    return `Il tuo account di lavoro non permette di collegare app esterne a ${name}. Chiedi a chi gestisce gli account in ufficio di approvare FamilyNest, oppure collega un altro calendario.`;
   }
   return `Non siamo riusciti a collegare ${name}. Riprova o salta questo passo.`;
 }
@@ -208,7 +217,7 @@ function Notice({
       </Alert>
     );
   }
-  if (!notice || notice.result === "linked") return null;
+  if (!notice || isLinked(notice)) return null;
   return (
     <Alert
       variant="errore"
@@ -275,7 +284,7 @@ export function CalendarStep({
   useEffect(() => {
     if (initialNotice === null) return;
     void clearLinkResult();
-    if (initialNotice.result !== "linked") return;
+    if (!isLinked(initialNotice)) return;
     for (const box of [mobileActions.current, desktopActions.current]) {
       const button = box?.querySelector("button");
       if (button && button.offsetParent !== null) {
