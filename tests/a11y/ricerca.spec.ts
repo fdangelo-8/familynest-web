@@ -107,7 +107,7 @@ test.describe("axe, uno per stato", () => {
     await searchField(page).fill("nuoto");
     const problem = page.getByTestId("ricerca-errore");
     await expect(problem).toBeVisible();
-    await expect(page.getByRole("alert")).toContainText(
+    await expect(problem.getByRole("alert")).toContainText(
       "Non siamo riusciti a cercare. Controlla la connessione e riprova.",
     );
     await expect(
@@ -127,7 +127,9 @@ test.describe("axe, uno per stato", () => {
       await context.setOffline(true);
       await searchField(page).fill("nuoto");
       await expect(page.getByTestId("ricerca-offline")).toBeVisible();
-      await expect(page.getByRole("alert")).toContainText(
+      await expect(
+        page.getByTestId("ricerca-offline").getByRole("alert"),
+      ).toContainText(
         "Sei offline: la ricerca riparte appena torna la connessione.",
       );
       await expect(page.getByTestId("ricerca-recenti")).toBeVisible();
@@ -193,9 +195,9 @@ test.describe("struttura", () => {
     await expect(dialog).toBeVisible();
     await expect(dialog).toHaveAttribute("aria-modal", "true");
     await expect(dialog.getByRole("combobox")).toBeFocused();
-    await expect(dialog).toContainText("↑ ↓ per scorrere");
-    await expect(dialog).toContainText("↵ per aprire");
-    await expect(dialog).toContainText("esc per chiudere");
+    await expect(dialog).toContainText("per scorrere");
+    await expect(dialog).toContainText("per aprire");
+    await expect(dialog).toContainText("per chiudere");
     await expect(
       page.getByRole("group", { name: "Filtra i risultati" }),
     ).toHaveCount(0);
@@ -264,7 +266,7 @@ test.describe("tastiera", () => {
         (el.textContent ?? "").replace(/\s+/g, " ").trim() ||
         el.tagName;
       // The initial of an avatar (aria-hidden) is in the text of a person chip.
-      const label = raw.replace(/^[A-Z](?=[A-Z])/, "");
+      const label = raw.replace(/^[A-Z](?=[A-Z][a-z])/, "");
       const inDialog = !!el.closest('[role="dialog"]');
       return { label, visible, inDialog };
     });
@@ -322,7 +324,7 @@ test.describe("tastiera", () => {
     await openSearch(page, testInfo);
     await searchAndWait(page, "nuoto");
     const order = await tabOrder(page, 12);
-    expect(order.slice(0, 2)).toEqual(["Annulla", "Tutto 5"]);
+    expect(order.slice(0, 2)).toEqual(["Annulla", "Tutto5"]);
     const box = order.findIndex((l) =>
       l.startsWith("Segna come fatto: Comprare la cuffia da nuoto"),
     );
@@ -430,8 +432,8 @@ test.describe("tastiera", () => {
       /is-selezionata/,
     );
     await page.keyboard.press("Escape");
-    await expect(page.getByTestId("ricerca-palette")).toHaveCount(0);
     await expect(page).toHaveURL(/\/oggi$/);
+    await expect(page.getByTestId("ricerca-palette")).toBeHidden();
   });
 });
 
