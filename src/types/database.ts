@@ -1169,6 +1169,38 @@ export type Database = {
         };
         Returns: undefined;
       };
+      search_household: {
+        Args: {
+          p_from?: string;
+          p_kinds?: Database["public"]["Enums"]["search_result_kind"][];
+          p_member_id?: string;
+          p_text?: string;
+          p_to?: string;
+        };
+        Returns: {
+          assignee_member_id: string;
+          author_member_id: string;
+          due_date: string;
+          ends_at: string;
+          escort_member_id: string;
+          for_member_id: string;
+          id: string;
+          is_masked: boolean;
+          is_private: boolean;
+          kind: Database["public"]["Enums"]["search_result_kind"];
+          location: string;
+          member_ids: string[];
+          occurrence_day: string;
+          quantity: string;
+          recurrence: Database["public"]["Enums"]["event_recurrence"];
+          recurrence_weekdays: number[];
+          series_starts_on: string;
+          sort_index: number;
+          starts_at: string;
+          title: string;
+          visibility: Database["public"]["Enums"]["event_visibility"];
+        }[];
+      };
       set_notification_preference: {
         Args: {
           p_enabled: boolean;
@@ -1262,6 +1294,7 @@ export type Database = {
         | "shopping"
         | "free_together"
         | "morning_digest";
+      search_result_kind: "event" | "deadline" | "todo" | "shopping_item";
       space_key:
         | "meals"
         | "couple"
@@ -1444,6 +1477,7 @@ export const Constants = {
         "free_together",
         "morning_digest",
       ],
+      search_result_kind: ["event", "deadline", "todo", "shopping_item"],
       space_key: [
         "meals",
         "couple",
