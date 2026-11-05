@@ -26,7 +26,7 @@ const PAGES = [
   { route: "/casa/spesa", file: "casa-spesa", h1: "Casa" },
   { route: "/notifiche", file: "notifiche", h1: "Notifiche" },
   { route: "/ricerca", file: "ricerca", h1: "Ricerca" },
-  { route: "/profilo", file: "profilo", h1: "Il tuo profilo" },
+  { route: "/profilo", file: "profilo", h1: "Marco D'Angelo" },
   {
     route: "/calendari-collegati",
     file: "calendari-collegati",

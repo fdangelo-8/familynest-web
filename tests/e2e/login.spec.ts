@@ -51,6 +51,22 @@ async function clickUntil(target: Locator, done: () => Promise<void> | void) {
 }
 
 /**
+ * «Esci» on /profilo asks for a confirmation (#38): opens the dialog (clicking
+ * until the page is hydrated) and confirms inside it.
+ */
+async function signOutFromProfile(page: Page) {
+  const dialog = page.getByRole("alertdialog", {
+    name: "Uscire da FamilyNest?",
+  });
+  await clickUntil(
+    page.getByRole("main").getByRole("button", { name: "Esci", exact: true }),
+    () => expect(dialog).toBeVisible({ timeout: 3000 }),
+  );
+  await dialog.getByRole("button", { name: "Esci", exact: true }).click();
+  await expect(page).toHaveURL(/\/accesso$/);
+}
+
+/**
  * Visible buttons of the page, read straight from the DOM. While the browser
  * is being sent to the provider, locators wait for that navigation, so the
  * loading state is read with page.evaluate.
@@ -967,9 +983,7 @@ test.describe("[CI-utenti] uscita e isolamento", () => {
     try {
       await enter(page, marco.email);
       await page.goto("/profilo");
-      await clickUntil(page.getByRole("button", { name: "Esci" }), () =>
-        expect(page).toHaveURL(/\/accesso$/, { timeout: 3000 }),
-      );
+      await signOutFromProfile(page);
       expect(
         (await cookieNames(context)).filter((n) => /^sb-.+-auth-token/.test(n)),
       ).toEqual([]);
@@ -1001,9 +1015,7 @@ test.describe("[CI-utenti] uscita e isolamento", () => {
     try {
       await enter(page, marco.email);
       await page.goto("/profilo");
-      await clickUntil(page.getByRole("button", { name: "Esci" }), () =>
-        expect(page).toHaveURL(/\/accesso$/, { timeout: 3000 }),
-      );
+      await signOutFromProfile(page);
       await enter(page, giulia.email);
       await expect(page).toHaveURL(/\/oggi$/);
       await expect(
