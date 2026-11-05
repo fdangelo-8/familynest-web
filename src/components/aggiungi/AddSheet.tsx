@@ -1661,7 +1661,7 @@ export function AddSheet({
               <Icon name="calendar" />
               <span className="riga-opzione__nome">
                 {dayKeyShown ? longDayLabel(dayKeyShown, todayKey) : "Quando"}
-              </span>
+              </span>{" "}
               <span className="riga-opzione__valore">
                 {slot ? rangeLabel(slot, todayKey) : "Scegli"}
               </span>
@@ -1673,7 +1673,7 @@ export function AddSheet({
               onOpen={openForm}
             >
               <Icon name="users" />
-              <span className="riga-opzione__nome">Chi</span>
+              <span className="riga-opzione__nome">Chi</span>{" "}
               <span className="riga-opzione__valore">
                 {participants.length > 0 && participants.length <= 4 ? (
                   <span className="avatar-gruppo">
@@ -1697,7 +1697,7 @@ export function AddSheet({
               onOpen={openForm}
             >
               <Icon name="car" />
-              <span className="riga-opzione__nome">La porta</span>
+              <span className="riga-opzione__nome">La porta</span>{" "}
               <span className="riga-opzione__valore">Scegli</span>
             </OptionRow>
             <OptionRow
@@ -1707,7 +1707,7 @@ export function AddSheet({
               onOpen={openForm}
             >
               <Icon name="eye" />
-              <span className="riga-opzione__nome">Chi lo vede</span>
+              <span className="riga-opzione__nome">Chi lo vede</span>{" "}
               <span className="riga-opzione__valore">
                 {VISIBILITY_LABELS[newEventVisibility]}
               </span>
