@@ -559,9 +559,8 @@ test.describe("ricerca (#40)", () => {
       await expect(
         page.getByRole("dialog", { name: "Cerca nel Nest" }),
       ).toBeVisible();
-      // The page below is Today: its h1 is a greeting that changes, so only
-      // the count (checked above: one h1 in the whole page) is stable.
-      await expect(page.locator("main h1")).toHaveCount(1);
+      // The page below is Today: its h1 is a greeting that changes, so it is
+      // not looked for by name; the single h1 of the page is checked above.
     }
   });
 });
