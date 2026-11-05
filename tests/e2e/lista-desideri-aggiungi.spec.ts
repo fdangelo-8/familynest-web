@@ -22,6 +22,7 @@ import {
   reservationsOf,
   seedList,
   startCounter,
+  shopHits,
   startShop,
   submitIdea,
   toastWith,
@@ -137,7 +138,10 @@ test.describe("aggiungere un'idea", () => {
           .from("wishlist_item_photos")
           .select("content_type")
           .eq("item_id", saved[0]!.id);
-        expect(photoRows, "foto copiata nel database").toHaveLength(1);
+        expect(
+          photoRows,
+          `foto copiata nel database; richieste al negozio: ${JSON.stringify(shopHits)}`,
+        ).toHaveLength(1);
         const image = first.locator("img.foto__immagine");
         await expect(image).toHaveCount(1);
         expect(await image.getAttribute("src")).not.toContain(

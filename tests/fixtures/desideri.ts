@@ -626,6 +626,8 @@ const TINY_JPEG = Buffer.from(
 );
 
 let shopServer: Promise<void> | null = null;
+/** Paths asked to the test shop by this worker (empty if another one serves). */
+export const shopHits: string[] = [];
 
 /**
  * Serves `/diario` and `/vuota` on the port of the test origin. The port is
@@ -645,6 +647,7 @@ async function listenShop(): Promise<void> {
   if (!SHOP_ORIGIN) throw new Error("Origine di prova non impostata");
   const port = Number(new URL(SHOP_ORIGIN).port);
   const server = createServer((request, response) => {
+    shopHits.push(`${request.url} ${request.headers.accept ?? ""}`);
     if (request.url === "/diario") {
       response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
       response.end(
