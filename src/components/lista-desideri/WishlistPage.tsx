@@ -377,8 +377,7 @@ function WishlistContent({
         </span>
         {occasion.missing ? (
           <Link className="btn-link" href={`/figli/${data.child.id}`}>
-            Aggiungila
-            <VisuallyHidden> la data di nascita</VisuallyHidden>
+            Aggiungila <VisuallyHidden>la data di nascita</VisuallyHidden>
           </Link>
         ) : (
           <span />
