@@ -497,7 +497,10 @@ export const openLink = (row: Locator): Locator =>
 export const REST_NOTIFICATIONS = /\/rest\/v1\/notifications(\?|$)/;
 export const REST_TODOS = /\/rest\/v1\/todos(\?|$)/;
 export const RPC_MARK_READ = /\/rest\/v1\/rpc\/mark_notifications_read(\?|$)/;
-export const RPC_LIST_EVENTS = /\/rest\/v1\/rpc\/list_household_events(\?|$)/;
+// The page reads the events through list_household_events_with_source (#34);
+// the old name is still matched so that the pattern keeps covering both.
+export const RPC_LIST_EVENTS =
+  /\/rest\/v1\/rpc\/list_household_events(_with_source)?(\?|$)/;
 
 /**
  * Makes the requests with this method to the matching path fail: `server` is
