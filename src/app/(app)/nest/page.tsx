@@ -46,7 +46,7 @@ const SETTINGS: ReadonlyArray<{
   {
     icon: "settings",
     title: "Impostazioni della casa",
-    info: "Piano, membri, aspetto",
+    info: "Chi c’è e notifiche",
     href: "/impostazioni",
   },
 ];

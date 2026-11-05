@@ -466,7 +466,7 @@ export function MemberView({
               <span className="riga-lista__testo">
                 <span className="riga-lista__titolo">Amministratore</span>
                 <span className="riga-lista__info">
-                  Può invitare, togliere persone e gestire il piano
+                  Può invitare e togliere persone
                 </span>
               </span>
               <Toggle
