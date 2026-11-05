@@ -16,19 +16,23 @@ export const metadata: Metadata = {
 export default async function Page() {
   // Session and Nest check before anything else (the layout is not a guard).
   const frame = await requireNest();
-  const loaded: Loaded =
-    frame.failed || !frame.me
-      ? { ok: false }
-      : await loadLinkedCalendars(frame.me.name).catch((): Loaded => ({
-          ok: false,
-        }));
-  if (!loaded.ok) return <CalendarsError />;
 
   // The way back from the provider leaves one short cookie with the provider
   // and one word (no mail, no id): the page shows it once.
   const linkNotice = parseLinkResult(
     (await cookies()).get(LINK_RESULT_COOKIE)?.value,
   );
+
+  const loaded: Loaded =
+    frame.failed || !frame.me
+      ? { ok: false }
+      : await loadLinkedCalendars(
+          frame.me.name,
+          linkNotice?.result === "already_linked" ? linkNotice.provider : null,
+        ).catch((): Loaded => ({
+          ok: false,
+        }));
+  if (!loaded.ok) return <CalendarsError />;
 
   return (
     <main id="contenuto" tabIndex={-1} className="pagina pagina-desktop">

@@ -53,6 +53,8 @@ export type CalendarsViewProps = {
   staleAccountIds: string[];
   /** «15:40»: when the page was read */
   loadedAt: string;
+  /** Mail of the account just linked again (read from the database) */
+  alreadyLinkedEmail: string | null;
   /** What the way back from the provider said, if the adult just came back */
   linkNotice: LinkNotice | null;
 };
@@ -110,6 +112,7 @@ export function CalendarsView({
   others,
   staleAccountIds,
   loadedAt,
+  alreadyLinkedEmail,
   linkNotice,
 }: CalendarsViewProps) {
   const router = useRouter();
@@ -242,6 +245,17 @@ export function CalendarsView({
     if (!notice || shown.current) return;
     shown.current = true;
     void clearLinkResult().catch(() => undefined);
+    if (notice.result === "already_linked") {
+      if (alreadyLinkedEmail) {
+        showToast({
+          icon: null,
+          lead: alreadyLinkedEmail,
+          text: "è già collegato.",
+          withoutNav: true,
+        });
+      }
+      return;
+    }
     if (notice.result !== "linked") return;
     showToast({
       lead: PROVIDER_NAME[notice.provider],
@@ -252,7 +266,7 @@ export function CalendarsView({
       .filter((a) => a.provider === notice.provider)
       .at(-1);
     if (last) sectionHeadings.current.get(last.id)?.focus();
-  }, [notice, showToast]);
+  }, [notice, alreadyLinkedEmail, showToast]);
 
   /* ---------- switches ---------- */
   const inFlight = useRef(new Set<string>());
@@ -390,7 +404,13 @@ export function CalendarsView({
   );
 
   const linkAlert = (() => {
-    if (!notice || notice.result === "linked") return null;
+    if (
+      !notice ||
+      notice.result === "linked" ||
+      notice.result === "already_linked"
+    ) {
+      return null;
+    }
     const name = PROVIDER_NAME[notice.provider];
     const retry = (
       <ConnectForm provider={notice.provider}>
@@ -426,6 +446,14 @@ export function CalendarsView({
           <Alert variant="errore" action={retry}>
             <b>{name}</b> ci ha dato l&apos;accesso all&apos;account ma non al
             calendario. Riprova e lascia la spunta su «Calendario».
+          </Alert>
+        );
+      case "admin_approval":
+        return (
+          <Alert variant="errore" action={retry}>
+            Il tuo account di lavoro non permette di collegare app esterne a
+            Outlook. Chiedi a chi gestisce gli account in ufficio di approvare
+            FamilyNest, oppure collega un altro calendario.
           </Alert>
         );
       case "limit":

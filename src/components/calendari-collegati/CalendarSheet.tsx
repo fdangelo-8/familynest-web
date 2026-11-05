@@ -182,6 +182,7 @@ export function CalendarSheet({
         open
         tall
         title={`${calendar.name} · ${provider}`}
+        ariaLabel={`Impostazioni del calendario ${calendar.name}`}
         onClose={onClose}
         closeRequested={closeRequested}
         locked={saving}

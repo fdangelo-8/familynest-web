@@ -35,12 +35,15 @@ export type PageData = {
   staleAccountIds: string[];
   /** «15:40»: when this page was read (for the offline notice) */
   loadedAt: string;
+  /** Mail of the account of `alreadyLinkedProvider` touched last (the one the adult just linked again) */
+  alreadyLinkedEmail: string | null;
 };
 
 export type Loaded = { ok: true; data: PageData } | { ok: false };
 
 export async function loadLinkedCalendars(
   fallbackName: string,
+  alreadyLinkedProvider: string | null = null,
 ): Promise<Loaded> {
   const supabase = await createClient();
   const now = new Date();
@@ -61,7 +64,7 @@ export async function loadLinkedCalendars(
     supabase
       .from("calendar_accounts")
       .select(
-        "id, provider, email, status, failing_since, last_synced_at, connected_at",
+        "id, provider, email, status, failing_since, last_synced_at, connected_at, updated_at",
       )
       .order("connected_at", { ascending: true })
       .order("id", { ascending: true }),
@@ -130,9 +133,14 @@ export async function loadLinkedCalendars(
     };
   });
 
+  const touched = accounts.data
+    .filter((a) => a.provider === alreadyLinkedProvider)
+    .sort((a, b) => b.updated_at.localeCompare(a.updated_at))[0];
+
   return {
     ok: true,
     data: {
+      alreadyLinkedEmail: touched?.email ?? null,
       myName: me?.name ?? fallbackName,
       others,
       accounts: items,
