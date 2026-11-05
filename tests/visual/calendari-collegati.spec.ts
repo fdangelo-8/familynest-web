@@ -181,6 +181,37 @@ test.describe("collegato", () => {
     });
   });
 
+  test("#35: «Ricollega» con lo stesso account: toast e nessun avviso", async ({
+    page,
+  }) => {
+    await withUser(page, async (ctx) => {
+      await linkBoth(page, ctx);
+      await putAccountIn(ctx, OUTLOOK.email, {
+        status: "reconnect",
+        failingMinutesAgo: 5,
+      });
+      await openCalendars(page, "linked");
+      await page
+        .getByRole("button", { name: "Ricollega", exact: true })
+        .click();
+      await page.waitForURL(/\/fornitore-finto\/outlook/);
+      await answerConsent(page);
+      // CA-9 of #35: the notice is gone and there is a single Outlook section.
+      await expect(page.getByText("è già collegato.")).toBeVisible();
+      await expect(
+        page.getByRole("heading", { level: 2, name: "Outlook" }),
+      ).toHaveCount(1);
+      await expect(page.getByText("Non riusciamo a sincronizzare")).toHaveCount(
+        0,
+      );
+      await shoot(
+        page,
+        "calendari-collegati-ricollega-stesso-account.png",
+        false,
+      );
+    });
+  });
+
   test("#34: errore del fornitore dopo 24 ore (Google)", async ({ page }) => {
     await withUser(page, async (ctx) => {
       await linkBoth(page, ctx);

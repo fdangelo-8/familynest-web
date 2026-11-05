@@ -69,9 +69,13 @@ const focusedName = (page: Page) =>
       .trim();
   });
 
-/** True when the 44 x 44 area centred on the element hits the element. */
-async function hasTouchArea(page: Page, target: Locator) {
-  const box = await target.boundingBox();
+/**
+ * True when the 44 x 44 area centred on `centre` (the element itself unless
+ * given) hits the element. The title of a calendar has its area on the column
+ * of the text (`.riga-lista--modificabile`, #204): the centre is the column.
+ */
+async function hasTouchArea(page: Page, target: Locator, centre?: Locator) {
+  const box = await (centre ?? target).boundingBox();
   expect(box).not.toBeNull();
   const cx = box!.x + box!.width / 2;
   const cy = box!.y + box!.height / 2;
@@ -94,7 +98,10 @@ async function hasTouchArea(page: Page, target: Locator) {
 async function expectTouchAreas(page: Page, targets: Locator[]) {
   for (const target of targets) {
     await target.scrollIntoViewIfNeeded();
-    expect(await hasTouchArea(page, target), String(target)).toBe(true);
+    // The title buttons of the rows: the area is the column of the text.
+    const isTitle = (await target.getAttribute("aria-describedby")) !== null;
+    const centre = isTitle ? target.locator("xpath=..") : undefined;
+    expect(await hasTouchArea(page, target, centre), String(target)).toBe(true);
   }
 }
 
@@ -323,6 +330,8 @@ test.describe("collegato", () => {
       await expect(
         page.getByRole("button", { name: "Collega un altro account" }),
       ).toBeDisabled();
+      // The rows of the calendars are disabled too (#34 §4, «Offline»).
+      await expect(calendarTitle(page, "Lavoro")).toBeDisabled();
       await axe(page);
       await context.setOffline(false);
       await expect(alerts(page)).toHaveCount(0);
@@ -344,6 +353,11 @@ test.describe("fogli e dialoghi", () => {
       await expect(
         sheet.getByRole("heading", { level: 2, name: "Lavoro · Outlook" }),
       ).toBeVisible();
+      await expect(
+        sheet
+          .getByRole("group", { name: "Chi vede questi impegni nel Nest" })
+          .getByRole("button", { name: "Occupato", exact: true }),
+      ).toHaveAttribute("aria-pressed", "true");
       await axe(page);
 
       // On opening the focus is on the chosen direction.
