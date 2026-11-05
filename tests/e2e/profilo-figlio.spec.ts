@@ -354,9 +354,7 @@ test.describe("contenuto dello stato normale", () => {
           href: SCADENZE,
           dot: true,
         });
-        await expect(
-          page.getByRole("link", { name: D1_NAME, exact: true }),
-        ).toHaveAttribute("href", SCADENZE);
+        await expect(counters(page).nth(1)).toHaveAccessibleName(D1_NAME);
         await expectCounter(third!, "55", "giorni al compleanno");
       });
     });
@@ -545,12 +543,9 @@ test.describe("contenuto dello stato normale", () => {
         href: SCADENZE,
         dot: true,
       });
-      await expect(
-        page.getByRole("link", {
-          name: "5 giorni alla scadenza: «Comprare il regalo per Mia», urgente",
-          exact: true,
-        }),
-      ).toBeVisible();
+      await expect(counters(page).nth(1)).toHaveAccessibleName(
+        "5 giorni alla scadenza: «Comprare il regalo per Mia», urgente",
+      );
       await expect(weekRows(page)).toHaveCount(3);
       const titles = weekRows(page).locator(".riga-lista__titolo");
       await expect(titles).toHaveText([
@@ -594,12 +589,9 @@ test.describe("regole di calcolo e varianti", () => {
       await expectCounter(counters(page).nth(1), "42", "giorni alla scadenza", {
         href: SCADENZE,
       });
-      await expect(
-        page.getByRole("link", {
-          name: `42 giorni alla scadenza: «${D2_TITLE}»`,
-          exact: true,
-        }),
-      ).toBeVisible();
+      await expect(counters(page).nth(1)).toHaveAccessibleName(
+        `42 giorni alla scadenza: «${D2_TITLE}»`,
+      );
     });
   });
 
@@ -621,12 +613,9 @@ test.describe("regole di calcolo e varianti", () => {
         href: SCADENZE,
         dot: true,
       });
-      await expect(
-        page.getByRole("link", {
-          name: `5 giorni di ritardo: «${D3_TITLE}», urgente`,
-          exact: true,
-        }),
-      ).toBeVisible();
+      await expect(counters(page).nth(1)).toHaveAccessibleName(
+        `5 giorni di ritardo: «${D3_TITLE}», urgente`,
+      );
 
       // D3 moved to 19/10: one day late.
       await moveDeadline(ctx, ids["D3"]!, "2026-10-19");

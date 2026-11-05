@@ -408,15 +408,16 @@ test.describe("contenuto", () => {
     // on mobile the page slides in (foglio-entra, 300 ms) and moves the links:
     // wait for the animation, then read all the positions in one go
     await waitForAnimationsToEnd(page);
-    const ys = await page.evaluate(
-      (hrefs) => {
-        return hrefs.map((href) => {
-          const link = document.querySelector(`main a[href="${href}"]`);
-          return link!.getBoundingClientRect().top;
-        });
-      },
-      expected.map(([, href]) => href),
-    );
+    // «Profili dei figli» goes to the same address as the row of Sofia in
+    // «Chi c’è»: the links are found by name, not by address.
+    const ys: number[] = [];
+    for (const [name] of expected) {
+      const box = await page
+        .locator("main")
+        .getByRole("link", { name: new RegExp(`^${name}`) })
+        .boundingBox();
+      ys.push(box!.y);
+    }
     expect(ys).toEqual([...ys].sort((a, b) => a - b));
     await expect(
       page.locator("main").getByRole("link", { name: /^Profili dei figli/ }),
