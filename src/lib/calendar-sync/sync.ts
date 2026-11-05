@@ -521,10 +521,13 @@ export async function processOutbox(
         if (item.action === "create") {
           const created = await session.createEvent(target, outgoing);
           // The link between the copy and the event must be saved, or the next
-          // run would create a second copy: one more try, and if the database
-          // still refuses, the copy just made is deleted before the retry.
+          // run would create a second copy. One more try if the first answer
+          // is an error; but an error may hide a call the database did
+          // register (the answer got lost), so after any error the database
+          // is asked again with a separate query before the copy is touched.
           let kept: boolean | null = null;
           let saved = false;
+          let uncertain = false;
           for (let attempt = 0; attempt < 2 && !saved; attempt += 1) {
             const completed = await admin.rpc("complete_calendar_outbox_item", {
               p_id: item.id,
@@ -535,16 +538,37 @@ export async function processOutbox(
             });
             saved = noteError(tally, completed);
             if (saved) kept = completed.data;
+            else uncertain = true;
           }
-          if (!saved) {
-            try {
+          if (uncertain) {
+            const { data: link, error: linkError } = await admin
+              .from("event_external_links")
+              .select("id")
+              .eq("event_id", item.event_id)
+              .eq("calendar_id", item.calendar_id)
+              .eq("provider_event_id", created.id)
+              .maybeSingle();
+            noteError(tally, { error: linkError });
+            // Cannot tell: the copy stays, the retry decides.
+            if (linkError) throw new Error("Not completed.");
+            // The database did register it: the work is done, hands off.
+            if (link) kept = true;
+            else {
+              const { data: row, error: rowError } = await admin
+                .from("calendar_outbox")
+                .select("id")
+                .eq("id", item.id)
+                .maybeSingle();
+              noteError(tally, { error: rowError });
+              if (rowError) throw new Error("Not completed.");
               await session.deleteEvent(target, created.id);
-            } catch {
-              // Nothing more can be done from here.
+              // Row gone and no link: the user switched «Anche su» off.
+              // Row still there: nothing was kept, the retry starts again.
+              if (row) throw new Error("Not completed.");
+              kept = true;
             }
-            throw new Error("Not completed.");
           }
-          // The user switched «Anche su» off meanwhile: the copy goes.
+          // Only a first, error-free `false` means «switched off meanwhile».
           if (kept === false) await session.deleteEvent(target, created.id);
         } else {
           if (!item.provider_event_id) throw new Error("Invalid outbox item.");

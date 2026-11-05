@@ -242,8 +242,6 @@ type RawOccurrence = Omit<
   recurrence_until: string | null;
   recurrence_weekdays: number[] | null;
   member_ids: string[] | null;
-  /** Missing or null counts as true: only an explicit false leaves it out. */
-  counts_for_free_time?: boolean | null;
 };
 
 function toOccurrence(raw: RawOccurrence): EventOccurrence | null {

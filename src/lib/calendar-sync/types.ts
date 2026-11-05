@@ -124,6 +124,10 @@ export interface ProviderSession {
     eventId: string,
     event: OutgoingEvent,
   ): Promise<{ version: string | null }>;
+  /**
+   * Deletes the event. For real adapters a 404 or 410 (already gone) counts as
+   * done: a deletion may be repeated after the database failed to record it.
+   */
   deleteEvent(calendar: { id: string }, eventId: string): Promise<void>;
 }
 
