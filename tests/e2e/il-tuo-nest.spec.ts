@@ -341,9 +341,9 @@ test.describe("contenuto", () => {
     });
   });
 
-  // Since #18 the rows of the adults and of the pets are links (CA-38 of #18,
-  // which replaces CA-8 of #17); the children have no page yet (#31).
-  test("CA-8 e CA-38: le righe di adulti e animali sono link, quelle dei figli no", async ({
+  // Since #31 the rows of the children are links too (CA-43 of #31, which
+  // replaces CA-8 of #17 and CA-38 of #18).
+  test("CA-43: le righe di adulti, animali e figli sono link, con la freccia", async ({
     page,
     baseURL,
   }) => {
@@ -363,15 +363,27 @@ test.describe("contenuto", () => {
       "href",
       "/membri/a1000000-0000-4000-8000-000000000005",
     );
-    for (const child of ["Sofia", "Tommaso"]) {
-      await expect(r.filter({ hasText: child })).toHaveCount(1);
-      await expect(linkOf(child)).toHaveCount(0);
+    await expect(linkOf("Sofia")).toHaveAttribute(
+      "href",
+      "/figli/a1000000-0000-4000-8000-000000000003",
+    );
+    await expect(linkOf("Tommaso")).toHaveAttribute(
+      "href",
+      "/figli/a1000000-0000-4000-8000-000000000004",
+    );
+    // The arrow is on every linked row, children included.
+    for (const title of ["Sofia", "Tommaso", "Laura", "Biscotto"]) {
+      await expect(
+        r.filter({ hasText: title }).locator(".riga-lista__valore"),
+      ).toHaveCount(1);
     }
-    await linkOf("Marco, tu").click();
-    await expect(page).toHaveURL(/\/profilo$/);
+    await linkOf("Sofia").click();
+    await expect(page).toHaveURL(
+      /\/figli\/a1000000-0000-4000-8000-000000000003$/,
+    );
   });
 
-  test("CA-9: Esplora e l'elenco delle impostazioni", async ({
+  test("CA-44: Esplora e l'elenco delle impostazioni, con «Profili dei figli»", async ({
     page,
     baseURL,
   }) => {
@@ -382,6 +394,7 @@ test.describe("contenuto", () => {
     await expect(porta).toHaveAttribute("href", "/esplora");
     const expected = [
       ["Calendari collegati", "/calendari-collegati"],
+      ["Profili dei figli", "/figli/a1000000-0000-4000-8000-000000000003"],
       ["Notifiche", "/notifiche"],
       ["Impostazioni della casa", "/impostazioni"],
     ] as const;
@@ -395,27 +408,26 @@ test.describe("contenuto", () => {
     // on mobile the page slides in (foglio-entra, 300 ms) and moves the links:
     // wait for the animation, then read all the positions in one go
     await waitForAnimationsToEnd(page);
-    const ys = await page.evaluate(
-      (hrefs) => {
-        return hrefs.map((href) => {
-          const link = document.querySelector(`main a[href="${href}"]`);
-          return link!.getBoundingClientRect().top;
-        });
-      },
-      expected.map(([, href]) => href),
-    );
+    // «Profili dei figli» goes to the same address as the row of Sofia in
+    // «Chi c’è»: the links are found by name, not by address.
+    const ys: number[] = [];
+    for (const [name] of expected) {
+      const box = await page
+        .locator("main")
+        .getByRole("link", { name: new RegExp(`^${name}`) })
+        .boundingBox();
+      ys.push(box!.y);
+    }
     expect(ys).toEqual([...ys].sort((a, b) => a - b));
+    await expect(
+      page.locator("main").getByRole("link", { name: /^Profili dei figli/ }),
+    ).toContainText("Sofia, Tommaso");
     await expect(
       page
         .locator("main")
         .getByRole("link", { name: /^Impostazioni della casa/ }),
     ).toContainText("Chi c’è e notifiche");
-    for (const absent of [
-      "Profili dei figli",
-      "spazi da scoprire",
-      "attivi",
-      "nuove",
-    ]) {
+    for (const absent of ["spazi da scoprire", "attivi", "nuove"]) {
       await expect(page.locator("main")).not.toContainText(absent);
     }
     await porta.click();
@@ -424,6 +436,52 @@ test.describe("contenuto", () => {
     await expect(page.getByRole("heading", { level: 1 })).toHaveAccessibleName(
       "Cosa può fare la vostra casa",
     );
+  });
+
+  test("CA-44: in un Nest senza figli «Profili dei figli» non c'è", async ({
+    page,
+    baseURL,
+  }) => {
+    test.skip(!throwawayConfigured(), throwawaySkipReason);
+    await withU(async (user) => {
+      await addMembers(user, [
+        { name: "Briciola", kind: "pet", color: "lampone" },
+      ]);
+      await openNestAs(page, user, baseURL);
+      await expect(rows(page)).toHaveCount(2);
+      await expect(
+        page.locator("main").getByRole("link", { name: /^Notifiche/ }),
+      ).toBeVisible();
+      await expect(page.locator("main")).not.toContainText("Profili dei figli");
+      await expect(
+        page.locator("main").getByRole("link", { name: /^Profili dei figli/ }),
+      ).toHaveCount(0);
+    });
+  });
+
+  test("CA-45: «Indietro» dalla pagina di Sofia torna a /nest, aperta direttamente o da «Sofia»", async ({
+    page,
+    baseURL,
+  }, info) => {
+    onlyMobile(info.project.name);
+    test.skip(!usersConfigured("A"), skipReason("A"));
+    await signInSeeded(page, baseURL, "A");
+    const sofia = "/figli/a1000000-0000-4000-8000-000000000003";
+    const back = page.getByRole("link", { name: "Indietro", exact: true });
+    const heading = page.getByRole("heading", { level: 1, name: "Sofia" });
+
+    await page.goto(sofia);
+    await expect(heading).toBeVisible();
+    await back.click();
+    await expect(page).toHaveURL(/\/nest$/);
+
+    await rows(page).filter({ hasText: "Sofia" }).getByRole("link").click();
+    await expect(page).toHaveURL(
+      /\/figli\/a1000000-0000-4000-8000-000000000003$/,
+    );
+    await expect(heading).toBeVisible();
+    await back.click();
+    await expect(page).toHaveURL(/\/nest$/);
   });
 
   test("CA-10: desktop con navigazione alta, senza X e due colonne", async ({

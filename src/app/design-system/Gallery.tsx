@@ -105,6 +105,7 @@ export function Gallery() {
       <EditableRowsSection />
       <MonthSection />
       {pageParts ? <PageParts /> : null}
+      {pageParts ? <WishlistParts /> : null}
     </main>
   );
 }
@@ -1869,6 +1870,172 @@ function DayViewSection() {
             <span className="blocco-orario__ora">9:00 – 10:00</span>
           </a>
         </DayGrid>
+      </Example>
+    </Section>
+  );
+}
+
+// A wide picture (2:1) as a data address: no request to other sites.
+const WISHLIST_SAMPLE_PHOTO =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='100'%3E%3Crect width='200' height='100' fill='%23f2c6a0'/%3E%3C/svg%3E";
+
+// #263 (for #32 and #33): the shared pieces of the wish list and of its
+// public page. Shown only with ?pezzi-pagine=1, in a section of its own so
+// the reference of `#pezzi-pagine` does not change.
+function WishlistParts() {
+  return (
+    <Section
+      id="pezzi-lista-desideri"
+      title="Lista desideri e pagina pubblica (#32, #33)"
+    >
+      <Example caption="riga-regalo--modificabile · foto__immagine · etichetta con il nome">
+        <ul className="scheda lista" data-testid="lista-desideri-righe">
+          <li className="riga-regalo riga-regalo--modificabile">
+            <span className="foto" aria-hidden="true">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                className="foto__immagine"
+                src={WISHLIST_SAMPLE_PHOTO}
+                alt=""
+              />
+            </span>
+            <span className="riga-lista__testo">
+              <button type="button" className="riga-regalo__titolo">
+                Diario segreto con lucchetto
+              </button>
+              <span className="riga-lista__info">
+                Feltrinelli · lo vuole tanto
+              </span>
+            </span>
+            <span className="riga-regalo__prezzo">18 €</span>
+          </li>
+          <li className="riga-regalo riga-regalo--modificabile">
+            <span className="foto" aria-hidden="true">
+              <Icon name="gift" size="l" />
+            </span>
+            <span className="riga-lista__testo">
+              <button type="button" className="riga-regalo__titolo">
+                Biglietti per il musical
+              </button>
+              <span className="riga-lista__info">
+                Un&apos;esperienza da fare con la nonna
+              </span>
+            </span>
+            <span />
+          </li>
+        </ul>
+        <ul className="scheda lista" data-testid="lista-desideri-prese">
+          <li className="riga-regalo riga-regalo--preso riga-regalo--modificabile">
+            <span className="foto" aria-hidden="true">
+              <Icon name="gift" size="l" />
+            </span>
+            <span className="riga-lista__testo">
+              <button type="button" className="riga-regalo__titolo">
+                Puzzle da 1000 pezzi
+              </button>
+              <span className="etichetta">
+                <Icon name="check" size="s" />
+                <span>
+                  Zia Carla con un nome molto lungo per vedere i puntini
+                </span>
+              </span>
+            </span>
+            <span className="riga-regalo__prezzo">22 €</span>
+          </li>
+        </ul>
+      </Example>
+      <Example caption="scheda--scura con lista--notte (margini interni di 16 px)">
+        <div
+          className="scheda scheda--scura"
+          data-testid="lista-desideri-scura"
+        >
+          <ul className="lista lista--notte">
+            <li className="riga-lista riga-lista--notte">
+              <span className="icona-riquadro icona-riquadro--scura">
+                <Icon name="link" />
+              </span>
+              <span className="riga-lista__testo">
+                <span className="riga-lista__titolo">Non ancora condivisa</span>
+                <span className="riga-lista__info">
+                  Crea il link e mandalo a nonni e parenti.
+                </span>
+              </span>
+              <button type="button" className="btn-chiaro btn--piccolo">
+                <span className="btn__testo">Condividi</span>
+              </button>
+            </li>
+          </ul>
+        </div>
+      </Example>
+      <Example caption="a.riga-regalo__titolo · riga-regalo--barrato · scheda-regalo--preso">
+        <ul className="scheda lista" data-testid="lista-desideri-link">
+          <li className="riga-regalo">
+            <span className="foto" aria-hidden="true">
+              <Icon name="gift" size="l" />
+            </span>
+            <span className="riga-lista__testo">
+              <a
+                className="riga-regalo__titolo"
+                href="#pezzi-lista-desideri"
+                target="_blank"
+                rel="noopener noreferrer nofollow"
+              >
+                Set di acquerelli con pennelli
+              </a>
+              <span className="riga-lista__info">24,90 €</span>
+            </span>
+            <button type="button" className="btn-primary btn--piccolo">
+              <span className="btn__testo">Lo regalo io</span>
+            </button>
+          </li>
+          <li className="riga-regalo riga-regalo--barrato">
+            <span className="foto" aria-hidden="true">
+              <Icon name="gift" size="l" />
+            </span>
+            <span className="riga-lista__testo">
+              <a
+                className="riga-regalo__titolo"
+                href="#pezzi-lista-desideri"
+                target="_blank"
+                rel="noopener noreferrer nofollow"
+              >
+                Casco per la bici
+              </a>
+              <span className="riga-lista__info">35 €</span>
+            </span>
+            <span className="etichetta">
+              <Icon name="check" size="s" />
+              Già preso
+            </span>
+          </li>
+        </ul>
+      </Example>
+      <Example caption="cornice-pubblica · pubblica-solo-mobile · pubblica-solo-desktop">
+        <div className="cornice-pubblica" data-testid="cornice-pubblica">
+          <div className="pagina">
+            <p
+              className="pubblica-solo-mobile t-nota"
+              data-testid="pubblica-solo-mobile"
+            >
+              Si vede sotto 1024 px
+            </p>
+            <p
+              className="pubblica-solo-desktop t-nota"
+              data-testid="pubblica-solo-desktop"
+            >
+              Si vede da 1024 px
+            </p>
+            <p className="marchio t-nota t-secondario">
+              <span className="quadrato-nest" aria-hidden="true">
+                <span className="quadrato-nest__punto membro-pomodoro" />
+                <span className="quadrato-nest__punto membro-glicine" />
+                <span className="quadrato-nest__punto membro-salvia" />
+                <span className="quadrato-nest__punto membro-cobalto" />
+              </span>
+              Lista creata con FamilyNest
+            </p>
+          </div>
+        </div>
       </Example>
     </Section>
   );

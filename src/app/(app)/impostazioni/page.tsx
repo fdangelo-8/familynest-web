@@ -23,7 +23,7 @@ type Row = {
   name: string;
   color: MemberColor;
   isMe: boolean;
-  /** Where the row leads; `null`: no link (children, until #31) */
+  /** Where the row leads: «/profilo», «/membri/<id>» or «/figli/<id>» */
   href: string | null;
   info: string | null;
   tag: string;
@@ -114,8 +114,8 @@ async function load(frame: NestFrameData): Promise<Loaded | null> {
       name: m.name,
       color: m.color,
       isMe: false,
-      // Children have no page until #31, as in «Il tuo Nest».
-      href: m.kind === "child" ? null : `/membri/${m.id}`,
+      // Same destination as in «Il tuo Nest»: children have their page (#31).
+      href: m.kind === "child" ? `/figli/${m.id}` : `/membri/${m.id}`,
       // The age text only, never the birth date.
       info: m.birth_date ? formatAge(m.birth_date) : null,
       tag: m.kind === "child" ? "Figlio o figlia" : "Animale",

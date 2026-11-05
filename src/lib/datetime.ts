@@ -707,6 +707,30 @@ export function daysUntilBirthday(
   return daysUntilDay(next, now);
 }
 
+/**
+ * The next birthday from a `YYYY-MM-DD` birth date (the Rome day of `now`
+ * counts as «today»): its day key, the days left (0 = today) and the age it
+ * completes, for the wish list (#32). 29 February becomes 28 in common years.
+ * `null` when `birthDate` is not a valid day or the birthday would be before
+ * the year of birth (a birth date in the future).
+ */
+export function nextBirthday(
+  birthDate: string,
+  now: Instant = new Date(),
+): { dayKey: string; daysLeft: number; turnsAge: number } | null {
+  if (!isValidDayKey(birthDate)) return null;
+  const birthYear = Number(birthDate.slice(0, 4));
+  const month = Number(birthDate.slice(5, 7));
+  const day = Number(birthDate.slice(8, 10));
+  const today = toDayKey(now);
+  const year = Number(today.slice(0, 4));
+  let dayKey = birthdayInYear(month, day, year);
+  if (dayKey < today) dayKey = birthdayInYear(month, day, year + 1);
+  const turnsAge = Number(dayKey.slice(0, 4)) - birthYear;
+  if (turnsAge < 0) return null;
+  return { dayKey, daysLeft: daysUntilDay(dayKey, now), turnsAge };
+}
+
 const WEEKDAY_NAMES = [
   "lunedì",
   "martedì",

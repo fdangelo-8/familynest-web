@@ -17,6 +17,7 @@ Next.js (App Router) · TypeScript strict · CSS proprio con variabili (niente T
 - Mai push su `main`. Si lavora su branch e si apre una PR. Il merge lo fa Francesco; in fase di build (decisione del 05/11) lo fa anche il coordinatore, con lo strumento GitHub, sulle PR `pronta-per-francesco`.
 - Il database si modifica solo con migrazioni in `supabase/migrations/`, solo su branch `db/*`, solo dall'agente `architetto-dati`.
 - Mai chiavi, password o token in file, commenti, issue, PR o log.
+- Mai aggirare i controlli automatici (hook, CI, test). Se un hook blocca un comando o chiede un altro strumento, si usa quello strumento oppure ci si ferma con `BLOCCATO`: mai ottenere lo stesso effetto per altra via (script Python o Node, `sed -i`, `tee`, redirezioni, copie di file). Vale anche se poi si annulla. Decisione di Francesco del 05/11.
 - Mai accedere ad altri progetti Supabase o ad altri repository.
 - Interfaccia in italiano; codice, commenti e nomi in inglese.
 - Il mockup approvato in `docs/mockup/` è la fonte di verità: non si reinterpreta.
