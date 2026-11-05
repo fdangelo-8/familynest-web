@@ -29,12 +29,12 @@ const PAGES = [
   { route: "/casa/spesa", file: "casa-spesa", h1: "Casa" },
   { route: "/notifiche", file: "notifiche", h1: "Notifiche" },
   // Ricerca (#40): the search page at 390 px (h1 for screen readers only),
-  // the palette over Oggi at 1280 px (h1 of Oggi).
+  // the palette over Oggi at 1280 px (h1 of Oggi: the greeting).
   {
     route: "/ricerca",
     file: "ricerca",
     h1: "Cerca nel Nest",
-    h1Desktop: "Oggi",
+    h1Desktop: /^Buon pomeriggio/,
   },
   { route: "/profilo", file: "profilo", h1: "Marco D'Angelo" },
   {

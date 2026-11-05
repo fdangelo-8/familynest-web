@@ -16,6 +16,7 @@ import {
   seedNuoto,
   seedRecents,
   storedRecents,
+  surface,
   test,
   titlesOf,
   toast,
@@ -203,7 +204,7 @@ test.describe("recenti", () => {
     await expectReady(page);
     await expect(example(page, "questo weekend")).toBeVisible();
     await expect(page.getByTestId("ricerca-recenti")).toHaveCount(0);
-    await expect(page.getByText("nuoto")).toHaveCount(0);
+    await expect(surface(page).getByText("nuoto")).toHaveCount(0);
   });
 
   test("CA-40: aprendo la ricerca nessuna richiesta contiene il testo delle recenti", async ({

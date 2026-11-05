@@ -34,6 +34,7 @@ import {
   refuseTodoUpdates,
   rowsOf,
   seedNuoto,
+  surface,
   test,
   titlesOf,
   toast,
@@ -295,9 +296,9 @@ test.describe("risultati e righe", () => {
     await typeSearch(page, "nuoto");
     await expect(titlesOf(page, "event")).toHaveText(["Nuoto in corso"]);
     await expect(titlesOf(page, "todo")).toHaveText(["Nuoto da fare"]);
-    await expect(page.getByText("Nuoto prova")).toHaveCount(0);
-    await expect(page.getByText("Nuoto appena finito")).toHaveCount(0);
-    await expect(page.getByText("Nuoto ieri")).toHaveCount(0);
+    await expect(surface(page).getByText("Nuoto prova")).toHaveCount(0);
+    await expect(surface(page).getByText("Nuoto appena finito")).toHaveCount(0);
+    await expect(surface(page).getByText("Nuoto ieri")).toHaveCount(0);
   });
 
   test("CA-22: al massimo 20 righe per tipo, nell'ordine di aggiunta", async ({

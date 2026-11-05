@@ -10,6 +10,7 @@ import {
   palette,
   recordSearch,
   ringOf,
+  surface,
   test,
   typeSearch,
   example,
@@ -295,7 +296,7 @@ test.describe("stato normale", () => {
         .getByTestId("ricerca-gruppo-deadline")
         .getByText("Iscrizione al corso di nuoto"),
     ).toBeVisible();
-    await expect(page.getByText("Comprare le scarpe")).toHaveCount(0);
+    await expect(surface(page).getByText("Comprare le scarpe")).toHaveCount(0);
 
     await field(page).fill("");
     await people.getByRole("button", { name: "Tu", exact: true }).click();

@@ -18,6 +18,7 @@ import {
   recordSearch,
   rowsOf,
   seedNuoto,
+  surface,
   test,
   titlesOf,
   typeSearch,
@@ -68,9 +69,9 @@ test.describe("espressioni", () => {
     await expect(field(page)).toHaveValue("questo weekend");
     await expect(titlesOf(page, "event")).toHaveText(["Pizza dai nonni"]);
     await expect(titlesOf(page, "deadline")).toHaveText(["Bollo auto"]);
-    await expect(page.getByText("Cinema")).toHaveCount(0);
+    await expect(surface(page).getByText("Cinema")).toHaveCount(0);
     await expect(group(page, "shopping_item")).toHaveCount(0);
-    await expect(page.getByText("Pizza surgelata")).toHaveCount(0);
+    await expect(surface(page).getByText("Pizza surgelata")).toHaveCount(0);
     await expect(page.locator("mark.evidenzia")).toHaveCount(0);
   });
 
@@ -149,7 +150,7 @@ test.describe("espressioni", () => {
     await expect(titlesOf(page, "event").first()).toHaveText(NUOTO);
     await expect(titlesOf(page, "deadline")).toHaveText([ISCRIZIONE]);
     await expect(group(page, "todo")).toHaveCount(0);
-    await expect(page.getByText("Comprare le scarpe")).toHaveCount(0);
+    await expect(surface(page).getByText("Comprare le scarpe")).toHaveCount(0);
     await expect(page.locator("mark.evidenzia")).toHaveCount(0);
   });
 
@@ -244,7 +245,7 @@ test.describe("privacy e isolamento", () => {
     expect(leaked(search.answers, ["Anna", "regalo", "abbonamento"])).toEqual(
       [],
     );
-    await expect(page.getByText("Nuoto con Anna")).toHaveCount(0);
+    await expect(surface(page).getByText("Nuoto con Anna")).toHaveCount(0);
   });
 
   test("CA-30: un «Occupato» di Laura non si trova per testo: né riga, né conteggio, né titolo nelle risposte", async ({
@@ -272,8 +273,8 @@ test.describe("privacy e isolamento", () => {
     await typeSearch(page, "nuoto");
 
     await expect(titlesOf(page, "event")).toHaveText([NUOTO]);
-    await expect(page.getByText("Laura ha un impegno")).toHaveCount(0);
-    await expect(page.getByText("Nuoto Laura")).toHaveCount(0);
+    await expect(surface(page).getByText("Laura ha un impegno")).toHaveCount(0);
+    await expect(surface(page).getByText("Nuoto Laura")).toHaveCount(0);
     if (isMobile()) {
       await expect
         .poll(() => chipTexts(page))
@@ -393,7 +394,7 @@ test.describe("privacy e isolamento", () => {
     await typeSearch(page, "nuoto");
     await expect(rowsOf(page, "event").first()).toBeVisible();
     for (const title of nestB) {
-      await expect(page.getByText(title), title).toHaveCount(0);
+      await expect(surface(page).getByText(title), title).toHaveCount(0);
     }
     if (isMobile()) {
       for (const name of ["Giulia", "Paolo", "Leo", "Anna"]) {
@@ -416,9 +417,9 @@ test.describe("privacy e isolamento", () => {
       await openSearch(pageB, baseURL, bianchi, { who: "Giulia" });
       await typeSearch(pageB, "nuoto");
       await expect(rowsOf(pageB, "event").first()).toBeVisible();
-      await expect(pageB.getByText("Nuoto Leo")).toBeVisible();
+      await expect(surface(pageB).getByText("Nuoto Leo")).toBeVisible();
       for (const title of nestA) {
-        await expect(pageB.getByText(title), title).toHaveCount(0);
+        await expect(surface(pageB).getByText(title), title).toHaveCount(0);
       }
     } finally {
       await other.close();
