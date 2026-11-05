@@ -68,6 +68,7 @@ function readAttributes(tag: string): Map<string, string> {
 const MAX_TAG_LENGTH = 2000;
 const MAX_META_TAGS = 500;
 const MAX_JSON_LD_BLOCKS = 20;
+const MAX_SCRIPT_TAGS = 500;
 const MAX_JSON_LD_LENGTH = 200_000;
 /** The head is read up to `</head>`, or this many characters. */
 const MAX_HEAD_LENGTH = 300_000;
@@ -97,16 +98,20 @@ function findTags(
   const found: string[] = [];
   const open = `<${name}`;
   let from = 0;
-  while (found.length < limit) {
+  // Tags looked at, skipped ones too, bound the loop; `from` only moves
+  // forward, past the `>` it found (no second search up to the same `>`).
+  let looked = 0;
+  while (looked < limit) {
     const start = lower.indexOf(open, from);
     if (start === -1) break;
+    looked += 1;
     from = start + open.length;
     if (!endsTagName(lower[from])) continue;
     const end = lower.indexOf(">", from);
     if (end === -1) break;
+    from = end + 1;
     if (end - start > MAX_TAG_LENGTH) continue;
     found.push(html.slice(start, end + 1));
-    from = end + 1;
   }
   return found;
 }
@@ -206,13 +211,18 @@ function readJsonLdOffer(
   /** The text of the `application/ld+json` scripts, found without regex. */
   const blocks: string[] = [];
   let from = 0;
-  while (blocks.length < MAX_JSON_LD_BLOCKS) {
+  // Scripts looked at (skipped ones too) bound the loop; `from` only moves
+  // forward, past the `>` found.
+  let looked = 0;
+  while (blocks.length < MAX_JSON_LD_BLOCKS && looked < MAX_SCRIPT_TAGS) {
     const start = lower.indexOf("<script", from);
     if (start === -1) break;
+    looked += 1;
     from = start + 7;
     if (!endsTagName(lower[from])) continue;
     const open = lower.indexOf(">", from);
     if (open === -1) break;
+    from = open + 1;
     if (open - start > MAX_TAG_LENGTH) continue;
     if (!lower.slice(start, open).includes("application/ld+json")) continue;
     const close = lower.indexOf("</script", open);
