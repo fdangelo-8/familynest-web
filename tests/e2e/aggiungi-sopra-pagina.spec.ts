@@ -71,7 +71,10 @@ async function openAddOverPage(page: Page, route: string) {
 async function expectFirstTabOnSkipLink(page: Page) {
   await page.waitForURL(/\/oggi$/, { waitUntil: "load" });
   await expect(
-    page.getByRole("heading", { level: 1, name: "Oggi" }),
+    page.getByRole("heading", {
+      level: 1,
+      name: /^(Buongiorno|Buon pomeriggio|Buonasera|Eccoti)/,
+    }),
   ).toBeVisible();
   await expect(page.locator("main")).toHaveCount(1);
   await page.keyboard.press("Tab");
@@ -153,7 +156,9 @@ test.describe("Aggiungi sopra la pagina", () => {
     await page.goto("/aggiungi");
     await expect(dialogOf(page)).toBeVisible();
     await expect(page).toHaveTitle("FamilyNest · Aggiungi");
-    await expect(page.locator("main h1")).toHaveText("Oggi");
+    await expect(page.locator("main h1:visible")).toHaveText(
+      /^(Buongiorno|Buon pomeriggio|Buonasera|Eccoti)/,
+    );
     await expect(page.locator("h1:visible")).toHaveCount(1);
     const active = page.getByRole("navigation", NAV).locator("[aria-current]");
     await expect(active).toHaveText("Oggi");
@@ -284,7 +289,9 @@ test.describe("Aggiungi sopra la pagina: altri casi", () => {
     await page.reload();
     await expect(dialogOf(page)).toBeVisible();
     await expect(page).toHaveURL(/\/aggiungi$/);
-    await expect(page.locator("main h1")).toHaveText("Oggi");
+    await expect(page.locator("main h1:visible")).toHaveText(
+      /^(Buongiorno|Buon pomeriggio|Buonasera|Eccoti)/,
+    );
   });
 
   test("CA-5: aperta direttamente, Esc porta a /oggi", async ({
@@ -328,7 +335,9 @@ test.describe("Aggiungi sopra la pagina: altri casi", () => {
     await signInAs(page.context(), baseURL as string, "B");
     await page.goto("/aggiungi");
     await expect(dialogOf(page)).toBeVisible();
-    await expect(page.locator("main h1")).toHaveText("Oggi");
+    await expect(page.locator("main h1:visible")).toHaveText(
+      /^(Buongiorno|Buon pomeriggio|Buonasera|Eccoti)/,
+    );
   });
 });
 
