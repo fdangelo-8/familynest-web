@@ -156,20 +156,12 @@ function MemberRow({ row }: { row: Row }) {
         </span>
         <span className="riga-lista__info">{row.info}</span>
       </span>
-      {href ? (
-        <span className="riga-lista__valore">
-          <Icon name="chevron-right" />
-        </span>
-      ) : null}
+      <span className="riga-lista__valore">
+        <Icon name="chevron-right" />
+      </span>
     </>
   );
-  return href ? (
-    <ListRow href={href}>{content}</ListRow>
-  ) : (
-    <li>
-      <div className="riga-lista">{content}</div>
-    </li>
-  );
+  return <ListRow href={href}>{content}</ListRow>;
 }
 
 export default async function Page() {

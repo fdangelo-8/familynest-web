@@ -36,36 +36,44 @@ async function readChild(childId: string): Promise<ReadResult> {
     const now = new Date();
     const { from, to } = weekBounds(now);
 
-    const [members, profile, teachers, deadlines, events] = await Promise.all([
-      supabase
-        .from("household_members")
-        .select("id, kind, name, color, birth_date")
-        .order("created_at", { ascending: true })
-        .order("id", { ascending: true }),
-      supabase
-        .from("child_profiles")
-        .select(
-          "school_name, school_class, school_starts_at, school_ends_at, school_days, school_note, shoe_size, clothing_size, pajama_size, sizes_updated_at",
-        )
-        .eq("member_id", childId)
-        .maybeSingle(),
-      supabase
-        .from("child_teachers")
-        .select("id, name, subject, phone")
-        .eq("member_id", childId)
-        .order("sort_order", { ascending: true }),
-      supabase
-        .from("deadlines")
-        .select("title, due_date")
-        .or(`for_member_id.eq.${childId},assignee_member_id.eq.${childId}`)
-        .order("due_date", { ascending: true })
-        .order("created_at", { ascending: true })
-        .order("id", { ascending: true })
-        .limit(1),
-      listHouseholdEvents(from, to, supabase),
-    ]);
+    const [members, birth, profile, teachers, deadlines, events] =
+      await Promise.all([
+        supabase
+          .from("household_members")
+          .select("id, kind, name, color")
+          .order("created_at", { ascending: true })
+          .order("id", { ascending: true }),
+        // The birth date is read for the open child only.
+        supabase
+          .from("household_members")
+          .select("birth_date")
+          .eq("id", childId)
+          .maybeSingle(),
+        supabase
+          .from("child_profiles")
+          .select(
+            "school_name, school_class, school_starts_at, school_ends_at, school_days, school_note, shoe_size, clothing_size, pajama_size, sizes_updated_at",
+          )
+          .eq("member_id", childId)
+          .maybeSingle(),
+        supabase
+          .from("child_teachers")
+          .select("id, name, subject, phone")
+          .eq("member_id", childId)
+          .order("sort_order", { ascending: true }),
+        supabase
+          .from("deadlines")
+          .select("title, due_date")
+          .or(`for_member_id.eq.${childId},assignee_member_id.eq.${childId}`)
+          .order("due_date", { ascending: true })
+          .order("created_at", { ascending: true })
+          .order("id", { ascending: true })
+          .limit(1),
+        listHouseholdEvents(from, to, supabase),
+      ]);
     if (
       members.error ||
+      birth.error ||
       profile.error ||
       teachers.error ||
       deadlines.error ||
@@ -98,7 +106,7 @@ async function readChild(childId: string): Promise<ReadResult> {
           id: child.id,
           name: child.name,
           color: child.color,
-          birthDate: child.birth_date,
+          birthDate: birth.data?.birth_date ?? null,
         },
         taken,
         profile: {

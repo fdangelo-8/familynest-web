@@ -233,7 +233,7 @@ export type SchoolView = {
 
 /** The link of a teacher's phone: separators out, `00` to `+`, `+39` if no prefix. */
 export function telHref(phone: string): string {
-  let number = phone.replace(/[\s.\-/()]/g, "");
+  let number = phone.replace(/(?!^\+)\D/g, "");
   if (number.startsWith("00")) number = `+${number.slice(2)}`;
   if (!number.startsWith("+")) number = `+39${number}`;
   return `tel:${number}`;

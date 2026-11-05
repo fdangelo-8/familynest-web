@@ -146,7 +146,7 @@ export function ChildPage({
       {status === "missing" ? (
         <PageError
           headingLevel={1}
-          title="Questa pagina non c'è"
+          title="Questa pagina non c’è"
           text="Il link potrebbe essere vecchio o scritto male."
           action={{ label: "Torna a Oggi", href: "/oggi" }}
         />
