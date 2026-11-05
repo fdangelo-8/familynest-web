@@ -299,8 +299,8 @@ test.describe("collegamento con il fornitore finto", () => {
         await expect(later(page)).toBeEnabled();
         await expect(collega(page, "Outlook")).toBeEnabled();
       } finally {
+        // The page closes with the test: no unrouteAll while a post is held.
         release();
-        await page.unrouteAll({ behavior: "ignoreErrors" });
         await fake.reset(user.id);
       }
     });
