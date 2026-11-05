@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { createServer, type Server } from "node:http";
+import { createServer } from "node:http";
 import type { AddressInfo } from "node:net";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { expect, type Locator, type Page } from "@playwright/test";
@@ -625,8 +625,23 @@ const TINY_JPEG = Buffer.from(
   "base64",
 );
 
-/** Serves `/diario` and `/vuota` on the port of the test origin. */
-export async function startShop(): Promise<Server> {
+let shopServer: Promise<void> | null = null;
+
+/**
+ * Serves `/diario` and `/vuota` on the port of the test origin. The port is
+ * fixed (the app reads it from the environment) and the tests of the two
+ * viewports run in parallel workers, so the server is started once per worker,
+ * never closed (it ends with the worker) and an already used port means that
+ * another worker already serves the same pages. Returns a handle whose
+ * `close` does nothing, so callers keep their try/finally.
+ */
+export async function startShop(): Promise<{ close: () => void }> {
+  shopServer ??= listenShop();
+  await shopServer;
+  return { close: () => {} };
+}
+
+async function listenShop(): Promise<void> {
   if (!SHOP_ORIGIN) throw new Error("Origine di prova non impostata");
   const port = Number(new URL(SHOP_ORIGIN).port);
   const server = createServer((request, response) => {
@@ -652,10 +667,12 @@ export async function startShop(): Promise<Server> {
     response.end("no");
   });
   await new Promise<void>((resolve, reject) => {
-    server.once("error", reject);
+    server.once("error", (error: NodeJS.ErrnoException) => {
+      if (error.code === "EADDRINUSE") resolve();
+      else reject(error);
+    });
     server.listen(port, "127.0.0.1", resolve);
   });
-  return server;
 }
 
 /** A local server on a port the app does not allow: counts what it receives. */
