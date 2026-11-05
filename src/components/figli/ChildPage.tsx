@@ -322,15 +322,13 @@ function Counters({ data }: { data: ChildData }) {
         <span className="contatore__info">{events.info}</span>
       </div>
       {data.deadline ? (
-        <Link href="/casa/scadenze" className={cls}>
+        <Link
+          href="/casa/scadenze"
+          className={cls}
+          aria-label={`${deadline.number} ${deadline.info}: «${data.deadline.title}»${deadline.urgent ? ", urgente" : ""}`}
+        >
           <CounterNumber view={deadline} />{" "}
-          <span className="contatore__info">
-            {deadline.info}
-            <VisuallyHidden>{`: «${data.deadline.title}»`}</VisuallyHidden>
-            {deadline.urgent ? (
-              <VisuallyHidden>, urgente</VisuallyHidden>
-            ) : null}
-          </span>
+          <span className="contatore__info">{deadline.info}</span>
         </Link>
       ) : (
         <div className={cls}>
