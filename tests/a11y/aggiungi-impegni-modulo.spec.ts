@@ -90,6 +90,7 @@ function ringVisible(page: Page) {
 
 /** Points of a square of at least 44 px centered on the control that land elsewhere. */
 async function missedPoints(control: Locator, min = 44) {
+  await control.scrollIntoViewIfNeeded();
   const box = await control.boundingBox();
   if (!box) throw new Error("the control is not visible");
   const w = Math.max(box.width, min);
@@ -219,9 +220,11 @@ test.describe("Aggiungi · Impegni · modulo: fuoco e tastiera", () => {
     }
     // Titolo → Giorno → Dalle → Alle → Si ripete → Dove → Chi → La porta → Chi lo vede → Note → submit
     const expected = ["Titolo", "Giorno", "Dalle", "Alle", "Si ripete", "Dove"];
-    expect(order.slice(0, expected.length)).toEqual(expected);
-    expect(order.at(-2)).toBe("Note");
-    expect(order.at(-1)).toBe(submitName);
+    // The native date and time fields have one stop per part: same name in a row
+    const stops = order.filter((name, i) => name !== order[i - 1]);
+    expect(stops.slice(0, expected.length)).toEqual(expected);
+    expect(stops.at(-2)).toBe("Note");
+    expect(stops.at(-1)).toBe(submitName);
     // one more Tab wraps to the first control of the dialog, not out of it
     await page.keyboard.press("Tab");
     expect(await focused(page)).toBe("Chiudi");
@@ -234,16 +237,17 @@ test.describe("Aggiungi · Impegni · modulo: fuoco e tastiera", () => {
     await installFakes(page);
     const { dialog } = await openWithPhrase(page);
     const cases = [
-      ["day", "Giorno"],
-      ["people", "Tu"],
-      ["escort", "Tu"],
-      ["visibility", "Occupato"],
+      ["day", /^Giorno$/],
+      // the chips read «S» + «Sofia»: the first pressed one, then «Tu» of «La porta»
+      ["people", /Sofia$/],
+      ["escort", /Tu$/],
+      ["visibility", /Occupato$/],
     ] as const;
     for (const [row, target] of cases) {
       const button = dialog.getByTestId(`aggiungi-ingresso-${row}`);
       await button.click();
       await expect(formOf(page)).toBeVisible();
-      expect(await focused(page)).toBe(target);
+      expect(await focused(page)).toMatch(target);
       await page.keyboard.press("Escape");
       await expect(formOf(page)).toHaveCount(0);
       await expect(
@@ -292,7 +296,9 @@ test.describe("Aggiungi · Impegni · modulo: aree di tocco", () => {
       ),
     ).toEqual([]);
     // chips of the people and of the escort
-    for (const chip of await form.getByRole("button", { name: "Tu" }).all()) {
+    for (const chip of await form
+      .getByRole("button", { name: "Tu", exact: true })
+      .all()) {
       expect(await missedPoints(chip)).toEqual([]);
     }
   });

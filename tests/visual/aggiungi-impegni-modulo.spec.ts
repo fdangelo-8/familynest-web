@@ -126,7 +126,9 @@ test("modulo compilato: luogo, ripetizione, note, chi accompagna", async ({
   await form.getByLabel("Si ripete").selectOption("weekly");
   await form.getByLabel("Note").fill("Portare la cuffia");
   // «La porta»: nobody is pressed at the start, so this is its «Tu»
-  await form.getByRole("button", { name: "Tu", pressed: false }).click();
+  await form
+    .getByRole("button", { name: "Tu", exact: true, pressed: false })
+    .click();
   await expect(form.getByLabel("Dove")).toHaveValue(
     "Piscina comunale, Lissone",
   );
