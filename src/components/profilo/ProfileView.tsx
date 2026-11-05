@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Alert } from "@/components/ui/Alert/Alert";
 import { Avatar } from "@/components/ui/Avatar/Avatar";
 import {
@@ -133,17 +133,6 @@ export function ProfileView({
     () => takenColors.map((c) => ({ color: c })),
     [takenColors],
   );
-
-  // TEMPORARY until the shared request #236 adds the `busy` prop to
-  // `ColorChoice`; then the page passes the prop and this effect goes.
-  // `ColorChoice` has no `aria-busy`: the group is marked here. It stays
-  // active (not disabled), so whoever uses the arrows does not lose the focus.
-  useLayoutEffect(() => {
-    const group = headRef.current?.querySelector('[role="radiogroup"]');
-    if (!group) return;
-    if (colorBusy) group.setAttribute("aria-busy", "true");
-    else group.removeAttribute("aria-busy");
-  }, [colorBusy]);
 
   // After a failed save the focus goes to the colour that is chosen again.
   useEffect(() => {
@@ -312,6 +301,7 @@ export function ProfileView({
             value={color}
             order={order}
             taken={takenForGroup}
+            busy={colorBusy}
             onChange={(next) => void onColorChange(next)}
           />
         </div>

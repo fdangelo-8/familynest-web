@@ -17,6 +17,8 @@ export type IconButtonProps = {
   "aria-disabled"?: boolean;
   /** Toggle state, for example a pinned item */
   pressed?: boolean;
+  /** The button opens a dialog or a sheet (`aria-haspopup`) */
+  "aria-haspopup"?: "dialog" | "menu" | true;
   type?: "button" | "submit";
   onClick?: (event: MouseEvent<HTMLButtonElement>) => void;
   className?: string;
@@ -35,6 +37,7 @@ export function IconButton({
   className,
   "aria-label": ariaLabel,
   "aria-disabled": ariaDisabled,
+  "aria-haspopup": hasPopup,
   "data-testid": testId,
 }: IconButtonProps) {
   return (
@@ -50,6 +53,7 @@ export function IconButton({
       disabled={disabled}
       aria-disabled={ariaDisabled || undefined}
       aria-pressed={pressed}
+      aria-haspopup={hasPopup}
       onClick={onClick}
       data-testid={testId}
     >

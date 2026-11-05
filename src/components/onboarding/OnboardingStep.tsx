@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useRef, useState, type KeyboardEvent } from "react";
 import { changeAnswer, createNest } from "@/app/onboarding/actions";
 import { Brand, Claim, Stickers } from "@/components/accesso/parts";
+import { clearLens } from "@/lib/lens";
 import { clearAllRecentSearches } from "@/lib/recent-searches";
 import { Button } from "@/components/ui/Button/Button";
 import { Icon } from "@/components/ui/Icon/Icon";
@@ -190,7 +191,10 @@ export function OnboardingStep({
         id={SIGN_OUT_FORM}
         method="post"
         action="/auth/signout"
-        onSubmit={() => clearAllRecentSearches()}
+        onSubmit={() => {
+          clearAllRecentSearches();
+          clearLens();
+        }}
       />
 
       <div className={`${styles.mobile} passo-onboarding`}>

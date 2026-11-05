@@ -62,6 +62,8 @@ export type ColorChoiceProps = {
   order?: ReadonlyArray<ChoosableColor>;
   /** Whole group disabled (saving in progress) */
   disabled?: boolean;
+  /** Saving in progress but the group stays active (`aria-busy`), so the arrows keep the focus */
+  busy?: boolean;
   /** Group left aligned (`.scelta-colore--sinistra`), as in sheets and forms; centered when false */
   alignStart?: boolean;
   /** Marks the group as wrong (`aria-invalid`) */
@@ -86,6 +88,7 @@ export function ColorChoice({
   taken = [],
   order,
   disabled = false,
+  busy = false,
   alignStart = false,
   invalid,
   describedBy,
@@ -149,6 +152,7 @@ export function ColorChoice({
       role="radiogroup"
       aria-label={ariaLabel}
       aria-invalid={invalid ? true : undefined}
+      aria-busy={busy || undefined}
       aria-describedby={describedBy}
       data-testid={testId}
     >
