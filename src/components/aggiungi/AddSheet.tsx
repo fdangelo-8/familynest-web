@@ -47,6 +47,15 @@ import { SegmentedControl } from "../ui/SegmentedControl/SegmentedControl";
 import { Sheet } from "../ui/Sheet/Sheet";
 import { Skeleton, SkeletonGroup } from "../ui/Skeleton/Skeleton";
 import { useToast } from "../ui/Toast/ToastProvider";
+import { focusField } from "../evento-modulo/EventFormFields";
+import {
+  ERROR_TEXTS,
+  firstErrorField,
+  newEventRepetition,
+  validateForm,
+  type EventFormValues,
+  type FormErrors,
+} from "../evento-modulo/model";
 import { AddPreview, type DayState } from "./AddPreview";
 import {
   focusAfterSheet,
@@ -56,6 +65,14 @@ import {
   type ListKind,
 } from "./coordination";
 import { detectType, type AddType } from "./detect-type";
+import {
+  ENTRY_FOCUS,
+  formSubmitLabel,
+  initialFormValues,
+  type FormEntry,
+} from "./new-event";
+import { NewEventForm } from "./NewEventForm";
+import { DetailsButton, OptionRow } from "./OptionRow";
 import {
   MEMBERS_FAILED_TEXT,
   SAVE_FAILED_TEXT,
@@ -74,8 +91,10 @@ import { parseDeadline, parseTodo } from "./parse-todo";
 import { escortNotice, type NestPerson } from "./preview";
 import {
   createDeadline,
+  createEvent,
   createTodo,
   deleteDeadline,
+  deleteNewEvent,
   deleteTodo,
   looksLikeId,
   readDeadline,
@@ -138,6 +157,13 @@ type EditState =
   | { status: "gone" }
   | { status: "ready"; kind: "da-fare"; record: TodoRecord }
   | { status: "ready"; kind: "scadenza"; record: DeadlineRecord };
+
+/** The full form «Nuovo impegno» while it is open: what was typed and where it was opened from. */
+type FormDraft = {
+  values: EventFormValues;
+  errors: FormErrors;
+  entry: FormEntry;
+};
 
 type ToTakeState =
   | { status: "idle" | "loading" | "failed" }
@@ -231,6 +257,8 @@ export function AddSheet({
   const uid = useId();
   const prefix = desktop ? "d" : "m";
   const formId = `${uid}-form`;
+  const moduleFormId = `${uid}-modulo`;
+  const modulePrefix = `n-${uid}`;
   const fieldId = `${prefix}-${uid}-frase`;
   const errorId = `${prefix}-${uid}-frase-errore`;
   const examplesId = `${prefix}-${uid}-esempi`;
@@ -272,6 +300,8 @@ export function AddSheet({
   );
   const [editAttempt, setEditAttempt] = useState(0);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  // null: the sheet shows the phrase; otherwise the full form «Nuovo impegno»
+  const [draft, setDraft] = useState<FormDraft | null>(null);
   const [opener] = useState(() => (editId ? readOpener(editId) : null));
 
   const savingRef = useRef(false);
@@ -288,6 +318,9 @@ export function AddSheet({
   const toTakeLoad = useRef<Promise<void> | null>(null);
   const toTakeKeys = useRef<Set<string> | null>(null);
   const pendingFocus = useRef<"for" | "visibility" | null>(null);
+  // Entry whose field takes the focus once the form is drawn, or that gets it back
+  const formFocus = useRef<FormEntry | null>(null);
+  const returnFocus = useRef<FormEntry | null>(null);
 
   function updateType(next: AddType) {
     typeRef.current = next;
@@ -666,6 +699,142 @@ export function AddSheet({
     showToast({ text, icon: null });
   }
 
+  /** The new event is saved, from the phrase or from the form: same toast, same «Annulla». */
+  function announceCreated(
+    supabase: Client,
+    event: { id: string; title: string; dayKey: string; startsAt: Date },
+  ) {
+    notifyEventsChanged();
+    showToast({
+      text: "Messo in",
+      emphasis: dayInSentence(event.dayKey, todayKey),
+      after: `: ${event.title} ${atTime(event.startsAt)}.`,
+      onUndo: () => {
+        void (async () => {
+          if (await deleteNewEvent(supabase, event.id)) notifyEventsChanged();
+          else undoFailed(UNDO_FAILED_TEXT);
+        })();
+      },
+    });
+    finishSaved();
+  }
+
+  // ----- Full form «Nuovo impegno» (#171)
+  const canOpenForm =
+    isImpegno && hasTitle && peopleState.status === "ready" && meId !== null;
+
+  function openForm(entry: FormEntry) {
+    if (savingRef.current || !canOpenForm || meId === null) return;
+    formFocus.current = entry;
+    setSaveFailed(false);
+    setDraft({
+      values: initialFormValues({
+        parsed,
+        slot,
+        todayKey,
+        memberIds: parsed.memberIds.length > 0 ? parsed.memberIds : [meId],
+        visibility: newEventVisibility,
+      }),
+      errors: {},
+      entry,
+    });
+  }
+
+  // X, Esc, the veil and the drag: back to the phrase, nothing is saved.
+  function backToPhrase() {
+    if (!draft) return;
+    returnFocus.current = draft.entry;
+    setSaveFailed(false);
+    setDraft(null);
+  }
+
+  function changeForm(patch: Partial<EventFormValues>) {
+    setDraft((current) =>
+      current ? { ...current, values: { ...current.values, ...patch } } : null,
+    );
+  }
+
+  async function submitForm() {
+    if (!draft || meId === null || savingRef.current) return;
+    setSaveFailed(false);
+    const { values } = draft;
+    const { errors, times } = validateForm(values, 0);
+    setDraft((current) => (current ? { ...current, errors } : null));
+    const first = firstErrorField(errors);
+    if (first) {
+      focusField(modulePrefix, first);
+      return;
+    }
+    if (!times) return;
+
+    savingRef.current = true;
+    setSaving(true);
+    const supabase = createClient();
+    const title = values.title.trim();
+    const created = await createEvent(supabase, {
+      title,
+      startsAt: times.start,
+      endsAt: times.end,
+      visibility: values.visibility,
+      memberIds: values.memberIds,
+      place: values.place.trim(),
+      escortId: values.escortId,
+      repetition: newEventRepetition(values.repeat, values.day),
+      notes: values.notes.trim(),
+    });
+    if (created.status === "failed") {
+      savingRef.current = false;
+      setSaving(false);
+      if (created.reason === "duration") {
+        setDraft((current) =>
+          current
+            ? { ...current, errors: { repeat: ERROR_TEXTS.duration } }
+            : null,
+        );
+        focusField(modulePrefix, "repeat");
+      } else {
+        setSaveFailed(true);
+      }
+      return;
+    }
+    announceCreated(supabase, {
+      id: created.id,
+      title,
+      dayKey: values.day,
+      startsAt: times.start,
+    });
+  }
+
+  // The form was just drawn: scroll to the top and focus the field of the entry.
+  // Back on the phrase: the entry that was used gets the focus again.
+  useLayoutEffect(() => {
+    const root = document.querySelector('[data-testid="aggiungi-foglio"]');
+    if (draft && formFocus.current) {
+      const entry = formFocus.current;
+      formFocus.current = null;
+      if (root) {
+        root.scrollTop = 0;
+        for (const part of root.querySelectorAll(
+          ".foglio__corpo, .modale__corpo",
+        )) {
+          part.scrollTop = 0;
+        }
+      }
+      focusField(modulePrefix, ENTRY_FOCUS[entry]);
+    } else if (!draft && returnFocus.current) {
+      const entry = returnFocus.current;
+      returnFocus.current = null;
+      const target =
+        root?.querySelector<HTMLElement>(
+          `[data-testid="aggiungi-ingresso-${entry}"]`,
+        ) ??
+        root?.querySelector<HTMLElement>(
+          '[data-testid="aggiungi-ingresso-details"]',
+        );
+      target?.focus();
+    }
+  });
+
   // ----- Save: Impegno
   async function submitEvent() {
     const problem = validatePhrase(parsed);
@@ -696,39 +865,20 @@ export function AddSheet({
         if (authorId) ids = [authorId];
       }
       if (ids.length === 0) throw new Error("no participants");
-      const { data, error: rpcError } = await supabase.rpc("create_event", {
-        p_title: parsed.title,
-        p_starts_at: slot.startsAt.toISOString(),
-        p_ends_at: slot.endsAt.toISOString(),
-        p_visibility: newEventVisibility,
-        p_member_ids: ids,
+      const created = await createEvent(supabase, {
+        title: parsed.title,
+        startsAt: slot.startsAt,
+        endsAt: slot.endsAt,
+        visibility: newEventVisibility,
+        memberIds: ids,
       });
-      if (rpcError || typeof data !== "string") throw new Error("not saved");
-      const eventId = data;
-
-      notifyEventsChanged();
-      showToast({
-        text: "Messo in",
-        emphasis: dayInSentence(slot.dayKey, todayKey),
-        after: `: ${parsed.title} ${atTime(slot.startsAt)}.`,
-        onUndo: () => {
-          void (async () => {
-            let failed = false;
-            try {
-              const { error: deleteError } = await supabase
-                .from("events")
-                .delete()
-                .eq("id", eventId);
-              failed = deleteError !== null;
-            } catch {
-              failed = true;
-            }
-            if (failed) showToast({ text: UNDO_FAILED_TEXT, icon: null });
-            else notifyEventsChanged();
-          })();
-        },
+      if (created.status === "failed") throw new Error("not saved");
+      announceCreated(supabase, {
+        id: created.id,
+        title: parsed.title,
+        dayKey: slot.dayKey,
+        startsAt: slot.startsAt,
       });
-      finishSaved();
     } catch {
       savingRef.current = false;
       setSaving(false);
@@ -1172,6 +1322,19 @@ export function AddSheet({
       {buttonLabel}
     </Button>
   );
+  const formOpen = draft !== null && meId !== null;
+  const formButton = draft ? (
+    <Button
+      type="submit"
+      form={moduleFormId}
+      arrow
+      arrowIcon="arrow-up-right"
+      full={!desktop}
+      loading={saving}
+    >
+      {formSubmitLabel(draft.values.day, todayKey)}
+    </Button>
+  ) : null;
   const removeLabel =
     editReady?.kind === "scadenza"
       ? "Elimina scadenza"
@@ -1234,7 +1397,18 @@ export function AddSheet({
       )
     ) : undefined;
   } else if (desktop) {
-    footer = submitButton;
+    footer = canOpenForm ? (
+      <>
+        <DetailsButton
+          label="Tutti i dettagli"
+          inactive={saving}
+          onOpen={openForm}
+        />
+        {submitButton}
+      </>
+    ) : (
+      submitButton
+    );
   } else {
     footer = (
       <>
@@ -1478,7 +1652,12 @@ export function AddSheet({
 
         {isImpegno && desktop && hasTitle ? (
           <div>
-            <div className="riga-opzione">
+            <OptionRow
+              entry="day"
+              interactive={canOpenForm}
+              inactive={saving}
+              onOpen={openForm}
+            >
               <Icon name="calendar" />
               <span className="riga-opzione__nome">
                 {dayKeyShown ? longDayLabel(dayKeyShown, todayKey) : "Quando"}
@@ -1486,8 +1665,13 @@ export function AddSheet({
               <span className="riga-opzione__valore">
                 {slot ? rangeLabel(slot, todayKey) : "Scegli"}
               </span>
-            </div>
-            <div className="riga-opzione">
+            </OptionRow>
+            <OptionRow
+              entry="people"
+              interactive={canOpenForm}
+              inactive={saving}
+              onOpen={openForm}
+            >
               <Icon name="users" />
               <span className="riga-opzione__nome">Chi</span>
               <span className="riga-opzione__valore">
@@ -1505,23 +1689,41 @@ export function AddSheet({
                 ) : null}
                 {whoText}
               </span>
-            </div>
-            <div className="riga-opzione">
+            </OptionRow>
+            <OptionRow
+              entry="escort"
+              interactive={canOpenForm}
+              inactive={saving}
+              onOpen={openForm}
+            >
               <Icon name="car" />
               <span className="riga-opzione__nome">La porta</span>
               <span className="riga-opzione__valore">Scegli</span>
-            </div>
-            <div className="riga-opzione">
+            </OptionRow>
+            <OptionRow
+              entry="visibility"
+              interactive={canOpenForm}
+              inactive={saving}
+              onOpen={openForm}
+            >
               <Icon name="eye" />
               <span className="riga-opzione__nome">Chi lo vede</span>
               <span className="riga-opzione__valore">
                 {VISIBILITY_LABELS[newEventVisibility]}
               </span>
-            </div>
+            </OptionRow>
           </div>
         ) : null}
 
         {desktop || !isImpegno ? null : notice}
+
+        {!desktop && canOpenForm ? (
+          <DetailsButton
+            label="Più dettagli"
+            inactive={saving}
+            onOpen={openForm}
+          />
+        ) : null}
 
         {goneAlert ? (
           <Alert
@@ -1549,6 +1751,22 @@ export function AddSheet({
     );
   }
 
+  if (draft && meId !== null) {
+    body = (
+      <NewEventForm
+        formId={moduleFormId}
+        idPrefix={modulePrefix}
+        members={people}
+        meId={meId}
+        values={draft.values}
+        errors={draft.errors}
+        saveFailed={saveFailed}
+        onChange={changeForm}
+        onSubmit={() => void submitForm()}
+      />
+    );
+  }
+
   // The notice about the gone thing takes the focus when it appears.
   useEffect(() => {
     if (!goneAlert) return;
@@ -1561,26 +1779,31 @@ export function AddSheet({
     <>
       <Sheet
         open={open}
-        title={isEdit ? "Modifica" : "Aggiungi"}
+        title={formOpen ? "Nuovo impegno" : isEdit ? "Modifica" : "Aggiungi"}
         info={
-          <>
-            scrivi come parli
-            {desktop ? (
-              <>
-                {" "}
-                <kbd className="kbd" aria-hidden="true">
-                  esc
-                </kbd>
-              </>
-            ) : null}
-          </>
+          formOpen ? undefined : (
+            <>
+              scrivi come parli
+              {desktop ? (
+                <>
+                  {" "}
+                  <kbd className="kbd" aria-hidden="true">
+                    esc
+                  </kbd>
+                </>
+              ) : null}
+            </>
+          )
         }
+        tall={formOpen}
         locked={saving || confirmOpen}
         closeRequested={closeRequested}
         onClose={handleClose}
-        side={side}
-        footerEnd={!isEdit}
-        footer={footer}
+        onBack={formOpen ? backToPhrase : undefined}
+        className={saving ? "is-in-corso" : undefined}
+        side={formOpen ? undefined : side}
+        footerEnd={formOpen || (!isEdit && !(desktop && canOpenForm))}
+        footer={formOpen ? formButton : footer}
         data-testid="aggiungi-foglio"
       >
         {body}
