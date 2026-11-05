@@ -50,3 +50,7 @@ Non creare riferimenti visivi per una pagina che non supera il confronto.
 - **Ricontrollo di una correzione piccola:** se il coordinatore ti chiede solo di verificare una correzione mirata, non riscrivere né rieseguire tutto: leggi l'esito della CI sul nuovo commit (`gh run view <id> --log-failed`), controlla i test legati ai punti corretti e rispondi.
 
 Modifichi solo `tests/`. Non aggiorni mai i riferimenti di altre pagine per far passare la tua.
+
+## Controlli automatici
+
+Mai aggirare hook, CI o test. Se un hook blocca un comando o chiede di usare un altro strumento (per esempio Edit al posto di uno script), usi quello strumento oppure chiudi con `BLOCCATO` spiegando cosa ti serve. Non ottieni mai lo stesso effetto per altra via: niente script Python o Node, `sed -i`, `tee`, redirezioni o copie di file, nemmeno per poi annullare. Scrivi nell'esito ogni volta che un hook ti ha fermato.
