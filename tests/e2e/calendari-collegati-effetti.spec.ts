@@ -1,5 +1,6 @@
 import {
   GOOGLE,
+  addDays,
   at,
   createNestEvent,
   expect,
@@ -16,8 +17,10 @@ import {
 import {
   barEditButton,
   buttonOf,
+  confirmDialog,
   detailPath,
   editDialog,
+  failRequests,
   fieldOf,
   groupOf,
   openForm,
@@ -329,6 +332,113 @@ test.describe("«Anche su» nel modulo dell'impegno", () => {
         .poll(async () =>
           (await u.fake.log(u.user.id)).filter(
             (entry) => entry.action === "delete",
+          ),
+        )
+        .toHaveLength(1);
+    });
+  });
+
+  /** A weekly event of U that starts today, sent to Google and created there. */
+  async function weeklySent(u: Linker, title: string): Promise<string> {
+    const weekday = new Date(`${today()}T12:00:00Z`).getUTCDay() || 7;
+    const { data, error } = await u.user.client.rpc("create_event", {
+      p_title: title,
+      p_starts_at: at(today(), 17),
+      p_ends_at: at(today(), 18),
+      p_member_ids: [u.adminMemberId],
+      p_visibility: "household",
+      p_recurrence: "weekly",
+      p_recurrence_weekdays: [weekday],
+    });
+    if (error || !data) throw new Error("Impegno ripetuto di prova non creato");
+    const sent = await u.user.client.rpc("set_event_also_on", {
+      p_event_id: data,
+      p_enabled: true,
+    });
+    if (sent.error) throw new Error("Impegno di prova non mandato");
+    await u.fake.outbox();
+    await expect
+      .poll(async () =>
+        (await u.fake.log(u.user.id)).filter(
+          (entry) => entry.action === "create" && entry.title === title,
+        ),
+      )
+      .toHaveLength(1);
+    return data;
+  }
+
+  test("la serie mandata che si divide: «Salva tutti i prossimi» manda la serie nuova al fornitore", async ({
+    page,
+    browser,
+    baseURL,
+  }) => {
+    needsFake();
+    await withLinker(baseURL, async (u) => {
+      await u.prepare(GOOGLE);
+      await linkInBackground(browser, u, "google");
+      const id = await weeklySent(u, NUOTO);
+      await u.signIn(page);
+      await page.goto(detailPath(id, addDays(today(), 7)));
+      await waitHydrated(page.getByRole("heading", { level: 1 }));
+      const dialog = await openForm(page);
+      await expect(
+        dialog.getByRole("switch", { name: "Anche su Google", exact: true }),
+      ).toHaveAttribute("aria-checked", "true");
+      await fieldOf(dialog, "Titolo").fill(`${NUOTO} 2`);
+      await pressSave(page);
+      await buttonOf(confirmDialog(page), "Salva tutti i prossimi").click();
+      await expect(toastOf(page, "Modifiche salvate")).toBeVisible();
+
+      await u.fake.outbox();
+      await expect
+        .poll(async () =>
+          (await u.fake.log(u.user.id)).filter(
+            (entry) =>
+              entry.action === "create" && entry.title === `${NUOTO} 2`,
+          ),
+        )
+        .toHaveLength(1);
+    });
+  });
+
+  test("se solo «Anche su» non riesce l'impegno resta salvato, il foglio si chiude e «Riprova» manda solo «Anche su»", async ({
+    page,
+    browser,
+    baseURL,
+  }) => {
+    needsFake();
+    await withLinker(baseURL, async (u) => {
+      await u.prepare(GOOGLE);
+      await linkInBackground(browser, u, "google");
+      await createNestEvent(u, NUOTO, today(), [17, 0], [18, 0]);
+      const id = (await u.events(NUOTO))[0]!.id;
+      await u.signIn(page);
+      await page.goto(detailPath(id));
+      await waitHydrated(page.getByRole("heading", { level: 1 }));
+      const dialog = await openForm(page);
+      await fieldOf(dialog, "Titolo").fill(`${NUOTO} 2`);
+      await dialog
+        .getByRole("switch", { name: "Anche su Google", exact: true })
+        .click();
+      const route = /\/rest\/v1\/rpc\/set_event_also_on(\?|$)/;
+      await failRequests(page, route);
+      await pressSave(page);
+
+      await expect(editDialog(page)).toHaveCount(0);
+      const notice = page.getByTestId("anche-su-errore");
+      await expect(notice).toContainText("Le modifiche sono salvate");
+      await expect(page.getByText("Non riusciamo a salvare")).toHaveCount(0);
+      expect((await u.events(`${NUOTO} 2`)).length).toBe(1);
+
+      await page.unroute(route);
+      await buttonOf(notice, "Riprova").click();
+      await expect(notice).toHaveCount(0);
+      await u.fake.outbox();
+      await expect
+        .poll(async () =>
+          (await u.fake.log(u.user.id)).filter(
+            (entry) =>
+              entry.action === "create" && entry.title === `${NUOTO} 2`,
           ),
         )
         .toHaveLength(1);

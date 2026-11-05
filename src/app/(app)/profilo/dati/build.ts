@@ -7,6 +7,7 @@ import {
   visibilityLabel,
 } from "@/components/profilo/model";
 import { toDateFieldValue, toTimeFieldValue } from "@/lib/datetime";
+import { providerName } from "@/lib/linked-calendars";
 import type { createClient } from "@/lib/supabase/server";
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
@@ -28,8 +29,6 @@ const WEEKDAY_NAMES = [
   "sabato",
   "domenica",
 ] as const;
-
-const PROVIDER_NAMES = { google: "Google", outlook: "Outlook" } as const;
 
 const RECURRENCE_NAMES = {
   none: "nessuna",
@@ -325,7 +324,7 @@ export async function buildExport(
       aggiunta_il: romeDateTime(i.created_at),
     })),
     calendari_collegati: accounts.data.map((a) => ({
-      servizio: PROVIDER_NAMES[a.provider],
+      servizio: providerName(a.provider),
       mail: a.email,
       collegato_il: romeDateTime(a.connected_at),
       ultima_sincronizzazione: dateTimeOrNull(a.last_synced_at),

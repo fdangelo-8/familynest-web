@@ -38,6 +38,7 @@ import {
 import {
   saveImportedVisibility,
   setAlsoOn,
+  type AlsoOnRetry,
   type AlsoOnTarget,
 } from "./also-on";
 import {
@@ -64,6 +65,8 @@ import {
 
 const SAVE_FAILED =
   "Non riusciamo a salvare le modifiche. Controlla la connessione e riprova.";
+const ALSO_ON_FAILED =
+  "Non siamo riusciti a mandare l'impegno al calendario esterno. Controlla la connessione e riprova.";
 const DELETE_FAILED =
   "Non riusciamo a eliminare l'impegno. Controlla la connessione e riprova.";
 
@@ -94,7 +97,12 @@ export type EditEventSheetProps = {
    * The change is saved. The page reads the occurrence again, updates the
    * address and shows the toast; the sheet leaves when this resolves.
    */
-  onSaved: (saved: { id: string; day: string }) => Promise<void>;
+  onSaved: (saved: {
+    id: string;
+    day: string;
+    /** The event is saved but «Anche su» failed: the page offers «Riprova» */
+    alsoOnRetry?: AlsoOnRetry;
+  }) => Promise<void>;
   /** The event turned out to be gone (deleted by someone else) */
   onMissing: () => void;
 };
@@ -182,9 +190,10 @@ function EditEventSheetOpen({
   /** Tells what a save outcome means for the form. */
   async function settle(
     outcome: SaveOutcome,
+    alsoOnRetry?: AlsoOnRetry,
   ): Promise<"done" | "field" | "failed"> {
     if (outcome.ok) {
-      await onSaved({ id: outcome.id, day: outcome.day });
+      await onSaved({ id: outcome.id, day: outcome.day, alsoOnRetry });
       setLeaving(true);
       return "done";
     }
@@ -210,11 +219,15 @@ function EditEventSheetOpen({
     }
   }
 
-  /** Saves the form and then sends or takes back the copy of «Anche su». */
+  /**
+   * Saves the form and then sends or takes back the copy of «Anche su». The
+   * save stays valid if only «Anche su» fails: `retry` then says what to send
+   * again (never the event itself).
+   */
   async function saveWithAlsoOn(
     scope: SaveScope,
     times: Times,
-  ): Promise<SaveOutcome> {
+  ): Promise<{ outcome: SaveOutcome; retry?: AlsoOnRetry }> {
     const outcome = await saveEvent(
       supabase(),
       occurrence,
@@ -222,17 +235,35 @@ function EditEventSheetOpen({
       times,
       scope,
     );
-    if (!outcome.ok || !alsoOnChanged) return outcome;
-    const sent = await setAlsoOn(supabase(), outcome.id, alsoOnChecked);
-    return sent ? outcome : { ok: false, reason: "failed" };
+    // Without the row there is nothing to send. A split of the series gives a
+    // new event: it follows the switch even if the switch did not change.
+    const split = outcome.ok && outcome.id !== occurrence.id;
+    if (!outcome.ok || !alsoOnRow || !(alsoOnChanged || split)) {
+      return { outcome };
+    }
+    const calls = [{ id: outcome.id, enabled: alsoOnChecked }];
+    // Switched off while the series split: the copy of the old series goes too.
+    if (split && !alsoOnChecked) {
+      calls.push({ id: occurrence.id, enabled: false });
+    }
+    const retry: AlsoOnRetry = {
+      calls,
+      providerLabel: alsoOnProvider ?? "il calendario esterno",
+    };
+    for (const call of calls) {
+      if (!(await setAlsoOn(supabase(), call.id, call.enabled))) {
+        return { outcome, retry };
+      }
+    }
+    return { outcome };
   }
 
   async function saveNow(scope: SaveScope, times: Times) {
     if (busy.current) return;
     busy.current = true;
     setSaving(true);
-    const outcome = await saveWithAlsoOn(scope, times);
-    const result = await settle(outcome);
+    const { outcome, retry } = await saveWithAlsoOn(scope, times);
+    const result = await settle(outcome, retry);
     if (result === "done") return; // stays busy until the sheet has left
     busy.current = false;
     setSaving(false);
@@ -244,8 +275,8 @@ function EditEventSheetOpen({
   }
 
   async function saveInDialog(scope: SaveScope, times: Times) {
-    const outcome = await saveWithAlsoOn(scope, times);
-    const result = await settle(outcome);
+    const { outcome, retry } = await saveWithAlsoOn(scope, times);
+    const result = await settle(outcome, retry);
     return result === "failed" ? false : undefined;
   }
 
@@ -292,7 +323,7 @@ function EditEventSheetOpen({
     if (result === "done") return;
     busy.current = false;
     setSaving(false);
-    if (result === "failed") setAlertText(SAVE_FAILED);
+    if (result === "failed") setAlertText(ALSO_ON_FAILED);
   }
 
   /** An imported event: only «Chi lo vede» goes to the database. */
@@ -308,12 +339,12 @@ function EditEventSheetOpen({
       occurrence.id,
       values.visibility,
     );
-    if (result === "ok" || result === "missing") {
-      const settled = await settle(
-        result === "ok"
-          ? { ok: true, id: occurrence.id, day: occurrence.occurrenceDate }
-          : { ok: false, reason: "missing" },
-      );
+    if (result === "ok") {
+      const settled = await settle({
+        ok: true,
+        id: occurrence.id,
+        day: occurrence.occurrenceDate,
+      });
       if (settled === "done") return;
     }
     busy.current = false;

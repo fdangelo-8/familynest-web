@@ -11,6 +11,13 @@ type Client = SupabaseClient<Database>;
  * calendars, never those of another adult.
  */
 
+/** What to send again when the event is saved but «Anche su» failed. */
+export type AlsoOnRetry = {
+  calls: Array<{ id: string; enabled: boolean }>;
+  /** «Google», «Outlook» */
+  providerLabel: string;
+};
+
 export type AlsoOnTarget = {
   /** «Google», «Outlook» */
   providerLabel: string;
@@ -81,17 +88,21 @@ export async function saveImportedVisibility(
   supabase: Client,
   eventId: string,
   visibility: Database["public"]["Enums"]["event_visibility"],
-): Promise<"ok" | "missing" | "private-at-source" | "failed"> {
+): Promise<"ok" | "private-at-source" | "failed"> {
   try {
     const { error } = await supabase
       .from("events")
       .update({ visibility })
       .eq("id", eventId);
     if (!error) return "ok";
-    if (error.code === "42501" && visibility === "household") {
+    if (
+      error.code === "42501" &&
+      visibility === "household" &&
+      (error.message ?? "").includes("private on its calendar")
+    ) {
       return "private-at-source";
     }
-    return error.code === "P0002" ? "missing" : "failed";
+    return "failed";
   } catch {
     return "failed";
   }
