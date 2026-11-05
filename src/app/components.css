@@ -4071,7 +4071,8 @@ main[tabindex="-1"]:focus {
 }
 .scheda
   > .riga-lista--modificabile:last-child:has(
-    > .riga-lista__testo > :is(button, a).riga-lista__titolo:is(:hover, :active)
+    > .riga-lista__testo
+      > :is(button, a).riga-lista__titolo:is(:hover, :active):not(:disabled)
   ) {
   border-bottom-left-radius: var(--radius-l);
   border-bottom-right-radius: var(--radius-l);
@@ -4103,17 +4104,23 @@ main[tabindex="-1"]:focus {
     transition: background-color var(--durata-rapida) var(--curva);
   }
   .riga-lista--modificabile:has(
-    > .riga-lista__testo > :is(button, a).riga-lista__titolo:hover
+    > .riga-lista__testo
+      > :is(button, a).riga-lista__titolo:hover:not(:disabled)
   ),
   .scheda a.riga-scadenza:hover {
     background-color: var(--color-carta);
   }
 }
 .riga-lista--modificabile:has(
-  > .riga-lista__testo > :is(button, a).riga-lista__titolo:active
+  > .riga-lista__testo > :is(button, a).riga-lista__titolo:active:not(:disabled)
 ),
 .scheda a.riga-scadenza:active {
   background-color: var(--color-carta);
+}
+/* Calendari collegati (#293): il titolo disabilitato (offline) sbiadisce come gli altri controlli. */
+.riga-lista--modificabile button.riga-lista__titolo:disabled {
+  opacity: var(--opacity-disabilitato);
+  cursor: not-allowed;
 }
 
 /* #133: testa del profilo in caricamento. .intestazione prende tutta la
