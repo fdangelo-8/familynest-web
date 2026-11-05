@@ -1,149 +1,128 @@
 # Lezioni apprese
 
-Errori già commessi (in questo progetto o in quelli precedenti dell'ecosistema) e regola corretta. Una riga per lezione. Non si cancellano lezioni: si aggiorna la regola.
+Una riga per lezione: `errore → regola`. Le lezioni imposte da hook, CI, test o dalle istruzioni degli agenti sono in `docs/agenti/LEZIONI-archivio.md`. Non si cancellano: si aggiorna la regola.
 
 ## Database e Supabase
 
-- Policy RLS riscritte "per sistemare" un bug e rotte per tutti → le policy si cambiano solo con migrazione + test pgTAP, mai al volo.
-- `.select()` concatenato dopo insert/update che resta appeso → dopo una scrittura non concatenare `.select()`: rileggi con una query separata se serve.
-- `ALTER TYPE ... ADD VALUE` usato nella stessa migrazione dell'insert che lo sfrutta → due migrazioni separate.
-- Migrazioni con dipendenze in un unico file che fallisce a metà → estensioni, poi DDL, poi dati, in migrazioni separate.
-- Supposizioni sui nomi delle colonne → verifica sempre lo schema reale nelle migrazioni prima di scrivere codice o query.
-- PR del database unita mentre il revisore chiedeva ancora correzioni, poi migrazioni già unite modificate → dopo un merge le migrazioni non si toccano più: le correzioni si fanno con migrazioni nuove su un nuovo branch `db/*`; prima di ogni push l'agente controlla che la PR sia ancora aperta.
-- Deploy delle migrazioni fallito per una password errata nel secret del database → dopo il merge di una PR `db/*` il coordinatore controlla il run `db` su `main` e, se fallisce per credenziali, apre subito una issue bloccata per Francesco.
-- Funzione `security definer` che si fida del jsonb mandato dal client (autore, date, id) → la fonte di verità è una tabella lato server; l'input del client è solo un elenco di id, e la funzione verifica appartenenza, finestra di tempo e stato.
-- Eventi `DELETE` di Realtime (Postgres Changes) senza filtro né RLS → arrivano a tutti gli iscritti con il solo `id`: la pagina ignora gli id che non conosce, e la descrizione della PR dice cosa arriva davvero.
-- Pulizia dei dati con scadenza affidata a un trigger di scrittura (dati oltre la scadenza se nessuno scrive) → la scadenza si garantisce con un job `pg_cron` che non dipende dall'uso.
-- Permesso di `insert` sulla colonna `id` → un altro Nest riusa un id ricevuto dagli eventi `DELETE` di Realtime e blocca l'«Annulla» del Nest che l'aveva tolto → mai `grant insert` su `id`: lo genera il database; la coda offline usa un id temporaneo e riconcilia con una lettura separata, senza `.select()`.
-- Impegni «Solo io» o «Occupato» di un altro: chi vi partecipa o li accompagna li vede per intero e può allargarli (aggiungere persone, cambiare chi accompagna) → solo l'autore aggiunge persone e cambia l'accompagnatore, con una funzione `security definer` in `private` usata dalla policy e un trigger sull'accompagnatore, più test pgTAP per ogni ruolo; togliere resta permesso a chi vede (#96).
-- Funzione che restituisce righe mascherate (campi `null` per privacy) → i tipi generati dicono `string`, e il compilatore non avvisa: la pagina non chiama la RPC direttamente, ma passa da una funzione unica in `src/lib/` con un tipo a varianti (`isMasked`) (#96).
-- Funzione del database chiamabile da anonimo (anteprima invito) con un blocco «solo POST» che rifiuta solo `GET` → il blocco rifiuta tutto ciò che non è `POST` (`HEAD`, `PUT`…) prima di leggere dati, e i test provano ogni metodo diverso da `POST` (#112).
-- Divisione di una serie di impegni fatta con più scritture separate: un errore a metà lascia un impegno «fantasma» con le sue note (#120) → ogni operazione che spezza una serie è una sola funzione `security definer` che scrive tutto in una transazione; il test conta le copie dopo un errore forzato.
-- Test pgTAP in `supabase/tests/` scritti dal tester o dal coordinatore → li scrive solo l'architetto dati nel branch `db/*`, perché gli hook lo impongono; il tester funzionale indica i casi mancanti nella PR, senza scriverli.
-- Limite di righe per adulto (per esempio sei spazi fissati) controllato con un conteggio prima dell'insert → due richieste vicine lo superano: la funzione prende `pg_advisory_xact_lock` per membro prima di contare e inserire (#192).
-- Modifica di una serie settimanale che manda solo il giorno del modulo → la serie cambia giorno (da lunedì a mercoledì): se la regola resta la stessa si mandano i giorni della serie spostati di quanto si è spostata la volta aperta; il giorno del modulo solo quando la regola cambia (#174).
-- Test RLS che provano un solo verso (adulto non amministratore contro amministratore) lasciano scoperto l'amministratore che legge o cambia i dati di un altro adulto → per ogni dato privato si provano entrambi i versi, anche l'amministratore: `update` e `delete` con `returning` devono dare 0 righe, `insert` con l'id di un altro deve dare `42501` (#225).
-- Cancellazione dell'account che elimina `auth.users` ma lascia il registro di Auth (`auth.audit_log_entries`: mail e indirizzi IP, senza chiave esterna) → la funzione cancella nella stessa transazione le righe di `auth` legate all'utente, il test verifica che quelle di un altro utente restino; se il ruolo non può cancellarle, la domanda va a Francesco (#226).
-- Lavoro che gira su tutti i Nest, esposto a chi chiama (anche con la chiave amministrativa, per i test) → `p_household_id` obbligatorio (`22023` se manca); su tutti i Nest lavora solo il job `pg_cron` tramite una funzione privata (#237).
-- Regole di visibilità copiate in una seconda funzione (la ricerca accanto al calendario) → una sola fonte in `private`, usata da entrambe, oppure un test di equivalenza che confronta le due funzioni sulle stesse righe (#239).
+- Policy RLS riscritte al volo per un bug → si cambiano solo con migrazione e test pgTAP.
+- `.select()` dopo una scrittura resta appeso; rilettura con la stessa query dà il vecchio dato → niente `.select()` dopo le scritture; rileggi con una query diversa.
+- `ALTER TYPE ... ADD VALUE` e l'insert che lo usa nella stessa migrazione; migrazioni con estensioni, DDL e dati insieme → una migrazione per passo.
+- Nomi di colonne supposti → verifica lo schema reale nelle migrazioni.
+- Migrazione già unita modificata → mai: correzioni in migrazioni nuove su un nuovo `db/*`; prima di ogni push controlla che la PR sia aperta.
+- Deploy migrazioni fallito per credenziali → il coordinatore controlla il run `db` su `main` dopo ogni merge `db/*` e apre subito una issue bloccata per Francesco.
+- `security definer` che si fida del jsonb del client → la fonte è una tabella lato server; il client manda solo id, la funzione verifica appartenenza, finestra e stato.
+- Realtime `DELETE` senza filtro né RLS → arriva a tutti con il solo `id`: la pagina ignora gli id sconosciuti; la PR dice cosa arriva.
+- Scadenza dei dati affidata a un trigger di scrittura → job `pg_cron`.
+- `grant insert` su `id` → mai: lo genera il database; la coda offline usa un id temporaneo e riconcilia con una lettura separata.
+- Impegni «Solo io» o «Occupato» modificabili da chi li vede → solo l'autore aggiunge persone e cambia l'accompagnatore (`security definer` in `private`, trigger, test per ruolo).
+- Righe mascherate con tipi generati che dicono `string` → una funzione unica in `src/lib/` con tipo a varianti (`isMasked`).
+- RPC anonima con blocco «solo POST» che rifiuta solo `GET` → rifiuta ogni metodo diverso da `POST` prima di leggere; test per ciascuno.
+- Divisione di una serie in più scritture: errore a metà, copie fantasma → una funzione `security definer` in transazione; test con errore forzato.
+- Limite per adulto controllato con un conteggio prima dell'insert → `pg_advisory_xact_lock` per membro prima di contare.
+- Serie settimanale modificata solo sul giorno del modulo → se la regola resta, spostare i giorni della serie della stessa distanza; il giorno del modulo solo se la regola cambia.
+- Test RLS in un solo verso → provare entrambi, anche con l'amministratore: `update`/`delete` con `returning` danno 0 righe, `insert` con id altrui dà `42501`.
+- Cancellazione account che lascia il registro di Auth (mail, IP) → cancellare nella stessa transazione le righe `auth` dell'utente; se il ruolo non può, la domanda va a Francesco.
+- Lavoro su tutti i Nest esposto a chi chiama → `p_household_id` obbligatorio (`22023`); il lavoro globale gira solo dal job `pg_cron`, via funzione `private`.
+- Regole di visibilità copiate in due funzioni → una sola fonte in `private`, o test di equivalenza.
+- PR `db/*` che tocca trigger o funzioni unita con la sola `check` verde → prima del merge, etichetta `suite-completa`.
+- Controllo del ruolo e chiamata a `private` in una sola espressione `security invoker`: `service_role` bloccata → il ruolo in un'istruzione a sé; test pgTAP con la chiave amministrativa.
 
 ## Sviluppo
 
-- Middleware Edge per l'autenticazione che rompeva i redirect → controllo della sessione lato server nei layout/route, niente middleware Edge per l'auth.
-- Prompt e PR troppo grandi causano regressioni → piccoli passi, pochi file per volta, commit frequenti.
-- File JSX grandi riscritti da zero perdendo parti → modifiche mirate, mai riscritture integrali non richieste.
-- Date mostrate nel giorno sbagliato per il fuso orario → le date si salvano in UTC e si mostrano nel fuso `Europe/Rome` con funzioni centralizzate.
-- Selettori di data che ricadevano sull'interfaccia nativa del browser → usare il componente del design system.
-- Riconoscimento delle sezioni per prefisso (`/casa/...`) che rendeva attive pagine inesistenti, con due h1 → le rotte attive si riconoscono per elenco esplicito delle pagine esistenti, non per prefisso.
-- Form con mail o altri dati personali senza `method="post"` e `action`, o con un campo che ha `name` (prima dell'idratazione il browser fa GET: l'indirizzo finisce in URL, cronologia, log e Referer; con `name` la mail arriva al server) → form con `method="post"` e `action` verso una rotta POST che risponde 303, campo senza `name`; si prova bloccando gli script e inviando prima dell'idratazione.
-- Percorso di ritorno (`next`) controllato sulla stringa grezza e risolto dopo con `new URL` → `/.//host` e `/a/..//host` passano i controlli → si normalizza prima con `new URL(raw, base)`, si verifica che l'origine non cambi, si applicano le regole al `pathname` normalizzato e si restituisce quello.
-- Cookie di sessione cancellati con `maxAge: 0` (o senza scadenza) restano nel browser come cookie vuoti → la cancellazione imposta una scadenza passata (`expires: new Date(0)`) con lo stesso `path`; il test verifica che il cookie non ci sia più dopo «Esci».
-- `redirect()` in una server action fa rifiutare la promessa lato client, e dentro un `try` viene preso per errore di rete → le server action restituiscono la destinazione e il client naviga; dove serve `redirect()`, il `catch` chiama per primo `unstable_rethrow(error)`.
-- Guardia di sessione che davanti a un errore tecnico (Auth non raggiungibile) mostra comunque il contenuto → la guardia chiude sull'errore con «Riprova»; il chiamante gestisce il caso di errore e non scarta il risultato.
-- Stessa parte di interfaccia in due disposizioni (mobile e desktop) con lo stesso `id` → `id` duplicati, `aria-describedby` ambigui, axe `duplicate-id-aria` → un `id` per disposizione, con prefisso diverso (`m-`, `d-`).
-- Link «Vai al contenuto» con `next/link` che non sposta il focus (Invio cambia solo lo scroll, il Tab successivo torna alla navigazione) → un `<a href="#contenuto">` nativo con `onClick` che chiama `focus()` sul `main` (`tabIndex={-1}`); il test verifica il focus dopo Invio (#78).
-- Pagine sotto `(app)` con un CSS module di pagina: per un attimo `loading.tsx` e la pagina coesistono, con due `<main>` nel documento; un CSS in stringa `<style>` è stato respinto in revisione → sotto `(app)` niente CSS module e niente `<style>` nelle pagine. Le classi di disposizione le aggiunge un lavoro `shared/*` (richiesta-condivisa) come classi globali nel blocco del designer di `components.css`, perché `feat/*` non può toccarlo (#79, #21, PR #94).
-- Rilettura dopo una scrittura con la stessa query della prima lettura: Next.js unisce le GET identiche nello stesso render e restituisce il risultato vecchio (#117) → rileggi con una query diversa (per esempio con un filtro su un istante che cambia), senza `.select()` sulla scrittura.
-- «Riprova» che resta in caricamento se il secondo tentativo dà lo stesso errore, perché l'effetto dipende da un valore che non cambia (#117) → lo stato di attesa si gestisce con `useTransition` attorno al nuovo tentativo, che si chiude sempre.
-- Funzione condivisa che restituisce nomi o dati personali a ogni chiamante, anche dove non servono (#124) → il tipo di ritorno dichiara cosa include; un parametro obbligatorio decide se i dati ci sono, e il test copre entrambi i casi.
-- Cookie con scadenza impostato solo con `expires`, senza `Max-Age` richiesto dal criterio (#124) → imposta anche `maxAge` in secondi (almeno 1, mai oltre la scadenza); la cancellazione usa opzioni sue, senza ereditarlo.
-- Token d'invito che finisce in un percorso di ritorno (`next`, poi `redirect_to`, log e indirizzo) (#124) → la destinazione passa sempre da `safeNextPath`, che rifiuta i percorsi con un token; il test prova un `next` esterno e uno con token.
-- Componente condiviso che riceve dalla pagina un elemento già pronto (avviso offline con «Riprova») invece dei dati (#119) → il componente condiviso possiede avviso, azioni e stato di caricamento; la pagina passa solo dati e callback.
-- Voce di menu di una sezione (Casa) con `aria-current="page"` anche sulle pagine interne → `"true"` per la sezione, `"page"` solo sull'indirizzo esatto della voce (`getNavAriaCurrent`).
-- Costante esportata da un modulo `"use client"` (es. `CHOOSABLE_COLORS` in `ColorChoice.tsx`) importata da codice server: diventa un riferimento client, non un valore (#130, di nuovo #146) → dal server si importano solo tipi (`import type`); i valori stanno in moduli senza `"use client"`.
-- Scorciatoia globale (Ctrl+K) ignorata quando il fuoco è in un campo di testo: un foglio con la textarea a fuoco all'apertura la disattiva (#172) → la specifica dice quale scorciatoia vale dal campo; i test la provano dal bottone «Chiudi» o da un elemento che non è un campo.
-- Costante o funzione generica spostata in un modulo condiviso (`URGENT_DAYS`) che collide con una uguale di una pagina → nel modulo condiviso i nomi sono specifici (`DEADLINE_URGENT_DAYS`) (#193).
-- Classe CSS condivisa rinominata senza cercarne tutti gli usi → prima si cerca in `src/`, `tests/` e nelle PR aperte, e il cambio di nome va in un solo passo con tutti gli usi (#193).
-- Stessa frase scritta a mano in due funzioni (`allDialogText` e `saveAllText`): dopo una decisione una delle due resta indietro → la frase sta in una sola funzione in `src/lib/`, usata da tutte le pagine (#193).
-- Lettura con `select` di colonne in più (date di nascita, colori, nomi di figli o animali non mostrati) → la lettura prende solo le colonne e le righe del tipo che la pagina mostra; un parametro obbligatorio dice quali nomi leggere (#233, #234).
-- Errore di rete e errore del server distinti dal `code` dell'errore (il `code` c'è solo con un corpo JSON, quindi un 5xx con altro corpo diventa «rete») → si decide con lo `status`: `0` è rete, ogni altro errore è server, e il conflitto (`23505`) resta a parte (#235).
-- `aria-pressed`, `aria-busy` o altri attributi ARIA messi sul DOM con un effect (trovati con `querySelector`) → l'attributo arriva dopo il disegno e dopo lo spostamento del fuoco; il componente condiviso riceve una prop (`pressed`, `busy`) con una `richiesta-condivisa`, e la pagina non ricopia il componente. Fino ad allora il ripiego è un `useLayoutEffect` dichiarato prima dell'effetto del fuoco, con una issue citata (#234, #235).
-- Preferenza letta senza controllare `error`, che ricade sul valore meno protettivo (visibilità «Occupato») → si controlla sempre l'errore; senza preferenza il valore predefinito è il più protettivo («Solo io») e la scelta è visibile prima del salvataggio (#233).
-- Lettura in più parti che su un errore parziale restituisce `ok: true` con un elenco a cui manca un pezzo → se una parte fallisce il risultato è `{ ok: false, reason }`, la pagina mostra «Riprova» e un test copre il caso (#244).
-- Dati locali (ricerche recenti, lente) cancellati solo dal pulsante «Esci» della pagina del profilo → si cancellano in ogni uscita (sessione scaduta, account eliminato altrove, «Esci» dell'onboarding) e alla pagina di accesso, con una sola funzione in `src/lib/` (#244, #249).
-- Valore non ancora approvato da Francesco già scritto nel codice o nei dati (righe dei nove spazi, puntina su desktop) → codice, skill e galleria contengono solo ciò che è approvato; il resto resta vuoto e un test lo verifica (#224).
-- Testo nascosto con `VisuallyHidden` che inizia o finisce con uno spazio (« di Sofia») → il nome accessibile ha spazi doppi o mancanti: lo spazio lo mette la struttura, non il testo nascosto, e il test confronta il nome dopo aver normalizzato gli spazi (#224).
+- Middleware Edge per l'auth che rompeva i redirect → sessione controllata lato server nei layout e nelle route.
+- PR grandi o file JSX riscritti per intero → pochi file per volta, modifiche mirate, commit frequenti.
+- Date nel giorno sbagliato → UTC nel salvataggio, `Europe/Rome` nella visualizzazione, con funzioni centralizzate.
+- Selettori di data nativi del browser → componente del design system.
+- Sezione attiva per prefisso (`/casa/...`) → rotte attive per elenco esplicito delle pagine esistenti.
+- Form con dati personali senza `method="post"` e `action`, o con `name` sul campo → `method="post"` e `action` verso rotta POST con 303; campo senza `name`.
+- `next` controllato sulla stringa grezza → normalizza con `new URL(raw, base)`, verifica l'origine, applica le regole al `pathname` e restituisci quello.
+- Cookie cancellati con `maxAge: 0` restano vuoti → cancella con `expires: new Date(0)` e lo stesso `path`; se il criterio chiede la scadenza, `maxAge` in secondi (almeno 1).
+- `redirect()` in server action rifiutato dal client o preso da un `try` → la action restituisce la destinazione; dove serve `redirect()`, il `catch` chiama `unstable_rethrow(error)` per primo.
+- Guardia di sessione che mostra il contenuto su errore tecnico → chiude con «Riprova».
+- Stessa parte di interfaccia in due disposizioni con lo stesso `id` → un `id` per disposizione, con prefisso `m-` o `d-`.
+- «Vai al contenuto» con `next/link` che non sposta il focus → `<a href="#contenuto">` con `focus()` sul `main` (`tabIndex={-1}`).
+- CSS module o `<style>` in `(app)` → niente, né in `(app)` né nelle pagine; le classi di disposizione vanno in `components.css` via `richiesta-condivisa`.
+- Nomi o dati personali letti o restituiti oltre il necessario → si legge e si restituisce solo ciò che la pagina mostra; un parametro obbligatorio decide se i dati ci sono.
+- Lettura in più parti che su errore parziale dà `ok: true` con un pezzo mancante → `{ ok: false, reason }` e «Riprova».
+- Componente condiviso che riceve un elemento già pronto → il componente possiede avviso, azioni e caricamento; la pagina passa dati e callback.
+- `aria-current="page"` su tutte le pagine di una sezione → `"true"` per la sezione, `"page"` solo sull'indirizzo esatto (`getNavAriaCurrent`).
+- Costante di un modulo `"use client"` importata dal server → dal server solo `import type`.
+- Scorciatoia globale ignorata con il fuoco in un campo → la specifica dice da quali elementi vale; test da un elemento che non è un campo.
+- Costante generica in un modulo condiviso che collide → nomi specifici; rinomina o frase condivisa solo dopo ricerca degli usi in `src/`, `tests/` e PR aperte.
+- Errore di rete distinto dal `code` (presente solo con corpo JSON) → si decide dallo `status`: `0` è rete, il resto è server; il conflitto `23505` a parte.
+- `aria-pressed`, `aria-busy` messi sul DOM con un effect → prop del componente condiviso via `richiesta-condivisa`; ripiego: `useLayoutEffect` con issue citata.
+- Preferenza letta senza controllare `error` → controlla sempre; il predefinito è il più protettivo («Solo io») e la scelta è visibile prima del salvataggio.
+- Dati locali cancellati solo da «Esci» del profilo → si cancellano in ogni uscita e alla pagina di accesso, con una funzione in `src/lib/`.
+- Valore non approvato scritto nel codice o nei dati → resta vuoto finché approvato; un test lo verifica.
+- `VisuallyHidden` con spazi a inizio o fine → lo spazio lo mette la struttura; il test normalizza gli spazi.
+- Variante nuova di un tipo unione condiviso → cerca in `src/` e nelle PR aperte tutti gli `switch` esaustivi e aggiornali nella stessa PR.
+- Regex `[^>]*` o `[\s\S]*?` su HTML esterno: tempo quadratico → `indexOf` e tetti di lunghezza; dopo un tag saltato riparti dopo il `>`.
 
 ## Processo
 
-- La protezione di `main` non è applicata sul piano GitHub gratuito → nessun agente conta su GitHub per bloccare un merge: si dichiara pronta solo una PR con `node scripts/agenti/gh.mjs pr-checks <n>` tutto verde.
-- `gh issue …` e `gh pr …` falliscono con "GitHub GraphQL is not available" → usare `node scripts/agenti/gh.mjs`, che usa l'API REST.
-
-- Una lista di issue o PR può tornare vuota per un istante (proxy della sessione) → prima di creare issue nuove ricontrollare; lo script riprova da solo la prima pagina vuota.
-- `.claude/worktrees/` sono le copie di lavoro degli agenti, ignorate da git → non si committano e non vanno "sistemate" quando un hook dell'ambiente segnala file non tracciati.
-- Due tester in parallelo sulla stessa PR condividono branch locale e indice git: un commit ha cancellato per errore gli spec dell'altro → ogni tester committa solo i propri file con pathspec esplicito, fa `git pull --no-rebase` prima del push e controlla `git show --stat` del proprio commit.
-- Tester che dichiara "CI tutta verde" guardando un commit precedente al proprio push → l'esito si dà solo dopo `node scripts/agenti/gh.mjs pr-checks <n> --watch` sul commit appena pushato.
-- `pr-checks <n> --watch` che dice «tutto verde» prima che il job `test` sia finito → l'esito si dà solo quando il job `test` del commit pushato risulta completato, non solo l'elenco dei controlli.
-- Lavoro su script e file condivisi assegnato all'architetto dati su branch `db/*`, ma guard e hook lo vietano → script in `scripts/`, `.env.example` e `package.json` si fanno solo su branch `shared/*`, anche se riguardano i dati.
-- Risposta di Francesco a una `proposta-design` registrata in ritardo, o nota di stato che la dà per «da decidere» → un'issue d'implementazione per ogni punto approvato, subito; prima di scrivere lo stato si rileggono i commenti di Francesco nell'issue (punti 6–14 della #43 erano rimasti senza issue).
-- Scostamento dal criterio deciso in PR (testo diverso dal CA) → il coordinatore aggiorna il criterio nell'issue prima del test funzionale, altrimenti il tester lo legge in contrasto con la PR.
-- Criterio di accettazione con un valore oltre i limiti del database (CA-13 della #12 superava i 100 caratteri, e non era verificabile) → l'analista controlla lunghezze e vincoli di colonne e funzioni prima di fissare il criterio.
-- CI rossa su `main` per 4 giorni senza che nessuno se ne accorgesse → dopo ogni merge il coordinatore controlla la CI su `main` e, se è rossa, apre subito una issue.
-- Push con `check` o `build` rotti dopo un push di soli file di test → si lancia `npm run check` e `npm run build` prima di ogni push, anche per file di test.
-- Suite Playwright completa (circa 20 minuti) a ogni push di ogni PR, con i minuti di Actions finiti il 29/10 e la CI bloccata fino al 1° novembre → la suite completa gira sempre su `main` e sulle PR con etichetta `in-test` o `pronta-per-francesco`, letta a inizio run; a ogni altro push girano solo `check` e `build`. Se l'etichetta arriva senza un nuovo push, si rilancia l'ultima run (#97, decisione di Francesco del 29/10, vedi `ARCHITETTURA.md` §9). Un solo push per lavoro, dopo i controlli in locale (#83).
-- Gruppo di concorrenza `remote-test-data` con una sola run in attesa: una nuova annulla quella in attesa, e il `test` annullato resta senza esito (#93) → il coordinatore rilancia a mano solo la suite annullata, quando la coda si libera; mai un job fallito.
-- Job di un workflow con lo stesso nome della suite completa (`test`): `pr-checks` tiene un solo controllo per nome, e il test mirato nascondeva una suite rossa («TUTTO VERDE» su #184) → il job mirato ha un nome suo (#186).
-- Vercel conta anche le build ignorate nel limite di 100 deployment al giorno del piano gratuito → per i rami senza anteprima si usa `git.deploymentEnabled` in `vercel.json` (#183).
-- Due `test-mirato` sullo stesso branch si annullano a vicenda (gruppo di concorrenza per ref) → si lanciano a turno, uno alla volta.
-- Branch temporaneo creato sul remoto (per un test o una prova) → gli agenti non possono cancellarlo: niente branch temporanei sul remoto, solo locali o il branch della propria PR.
-- `npm run check` nella copia principale che fallisce con migliaia di errori dalle copie di lavoro degli agenti (`.claude/worktrees/`, build `.next` incluse), perché la configurazione flat di ESLint non legge `.gitignore` → `.claude/worktrees/**` è escluso da ESLint (#93, #97).
-- Agente senza worktree che fa `git checkout` nella copia principale e cambia il branch sotto gli altri (successo il 29/10) → niente cambi di branch nella copia principale: si lavora solo nel proprio worktree.
-- Script o file nello scratchpad condiviso tra agenti: uno script condiviso ha portato più agenti a scrivere sul Supabase remoto → ogni agente lavora solo dentro il proprio worktree, mai script o file in cartelle condivise.
-- Stack Supabase locale avviato con una cartella o un project-id comuni → cartella e project-id dentro il proprio worktree; per fermarlo `supabase stop --workdir <cartella del proprio worktree>`, mai lo stack di un altro agente.
-- Disco del container limitato, con `node_modules`, `.next` e `test-results` lasciati dai worktree → alla fine di ogni lavoro si cancellano `node_modules`, `.next` e `test-results` del proprio worktree.
-- PR di sola documentazione bloccate perché la verifica `db` non partiva mai → la verifica `db` parte sempre; se la PR tocca solo `docs/**` o `*.md` salta i passi del database e finisce verde (#121).
-- PR di una fondamenta `shared/*` con `Refs #n` nel corpo, e guard rosso → il guard vuole `Closes #<n>` nel corpo di ogni PR, anche delle fondamenta; `Refs` non basta (#124).
-- `pr-checks <n> --watch` subito dopo un push che dice «TUTTO VERDE» prima che partano i run del nuovo SHA → si aspetta che esistano i run del nuovo SHA (`gh run list`), poi si legge l'esito.
-- File temporanei con nomi uguali in una cartella usata da più agenti in parallelo si sovrascrivono → ogni file temporaneo ha un prefisso unico (numero di issue o PR) e sta nel proprio spazio di lavoro.
-- Sviluppatore che risponde FATTO senza aver eseguito i test della propria pagina → prima di FATTO lancia il workflow `test-mirato` sulle spec della pagina (`tests/e2e`, `tests/a11y`, `tests/visual`) e scrive l'esito nella PR (#177).
-- Test instabili che passano solo al secondo tentativo restano nascosti in CI → il tester li segnala con i numeri delle run e il coordinatore apre subito una issue (#177).
-- Requisito di un'issue che si perde nel riepilogo del coordinatore (testi della ripetizione) → il revisore confronta la PR con il requisito originale della issue, non con il riepilogo, e ogni elemento perso va deciso per iscritto prima del test (#170).
-- Suite completa più lunga del timeout del job (45 minuti) che si interrompe prima della fine, senza un test rosso → si misura la durata delle ultime run complete e si alza il timeout prima di aggiungere pagine; una suite interrotta non è un esito (#238).
+- Protezione di `main` non applicata sul piano gratuito → nessun agente conta su GitHub per bloccare un merge; una PR è pronta solo con `pr-checks <n>` verde.
+- Lista di issue o PR vuota per un istante → ricontrolla prima di creare issue nuove.
+- `.claude/worktrees/` non tracciati → non si committano né si «sistemano».
+- «CI verde» dichiarato su un commit precedente, o `--watch` letto prima dei run del nuovo SHA → l'esito si dà solo sul commit pushato, con i run completati.
+- Script o file condivisi (`scripts/`, `.env.example`, `package.json`) affidati all'architetto dati → solo su `shared/*`.
+- Proposta di design approvata in ritardo, o stato che la dà «da decidere» → un'issue per ogni punto approvato, subito; prima dello stato si rileggono i commenti di Francesco.
+- Scostamento dal criterio deciso in PR → il coordinatore aggiorna il criterio nell'issue prima del test.
+- Criterio con valori oltre i limiti del database → l'analista controlla lunghezze e vincoli.
+- CI rossa su `main` per giorni → dopo ogni merge il coordinatore controlla `main` e apre subito una issue se è rossa.
+- Push con `check` o `build` rotti dopo un push di soli test → prima di ogni push `npm run check` e `npm run build`.
+- Suite Playwright completa a ogni push, con i minuti esauriti → gira su `main` e sulle PR con `in-test` o `pronta-per-francesco`; un solo push per lavoro, dopo i controlli locali.
+- Run annullata dalla concorrenza di `remote-test-data` → il coordinatore la rilancia a mano; mai un job fallito.
+- Suite più lunga del timeout del job, interrotta senza test rossi → misura le ultime run e alza il timeout prima di aggiungere pagine; una suite interrotta non è un esito.
+- Stack Supabase locale con cartella o project-id comuni → cartella e project-id nel proprio worktree; si ferma con `supabase stop --workdir` del proprio worktree.
+- Disco pieno per `node_modules`, `.next`, `test-results` → alla fine si cancellano quelli del proprio worktree.
+- `git checkout` nella copia principale che cambia il branch agli altri → si lavora solo nel proprio worktree.
+- Script o file temporanei in cartelle condivise tra agenti → ogni agente lavora nel proprio worktree, con file dal prefisso unico (numero di issue o PR).
+- `npm run check` nella copia principale con migliaia di errori dai worktree → `.claude/worktrees/**` è escluso da ESLint.
+- Requisito di un'issue perso nel riepilogo del coordinatore → il revisore confronta la PR con l'issue originale; ogni elemento perso si decide per iscritto prima del test.
 
 ## Test
 
-- Falsi errori di insert in locale per saturazione del pool di connessioni → verificare sulla preview prima di dichiarare un bug; le anteprime esistono solo per `main`, `feat/*` e `shared/*`, con modifiche fuori da `tests/`, `docs/` e `*.md` (#141), quindi su `db/*`, `docs/*` e `admin/*` non ce ne sono.
-- Test fragili legati a testi o classi CSS → selettori per ruolo e nome accessibile, o `data-testid` dove serve.
-- Test che confrontano token o stili come stringhe falliscono perché la build minifica i valori (`.30`→`.3`, `#ffffff`→`#fff`, rgba→hex) e Prettier riscrive i numeri → i test che confrontano token o stili normalizzano i valori, mai confronto letterale di stringhe.
-- Test con timer che usavano `page.clock.install()` senza fermare il tempo fallivano solo in CI (più lenta) → nei test con tempi usare `page.clock.pauseAt` e avanzare con `runFor`.
-- Confronti di stili calcolati con il mockup falliscono in CI su altezze che dipendono da andata a capo e font (il mockup non carica i font da Google in CI) → escludere `height` solo dove dipende dal testo, non togliere l'intero caso.
-- Riferimento visivo vecchio ma sotto tolleranza non viene riscritto dal workflow visual-baseline (`--update-snapshots`), e gli hook vietano di cancellare screenshot → il riferimento resta valido finché è sotto tolleranza; per rigenerarlo si usa l'immagine della CI (container Playwright) sull'ultimo commit che cambia il CSS, con il workflow `visual-baseline` con `-f spec=<file sotto tests/visual>` e `-f update=all` (la differenza è sotto la tolleranza del 2%, e senza `all` non si riscrive), su Supabase locale, o in locale con la stessa immagine e `--update-snapshots=all`; l'artefatto viene caricato anche se fallisce una spec estranea, quindi si legge il log della spec richiesta, e si controlla il pixel che è cambiato, perché sotto tolleranza la CI resta verde anche con un riferimento sbagliato (#153).
-- Script che scrive nel progetto remoto riconosceva gli account di test solo dalla mail → gli script che toccano il progetto remoto marcano i propri dati (es. `app_metadata.familynest_test_user`), fanno tutti i controlli prima della prima scrittura e cancellano solo dati marcati.
-- Test che richiedono un utente autenticato saltati in CI finché gli utenti di test remoti non esistono, e riferimenti visivi mai generati: arrivate le credenziali dell'utente A, la CI su main è rimasta rossa (#73); "CI verde" non prova quei casi → quando un test è saltato in CI, la verifica si fa in locale contro Supabase locale e l'esito lo dice esplicitamente; quando arrivano le credenziali, i riferimenti visivi che le usano si generano subito con `visual-baseline`, senza aspettare la PR successiva.
-- Due tester che usano lo stesso Supabase locale e riseminano con credenziali diverse si cancellano a vicenda i dati → un solo seed condiviso per sessione, stesse variabili per tutti.
-- Correzione approvata che cambia uno stile fissato dal mockup → il test di confronto fallisce: si aggiorna con l'elenco delle differenze approvate, citando la decisione, senza disattivarlo.
-- Script `node --env-file` che scrive nel progetto remoto per errore, perché non sovrascrive le variabili già presenti nella shell → seed e test in locale sostituiscono esplicitamente l'ambiente; chi lancia lo script verifica che l'URL sia `127.0.0.1` prima della prima scrittura. Lo script rifiuta comunque il progetto remoto fuori da GitHub Actions (due incidenti, #76 e #95: seed scritti sul remoto).
-- Test che leggono il nome del branch o il diff con `origin/main` (CA-22 della #52) passavano in silenzio in CI, dove il checkout è superficiale e `origin/main` manca → il recupero usa `git fetch --deepen=N` o `--unshallow` (non `--depth`, che non allunga la storia di `HEAD`), con `git -c safe.directory=*` nel container; se il diff non si può calcolare il test fallisce con un messaggio, mai con un `return` silenzioso.
-- Screenshot scattato dopo un clic, con il puntatore ancora sopra, che cattura lo stato di passaggio del mouse → `await page.mouse.move(0, 0)` prima dello screenshot.
-- Porta 54322 del database locale occupata sul runner, con il controllo `db` rosso senza bug → `db.yml` riprova una volta dopo uno stop pulito; se il controllo `db` cade per la porta, si rilancia prima di cercare un bug (#121).
-- Area di tocco fatta con `::before` misurata con `boundingBox` (dà il box del nodo, non l'area toccabile) → si verifica con `elementFromPoint` nei punti dell'area (#78).
-- Selettori dei test sul campo della spesa che diventano ambigui dopo l'arrivo di un secondo campo rapido (strict mode) → restringere con `aria-label` su ogni campo.
-- Test di accessibilità sul fuoco che non trova l'anello su un campo con `outline: none` → l'anello su `:focus-within` del contenitore è ammesso solo se la specifica lo documenta, e il test controlla il contenitore, non il campo.
-- Due `<main>` nel documento per un attimo (React 19 in streaming: `loading` e pagina insieme) → i test aspettano l'h1 della pagina e poi cercano `getByRole("main")`; mai il primo `main` appena visibile.
-- Test di isolamento che cercano i Nest del seed per nome: altri test creano Nest usa e getta con lo stesso nome, e il risultato cambia (#155) → usare gli id fissi `SEED_HOME_A` e `SEED_HOME_B`; prima di verificare un'assenza si attende che la pagina sia caricata (un testo che non c'è ancora passa per assente).
-- Test di login con link magico su utenti seed condivisi da desktop e mobile in parallelo: ogni nuovo link annulla il precedente, e un test finiva su «link scaduto» (#175) → ogni test crea il proprio utente usa e getta e lo cancella nel `finally`.
-- axe `label-content-name-mismatch` (serious, WCAG 2.5.3) su tab e blocchi: il nome accessibile non comincia con il testo visibile, e axe conta anche le iniziali degli avatar `aria-hidden` dentro il controllo (#168) → il nome comincia con il testo visibile; i dettagli vanno in `aria-describedby`, non in `aria-label`.
-- Test che cliccano o premono un tasto prima che la pagina sia idratata passano per il motivo sbagliato: la navigazione nativa apre un'altra situazione (per esempio il foglio aperto direttamente) (#167) → prima del clic si aspetta un segnale di idratazione, si verifica il caso positivo e poi quelli negativi; mai attese a tempo.
-- `getByRole` con un nome parziale trova più elementi («Aggiungi» in «Aggiungi un impegno», blocco e scheda) (#167, #168) → usare `exact: true` o cercare dentro il contenitore, non `.first()`.
-- Test che simulano un errore su una tabella intercettando ogni richiesta a quella tabella rompono anche la lettura dell'id utente (#172) → intercettare solo la query dell'elenco; un GET senza risposta viene riprovato dal client a 1, 2 e 4 secondi, quindi si risponde subito con 500.
-- Test con orologio fermato (`page.clock.pauseAt`) che navigano: la pagina non parte dopo il `goto` (#168) → dopo ogni navigazione una funzione di supporto fa ripartire e rifermare l'orologio.
-- Pagina che passa da segnaposto a contenuto reale: cambiano i riferimenti visivi di altre pagine che la ritraggono, come cornice, layout a 800 px e «Vai al contenuto» (#168) → la PR elenca tutti i riferimenti che cambiano, e il tester visivo li rigenera e li controlla a occhio.
-- Test che misurano posizioni o colori mentre un foglio o un velo entra con un'animazione (300 ms, `foglio-entra`, `appare`) falliscono a caso, e `force: true` salta il controllo di stabilità → prima di cliccare, misurare o lanciare axe si aspetta `waitForAnimationsToEnd` (`tests/fixtures/animations.ts`), che ignora le animazioni infinite (spinner, scheletri) (#179, #181, #199).
-- Test che blocca tutte le richieste a una pagina blocca anche il prefetch di Next, e la schermata di caricamento non compare mai → si blocca solo la navigazione vera e si lascia passare il prefetch (#199).
-- Didascalia nel font dei codici che va a capo solo dal secondo scatto → due catture diverse e screenshot instabile: didascalie corte, che stanno su una riga (#184).
-- Test che dipendono dalla data reale (il nome del file «I tuoi dati» contiene la data del server) diventano rossi da un giorno all'altro su `main` e su tutte le PR → l'atteso usa un'espressione regolare sul formato, o si fissa il tempo con `page.clock.pauseAt`; mai una data scritta a mano (#246, #247).
-- Fixture che scrivono con il ruolo amministrativo anche dove il test deve usare la sessione dell'utente → il test non prova RLS né permessi reali: la scrittura che farebbe l'utente passa dalla sua sessione, e il ruolo amministrativo serve solo per preparare ciò che la sessione non può scrivere, dichiarato nel commento (#228).
-- Dati finti di una pagina con `page.route` che restano attivi nel test successivo → `page.unrouteAll()` nel `finally` o a fine test.
-- Test di privacy che guarda solo ciò che è nel DOM non vede i dati che il browser riceve e non mostra → si registrano le risposte di rete della pagina (documento, fetch, xhr) e si cerca nomi, date e id che non devono esserci (#234).
+- Falsi errori di insert in locale per saturazione del pool → verifica sulla preview prima di dichiarare un bug.
+- Selettori fragili (testi, classi, `.first()`, nomi parziali, campi multipli) → ruolo e nome accessibile con `exact: true`, dentro il contenitore, o `data-testid`/`aria-label`.
+- Token o stili confrontati come stringhe → la build minifica: normalizza i valori prima del confronto.
+- `page.clock.install()` senza fermare il tempo, o orologio fermato che blocca il `goto` → `page.clock.pauseAt` e `runFor`; dopo ogni navigazione fai ripartire e rifermare l'orologio.
+- `height` che dipende da font o andata a capo in CI → escludila solo dove dipende dal testo.
+- Riferimento visivo sotto tolleranza → resta valido; si rigenera con `visual-baseline` (`-f spec`, `-f update=all`) e si controlla il pixel cambiato.
+- Correzione approvata che cambia uno stile del mockup → aggiorna il test con l'elenco delle differenze approvate, citando la decisione; mai disattivarlo.
+- Script che scrive sul remoto e riconosce i test solo dalla mail → marca i dati (`app_metadata.familynest_test_user`), controlla prima di scrivere, cancella solo i dati marcati.
+- `node --env-file` che non sovrascrive le variabili già nella shell → verifica che l'URL sia `127.0.0.1` prima della prima scrittura.
+- Test con utente autenticato saltati in CI → la verifica si fa in locale e l'esito lo dice; quando arrivano le credenziali, i riferimenti visivi si generano subito.
+- Due tester sullo stesso Supabase locale con seed diversi → un solo seed per sessione.
+- Test che leggono il branch o il diff con `origin/main` in checkout superficiale → `git fetch --deepen=N`; se il diff non si calcola il test fallisce, mai con un `return`.
+- Screenshot con il puntatore sopra → `page.mouse.move(0, 0)` prima.
+- Area di tocco misurata con `boundingBox` → verifica con `elementFromPoint` nei punti dell'area.
+- Fuoco su un campo con `outline: none` → controlla il contenitore `:focus-within`, se documentato.
+- Due `<main>` in streaming → aspetta l'h1, poi `getByRole("main")`.
+- Test di isolamento che cercano i Nest per nome → id fissi `SEED_HOME_A` e `SEED_HOME_B`; attendi il caricamento prima di verificare un'assenza.
+- Login con link magico su utenti condivisi in parallelo → ogni test crea e cancella il proprio utente nel `finally`.
+- axe `label-content-name-mismatch` → il nome accessibile comincia con il testo visibile; i dettagli in `aria-describedby`.
+- Clic o tasti prima dell'idratazione → aspetta un segnale di idratazione; mai attese a tempo.
+- Errore simulato intercettando ogni richiesta alla tabella → intercetta solo la query dell'elenco; rispondi subito con 500 (il client riprova a 1, 2, 4 secondi).
+- Pagina che passa da segnaposto a contenuto → la PR elenca i riferimenti visivi che cambiano; il tester visivo li rigenera.
+- Misure o clic durante un'animazione, o `force: true` → `waitForAnimationsToEnd` (`tests/fixtures/animations.ts`).
+- Test che blocca tutte le richieste, prefetch di Next incluso → blocca solo la navigazione vera.
+- Didascalia nel font dei codici che va a capo → didascalie corte, su una riga.
+- Test che dipendono dalla data reale → regex sul formato o `pauseAt`; mai una data scritta a mano.
+- Fixture che scrivono con il ruolo amministrativo dove serve la sessione utente → la scrittura passa dalla sessione; il ruolo amministrativo solo per preparare, detto nel commento.
+- Dati finti di `page.route` che restano nel test successivo → `page.unrouteAll()` nel `finally`.
+- Privacy controllata solo sul DOM → registra le risposte di rete (documento, fetch, xhr) e cerca nomi, date e id.
+- Testo cercato in tutta la pagina con una palette aperta sopra → controlla solo la superficie in cui il test è aperto.
+- `boundingBox` letto una volta su un elemento che React sostituisce → `expect.poll` finché stabile.
+- Commenti CSS con «#numero» letti come colori → togli i commenti `/* … */` prima di cercare i colori.
 
 ## Design
 
-- Grafiche che "sembrano fatte dall'AI" (card inclinate, CTA generiche, `+` anonimi) → seguire il mockup alla lettera; testi di bottoni specifici (es. "Aggiungi", non "Scrivi").
-- Componente in caricamento con lo stile del disabilitato sembrava disabilitato → `aria-busy` e `aria-disabled` sono corretti, ma lo stile visivo del caricamento va separato da quello del disabilitato.
-- Frase sul comportamento nella guida del design system (es. dove appare il dialogo, «in basso» su mobile) scritta senza controllarla sul CSS → ogni frase di comportamento si verifica su `components.css` prima di approvare o correggere la guida.
-- Regole CSS nuove in fondo a `components.css`, fuori dal blocco del designer che la specifica indica (#114, #119), e descrizione della PR che dice il contrario → le regole vanno nel blocco «STATI AGGIUNTI DAL DESIGNER», nel punto indicato dalla specifica; la descrizione lo dichiara solo dopo averlo controllato.
-- Scorciatoia a una sola lettera (N) senza modo di spegnerla o cambiarla: contrasta con WCAG 2.1.4 (livello A) (#167) → la specifica prevede lo spegnimento, il cambio o un elemento a fuoco richiesto, e la decide il designer prima dello sviluppo.
-- Regole nuove nel blocco del designer, in un tratto dove un test vieta i `px` (anche nelle media query di `date-calendario.spec.ts`) → si usano solo token; le regole nuove vanno in fondo al blocco «STATI AGGIUNTI DAL DESIGNER», tra i segnaposti che i test usano come confine (#184).
-- Elemento figlio di una griglia senza colonne definite (come `.esempio` della galleria) che prende la larghezza del contenuto → la vista interna non scorre, scorre la pagina; il contenitore della griglia ha `grid-template-columns: minmax(0, 1fr)` (#184).
-- PR `shared/*` con prop nuove (`pressed`, `busy`, `aria-haspopup`) senza skill e galleria aggiornate → la PR aggiorna `componenti.md`, `registro.md` e `Gallery.tsx` con un esempio per ogni prop nuova; il tester visivo ha così un riferimento, e il revisore lo controlla prima del test (#249, #242, #224).
-- Esempio della galleria che non riproduce l'uso della pagina (bottone solo icona al posto del bottone con testo, link fuori dalla sezione) → l'esempio ha la struttura e il testo della pagina; il tester visivo lo confronta con la pagina, non con l'idea del componente (#224).
+- Grafiche «fatte dall'AI» o testi generici → mockup alla lettera; testi di bottoni specifici («Aggiungi», non «Scrivi»).
+- Caricamento con lo stile del disabilitato → `aria-busy` e `aria-disabled`, ma stile di caricamento separato.
+- Frase sul comportamento nella guida scritta senza controllare il CSS → verificala su `components.css` prima di approvare.
+- Regole CSS nuove fuori dal blocco del designer → nel punto indicato dalla specifica; la descrizione lo dichiara dopo averlo controllato.
+- Scorciatoia a una lettera senza spegnimento (WCAG 2.1.4) → la specifica prevede spegnimento o cambio; lo decide il designer.
+- Regole nuove dove un test vieta i `px` → solo token; in fondo al blocco «STATI AGGIUNTI DAL DESIGNER», tra i segnaposti.
+- Figlio di griglia senza colonne definite → `grid-template-columns: minmax(0, 1fr)` nel contenitore.
+- PR `shared/*` con prop nuove senza skill e galleria → aggiorna `componenti.md`, `registro.md` e `Gallery.tsx` con un esempio per prop.
+- Esempio di galleria diverso dall'uso della pagina → stessa struttura e testo; il tester visivo confronta con la pagina.

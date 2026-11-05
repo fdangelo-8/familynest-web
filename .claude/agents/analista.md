@@ -61,6 +61,7 @@ Quando il coordinatore te lo chiede, leggi tutto il mockup e restituisci (senza 
 - Applica `privacy-e-dati-minori`: ogni dato personale nuovo va giustificato; dati vietati → domanda bloccante.
 - Scrivi in italiano semplice: anche Francesco deve capire il requisito.
 - Non modificare codice.
+- **Requisito compatto** (decisione di Francesco del 05/11, per usare meno token): il corpo della issue resta sotto i 20.000 caratteri. Ogni CA è una frase verificabile; niente ripetizioni del mockup, niente spiegazioni già nella specifica grafica o in ARCHITETTURA. I dettagli lunghi (tabelle di casi, testi completi, analisi dei dati) vanno in `docs/specifiche/<issue>-<pagina>.md`, citato dalla issue, che gli altri agenti leggono solo se serve.
 
 ## Esito
 

@@ -5037,6 +5037,16 @@ button.riga-regalo__titolo::before {
   background-color: var(--color-carta);
 }
 
+/* 2a. Foto dell'idea dentro il suo riquadro (#284): la griglia ha una sola
+      riga e una sola colonna della misura del riquadro, così l'immagine con
+      altezza 100% non cresce alla sua altezza naturale e il riquadro la taglia
+      (desktop: --size-foto-scheda; mobile: --size-foto) */
+.foto {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  overflow: hidden;
+}
+
 /* 2. Foto copiata dal negozio: l'oggetto intero, su fondo carta-2 attorno alle
       foto non quadrate (anche in .scheda-regalo .foto, #33) */
 .foto__immagine {
@@ -5097,11 +5107,13 @@ a.riga-regalo__titolo::before {
   flex-direction: column;
   background: var(--color-carta);
 }
-.cornice-pubblica > .pagina {
-  padding-top: calc(var(--space-5) + env(safe-area-inset-top));
-  padding-bottom: calc(var(--space-6) + env(safe-area-inset-bottom));
+@media (max-width: 1023px) {
+  .cornice-pubblica > .pagina {
+    padding-top: calc(var(--space-5) + env(safe-area-inset-top));
+    padding-bottom: calc(var(--space-6) + env(safe-area-inset-bottom));
+  }
 }
-@media (min-width: 768px) {
+@media (min-width: 768px) and (max-width: 1023px) {
   .cornice-pubblica > .pagina {
     width: 100%;
     max-width: var(--grid-colonna-stretta);

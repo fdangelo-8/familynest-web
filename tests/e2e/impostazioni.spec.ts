@@ -344,12 +344,12 @@ test.describe("contenuto", () => {
     await expect(h1(page)).toBeVisible();
     const nestLinks = {
       sofia: await page
-        .getByRole("main")
-        .getByRole("link", { name: /Sofia/ })
+        .getByRole("list", { name: "Chi c’è" })
+        .getByRole("link", { name: /^Sofia/ })
         .evaluateAll((els) => els.map((el) => el.getAttribute("href"))),
       tommaso: await page
-        .getByRole("main")
-        .getByRole("link", { name: /Tommaso/ })
+        .getByRole("list", { name: "Chi c’è" })
+        .getByRole("link", { name: /^Tommaso/ })
         .evaluateAll((els) => els.map((el) => el.getAttribute("href"))),
     };
 
@@ -365,7 +365,7 @@ test.describe("contenuto", () => {
     await expect(
       people.getByRole("link", { name: /^Biscotto/ }),
     ).toHaveAttribute("href", `/membri/${IDS.biscotto}`);
-    // The children lead where they lead in «Il tuo Nest» (today: nowhere).
+    // The children lead where they lead in «Il tuo Nest» (since #31: /figli/<id>; scoped to the list, the «Profili dei figli» row also names the children).
     for (const [name, expected] of [
       ["Sofia", nestLinks.sofia],
       ["Tommaso", nestLinks.tommaso],

@@ -31,25 +31,42 @@ type Loaded = {
   admin: boolean;
 };
 
-const SETTINGS: ReadonlyArray<{
+type Setting = {
   icon: IconName;
   title: string;
   info?: string;
   href: string;
-}> = [
-  {
-    icon: "calendar-arrow-down",
-    title: "Calendari collegati",
-    href: "/calendari-collegati",
-  },
-  { icon: "bell", title: "Notifiche", href: "/notifiche" },
-  {
-    icon: "settings",
-    title: "Impostazioni della casa",
-    info: "Chi c’è e notifiche",
-    href: "/impostazioni",
-  },
-];
+};
+
+/** «Profili dei figli» only when the Nest has a child; it opens the first one. */
+function settingsFor(rows: ReadonlyArray<Row>): Setting[] {
+  const children = rows.filter((row) => row.kind === "child");
+  const first = children[0];
+  return [
+    {
+      icon: "calendar-arrow-down",
+      title: "Calendari collegati",
+      href: "/calendari-collegati",
+    },
+    ...(first
+      ? [
+          {
+            icon: "baby" as const,
+            title: "Profili dei figli",
+            info: children.map((child) => child.name).join(", "),
+            href: `/figli/${first.id}`,
+          },
+        ]
+      : []),
+    { icon: "bell", title: "Notifiche", href: "/notifiche" },
+    {
+      icon: "settings",
+      title: "Impostazioni della casa",
+      info: "Chi c’è e notifiche",
+      href: "/impostazioni",
+    },
+  ];
+}
 
 /** Reads Nest, members and (administrators only) invitations. `null` on any error. */
 async function load(frame: NestFrameData): Promise<Loaded | null> {
@@ -124,11 +141,11 @@ async function load(frame: NestFrameData): Promise<Loaded | null> {
 }
 
 function MemberRow({ row }: { row: Row }) {
-  // Adults and pets have their own page (#18); children have none yet (#31).
+  // Adults and pets have their page (#18), children theirs (#31).
   const href = row.isMe
     ? "/profilo"
     : row.kind === "child"
-      ? null
+      ? `/figli/${row.id}`
       : `/membri/${row.id}`;
   const content = (
     <>
@@ -139,20 +156,12 @@ function MemberRow({ row }: { row: Row }) {
         </span>
         <span className="riga-lista__info">{row.info}</span>
       </span>
-      {href ? (
-        <span className="riga-lista__valore">
-          <Icon name="chevron-right" />
-        </span>
-      ) : null}
+      <span className="riga-lista__valore">
+        <Icon name="chevron-right" />
+      </span>
     </>
   );
-  return href ? (
-    <ListRow href={href}>{content}</ListRow>
-  ) : (
-    <li>
-      <div className="riga-lista">{content}</div>
-    </li>
-  );
+  return <ListRow href={href}>{content}</ListRow>;
 }
 
 export default async function Page() {
@@ -199,7 +208,7 @@ export default async function Page() {
             </span>
           </Link>
           <ul className="scheda lista">
-            {SETTINGS.map((item) => (
+            {settingsFor(rows).map((item) => (
               <ListRow key={item.href} href={item.href}>
                 <span className="icona-riquadro">
                   <Icon name={item.icon} />

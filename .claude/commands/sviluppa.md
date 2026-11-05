@@ -79,6 +79,11 @@ Se in `docs/mockup/` c'è un mockup senza issue corrispondenti:
 - Non passare mai segreti nei prompt.
 - **Riprendi l'agente invece di lanciarne uno nuovo** quando una correzione o un ricontrollo riguarda lo stesso lavoro: `SendMessage` all'agente che l'ha fatto, che ha già contesto e worktree.
 - **Ricontrolli piccoli con un solo tester.** Il primo giro di test di una PR lo fanno sempre tester funzionale e visivo in parallelo. Se poi la correzione è mirata (pochi punti, nessun cambio di aspetto o di flusso), basta il tester che ha dato `NON SUPERATO`: legge l'esito della CI sul nuovo commit e controlla i test legati ai punti corretti. L'esito `SUPERATO` dell'altro tester resta valido se i suoi test sono verdi nella stessa CI. Se la correzione cambia testo visibile, aspetto o flusso, rifanno il giro entrambi.
+- **Meno token** (decisione di Francesco del 05/11):
+  - **Modello leggero per i compiti semplici:** allineamenti a main, conflitti, sistemazioni di un test o di poche righe si lanciano con `model: "haiku"`. Sviluppo di pagine e fondamenta, revisione, database e sicurezza restano con il modello dell'agente.
+  - **Prompt brevi:** non ricopiare nel prompt ciò che l'agente trova nella issue o nelle sue istruzioni; dai numero di issue/PR, link agli esiti e solo le decisioni nuove.
+  - **Meno giri:** chi sviluppa una pagina che sostituisce un segnaposto aggiorna nella stessa PR i test del segnaposto. Le PR `db/*` che cambiano trigger, policy o funzioni su tabelle già usate dalle pagine hanno l'etichetta `suite-completa` prima del merge.
+  - **LEZIONI corta:** una volta alla settimana chiedi al documentalista la compattazione (compito 4).
 - **Test mirati dello sviluppatore:** lo sviluppatore esegue i test di accessibilità ed e2e della sua pagina con il workflow `test-mirato` prima di consegnare. Una PR passa a `in-revisione` solo se l'esito dice quali spec ha eseguito e che sono verdi (o perché la pagina non ne ha ancora).
 
 Mappa compito → agente:
