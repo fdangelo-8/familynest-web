@@ -62,11 +62,60 @@ function readAttributes(tag: string): Map<string, string> {
   return attributes;
 }
 
+// The HTML comes from a stranger: every search below moves forward with
+// `indexOf` and has a ceiling, so no input (open tags never closed, millions
+// of `<meta`) can take more than linear time.
+const MAX_TAG_LENGTH = 2000;
+const MAX_META_TAGS = 500;
+const MAX_JSON_LD_BLOCKS = 20;
+const MAX_JSON_LD_LENGTH = 200_000;
+/** The head is read up to `</head>`, or this many characters. */
+const MAX_HEAD_LENGTH = 300_000;
+
+/** Same length as `text`, ASCII letters in lower case (indexes stay valid). */
+function asciiLower(text: string): string {
+  return text.replace(/[A-Z]/g, (letter) =>
+    String.fromCharCode(letter.charCodeAt(0) + 32),
+  );
+}
+
+/** True if the character after a tag name ends the name (`<meta ` yes, `<metadata` no). */
+function endsTagName(char: string | undefined): boolean {
+  return char === undefined || !/[a-z0-9:_-]/.test(char);
+}
+
+/**
+ * The tags called `name` in `lower` (a lower-cased copy of `html`): their
+ * text, at most `limit`. A tag with no `>` within 2000 characters is skipped.
+ */
+function findTags(
+  html: string,
+  lower: string,
+  name: string,
+  limit: number,
+): string[] {
+  const found: string[] = [];
+  const open = `<${name}`;
+  let from = 0;
+  while (found.length < limit) {
+    const start = lower.indexOf(open, from);
+    if (start === -1) break;
+    from = start + open.length;
+    if (!endsTagName(lower[from])) continue;
+    const end = lower.indexOf(">", from);
+    if (end === -1) break;
+    if (end - start > MAX_TAG_LENGTH) continue;
+    found.push(html.slice(start, end + 1));
+    from = end + 1;
+  }
+  return found;
+}
+
 /** First value of each `<meta>` by property/name/itemprop (lower case). */
-function readMetaTags(html: string): Map<string, string> {
+function readMetaTags(html: string, lower: string): Map<string, string> {
   const values = new Map<string, string>();
-  for (const match of html.matchAll(/<meta\b[^>]*>/gi)) {
-    const attributes = readAttributes(match[0]);
+  for (const tag of findTags(html, lower, "meta", MAX_META_TAGS)) {
+    const attributes = readAttributes(tag);
     const content = attributes.get("content");
     if (content === undefined) continue;
     for (const key of ["property", "name", "itemprop"]) {
@@ -77,9 +126,20 @@ function readMetaTags(html: string): Map<string, string> {
   return values;
 }
 
-function readTitleTag(html: string): string | null {
-  const match = /<title\b[^>]*>([\s\S]*?)<\/title\s*>/i.exec(html);
-  return match ? normalizeText(decodeEntities(match[1] ?? "")) : null;
+function readTitleTag(html: string, lower: string): string | null {
+  let from = 0;
+  for (let tries = 0; tries < 5; tries += 1) {
+    const start = lower.indexOf("<title", from);
+    if (start === -1) return null;
+    from = start + 6;
+    if (!endsTagName(lower[from])) continue;
+    const open = lower.indexOf(">", from);
+    if (open === -1 || open - start > MAX_TAG_LENGTH) return null;
+    const close = lower.indexOf("</title", open);
+    if (close === -1 || close - open > MAX_TAG_LENGTH) return null;
+    return normalizeText(decodeEntities(html.slice(open + 1, close)));
+  }
+  return null;
 }
 
 /** Cut to `max` characters at the last whole word, with «…». */
@@ -141,10 +201,27 @@ function typeIncludes(node: Record<string, unknown>, type: string): boolean {
 /** Price of the first `Offer` of a `Product` in the JSON-LD blocks. */
 function readJsonLdOffer(
   html: string,
+  lower: string,
 ): { amount: string; currency: string } | null {
-  const blocks = html.matchAll(
-    /<script\b[^>]*type\s*=\s*["']?application\/ld\+json["']?[^>]*>([\s\S]*?)<\/script\s*>/gi,
-  );
+  /** The text of the `application/ld+json` scripts, found without regex. */
+  const blocks: string[] = [];
+  let from = 0;
+  while (blocks.length < MAX_JSON_LD_BLOCKS) {
+    const start = lower.indexOf("<script", from);
+    if (start === -1) break;
+    from = start + 7;
+    if (!endsTagName(lower[from])) continue;
+    const open = lower.indexOf(">", from);
+    if (open === -1) break;
+    if (open - start > MAX_TAG_LENGTH) continue;
+    if (!lower.slice(start, open).includes("application/ld+json")) continue;
+    const close = lower.indexOf("</script", open);
+    if (close === -1) break;
+    from = close;
+    if (close - open <= MAX_JSON_LD_LENGTH) {
+      blocks.push(html.slice(open + 1, close));
+    }
+  }
   let visited = 0;
   type Offer = { amount: string; currency: string };
   const walk = (
@@ -184,7 +261,7 @@ function readJsonLdOffer(
   for (const block of blocks) {
     let data: JsonValue;
     try {
-      data = JSON.parse(decodeEntities((block[1] ?? "").trim()));
+      data = JSON.parse(decodeEntities(block.trim()));
     } catch {
       continue;
     }
@@ -211,10 +288,18 @@ export type ShopPageInfo = {
  * JSON-LD offer; the `og:image`.
  */
 export function readShopPage(html: string, host: string): ShopPageInfo {
-  const meta = readMetaTags(html);
+  const lowerAll = asciiLower(html);
+  const headEnd = lowerAll.indexOf("</head");
+  const headLength = Math.min(
+    headEnd === -1 ? html.length : headEnd,
+    MAX_HEAD_LENGTH,
+  );
+  const head = html.slice(0, headLength);
+  const lowerHead = lowerAll.slice(0, headLength);
+  const meta = readMetaTags(head, lowerHead);
 
   const rawTitle = normalizeText(meta.get("og:title") ?? "");
-  const title = normalizeText(rawTitle || readTitleTag(html) || "");
+  const title = normalizeText(rawTitle || readTitleTag(head, lowerHead) || "");
 
   const siteName = normalizeText(meta.get("og:site_name") ?? "");
   const hostName = host.replace(/^www\./i, "");
@@ -237,7 +322,7 @@ export function readShopPage(html: string, host: string): ShopPageInfo {
     }
   }
   if (amount === null) {
-    const offer = readJsonLdOffer(html);
+    const offer = readJsonLdOffer(html, lowerAll);
     if (offer) {
       amount = offer.amount;
       currency = offer.currency;

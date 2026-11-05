@@ -15,7 +15,7 @@ import sharp from "sharp";
 export const PHOTO_MAX_SIDE = 320;
 export const PHOTO_MAX_BYTES = 100 * 1024;
 /** Pictures with more pixels than this are refused before decoding. */
-const PHOTO_MAX_INPUT_PIXELS = 40_000_000;
+const PHOTO_MAX_INPUT_PIXELS = 25_000_000;
 const QUALITIES = [80, 68, 56, 44, 32] as const;
 
 export type ReducedPhoto = { contentType: "image/webp"; data: Buffer };
@@ -25,18 +25,29 @@ export async function reduceShopPhoto(
   input: Buffer,
 ): Promise<ReducedPhoto | null> {
   try {
-    for (const quality of QUALITIES) {
-      const data = await sharp(input, {
-        limitInputPixels: PHOTO_MAX_INPUT_PIXELS,
-        failOn: "error",
+    // Decode and resize once (raw pixels, orientation applied); only the
+    // encoding is repeated for the lower qualities.
+    const { data: pixels, info } = await sharp(input, {
+      limitInputPixels: PHOTO_MAX_INPUT_PIXELS,
+      failOn: "error",
+    })
+      .rotate()
+      .resize({
+        width: PHOTO_MAX_SIDE,
+        height: PHOTO_MAX_SIDE,
+        fit: "inside",
+        withoutEnlargement: true,
       })
-        .rotate()
-        .resize({
-          width: PHOTO_MAX_SIDE,
-          height: PHOTO_MAX_SIDE,
-          fit: "inside",
-          withoutEnlargement: true,
-        })
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+    for (const quality of QUALITIES) {
+      const data = await sharp(pixels, {
+        raw: {
+          width: info.width,
+          height: info.height,
+          channels: info.channels,
+        },
+      })
         .webp({ quality })
         .toBuffer();
       if (data.length > PHOTO_MAX_BYTES) continue;

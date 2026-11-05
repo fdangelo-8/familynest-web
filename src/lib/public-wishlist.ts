@@ -207,6 +207,8 @@ export function normalizeGiverName(name: string): string {
   return name.replace(/\s+/g, " ").trim();
 }
 
+// Only used in the browser, when `localStorage` is not available (private
+// mode): never reached on the server (see the guards below).
 let memoryKey: string | null = null;
 
 function newGiverKey(): string {
@@ -223,7 +225,9 @@ function newGiverKey(): string {
  * browser except in the body of the two calls above. Without `localStorage`
  * (private mode) it lives as long as the page.
  */
-export function getGiverKey(): string {
+export function getGiverKey(): string | null {
+  // On the server there is no browser: no key is made there, ever.
+  if (typeof window === "undefined") return null;
   try {
     const stored = window.localStorage.getItem(KEY_STORAGE);
     if (stored && /^[A-Za-z0-9+/=_-]{32,128}$/.test(stored)) return stored;
@@ -238,6 +242,7 @@ export function getGiverKey(): string {
 
 /** The key if this browser already has one, without creating it. */
 export function peekGiverKey(): string | null {
+  if (typeof window === "undefined") return null;
   try {
     const stored = window.localStorage.getItem(KEY_STORAGE);
     return stored && /^[A-Za-z0-9+/=_-]{32,128}$/.test(stored)
