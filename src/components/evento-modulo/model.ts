@@ -134,6 +134,7 @@ export function endsOtherDayHint(
 
 export const ERROR_TEXTS = {
   title: "Scrivi il titolo dell'impegno.",
+  titleLong: `Il titolo può avere al massimo ${TITLE_MAX_LENGTH} caratteri.`,
   day: "Scegli il giorno.",
   from: "Scegli l'ora d'inizio.",
   to: "Scegli l'ora di fine.",
@@ -148,7 +149,10 @@ export function validateForm(
   offsetDays: number,
 ): { errors: FormErrors; times: { start: Date; end: Date } | null } {
   const errors: FormErrors = {};
-  if (values.title.trim() === "") errors.title = ERROR_TEXTS.title;
+  const titleLength = [...values.title.trim()].length;
+  if (titleLength === 0) errors.title = ERROR_TEXTS.title;
+  // The field stops typing at the limit, but a title carried in by Aggiungi can be longer.
+  else if (titleLength > TITLE_MAX_LENGTH) errors.title = ERROR_TEXTS.titleLong;
   if (!isValidDayKey(values.day)) errors.day = ERROR_TEXTS.day;
   if (!values.from) errors.from = ERROR_TEXTS.from;
   if (!values.to) errors.to = ERROR_TEXTS.to;

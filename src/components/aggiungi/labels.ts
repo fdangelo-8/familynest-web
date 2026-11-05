@@ -5,11 +5,15 @@ import {
   startOfDay,
   type Instant,
 } from "../../lib/datetime";
+import {
+  ERROR_TEXTS,
+  TITLE_MAX_LENGTH as MODEL_TITLE_MAX_LENGTH,
+} from "../evento-modulo/model";
 import type { ParsedPhrase, PhraseSlot } from "./parse-phrase";
 
 /** Texts and short formats of the Add sheet (issue #20, specifica §8). */
 
-export const TITLE_MAX_LENGTH = 100;
+export const TITLE_MAX_LENGTH = MODEL_TITLE_MAX_LENGTH;
 
 export const SAVE_FAILED_TEXT =
   "Non siamo riusciti a salvare l'impegno. Controlla la connessione e riprova.";
@@ -22,7 +26,6 @@ const HINT = "scrivi per esempio «dentista giovedì alle 16».";
 const MISSING_TITLE = `Manca cosa c'è da fare: ${HINT}`;
 const MISSING_DAY_AND_TIME = `Mancano il giorno e l'ora: ${HINT}`;
 const MISSING_TIME = `Manca l'ora: ${HINT}`;
-const TITLE_TOO_LONG = `Il titolo può avere al massimo ${TITLE_MAX_LENGTH} caratteri.`;
 
 /** The message under the field, or null when the phrase can be saved. */
 export function validatePhrase(parsed: ParsedPhrase): string | null {
@@ -30,7 +33,7 @@ export function validatePhrase(parsed: ParsedPhrase): string | null {
   if (parsed.dayKey === null && parsed.time === null)
     return MISSING_DAY_AND_TIME;
   if (parsed.time === null) return MISSING_TIME;
-  if ([...parsed.title].length > TITLE_MAX_LENGTH) return TITLE_TOO_LONG;
+  if ([...parsed.title].length > TITLE_MAX_LENGTH) return ERROR_TEXTS.titleLong;
   return null;
 }
 

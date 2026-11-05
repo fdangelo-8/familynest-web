@@ -1,5 +1,8 @@
 import { nameKey } from "../casa-spesa/model";
+import type { EventVisibility } from "../../lib/calendar";
 import type { createClient } from "../../lib/supabase/client";
+import { failureReason, type FailureReason } from "../evento-modulo/failure";
+import type { NewEventRepetition } from "../evento-modulo/model";
 import type { ShoppingEntry } from "./parse-list";
 
 /**
@@ -48,6 +51,66 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 /** Only an id that looks like one is asked to the database. */
 export function looksLikeId(value: string): boolean {
   return UUID.test(value);
+}
+
+/* ---------- Impegno ---------- */
+
+export type NewEventInput = {
+  title: string;
+  startsAt: Date;
+  endsAt: Date;
+  visibility: EventVisibility;
+  memberIds: string[];
+  /** Left out when empty */
+  place?: string;
+  escortId?: string | null;
+  repetition?: NewEventRepetition;
+  /** Left out when empty */
+  notes?: string;
+};
+
+export type CreateEventResult =
+  { status: "ok"; id: string } | { status: "failed"; reason: FailureReason };
+
+/**
+ * The one call that saves a new event: from the phrase and from the full form
+ * «Nuovo impegno». The app never sends the id, the author or the Nest.
+ */
+export async function createEvent(
+  supabase: Client,
+  input: NewEventInput,
+): Promise<CreateEventResult> {
+  try {
+    const { data, error } = await supabase.rpc("create_event", {
+      p_title: input.title,
+      p_starts_at: input.startsAt.toISOString(),
+      p_ends_at: input.endsAt.toISOString(),
+      p_visibility: input.visibility,
+      p_member_ids: input.memberIds,
+      ...(input.place ? { p_location: input.place } : {}),
+      ...(input.escortId ? { p_escort_member_id: input.escortId } : {}),
+      ...(input.repetition ?? {}),
+      ...(input.notes ? { p_notes: input.notes } : {}),
+    });
+    if (error) return { status: "failed", reason: failureReason(error) };
+    if (typeof data !== "string") return { status: "failed", reason: "failed" };
+    return { status: "ok", id: data };
+  } catch {
+    return { status: "failed", reason: "failed" };
+  }
+}
+
+/** «Annulla» of a new event: deletes the whole event, with all its times and people. */
+export async function deleteNewEvent(
+  supabase: Client,
+  id: string,
+): Promise<boolean> {
+  try {
+    const { error } = await supabase.from("events").delete().eq("id", id);
+    return error === null;
+  } catch {
+    return false;
+  }
 }
 
 /* ---------- Spesa ---------- */
