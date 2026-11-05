@@ -525,7 +525,7 @@ test.describe("Liberi insieme", () => {
 /* ---------- listHouseholdEvents ---------- */
 
 type Row =
-  Database["public"]["Functions"]["list_household_events"]["Returns"][number];
+  Database["public"]["Functions"]["list_household_events_with_source"]["Returns"][number];
 
 function fakeClient(
   response: { data: unknown; error: unknown } | (() => never),
@@ -579,7 +579,7 @@ test.describe("listHouseholdEvents", () => {
     );
     expect(calls).toEqual([
       {
-        fn: "list_household_events",
+        fn: "list_household_events_with_source",
         args: {
           p_from: "2026-10-18T22:00:00.000Z",
           p_to: "2026-10-25T22:00:00.000Z",
@@ -589,6 +589,7 @@ test.describe("listHouseholdEvents", () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     const [complete, hidden] = result.events;
+    // rows without the column (older database) count for free time
     expect(complete).toEqual({
       masked: false,
       id: "e-1",
@@ -600,6 +601,7 @@ test.describe("listHouseholdEvents", () => {
       location: "Via Roma 1",
       escortMemberId: null,
       memberIds: ["m-1", "m-2"],
+      countsForFreeTime: true,
     });
     expect(hidden).toEqual({
       masked: true,
@@ -607,10 +609,12 @@ test.describe("listHouseholdEvents", () => {
       endsAt: "2026-10-20T13:00:00+00:00",
       visibility: "busy",
       authorMemberId: "m-2",
+      countsForFreeTime: true,
     });
     // the masked row has no detail field at all, not even as null
     expect(Object.keys(hidden!).sort()).toEqual([
       "authorMemberId",
+      "countsForFreeTime",
       "endsAt",
       "masked",
       "startsAt",
@@ -630,6 +634,9 @@ test.describe("listHouseholdEvents", () => {
       location: "Ufficio Nord",
       escort_member_id: "m-3",
       member_ids: ["m-3"],
+      counts_for_free_time: true,
+      is_imported: false,
+      source_provider: "google",
     } satisfies Row;
     const result = await listHouseholdEvents(
       FROM,
@@ -1082,9 +1089,11 @@ test.describe("listHouseholdEvents contro la RPC vera (#88)", () => {
         endsAt: expect.any(String),
         visibility: "busy",
         authorMemberId: GIULIA,
+        countsForFreeTime: true,
       });
       expect(Object.keys(busy!).sort()).toEqual([
         "authorMemberId",
+        "countsForFreeTime",
         "endsAt",
         "masked",
         "startsAt",

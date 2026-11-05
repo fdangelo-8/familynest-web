@@ -106,6 +106,7 @@ export function Gallery() {
       <MonthSection />
       {pageParts ? <PageParts /> : null}
       {pageParts ? <WishlistParts /> : null}
+      {pageParts ? <LinkedCalendarParts /> : null}
     </main>
   );
 }
@@ -1878,6 +1879,93 @@ function DayViewSection() {
 // A wide picture (2:1) as a data address: no request to other sites.
 const WISHLIST_SAMPLE_PHOTO =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='100'%3E%3Crect width='200' height='100' fill='%23f2c6a0'/%3E%3C/svg%3E";
+
+// #272 (for #34, #35 and #37): the two rules of the linked calendars page.
+// Shown only with ?pezzi-pagine=1, in a section of its own.
+function LinkedCalendarParts() {
+  return (
+    <Section
+      id="pezzi-calendari-collegati"
+      title="Calendari collegati (#34, #35, #37)"
+    >
+      <Example caption="scelta disabilitata · «Entrata e uscita» di un calendario di sola lettura">
+        <div className="colonna" data-testid="scelta-disabilitata">
+          <div
+            className="gruppo-scelte"
+            role="radiogroup"
+            aria-label="Direzione"
+            aria-describedby="galleria-direzione-aiuto"
+          >
+            <button
+              type="button"
+              className="scelta"
+              role="radio"
+              aria-checked="false"
+              aria-disabled="true"
+              data-testid="scelta-direzione-disabilitata"
+            >
+              <span className="scelta__radio" aria-hidden="true" />
+              <span>
+                <span className="scelta__titolo">Entrata e uscita</span>
+                <span className="scelta__info">
+                  Quello che crei su Outlook arriva qui, e puoi mandare su
+                  Outlook gli impegni di FamilyNest.
+                </span>
+              </span>
+              <span />
+            </button>
+            <button
+              type="button"
+              className="scelta"
+              role="radio"
+              aria-checked="true"
+              data-testid="scelta-direzione-attiva"
+            >
+              <span className="scelta__radio" aria-hidden="true" />
+              <span>
+                <span className="scelta__titolo">Solo in entrata</span>
+                <span className="scelta__info">
+                  Vedi i tuoi impegni, ma FamilyNest non scrive su Outlook.
+                </span>
+              </span>
+              <span />
+            </button>
+          </div>
+          <p className="campo__aiuto" id="galleria-direzione-aiuto">
+            Festività in Italia è di sola lettura su Outlook: si può solo
+            portare qui.
+          </p>
+        </div>
+      </Example>
+      <Example caption="sezione__testa > sezione__info · mail lunga che va a capo a destra">
+        <div className="sezione" data-testid="sezione-mail-lunga">
+          <div className="sezione__testa">
+            <h3 className="sezione__titolo">Outlook</h3>
+            <span className="sezione__info">
+              francesca.dangelo-rossi@studiolegaleassociato.it
+            </span>
+          </div>
+          <ul className="scheda lista">
+            <li className="riga-lista">
+              <span
+                className="logo-marchio logo-marchio--piccolo logo-marchio--outlook"
+                aria-hidden="true"
+              >
+                L
+              </span>
+              <span className="riga-lista__testo">
+                <span className="riga-lista__titolo">Lavoro</span>
+                <span className="riga-lista__info">
+                  Entrata e uscita · Occupato
+                </span>
+              </span>
+            </li>
+          </ul>
+        </div>
+      </Example>
+    </Section>
+  );
+}
 
 // #263 (for #32 and #33): the shared pieces of the wish list and of its
 // public page. Shown only with ?pezzi-pagine=1, in a section of its own so

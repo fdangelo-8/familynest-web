@@ -393,8 +393,9 @@ test.describe("CSS nuovo nel blocco del designer (#221)", () => {
     const added = designerBlock.slice(start).replace(/\/\*[\s\S]*?\*\//g, "");
     expect(added).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
     expect(added).not.toMatch(/\brgba?\(/);
-    // media queries are the only place where a px width is allowed
-    const withoutMedia = added.replace(/@media \([^)]*\)/g, "@media");
+    // media queries are the only place where a px width is allowed; their
+    // condition may be compound, e.g. "(min-width: 768px) and (max-width: 1023px)"
+    const withoutMedia = added.replace(/@media [^{]*/g, "@media");
     expect(withoutMedia).not.toMatch(/\b\d+(\.\d+)?px\b/);
   });
 

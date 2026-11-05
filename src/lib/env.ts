@@ -44,3 +44,81 @@ export function getShopLinkTestOrigin(): string | null {
     return null;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Linked calendars (#272, for #34, #35, #37). Server-only: none of these names
+// starts with NEXT_PUBLIC_, so Next.js never sends them to the browser. Only
+// the NAMES are in the repository (and in `.env.example`); the values live in
+// the environment of the server.
+// ---------------------------------------------------------------------------
+
+// Secret of the synchronisation service: the scheduled job of the database
+// (pg_cron + pg_net) sends it as a bearer token (the same value is kept in the
+// Vault of Supabase as `calendar_sync_secret`). At least 32 characters.
+export function getCalendarSyncSecret(): string | null {
+  const value = process.env.CALENDAR_SYNC_SECRET;
+  return value && value.length >= 32 ? value : null;
+}
+
+// Key that encrypts the credentials of the external accounts: 32 random bytes
+// in base64. It never enters the database. `CALENDAR_ENCRYPTION_KEY_VERSION`
+// (1-999, default 1) is the version written in front of every new ciphertext
+// («v<version>:...»); after a rotation the key of an older version stays
+// available for reading in `CALENDAR_ENCRYPTION_KEY_V<version>`.
+export function getCalendarEncryptionKey(version?: number): {
+  version: number;
+  key: Buffer;
+} {
+  const rawCurrent = process.env.CALENDAR_ENCRYPTION_KEY_VERSION;
+  const current = rawCurrent ? Number(rawCurrent) : 1;
+  if (!Number.isInteger(current) || current < 1 || current > 999) {
+    throw new Error(
+      "Invalid environment variable CALENDAR_ENCRYPTION_KEY_VERSION.",
+    );
+  }
+  const wanted = version ?? current;
+  const name =
+    wanted === current
+      ? "CALENDAR_ENCRYPTION_KEY"
+      : `CALENDAR_ENCRYPTION_KEY_V${wanted}`;
+  const raw = required(name, process.env[name]);
+  const key = Buffer.from(raw, "base64");
+  if (key.length !== 32) {
+    throw new Error(`Environment variable ${name} must be 32 bytes in base64.`);
+  }
+  return { version: wanted, key };
+}
+
+// The fake calendar provider (#34 §11) for development and tests: it needs the
+// variable, and it never exists on Vercel (production or previews), whatever the
+// variable says: its state lives in the memory of one process.
+export function isFakeCalendarProviderEnabled(): boolean {
+  if (process.env.VERCEL || process.env.VERCEL_ENV === "production")
+    return false;
+  return process.env.CALENDAR_FAKE_PROVIDER === "1";
+}
+
+type OAuthClient = { clientId: string; clientSecret: string };
+
+function oauthClient(idName: string, secretName: string): OAuthClient | null {
+  const clientId = process.env[idName];
+  const clientSecret = process.env[secretName];
+  return clientId && clientSecret ? { clientId, clientSecret } : null;
+}
+
+// OAuth client of the calendar permissions at Google (a client of its own,
+// separate from the one of the sign-in). Null until it is configured.
+export function getGoogleCalendarClient(): OAuthClient | null {
+  return oauthClient(
+    "GOOGLE_CALENDAR_CLIENT_ID",
+    "GOOGLE_CALENDAR_CLIENT_SECRET",
+  );
+}
+
+// OAuth client for Outlook (#35). Null until it is configured.
+export function getMicrosoftCalendarClient(): OAuthClient | null {
+  return oauthClient(
+    "MICROSOFT_CALENDAR_CLIENT_ID",
+    "MICROSOFT_CALENDAR_CLIENT_SECRET",
+  );
+}
