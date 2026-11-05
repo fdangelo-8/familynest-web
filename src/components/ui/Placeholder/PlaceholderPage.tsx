@@ -10,6 +10,12 @@ const CASA_KEYS: ReadonlyArray<PlaceholderKey> = [
   "casa-da-fare",
   "casa-scadenze",
 ];
+// Pages whose h1 is in the mobile top bar (Notifiche, #39): the page keeps its
+// own h1 for desktop only, so there is one visible h1 per width.
+const H1_IN_BAR_ON_MOBILE: ReadonlyArray<PlaceholderKey> = [
+  ...CASA_KEYS,
+  "notifiche",
+];
 const WITH_LENS: ReadonlyArray<PlaceholderKey> = [
   "oggi",
   "aggiungi",
@@ -37,12 +43,12 @@ export function PlaceholderPage({
   extra?: ReactNode;
 }) {
   const def = PLACEHOLDERS[pageKey];
-  const isCasa = CASA_KEYS.includes(pageKey);
+  const h1InBar = H1_IN_BAR_ON_MOBILE.includes(pageKey);
 
   const content = (
     <div className="colonna" data-testid="pagina-segnaposto">
-      {isCasa ? (
-        // On mobile the h1 "Casa" is in the top bar: one visible h1 per width.
+      {h1InBar ? (
+        // On mobile the h1 ("Casa", "Notifiche") is in the top bar: one visible h1 per width.
         <div className="intestazione-desktop">
           <h1 className="t-titolo-pagina">{def.title}</h1>
         </div>

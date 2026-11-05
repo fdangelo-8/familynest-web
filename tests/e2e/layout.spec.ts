@@ -236,10 +236,20 @@ test.describe("regole di navigazione (funzioni pure)", () => {
       fallback: "/nest",
       title: "Il tuo profilo",
     });
+    // «Notifiche» (#39): the title is the h1, the gear leads to the settings.
     expect(getBarConfig("/notifiche")).toEqual({
       kind: "detail",
       fallback: "/oggi",
+      title: "Notifiche",
+      titleIsHeading: true,
+      link: {
+        href: "/impostazioni#notifiche",
+        icon: "settings-2",
+        label: "Impostazioni delle notifiche",
+      },
     });
+    // The search has no bar on mobile (#40).
+    expect(getBarConfig("/ricerca")).toEqual({ kind: "none" });
   });
 
   test("ogni segnaposto ha titolo e titolo del browser", () => {

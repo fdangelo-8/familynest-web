@@ -4852,7 +4852,7 @@ button.griglia-mese__cella--selezionata {
   list-style: none;
 }
 
-/* Notifiche (#39, richiesta condivisa #243): parole della sintesi che aprono
+/* Notifiche (#39): parole della sintesi che aprono
    l'elemento. Passaggio e premuto come gli altri fondi --color-carta; la
    parola «insieme» non ha un fondo più scuro, quindi ispessisce il bordo. */
 a.parola {
@@ -4888,7 +4888,7 @@ a.parola--insieme:active {
   box-decoration-break: clone;
 }
 
-/* Ricerca (#40, richiesta condivisa #243) */
+/* Ricerca (#40) */
 
 /* 1. Anello di focus del campo di ricerca: il bordo di 2 px c'è sempre,
       senza anello il focus non si vedrebbe */
