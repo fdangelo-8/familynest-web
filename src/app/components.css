@@ -4970,6 +4970,148 @@ button.riga-opzione:active:not(:disabled, [aria-disabled="true"]) {
   cursor: default;
 }
 
+/* Lista desideri (#32) e pagina pubblica (#33), richiesta condivisa #263:
+   solo token, nessun colore o misura scritti a mano. */
+
+/* 1. Riga che apre «Modifica l'idea»: il titolo-bottone copre tutta la riga con
+      un ::before trasparente. A riposo l'aspetto non cambia. */
+.riga-regalo--modificabile {
+  position: relative;
+}
+button.riga-regalo__titolo {
+  border: var(--space-0);
+  background: none;
+  padding: var(--space-0);
+  color: inherit;
+  text-align: start;
+  cursor: pointer;
+  justify-self: start;
+  -webkit-tap-highlight-color: transparent;
+}
+button.riga-regalo__titolo::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+/* Il fondo dello stato resta dentro il filo e segue gli angoli (come #204) */
+.scheda > .riga-regalo--modificabile {
+  border: var(--border-sottile) solid transparent;
+  border-top-width: var(--space-0);
+  border-bottom-width: var(--space-0);
+  padding: var(--space-2) calc(var(--space-3) - var(--border-sottile));
+  background-clip: padding-box;
+}
+.scheda > .riga-regalo--modificabile:first-child {
+  border-top-width: var(--border-sottile);
+  padding-top: calc(var(--space-2) - var(--border-sottile));
+  border-top-left-radius: var(--radius-l);
+  border-top-right-radius: var(--radius-l);
+}
+.scheda > .riga-regalo--modificabile:last-child {
+  border-bottom-width: var(--border-sottile);
+  padding-bottom: calc(var(--space-2) - var(--border-sottile));
+}
+.scheda
+  > .riga-regalo--modificabile:last-child:has(
+    button.riga-regalo__titolo:is(:hover, :active)
+  ) {
+  border-bottom-left-radius: var(--radius-l);
+  border-bottom-right-radius: var(--radius-l);
+}
+@media (hover: hover) {
+  .riga-regalo--modificabile {
+    transition: background-color var(--durata-rapida) var(--curva);
+  }
+  .riga-regalo--modificabile:has(button.riga-regalo__titolo:hover) {
+    background-color: var(--color-carta);
+  }
+}
+.riga-regalo--modificabile:has(button.riga-regalo__titolo:active) {
+  background-color: var(--color-carta);
+}
+
+/* 2. Foto copiata dal negozio: l'oggetto intero, su fondo carta-2 attorno alle
+      foto non quadrate (anche in .scheda-regalo .foto, #33) */
+.foto__immagine {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: inherit;
+}
+
+/* 3. Blocco scuro: margini interni a sinistra e a destra, così icona e bottone
+      non toccano il bordo arrotondato (anche Impostazioni del Nest) */
+.scheda--scura > .lista--notte {
+  padding-inline: var(--space-4);
+}
+
+/* 4. Etichetta («Zia Carla») larga quanto il testo dentro la riga del regalo */
+.riga-regalo .riga-lista__testo > .etichetta {
+  justify-self: start;
+  max-width: 100%;
+}
+.riga-regalo .riga-lista__testo > .etichetta > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 5. Titolo dell'idea che porta al negozio (#33): sottolineato sottile, come
+      .legale__link, area di tocco da 44 px sulla colonna del testo */
+a.riga-regalo__titolo {
+  position: relative;
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: var(--border-sottile);
+  text-underline-offset: var(--space-half);
+}
+a.riga-regalo__titolo::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 50%;
+  height: max(100%, var(--size-tocco));
+  transform: translateY(-50%);
+}
+.riga-regalo--barrato a.riga-regalo__titolo,
+.riga-regalo--preso a.riga-regalo__titolo,
+.scheda-regalo--preso a.riga-regalo__titolo {
+  text-decoration-line: underline line-through;
+}
+
+/* 6. Cornice della pagina pubblica (#33): niente barra né navigazione; le due
+      disposizioni stanno nel codice e una sola si vede (come .casa-solo-*) */
+.cornice-pubblica {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-carta);
+}
+.cornice-pubblica > .pagina {
+  padding-top: calc(var(--space-5) + env(safe-area-inset-top));
+  padding-bottom: calc(var(--space-6) + env(safe-area-inset-bottom));
+}
+@media (min-width: 768px) {
+  .cornice-pubblica > .pagina {
+    width: 100%;
+    max-width: var(--grid-colonna-stretta);
+    margin-inline: auto;
+  }
+}
+@media (min-width: 1024px) {
+  .cornice-pubblica > .pagina-desktop {
+    margin-inline: auto;
+  }
+  .pubblica-solo-mobile {
+    display: none;
+  }
+}
+@media (max-width: 1023px) {
+  .pubblica-solo-desktop {
+    display: none;
+  }
+}
+
 /* =========================================================
    CORNICE DELL'APP (fondamenta layout e navigazione, #10)
    Il mockup mette tutto dentro una cornice fissa: qui le regole
