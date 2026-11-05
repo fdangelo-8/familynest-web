@@ -2010,6 +2010,34 @@ function WishlistParts() {
           </li>
         </ul>
       </Example>
+      <Example caption="scheda-regalo con foto__immagine (foto 160 px dentro .foto, #284)">
+        <ul className="colonne colonne--tre" data-testid="scheda-regalo-foto">
+          <li className="scheda scheda-regalo">
+            <span className="foto" aria-hidden="true">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                className="foto__immagine"
+                src={WISHLIST_SAMPLE_PHOTO}
+                alt=""
+              />
+            </span>
+            <div className="scheda-regalo__info">
+              <button type="button" className="riga-regalo__titolo">
+                Diario segreto con lucchetto
+              </button>
+              <span className="riga-lista__info">
+                Feltrinelli · lo vuole tanto
+              </span>
+              <div className="scheda-regalo__piede">
+                <span className="riga-regalo__prezzo">18 €</span>
+                <button type="button" className="btn-primary btn--piccolo">
+                  <span className="btn__testo">Lo regalo io</span>
+                </button>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </Example>
       <Example caption="cornice-pubblica · pubblica-solo-mobile · pubblica-solo-desktop">
         <div className="cornice-pubblica" data-testid="cornice-pubblica">
           <div className="pagina">
