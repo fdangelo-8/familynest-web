@@ -15,6 +15,11 @@ import { useToast } from "@/components/ui/Toast/ToastProvider";
 import { VisuallyHidden } from "@/components/ui/VisuallyHidden/VisuallyHidden";
 import { formatShortWeekday, formatTime } from "@/lib/datetime";
 import { eventHref, type FullEvent } from "@/lib/household-events";
+import {
+  birthdayTitle,
+  ideasCountText,
+  wishlistRowInfo,
+} from "@/components/lista-desideri/model";
 import { ChildSheet, type SheetFocus } from "./ChildSheet";
 import { ChildSkeleton } from "./ChildSkeleton";
 import {
@@ -226,6 +231,7 @@ function ProfileContent({
         {head}
         {notice}
         {emptyProfile}
+        <WishlistSection data={data} />
       </>
     );
   }
@@ -240,11 +246,10 @@ function ProfileContent({
         {school ? <SchoolSection view={school} /> : null}
         {empty ? emptyProfile : null}
       </div>
-      {sizes ? (
-        <div className="colonna">
-          <SizesSection view={sizes} />
-        </div>
-      ) : null}
+      <div className="colonna">
+        {sizes ? <SizesSection view={sizes} /> : null}
+        <WishlistSection data={data} />
+      </div>
     </div>
   );
 }
@@ -499,6 +504,40 @@ function SizesSection({ view }: { view: SizesView }) {
           ))}
         </div>
       </div>
+    </section>
+  );
+}
+
+/** Lista desideri (#32 §9): a row to the page of the list, counts only. */
+function WishlistSection({ data }: { data: ChildData }) {
+  const titleId = useId();
+  const { wishlist, child } = data;
+  return (
+    <section className="sezione" aria-labelledby={titleId}>
+      <div className="sezione__testa">
+        <h2 className="sezione__titolo" id={titleId}>
+          Lista desideri
+        </h2>
+        <span className="sezione__info">{ideasCountText(wishlist.ideas)}</span>
+      </div>
+      <ul className="scheda lista">
+        <ListRow href={`/figli/${child.id}/lista-desideri`}>
+          <span className="icona-riquadro">
+            <Icon name="gift" />
+          </span>
+          <span className="riga-lista__testo">
+            <span className="riga-lista__titolo">
+              {birthdayTitle(child.birthDate, data.readAt)}
+            </span>
+            <span className="riga-lista__info">
+              {wishlistRowInfo(wishlist.shared, wishlist.taken)}
+            </span>
+          </span>
+          <span className="riga-lista__valore">
+            <Icon name="chevron-right" />
+          </span>
+        </ListRow>
+      </ul>
     </section>
   );
 }

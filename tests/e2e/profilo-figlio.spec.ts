@@ -459,7 +459,7 @@ test.describe("contenuto dello stato normale", () => {
       });
     });
 
-    test(`CA-14: niente Salute, pediatra, certificato, lista desideri; un solo link tel: (${viewport} px)`, async ({
+    test(`CA-14: niente Salute, pediatra, certificato; c'è la sezione «Lista desideri» (#32); un solo link tel: (${viewport} px)`, async ({
       page,
       baseURL,
     }) => {
@@ -471,8 +471,10 @@ test.describe("contenuto dello stato normale", () => {
         await expect(section(page, "Taglie")).toBeVisible();
 
         expect(await pageText(page)).not.toMatch(
-          /salute|ediatra|ertificato|medic|visibile solo ai genitori|lista desideri/i,
+          /salute|ediatra|ertificato|medic|visibile solo ai genitori/i,
         );
+        // La sezione «Lista desideri» arriva con la #32: ogni figlio ce l'ha.
+        await expect(section(page, "Lista desideri")).toBeVisible();
         const phones = page.locator('a[href^="tel:"]');
         await expect(phones).toHaveCount(1);
         await expect(phones).toContainText("Maestra Bianchi");

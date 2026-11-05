@@ -81,8 +81,19 @@ export type ChildData = {
   /** Events of this week with the child, seen in full by the reader */
   weekEvents: FullEvent[];
   deadline: NextDeadline | null;
+  /** The wish list in short (#32 §9): counts only, never who gives what */
+  wishlist: WishlistSummary;
   /** The instant of the reading: «now» for every calculation */
   readAt: Date;
+};
+
+export type WishlistSummary = {
+  /** Ideas taken and not taken */
+  ideas: number;
+  /** Ideas somebody took */
+  taken: number;
+  /** There is an active link (not disabled, not expired) */
+  shared: boolean;
 };
 
 const nonEmpty = (value: string | null | undefined): value is string =>
