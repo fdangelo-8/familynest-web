@@ -291,14 +291,36 @@ test.describe("collegamento con il fornitore finto", () => {
         );
         // The post is held: the click must not wait for the navigation.
         await collega(page, "Google").click({ noWaitAfter: true });
-        await expect(
-          page.getByText("Collegamento", { exact: true }).filter(visible),
-        ).toBeVisible();
-        await expect(
-          principal(page, "Continua senza calendario"),
-        ).toBeDisabled();
-        await expect(later(page)).toBeEnabled();
-        await expect(collega(page, "Outlook")).toBeEnabled();
+        // Locators wait for a navigation in flight, so the page is read
+        // straight from the document that is still on screen.
+        await expect
+          .poll(() =>
+            page.evaluate(() => {
+              const shown = (e: Element) =>
+                (e as HTMLElement).offsetParent !== null;
+              const all = (selector: string) =>
+                [...document.querySelectorAll(selector)].filter(shown);
+              const text = (e: Element) => (e.textContent ?? "").trim();
+              return {
+                spinner: all(".btn-tenue[aria-busy=true]").map(text),
+                mainDisabled: all("button")
+                  .filter((e) => text(e) === "Continua senza calendario")
+                  .map((e) => (e as HTMLButtonElement).disabled),
+                laterActive: all("a")
+                  .filter((e) => text(e) === "Più tardi")
+                  .map((e) => !e.hasAttribute("aria-disabled")),
+                outlookActive: all("button")
+                  .filter((e) => text(e).startsWith("Collega"))
+                  .map((e) => !(e as HTMLButtonElement).disabled),
+              };
+            }),
+          )
+          .toEqual({
+            spinner: ["Collegamento"],
+            mainDisabled: [true],
+            laterActive: [true],
+            outlookActive: [true],
+          });
       } finally {
         // The page closes with the test: no unrouteAll while a post is held.
         release();
