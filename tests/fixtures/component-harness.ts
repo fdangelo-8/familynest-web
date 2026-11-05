@@ -15,6 +15,10 @@ const ROOT = process.cwd();
 const nodeRequire = createRequire(path.join(ROOT, "package.json"));
 const ENTRY = path.join(ROOT, "tests/fixtures/harness/app.tsx");
 const LINK_STUB = path.join(ROOT, "tests/fixtures/harness/next-link-stub.tsx");
+const NAVIGATION_STUB = path.join(
+  ROOT,
+  "tests/fixtures/harness/next-navigation-stub.ts",
+);
 
 function isFile(file: string) {
   return existsSync(file) && statSync(file).isFile();
@@ -37,6 +41,7 @@ function resolveFile(base: string): string {
 
 function resolveSpec(spec: string, from: string): string {
   if (spec === "next/link") return LINK_STUB;
+  if (spec === "next/navigation") return NAVIGATION_STUB;
   if (spec.startsWith("@/"))
     return resolveFile(path.join(ROOT, "src", spec.slice(2)));
   if (spec.startsWith("."))

@@ -18,6 +18,7 @@ import {
   TimeField,
 } from "@/components/ui/Field/Field";
 import { Icon } from "@/components/ui/Icon/Icon";
+import { ColorChoice } from "@/components/ui/ColorChoice/ColorChoice";
 import { IconButton } from "@/components/ui/IconButton/IconButton";
 import { List, ListRow } from "@/components/ui/List/List";
 import { PageError } from "@/components/ui/PageError/PageError";
@@ -2239,6 +2240,41 @@ function PageParts() {
               <Skeleton shape="bottone" />
             </SkeletonGroup>
           </div>
+        </div>
+      </Example>
+      <Example caption="Button con pressed, aria-haspopup e ColorChoice busy (#236)">
+        <div className="colonna" data-testid="pezzi-bottoni-236">
+          <Button variant="primary" full icon="bell" pressed={false}>
+            Avvisami quando è pronto
+          </Button>
+          <Button variant="secondary" full icon="check" pressed>
+            Ti avvisiamo appena è pronto
+          </Button>
+          <Button variant="pericolo" aria-haspopup="dialog">
+            Elimina l&apos;account
+          </Button>
+          <ColorChoice
+            aria-label="Colore in salvataggio"
+            value="salvia"
+            busy
+            onChange={() => undefined}
+            idPrefix="galleria-busy"
+          />
+        </div>
+      </Example>
+      <Example caption="Alert con role status e con fuoco da codice (#251)">
+        <div className="colonna" data-testid="pezzi-alert-251">
+          <Alert variant="errore" role="status" data-testid="alert-status">
+            Non riusciamo a caricare le notifiche.
+          </Alert>
+          <Alert
+            variant="avviso"
+            role="alert"
+            tabIndex={-1}
+            data-testid="alert-focus"
+          >
+            Controlla la connessione e riprova.
+          </Alert>
         </div>
       </Example>
       <Example caption="riga-evento--passato (testo secondario, senza opacità)">

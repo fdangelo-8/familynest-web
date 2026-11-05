@@ -4,10 +4,8 @@ import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { Alert } from "@/components/ui/Alert/Alert";
 import { BarAction } from "@/components/ui/AppFrame/BarAction";
 import { Button } from "@/components/ui/Button/Button";
-import { cx } from "@/components/ui/cx";
 import { Icon } from "@/components/ui/Icon/Icon";
 import { Skeleton, SkeletonGroup } from "@/components/ui/Skeleton/Skeleton";
-import { Spinner } from "@/components/ui/Spinner/Spinner";
 import { useToast } from "@/components/ui/Toast/ToastProvider";
 import { getPinLabel } from "@/lib/pin-texts";
 import {
@@ -245,30 +243,19 @@ export function SpaceComingPage({ spaceKey }: { spaceKey: SpaceKey }) {
           </Alert>
         ) : null}
         {status === "ready" ? (
-          <button
-            ref={interestRef}
-            type="button"
-            className={cx(
-              interestOn ? "btn-secondary" : "btn-primary",
-              "btn--pieno",
-              saving && "is-caricamento",
-            )}
-            aria-pressed={interestOn}
-            aria-busy={saving || undefined}
-            aria-disabled={saving || undefined}
+          <Button
+            buttonRef={interestRef}
+            variant={interestOn ? "secondary" : "primary"}
+            full
+            icon={interestOn ? "check" : "bell"}
+            pressed={interestOn}
+            loading={saving}
             onClick={() => void toggleInterest()}
           >
-            {saving ? (
-              <Spinner />
-            ) : (
-              <Icon name={interestOn ? "check" : "bell"} />
-            )}
-            <span className="btn__testo">
-              {interestOn
-                ? "Ti avvisiamo appena è pronto"
-                : "Avvisami quando è pronto"}
-            </span>
-          </button>
+            {interestOn
+              ? "Ti avvisiamo appena è pronto"
+              : "Avvisami quando è pronto"}
+          </Button>
         ) : null}
       </div>
     </main>

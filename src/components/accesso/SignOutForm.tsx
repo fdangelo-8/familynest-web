@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button/Button";
+import { clearLens } from "@/lib/lens";
 import { clearAllRecentSearches } from "@/lib/recent-searches";
 
 /**
@@ -27,6 +28,7 @@ export function SignOutForm() {
       onSubmit={() => {
         // The recent searches stay in this browser only: they leave with the person.
         clearAllRecentSearches();
+        clearLens();
         setLoading(true);
       }}
     >
