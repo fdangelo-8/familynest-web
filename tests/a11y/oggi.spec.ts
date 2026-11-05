@@ -140,11 +140,8 @@ test.describe("axe", () => {
     expect(await seriousViolations(page)).toEqual([]);
   });
 
-  // The rows of «Già fatti» are at 50% of opacity until the shared request
-  // #241 (colour of the secondary text): axe reports a contrast of less than
-  // 4.5:1 (serious). Remove the fixme when #241 is merged.
+  // The rows of «Già fatti» use the secondary text colour (#241/#242).
   test("«Già fatti» aperto", async ({ page }) => {
-    test.fixme(true, "attende #241");
     await open(page, { scenario: "normale" });
     await page.getByRole("button", { name: /^Già fatt/ }).click();
     await expect(

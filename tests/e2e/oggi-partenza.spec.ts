@@ -9,7 +9,6 @@ import {
 import {
   expect,
   expectAccessible,
-  NOW,
   h1,
   open,
   reopen,
@@ -215,8 +214,7 @@ test.describe("lista di partenza", () => {
       const { error } = await ctx.owner.admin
         .from("invitations")
         .update({
-          // Before the stopped clock of the page (last Tuesday), not only before now.
-          expires_at: new Date(NOW.getTime() - 24 * 3600 * 1000).toISOString(),
+          expires_at: new Date(Date.now() - 24 * 3600 * 1000).toISOString(),
         })
         .eq("household_id", ctx.nest.householdId);
       if (error) throw new Error("Scadenza dell'invito di prova non scritta");

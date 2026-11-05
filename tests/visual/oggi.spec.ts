@@ -13,8 +13,6 @@ import { signInAsCached } from "../fixtures/visual-login-cached";
 // database and the shots do not depend on what other suites do in the same
 // Nest. Sign-in, the Nest and its members are real: test user A is needed.
 // The clock is fixed at Tuesday 20 October 2026, 15:52 (Rome), like the mockup.
-// «Già fatti» open has no reference yet: its rows wait for the shared request
-// #241 (colour of the secondary text), see tests/a11y/oggi.spec.ts.
 // The references are generated in the CI container (workflow visual-baseline).
 
 test.use({
@@ -140,4 +138,12 @@ test("per oggi è tutto", async ({ page }) => {
   await open(page, { scenario: "tutto-fatto" });
   await expect(shown(page, "Per oggi è tutto")).toBeVisible();
   await shoot(page, "tutto-fatto.png");
+});
+
+test("«Già fatti» aperto", async ({ page }) => {
+  await open(page, { scenario: "normale" });
+  const toggle = page.getByRole("button", { name: /^Già fatt/ });
+  await toggle.click();
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+  await shoot(page, "gia-fatti-aperto.png");
 });

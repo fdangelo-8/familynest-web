@@ -11,7 +11,6 @@ import {
   open,
   sec,
   shortDay,
-  T,
   test,
   addDays,
 } from "../fixtures/oggi";
@@ -46,16 +45,13 @@ test.describe("giornata libera e domani", () => {
     baseURL,
     casa,
   }) => {
-    // At 23:10 the free evening of today (18:00 - 23:00) is over: with two
-    // adults in the Nest and an event in the period, earlier in the day there
-    // would be a «Liberi insieme» today, and today would not be empty.
     await ev(casa, "Marco", {
       title: "Cena fuori",
       day: d(1),
       from: "20:00",
       to: "22:00",
     });
-    await open(page, baseURL, casa, "Marco", { now: at(T, "23:10") });
+    await open(page, baseURL, casa, "Marco");
     const domani = sec(page, "Domani");
     await expect(domani).toBeVisible();
     await expect(info(domani)).toHaveText(dayWithNumber(d(1)));

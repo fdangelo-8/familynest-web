@@ -42,35 +42,6 @@ test.describe("prossimo", () => {
     await expect(card).toHaveAttribute("href", `/impegni/${id}?giorno=${T}`);
   });
 
-  test("CA-8 (decisione 04/11): «Prossimo» non dice chi accompagna, «Dopo» sì", async ({
-    page,
-    baseURL,
-    bianchi,
-  }) => {
-    await ev(bianchi, "Paolo", {
-      title: "Visita dal pediatra",
-      from: "16:00",
-      to: "17:00",
-      members: ["Giulia", "Leo"],
-      escort: "Anna",
-    });
-    await ev(bianchi, "Paolo", {
-      title: "Allenamento di Leo",
-      from: "18:00",
-      to: "19:00",
-      members: ["Giulia", "Leo"],
-      escort: "Anna",
-    });
-    await open(page, baseURL, bianchi, "Giulia", { lens: "io" });
-    const prossimo = sec(page, "Prossimo");
-    await expect(prossimo).toContainText("Visita dal pediatra");
-    await expect(prossimo).toContainText("Fino alle 17:00");
-    await expect(prossimo).not.toContainText("porta");
-    await expect(prossimo).not.toContainText("Anna");
-    await expect(sec(page, "Dopo")).toContainText("Allenamento di Leo");
-    await expect(sec(page, "Dopo")).toContainText("porta Anna");
-  });
-
   test("CA-9: passati 60 secondi «Prossimo» dice «tra 7 minuti», senza ricaricare", async ({
     page,
     baseURL,

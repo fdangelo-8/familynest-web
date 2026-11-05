@@ -86,20 +86,14 @@ function watchWrite(page: Page) {
   return seen;
 }
 
-/**
- * The page has drawn what React has just decided: two turns of the message
- * loop. Not `requestAnimationFrame`, which the stopped clock does not call.
- */
+/** Two frames: the page has drawn what React has just decided. */
 async function drawn(page: Page) {
-  await page.evaluate(async () => {
-    for (let turn = 0; turn < 2; turn++) {
-      await new Promise<void>((resolve) => {
-        const channel = new MessageChannel();
-        channel.port1.onmessage = () => resolve();
-        channel.port2.postMessage(0);
-      });
-    }
-  });
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+      ),
+  );
 }
 
 test.describe("le mie cose", () => {

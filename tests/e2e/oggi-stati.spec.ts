@@ -188,8 +188,6 @@ test.describe("accessibilità", () => {
     await chooseLens(page, "Io");
     await tick(page, "Ritirare il pacco").click();
     await expect(toast(page)).toBeVisible();
-    // The countdown of the toast stops while the pointer is on it.
-    await toast(page).hover();
     await expectAccessible(page, "conferma");
 
     await page.context().setOffline(true);

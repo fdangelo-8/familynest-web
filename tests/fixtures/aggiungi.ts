@@ -284,10 +284,7 @@ export async function failMembersList(
   await page.route(
     (url) =>
       url.pathname.endsWith("/rest/v1/household_members") &&
-      // The list of the sheet also asks for `user_id`: the one of Oggi, behind
-      // the sheet (`id, name, color, kind`), is left alone.
-      (url.searchParams.get("select") ?? "").includes("name") &&
-      (url.searchParams.get("select") ?? "").includes("user_id"),
+      (url.searchParams.get("select") ?? "").includes("name"),
     async (route) => {
       if (!failing() || route.request().method() === "OPTIONS") {
         await route.continue();
