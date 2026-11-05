@@ -6,6 +6,7 @@ import {
 import { NORMAL_LIST, installSpesaFake } from "../fixtures/spesa-fake";
 import { NORMAL_TODOS, installTodosFake } from "../fixtures/todos-fake";
 import { installNotificheFake } from "../fixtures/notifiche-visuale";
+import { installOggiFake } from "../fixtures/oggi-visuale";
 import { hasTestUser, signInAs } from "../fixtures/visual-login";
 
 // Layout and navigation (#10): the app frame in every section, at 390 and
@@ -21,8 +22,9 @@ test.use({
 });
 
 const PAGES = [
-  { route: "/oggi", file: "oggi", h1: "Oggi" },
-  { route: "/aggiungi", file: "aggiungi", h1: "Oggi" },
+  // Since #30 the h1 of Oggi is the greeting (15:00: «Buon pomeriggio»).
+  { route: "/oggi", file: "oggi", h1: /^Buon pomeriggio/ },
+  { route: "/aggiungi", file: "aggiungi", h1: /^Buon pomeriggio/ },
   { route: "/calendario", file: "calendario", h1: "19 – 25 ottobre" },
   { route: "/casa/spesa", file: "casa-spesa", h1: "Casa" },
   { route: "/notifiche", file: "notifiche", h1: "Notifiche" },
@@ -49,6 +51,9 @@ test.beforeEach(async ({ page, context, baseURL }) => {
 });
 
 async function open(page: import("@playwright/test").Page, route: string) {
+  // The tablet test opens several pages with the same page: the fakes of the
+  // one before (Oggi's events) must not answer for the next one (Calendario).
+  await page.unrouteAll({ behavior: "ignoreErrors" });
   // Casa · Spesa (#21) shows the shopping list: a fixed list, served by a fake,
   // so the reference does not depend on what other suites write in the Nest.
   const isSpesa = route === "/casa/spesa";
@@ -64,8 +69,18 @@ async function open(page: import("@playwright/test").Page, route: string) {
   // served by a fake. The page clock is the one of the test (20 October, 15:00).
   const isNotifiche = route === "/notifiche";
   if (isNotifiche) await installNotificheFake(page);
+  // Oggi (#30) reads its data in the browser: a fixed day, served by a fake,
+  // so the reference does not depend on what other suites write in the Nest.
+  // /aggiungi is Oggi under the sheet.
+  const isOggi = route === "/oggi" || route === "/aggiungi";
+  if (isOggi) await installOggiFake(page, { scenario: "normale" });
   await page.goto(route);
   await expect(page.getByRole("main")).toBeVisible();
+  if (isOggi) {
+    await expect(page.locator('[aria-busy="true"]')).toHaveCount(0, {
+      timeout: 20_000,
+    });
+  }
   if (isSpesa) await expect(page.getByTestId("spesa-riga")).toHaveCount(7);
   if (isNotifiche) {
     await expect(page.getByTestId("notifica")).toHaveCount(5, {

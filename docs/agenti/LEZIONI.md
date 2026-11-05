@@ -22,6 +22,10 @@ Errori già commessi (in questo progetto o in quelli precedenti dell'ecosistema)
 - Test pgTAP in `supabase/tests/` scritti dal tester o dal coordinatore → li scrive solo l'architetto dati nel branch `db/*`, perché gli hook lo impongono; il tester funzionale indica i casi mancanti nella PR, senza scriverli.
 - Limite di righe per adulto (per esempio sei spazi fissati) controllato con un conteggio prima dell'insert → due richieste vicine lo superano: la funzione prende `pg_advisory_xact_lock` per membro prima di contare e inserire (#192).
 - Modifica di una serie settimanale che manda solo il giorno del modulo → la serie cambia giorno (da lunedì a mercoledì): se la regola resta la stessa si mandano i giorni della serie spostati di quanto si è spostata la volta aperta; il giorno del modulo solo quando la regola cambia (#174).
+- Test RLS che provano un solo verso (adulto non amministratore contro amministratore) lasciano scoperto l'amministratore che legge o cambia i dati di un altro adulto → per ogni dato privato si provano entrambi i versi, anche l'amministratore: `update` e `delete` con `returning` devono dare 0 righe, `insert` con l'id di un altro deve dare `42501` (#225).
+- Cancellazione dell'account che elimina `auth.users` ma lascia il registro di Auth (`auth.audit_log_entries`: mail e indirizzi IP, senza chiave esterna) → la funzione cancella nella stessa transazione le righe di `auth` legate all'utente, il test verifica che quelle di un altro utente restino; se il ruolo non può cancellarle, la domanda va a Francesco (#226).
+- Lavoro che gira su tutti i Nest, esposto a chi chiama (anche con la chiave amministrativa, per i test) → `p_household_id` obbligatorio (`22023` se manca); su tutti i Nest lavora solo il job `pg_cron` tramite una funzione privata (#237).
+- Regole di visibilità copiate in una seconda funzione (la ricerca accanto al calendario) → una sola fonte in `private`, usata da entrambe, oppure un test di equivalenza che confronta le due funzioni sulle stesse righe (#239).
 
 ## Sviluppo
 
@@ -51,6 +55,14 @@ Errori già commessi (in questo progetto o in quelli precedenti dell'ecosistema)
 - Costante o funzione generica spostata in un modulo condiviso (`URGENT_DAYS`) che collide con una uguale di una pagina → nel modulo condiviso i nomi sono specifici (`DEADLINE_URGENT_DAYS`) (#193).
 - Classe CSS condivisa rinominata senza cercarne tutti gli usi → prima si cerca in `src/`, `tests/` e nelle PR aperte, e il cambio di nome va in un solo passo con tutti gli usi (#193).
 - Stessa frase scritta a mano in due funzioni (`allDialogText` e `saveAllText`): dopo una decisione una delle due resta indietro → la frase sta in una sola funzione in `src/lib/`, usata da tutte le pagine (#193).
+- Lettura con `select` di colonne in più (date di nascita, colori, nomi di figli o animali non mostrati) → la lettura prende solo le colonne e le righe del tipo che la pagina mostra; un parametro obbligatorio dice quali nomi leggere (#233, #234).
+- Errore di rete e errore del server distinti dal `code` dell'errore (il `code` c'è solo con un corpo JSON, quindi un 5xx con altro corpo diventa «rete») → si decide con lo `status`: `0` è rete, ogni altro errore è server, e il conflitto (`23505`) resta a parte (#235).
+- `aria-pressed`, `aria-busy` o altri attributi ARIA messi sul DOM con un effect (trovati con `querySelector`) → l'attributo arriva dopo il disegno e dopo lo spostamento del fuoco; il componente condiviso riceve una prop (`pressed`, `busy`) con una `richiesta-condivisa`, e la pagina non ricopia il componente. Fino ad allora il ripiego è un `useLayoutEffect` dichiarato prima dell'effetto del fuoco, con una issue citata (#234, #235).
+- Preferenza letta senza controllare `error`, che ricade sul valore meno protettivo (visibilità «Occupato») → si controlla sempre l'errore; senza preferenza il valore predefinito è il più protettivo («Solo io») e la scelta è visibile prima del salvataggio (#233).
+- Lettura in più parti che su un errore parziale restituisce `ok: true` con un elenco a cui manca un pezzo → se una parte fallisce il risultato è `{ ok: false, reason }`, la pagina mostra «Riprova» e un test copre il caso (#244).
+- Dati locali (ricerche recenti, lente) cancellati solo dal pulsante «Esci» della pagina del profilo → si cancellano in ogni uscita (sessione scaduta, account eliminato altrove, «Esci» dell'onboarding) e alla pagina di accesso, con una sola funzione in `src/lib/` (#244, #249).
+- Valore non ancora approvato da Francesco già scritto nel codice o nei dati (righe dei nove spazi, puntina su desktop) → codice, skill e galleria contengono solo ciò che è approvato; il resto resta vuoto e un test lo verifica (#224).
+- Testo nascosto con `VisuallyHidden` che inizia o finisce con uno spazio (« di Sofia») → il nome accessibile ha spazi doppi o mancanti: lo spazio lo mette la struttura, non il testo nascosto, e il test confronta il nome dopo aver normalizzato gli spazi (#224).
 
 ## Processo
 
@@ -86,6 +98,7 @@ Errori già commessi (in questo progetto o in quelli precedenti dell'ecosistema)
 - Sviluppatore che risponde FATTO senza aver eseguito i test della propria pagina → prima di FATTO lancia il workflow `test-mirato` sulle spec della pagina (`tests/e2e`, `tests/a11y`, `tests/visual`) e scrive l'esito nella PR (#177).
 - Test instabili che passano solo al secondo tentativo restano nascosti in CI → il tester li segnala con i numeri delle run e il coordinatore apre subito una issue (#177).
 - Requisito di un'issue che si perde nel riepilogo del coordinatore (testi della ripetizione) → il revisore confronta la PR con il requisito originale della issue, non con il riepilogo, e ogni elemento perso va deciso per iscritto prima del test (#170).
+- Suite completa più lunga del timeout del job (45 minuti) che si interrompe prima della fine, senza un test rosso → si misura la durata delle ultime run complete e si alza il timeout prima di aggiungere pagine; una suite interrotta non è un esito (#238).
 
 ## Test
 
@@ -118,6 +131,10 @@ Errori già commessi (in questo progetto o in quelli precedenti dell'ecosistema)
 - Test che misurano posizioni o colori mentre un foglio o un velo entra con un'animazione (300 ms, `foglio-entra`, `appare`) falliscono a caso, e `force: true` salta il controllo di stabilità → prima di cliccare, misurare o lanciare axe si aspetta `waitForAnimationsToEnd` (`tests/fixtures/animations.ts`), che ignora le animazioni infinite (spinner, scheletri) (#179, #181, #199).
 - Test che blocca tutte le richieste a una pagina blocca anche il prefetch di Next, e la schermata di caricamento non compare mai → si blocca solo la navigazione vera e si lascia passare il prefetch (#199).
 - Didascalia nel font dei codici che va a capo solo dal secondo scatto → due catture diverse e screenshot instabile: didascalie corte, che stanno su una riga (#184).
+- Test che dipendono dalla data reale (il nome del file «I tuoi dati» contiene la data del server) diventano rossi da un giorno all'altro su `main` e su tutte le PR → l'atteso usa un'espressione regolare sul formato, o si fissa il tempo con `page.clock.pauseAt`; mai una data scritta a mano (#246, #247).
+- Fixture che scrivono con il ruolo amministrativo anche dove il test deve usare la sessione dell'utente → il test non prova RLS né permessi reali: la scrittura che farebbe l'utente passa dalla sua sessione, e il ruolo amministrativo serve solo per preparare ciò che la sessione non può scrivere, dichiarato nel commento (#228).
+- Dati finti di una pagina con `page.route` che restano attivi nel test successivo → `page.unrouteAll()` nel `finally` o a fine test.
+- Test di privacy che guarda solo ciò che è nel DOM non vede i dati che il browser riceve e non mostra → si registrano le risposte di rete della pagina (documento, fetch, xhr) e si cerca nomi, date e id che non devono esserci (#234).
 
 ## Design
 
@@ -128,3 +145,5 @@ Errori già commessi (in questo progetto o in quelli precedenti dell'ecosistema)
 - Scorciatoia a una sola lettera (N) senza modo di spegnerla o cambiarla: contrasta con WCAG 2.1.4 (livello A) (#167) → la specifica prevede lo spegnimento, il cambio o un elemento a fuoco richiesto, e la decide il designer prima dello sviluppo.
 - Regole nuove nel blocco del designer, in un tratto dove un test vieta i `px` (anche nelle media query di `date-calendario.spec.ts`) → si usano solo token; le regole nuove vanno in fondo al blocco «STATI AGGIUNTI DAL DESIGNER», tra i segnaposti che i test usano come confine (#184).
 - Elemento figlio di una griglia senza colonne definite (come `.esempio` della galleria) che prende la larghezza del contenuto → la vista interna non scorre, scorre la pagina; il contenitore della griglia ha `grid-template-columns: minmax(0, 1fr)` (#184).
+- PR `shared/*` con prop nuove (`pressed`, `busy`, `aria-haspopup`) senza skill e galleria aggiornate → la PR aggiorna `componenti.md`, `registro.md` e `Gallery.tsx` con un esempio per ogni prop nuova; il tester visivo ha così un riferimento, e il revisore lo controlla prima del test (#249, #242, #224).
+- Esempio della galleria che non riproduce l'uso della pagina (bottone solo icona al posto del bottone con testo, link fuori dalla sezione) → l'esempio ha la struttura e il testo della pagina; il tester visivo lo confronta con la pagina, non con l'idea del componente (#224).

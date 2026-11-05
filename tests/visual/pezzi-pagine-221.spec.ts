@@ -36,6 +36,14 @@ for (const id of [
   });
 }
 
+// #258 / PR #261: option row as a button, in-progress state, sheet with onBack.
+test("#258: esempio riga-opzione-258", async ({ page }) => {
+  const example = page.getByTestId("riga-opzione-258");
+  await example.scrollIntoViewIfNeeded();
+  await page.mouse.move(0, 0);
+  await expect(example).toHaveScreenshot("esempio-riga-opzione-258.png");
+});
+
 test("#221: sezione intera dei pezzi delle pagine", async ({ page }) => {
   const section = page.locator("#pezzi-pagine");
   await section.scrollIntoViewIfNeeded();

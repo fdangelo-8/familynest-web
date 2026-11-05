@@ -313,9 +313,10 @@ const NOT_FOUND_TITLE = /Questa pagina non c['’]è/;
 const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
 
 const SCREENS: [route: string, h1: string, title: string][] = [
-  ["/oggi", "Oggi", "FamilyNest · Oggi"],
+  // Oggi is a real page since #30: its h1 is the greeting and the name
+  ["/oggi", "il saluto", "FamilyNest · Oggi"],
   // opened directly, Add is a sheet over Today (#164): the page h1 is Today's
-  ["/aggiungi", "Oggi", "FamilyNest · Aggiungi"],
+  ["/aggiungi", "il saluto", "FamilyNest · Aggiungi"],
   ["/calendario", "Calendario", "FamilyNest · Calendario"],
   ["/casa/spesa", "Casa", "FamilyNest · Casa · Spesa"],
   ["/casa/da-fare", "Casa", "FamilyNest · Casa · Da fare"],
@@ -477,6 +478,19 @@ test.describe("segnaposto", () => {
       expect(response?.status()).toBe(200);
       await expect(page).toHaveURL(new RegExp(`${route}$`));
       await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+      if (route === "/oggi" || route === "/aggiungi") {
+        // Real page since #30 (two layouts in the DOM, one in the accessibility
+        // tree): the h1 is «<saluto>, <nome>», no placeholder.
+        await expect(
+          page.getByRole("heading", {
+            level: 1,
+            name: /^(Buongiorno|Buon pomeriggio|Buonasera|Eccoti),\s*Marco$/,
+          }),
+        ).toBeVisible();
+        await expect(page).toHaveTitle(title);
+        await expect(page.getByTestId("pagina-segnaposto")).toHaveCount(0);
+        return;
+      }
       await expect(
         page.getByRole("heading", { level: 1, name: h1, exact: true }),
       ).toBeVisible();
@@ -837,7 +851,12 @@ test.describe("mobile 390 px", () => {
       lens.getByLabel("Giulia, Paolo, Leo", { exact: true }),
     ).toBeVisible();
 
-    const content = html + (await page.content());
+    // The fixed example of the quick-add field of Oggi («nuoto Sofia giovedì
+    // alle 17», text of the mockup) is not data of the Nest of A.
+    const content = (html + (await page.content())).replaceAll(
+      "nuoto Sofia giovedì alle 17",
+      "",
+    );
     expect(content).not.toMatch(
       /Casa D(?:'|&#x27;|&#39;|&apos;|\\u0027)Angelo/,
     );
@@ -917,8 +936,11 @@ test.describe("desktop 1280 px", () => {
     await expect(header.getByRole("navigation", NAV)).toBeVisible();
     // the only visible main navigation is the one in the header
     await expect(mainNav(page)).toHaveCount(1);
-    // one visible "Aggiungi": the one in the top navigation (#67)
-    await expect(page.getByRole("link", { name: "Aggiungi" })).toHaveCount(1);
+    // one visible "Aggiungi": the one in the top navigation (#67). Oggi (#30)
+    // has the quick-add field «Aggiungi un impegno, …»: the name must be exact.
+    await expect(
+      page.getByRole("link", { name: "Aggiungi", exact: true }),
+    ).toHaveCount(1);
   });
 
   test("CA-16: il logo porta a Oggi", async ({ page, baseURL }) => {
@@ -1113,9 +1135,11 @@ test.describe("desktop 1280 px", () => {
       page.getByRole("link", { name: "FamilyNest", exact: true }),
     ).toBeVisible();
     // from 1024 px the only visible "Aggiungi" is in the top navigation (#67)
-    await expect(page.getByRole("link", { name: "Aggiungi" })).toHaveCount(1);
     await expect(
-      visibleHeader(page).getByRole("link", { name: "Aggiungi" }),
+      page.getByRole("link", { name: "Aggiungi", exact: true }),
+    ).toHaveCount(1);
+    await expect(
+      visibleHeader(page).getByRole("link", { name: "Aggiungi", exact: true }),
     ).toHaveAttribute("href", "/aggiungi");
   });
 

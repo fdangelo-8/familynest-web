@@ -4951,6 +4951,25 @@ a.parola--insieme:active {
   opacity: 1;
 }
 
+/* Aggiungi, Fase 2 (#171): righe del riepilogo che aprono il modulo «Nuovo impegno» */
+@media (hover: hover) {
+  button.riga-opzione {
+    transition: background var(--durata-rapida) var(--curva);
+  }
+  button.riga-opzione:hover:not(:disabled, [aria-disabled="true"]) {
+    background: var(--color-carta);
+  }
+}
+button.riga-opzione:active:not(:disabled, [aria-disabled="true"]) {
+  background: var(--color-carta);
+}
+/* Foglio con un salvataggio in corso (#171): ingressi e righe resi inattivi non cambiano aspetto */
+.is-in-corso .btn-link[aria-disabled="true"],
+.is-in-corso .riga-opzione[aria-disabled="true"] {
+  opacity: 1;
+  cursor: default;
+}
+
 /* =========================================================
    CORNICE DELL'APP (fondamenta layout e navigazione, #10)
    Il mockup mette tutto dentro una cornice fissa: qui le regole

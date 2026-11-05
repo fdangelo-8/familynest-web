@@ -80,8 +80,13 @@ export async function openAdd(
   }
   await nest.signIn(page, baseURL, who);
   await page.goto("/oggi");
+  // Oggi (#30): the h1 is the greeting, and the page has two layouts in the DOM
+  // (only the visible one is in the accessibility tree).
   await expect(
-    page.getByRole("heading", { level: 1, name: "Oggi" }),
+    page.getByRole("heading", {
+      level: 1,
+      name: /^(Buongiorno|Buon pomeriggio|Buonasera|Eccoti)/,
+    }),
   ).toBeVisible({ timeout: 20_000 });
   await expect(async () => {
     await page.getByRole("link", { name: "Aggiungi", exact: true }).click();
@@ -279,7 +284,10 @@ export async function failMembersList(
   await page.route(
     (url) =>
       url.pathname.endsWith("/rest/v1/household_members") &&
-      (url.searchParams.get("select") ?? "").includes("name"),
+      // The list of the sheet also asks for `user_id`: the one of Oggi, behind
+      // the sheet (`id, name, color, kind`), is left alone.
+      (url.searchParams.get("select") ?? "").includes("name") &&
+      (url.searchParams.get("select") ?? "").includes("user_id"),
     async (route) => {
       if (!failing() || route.request().method() === "OPTIONS") {
         await route.continue();
