@@ -122,7 +122,7 @@ export type ListNotificationsResult =
  * `status` 0: no answer arrived (network); so does a browser that knows it is
  * offline. Any other answer, with an error, is the server's.
  */
-function failureOf(status: number): NotificationFailure {
+export function failureOf(status: number): NotificationFailure {
   if (typeof navigator !== "undefined" && navigator.onLine === false) {
     return "network";
   }
