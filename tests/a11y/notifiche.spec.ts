@@ -137,7 +137,7 @@ const STATES: Array<{
     options: { digest: "error" },
     ready: true,
     wait: async (page) => {
-      await expect(page.getByRole("alert")).toContainText(
+      await expect(page.locator(".avviso[role=alert]")).toContainText(
         "Non riusciamo a caricare la sintesi di oggi",
       );
     },
@@ -171,7 +171,7 @@ test("axe: «Fatto» con toast", async ({ page }) => {
 test("axe: «Fatto», ma il da fare non c'è più", async ({ page }) => {
   await openNotifiche(page, { todo: "gone" });
   await page.getByRole("button", { name: "Fatto" }).click();
-  await expect(page.getByRole("alert")).toContainText(
+  await expect(page.locator(".avviso[role=alert]")).toContainText(
     "Questa cosa da fare non c'è più",
   );
   await expectNoViolations(page);
@@ -192,7 +192,7 @@ test("axe: «Segna tutte» non riuscito (desktop)", async ({
   const fake = await openNotifiche(page);
   fake.failMarking();
   await page.getByRole("button", { name: "Segna tutte come lette" }).click();
-  await expect(page.getByRole("alert")).toContainText(
+  await expect(page.locator(".avviso[role=alert]")).toContainText(
     "Non siamo riusciti a segnare le notifiche come lette",
   );
   await expectNoViolations(page);
