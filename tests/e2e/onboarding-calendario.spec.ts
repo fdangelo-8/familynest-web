@@ -1,4 +1,4 @@
-import { expect, test, type Page, type Route } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import {
   signInAs,
   skipReason,
@@ -273,15 +273,22 @@ test.describe("collegamento con il fornitore finto", () => {
   }) => {
     needsFake();
     const fake = fakeCalendar(baseURL as string);
-    let held: Route | undefined;
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
     await withNest("couple", async (user) => {
       try {
         await fake.setup({ userId: user.id, ...STANDARD_FAKE_ACCOUNT });
         await open(page, user, baseURL);
         // The trip to the provider is held by the test.
-        await page.route("**/calendari-collegati/collega/google", (route) => {
-          held = route;
-        });
+        await page.route(
+          "**/calendari-collegati/collega/google",
+          async (route) => {
+            await gate;
+            await route.abort().catch(() => undefined);
+          },
+        );
         await collega(page, "Google").click();
         await expect(
           page.getByText("Collegamento", { exact: true }).filter(visible),
@@ -292,7 +299,7 @@ test.describe("collegamento con il fornitore finto", () => {
         await expect(later(page)).toBeEnabled();
         await expect(collega(page, "Outlook")).toBeEnabled();
       } finally {
-        await held?.abort().catch(() => undefined);
+        release();
         await page.unrouteAll({ behavior: "ignoreErrors" });
         await fake.reset(user.id);
       }
