@@ -289,7 +289,8 @@ test.describe("collegamento con il fornitore finto", () => {
             await route.abort().catch(() => undefined);
           },
         );
-        await collega(page, "Google").click();
+        // The post is held: the click must not wait for the navigation.
+        await collega(page, "Google").click({ noWaitAfter: true });
         await expect(
           page.getByText("Collegamento", { exact: true }).filter(visible),
         ).toBeVisible();
