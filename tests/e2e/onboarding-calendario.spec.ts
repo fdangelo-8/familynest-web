@@ -293,34 +293,43 @@ test.describe("collegamento con il fornitore finto", () => {
         await collega(page, "Google").click({ noWaitAfter: true });
         // Locators wait for a navigation in flight, so the page is read
         // straight from the document that is still on screen.
+        let last = "";
         await expect
-          .poll(() =>
-            page.evaluate(() => {
-              const shown = (e: Element) =>
-                (e as HTMLElement).offsetParent !== null;
-              const all = (selector: string) =>
-                [...document.querySelectorAll(selector)].filter(shown);
-              const text = (e: Element) => (e.textContent ?? "").trim();
-              return {
-                spinner: all(".btn-tenue[aria-busy=true]").map(text),
-                mainDisabled: all("button")
-                  .filter((e) => text(e) === "Continua senza calendario")
-                  .map((e) => (e as HTMLButtonElement).disabled),
-                laterActive: all("a")
-                  .filter((e) => text(e) === "Più tardi")
-                  .map((e) => !e.hasAttribute("aria-disabled")),
-                outlookActive: all("button")
-                  .filter((e) => text(e).startsWith("Collega"))
-                  .map((e) => !(e as HTMLButtonElement).disabled),
-              };
+          .poll(async () => {
+            try {
+              const state = await page.evaluate(() => {
+                const shown = (e: Element) =>
+                  (e as HTMLElement).offsetParent !== null;
+                const all = (selector: string) =>
+                  [...document.querySelectorAll(selector)].filter(shown);
+                const text = (e: Element) => (e.textContent ?? "").trim();
+                return {
+                  spinner: all(".btn-tenue[aria-busy=true]").map(text),
+                  mainDisabled: all("button")
+                    .filter((e) => text(e) === "Continua senza calendario")
+                    .map((e) => (e as HTMLButtonElement).disabled),
+                  laterActive: all("a")
+                    .filter((e) => text(e) === "Più tardi")
+                    .map((e) => !e.hasAttribute("aria-disabled")),
+                  outlookActive: all("button")
+                    .filter((e) => text(e).startsWith("Collega"))
+                    .map((e) => !(e as HTMLButtonElement).disabled),
+                };
+              });
+              last = JSON.stringify(state);
+            } catch (error) {
+              last = `evaluate failed: ${String(error).slice(0, 120)}`;
+            }
+            return last;
+          })
+          .toBe(
+            JSON.stringify({
+              spinner: ["Collegamento"],
+              mainDisabled: [true],
+              laterActive: [true],
+              outlookActive: [true],
             }),
-          )
-          .toEqual({
-            spinner: ["Collegamento"],
-            mainDisabled: [true],
-            laterActive: [true],
-            outlookActive: [true],
-          });
+          );
       } finally {
         // The page closes with the test: no unrouteAll while a post is held.
         release();
