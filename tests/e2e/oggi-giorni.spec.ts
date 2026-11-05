@@ -35,7 +35,10 @@ test.describe("giornata libera e domani", () => {
     await expect(
       oggi.getByRole("link", { name: "Aggiungi un impegno" }),
     ).toHaveAttribute("href", "/aggiungi");
-    await expect(oggi).toContainText("e lo vedi qui.");
+    // Nobody has a linked calendar here: the text invites to link one (#34).
+    await expect(oggi).toContainText(
+      "Collega il calendario o aggiungi un impegno.",
+    );
     await expect(sec(page, "Prossimo")).toHaveCount(0);
     await expect(sec(page, "Dopo")).toHaveCount(0);
     await expect(sec(page, "Domani")).toHaveCount(0);

@@ -368,7 +368,19 @@ export async function getEventCalendarLink(
           calendar_name: string | null;
         }
       | undefined;
-    if (!row) return { ok: false };
+    // No row: the reader cannot read the event, so there is no source to say.
+    // Not an error: the database refuses every change to an imported event anyway.
+    if (!row) {
+      return {
+        ok: true,
+        link: {
+          isImported: false,
+          isSent: false,
+          providerLabel: null,
+          calendarName: null,
+        },
+      };
+    }
     return {
       ok: true,
       link: {
