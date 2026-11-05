@@ -12,6 +12,7 @@ import {
   toDayKey,
 } from "@/lib/datetime";
 import { formatDayInSentence, joinNames } from "@/lib/event-texts";
+import { giftTakenParts } from "@/lib/notifications";
 import type { NotificationItem } from "@/lib/notifications";
 
 /** A member of the Nest as the page needs it (names of the people in a text). */
@@ -219,6 +220,20 @@ function toRow(
           ),
         ],
       };
+    case "gift_taken": {
+      // No action: the «Apri» proposed in #39 is not approved (#32 §10).
+      const words = giftTakenParts(item);
+      return {
+        ...base,
+        lead: { type: "icon", icon: "gift", together: false },
+        parts: [
+          bold(words.giverName),
+          text(words.verb),
+          bold(words.itemTitle),
+          text(`${words.connector}${words.childName}.`),
+        ],
+      };
+    }
   }
 }
 
