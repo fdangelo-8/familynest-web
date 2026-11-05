@@ -518,6 +518,21 @@ test.describe("punto 8: Vai al contenuto", () => {
         ).toBeFocused();
         return;
       }
+      if (route === "/ricerca" && info.project.name !== "mobile") {
+        // opened directly it is a modal palette over Today (#40, section 3):
+        // the focus opens in the field and is trapped inside the dialog, so
+        // Tab never reaches the skip link behind it (same as /aggiungi)
+        await expect(
+          page.getByRole("dialog", { name: "Cerca nel Nest" }),
+        ).toBeVisible();
+        await page.keyboard.press("Tab");
+        expect(
+          await page.evaluate(
+            () => !!document.activeElement?.closest('[role="dialog"]'),
+          ),
+        ).toBe(true);
+        return;
+      }
       await page.keyboard.press("Tab");
       if (route === "/aggiungi") {
         // opened directly it is a modal sheet over Today (#164): the focus is
