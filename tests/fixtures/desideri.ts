@@ -84,12 +84,14 @@ export const T_I5 = IDEAS.I5.title;
 
 /** The error the browsers' admin client gives back is never shown. */
 async function must<T>(
-  query: PromiseLike<{ data: T | null; error: { message: string } | null }>,
+  query: PromiseLike<{ data: unknown; error: { message: string } | null }>,
   what: string,
 ): Promise<T> {
   const { data, error } = await query;
-  if (error || data === null) throw new Error(`${what} fallito`);
-  return data;
+  if (error || data === null || data === undefined) {
+    throw new Error(`${what} fallito`);
+  }
+  return data as T;
 }
 
 async function mustWrite(
@@ -118,7 +120,7 @@ export async function createList(
   ctx: Scope,
   memberId: string,
 ): Promise<string> {
-  const row = await must(
+  const row = await must<{ id: string }>(
     ctx.admin
       .from("wishlists")
       .insert({ household_id: ctx.householdId, member_id: memberId })
@@ -126,7 +128,7 @@ export async function createList(
       .single(),
     "Lista di prova",
   );
-  return (row as { id: string }).id;
+  return row.id;
 }
 
 export async function insertIdea(
@@ -134,7 +136,7 @@ export async function insertIdea(
   listId: string,
   spec: Omit<IdeaSpec, "giver"> & { createdAt?: Date },
 ): Promise<string> {
-  const row = await must(
+  const row = await must<{ id: string }>(
     ctx.admin
       .from("wishlist_items")
       .insert({
@@ -151,7 +153,7 @@ export async function insertIdea(
       .single(),
     "Idea di prova",
   );
-  return (row as { id: string }).id;
+  return row.id;
 }
 
 /** The expiry the database gives a link: 00:00 of Rome, two days after. */
@@ -170,7 +172,7 @@ export async function insertLink(
     closed?: boolean;
   },
 ): Promise<LinkRow> {
-  const row = await must(
+  const row = await must<LinkRow>(
     ctx.admin
       .from("wishlist_share_links")
       .insert({
@@ -186,7 +188,7 @@ export async function insertLink(
       .single(),
     "Link di prova",
   );
-  return row as LinkRow;
+  return row;
 }
 
 export async function insertReservation(
@@ -356,14 +358,14 @@ export async function reservationsOf(
   ctx: Scope,
   itemId: string,
 ): Promise<{ giver_name: string }[]> {
-  const rows = await must(
+  const rows = await must<{ giver_name: string }[]>(
     ctx.admin
       .from("wishlist_reservations")
       .select("giver_name")
       .eq("item_id", itemId),
     "Lettura delle prenotazioni",
   );
-  return rows as { giver_name: string }[];
+  return rows;
 }
 
 export async function reservationCount(
@@ -393,26 +395,26 @@ export type IdeaRow = {
 };
 
 export async function ideasOf(ctx: Scope, listId: string): Promise<IdeaRow[]> {
-  const rows = await must(
+  const rows = await must<IdeaRow[]>(
     ctx.admin
       .from("wishlist_items")
       .select("id, title, url, shop_name, price_cents, note")
       .eq("wishlist_id", listId),
     "Lettura delle idee",
   );
-  return rows as IdeaRow[];
+  return rows;
 }
 
 /** All the ideas of the Nest, whatever the list (a list may not exist yet). */
 export async function ideasOfNest(ctx: Scope): Promise<IdeaRow[]> {
-  const rows = await must(
+  const rows = await must<IdeaRow[]>(
     ctx.admin
       .from("wishlist_items")
       .select("id, title, url, shop_name, price_cents, note")
       .eq("household_id", ctx.householdId),
     "Lettura delle idee del Nest",
   );
-  return rows as IdeaRow[];
+  return rows;
 }
 
 export type LinkState = {
@@ -426,14 +428,14 @@ export async function linksOf(
   ctx: Scope,
   householdId: string = ctx.householdId,
 ): Promise<LinkState[]> {
-  const rows = await must(
+  const rows = await must<LinkState[]>(
     ctx.admin
       .from("wishlist_share_links")
       .select("id, code, disabled_at, expires_at")
       .eq("household_id", householdId),
     "Lettura dei link",
   );
-  return rows as LinkState[];
+  return rows;
 }
 
 /** The links of the Nest that work now (not closed, not expired). */
