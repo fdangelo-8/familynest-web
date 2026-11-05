@@ -118,14 +118,14 @@ test.describe("con un utente usa e getta", () => {
     }
     await expect(
       page.getByRole("link", {
-        name: /^14 giorni alla scadenza: «Rinnovo carta d'identità di Sofia», urgente$/,
+        name: /^14 giorni alla scadenza\s*: «Rinnovo carta d'identità di Sofia»\s*, urgente$/,
       }),
     ).toBeVisible();
     await expect(
-      page.getByRole("link", { name: /^Maestra Bianchi .*, chiama$/ }),
+      page.getByRole("link", { name: /^Maestra Bianchi .*\s*, chiama$/ }),
     ).toHaveAttribute("href", "tel:+390392345678");
     await expect(
-      page.getByRole("link", { name: /^Nuoto .*Giovedì alle 17:00/ }),
+      page.getByRole("link", { name: /^Gio Nuoto .*Giovedì alle 17:00/ }),
     ).toBeVisible();
     // No health section (D1).
     await expect(page.getByText("Salute")).toHaveCount(0);
@@ -294,19 +294,22 @@ test.describe("con un utente usa e getta", () => {
     const names: string[] = [];
     for (let i = 0; i < 40; i++) {
       await page.keyboard.press("Tab");
-      names.push(await focusedName(page));
-      expect(await focusRingVisible(page), `anello su «${names.at(-1)}»`).toBe(
-        true,
-      );
+      const name = await focusedName(page);
+      // The focus has gone through the whole page and left it: no trap.
+      if (name === "") break;
+      names.push(name);
+      expect(await focusRingVisible(page), `anello su «${name}»`).toBe(true);
     }
+    expect(names.length).toBeGreaterThan(8);
+    expect(names.length).toBeLessThan(40);
     const expected: Array<string | RegExp> = [
       ...(info.project.name === "mobile"
         ? ["Indietro", "Modifica il profilo di Sofia"]
         : [/^Modifica il profilo di Sofia$/]),
       /giorni alla scadenza/,
       "Vedi nel calendario",
-      /^Nuoto/,
-      /^Festa di Giulia/,
+      /^Gio Nuoto/,
+      /^Sab Festa di Giulia/,
       /^Maestra Bianchi/,
     ];
     let from = 0;
@@ -338,7 +341,7 @@ test.describe("con un utente usa e getta", () => {
       "Vedi nel calendario": page.getByRole("link", {
         name: "Vedi nel calendario",
       }),
-      "riga Nuoto": page.getByRole("link", { name: /^Nuoto/ }),
+      "riga Nuoto": page.getByRole("link", { name: /^Gio Nuoto/ }),
       "riga maestra": page.getByRole("link", { name: /^Maestra Bianchi/ }),
     };
     for (const [label, target] of Object.entries(targets)) {
