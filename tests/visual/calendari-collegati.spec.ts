@@ -197,7 +197,7 @@ test.describe("collegato", () => {
       await page.waitForURL(/\/fornitore-finto\/outlook/);
       await answerConsent(page);
       // CA-9 of #35: the notice is gone and there is a single Outlook section.
-      await expect(page.getByText("è già collegato.")).toBeVisible();
+      await expect(page.getByText("ricollegato.")).toBeVisible();
       await expect(
         page.getByRole("heading", { level: 2, name: "Outlook" }),
       ).toHaveCount(1);
@@ -206,7 +206,7 @@ test.describe("collegato", () => {
       );
       await shoot(
         page,
-        "calendari-collegati-ricollega-stesso-account.png",
+        "calendari-collegati-ricollegato.png",
         false,
       );
     });
