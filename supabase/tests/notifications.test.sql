@@ -26,8 +26,8 @@ select columns_are(
   'public', 'notifications',
   array['id', 'household_id', 'recipient_member_id', 'kind', 'actor_member_id', 'todo_id', 'deadline_id',
         'event_id', 'occurrence_date', 'days_before', 'evening_date', 'free_from', 'item_count', 'read_at',
-        'created_at', 'created_on', 'updated_at'],
-  'notifications has exactly the planned columns (references and numbers, no free text)'
+        'created_at', 'created_on', 'updated_at', 'wishlist_reservation_id'],
+  'notifications has exactly the planned columns (references and numbers, no free text; #259 adds the reservation)'
 );
 select is_empty(
   $$ select a.attname
@@ -40,8 +40,8 @@ select is_empty(
 );
 select enum_has_labels(
   'public', 'notification_kind',
-  array['todo_assigned', 'deadline_reminder', 'free_together', 'event_time_changed', 'shopping_added'],
-  'the five kinds of notification of #39'
+  array['todo_assigned', 'deadline_reminder', 'free_together', 'event_time_changed', 'shopping_added', 'gift_taken'],
+  'the five kinds of notification of #39, and gift_taken of #259'
 );
 select enum_has_labels(
   'public', 'notification_job',
@@ -81,7 +81,7 @@ select is(
   (select array_agg(k.confdeltype::text order by k.conname)
    from pg_constraint k
    where k.conrelid = 'public.notifications'::regclass and k.contype = 'f'),
-  array['c', 'c', 'c', 'c', 'c', 'c'],
+  array['c', 'c', 'c', 'c', 'c', 'c', 'c'],
   'every foreign key of notifications is on delete cascade (household, recipient, who acted, element of origin)'
 );
 select has_index('public', 'notifications', 'notifications_recipient_created_idx', 'index on recipient and time');
@@ -194,8 +194,8 @@ select ok(
   'triggers, helpers and jobs cannot be called by the app'
 );
 select ok(
-  has_function_privilege('authenticated', 'private.notification_is_visible(public.notification_kind, uuid, uuid, uuid, date)', 'execute')
-  and not has_function_privilege('anon', 'private.notification_is_visible(public.notification_kind, uuid, uuid, uuid, date)', 'execute'),
+  has_function_privilege('authenticated', 'private.notification_is_visible(public.notification_kind, uuid, uuid, uuid, date, uuid)', 'execute')
+  and not has_function_privilege('anon', 'private.notification_is_visible(public.notification_kind, uuid, uuid, uuid, date, uuid)', 'execute'),
   'the visibility check of the select policy is evaluated as the reader'
 );
 select policies_are(
