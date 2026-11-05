@@ -281,21 +281,36 @@ test.describe("Aggiungi · Impegni: fuoco", () => {
     await expect(
       page.getByRole("status").filter({ hasText: "chi accompagna Sofia?" }),
     ).toHaveCount(1);
+    // #171: the entries to the full form come before the button: «Più dettagli»
+    // on mobile; the four rows of the summary and «Tutti i dettagli» on desktop.
+    const desktop = (page.viewportSize()?.width ?? 0) >= 1024;
     await page.keyboard.press("Shift+Tab");
     const order = [await focused(page)];
-    for (let i = 0; i < 6; i += 1) {
+    for (let i = 0; i < (desktop ? 11 : 7); i += 1) {
       await page.keyboard.press("Tab");
       order.push(await focused(page));
     }
-    expect(order).toEqual([
+    const entries = desktop
+      ? [
+          "Giovedì 22 ottobre",
+          "Chi",
+          "La porta",
+          "Chi lo vede",
+          "Tutti i dettagli",
+        ]
+      : ["Più dettagli"];
+    expect(order.slice(0, 6)).toEqual([
       "Chiudi",
       "Cosa vuoi aggiungere?",
       "Impegno",
       "Da fare",
       "Spesa",
       "Scadenza",
-      "Metti in giovedì 22",
     ]);
+    entries.forEach((name, index) => {
+      expect(order[6 + index]).toContain(name);
+    });
+    expect(order[6 + entries.length]).toBe("Metti in giovedì 22");
     // Nothing else after the button: the next Tab goes back to the start
     await page.keyboard.press("Tab");
     expect(await focused(page)).toBe("Chiudi");
@@ -336,9 +351,11 @@ test.describe("Aggiungi · Impegni: fuoco", () => {
     await example.press("Enter");
     const submit = dialog.getByRole("button", { name: "Metti in venerdì 23" });
     await expect(submit).toBeEnabled();
-    // Back to Chiudi, then field, Impegno, Da fare, Spesa, Scadenza, submit
+    // Back to Chiudi, then field, Impegno, Da fare, Spesa, Scadenza, the entries
+    // to the full form (#171: «Più dettagli», or four rows and «Tutti i dettagli»), submit
+    const entries = (page.viewportSize()?.width ?? 0) >= 1024 ? 5 : 1;
     await page.keyboard.press("Shift+Tab");
-    for (let i = 0; i < 6; i += 1) await page.keyboard.press("Tab");
+    for (let i = 0; i < 6 + entries; i += 1) await page.keyboard.press("Tab");
     await expect(submit).toBeFocused();
     expect((await ring(submit)).outline).toBe(true);
   });
