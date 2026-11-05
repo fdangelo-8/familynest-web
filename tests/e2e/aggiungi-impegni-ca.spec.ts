@@ -652,8 +652,10 @@ test.describe("Aggiungi · Impegni · privacy della frase", () => {
     const membersRead = page.waitForResponse(
       (response) =>
         response.url().includes("/rest/v1/household_members") &&
-        new URL(response.url()).searchParams.get("select")?.includes("name") ===
-          true,
+        // The list of the sheet asks for `user_id`; Oggi, behind it, does not.
+        new URL(response.url()).searchParams
+          .get("select")
+          ?.includes("user_id") === true,
     );
     await openAdd(page, baseURL, casa, "Marco");
     await membersRead;
@@ -667,7 +669,14 @@ test.describe("Aggiungi · Impegni · privacy della frase", () => {
     await expectLabels(labelsOf(page), ["Giovedì 22", "17:00", "Sofia"]);
 
     // Only the reading of the events of the day, once per day recognised.
-    const api = network.api();
+    // Oggi, behind the sheet, reads the numbers of the house again when its
+    // real-time channel is up (shopping and deadlines): not requests of the phrase.
+    const api = network
+      .api()
+      .filter(
+        (request) =>
+          !/\/rest\/v1\/(shopping_items|deadlines)/.test(request.url),
+      );
     expect(api.length).toBeLessThanOrEqual(1);
     for (const request of api) {
       expect(request.url).toContain("/rpc/list_household_events");

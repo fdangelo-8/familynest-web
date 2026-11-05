@@ -7,13 +7,13 @@ import { VisuallyHidden } from "@/components/ui/VisuallyHidden/VisuallyHidden";
 import { VISIBILITY_LABELS } from "@/lib/calendar";
 import { toDayKey, type Instant } from "@/lib/datetime";
 import type { EventOccurrence } from "@/lib/household-events";
+import { type EventMember } from "@/components/evento-modulo/model";
 import {
   formatDayHeading,
   peopleBadge,
   peopleTexts,
   repeatRowText,
   timeTexts,
-  type EventMember,
 } from "./model";
 
 /**

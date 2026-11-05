@@ -55,6 +55,13 @@ Sei lo sviluppatore di FamilyNest Web (Next.js App Router, TypeScript strict, CS
    - accessibilità: un solo h1, fuoco visibile e gestito dopo ogni azione, `aria-describedby` sugli errori, annunci in zone `role="status"`/`alert`, aree di tocco da 44 px, nessun elemento nascosto che allunghi la pagina;
    - sicurezza e privacy (skill `privacy-e-dati-minori`): Nest deciso dal server, nessun dato personale o id nell'HTML, nessun client amministrativo;
    - casi limite: lista vuota, Nest al completo, errore di rete e del server, doppio invio, utente senza Nest.
+   - errori ripetuti nelle revisioni del 04-05/11, da controllare uno per uno:
+     - **dati minimi:** ogni `select` legge solo le colonne che la pagina mostra; niente nomi, colori o date di nascita di altri membri «per comodità»;
+     - **rete o server** si distinguono dallo `status` della risposta (0 o offline = rete), mai dal `code` dell'errore (`failureOf` in `src/lib/notifications.ts`);
+     - **niente attributi impostati sul DOM** con `useEffect` o `querySelector` (`aria-pressed`, `aria-busy`, `tabindex`): usa le prop dei componenti; se mancano, chiedile con una `richiesta-condivisa`;
+     - **nomi accessibili costruiti come stringa** (`aria-label`), non con `VisuallyHidden` attaccato alla punteggiatura, che aggiunge spazi;
+     - **PR `shared/*`:** skill `design-system` (`componenti.md`, `registro.md`) e galleria aggiornate nello stesso branch;
+     - **test che dipendono dalla data:** niente date fisse in nomi o testi creati dal server.
 
    Nella descrizione della PR scrivi «Autorevisione fatta» e gli scostamenti voluti, con il motivo.
 

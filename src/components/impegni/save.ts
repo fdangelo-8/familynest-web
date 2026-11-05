@@ -3,11 +3,14 @@ import { addDaysToDayKey } from "@/lib/datetime";
 import type { EventOccurrence } from "@/lib/household-events";
 import type { Database } from "@/types/database";
 import {
-  initialRepeat,
+  failureReason,
+  type FailureReason,
+} from "@/components/evento-modulo/failure";
+import {
   isoWeekdayOf,
-  shiftOf,
   type EventFormValues,
-} from "./model";
+} from "@/components/evento-modulo/model";
+import { initialRepeat, shiftOf } from "./model";
 
 type Client = SupabaseClient<Database>;
 type Functions = Database["public"]["Functions"];
@@ -27,39 +30,8 @@ export type SaveOutcome =
     }
   | {
       ok: false;
-      reason:
-        /** The event is gone (deleted by someone else) */
-        | "missing"
-        /** Another occurrence of the series starts on that day */
-        | "day-taken"
-        /** The escort does not see the event: only with «Tutti i prossimi» */
-        | "escort"
-        /** A repeated event lasts at most 7 days */
-        | "duration"
-        /** Network or any other failure: nothing is told about it */
-        | "failed";
+      reason: FailureReason;
     };
-
-type DbError = { code?: string | null; message?: string | null };
-
-/** Maps a database error to what the page tells the user. */
-export function failureReason(
-  error: DbError,
-): Extract<SaveOutcome, { ok: false }>["reason"] {
-  const message = error.message ?? "";
-  if (error.code === "P0002") return "missing";
-  if (
-    error.code === "P0001" &&
-    message.includes("another occurrence of the event starts on that day")
-  ) {
-    return "day-taken";
-  }
-  if (error.code === "42501" && message.includes("must already see")) {
-    return "escort";
-  }
-  if (message.includes("events_repeated_duration")) return "duration";
-  return "failed";
-}
 
 /** The weekdays of the rule moved by the same days as the form's day. */
 function shiftWeekdays(weekdays: ReadonlyArray<number>, shift: number) {
