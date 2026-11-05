@@ -173,7 +173,9 @@ test.describe("con un utente usa e getta", () => {
     const dialog = await addButton(page);
     await dialog.getByRole("button", { name: "Aggiungi alla lista" }).click();
     await expect(
-      dialog.getByText("Incolla il link di un negozio o scrivi l'idea qui sotto."),
+      dialog.getByText(
+        "Incolla il link di un negozio o scrivi l'idea qui sotto.",
+      ),
     ).toBeVisible();
     await shoot(page, "foglio-aggiungi-errore.png", false);
   });
@@ -395,9 +397,12 @@ test.describe("con un utente usa e getta", () => {
   }) => {
     await publicPage(page);
     await page.evaluate(() => window.dispatchEvent(new Event("offline")));
-    await expect(page.getByRole("alert").filter({ hasText: "Sei offline" }).locator("visible=true")).toContainText(
-      "Sei offline. Per segnare un regalo serve la connessione.",
-    );
+    await expect(
+      page
+        .getByRole("alert")
+        .filter({ hasText: "Sei offline" })
+        .locator("visible=true"),
+    ).toContainText("Sei offline. Per segnare un regalo serve la connessione.");
     await shoot(page, "pubblica-offline.png");
   });
 
@@ -423,7 +428,9 @@ test.describe("con un utente usa e getta", () => {
     await expect(dialog).toBeVisible();
     await dialog.getByRole("button", { name: "Lo regalo io" }).click();
     await expect(
-      dialog.getByText("Scrivi il tuo nome, così i genitori sanno chi lo regala."),
+      dialog.getByText(
+        "Scrivi il tuo nome, così i genitori sanno chi lo regala.",
+      ),
     ).toBeVisible();
     await waitForAnimationsToEnd(page);
     await shoot(page, "pubblica-foglio-errore.png", false);
