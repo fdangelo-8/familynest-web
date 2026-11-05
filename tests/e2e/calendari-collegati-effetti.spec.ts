@@ -7,6 +7,7 @@ import {
   needsFake,
   test,
   today,
+  tomorrow,
   waitHydrated,
   withLinker,
   withLinkerRita,
@@ -24,6 +25,7 @@ import {
   pressSave,
   toastOf,
 } from "../fixtures/impegni";
+import { expectReady, rowsOf, typeSearch } from "../fixtures/ricerca";
 
 // «Calendari collegati» (#34, parte 2): effetti sulle altre pagine (CA-45 ...
 // CA-54, CA-57). Fornitore finto, utenti usa e getta: U (amministratore) e
@@ -41,6 +43,7 @@ async function linkedWithVisit(
   u: Linker,
   visibility: "private" | "busy" | "household" = "busy",
   startHour = 10,
+  day = today(),
 ) {
   await u.prepare(GOOGLE);
   await linkInBackground(browser, u, "google");
@@ -50,8 +53,8 @@ async function linkedWithVisit(
       id: "visita",
       title: VISITA,
       location: "Via Roma 1",
-      startsAt: at(today(), startHour),
-      endsAt: at(today(), startHour + 1),
+      startsAt: at(day, startHour),
+      endsAt: at(day, startHour + 1),
     },
   ]);
   await u.fake.sync(u.user.id);
@@ -71,7 +74,9 @@ test.describe("righe di Profilo e Nest", () => {
     await withLinker(baseURL, async (u) => {
       await u.signIn(page);
       await page.goto("/profilo");
-      const row = page.getByRole("link", { name: /^Calendari collegati/ });
+      const row = page.locator("a.riga-lista", {
+        hasText: "Calendari collegati",
+      });
       await expect(row).toBeVisible();
       await expect(row.locator(".riga-lista__info")).toHaveText(
         "Nessuno collegato",
@@ -79,7 +84,9 @@ test.describe("righe di Profilo e Nest", () => {
       await expect(row.locator(".riga-lista__valore")).toHaveText("");
 
       await page.goto("/nest");
-      const nestRow = page.getByRole("link", { name: /^Calendari collegati/ });
+      const nestRow = page.locator("a.riga-lista", {
+        hasText: "Calendari collegati",
+      });
       await expect(nestRow).toBeVisible();
       await expect(nestRow.locator(".riga-lista__info")).toHaveCount(0);
     });
@@ -100,12 +107,16 @@ test.describe("righe di Profilo e Nest", () => {
 
       await u.signIn(page);
       await page.goto("/profilo");
-      const row = page.getByRole("link", { name: /^Calendari collegati/ });
+      const row = page.locator("a.riga-lista", {
+        hasText: "Calendari collegati",
+      });
       await expect(row.locator(".riga-lista__info")).toHaveText("Google");
       await expect(row.locator(".riga-lista__valore")).toHaveText(String(on));
 
       await page.goto("/nest");
-      const nestRow = page.getByRole("link", { name: /^Calendari collegati/ });
+      const nestRow = page.locator("a.riga-lista", {
+        hasText: "Calendari collegati",
+      });
       await expect(nestRow.locator(".riga-lista__info")).toHaveText(
         `Google · ${on} attivi`,
       );
@@ -145,6 +156,34 @@ test.describe("etichetta della fonte", () => {
       ).toBeVisible();
       await page.getByRole("button", { name: /Nest/ }).first().click();
       await expect(page.getByRole("main")).not.toContainText("Google");
+    });
+  });
+});
+
+test.describe("etichetta della fonte nella ricerca", () => {
+  test("CA-45: nella ricerca «Visita in banca» ha l'etichetta «Google» per U e non per Rita", async ({
+    page,
+    browser,
+    baseURL,
+  }) => {
+    needsFake();
+    await withLinkerRita(baseURL, async (u) => {
+      await linkedWithVisit(browser, u, "household", 10, tomorrow());
+
+      await u.signIn(page);
+      await page.goto("/ricerca");
+      await expectReady(page);
+      await typeSearch(page, "Visita");
+      await expect(rowsOf(page, "event").first()).toContainText(VISITA);
+      await expect(rowsOf(page, "event").first()).toContainText("Google");
+
+      await page.context().clearCookies();
+      await u.rita.signInContext(page.context(), baseURL as string);
+      await page.goto("/ricerca");
+      await expectReady(page);
+      await typeSearch(page, "Visita");
+      await expect(rowsOf(page, "event").first()).toContainText(VISITA);
+      await expect(rowsOf(page, "event").first()).not.toContainText("Google");
     });
   });
 });
@@ -225,10 +264,12 @@ test.describe("impegni importati in Dettaglio", () => {
 });
 
 test.describe("«Anche su» nel modulo dell'impegno", () => {
-  async function chooseTarget(u: Linker) {
-    const calendar = (await u.calendars()).find((c) => c.name === "Personale");
+  /** «Dove vanno i nuovi impegni»: a calendar by name, or `null` («Nessuno»). */
+  async function chooseTarget(u: Linker, name: string | null) {
+    const calendar = (await u.calendars()).find((c) => c.name === name);
     const { error } = await u.user.client.rpc("set_new_events_calendar", {
-      p_calendar_id: calendar!.id,
+      // The function accepts null; the generated type says string.
+      p_calendar_id: (calendar?.id ?? null) as string,
     });
     if (error) throw new Error("Calendario dei nuovi impegni non scelto");
   }
@@ -246,7 +287,8 @@ test.describe("«Anche su» nel modulo dell'impegno", () => {
       const id = (await u.events(NUOTO))[0]!.id;
       await u.signIn(page);
 
-      // No calendar chosen yet: no row (CA-51).
+      // «Nessuno»: no row (CA-51).
+      await chooseTarget(u, null);
       await page.goto(detailPath(id));
       await waitHydrated(page.getByRole("heading", { level: 1 }));
       let dialog = await openForm(page);
@@ -254,7 +296,7 @@ test.describe("«Anche su» nel modulo dell'impegno", () => {
       await page.keyboard.press("Escape");
       await expect(editDialog(page)).toHaveCount(0);
 
-      await chooseTarget(u);
+      await chooseTarget(u, "Personale");
       await page.goto(detailPath(id));
       await waitHydrated(page.getByRole("heading", { level: 1 }));
       dialog = await openForm(page);
