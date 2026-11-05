@@ -233,7 +233,10 @@ test.describe("Dettaglio impegno importato e «Anche su»", () => {
   }) => {
     await open(page, TARGET);
     await openForm(page);
+    // Reached with the keyboard (a scripted focus after a click shows no ring).
     await sw(page).focus();
+    await page.keyboard.press("Shift+Tab");
+    await page.keyboard.press("Tab");
     await expect(sw(page)).toBeFocused();
     expect(await focusRing(page)).not.toBe("nessuno");
     await page.keyboard.press("Space");
@@ -312,11 +315,16 @@ test.describe("righe «Calendari collegati» di Profilo e Nest", () => {
       await linked(page, async () => {
         await page.goto(path);
         await expect(page.getByRole("main")).toBeVisible();
-        const row = page.getByRole("link", { name: /^Calendari collegati/ });
+        const row = page
+          .getByRole("main")
+          .getByRole("link", { name: /^Calendari collegati/ });
         await expect(row).toBeVisible();
         await expect(row).toContainText("Outlook, Google");
         expect(await seriousViolations(page)).toEqual([]);
         await row.focus();
+        await page.keyboard.press("Shift+Tab");
+        await page.keyboard.press("Tab");
+        await expect(row).toBeFocused();
         expect(await focusRing(page)).not.toBe("nessuno");
         if (isMobile(testInfo.project.name)) {
           expect(await hasTouchArea(row)).toBe(true);
