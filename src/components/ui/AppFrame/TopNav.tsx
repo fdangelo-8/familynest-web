@@ -10,12 +10,14 @@ import { cx } from "../cx";
 import { Icon } from "../Icon/Icon";
 import { NestSquare } from "../NestSquare/NestSquare";
 import { NotificationsLink, SearchLink } from "./IconLinks";
+import { useNotificationCount } from "./NotificationCount";
 import { useFramePathname } from "./useFramePathname";
 
 /** Desktop top navigation (`.nav-alto`). Hidden below 1024 px. */
 export function TopNav() {
   const pathname = useFramePathname();
   const active = getActiveNavItem(pathname, "desktop");
+  const { count } = useNotificationCount();
 
   return (
     <header className="nav-alto">
@@ -41,8 +43,11 @@ export function TopNav() {
           </span>
           Aggiungi
         </Link>
-        <SearchLink label="Cerca nel Nest (⌘K)" />
-        <NotificationsLink />
+        <SearchLink label="Cerca nel Nest (⌘K)" shortcut />
+        <NotificationsLink
+          newCount={count}
+          current={pathname === "/notifiche"}
+        />
         <NestSquare />
       </div>
     </header>

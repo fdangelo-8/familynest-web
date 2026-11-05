@@ -2,6 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
+import { countUnreadNotifications } from "@/lib/notifications";
 import { createClient } from "@/lib/supabase/server";
 import type { NestMember, NestPreferences, NestSelf } from "@/lib/nest-types";
 
@@ -11,6 +12,8 @@ export type NestFrameData = NestPreferences & {
   /** First 4 members; the name is set only for the first 3 */
   members: NestMember[];
   me: NestSelf | null;
+  /** Unread notifications the bell shows; 0 when they could not be read (no error) */
+  unreadNotifications: number;
   failed: boolean;
 };
 
@@ -18,6 +21,7 @@ const FAILED: NestFrameData = {
   nestName: null,
   members: [],
   me: null,
+  unreadNotifications: 0,
   startLens: "io",
   defaultVisibility: "private",
   failed: true,
@@ -45,7 +49,7 @@ async function loadNestFrame(): Promise<NestFrameData> {
   if (householdError) return FAILED;
   if (!householdId) redirect("/onboarding");
 
-  const [household, members, profile] = await Promise.all([
+  const [household, members, profile, unread] = await Promise.all([
     supabase
       .from("households")
       .select("name")
@@ -62,6 +66,8 @@ async function loadNestFrame(): Promise<NestFrameData> {
       .select("start_lens, default_event_visibility")
       .eq("id", userId)
       .maybeSingle(),
+    // The bell: a failed read only means a bell without number.
+    countUnreadNotifications(supabase),
   ]);
 
   if (household.error || !household.data || members.error) return FAILED;
@@ -83,6 +89,7 @@ async function loadNestFrame(): Promise<NestFrameData> {
       color: m.color,
     })),
     me: me ? { name: me.name, color: me.color } : null,
+    unreadNotifications: unread.ok ? unread.count : 0,
     // A failed read of the preferences never breaks the frame, and never
     // widens what others see: start from «Io» and from «Solo io».
     startLens: preferences.startLens,

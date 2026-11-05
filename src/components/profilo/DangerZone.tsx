@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog/ConfirmDialog";
 import { Icon } from "@/components/ui/Icon/Icon";
 import { getLeaveDialogCopy } from "@/lib/leave-dialog";
+import { clearAllRecentSearches } from "@/lib/recent-searches";
 import type { DeletionOutlook } from "./model";
 
 const SIGN_OUT_TEXT = {
@@ -74,6 +75,8 @@ export function DangerZone({
       });
       // The route answers with a redirect to /accesso and deletes the cookies.
       if (response.type === "opaqueredirect" || response.ok) {
+        // The recent searches stay in this browser only: they leave with the person.
+        clearAllRecentSearches();
         window.location.replace("/accesso");
         return UNTIL_THE_PAGE_CHANGES();
       }
@@ -103,6 +106,7 @@ export function DangerZone({
     }
 
     if (response.ok) {
+      clearAllRecentSearches();
       // `replace`: going back never returns to a page of an account that is gone.
       window.location.replace(AFTER_DELETION);
       return UNTIL_THE_PAGE_CHANGES();

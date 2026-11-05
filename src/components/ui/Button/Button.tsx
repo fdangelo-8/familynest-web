@@ -50,6 +50,11 @@ export type ButtonProps = {
   form?: string;
   onClick?: (event: MouseEvent<HTMLElement>) => void;
   className?: string;
+  /**
+   * `id` of the text the button belongs to: when the visible name repeats
+   * («Fatto», «Apri» on every row), the row's text explains it.
+   */
+  "aria-describedby"?: string;
   children: ReactNode;
   "data-testid"?: string;
 };
@@ -69,6 +74,7 @@ export function Button({
   form,
   onClick,
   className,
+  "aria-describedby": describedBy,
   children,
   "data-testid": testId,
 }: ButtonProps) {
@@ -109,6 +115,7 @@ export function Button({
         className={classes}
         aria-busy={loading || undefined}
         aria-disabled={inactive || undefined}
+        aria-describedby={describedBy}
         tabIndex={disabled ? -1 : undefined}
         onClick={handleClick}
         data-testid={testId}
@@ -126,6 +133,7 @@ export function Button({
       disabled={disabled}
       aria-busy={loading || undefined}
       aria-disabled={loading || inactiveProp || undefined}
+      aria-describedby={describedBy}
       onClick={handleClick}
       data-testid={testId}
     >
