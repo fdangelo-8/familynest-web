@@ -216,16 +216,19 @@ test.describe("Impostazioni della casa: utenti del seed", () => {
     const order = inMain.slice(start);
     expect(order[0]).toMatch(/^Marco, tu/);
     expect(order[1]).toMatch(/^Laura/);
-    // Children have no link: the next stop is the pet, then the five switches.
-    expect(order[2]).toMatch(/^Biscotto/);
-    expect(order.slice(3, 8)).toEqual([
+    // Every row leads to a page (adults to /membri, children to /figli, #31):
+    // Laura, the two children and the pet are focus stops, then the five switches.
+    expect(order[2]).toMatch(/^Sofia/);
+    expect(order[3]).toMatch(/^Tommaso/);
+    expect(order[4]).toMatch(/^Biscotto/);
+    expect(order.slice(5, 10)).toEqual([
       "Impegni e cambi d'orario",
       "Da fare assegnati a me",
       "Spesa",
       "Liberi insieme",
       "Sintesi del mattino",
     ]);
-    expect(order[8]).toBe("Esci da Casa D'Angelo");
+    expect(order[10]).toBe("Esci da Casa D'Angelo");
   });
 
   test("aree di tocco di almeno 44 px (390 px)", async ({
