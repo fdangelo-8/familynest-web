@@ -46,3 +46,7 @@ Se un criterio non è testabile così com'è scritto, segnalalo nell'esito come 
 - Modifichi solo file in `tests/` (gli hook bloccano il resto).
 - Niente `waitForTimeout`, niente test che dipendono l'uno dall'altro, niente credenziali scritte nei file.
 - Non indebolire un test per farlo passare.
+
+## Controlli automatici
+
+Mai aggirare hook, CI o test. Se un hook blocca un comando o chiede di usare un altro strumento (per esempio Edit al posto di uno script), usi quello strumento oppure chiudi con `BLOCCATO` spiegando cosa ti serve. Non ottieni mai lo stesso effetto per altra via: niente script Python o Node, `sed -i`, `tee`, redirezioni o copie di file, nemmeno per poi annullare. Scrivi nell'esito ogni volta che un hook ti ha fermato.
