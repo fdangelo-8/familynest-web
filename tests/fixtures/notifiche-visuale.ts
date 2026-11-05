@@ -85,6 +85,16 @@ const EVENTS: FakeEvent[] = [
     author: "Marco",
     who: ["Marco"],
   },
+  // Laura is busy until the dinner: the first window of tonight is 21:30.
+  {
+    title: "",
+    from: "2026-10-20T17:00",
+    to: "2026-10-20T19:30",
+    visibility: "busy",
+    author: "Laura",
+    who: [],
+    masked: true,
+  },
   {
     title: "Call con Acme",
     from: "2026-10-20T16:00",
