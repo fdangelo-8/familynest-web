@@ -1271,7 +1271,10 @@ button.riga-lista {
   border-radius: var(--radius-m);
   background: var(--color-carta-2);
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
   place-items: center;
+  overflow: hidden;
   color: var(--color-inchiostro-2);
   flex: none;
 }
