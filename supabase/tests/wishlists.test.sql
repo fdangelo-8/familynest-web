@@ -16,7 +16,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(145);
+select plan(153);
 
 -- ---------------------------------------------------------------------------
 -- Schema
@@ -306,6 +306,18 @@ select throws_ok(
              'https://') $$,
   '23514', null,
   'a link needs a host'
+);
+select throws_ok(
+  $$ insert into public.wishlist_items (household_id, wishlist_id, title, note)
+     values ('11111111-1111-4111-8111-111111111111', 'd1000000-0000-4000-8000-000000000001', 'Trottola',
+             repeat('n', 81)) $$,
+  '23514', 'a field of the idea is not valid',
+  'a field out of its limits is refused by the trigger before the checks, with a message without values'
+);
+select throws_ok(
+  $$ update public.wishlist_items set title = repeat('t', 81) where id = 'd2000000-0000-4000-8000-000000000006' $$,
+  '23514', 'a field of the idea is not valid',
+  'a title too long in a change is refused by the trigger, with a message without values'
 );
 select throws_ok(
   $$ insert into public.wishlist_item_photos (item_id, household_id, content_type, data)
@@ -788,6 +800,47 @@ select throws_ok(
   $$ select public.add_wishlist_item('a1000000-0000-4000-8000-000000000004', 'Trottola') $$,
   '42501', null,
   'anon cannot run the page functions'
+);
+reset role;
+
+-- A disabled link is never opened again, by any role (the owner here, then service_role).
+select throws_ok(
+  $$ update public.wishlist_share_links set disabled_at = null where id = 'd3000000-0000-4000-8000-000000000001' $$,
+  '42501', 'a disabled link cannot be changed',
+  'the owner cannot open again a disabled link'
+);
+set local role service_role;
+select throws_ok(
+  $$ update public.wishlist_share_links set disabled_at = null where id = 'd3000000-0000-4000-8000-000000000001' $$,
+  '42501', 'a disabled link cannot be changed',
+  'service_role cannot open again a disabled link'
+);
+select throws_ok(
+  $$ update public.wishlist_share_links set disabled_at = disabled_at - interval '1 day'
+     where id = 'd3000000-0000-4000-8000-000000000001' $$,
+  '42501', 'a disabled link cannot be changed',
+  'service_role cannot move the disabling time of a disabled link'
+);
+select lives_ok(
+  $$ update public.wishlist_share_links l set expires_at = now() + interval '1 hour'
+     where l.disabled_at is null
+       and l.wishlist_id = (select w.id from public.wishlists w where w.member_id = 'a1000000-0000-4000-8000-000000000004') $$,
+  'service_role can still move expires_at of an open link'
+);
+select is(
+  (select count(*)::integer from public.wishlist_share_links l
+   join public.wishlists w on w.id = l.wishlist_id
+   where w.member_id = 'a1000000-0000-4000-8000-000000000004'
+     and l.disabled_at is null
+     and l.expires_at between now() + interval '59 minutes' and now() + interval '61 minutes'),
+  1,
+  'the expiry of the open link was moved'
+);
+select lives_ok(
+  $$ update public.wishlist_share_links l set disabled_at = now()
+     where l.disabled_at is null
+       and l.wishlist_id = (select w.id from public.wishlists w where w.member_id = 'a1000000-0000-4000-8000-000000000004') $$,
+  'service_role can still close an open link'
 );
 reset role;
 

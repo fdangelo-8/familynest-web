@@ -97,6 +97,18 @@ begin
   new.shop_name := nullif(btrim(regexp_replace(new.shop_name, '\s+', ' ', 'g')), '');
   new.note := nullif(btrim(regexp_replace(new.note, '\s+', ' ', 'g')), '');
 
+  -- The same rules as the check constraints, verified here first: a failing check makes
+  -- Postgres write the whole row (title, link, note) in its log, this message has no values.
+  if char_length(new.title) not between 1 and 80
+     or char_length(new.url) not between 1 and 2000
+     or new.url !~* '^https?://[^/?#\s]+'
+     or new.url ~ '\s'
+     or char_length(new.shop_name) not between 1 and 40
+     or new.price_cents not between 1 and 9999999
+     or char_length(new.note) not between 1 and 80 then
+    raise exception 'a field of the idea is not valid' using errcode = '23514';
+  end if;
+
   if tg_op = 'UPDATE' then
     if new.id is distinct from old.id
        or new.household_id is distinct from old.household_id
@@ -133,6 +145,9 @@ create trigger wishlist_items_set_updated_at
 
 -- ---------------------------------------------------------------------------
 -- wishlist_share_links: household, list and code never change (every role).
+-- A disabled link is never opened again and its disabled_at never changes (every role,
+-- administrative key included): the revocation is the only way the parents have to take
+-- the access back. An open link can still be closed and expires_at can still be moved.
 -- ---------------------------------------------------------------------------
 create or replace function private.wishlist_share_links_before_update()
 returns trigger
@@ -146,6 +161,9 @@ begin
      or new.code is distinct from old.code
      or new.created_at is distinct from old.created_at then
     raise exception 'this field of a link cannot be changed' using errcode = '42501';
+  end if;
+  if old.disabled_at is not null and new.disabled_at is distinct from old.disabled_at then
+    raise exception 'a disabled link cannot be changed' using errcode = '42501';
   end if;
   return new;
 end;
