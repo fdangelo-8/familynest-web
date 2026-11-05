@@ -1908,7 +1908,8 @@ function LinkedCalendarParts() {
               <span>
                 <span className="scelta__titolo">Entrata e uscita</span>
                 <span className="scelta__info">
-                  Quello che crei su Outlook arriva qui, e puoi mandare su Outlook gli impegni di FamilyNest.
+                  Quello che crei su Outlook arriva qui, e puoi mandare su
+                  Outlook gli impegni di FamilyNest.
                 </span>
               </span>
               <span />
@@ -1924,7 +1925,8 @@ function LinkedCalendarParts() {
               <span>
                 <span className="scelta__titolo">Solo in entrata</span>
                 <span className="scelta__info">
-                  Vedi i tuoi impegni di lavoro, ma FamilyNest non scrive su Outlook.
+                  Vedi i tuoi impegni di lavoro, ma FamilyNest non scrive su
+                  Outlook.
                 </span>
               </span>
               <span />
@@ -1946,7 +1948,10 @@ function LinkedCalendarParts() {
           </div>
           <ul className="scheda lista">
             <li className="riga-lista">
-              <span className="logo-marchio logo-marchio--piccolo logo-marchio--outlook" aria-hidden="true">
+              <span
+                className="logo-marchio logo-marchio--piccolo logo-marchio--outlook"
+                aria-hidden="true"
+              >
                 L
               </span>
               <span className="riga-lista__testo">
