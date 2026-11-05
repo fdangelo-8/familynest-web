@@ -186,6 +186,17 @@ jobs:
               echo "TEST_USER_${key}_PASSWORD=$password"
             } >> "$env_file"
           done
+          # Linked calendars (#272): fake provider and throwaway values, generated
+          # for this run only and discarded with the runner.
+          sync_secret="$(openssl rand -hex 32)"
+          encryption_key="$(openssl rand -base64 32)"
+          echo "::add-mask::$sync_secret"
+          echo "::add-mask::$encryption_key"
+          {
+            echo "CALENDAR_FAKE_PROVIDER=1"
+            echo "CALENDAR_SYNC_SECRET=$sync_secret"
+            echo "CALENDAR_ENCRYPTION_KEY=$encryption_key"
+          } >> "$env_file"
           # The file overrides the workflow-level variables, which point to the remote project.
           set -a
           . "$env_file"
