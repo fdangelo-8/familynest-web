@@ -2,6 +2,7 @@ import { after, NextResponse, type NextRequest } from "next/server";
 import { encryptCredentials } from "@/lib/calendar-sync/crypto";
 import { redirectToDestination } from "@/lib/calendar-sync/link-response";
 import {
+  ADMIN_APPROVAL_ERROR,
   OAUTH_COOKIE,
   checkOAuth,
   type LinkDestination,
@@ -24,10 +25,13 @@ import { createAdminClient } from "@/lib/supabase/admin";
  * outside. The result reaches the page in a short cookie (see oauth.ts).
  *
  * - the user refused (`error`): nothing saved, result `denied` (a notice);
+ * - an administrator must approve the app first: nothing saved, result
+ *   `admin_approval`;
  * - the calendar permission was left off: nothing saved, the access just given
  *   is revoked, result `no_calendar_permission`;
  * - 5 accounts already: nothing saved, result `limit`;
- * - otherwise the account is saved (the same account again updates its row),
+ * - the same account again: its row is updated, result `already_linked`;
+ * - otherwise the account is saved,
  *   its calendars are read with the starting choices of #34 §6, and the first
  *   synchronisation starts after the answer.
  *
@@ -60,6 +64,8 @@ export async function GET(
     if (!issued) return;
     const { provider, refreshToken } = issued;
     issued = null;
+    // Without a revocation service (Outlook, #35) the user removes it from the account.
+    if (!provider.canRevoke) return;
     try {
       await provider.revoke(refreshToken);
     } catch {
@@ -92,6 +98,8 @@ export async function GET(
 
     // The user refused, or cancelled, on the page of the provider.
     if (searchParams.get("error") === "access_denied") return finish("denied");
+    if (searchParams.get("error") === ADMIN_APPROVAL_ERROR)
+      return finish("admin_approval");
     const code = searchParams.get("code");
     if (searchParams.has("error") || !code) return finish("failed");
 
@@ -122,6 +130,8 @@ export async function GET(
       return finish(saveError?.code === "FN008" ? "limit" : "failed");
     }
     const accountId = saved[0].account_id;
+    // is_new is false when this adult had the same provider account already.
+    const result: LinkResult = saved[0].is_new ? "linked" : "already_linked";
     // From here the account is kept: the token must not be revoked.
     const keptToken = linked.refreshToken;
     issued = null;
@@ -141,7 +151,7 @@ export async function GET(
       }
     });
 
-    return finish("linked");
+    return finish(result);
   } catch {
     await revokeIssued();
     return finish("failed");
