@@ -13,7 +13,11 @@ export function WishlistError() {
   const [retrying, startTransition] = useTransition();
 
   return (
-    <main id="contenuto" tabIndex={-1} className="pagina pagina-desktop">
+    <main
+      id="contenuto"
+      tabIndex={-1}
+      className="pagina pagina-desktop pagina-desktop--centrata"
+    >
       <PageError
         headingLevel={1}
         retrying={retrying}

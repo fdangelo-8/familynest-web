@@ -9,7 +9,11 @@ import { WishlistSkeleton } from "./WishlistSkeleton";
  */
 export function WishlistLoading() {
   return (
-    <main id="contenuto" tabIndex={-1} className="pagina pagina-desktop">
+    <main
+      id="contenuto"
+      tabIndex={-1}
+      className="pagina pagina-desktop pagina-desktop--centrata"
+    >
       <BarAction
         icon="plus"
         label="Aggiungi un'idea"

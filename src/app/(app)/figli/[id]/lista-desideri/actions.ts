@@ -100,7 +100,7 @@ export async function addWishlistIdea(input: {
     });
     if (!error) return { ok: true };
     if (error.code === "FN005") return { ok: false, reason: "limit" };
-    return { ok: false, reason: error.code ? "server" : "network" };
+    return { ok: false, reason: "server" };
   } catch {
     return { ok: false, reason: "server" };
   }
