@@ -34,6 +34,7 @@ import {
   withUser,
   FIXED_NOW,
 } from "../fixtures/calendari-collegati-visuale";
+import { waitForAnimationsToEnd } from "../fixtures/animations";
 import { hasTestUser } from "../fixtures/visual-login";
 import { signInAsCached } from "../fixtures/visual-login-cached";
 
@@ -249,6 +250,7 @@ test.describe("Dettaglio impegno importato e «Anche su»", () => {
       alsoOnFails: true,
     });
     await openForm(page);
+    await page.getByLabel("Titolo").fill("Call con Acme, Milano");
     await page
       .getByRole("switch", { name: "Anche su Google", exact: true })
       .click();
@@ -256,6 +258,24 @@ test.describe("Dettaglio impegno importato e «Anche su»", () => {
     await expect(page.getByTestId("anche-su-errore")).toBeVisible();
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await shot(page, "anche-su-errore.png");
+  });
+
+  test("errore nel modulo: cambia solo «Anche su» e non riesce", async ({
+    page,
+  }) => {
+    await open(page, {
+      target: { provider: "google", name: "Personale" },
+      alsoOnFails: true,
+    });
+    await openForm(page);
+    await page
+      .getByRole("switch", { name: "Anche su Google", exact: true })
+      .click();
+    await page.getByRole("button", { name: "Salva le modifiche" }).click();
+    await expect(
+      page.getByRole("dialog", { name: "Modifica impegno" }).getByRole("alert"),
+    ).toBeVisible();
+    await shot(page, "anche-su-errore-modulo.png");
   });
 });
 
@@ -292,7 +312,11 @@ test.describe("righe «Calendari collegati» di Profilo e Nest", () => {
         "Outlook, Google",
       );
       await expect(row.locator(".riga-lista__valore")).toHaveText("3");
+      await expect(
+        page.getByRole("heading", { level: 1 }).locator("visible=true").first(),
+      ).toBeVisible();
       await page.evaluate(() => document.fonts.ready);
+      await waitForAnimationsToEnd(page);
       await page.mouse.move(0, 0);
       await expect(page).toHaveScreenshot("profilo-calendari.png", {
         fullPage: true,
@@ -309,7 +333,11 @@ test.describe("righe «Calendari collegati» di Profilo e Nest", () => {
       await expect(row.locator(".riga-lista__info")).toHaveText(
         "Outlook, Google · 3 attivi",
       );
+      await expect(
+        page.getByRole("heading", { level: 1 }).locator("visible=true").first(),
+      ).toBeVisible();
       await page.evaluate(() => document.fonts.ready);
+      await waitForAnimationsToEnd(page);
       await page.mouse.move(0, 0);
       await expect(page).toHaveScreenshot("nest-calendari.png", {
         fullPage: true,

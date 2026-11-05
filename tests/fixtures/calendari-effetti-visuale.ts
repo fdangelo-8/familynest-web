@@ -132,16 +132,12 @@ export async function installCalendarSide(
       return route.fulfill({ status: 204, headers: CORS });
     }
     if (!row) {
+      // No row: `.maybeSingle()` reads `null`.
       return route.fulfill({
-        status: 406,
-        contentType: "application/json",
+        status: 200,
+        contentType: "application/vnd.pgrst.object+json",
         headers: CORS,
-        body: JSON.stringify({
-          code: "PGRST116",
-          details: "The result contains 0 rows",
-          hint: null,
-          message: "JSON object requested, multiple (or no) rows returned",
-        }),
+        body: "null",
       });
     }
     return route.fulfill({

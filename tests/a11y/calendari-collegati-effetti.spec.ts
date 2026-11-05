@@ -207,6 +207,7 @@ test.describe("Dettaglio impegno importato e «Anche su»", () => {
   }) => {
     await open(page, { ...TARGET, alsoOnFails: true });
     await openForm(page);
+    await page.getByLabel("Titolo").fill("Call con Acme, Milano");
     await sw(page).click();
     await page.getByRole("button", { name: "Salva le modifiche" }).click();
     const notice = page.getByTestId("anche-su-errore");
@@ -246,6 +247,7 @@ test.describe("Dettaglio impegno importato e «Anche su»", () => {
   }) => {
     await open(page, { ...TARGET, alsoOnFails: true });
     await openForm(page);
+    await page.getByLabel("Titolo").fill("Call con Acme, Milano");
     await sw(page).click();
     await page.getByRole("button", { name: "Salva le modifiche" }).click();
     const retry = page
@@ -275,6 +277,7 @@ test.describe("Dettaglio impegno importato e «Anche su»", () => {
     test("«Riprova» dell'avviso", async ({ page }) => {
       await open(page, { ...TARGET, alsoOnFails: true });
       await openForm(page);
+      await page.getByLabel("Titolo").fill("Call con Acme, Milano");
       await sw(page).click();
       await page.getByRole("button", { name: "Salva le modifiche" }).click();
       const retry = page
