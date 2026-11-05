@@ -350,6 +350,11 @@ export type DataFile = {
   da_fare: Array<{ titolo: string }>;
   scadenze: Array<{ titolo: string }>;
   spesa: Array<{ nome: string }>;
+  idee_regalo: Array<{
+    titolo: string;
+    link: string | null;
+    nota: string | null;
+  }>;
   avvisi_degli_spazi: Array<{ spazio: string }>;
   spazi_fissati: Array<{ spazio: string }>;
 };

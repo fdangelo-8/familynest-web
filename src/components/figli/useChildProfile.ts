@@ -20,6 +20,12 @@ export type ChildStatus = "loading" | "ready" | "error" | "missing";
 type ReadResult =
   { kind: "ok"; data: ChildData } | { kind: "missing" } | { kind: "error" };
 
+/** PostgREST gives an object for a one-to-one link and an array otherwise. */
+function asList<T>(value: T | T[] | null | undefined): T[] {
+  if (Array.isArray(value)) return value;
+  return value ? [value] : [];
+}
+
 const isMemberColor = (value: string): value is MemberColor =>
   (MEMBER_COLORS as ReadonlyArray<string>).includes(value);
 
@@ -36,7 +42,7 @@ async function readChild(childId: string): Promise<ReadResult> {
     const now = new Date();
     const { from, to } = weekBounds(now);
 
-    const [members, birth, profile, teachers, deadlines, events] =
+    const [members, birth, profile, teachers, deadlines, events, wishlist] =
       await Promise.all([
         supabase
           .from("household_members")
@@ -70,6 +76,14 @@ async function readChild(childId: string): Promise<ReadResult> {
           .order("id", { ascending: true })
           .limit(1),
         listHouseholdEvents(from, to, supabase),
+        // Counts only: no title, no name of who gives, no code of the link.
+        supabase
+          .from("wishlists")
+          .select(
+            "wishlist_items(id, wishlist_reservations(created_at)), wishlist_share_links(expires_at, disabled_at)",
+          )
+          .eq("member_id", childId)
+          .maybeSingle(),
       ]);
     if (
       members.error ||
@@ -77,6 +91,7 @@ async function readChild(childId: string): Promise<ReadResult> {
       profile.error ||
       teachers.error ||
       deadlines.error ||
+      wishlist.error ||
       !events.ok
     ) {
       return { kind: "error" };
@@ -98,6 +113,7 @@ async function readChild(childId: string): Promise<ReadResult> {
     const full = events.events.flatMap((event) =>
       event.masked ? [] : [event],
     );
+    const wishItems = asList(wishlist.data?.wishlist_items);
 
     return {
       kind: "ok",
@@ -129,6 +145,16 @@ async function readChild(childId: string): Promise<ReadResult> {
         })),
         weekEvents: pickWeekEvents(full, childId, now),
         deadline: next ? { title: next.title, dueDate: next.due_date } : null,
+        wishlist: {
+          ideas: wishItems.length,
+          taken: wishItems.filter(
+            (item) => asList(item.wishlist_reservations).length > 0,
+          ).length,
+          shared: asList(wishlist.data?.wishlist_share_links).some(
+            (link) =>
+              link.disabled_at === null && new Date(link.expires_at) > now,
+          ),
+        },
         readAt: now,
       },
     };
