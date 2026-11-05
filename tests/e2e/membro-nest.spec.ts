@@ -246,7 +246,7 @@ test.describe("contenuto", () => {
       page.getByText("Amministratore", { exact: true }),
     ).toBeVisible();
     await expect(
-      page.getByText("Può invitare, togliere persone e gestire il piano"),
+      page.getByText("Può invitare e togliere persone"),
     ).toBeVisible();
     const toggle = roleSwitch(page);
     await expect(toggle).toHaveAttribute("aria-checked", "false");
