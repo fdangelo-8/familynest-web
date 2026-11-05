@@ -174,14 +174,23 @@ export function openConnectSheet(page: Page) {
   );
 }
 
+/**
+ * The button that opens the settings of a calendar: its name is the name of
+ * the calendar plus «: impostazioni» in a hidden span. The browser puts a space
+ * before the colon (the span is positioned), so the spaces are not compared
+ * (LEZIONI: «VisuallyHidden … il test normalizza gli spazi»).
+ */
+export function calendarTitle(page: Page, calendar: string) {
+  const escaped = calendar.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return page.getByRole("button", {
+    name: new RegExp(`^${escaped}\\s*:\\s*impostazioni$`),
+  });
+}
+
 export function openCalendarSheet(page: Page, calendar: string) {
   return openSheet(
     page,
-    () =>
-      page.getByRole("button", {
-        name: `${calendar}: impostazioni`,
-        exact: true,
-      }),
+    () => calendarTitle(page, calendar),
     `Impostazioni del calendario ${calendar}`,
   );
 }

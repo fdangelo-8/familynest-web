@@ -44,6 +44,8 @@ export function isLinkDestination(value: unknown): value is LinkDestination {
  * - already_linked: the provider account was already linked by this adult; the
  *   row is updated as before, the page says which mail is already linked (the
  *   mail is read from the database, never from this cookie);
+ * - relinked: the same, but the account had a problem (it asked to be linked
+ *   again): the page says the account is linked again, not that it was already;
  * - denied: the user refused or cancelled on the provider page (a notice, not
  *   an error);
  * - no_calendar_permission: the calendar permission was left off, nothing saved;
@@ -55,6 +57,7 @@ export function isLinkDestination(value: unknown): value is LinkDestination {
 export const LINK_RESULTS = [
   "linked",
   "already_linked",
+  "relinked",
   "denied",
   "no_calendar_permission",
   "limit",
