@@ -77,7 +77,7 @@ const rowOf = (page: Page, row: "day" | "people" | "escort" | "visibility") => {
     case "day":
       return dialog.getByRole("button", { name: /^Giovedì 22 ottobre/ });
     case "people":
-      return dialog.getByRole("button", { name: /^Chi(?! lo vede)/ });
+      return dialog.getByRole("button", { name: /^Chi (?!lo vede)/ });
     case "escort":
       return dialog.getByRole("button", { name: /^La porta/ });
     case "visibility":
@@ -258,7 +258,9 @@ test.describe("Aggiungi · Impegni · modulo · ingressi", () => {
 
     // Document order: label «Sofia», then «Più dettagli», then the submit button.
     const label = await labelsOf(page)
-      .getByText("Sofia", { exact: true })
+      .locator(".chip")
+      .filter({ hasText: "Sofia" })
+      .first()
       .elementHandle();
     const entryNode = await entry.elementHandle();
     const submitNode = await submit.elementHandle();
@@ -1070,7 +1072,8 @@ test.describe("Aggiungi · Impegni · modulo · isolamento e privacy", () => {
     await expectChips(groupOf(page, "La porta"), ["Tu", "Paolo", "Anna"]);
 
     // Nothing of the other Nest reaches the page or the answers it reads.
-    const body = (await page.locator("body").textContent()) ?? "";
+    // Visible text of the page (not the scripts, which carry the examples).
+    const body = await page.locator("body").innerText();
     const answers = (await network.texts()).join("\n");
     for (const secret of [
       "Marco",
