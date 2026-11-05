@@ -28,7 +28,10 @@ export default async function Page() {
       ? { ok: false }
       : await loadLinkedCalendars(
           frame.me.name,
-          linkNotice?.result === "already_linked" ? linkNotice.provider : null,
+          linkNotice?.result === "already_linked" ||
+            linkNotice?.result === "relinked"
+            ? linkNotice.provider
+            : null,
         ).catch((): Loaded => ({
           ok: false,
         }));
