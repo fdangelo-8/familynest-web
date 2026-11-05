@@ -301,6 +301,9 @@ test.describe("caricamento, errore, offline", () => {
   }) => {
     await seedNuoto(nest);
     await openSearch(page, baseURL, nest);
+    // A first search shows the people of the Nest are read: only then the connection goes.
+    await typeSearch(page, "nu");
+    await expect(rowsOf(page, "event").first()).toBeVisible();
     await page.context().setOffline(true);
     await typeSearch(page, "nuoto");
 

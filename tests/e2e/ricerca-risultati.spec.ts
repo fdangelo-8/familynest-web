@@ -382,11 +382,44 @@ test.describe("campo e annuncio", () => {
 
     const input = field(page);
     await expect(input).not.toHaveAttribute("name");
-    const appearance = await input.evaluate(
-      (element) =>
-        getComputedStyle(element, "::-webkit-search-cancel-button").appearance,
-    );
-    expect(appearance).toBe("none");
+    // getComputedStyle does not resolve this pseudo-element in Chrome (it gives
+    // back the style of the field), so the rule that applies to the field is read.
+    const declared = await input.evaluate((element) => {
+      const find = (rules: CSSRuleList): string | null => {
+        for (const rule of Array.from(rules)) {
+          if (rule instanceof CSSStyleRule) {
+            const bases = rule.selectorText
+              .split(",")
+              .map((part) => part.trim())
+              .filter((part) => part.endsWith("::-webkit-search-cancel-button"))
+              .map(
+                (part) =>
+                  part.replace("::-webkit-search-cancel-button", "") || "*",
+              );
+            if (bases.some((base) => element.matches(base))) {
+              return (
+                rule.style.getPropertyValue("appearance") ||
+                rule.style.getPropertyValue("-webkit-appearance")
+              );
+            }
+          } else if ("cssRules" in rule) {
+            const inner = find((rule as CSSGroupingRule).cssRules);
+            if (inner) return inner;
+          }
+        }
+        return null;
+      };
+      for (const sheet of Array.from(document.styleSheets)) {
+        try {
+          const found = find(sheet.cssRules);
+          if (found) return found;
+        } catch {
+          // A sheet of another origin cannot be read.
+        }
+      }
+      return null;
+    });
+    expect(declared).toBe("none");
 
     await input.press("Control+a");
     await input.press("Backspace");
@@ -451,7 +484,8 @@ test.describe("casella dei Da fare (mobile)", () => {
       "La casella c'è solo su mobile (su desktop vedi CA-51)",
     );
     await seedNuoto(nest);
-    await openSearch(page, baseURL, nest);
+    // Real clock: the database refuses a done_at in the future of its own clock.
+    await openSearch(page, baseURL, nest, { clock: false });
     await typeSearch(page, "nuoto");
     await expect(tick(page)).toBeVisible();
     await tick(page).click();
@@ -473,7 +507,8 @@ test.describe("casella dei Da fare (mobile)", () => {
   }) => {
     test.skip(!isMobile(), "La casella c'è solo su mobile");
     await seedNuoto(nest);
-    await openSearch(page, baseURL, nest);
+    // Real clock: the database refuses a done_at in the future of its own clock.
+    await openSearch(page, baseURL, nest, { clock: false });
     await typeSearch(page, "nuoto");
     await tick(page).click();
     await expect(tick(page)).toHaveAttribute("aria-checked", "true");
@@ -492,7 +527,8 @@ test.describe("casella dei Da fare (mobile)", () => {
   }) => {
     test.skip(!isMobile(), "La casella c'è solo su mobile");
     await seedNuoto(nest);
-    await openSearch(page, baseURL, nest);
+    // Real clock: the database refuses a done_at in the future of its own clock.
+    await openSearch(page, baseURL, nest, { clock: false });
     await typeSearch(page, "nuoto");
     await expect(tick(page)).toBeVisible();
     await refuseTodoUpdates(page);
@@ -515,7 +551,8 @@ test.describe("casella dei Da fare (mobile)", () => {
   }) => {
     test.skip(!isMobile(), "La casella c'è solo su mobile");
     await seedNuoto(nest);
-    await openSearch(page, baseURL, nest);
+    // Real clock: the database refuses a done_at in the future of its own clock.
+    await openSearch(page, baseURL, nest, { clock: false });
     await typeSearch(page, "nuoto");
     await expect(tick(page)).toBeVisible();
 
