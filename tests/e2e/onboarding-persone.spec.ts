@@ -829,7 +829,7 @@ test.describe("errori del foglio", () => {
 // ================================================================ Continua / Indietro
 
 test.describe("Continua e Indietro", () => {
-  test("CA-26: «Continua» con un adulto senza account porta a /onboarding/invito e non cambia i membri", async ({
+  test("CA-26 (#37): «Continua» con un adulto senza account porta a /onboarding/calendario e non cambia i membri", async ({
     page,
     baseURL,
   }) => {
@@ -839,12 +839,12 @@ test.describe("Continua e Indietro", () => {
       const before = await members(user);
       await openPage(page, user, baseURL);
       await continua(page).click();
-      await expect(page).toHaveURL(/\/onboarding\/invito$/);
+      await expect(page).toHaveURL(/\/onboarding\/calendario$/);
       expect(await members(user)).toEqual(before);
     });
   });
 
-  test("CA-26: «Continua» senza adulti da invitare porta a /onboarding/pronto", async ({
+  test("CA-26 (#37): «Continua» senza adulti da invitare porta a /onboarding/calendario", async ({
     page,
     baseURL,
   }) => {
@@ -854,12 +854,12 @@ test.describe("Continua e Indietro", () => {
       const before = await members(user);
       await openPage(page, user, baseURL);
       await continua(page).click();
-      await expect(page).toHaveURL(/\/onboarding\/pronto$/);
+      await expect(page).toHaveURL(/\/onboarding\/calendario$/);
       expect(await members(user)).toEqual(before);
     });
   });
 
-  test("CA-26: «Continua» con «Solo io» porta a /onboarding/pronto", async ({
+  test("CA-26 (#37): «Continua» con «Solo io» porta a /onboarding/calendario", async ({
     page,
     baseURL,
   }) => {
@@ -867,7 +867,7 @@ test.describe("Continua e Indietro", () => {
     await withNest("single", async (user) => {
       await openPage(page, user, baseURL);
       await continua(page).click();
-      await expect(page).toHaveURL(/\/onboarding\/pronto$/);
+      await expect(page).toHaveURL(/\/onboarding\/calendario$/);
     });
   });
 

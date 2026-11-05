@@ -24,7 +24,7 @@ import {
   MAX_HOUSEHOLD_MEMBERS,
 } from "@/lib/household-limits";
 import type { Database } from "@/types/database";
-import { INVITE_PATH, READY_PATH } from "./invite-routes";
+import { CALENDAR_PATH } from "./invite-routes";
 import styles from "./onboarding.module.css";
 import { BackArrow, BackLink } from "./PeopleBack";
 import { Steps } from "./Steps";
@@ -213,14 +213,9 @@ export function PeopleStep({
     }
   }
 
-  // Invito only when someone has to be invited (an adult without account);
-  // "Solo io" skips it. The Invito page checks again on the server.
-  const goOn = () =>
-    router.push(
-      people.some((person) => person.kind === "adult" && !person.hasAccount)
-        ? INVITE_PATH
-        : READY_PATH,
-    );
+  // The calendar step comes next; it decides between Invito and Pronto on
+  // the server (#37).
+  const goOn = () => router.push(CALENDAR_PATH);
 
   return (
     <main className={styles.root}>

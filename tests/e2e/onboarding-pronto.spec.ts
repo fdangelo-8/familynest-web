@@ -483,7 +483,7 @@ test.describe("dati preparati dal test", () => {
     });
   });
 
-  test("CA-20: da «Chi c'è nel Nest?» con «Solo io», «Continua» porta a /onboarding/pronto", async ({
+  test("CA-20 (#37): da «Chi c'è nel Nest?» con «Solo io», «Continua» e poi «Più tardi» portano a /onboarding/pronto", async ({
     page,
     baseURL,
   }) => {
@@ -498,10 +498,15 @@ test.describe("dati preparati dal test", () => {
         .filter({ visible: true });
       await expect(async () => {
         await next.click();
-        await expect(page).toHaveURL(/\/onboarding\/pronto$/, {
+        await expect(page).toHaveURL(/\/onboarding\/calendario$/, {
           timeout: 1000,
         });
       }).toPass();
+      await page
+        .getByRole("link", { name: "Più tardi", exact: true })
+        .filter({ visible: true })
+        .click();
+      await expect(page).toHaveURL(/\/onboarding\/pronto$/);
     });
   });
 
