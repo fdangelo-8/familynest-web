@@ -3,7 +3,6 @@ import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { expect, type Locator, type Page } from "@playwright/test";
-import { waitForAnimationsToEnd } from "./animations";
 import {
   addDays,
   monthName,
@@ -520,7 +519,6 @@ export async function openAdd(page: Page): Promise<Locator> {
   await addTrigger(page).click();
   const dialog = addDialog(page);
   await expect(dialog).toBeVisible();
-  await waitForAnimationsToEnd(page);
   return dialog;
 }
 
@@ -548,7 +546,6 @@ export async function openIdea(page: Page, title: string): Promise<Locator> {
   await page.getByRole("button", { name: title, exact: true }).click();
   const dialog = editDialog(page);
   await expect(dialog).toBeVisible();
-  await waitForAnimationsToEnd(page);
   return dialog;
 }
 

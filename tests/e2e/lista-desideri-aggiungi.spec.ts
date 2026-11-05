@@ -1,5 +1,4 @@
 import { expect, test, type Page } from "@playwright/test";
-import { waitForAnimationsToEnd } from "../fixtures/animations";
 import {
   SHOP_ORIGIN,
   T_I1,
@@ -76,7 +75,6 @@ test.describe("aggiungere un'idea", () => {
       await addTrigger(page).click();
       const dialog = addDialog(page);
       await expect(dialog).toBeVisible();
-      await waitForAnimationsToEnd(page);
 
       await expect(
         dialog.getByRole("heading", { level: 2, name: "Aggiungi un'idea" }),

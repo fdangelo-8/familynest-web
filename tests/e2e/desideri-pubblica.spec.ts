@@ -6,7 +6,6 @@ import {
   type Locator,
   type Page,
 } from "@playwright/test";
-import { waitForAnimationsToEnd } from "../fixtures/animations";
 import { signInAs, skipReason, usersConfigured } from "../fixtures/auth";
 import { addDays, romeDay } from "../fixtures/casa";
 import {
@@ -158,7 +157,6 @@ async function openGive(page: Page, title: string): Promise<Locator> {
   await giveButton(rowOf(page, title)).click();
   const dialog = giveDialog(page, title);
   await expect(dialog).toBeVisible();
-  await waitForAnimationsToEnd(page);
   return dialog;
 }
 
