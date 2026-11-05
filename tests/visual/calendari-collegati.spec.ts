@@ -204,11 +204,7 @@ test.describe("collegato", () => {
       await expect(page.getByText("Non riusciamo a sincronizzare")).toHaveCount(
         0,
       );
-      await shoot(
-        page,
-        "calendari-collegati-ricollegato.png",
-        false,
-      );
+      await shoot(page, "calendari-collegati-ricollegato.png", false);
     });
   });
 
