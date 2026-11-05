@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { signInAs } from "../fixtures/auth";
+import { withFigli } from "../fixtures/figlio";
 import {
   DATA_NETWORK_ERROR,
   DATA_SERVER_ERROR,
@@ -59,6 +60,66 @@ test.describe("file «I tuoi dati»", () => {
     });
   });
 
+  test("CA-52 (#32): il file ha le idee regalo aggiunte da chi scarica, mai quelle degli altri né i nomi di chi regala", async ({
+    page,
+    baseURL,
+  }) => {
+    needsThrowaway();
+    await withFigli(async (ctx) => {
+      const ugo = ctx.nest.users["Ugo"]!;
+      const vera = ctx.nest.users["Vera"]!;
+      const add = async (
+        user: typeof ugo,
+        args: Record<string, string>,
+      ): Promise<string> => {
+        const { data, error } = await user.client.rpc("add_wishlist_item", {
+          p_member_id: ctx.mia,
+          p_title: args["p_title"]!,
+          ...args,
+        });
+        expect(error).toBeNull();
+        return data as string;
+      };
+      const diary = await add(ugo, {
+        p_title: "Diario segreto con lucchetto",
+        p_url: "https://negozio.example/diario",
+        p_note: "Lo vuole tanto",
+      });
+      await add(vera, { p_title: "Set di acquerelli con pennelli" });
+
+      // «Nonna Anna» takes the diary through the public function.
+      const { data: link, error: linkError } = await ugo.client.rpc(
+        "share_wishlist",
+        { p_member_id: ctx.mia },
+      );
+      expect(linkError).toBeNull();
+      const { data: outcome } = await ctx.admin.rpc(
+        "reserve_public_wishlist_item",
+        {
+          p_code: link![0]!.code,
+          p_item_id: diary,
+          p_name: "Nonna Anna",
+          p_giver_key: "k".repeat(40),
+        },
+      );
+      expect(outcome).toBe("reserved");
+
+      await ugo.signInContext(page.context(), baseURL as string);
+      await openProfile(page);
+      const file = await downloadData(page);
+      expect(file.json.idee_regalo).toEqual([
+        {
+          titolo: "Diario segreto con lucchetto",
+          link: "https://negozio.example/diario",
+          nota: "Lo vuole tanto",
+          aggiunta_il: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
+        },
+      ]);
+      expect(file.text).not.toContain("Set di acquerelli con pennelli");
+      expect(file.text).not.toContain("Nonna Anna");
+    });
+  });
+
   test("CA-26: il file non contiene niente di quello che hanno inserito gli altri", async ({
     page,
     baseURL,
@@ -104,6 +165,7 @@ test.describe("file «I tuoi dati»", () => {
       expect(file.json.da_fare).toEqual([]);
       expect(file.json.scadenze).toEqual([]);
       expect(file.json.spesa).toEqual([]);
+      expect(file.json.idee_regalo).toEqual([]);
       expect(file.json.spazi_fissati).toEqual([]);
       expect(file.json.avvisi_degli_spazi).toEqual([]);
       expect(file.json.preferenze_di_notifica).toBeNull();
