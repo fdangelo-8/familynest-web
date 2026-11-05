@@ -5095,11 +5095,13 @@ a.riga-regalo__titolo::before {
   flex-direction: column;
   background: var(--color-carta);
 }
-.cornice-pubblica > .pagina {
-  padding-top: calc(var(--space-5) + env(safe-area-inset-top));
-  padding-bottom: calc(var(--space-6) + env(safe-area-inset-bottom));
+@media (max-width: 1023px) {
+  .cornice-pubblica > .pagina {
+    padding-top: calc(var(--space-5) + env(safe-area-inset-top));
+    padding-bottom: calc(var(--space-6) + env(safe-area-inset-bottom));
+  }
 }
-@media (min-width: 768px) {
+@media (min-width: 768px) and (max-width: 1023px) {
   .cornice-pubblica > .pagina {
     width: 100%;
     max-width: var(--grid-colonna-stretta);
