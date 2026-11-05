@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { mintFakeConsentCodes } from "@/lib/calendar-sync/fake-provider";
 import { isProviderId } from "@/lib/calendar-sync/types";
 import { isFakeCalendarProviderEnabled } from "@/lib/env";
@@ -24,14 +25,23 @@ function first(value: string | string[] | undefined): string | null {
   return one && SAFE_VALUE.test(one) ? one : null;
 }
 
-export default async function FakeProviderPage({
-  params,
-  searchParams,
-}: {
+type PageProps = {
   params: Promise<{ provider: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
+};
+
+/* Request data (params, searchParams, cookies) is read below a Suspense
+ * boundary, as cacheComponents requires. */
+export default function FakeProviderPage(props: PageProps) {
   if (!isFakeCalendarProviderEnabled()) notFound();
+  return (
+    <Suspense fallback={null}>
+      <FakeProviderConsent {...props} />
+    </Suspense>
+  );
+}
+
+async function FakeProviderConsent({ params, searchParams }: PageProps) {
   const { provider } = await params;
   if (!isProviderId(provider)) notFound();
   const query = await searchParams;
