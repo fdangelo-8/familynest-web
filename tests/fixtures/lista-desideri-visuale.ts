@@ -159,8 +159,7 @@ export async function wishNest(
         : ideas === "tutte-prese"
           ? IDEAS.map((idea, index) => ({
               ...idea,
-              giver:
-                idea.giver ?? ["Nonno Piero", "Zio Luca", "Zia Anna"][index],
+              giver: idea.giver ?? ["Nonno Piero", "Zio Luca", "Zia Anna"][index],
             }))
           : IDEAS.map((idea) => ({
               ...idea,
@@ -233,8 +232,8 @@ export async function pinLinkExpiry(page: Page, expiresAt: string) {
     if (route.request().method() !== "GET") return route.fallback();
     const response = await route.fetch();
     const json = await response.json();
-    type Row = { wishlist_share_links?: Array<{ expires_at: string }> };
-    const rows: Row[] = Array.isArray(json) ? json : [json];
+    const rows: Array<{ wishlist_share_links?: Array<{ expires_at: string }> }> =
+      Array.isArray(json) ? json : [json];
     for (const wishlist of rows) {
       for (const link of wishlist?.wishlist_share_links ?? []) {
         link.expires_at = expiresAt;
@@ -260,10 +259,7 @@ export async function openPublic(page: Page, code: string) {
   await expect(async () => {
     await page.goto(`/desideri/${code}`);
     await expect(
-      page.getByRole("heading", {
-        level: 1,
-        name: `Il compleanno di ${CHILD}`,
-      }),
+      page.getByRole("heading", { level: 1, name: `Il compleanno di ${CHILD}` }),
     ).toBeVisible({ timeout: 10_000 });
   }).toPass({ timeout: 60_000 });
   await settle(page);
