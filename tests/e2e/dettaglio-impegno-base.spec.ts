@@ -67,9 +67,9 @@ test.describe("barra mobile", () => {
     });
   });
   test("le altre pagine di dettaglio non cambiano", () => {
-    expect(getBarConfig("/notifiche")).toEqual({
+    expect(getBarConfig("/calendari-collegati")).toEqual({
       kind: "detail",
-      fallback: "/oggi",
+      fallback: "/nest",
     });
   });
 });
