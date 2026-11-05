@@ -186,7 +186,12 @@ function Notice({
   return (
     <Alert
       variant="errore"
-      icon="circle-alert"
+      icon={
+        notice.result === "no_calendar_permission" ||
+        notice.result === "admin_approval"
+          ? "circle-alert"
+          : "wifi-off"
+      }
       action={
         <ConnectForm provider={notice.provider} onSubmit={onConnect}>
           <Button variant="link" type="submit">
