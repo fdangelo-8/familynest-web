@@ -10,7 +10,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(70);
+select plan(67);
 
 insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, created_at, updated_at)
 values
@@ -362,36 +362,7 @@ select is_empty($$ select 1 from public.invitations $$, 'E (not administrator) r
 set local request.jwt.claims to '{"sub":"cccccccc-0000-4000-8000-000000000001","role":"authenticated"}';
 
 select is_empty($$ select * from public.current_member_welcome() $$, 'C (the inviter) gets no welcome');
--- Issue #266 (#34 §17, CA-56): the step «Collega il tuo calendario».
-select is(
-  public.complete_starter_list(),
-  false,
-  'CA-56 (#34): item added and invitation accepted, but no linked calendar: not completed'
-);
-select is(
-  (select h.starter_list_completed_at from public.households h),
-  null,
-  'without a linked calendar nothing changes'
-);
-reset role;
--- An account of the fake provider for E (not administrator) does not count for C.
-insert into public.calendar_accounts (household_id, member_id, provider, provider_account_id, email, is_fake, credentials_ciphertext)
-select m.household_id, m.id, 'google', 'fake-e', 'e.finto@example.test', true, 'v1:test.placeholder.not.a.credential.000000'
-from public.household_members m
-where m.user_id = 'eeeeeeee-0000-4000-8000-000000000001';
-set local role authenticated;
-select is(
-  public.complete_starter_list(),
-  false,
-  'a linked calendar of another adult does not do the step of the administrator who calls'
-);
-reset role;
-insert into public.calendar_accounts (household_id, member_id, provider, provider_account_id, email, is_fake, credentials_ciphertext)
-select m.household_id, m.id, 'google', 'fake-c', 'c.finto@example.test', true, 'v1:test.placeholder.not.a.credential.000000'
-from public.household_members m
-where m.user_id = 'cccccccc-0000-4000-8000-000000000001';
-set local role authenticated;
-select is(public.complete_starter_list(), true, 'item added, invitation accepted and a calendar linked: completed');
+select is(public.complete_starter_list(), true, 'item added and invitation accepted: completed');
 select is(
   (select h.starter_list_completed_at from public.households h),
   now(),
@@ -438,16 +409,6 @@ set local request.jwt.claims to '{"sub":"aaaaaaaa-0000-4000-8000-000000000001","
 
 select is(public.complete_starter_list(), false, 'A: the invitation of Laura is pending, not completed');
 
--- Giulia (B) and Marco (A) link a calendar (#266); Paolo has the seed account, not an
--- administrator.
-reset role;
-insert into public.calendar_accounts (household_id, member_id, provider, provider_account_id, email, is_fake, credentials_ciphertext)
-values
-  ('22222222-2222-4222-8222-222222222222', 'b1000000-0000-4000-8000-000000000001', 'outlook', 'fake-giulia',
-   'giulia.finto@example.test', true, 'v1:test.placeholder.not.a.credential.000000'),
-  ('11111111-1111-4111-8111-111111111111', 'a1000000-0000-4000-8000-000000000001', 'google', 'fake-marco',
-   'marco.finto@example.test', true, 'v1:test.placeholder.not.a.credential.000000');
-set local role authenticated;
 set local request.jwt.claims to '{"sub":"bbbbbbbb-0000-4000-8000-000000000001","role":"authenticated"}';
 
 select is(

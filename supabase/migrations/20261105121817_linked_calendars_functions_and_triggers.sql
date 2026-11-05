@@ -352,16 +352,22 @@ begin
   end if;
 
   if private.external_calendar_is_target_eligible(new)
-     and (tg_op = 'INSERT' or not private.external_calendar_is_target_eligible(old))
-     and not exists (
-       select 1
-       from public.external_calendars t
-       where t.member_id = new.member_id
-         and t.is_new_events_target
-     ) then
-    update public.external_calendars c
-    set is_new_events_target = true
-    where c.id = new.id;
+     and (tg_op = 'INSERT' or not private.external_calendar_is_target_eligible(old)) then
+    -- Same lock per adult as public.set_new_events_calendar() (LEZIONI #192): two
+    -- calendars switched on together, or a switch together with a choice of the page, are
+    -- serialised, so the second one sees the first choice and never hits the unique index.
+    perform pg_advisory_xact_lock(hashtextextended('public.external_calendars.target:' || new.member_id::text, 0));
+
+    if not exists (
+      select 1
+      from public.external_calendars t
+      where t.member_id = new.member_id
+        and t.is_new_events_target
+    ) then
+      update public.external_calendars c
+      set is_new_events_target = true
+      where c.id = new.id;
+    end if;
   end if;
 
   return null;

@@ -15,7 +15,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(214);
+select plan(226);
 
 -- ---------------------------------------------------------------------------
 -- Schema
@@ -289,6 +289,24 @@ select throws_ok(
   'CA-15: a read-only calendar cannot be «Entrata e uscita»'
 );
 
+-- Only POST through the Data API (LEZIONI #112): every other method is refused before
+-- anything is read or written.
+set local request.method to 'GET';
+select throws_ok($$ select public.set_new_events_calendar(null) $$, 'P0001', 'use POST', 'set_new_events_calendar: GET refused');
+select throws_ok($$ select public.set_event_also_on(gen_random_uuid(), true) $$, 'P0001', 'use POST', 'set_event_also_on: GET refused');
+set local request.method to 'HEAD';
+select throws_ok($$ select public.set_new_events_calendar(null) $$, 'P0001', 'use POST', 'set_new_events_calendar: HEAD refused');
+select throws_ok($$ select public.set_event_also_on(gen_random_uuid(), true) $$, 'P0001', 'use POST', 'set_event_also_on: HEAD refused');
+set local request.method to 'PUT';
+select throws_ok($$ select public.set_new_events_calendar(null) $$, 'P0001', 'use POST', 'set_new_events_calendar: PUT refused');
+select throws_ok($$ select public.set_event_also_on(gen_random_uuid(), true) $$, 'P0001', 'use POST', 'set_event_also_on: PUT refused');
+set local request.method to 'POST';
+select results_eq(
+  $$ select c.name from public.external_calendars c where c.is_new_events_target $$,
+  $$ values ('Personale'::text) $$,
+  'the refused calls changed nothing («Personale» is still «Dove vanno i nuovi impegni»)'
+);
+
 -- Giulia: same household, administrator.
 set local request.jwt.claims to '{"sub":"bbbbbbbb-0000-4000-8000-000000000001","role":"authenticated"}';
 select is_empty($$ select 1 from public.calendar_accounts $$, 'CA-28: Giulia (administrator) reads no account of Paolo');
@@ -382,9 +400,30 @@ select throws_ok(
        'aaaaaaaa-0000-4000-8000-000000000001', 'google', 'x', 'x@example.test',
        'v1:test.placeholder.not.a.credential.000003', true) $$,
   'P0001', 'use POST',
-  'only POST through the Data API'
+  'only POST through the Data API (GET)'
+);
+set local request.method to 'HEAD';
+select throws_ok(
+  $$ select * from public.save_calendar_account(
+       'aaaaaaaa-0000-4000-8000-000000000001', 'google', 'x', 'x@example.test',
+       'v1:test.placeholder.not.a.credential.000003', true) $$,
+  'P0001', 'use POST',
+  'only POST through the Data API (HEAD)'
+);
+set local request.method to 'PUT';
+select throws_ok(
+  $$ select * from public.save_calendar_account(
+       'aaaaaaaa-0000-4000-8000-000000000001', 'google', 'x', 'x@example.test',
+       'v1:test.placeholder.not.a.credential.000003', true) $$,
+  'P0001', 'use POST',
+  'only POST through the Data API (PUT)'
 );
 set local request.method to 'POST';
+select results_eq(
+  $$ select count(*)::integer from public.calendar_accounts a where a.provider_account_id = 'x' $$,
+  $$ values (0) $$,
+  'a call refused for its method writes nothing'
+);
 
 -- CA-10: at most 5 accounts per adult (4 more, then the sixth is refused).
 select lives_ok(
@@ -493,6 +532,31 @@ select results_eq(
        ('Festività in Italia'::text, false, 'incoming'::public.calendar_direction, 'busy'::public.event_visibility, true, false, false),
        ('Tennis'::text, false, 'two_way'::public.calendar_direction, 'busy'::public.event_visibility, true, false, false) $$,
   'CA-5, CA-16, §6: only the main calendar on, «Entrata e uscita» when writable, «Occupato» (F5), counts for «Liberi insieme»; the main one is «Dove vanno i nuovi impegni»'
+);
+-- Marco never called set_new_events_calendar(): the lock below was taken by the trigger.
+select ok(
+  exists (
+    select 1
+    from pg_locks l
+    where l.locktype = 'advisory'
+      and l.pid = pg_backend_pid()
+      and l.granted
+      and ((l.classid::bigint << 32) | l.objid::bigint)
+          = hashtextextended('public.external_calendars.target:a1000000-0000-4000-8000-000000000001', 0)
+  ),
+  'the automatic choice of «Dove vanno i nuovi impegni» takes the same lock per adult as set_new_events_calendar()'
+);
+select ok(
+  exists (
+    select 1
+    from pg_locks l
+    where l.locktype = 'advisory'
+      and l.pid = pg_backend_pid()
+      and l.granted
+      and ((l.classid::bigint << 32) | l.objid::bigint)
+          = hashtextextended('public.external_calendars:' || current_setting('test.marco_account'), 0)
+  ),
+  'the 50 calendars limit takes the lock of the account before counting'
 );
 set local role service_role;
 select is(

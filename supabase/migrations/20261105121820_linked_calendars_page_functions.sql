@@ -6,9 +6,10 @@
 -- - get_event_calendar_link(): what Dettaglio impegno needs to know about the external
 --                              calendar of an event (read only, «Anche su», source);
 -- - count_imported_events():   «<n> impegni arrivati da <fornitori>» of Onboarding · Pronto
---                              (#37 §6, richiesta-db point 13);
--- - complete_starter_list():   new version with the step «Collega il tuo calendario»
---                              (richiesta-db point 10).
+--                              (#37 §6, richiesta-db point 13).
+-- The step «Collega il tuo calendario» of complete_starter_list() (richiesta-db point 10,
+-- CA-56) is not here: it arrives with the page of #34 part 2, in its own migration
+-- (decision of the coordinator on PR #270).
 --
 -- Conventions: `set search_path = ''`, fully qualified names; nothing sent by the app is
 -- trusted beyond ids: the adult is always the member of the verified session; an id of
@@ -297,81 +298,5 @@ begin
     where a.member_id = v_member_id
     group by a.provider
     order by min(a.connected_at), a.provider;
-end;
-$$;
-
--- ---------------------------------------------------------------------------
--- RPC: the administrator marks the starter list of their household as completed (new
--- version of the starter_list_functions_and_triggers migration, #90, same arguments and
--- result). One more condition, the step «Collega il tuo calendario» (#34 §17): the
--- administrator who calls has at least one linked account. The others are unchanged:
--- - the caller is an administrator of a household (otherwise 42501);
--- - at least one item was ever added to the shopping list;
--- - no invitation of the household is still pending and not expired.
--- If a condition is false nothing changes and the result is false. Once completed the time
--- is never changed again (unlinking later does not reopen the list) and the result is
--- true. `create or replace` keeps the owner and the execute grants (signed-in users only).
--- ---------------------------------------------------------------------------
-create or replace function public.complete_starter_list()
-returns boolean
-language plpgsql
-volatile
-security definer
-set search_path = ''
-as $$
-declare
-  v_member_id uuid;
-  v_household_id uuid;
-  v_first_item_at timestamptz;
-  v_completed_at timestamptz;
-begin
-  select m.id, m.household_id into v_member_id, v_household_id
-  from public.household_members m
-  where m.user_id = (select auth.uid())
-    and m.is_admin;
-
-  if v_household_id is null then
-    raise exception 'permission denied for function complete_starter_list' using errcode = '42501';
-  end if;
-
-  -- Serialises concurrent calls for the same household (same lock as the member limit
-  -- trigger: it does not block the foreign key checks of the other tables).
-  select h.first_shopping_item_at, h.starter_list_completed_at
-  into v_first_item_at, v_completed_at
-  from public.households h
-  where h.id = v_household_id
-  for no key update;
-
-  if v_completed_at is not null then
-    return true;
-  end if;
-
-  if v_first_item_at is null then
-    return false;
-  end if;
-
-  if exists (
-    select 1
-    from public.invitations i
-    where i.household_id = v_household_id
-      and i.status = 'pending'
-      and i.expires_at > now()
-  ) then
-    return false;
-  end if;
-
-  if not exists (
-    select 1
-    from public.calendar_accounts a
-    where a.member_id = v_member_id
-  ) then
-    return false;
-  end if;
-
-  update public.households h
-  set starter_list_completed_at = now()
-  where h.id = v_household_id;
-
-  return true;
 end;
 $$;
