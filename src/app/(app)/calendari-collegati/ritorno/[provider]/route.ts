@@ -30,7 +30,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
  * - the calendar permission was left off: nothing saved, the access just given
  *   is revoked, result `no_calendar_permission`;
  * - 5 accounts already: nothing saved, result `limit`;
- * - otherwise the account is saved (the same account again updates its row),
+ * - the same account again: its row is updated, result `already_linked`;
+ * - otherwise the account is saved,
  *   its calendars are read with the starting choices of #34 §6, and the first
  *   synchronisation starts after the answer.
  *
@@ -127,6 +128,8 @@ export async function GET(
       return finish(saveError?.code === "FN008" ? "limit" : "failed");
     }
     const accountId = saved[0].account_id;
+    // is_new is false when this adult had the same provider account already.
+    const result: LinkResult = saved[0].is_new ? "linked" : "already_linked";
     // From here the account is kept: the token must not be revoked.
     const keptToken = linked.refreshToken;
     issued = null;
@@ -146,7 +149,7 @@ export async function GET(
       }
     });
 
-    return finish("linked");
+    return finish(result);
   } catch {
     await revokeIssued();
     return finish("failed");

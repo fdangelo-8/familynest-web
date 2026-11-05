@@ -41,6 +41,9 @@ export function isLinkDestination(value: unknown): value is LinkDestination {
 /**
  * What happened when the user came back:
  * - linked: the account is saved, the first synchronisation has started;
+ * - already_linked: the provider account was already linked by this adult; the
+ *   row is updated as before, the page says which mail is already linked (the
+ *   mail is read from the database, never from this cookie);
  * - denied: the user refused or cancelled on the provider page (a notice, not
  *   an error);
  * - no_calendar_permission: the calendar permission was left off, nothing saved;
@@ -51,6 +54,7 @@ export function isLinkDestination(value: unknown): value is LinkDestination {
  */
 export const LINK_RESULTS = [
   "linked",
+  "already_linked",
   "denied",
   "no_calendar_permission",
   "limit",
