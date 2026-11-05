@@ -112,52 +112,65 @@ export async function buildExport(
   const namesOf = (ids: ReadonlyArray<string>): string[] =>
     ids.flatMap((id) => nameOf(id) ?? []);
 
-  const [events, todos, deadlines, shopping, pinned, notifications, interests] =
-    await Promise.all([
-      supabase
-        .from("events")
-        .select(
-          "id, title, location, starts_at, ends_at, visibility, recurrence, recurrence_until, recurrence_weekdays, notes, escort_member_id",
-        )
-        .eq("author_member_id", me.id)
-        .order("starts_at", { ascending: true }),
-      supabase
-        .from("todos")
-        .select(
-          "title, due_date, is_private, assignee_member_id, for_member_id, done_at",
-        )
-        .eq("created_by_member_id", me.id)
-        .order("created_at", { ascending: true }),
-      supabase
-        .from("deadlines")
-        .select(
-          "title, due_date, note, is_private, assignee_member_id, for_member_id, reminder_days",
-        )
-        .eq("created_by_member_id", me.id)
-        .order("due_date", { ascending: true }),
-      supabase
-        .from("shopping_items")
-        .select("name, quantity, created_at, checked_at")
-        .eq("added_by_member_id", me.id)
-        .order("created_at", { ascending: true }),
-      supabase
-        .from("pinned_spaces")
-        .select("space, pinned_at")
-        .eq("member_id", me.id)
-        .order("pinned_at", { ascending: true }),
-      supabase
-        .from("notification_preferences")
-        .select(
-          "events, assigned_todos, shopping, free_together, morning_digest",
-        )
-        .eq("member_id", me.id)
-        .maybeSingle(),
-      supabase
-        .from("space_interests")
-        .select("space, created_at")
-        .eq("member_id", me.id)
-        .order("created_at", { ascending: true }),
-    ]);
+  const [
+    events,
+    todos,
+    deadlines,
+    shopping,
+    pinned,
+    notifications,
+    interests,
+    ideas,
+  ] = await Promise.all([
+    supabase
+      .from("events")
+      .select(
+        "id, title, location, starts_at, ends_at, visibility, recurrence, recurrence_until, recurrence_weekdays, notes, escort_member_id",
+      )
+      .eq("author_member_id", me.id)
+      .order("starts_at", { ascending: true }),
+    supabase
+      .from("todos")
+      .select(
+        "title, due_date, is_private, assignee_member_id, for_member_id, done_at",
+      )
+      .eq("created_by_member_id", me.id)
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("deadlines")
+      .select(
+        "title, due_date, note, is_private, assignee_member_id, for_member_id, reminder_days",
+      )
+      .eq("created_by_member_id", me.id)
+      .order("due_date", { ascending: true }),
+    supabase
+      .from("shopping_items")
+      .select("name, quantity, created_at, checked_at")
+      .eq("added_by_member_id", me.id)
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("pinned_spaces")
+      .select("space, pinned_at")
+      .eq("member_id", me.id)
+      .order("pinned_at", { ascending: true }),
+    supabase
+      .from("notification_preferences")
+      .select("events, assigned_todos, shopping, free_together, morning_digest")
+      .eq("member_id", me.id)
+      .maybeSingle(),
+    supabase
+      .from("space_interests")
+      .select("space, created_at")
+      .eq("member_id", me.id)
+      .order("created_at", { ascending: true }),
+    // Only the ideas this person added: title, link, note, date. Never the
+    // names of whoever gives (they are other people's data, #32 §11).
+    supabase
+      .from("wishlist_items")
+      .select("title, url, note, created_at")
+      .eq("added_by_member_id", me.id)
+      .order("created_at", { ascending: true }),
+  ]);
   if (
     events.error ||
     todos.error ||
@@ -165,7 +178,8 @@ export async function buildExport(
     shopping.error ||
     pinned.error ||
     notifications.error ||
-    interests.error
+    interests.error ||
+    ideas.error
   ) {
     return null;
   }
@@ -283,6 +297,12 @@ export async function buildExport(
       quantita: s.quantity,
       aggiunta_il: romeDateTime(s.created_at),
       presa_il: dateTimeOrNull(s.checked_at),
+    })),
+    idee_regalo: ideas.data.map((i) => ({
+      titolo: i.title,
+      link: i.url,
+      nota: i.note,
+      aggiunta_il: romeDateTime(i.created_at),
     })),
     avvisi_degli_spazi: interests.data.map((i) => ({
       spazio: i.space,
