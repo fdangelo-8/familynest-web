@@ -26,6 +26,8 @@ type BarActionSpec = {
   inactive: boolean;
   /** Two-state button (e.g. a pin): `aria-pressed`. Undefined = plain button */
   pressed?: boolean;
+  /** The button opens a dialog (`aria-haspopup`) */
+  haspopup?: "dialog" | "menu" | true;
   /** With an address the action is a link, not a button (no `onClick`) */
   href?: string;
 };
@@ -67,6 +69,8 @@ type BarActionProps = {
   icon: IconName;
   /** Accessible name, written as the action */
   label: string;
+  /** The action opens a dialog: `aria-haspopup` */
+  "aria-haspopup"?: "dialog" | "menu" | true;
 } & (
   | {
       href?: undefined;
@@ -91,6 +95,7 @@ export function BarAction({
   pressed,
   href,
   onClick,
+  "aria-haspopup": haspopup,
 }: BarActionProps) {
   const context = useContext(BarActionContext);
   const setAction = context?.setAction;
@@ -101,9 +106,9 @@ export function BarAction({
   });
 
   useEffect(() => {
-    setAction?.({ icon, label, inactive, pressed, href });
+    setAction?.({ icon, label, inactive, pressed, haspopup, href });
     return () => setAction?.(null);
-  }, [setAction, icon, label, inactive, pressed, href]);
+  }, [setAction, icon, label, inactive, pressed, haspopup, href]);
 
   useEffect(() => () => setOnPress?.(null), [setOnPress]);
 
@@ -128,6 +133,7 @@ export function BarActionSlot() {
       aria-label={action.label}
       aria-disabled={action.inactive}
       pressed={action.pressed}
+      aria-haspopup={action.haspopup}
       onClick={action.inactive ? undefined : context.press}
     />
   );
