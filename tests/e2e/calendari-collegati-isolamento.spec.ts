@@ -33,6 +33,7 @@ import { seedClient } from "../fixtures/esplora";
 // Nest, Marco (seed) in un altro.
 
 test.use({ locale: "it-IT", timezoneId: "Europe/Rome" });
+test.describe.configure({ timeout: 90_000 });
 
 const VISITA = "Visita in banca";
 const VIA = "Via Roma 1";

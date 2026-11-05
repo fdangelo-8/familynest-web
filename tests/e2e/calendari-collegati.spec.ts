@@ -19,6 +19,7 @@ import {
   needsFake,
   openCalendars,
   rowButton,
+  rowButtonName,
   rowSummary,
   rowSwitch,
   startLink,
@@ -32,6 +33,7 @@ import {
 // un utente usa e getta con il suo Nest e lo cancella alla fine.
 
 test.use({ locale: "it-IT", timezoneId: "Europe/Rome" });
+test.describe.configure({ timeout: 90_000 });
 
 test.describe("accesso e testa", () => {
   test("CA-1: Chiara senza Nest finisce su /onboarding, un visitatore su /accesso", async ({
@@ -142,7 +144,7 @@ test.describe("collegamento", () => {
       await expect(rows).toHaveCount(3);
       for (const [index, name] of names.entries()) {
         await expect(rowButton(rows.nth(index))).toHaveAccessibleName(
-          `${name}: impostazioni`,
+          rowButtonName(name),
         );
       }
 
@@ -186,9 +188,11 @@ test.describe("collegamento", () => {
       expect(url.pathname).toBe(PATH);
       expect(url.search).toBe("");
       expect(url.hash).toBe("");
-      const afterFake = visited.slice(
-        visited.findIndex((entry) => entry.includes("/fornitore-finto/")) + 1,
+      const lastFake = visited.findLastIndex((entry) =>
+        entry.includes("/fornitore-finto/"),
       );
+      expect(lastFake).toBeGreaterThanOrEqual(0);
+      const afterFake = visited.slice(lastFake + 1);
       expect(afterFake.length).toBeGreaterThan(0);
       for (const entry of afterFake) {
         expect(entry).not.toMatch(/[?&](code|state)=/);

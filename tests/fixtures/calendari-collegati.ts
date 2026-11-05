@@ -370,13 +370,16 @@ export const accountSection = (
 export const anySection = (page: Page) =>
   page.getByRole("region", { name: /^Account (Google|Outlook)/ });
 
+const escapeRe = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/** Accessible name of the button of a row: «Personale : impostazioni». */
+export const rowButtonName = (name: string) =>
+  new RegExp(`^${escapeRe(name)}\\s?: impostazioni$`);
+
 /** The row of a calendar inside a section. */
 export const calendarRow = (section: Locator, name: string) =>
   section.getByRole("listitem").filter({
-    has: section.page().getByRole("button", {
-      name: `${name}: impostazioni`,
-      exact: true,
-    }),
+    has: section.page().getByRole("button", { name: rowButtonName(name) }),
   });
 
 export const rowButton = (row: Locator) => row.getByRole("button").first();

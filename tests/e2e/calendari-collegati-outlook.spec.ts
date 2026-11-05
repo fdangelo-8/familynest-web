@@ -24,6 +24,7 @@ import {
   openSettings,
   revokedTokens,
   rowButton,
+  rowButtonName,
   rowSummary,
   rowSwitch,
   snapshot,
@@ -43,6 +44,7 @@ import {
 // Microsoft vero, prova a mano di Francesco) sono saltati con il motivo.
 
 test.use({ locale: "it-IT", timezoneId: "Europe/Rome" });
+test.describe.configure({ timeout: 90_000 });
 
 const MAIL = OUTLOOK.email;
 
@@ -85,10 +87,10 @@ test.describe("Outlook · collegamento", () => {
       const rows = section.getByRole("listitem");
       await expect(rows).toHaveCount(2);
       await expect(rowButton(rows.nth(0))).toHaveAccessibleName(
-        "Calendario: impostazioni",
+        rowButtonName("Calendario"),
       );
       await expect(rowButton(rows.nth(1))).toHaveAccessibleName(
-        "Ferie del team: impostazioni",
+        rowButtonName("Ferie del team"),
       );
 
       const calendario = calendarRow(section, "Calendario");

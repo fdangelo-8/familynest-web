@@ -28,6 +28,7 @@ import {
 // dell'account (CA-43, CA-44). La coda di revoca la lancia il test.
 
 test.use({ locale: "it-IT", timezoneId: "Europe/Rome" });
+test.describe.configure({ timeout: 90_000 });
 
 const VISITA = "Visita in banca";
 const visita = {

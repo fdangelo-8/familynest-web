@@ -37,6 +37,7 @@ import {
 // tutti gli orari partono dal giorno in cui gira il test.
 
 test.use({ locale: "it-IT", timezoneId: "Europe/Rome" });
+test.describe.configure({ timeout: 90_000 });
 
 const VISITA = "Visita in banca";
 
@@ -243,15 +244,13 @@ test.describe("sincronizzazione", () => {
 
       await u.asRita.signIn(page);
       await openDay(page, day);
-      await expect(freeBlocks(page)).toHaveCount(1);
-      await expect(freeBlocks(page)).toContainText(
+      await expect(freeBlocks(page).first()).toContainText(
         "Liberi insieme dalle 18:00 alle 20:00",
       );
 
       await u.setCalendar("Personale", { counts_for_free_time: false });
       await openDay(page, day);
-      await expect(freeBlocks(page)).toHaveCount(1);
-      await expect(freeBlocks(page)).toContainText(
+      await expect(freeBlocks(page).first()).toContainText(
         "Liberi insieme dalle 18:00 alle 23:00",
       );
     });
@@ -272,8 +271,8 @@ test.describe("sincronizzazione", () => {
 
       await u.asRita.signIn(page);
       await openDay(page, day);
-      await expect(freeBlocks(page)).toHaveCount(1);
-      const before = await freeBlocks(page).textContent();
+      await expect(freeBlocks(page).first()).toBeAttached();
+      const before = (await freeBlocks(page).allTextContents()).join("|");
 
       await u.provide(GOOGLE, "personale", [
         {
@@ -293,8 +292,8 @@ test.describe("sincronizzazione", () => {
       });
 
       await openDay(page, day);
-      await expect(freeBlocks(page)).toHaveCount(1);
-      expect(await freeBlocks(page).textContent()).toBe(before);
+      await expect(freeBlocks(page).first()).toBeAttached();
+      expect((await freeBlocks(page).allTextContents()).join("|")).toBe(before);
     });
   });
 

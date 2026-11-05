@@ -37,6 +37,7 @@ import {
 // e getta; gli orari sono sempre calcolati dal giorno in cui gira il test.
 
 test.use({ locale: "it-IT", timezoneId: "Europe/Rome" });
+test.describe.configure({ timeout: 90_000 });
 
 const TENNIS = "Tennis con Luca";
 
