@@ -315,9 +315,9 @@ test.describe("righe «Calendari collegati» di Profilo e Nest", () => {
       await linked(page, async () => {
         await page.goto(path);
         await expect(page.getByRole("main")).toBeVisible();
-        const row = page
-          .getByRole("main")
-          .getByRole("link", { name: /^Calendari collegati/ });
+        const row = page.locator("a.riga-lista", {
+          hasText: "Calendari collegati",
+        });
         await expect(row).toBeVisible();
         await expect(row).toContainText("Outlook, Google");
         expect(await seriousViolations(page)).toEqual([]);
