@@ -2,6 +2,7 @@ import {
   AccessScreen,
   type AccessError,
 } from "@/components/accesso/AccessScreen";
+import { ClearRecentSearches } from "@/components/accesso/ClearRecentSearches";
 import { redirectIfSignedIn } from "@/lib/auth/destination";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
@@ -40,9 +41,12 @@ export default async function AccessoPage({
   await redirectIfSignedIn();
   const params = await searchParams;
   return (
-    <AccessScreen
-      initialError={readError(params)}
-      accountDeleted={readAccountDeleted(params)}
-    />
+    <>
+      <ClearRecentSearches />
+      <AccessScreen
+        initialError={readError(params)}
+        accountDeleted={readAccountDeleted(params)}
+      />
+    </>
   );
 }

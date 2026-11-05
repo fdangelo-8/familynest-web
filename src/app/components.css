@@ -4036,11 +4036,11 @@ main[tabindex="-1"]:focus {
 .riga-lista--modificabile > .riga-lista__testo {
   position: relative;
 }
-.riga-lista--modificabile button.riga-lista__titolo {
+.riga-lista--modificabile :is(button, a).riga-lista__titolo {
   justify-self: start;
   -webkit-tap-highlight-color: transparent;
 }
-.riga-lista--modificabile button.riga-lista__titolo::before {
+.riga-lista--modificabile :is(button, a).riga-lista__titolo::before {
   content: "";
   position: absolute;
   top: 50%;
@@ -4069,7 +4069,7 @@ main[tabindex="-1"]:focus {
 }
 .scheda
   > .riga-lista--modificabile:last-child:has(
-    > .riga-lista__testo > button.riga-lista__titolo:is(:hover, :active)
+    > .riga-lista__testo > :is(button, a).riga-lista__titolo:is(:hover, :active)
   ) {
   border-bottom-left-radius: var(--radius-l);
   border-bottom-right-radius: var(--radius-l);
@@ -4101,14 +4101,14 @@ main[tabindex="-1"]:focus {
     transition: background-color var(--durata-rapida) var(--curva);
   }
   .riga-lista--modificabile:has(
-    > .riga-lista__testo > button.riga-lista__titolo:hover
+    > .riga-lista__testo > :is(button, a).riga-lista__titolo:hover
   ),
   .scheda a.riga-scadenza:hover {
     background-color: var(--color-carta);
   }
 }
 .riga-lista--modificabile:has(
-  > .riga-lista__testo > button.riga-lista__titolo:active
+  > .riga-lista__testo > :is(button, a).riga-lista__titolo:active
 ),
 .scheda a.riga-scadenza:active {
   background-color: var(--color-carta);
@@ -4850,6 +4850,105 @@ button.griglia-mese__cella--selezionata {
   margin: var(--space-0);
   padding: var(--space-0);
   list-style: none;
+}
+
+/* Notifiche (#39): parole della sintesi che aprono
+   l'elemento. Passaggio e premuto come gli altri fondi --color-carta; la
+   parola «insieme» non ha un fondo più scuro, quindi ispessisce il bordo. */
+a.parola {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+@media (hover: hover) {
+  a.parola {
+    transition:
+      background-color var(--durata-rapida) var(--curva),
+      box-shadow var(--durata-rapida) var(--curva);
+  }
+  a.parola:hover {
+    background-color: var(--color-carta-2);
+  }
+  a.parola--insieme:hover {
+    background-color: var(--color-insieme);
+    box-shadow: inset 0 0 0 var(--border-medio) var(--color-insieme-bordo);
+  }
+}
+a.parola:active {
+  background-color: var(--color-carta-2);
+}
+a.parola--insieme:active {
+  background-color: var(--color-insieme);
+  box-shadow: inset 0 0 0 var(--border-medio) var(--color-insieme-bordo);
+}
+/* Parola più lunga di 24 caratteri: va a capo dentro la frase invece di
+   uscire dalla scheda; il fondo si ripete su ogni riga */
+.parola--a-capo {
+  white-space: normal;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+/* Ricerca (#40) */
+
+/* 1. Anello di focus del campo di ricerca: il bordo di 2 px c'è sempre,
+      senza anello il focus non si vedrebbe */
+.campo-ricerca:focus-within {
+  outline: var(--border-medio) solid var(--color-info);
+  outline-offset: var(--space-half);
+}
+
+/* 2. Niente crocetta né decorazioni native del campo di ricerca (mockup) */
+.campo-ricerca__input::-webkit-search-cancel-button,
+.campo-ricerca__input::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* 3. Pagina senza barra (Ricerca su mobile): sotto la tacca del telefono */
+.pagina--stretta-alto {
+  padding-top: calc(var(--space-3) + env(safe-area-inset-top));
+}
+
+/* 4. Palette: campo e piede fermi, scorre solo il contenuto in mezzo.
+      Padding e margine di 4 px: anelli di focus e aree dei chip interi. */
+.palette {
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+.palette__risultati {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-3);
+  align-content: start;
+  min-height: var(--space-0);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--space-1);
+  margin: calc(-1 * var(--space-1));
+}
+
+/* 5. La riga scelta resta bianca anche sotto il mouse e premuta
+      (le regole generali delle righe la farebbero color carta) */
+.palette .riga-lista--cliccabile.is-selezionata,
+.palette .riga-lista--cliccabile.is-selezionata:hover:not(:disabled),
+.palette .riga-lista--cliccabile.is-selezionata:active:not(:disabled) {
+  background-color: var(--color-superficie);
+}
+
+/* 6. Chip scelto con le frecce («Prova a cercare» nella palette):
+      stesso bordo della riga scelta */
+.palette .chip.is-selezionata {
+  box-shadow: inset 0 0 0 var(--border-medio) var(--color-inchiostro);
+}
+
+/* 7. Titolo dello stato vuoto con un testo lungo senza spazi */
+.stato-vuoto__titolo {
+  overflow-wrap: anywhere;
+}
+
+/* 8. Numero dei chip non scelti leggibile (#40 P1, approvata dal
+      coordinatore il 04/11; come .selettore__conteggio, #43 punto 18) */
+.chip:not([aria-pressed="true"]) .chip__conteggio {
+  opacity: 1;
 }
 
 /* =========================================================
