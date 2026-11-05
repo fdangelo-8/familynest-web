@@ -139,8 +139,12 @@ select is_empty(
      from pg_proc p join pg_namespace n on n.oid = p.pronamespace
      where n.nspname in ('public', 'private')
        and has_function_privilege('anon', p.oid, 'execute')
-       and p.oid <> 'public.invitation_preview(text)'::regprocedure $$,
-  'the preview is the only function anon can execute'
+       and p.oid <> 'public.invitation_preview(text)'::regprocedure
+       -- The public wish list (#259, decision D2): the only other functions for anon.
+       and p.oid not in ('public.get_public_wishlist(text, text)'::regprocedure,
+                         'public.get_public_wishlist_photo(text, uuid)'::regprocedure,
+                         'public.reserve_public_wishlist_item(text, uuid, text, text)'::regprocedure) $$,
+  'the preview and the public wish list are the only functions anon can execute'
 );
 select is_empty(
   $$ select i.id from public.invitations i where i.token !~ '^[0-9a-f]{64}$' $$,
