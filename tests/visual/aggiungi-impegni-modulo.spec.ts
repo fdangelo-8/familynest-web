@@ -115,6 +115,20 @@ test("modulo aperto da «Più dettagli» / «Tutti i dettagli»", async ({
   await shoot(page, "modulo-aperto-dettagli.png");
 });
 
+test("modulo aperto, in fondo: Chi lo vede, Note e bottone", async ({
+  page,
+}) => {
+  await installFakes(page);
+  const { entry } = await openWithPhrase(page);
+  await entry.click();
+  const form = formOf(page);
+  await form
+    .getByRole("button", { name: "Metti in giovedì 22" })
+    .scrollIntoViewIfNeeded();
+  await expect(form.getByLabel("Note")).toBeVisible();
+  await shoot(page, "modulo-aperto-in-fondo.png");
+});
+
 test("modulo compilato: luogo, ripetizione, note, chi accompagna", async ({
   page,
 }) => {
@@ -125,9 +139,10 @@ test("modulo compilato: luogo, ripetizione, note, chi accompagna", async ({
   await form.getByLabel("Dove").fill("Piscina comunale, Lissone");
   await form.getByLabel("Si ripete").selectOption("weekly");
   await form.getByLabel("Note").fill("Portare la cuffia");
-  // «La porta»: nobody is pressed at the start, so this is its «Tu»
+  // «La porta» comes after «Chi»: its «Tu» is the last one
   await form
     .getByRole("button", { name: "Tu", exact: true, pressed: false })
+    .last()
     .click();
   await expect(form.getByLabel("Dove")).toHaveValue(
     "Piscina comunale, Lissone",
@@ -196,6 +211,7 @@ test("salvataggio in corso dal modulo", async ({ page }) => {
   const submit = form.getByRole("button", { name: "Metti in giovedì 22" });
   await submit.click();
   await expect(submit).toHaveAttribute("aria-busy", "true");
+  await submit.scrollIntoViewIfNeeded();
   await shoot(page, "modulo-salvataggio-in-corso.png");
 });
 
@@ -204,10 +220,12 @@ test("salvataggio non riuscito dal modulo", async ({ page }) => {
   const { entry } = await openWithPhrase(page);
   await entry.click();
   const form = formOf(page);
-  await form.getByRole("button", { name: "Metti in giovedì 22" }).click();
+  const submit = form.getByRole("button", { name: "Metti in giovedì 22" });
+  await submit.click();
   await expect(form.getByRole("alert")).toHaveText(
     "Non siamo riusciti a salvare l'impegno. Controlla la connessione e riprova.",
   );
+  await submit.scrollIntoViewIfNeeded();
   await shoot(page, "modulo-salvataggio-non-riuscito.png");
 });
 
