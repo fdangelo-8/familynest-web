@@ -12,7 +12,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(65);
+select plan(67);
 
 delete from public.deadlines;
 
@@ -341,11 +341,22 @@ select lives_ok($$ select public.set_notification_preference('free_together', fa
 -- The calendar of one member is exactly what that member reads with list_household_events.
 reset role;
 set local request.jwt.claims to '{"sub":"bbbbbbbb-0000-4000-8000-000000000001","role":"authenticated"}';
+-- Since #266 the job reads private.household_event_rows_for_member() (the rows behind
+-- list_household_events_with_source, with «conta per Liberi insieme»).
+select results_eq(
+  $$ select * from public.list_household_events_with_source('2026-10-19 00:00+02', '2026-11-09 00:00+01') $$,
+  $$ select r.id, r.starts_at, r.ends_at, r.visibility, r.author_member_id, r.is_masked, r.title, r.location,
+            r.escort_member_id, r.member_ids, r.source_provider, r.is_imported, r.counts_for_free_time
+     from private.household_event_rows_for_member('b1000000-0000-4000-8000-000000000001',
+       '2026-10-19 00:00+02', '2026-11-09 00:00+01') r
+     order by r.starts_at, r.ends_at, r.event_id $$,
+  'the calendar used by the job for Giulia is the one she reads (the «Occupato» of Paolo masked, his «Solo io» absent)'
+);
 select results_eq(
   $$ select * from public.list_household_events('2026-10-19 00:00+02', '2026-11-09 00:00+01') $$,
   $$ select * from private.household_events_for_member('b1000000-0000-4000-8000-000000000001',
        '2026-10-19 00:00+02', '2026-11-09 00:00+01') $$,
-  'the calendar used by the job for Giulia is the one she reads (the «Occupato» of Paolo masked, his «Solo io» absent)'
+  'list_household_events gives the same rows to Giulia'
 );
 select ok(
   exists (
@@ -362,10 +373,19 @@ select ok(
 );
 set local request.jwt.claims to '{"sub":"bbbbbbbb-0000-4000-8000-000000000002","role":"authenticated"}';
 select results_eq(
+  $$ select * from public.list_household_events_with_source('2026-10-19 00:00+02', '2026-11-09 00:00+01') $$,
+  $$ select r.id, r.starts_at, r.ends_at, r.visibility, r.author_member_id, r.is_masked, r.title, r.location,
+            r.escort_member_id, r.member_ids, r.source_provider, r.is_imported, r.counts_for_free_time
+     from private.household_event_rows_for_member('b1000000-0000-4000-8000-000000000002',
+       '2026-10-19 00:00+02', '2026-11-09 00:00+01') r
+     order by r.starts_at, r.ends_at, r.event_id $$,
+  'the calendar used by the job for Paolo is the one he reads (his «Solo io» and «Occupato» in full)'
+);
+select results_eq(
   $$ select * from public.list_household_events('2026-10-19 00:00+02', '2026-11-09 00:00+01') $$,
   $$ select * from private.household_events_for_member('b1000000-0000-4000-8000-000000000002',
        '2026-10-19 00:00+02', '2026-11-09 00:00+01') $$,
-  'the calendar used by the job for Paolo is the one he reads (his «Solo io» and «Occupato» in full)'
+  'list_household_events gives the same rows to Paolo'
 );
 set local request.jwt.claims to '{}';
 
