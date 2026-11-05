@@ -309,6 +309,7 @@ test.describe("«Anche su» nel modulo dell'impegno", () => {
       await toggle.click();
       await pressSave(page);
       await expect(toastOf(page, "Modifiche salvate")).toBeVisible();
+      await expect(editDialog(page)).toHaveCount(0);
 
       await u.fake.outbox();
       await expect
