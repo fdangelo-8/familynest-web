@@ -308,8 +308,8 @@ test.describe("con un utente usa e getta", () => {
         : [/^Modifica il profilo di Sofia$/]),
       /giorni alla scadenza/,
       "Vedi nel calendario",
-      /^Gio Nuoto/,
-      /^Sab Festa di Giulia/,
+      /^GioNuoto/,
+      /^SabFesta di Giulia/,
       /^Maestra Bianchi/,
     ];
     let from = 0;
