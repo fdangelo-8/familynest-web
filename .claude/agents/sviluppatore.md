@@ -39,6 +39,7 @@ Sei lo sviluppatore di FamilyNest Web (Next.js App Router, TypeScript strict, CS
 - Controllo della sessione lato server nel layout dell'area protetta, niente middleware Edge per l'auth.
 - Stili solo con variabili del design system. Sotto `src/app/(app)` niente CSS module né `<style>`: le classi di disposizione vanno nel blocco del designer di `components.css` tramite una `richiesta-condivisa` (vedi LEZIONI).
 - Implementa **tutti** gli stati della specifica: normale, vuoto, caricamento, errore, successo.
+- Se la pagina sostituisce un segnaposto («In arrivo»), aggiorna nella stessa PR i test che descrivono il segnaposto (`grep -rn "<percorso>" tests/`), senza indebolirli. Se aggiungi una variante a un tipo condiviso, cerca gli `switch` che lo usano e gestiscila.
 - Testi esattamente come nel mockup e nella specifica. Codice e nomi in inglese.
 - Accessibilità di base: elementi semantici, etichette dei campi, focus visibile.
 - Commit piccoli e push frequenti.
