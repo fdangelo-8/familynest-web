@@ -150,6 +150,10 @@ export type BarConfig =
   /** No top bar: the page has its own (the search on mobile) */
   | { kind: "none" };
 
+/** `/figli/<id>/lista-desideri` (#32): the id is a lowercase uuid. */
+const WISHLIST_ROUTE =
+  /^\/figli\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\/lista-desideri\/?$/;
+
 /** Shape of the mobile top bar for a route. */
 export function getBarConfig(pathname: string): BarConfig {
   if (matchesAny(pathname, ["/oggi", "/aggiungi"])) {
@@ -189,6 +193,13 @@ export function getBarConfig(pathname: string): BarConfig {
   }
   if (matchesPrefix(pathname, "/impostazioni")) {
     return { kind: "detail", fallback: "/nest", title: "Impostazioni" };
+  }
+  // «Lista desideri» (#32): «Indietro» falls back to the profile of the child
+  // (the page's own «+» is on the right). Only a well-formed id goes in the
+  // address of the fallback.
+  const wishlistChild = WISHLIST_ROUTE.exec(pathname)?.[1];
+  if (wishlistChild) {
+    return { kind: "detail", fallback: `/figli/${wishlistChild}` };
   }
   // «Profilo di un figlio» (#31) is under /figli: back to the Nest.
   if (matchesAny(pathname, ["/calendari-collegati", "/membri", "/figli"])) {

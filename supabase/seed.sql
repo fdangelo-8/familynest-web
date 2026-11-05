@@ -246,3 +246,33 @@ values
 
 delete from public.notifications n
 where n.kind = 'gift_taken';
+
+-- Linked calendars (issue #266, for pages #34, #35, #37): one account of the fake provider
+-- (is_fake: the synchronisation of production ignores it) for Paolo (B2, Casa Bianchi, not
+-- an administrator), with the calendars «Personale» (main, writable, switched on, so also
+-- «Dove vanno i nuovi impegni») and «Festività in Italia» (read only, switched off). No
+-- imported event: the calendar pages of the seed households do not change. Marco, Giulia
+-- and Chiara have no account (Oggi, Il tuo profilo and Il tuo Nest show them unlinked).
+-- The credentials are a placeholder in the stored format, not a token and not encrypted
+-- with any key: nothing can be revoked or read with it. Page tests that link calendars use
+-- their own throwaway users.
+insert into public.calendar_accounts (
+  id, household_id, member_id, provider, provider_account_id, email, is_fake, credentials_ciphertext,
+  connected_at, last_synced_at
+)
+values
+  ('e1000000-0000-4000-8000-000000000001', '22222222-2222-4222-8222-222222222222',
+   'b1000000-0000-4000-8000-000000000002', 'google', 'fake-seed-paolo', 'paolo.finto@example.test', true,
+   'v1:seed.placeholder.not.a.credential.00000000', now() - interval '10 days', now() - interval '1 hour');
+
+insert into public.external_calendars (
+  id, household_id, member_id, account_id, provider_calendar_id, name, is_primary, is_read_only,
+  is_enabled, last_synced_at
+)
+values
+  ('e2000000-0000-4000-8000-000000000001', '22222222-2222-4222-8222-222222222222',
+   'b1000000-0000-4000-8000-000000000002', 'e1000000-0000-4000-8000-000000000001', 'fake-personale',
+   'Personale', true, false, true, now() - interval '1 hour'),
+  ('e2000000-0000-4000-8000-000000000002', '22222222-2222-4222-8222-222222222222',
+   'b1000000-0000-4000-8000-000000000002', 'e1000000-0000-4000-8000-000000000001', 'fake-festivita',
+   'Festività in Italia', false, true, false, null);
