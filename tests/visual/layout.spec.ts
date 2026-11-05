@@ -50,6 +50,9 @@ test.beforeEach(async ({ page, context, baseURL }) => {
 });
 
 async function open(page: import("@playwright/test").Page, route: string) {
+  // The tablet test opens several pages with the same page: the fakes of the
+  // one before (Oggi's events) must not answer for the next one (Calendario).
+  await page.unrouteAll({ behavior: "ignoreErrors" });
   // Casa · Spesa (#21) shows the shopping list: a fixed list, served by a fake,
   // so the reference does not depend on what other suites write in the Nest.
   const isSpesa = route === "/casa/spesa";

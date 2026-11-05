@@ -171,9 +171,11 @@ export const tick = (page: Page, title: string) =>
 
 /** The row of a thing to do (`li[data-todo-id]`) on screen. */
 export const todoRow = (page: Page, title: string) =>
-  page.getByRole("listitem").filter({
-    has: page.getByRole("checkbox", { name: `Segna come fatto: ${title}` }),
-  });
+  page
+    .getByRole("listitem")
+    .filter({
+      has: page.getByRole("checkbox", { name: `Segna come fatto: ${title}` }),
+    });
 
 export const lensGroup = (page: Page) =>
   page.getByRole("group", { name: LENS });
