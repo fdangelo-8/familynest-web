@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page, type Route } from "@playwright/test";
 import {
   signInAs,
   skipReason,
@@ -273,12 +273,15 @@ test.describe("collegamento con il fornitore finto", () => {
   }) => {
     needsFake();
     const fake = fakeCalendar(baseURL as string);
+    let held: Route | undefined;
     await withNest("couple", async (user) => {
       try {
         await fake.setup({ userId: user.id, ...STANDARD_FAKE_ACCOUNT });
         await open(page, user, baseURL);
         // The trip to the provider is held by the test.
-        await page.route("**/calendari-collegati/collega/google", () => {});
+        await page.route("**/calendari-collegati/collega/google", (route) => {
+          held = route;
+        });
         await collega(page, "Google").click();
         await expect(
           page.getByText("Collegamento", { exact: true }).filter(visible),
@@ -289,6 +292,7 @@ test.describe("collegamento con il fornitore finto", () => {
         await expect(later(page)).toBeEnabled();
         await expect(collega(page, "Outlook")).toBeEnabled();
       } finally {
+        await held?.abort().catch(() => undefined);
         await page.unrouteAll({ behavior: "ignoreErrors" });
         await fake.reset(user.id);
       }
@@ -312,7 +316,9 @@ test.describe("collegamento con il fornitore finto", () => {
         await collega(page, "Google").click();
         await page.getByRole("link", { name: "Nega", exact: true }).click();
         await expect(page).toHaveURL(/\/onboarding\/calendario$/);
-        const alert = page.getByRole("alert").filter(visible);
+        const alert = page
+          .locator(".avviso--errore[role=alert]")
+          .filter(visible);
         await expect(alert).toContainText(
           "Non siamo riusciti a collegare Google. Riprova o salta questo passo.",
         );
@@ -324,7 +330,9 @@ test.describe("collegamento con il fornitore finto", () => {
         await alert.getByRole("button", { name: "Riprova" }).click();
         await page.getByRole("link", { name: "Consenti", exact: true }).click();
         await expect(page.getByText("Collegato").filter(visible)).toBeVisible();
-        await expect(page.getByRole("alert").filter(visible)).toHaveCount(0);
+        await expect(
+          page.locator(".avviso--errore").filter(visible),
+        ).toHaveCount(0);
       } finally {
         await fake.reset(user.id);
       }
