@@ -342,8 +342,10 @@ test.describe("utenti del seed", () => {
     await openProfile(page, "Marco D'Angelo");
     const download = page.waitForEvent("download");
     await page.getByRole("button", { name: /^I tuoi dati/ }).click();
-    expect((await download).suggestedFilename()).toBe(
-      "familynest-i-tuoi-dati-2026-11-04.json",
+    // The server builds the name with the real date (the page clock does not
+    // reach it), so accept any day.
+    expect((await download).suggestedFilename()).toMatch(
+      /^familynest-i-tuoi-dati-\d{4}-\d{2}-\d{2}\.json$/,
     );
     await expect(page.getByRole("status")).toContainText(
       "Dati scaricati: trovi il file tra i download.",
