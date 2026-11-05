@@ -28,3 +28,19 @@ export function getPublicEnv() {
 export function getSecretKey(): string {
   return required("SUPABASE_SECRET_KEY", process.env.SUPABASE_SECRET_KEY);
 }
+
+// Server-only (wish list, #32): the ONE origin of a test shop that the link
+// reader may open even if it is local (e.g. `http://127.0.0.1:4010`). Used by
+// the tests only; always ignored when the app runs on Vercel.
+export function getShopLinkTestOrigin(): string | null {
+  if (process.env.VERCEL) return null;
+  const raw = process.env.SHOP_LINK_TEST_ORIGIN;
+  if (!raw) return null;
+  try {
+    const url = new URL(raw);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+    return url.origin;
+  } catch {
+    return null;
+  }
+}

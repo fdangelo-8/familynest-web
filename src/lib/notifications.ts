@@ -100,12 +100,53 @@ export type ShoppingAddedNotification = NotificationBase & {
   itemCount: number;
 };
 
+/**
+ * Somebody took an idea of a wish list with «Lo regalo io» on the public page
+ * (#32, #33). The person has no account: there is no actor, only the name
+ * they wrote. Names and title are read with the permissions of the reader,
+ * and shown only to the adults of the Nest. Always on (no preference).
+ */
+export type GiftTakenNotification = NotificationBase & {
+  kind: "gift_taken";
+  /** The name the giver wrote, as written */
+  giverName: string;
+  /** Title of the idea, as written */
+  itemTitle: string;
+  /** Name of the child whose list it is */
+  childName: string;
+  /** Where the row leads when the page decides so: the list of the child */
+  childId: string;
+};
+
 export type NotificationItem =
   | TodoAssignedNotification
   | DeadlineReminderNotification
   | FreeTogetherNotification
   | EventTimeChangedNotification
-  | ShoppingAddedNotification;
+  | ShoppingAddedNotification
+  | GiftTakenNotification;
+
+/** «<giver> regala <title> a <child>.» : the words of a `gift_taken` row. */
+export function giftTakenParts(item: GiftTakenNotification): {
+  giverName: string;
+  verb: string;
+  itemTitle: string;
+  connector: string;
+  childName: string;
+} {
+  return {
+    giverName: item.giverName,
+    verb: " regala ",
+    itemTitle: item.itemTitle,
+    connector: " a ",
+    childName: item.childName,
+  };
+}
+
+/** Where a `gift_taken` notification leads: the wish list of the child. */
+export function giftTakenHref(item: GiftTakenNotification): string {
+  return `/figli/${item.childId}/lista-desideri`;
+}
 
 export type NotificationKind = NotificationItem["kind"];
 
@@ -157,6 +198,15 @@ type RawNotification = {
     due_date: string;
     note: string | null;
   } | null;
+  reservation: {
+    giver_name: string;
+    item: {
+      title: string;
+      wishlist: {
+        child: { id: string; name: string } | null;
+      } | null;
+    } | null;
+  } | null;
 };
 
 const COLUMNS = `
@@ -164,7 +214,16 @@ const COLUMNS = `
   evening_date, free_from, item_count,
   actor:household_members!notifications_actor_fkey(id, name, color),
   todo:todos!notifications_todo_fkey(id, title, due_date, done_at),
-  deadline:deadlines!notifications_deadline_fkey(id, title, due_date, note)
+  deadline:deadlines!notifications_deadline_fkey(id, title, due_date, note),
+  reservation:wishlist_reservations!notifications_wishlist_reservation_fkey(
+    giver_name,
+    item:wishlist_items!wishlist_reservations_item_fkey(
+      title,
+      wishlist:wishlists!wishlist_items_wishlist_fkey(
+        child:household_members!wishlists_member_fkey(id, name)
+      )
+    )
+  )
 `;
 
 function toActor(raw: RawNotification["actor"]): NotificationActor | null {
@@ -229,6 +288,19 @@ function toItem(raw: RawNotification): NotificationItem | null {
         kind: "shopping_added",
         actor,
         itemCount: raw.item_count,
+      };
+    }
+    case "gift_taken": {
+      // Gone without a message when the idea or the reservation is gone.
+      const child = raw.reservation?.item?.wishlist?.child;
+      if (!raw.reservation || !raw.reservation.item || !child) return null;
+      return {
+        ...base,
+        kind: "gift_taken",
+        giverName: raw.reservation.giver_name,
+        itemTitle: raw.reservation.item.title,
+        childName: child.name,
+        childId: child.id,
       };
     }
     // The occurrence is read separately (see `listNotifications`).
