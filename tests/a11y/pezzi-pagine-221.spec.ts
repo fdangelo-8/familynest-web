@@ -213,14 +213,19 @@ test("a11y: foglio con ritorno, Esc e X tornano indietro senza chiudere, senza t
 }) => {
   const example = page.getByTestId("riga-opzione-258");
   await example.scrollIntoViewIfNeeded();
-  await example.getByRole("button", { name: "Apri foglio con ritorno" }).click();
+  await example
+    .getByRole("button", { name: "Apri foglio con ritorno" })
+    .click();
   const dialog = page.getByRole("dialog", { name: "Nuovo impegno" });
   await expect(dialog).toBeVisible();
   const counter = page.getByTestId("foglio-ritorno-n");
   await page.keyboard.press("Escape");
   await expect(counter).toHaveText("Indietro: 1");
   await expect(dialog).toBeVisible();
-  await dialog.getByRole("button", { name: "Chiudi", exact: true }).first().click();
+  await dialog
+    .getByRole("button", { name: "Chiudi", exact: true })
+    .first()
+    .click();
   await expect(counter).toHaveText("Indietro: 2");
   await expect(dialog).toBeVisible();
   const results = await new AxeBuilder({ page }).analyze();
