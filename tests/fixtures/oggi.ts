@@ -171,11 +171,9 @@ export const tick = (page: Page, title: string) =>
 
 /** The row of a thing to do (`li[data-todo-id]`) on screen. */
 export const todoRow = (page: Page, title: string) =>
-  page
-    .getByRole("listitem")
-    .filter({
-      has: page.getByRole("checkbox", { name: `Segna come fatto: ${title}` }),
-    });
+  page.getByRole("listitem").filter({
+    has: page.getByRole("checkbox", { name: `Segna come fatto: ${title}` }),
+  });
 
 export const lensGroup = (page: Page) =>
   page.getByRole("group", { name: LENS });
@@ -352,6 +350,8 @@ export async function tabNeverEnters(page: Page, row: Locator): Promise<void> {
 // ------------------------------------------------------------ accessibility
 
 export async function axeProblems(page: Page): Promise<string[]> {
+  // axe waits on timers that a stopped clock never fires.
+  await page.clock.resume().catch(() => {});
   const results = await new AxeBuilder({ page }).analyze();
   return results.violations
     .filter((v) => ["serious", "critical"].includes(v.impact ?? ""))

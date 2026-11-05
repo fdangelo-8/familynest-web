@@ -124,6 +124,70 @@ test.describe("lente e visibilità", () => {
       sec(page, "Dopo").locator("a.riga-evento:not(.riga-evento--insieme)"),
     ).toHaveCount(0);
   });
+
+  test("CA-7 (decisione 04/11): l'«Occupato» di Paolo domani non compare in «Domani», nemmeno con la lente «Nest»; l'impegno condiviso sì", async ({
+    page,
+    baseURL,
+    bianchi,
+  }) => {
+    const title = "Riunione segreta";
+    const place = "Ufficio Nord";
+    await ev(bianchi, "Paolo", {
+      title,
+      day: d(1),
+      from: "10:00",
+      to: "11:00",
+      visibility: "busy",
+      place,
+    });
+    await ev(bianchi, "Paolo", {
+      title: "Cena in famiglia",
+      day: d(1),
+      from: "20:00",
+      to: "22:00",
+    });
+    const net = watchNetwork(page);
+    await open(page, baseURL, bianchi, "Giulia", {
+      lens: "nest",
+      now: at(d(0), "23:10"),
+    });
+    const domani = sec(page, "Domani");
+    await expect(domani).toBeVisible();
+    await expect(domani).toContainText("Cena in famiglia");
+    await expect(domani).not.toContainText("Occupato");
+    await expect(domani).not.toContainText("10:00");
+    await expect(
+      page.getByRole("group", { name: /Paolo ha un impegno/ }),
+    ).toHaveCount(0);
+    await expectNeverSeen(page, net.bodies, [title, place]);
+  });
+
+  test("CA-7 (decisione 04/11): con solo un «Occupato» di Paolo domani non c'è «Domani»", async ({
+    page,
+    baseURL,
+    bianchi,
+  }) => {
+    await ev(bianchi, "Paolo", {
+      title: "Riunione segreta",
+      day: d(1),
+      from: "10:00",
+      to: "11:00",
+      visibility: "busy",
+    });
+    await open(page, baseURL, bianchi, "Giulia", {
+      lens: "nest",
+      now: at(d(0), "23:10"),
+    });
+    await expect(lensButton(page, "Nest")).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await expect(sec(page, "Domani")).toHaveCount(0);
+    await expect(page.getByText("Occupato")).toHaveCount(0);
+    await expect(
+      page.getByRole("group", { name: /Paolo ha un impegno/ }),
+    ).toHaveCount(0);
+  });
 });
 
 test.describe("isolamento tra nuclei", () => {
