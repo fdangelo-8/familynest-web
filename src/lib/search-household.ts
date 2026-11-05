@@ -174,8 +174,22 @@ function toEventHit(raw: RawRow): EventHit | MaskedEventHit | null {
   ) {
     return null;
   }
+  // The database marks «Occupato» of others with is_masked and sends
+  // visibility null on them: only the allowed fields are copied, whatever
+  // else the row carries.
+  if (raw.is_masked === true) {
+    if (raw.author_member_id === null) return null;
+    return {
+      kind: "event",
+      masked: true,
+      startsAt: raw.starts_at,
+      endsAt: raw.ends_at,
+      occurrenceDay: raw.occurrence_day,
+      visibility: "busy",
+      authorMemberId: raw.author_member_id,
+    };
+  }
   const hasDetails =
-    raw.is_masked !== true &&
     raw.id !== null &&
     raw.title !== null &&
     raw.member_ids !== null &&
@@ -201,18 +215,8 @@ function toEventHit(raw: RawRow): EventHit | MaskedEventHit | null {
       seriesStartsOn: raw.series_starts_on as string,
     };
   }
-  // Anything that is not provably a full row is treated as «Occupato»: only
-  // the allowed fields are copied, nothing else can leak.
-  if (raw.visibility !== "busy" || raw.author_member_id === null) return null;
-  return {
-    kind: "event",
-    masked: true,
-    startsAt: raw.starts_at,
-    endsAt: raw.ends_at,
-    occurrenceDay: raw.occurrence_day,
-    visibility: "busy",
-    authorMemberId: raw.author_member_id,
-  };
+  // Not masked and not provably complete: dropped, never shown half.
+  return null;
 }
 
 function toThingHit(

@@ -130,6 +130,8 @@ function failureOf(error: ErrorLike): NotificationFailure {
     : "network";
 }
 
+class OccurrenceReadFailed extends Error {}
+
 const DAYS_BEFORE = [30, 7, 1, 0] as const;
 
 type RawNotification = {
@@ -277,14 +279,17 @@ export async function listNotifications(
   // Cambi d'orario: the current occurrence of each event, one read each.
   const occurrences = new Map<
     string,
-    Promise<EventTimeChangedNotification["event"] | null>
+    Promise<EventTimeChangedNotification["event"] | null | "failed">
   >();
   const readOccurrence = (eventId: string, day: string | null) => {
     const key = `${eventId}|${day ?? ""}`;
     let found = occurrences.get(key);
     if (!found) {
-      found = getEventOccurrence(eventId, day, client).then((result) =>
-        result.ok && result.occurrence
+      // `ok: true` with no occurrence = «cannot be shown»; `ok: false` = the
+      // read failed, and the whole list fails with it (never an incomplete list).
+      found = getEventOccurrence(eventId, day, client).then((result) => {
+        if (!result.ok) return "failed" as const;
+        return result.occurrence
           ? {
               id: result.occurrence.id,
               title: result.occurrence.title,
@@ -292,30 +297,40 @@ export async function listNotifications(
               endsAt: result.occurrence.endsAt,
               occurrenceDate: result.occurrence.occurrenceDate,
             }
-          : null,
-      );
+          : null;
+      });
       occurrences.set(key, found);
     }
     return found;
   };
 
-  const items = await Promise.all(
-    rows.map(async (raw): Promise<NotificationItem | null> => {
-      if (raw.kind !== "event_time_changed") return toItem(raw);
-      const actor = toActor(raw.actor);
-      if (!actor || raw.event_id === null) return null;
-      const event = await readOccurrence(raw.event_id, raw.occurrence_date);
-      if (!event) return null;
-      return {
-        id: raw.id,
-        createdAt: raw.created_at,
-        readAt: raw.read_at,
-        kind: "event_time_changed",
-        actor,
-        event,
-      };
-    }),
-  );
+  let items: (NotificationItem | null)[];
+  try {
+    items = await Promise.all(
+      rows.map(async (raw): Promise<NotificationItem | null> => {
+        if (raw.kind !== "event_time_changed") return toItem(raw);
+        const actor = toActor(raw.actor);
+        if (!actor || raw.event_id === null) return null;
+        const event = await readOccurrence(raw.event_id, raw.occurrence_date);
+        if (event === "failed") throw new OccurrenceReadFailed();
+        if (!event) return null;
+        return {
+          id: raw.id,
+          createdAt: raw.created_at,
+          readAt: raw.read_at,
+          kind: "event_time_changed",
+          actor,
+          event,
+        };
+      }),
+    );
+  } catch (error) {
+    if (!(error instanceof OccurrenceReadFailed)) throw error;
+    // The read of an occurrence does not say why it failed.
+    const offline =
+      typeof navigator !== "undefined" && navigator.onLine === false;
+    return { ok: false, reason: offline ? "network" : "server" };
+  }
 
   return {
     ok: true,

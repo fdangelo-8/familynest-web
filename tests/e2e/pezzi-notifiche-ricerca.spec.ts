@@ -194,7 +194,7 @@ test.describe("ricerca del Nest (#40)", () => {
     expect(isSearchable({ text: "nuoto", kinds: [] })).toBe(false);
   });
 
-  test("manda solo i parametri dati, ripulisce il testo e chiama la funzione in POST", async () => {
+  test("manda solo i parametri dati, ripulisce il testo e chiama search_household", async () => {
     const { client, calls } = rpcClient(() => ({ data: [] }));
     const result = await searchHousehold(
       { text: "  nuoto  ", kinds: ["event", "todo"] },
@@ -255,12 +255,13 @@ test.describe("ricerca del Nest (#40)", () => {
         is_masked: true,
         // a masked row that carries a title by mistake: nothing but the
         // allowed fields may come out
-        title: "Visita riservata",
-        location: "Studio",
+        title: "Riunione riservata",
+        location: "Ufficio",
         starts_at: "2026-11-06T09:00:00Z",
         ends_at: "2026-11-06T10:00:00Z",
         occurrence_day: "2026-11-06",
-        visibility: "busy",
+        // the database sends null on masked rows
+        visibility: null,
         author_member_id: ID(12),
       },
       {
@@ -651,6 +652,27 @@ test.describe("notifiche (#39)", () => {
     const { client } = listClient(rows);
     const result = await listNotifications(client);
     expect(result).toEqual({ ok: true, notifications: [] });
+  });
+
+  test("se la lettura di un'occorrenza fallisce, fallisce tutto l'elenco", async () => {
+    const rows = [
+      {
+        ...empty,
+        id: ID(5),
+        kind: "event_time_changed",
+        created_at: "2026-11-03T10:00:00Z",
+        actor,
+        event_id: ID(30),
+        occurrence_date: "2026-11-12",
+      },
+    ];
+    const { client } = listClient(rows);
+    (client as unknown as { rpc: unknown }).rpc = () =>
+      Promise.resolve({ data: null, error: { code: "XX000" } });
+    expect(await listNotifications(client)).toEqual({
+      ok: false,
+      reason: "server",
+    });
   });
 
   test("errore della lettura: {ok: false} con il motivo, senza dettagli", async () => {

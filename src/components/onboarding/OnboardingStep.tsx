@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useRef, useState, type KeyboardEvent } from "react";
 import { changeAnswer, createNest } from "@/app/onboarding/actions";
 import { Brand, Claim, Stickers } from "@/components/accesso/parts";
+import { clearAllRecentSearches } from "@/lib/recent-searches";
 import { Button } from "@/components/ui/Button/Button";
 import { Icon } from "@/components/ui/Icon/Icon";
 import { CHOICES, type Living } from "./choices";
@@ -185,7 +186,12 @@ export function OnboardingStep({
   return (
     <main className={styles.root}>
       {/* "Indietro" signs out of this device (POST), then goes to /accesso. */}
-      <form id={SIGN_OUT_FORM} method="post" action="/auth/signout" />
+      <form
+        id={SIGN_OUT_FORM}
+        method="post"
+        action="/auth/signout"
+        onSubmit={() => clearAllRecentSearches()}
+      />
 
       <div className={`${styles.mobile} passo-onboarding`}>
         <div className="passo-onboarding__testa">

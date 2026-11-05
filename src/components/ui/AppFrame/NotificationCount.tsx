@@ -1,6 +1,5 @@
 "use client";
 
-import { usePathname } from "next/navigation";
 import {
   createContext,
   useCallback,
@@ -12,6 +11,7 @@ import {
   type ReactNode,
 } from "react";
 import { countUnreadNotifications } from "@/lib/notifications";
+import { useFramePathname } from "./useFramePathname";
 
 type NotificationCountValue = {
   /** Unread notifications the bell shows. 0 = no number, no dot. */
@@ -39,7 +39,8 @@ export function NotificationCountProvider({
   initialCount: number;
   children: ReactNode;
 }) {
-  const pathname = usePathname();
+  // The page below a sheet or the search is the same page: no new read.
+  const pathname = useFramePathname();
   const [count, setCountState] = useState(initialCount);
   // A newer read wins; an answer that comes late is thrown away.
   const latest = useRef(0);
