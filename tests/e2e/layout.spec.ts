@@ -467,6 +467,9 @@ test.describe("segnaposto", () => {
     if (route === "/profilo") continue;
     // /impostazioni is no longer a placeholder (#41): see tests/e2e/impostazioni.spec.ts.
     if (route === "/impostazioni") continue;
+    // /ricerca is no longer a placeholder (#40): see the test right below the loop
+    // and tests/e2e/ricerca-*.spec.ts.
+    if (route === "/ricerca") continue;
     test(`CA-6: A apre ${route}: stato 200, un solo h1 «${h1}», titolo, segnaposto`, async ({
       page,
       baseURL,
@@ -525,6 +528,41 @@ test.describe("segnaposto", () => {
       await expect(placeholder).toContainText("In arrivo");
     });
   }
+});
+
+test.describe("ricerca (#40)", () => {
+  test("CA-6: A apre /ricerca: stato 200, titolo, non è più il segnaposto; pagina «Cerca nel Nest» su mobile, dialogo sopra Oggi su desktop", async ({
+    page,
+    baseURL,
+  }, testInfo) => {
+    withUser("A");
+    const response = await openAs(page, baseURL, "A", "/ricerca");
+    expect(response?.status()).toBe(200);
+    await expect(page).toHaveURL(/\/ricerca$/);
+    await expect(page).toHaveTitle("FamilyNest · Ricerca");
+    await expect(page.getByTestId("pagina-segnaposto")).toHaveCount(0);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+    if (testInfo.project.name === "mobile") {
+      // The page of the search: one hidden h1, the field, no bars.
+      await expect(
+        page.getByRole("heading", {
+          level: 1,
+          name: "Cerca nel Nest",
+          exact: true,
+        }),
+      ).toHaveCount(1);
+      await expect(
+        page.getByRole("searchbox", { name: "Cerca nel Nest" }),
+      ).toBeVisible();
+    } else {
+      // Opened by address, the palette is over Today.
+      await expect(
+        page.getByRole("dialog", { name: "Cerca nel Nest" }),
+      ).toBeVisible();
+      // The page below is Today: its h1 is a greeting that changes, so it is
+      // not looked for by name; the single h1 of the page is checked above.
+    }
+  });
 });
 
 test.describe("mobile 390 px", () => {
