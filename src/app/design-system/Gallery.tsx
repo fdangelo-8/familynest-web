@@ -2059,6 +2059,8 @@ function MonthSection() {
 }
 
 function PageParts() {
+  const [backOpen, setBackOpen] = useState(false);
+  const [backCount, setBackCount] = useState(0);
   return (
     <Section id="pezzi-pagine" title="Pezzi delle pagine (#29, #31, #38, #41)">
       <Example caption="sezione__link · link nella testa di una sezione">
@@ -2342,6 +2344,62 @@ function PageParts() {
               </li>
             </ul>
           </section>
+        </div>
+      </Example>
+      <Example caption="riga-opzione come bottone · is-in-corso · Sheet con onBack (#258)">
+        <div className="colonna" data-testid="riga-opzione-258">
+          <div className="scheda">
+            <button type="button" className="riga-opzione">
+              <Icon name="calendar" />
+              <span className="riga-opzione__nome">Giovedì 22 ottobre</span>
+              <span className="riga-opzione__valore">17:00 – 18:00</span>
+            </button>
+            <div className="is-in-corso">
+              <button
+                type="button"
+                className="riga-opzione"
+                aria-disabled="true"
+              >
+                <Icon name="users" />
+                <span className="riga-opzione__nome">Chi</span>
+                <span className="riga-opzione__valore">Sofia</span>
+              </button>
+              <button
+                type="button"
+                className="btn-link btn-link--secondario"
+                aria-disabled="true"
+              >
+                <Icon name="sliders-horizontal" size="s" />
+                Più dettagli
+              </button>
+            </div>
+          </div>
+          <Button
+            variant="secondary"
+            onClick={() => setBackOpen(true)}
+            data-testid="foglio-ritorno-apri"
+          >
+            Apri foglio con ritorno
+          </Button>
+          <span className="t-nota t-secondario" data-testid="foglio-ritorno-n">
+            Indietro: {backCount}
+          </span>
+          <Sheet
+            open={backOpen}
+            onClose={() => setBackOpen(false)}
+            onBack={() => setBackCount((n) => n + 1)}
+            title="Nuovo impegno"
+            data-testid="foglio-ritorno"
+            footer={
+              <Button full onClick={() => setBackOpen(false)}>
+                Chiudi il foglio
+              </Button>
+            }
+          >
+            <p className="t-corpo">
+              X, Esc, velo e maniglia tornano indietro senza chiudere.
+            </p>
+          </Sheet>
         </div>
       </Example>
     </Section>

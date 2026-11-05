@@ -16,6 +16,12 @@ import { useAnimatedClose, useDialogFocus, useIsDesktop } from "../overlay";
 export type SheetProps = {
   open: boolean;
   onClose: () => void;
+  /**
+   * Goes back instead of closing: X, Esc, the veil and the drag call it and the
+   * sheet stays open, with no exit animation (the parent changes the content).
+   * Without it they close the sheet, as usual. Ignored while `locked`.
+   */
+  onBack?: () => void;
   /** Required: becomes the `h2` and the accessible name of the dialog */
   title: string;
   /** Body content, same on mobile and desktop */
@@ -54,6 +60,7 @@ export function Sheet(props: SheetProps) {
 
 function SheetContent({
   onClose,
+  onBack,
   title,
   children,
   footer,
@@ -76,8 +83,14 @@ function SheetContent({
   useEffect(() => {
     lockedRef.current = locked;
   });
+  const onBackRef = useRef(onBack);
+  useEffect(() => {
+    onBackRef.current = onBack;
+  });
   const requestClose = useCallback(() => {
-    if (!lockedRef.current) startClose();
+    if (lockedRef.current) return;
+    if (onBackRef.current) onBackRef.current();
+    else startClose();
   }, [startClose]);
   useEffect(() => {
     if (closeRequested) startClose();
@@ -120,12 +133,16 @@ function SheetContent({
     const dialog = dialogRef.current;
     if (!dialog) return;
     dialog.classList.remove("is-trascinato");
-    if (delta > dialog.offsetHeight * DRAG_CLOSE_RATIO && !lockedRef.current) {
+    const beyond =
+      delta > dialog.offsetHeight * DRAG_CLOSE_RATIO && !lockedRef.current;
+    if (beyond && !onBackRef.current) {
       requestClose();
-    } else {
-      dialog.classList.add("is-rientro");
-      dialog.style.removeProperty("--trascinamento");
+      return;
     }
+    // Going back: the sheet slides to its place first, then the parent acts.
+    dialog.classList.add("is-rientro");
+    dialog.style.removeProperty("--trascinamento");
+    if (beyond) requestClose();
   };
 
   return (

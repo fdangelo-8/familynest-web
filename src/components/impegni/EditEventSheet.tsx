@@ -16,9 +16,22 @@ import {
 } from "@/lib/event-texts";
 import type { EventOccurrence } from "@/lib/household-events";
 import { createClient } from "@/lib/supabase/client";
-import { EventFormFields, focusField } from "./EventFormFields";
+import {
+  EventFormFields,
+  focusField,
+} from "@/components/evento-modulo/EventFormFields";
 import {
   ERROR_TEXTS,
+  endsOtherDayHint,
+  firstErrorField,
+  validateForm,
+  visibilityHelp,
+  type EventFormValues,
+  type EventMember,
+  type FieldKey,
+  type FormErrors,
+} from "@/components/evento-modulo/model";
+import {
   allDialogText,
   calendarHref,
   choiceDialogText,
@@ -26,20 +39,12 @@ import {
   deleteTextOf,
   dayTakenText,
   endDayOffset,
-  endsOtherDayHint,
   escortRefusedText,
-  firstErrorField,
   initialValues,
   isFirstOccurrence,
   locksFor,
   peopleLockedHelp,
   repeatOptions,
-  validateForm,
-  visibilityHelp,
-  type EventFormValues,
-  type EventMember,
-  type FieldKey,
-  type FormErrors,
 } from "./model";
 import {
   deleteEvent,

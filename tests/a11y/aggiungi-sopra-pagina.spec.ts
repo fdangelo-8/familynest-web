@@ -119,7 +119,10 @@ test.describe("Aggiungi sopra la pagina", () => {
     await expect(dialogOf(page)).toHaveCount(0);
     await expect(page).toHaveURL(/\/oggi$/);
     await expect(
-      page.getByRole("heading", { level: 1, name: "Oggi" }),
+      page.getByRole("heading", {
+        level: 1,
+        name: /^(Buongiorno|Buon pomeriggio|Buonasera|Eccoti)/,
+      }),
     ).toBeVisible();
     await expect(page.locator("main")).toHaveCount(1);
     await page.keyboard.press("Tab");
@@ -139,7 +142,10 @@ test.describe("Aggiungi sopra la pagina", () => {
       await expect(dialogOf(page)).toHaveCount(0);
       await expect(page).toHaveURL(/\/oggi$/);
       await expect(
-        page.getByRole("heading", { level: 1, name: "Oggi" }),
+        page.getByRole("heading", {
+          level: 1,
+          name: /^(Buongiorno|Buon pomeriggio|Buonasera|Eccoti)/,
+        }),
       ).toBeVisible();
       await expect(page.locator("main")).toHaveCount(1);
       await page.keyboard.press("Tab");
