@@ -190,8 +190,9 @@ export function CalendarsView({
         .flatMap((a) => a.calendars)
         .filter((c) => c.isEnabled)
         .map((c) => c.id);
-      const showProgress = !syncing.current;
-      syncing.current = true;
+      // One progress notice at a time, and none when there is nothing to count.
+      const showProgress = !syncing.current && ids.length > 0;
+      if (showProgress) syncing.current = true;
       let before: Map<string, string | null> | null = null;
       if (showProgress) {
         before = await readSyncMarks();
@@ -408,7 +409,9 @@ export function CalendarsView({
     switch (notice.result) {
       case "denied":
         return (
-          <Alert variant="info" action={retry}>
+          // Information, not an error (info icon); announced at once because
+          // the adult has just come back and is waiting for the outcome (CA-7).
+          <Alert variant="info" role="alert" action={retry}>
             Collegamento con <b>{name}</b> annullato: senza il tuo permesso non
             possiamo leggere il calendario.
           </Alert>
