@@ -108,55 +108,6 @@ test.describe("aggiungere un'idea", () => {
     });
   });
 
-  test("CA-20: da link del negozio di prova: nome, negozio, prezzo e foto copiata (con l'origine di prova)", async ({
-    page,
-    baseURL,
-  }) => {
-    only390();
-    needsThrowaway();
-    needsShop();
-    const shop = await startShop();
-    try {
-      await withFigli(async (ctx) => {
-        await openList(page, baseURL, ctx, "Ugo", ctx.mia, "Mia");
-        const dialog = await openAdd(page);
-        await fillIdea(dialog, {
-          link: `${SHOP_ORIGIN}/diario`,
-          note: "Lo vuole tanto",
-        });
-        await submitIdea(dialog).click();
-        await expect(dialog).toBeHidden();
-
-        const first = ideaRows(page, "Da regalare").first();
-        await expect(first.locator(".riga-regalo__titolo")).toHaveText(T_I1);
-        await expect(first.locator(".riga-lista__info")).toHaveText(
-          "Feltrinelli · lo vuole tanto",
-        );
-        await expect(first.locator(".riga-regalo__prezzo")).toHaveText("18 €");
-        const saved = await ideasOfNest(ctx);
-        const { data: photoRows } = await ctx.admin
-          .from("wishlist_item_photos")
-          .select("content_type")
-          .eq("item_id", saved[0]!.id);
-        expect(
-          photoRows,
-          `foto copiata nel database; richieste al negozio: ${JSON.stringify(shopHits)}`,
-        ).toHaveLength(1);
-        const image = first.locator("img.foto__immagine");
-        await expect(image).toHaveCount(1);
-        expect(await image.getAttribute("src")).not.toContain(
-          new URL(SHOP_ORIGIN!).host,
-        );
-        const rows = await ideasOfNest(ctx);
-        expect(rows).toHaveLength(1);
-        expect(rows[0]!.url).toBe(`${SHOP_ORIGIN}/diario`);
-        expect(rows[0]!.price_cents).toBe(1800);
-      });
-    } finally {
-      shop.close();
-    }
-  });
-
   test("CA-20 (aggiunta a mano): idea scritta con il suo link e la nota: prima riga di «Da regalare», link salvato", async ({
     page,
     baseURL,
@@ -212,35 +163,6 @@ test.describe("aggiungere un'idea", () => {
     });
   });
 
-  test("CA-22: link e idea scritti: vale il nome scritto, con negozio e prezzo del link (con l'origine di prova)", async ({
-    page,
-    baseURL,
-  }) => {
-    only390();
-    needsThrowaway();
-    needsShop();
-    const shop = await startShop();
-    try {
-      await withFigli(async (ctx) => {
-        await openList(page, baseURL, ctx, "Ugo", ctx.mia, "Mia");
-        const dialog = await openAdd(page);
-        await fillIdea(dialog, {
-          link: `${SHOP_ORIGIN}/diario`,
-          idea: "Diario per Mia",
-        });
-        await submitIdea(dialog).click();
-        await expect(dialog).toBeHidden();
-        const row = ideaRow(page, "Diario per Mia");
-        await expect(row.locator(".riga-lista__info")).toHaveText(
-          "Feltrinelli",
-        );
-        await expect(row.locator(".riga-regalo__prezzo")).toHaveText("18 €");
-      });
-    } finally {
-      shop.close();
-    }
-  });
-
   test("CA-23: a campi vuoti compare «Incolla il link di un negozio o scrivi l'idea qui sotto.», il fuoco è sul link e non è salvato nulla", async ({
     page,
     baseURL,
@@ -273,43 +195,6 @@ test.describe("aggiungere un'idea", () => {
       await expect(dialog).toBeVisible();
       expect(await ideasOfNest(ctx)).toEqual([]);
     });
-  });
-
-  test("CA-25: link che non si legge: errore sull'idea, il link resta scritto, nulla salvato; poi con «Diario» si salva con il link", async ({
-    page,
-    baseURL,
-  }) => {
-    only390();
-    needsThrowaway();
-    test.setTimeout(90_000);
-    const link = SHOP_ORIGIN ? `${SHOP_ORIGIN}/vuota` : UNREADABLE_LINK;
-    const shop = SHOP_ORIGIN ? await startShop() : null;
-    try {
-      await withFigli(async (ctx) => {
-        await openList(page, baseURL, ctx, "Ugo", ctx.mia, "Mia");
-        const dialog = await openAdd(page);
-        await fillIdea(dialog, { link });
-        await submitIdea(dialog).click();
-        await expect(dialog.getByText(UNREADABLE_ERROR)).toBeVisible({
-          timeout: 30_000,
-        });
-        await expect(field(dialog, "Oppure scrivi l'idea")).toBeFocused();
-        await expect(field(dialog, "Link del negozio")).toHaveValue(link);
-        expect(await ideasOfNest(ctx)).toEqual([]);
-
-        await fillIdea(dialog, { idea: "Diario" });
-        await submitIdea(dialog).click();
-        await expect(dialog).toBeHidden({ timeout: 30_000 });
-        const row = ideaRow(page, "Diario");
-        await expect(row.locator(".riga-regalo__prezzo")).toHaveCount(0);
-        const rows = await ideasOfNest(ctx);
-        expect(rows).toHaveLength(1);
-        expect(rows[0]!.title).toBe("Diario");
-        expect(rows[0]!.url).toBe(link);
-      });
-    } finally {
-      shop?.close();
-    }
   });
 
   test("CA-26: indirizzi interni o vietati danno lo stesso messaggio e il server di prova non riceve richieste", async ({
@@ -437,6 +322,128 @@ test.describe("aggiungere un'idea", () => {
       dialog = await openAdd(page);
       await expect(field(dialog, "Oppure scrivi l'idea")).toHaveValue("");
     });
+  });
+});
+
+// Le prove che usano il negozio di prova (porta fissa, un solo server per
+// worker) girano nello stesso worker, una dopo l'altra, ma senza fermarsi al
+// primo errore.
+test.describe("aggiungere da un link (negozio di prova)", () => {
+  test.describe.configure({ mode: "default" });
+
+  test("CA-20: da link del negozio di prova: nome, negozio, prezzo e foto copiata (con l'origine di prova)", async ({
+    page,
+    baseURL,
+  }) => {
+    only390();
+    needsThrowaway();
+    needsShop();
+    const shop = await startShop();
+    try {
+      await withFigli(async (ctx) => {
+        await openList(page, baseURL, ctx, "Ugo", ctx.mia, "Mia");
+        const dialog = await openAdd(page);
+        await fillIdea(dialog, {
+          link: `${SHOP_ORIGIN}/diario`,
+          note: "Lo vuole tanto",
+        });
+        await submitIdea(dialog).click();
+        await expect(dialog).toBeHidden();
+
+        const first = ideaRows(page, "Da regalare").first();
+        await expect(first.locator(".riga-regalo__titolo")).toHaveText(T_I1);
+        await expect(first.locator(".riga-lista__info")).toHaveText(
+          "Feltrinelli · lo vuole tanto",
+        );
+        await expect(first.locator(".riga-regalo__prezzo")).toHaveText("18 €");
+        const saved = await ideasOfNest(ctx);
+        const { data: photoRows } = await ctx.admin
+          .from("wishlist_item_photos")
+          .select("content_type")
+          .eq("item_id", saved[0]!.id);
+        expect(
+          photoRows,
+          `foto copiata nel database; richieste al negozio: ${JSON.stringify(shopHits)}`,
+        ).toHaveLength(1);
+        const image = first.locator("img.foto__immagine");
+        await expect(image).toHaveCount(1);
+        expect(await image.getAttribute("src")).not.toContain(
+          new URL(SHOP_ORIGIN!).host,
+        );
+        const rows = await ideasOfNest(ctx);
+        expect(rows).toHaveLength(1);
+        expect(rows[0]!.url).toBe(`${SHOP_ORIGIN}/diario`);
+        expect(rows[0]!.price_cents).toBe(1800);
+      });
+    } finally {
+      shop.close();
+    }
+  });
+
+  test("CA-22: link e idea scritti: vale il nome scritto, con negozio e prezzo del link (con l'origine di prova)", async ({
+    page,
+    baseURL,
+  }) => {
+    only390();
+    needsThrowaway();
+    needsShop();
+    const shop = await startShop();
+    try {
+      await withFigli(async (ctx) => {
+        await openList(page, baseURL, ctx, "Ugo", ctx.mia, "Mia");
+        const dialog = await openAdd(page);
+        await fillIdea(dialog, {
+          link: `${SHOP_ORIGIN}/diario`,
+          idea: "Diario per Mia",
+        });
+        await submitIdea(dialog).click();
+        await expect(dialog).toBeHidden();
+        const row = ideaRow(page, "Diario per Mia");
+        await expect(row.locator(".riga-lista__info")).toHaveText(
+          "Feltrinelli",
+        );
+        await expect(row.locator(".riga-regalo__prezzo")).toHaveText("18 €");
+      });
+    } finally {
+      shop.close();
+    }
+  });
+
+  test("CA-25: link che non si legge: errore sull'idea, il link resta scritto, nulla salvato; poi con «Diario» si salva con il link", async ({
+    page,
+    baseURL,
+  }) => {
+    only390();
+    needsThrowaway();
+    test.setTimeout(90_000);
+    const link = SHOP_ORIGIN ? `${SHOP_ORIGIN}/vuota` : UNREADABLE_LINK;
+    const shop = SHOP_ORIGIN ? await startShop() : null;
+    try {
+      await withFigli(async (ctx) => {
+        await openList(page, baseURL, ctx, "Ugo", ctx.mia, "Mia");
+        const dialog = await openAdd(page);
+        await fillIdea(dialog, { link });
+        await submitIdea(dialog).click();
+        await expect(dialog.getByText(UNREADABLE_ERROR)).toBeVisible({
+          timeout: 30_000,
+        });
+        await expect(field(dialog, "Oppure scrivi l'idea")).toBeFocused();
+        await expect(field(dialog, "Link del negozio")).toHaveValue(link);
+        expect(await ideasOfNest(ctx)).toEqual([]);
+
+        await fillIdea(dialog, { idea: "Diario" });
+        await submitIdea(dialog).click();
+        await expect(dialog).toBeHidden({ timeout: 30_000 });
+        const row = ideaRow(page, "Diario");
+        await expect(row.locator(".riga-regalo__prezzo")).toHaveCount(0);
+        const rows = await ideasOfNest(ctx);
+        expect(rows).toHaveLength(1);
+        expect(rows[0]!.title).toBe("Diario");
+        expect(rows[0]!.url).toBe(link);
+      });
+    } finally {
+      shop?.close();
+    }
   });
 });
 
