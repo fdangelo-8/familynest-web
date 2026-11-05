@@ -229,13 +229,14 @@ test("salvataggio non riuscito dal modulo", async ({ page }) => {
   await shoot(page, "modulo-salvataggio-non-riuscito.png");
 });
 
-test("ritorno alla frase con la X", async ({ page }) => {
+test("ritorno alla frase con Esc", async ({ page }) => {
   await installFakes(page);
   const { dialog, field, entry } = await openWithPhrase(page);
   await entry.click();
   const form = formOf(page);
   await form.getByLabel("Titolo").fill("Altro");
-  await form.getByRole("button", { name: "Chiudi" }).click();
+  // From the keyboard, so that the ring of the focus on the entry is drawn
+  await page.keyboard.press("Escape");
   await expect(formOf(page)).toHaveCount(0);
   await expect(dialog).toBeVisible();
   await expect(field).toHaveValue(PHRASE);
