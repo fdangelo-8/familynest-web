@@ -13,6 +13,7 @@ import {
   type ReactNode,
 } from "react";
 import { flushSync } from "react-dom";
+import { takeAddText } from "../../lib/add-text-handoff";
 import { notifyEventsChanged } from "../../lib/events-changed";
 import { VISIBILITY_LABELS, type EventVisibility } from "../../lib/calendar";
 import {
@@ -234,9 +235,13 @@ export function AddSheet({
   const errorId = `${prefix}-${uid}-frase-errore`;
   const examplesId = `${prefix}-${uid}-esempi`;
 
+  // Text left by another page (the search): read once, then forgotten.
+  const [handoff] = useState(() => (editId ? null : takeAddText()));
+  const startType = initialType ?? handoff?.type ?? null;
+
   const [open, setOpen] = useState(true);
   const [closeRequested, setCloseRequested] = useState(false);
-  const [phrase, setPhrase] = useState("");
+  const [phrase, setPhrase] = useState(handoff?.text ?? "");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveFailed, setSaveFailed] = useState(false);
@@ -251,7 +256,7 @@ export function AddSheet({
 
   // Type, Spesa, Da fare, Scadenza
   const [type, setType] = useState<AddType>(
-    isEdit ? "da-fare" : (initialType ?? "impegno"),
+    isEdit ? "da-fare" : (startType ?? "impegno"),
   );
   const [toTake, setToTake] = useState<ToTakeState>({ status: "idle" });
   // undefined = follows the text; null or an id = chosen by hand
@@ -275,7 +280,7 @@ export function AddSheet({
   const requestedDays = useRef(new Set<string>());
   const fieldRef = useRef<HTMLTextAreaElement>(null);
   // The type was chosen by hand (or by the address): the text no longer changes it
-  const manualRef = useRef(initialType !== null || isEdit);
+  const manualRef = useRef(startType !== null || isEdit);
   const typeRef = useRef(type);
   const phraseRef = useRef(phrase);
   // What the text said about «chi se ne occupa» the last time it changed
@@ -619,14 +624,16 @@ export function AddSheet({
     }
   });
 
-  // Edit: the field takes the focus with the cursor at the end.
+  // Edit, or text handed over by another page: the field takes the focus
+  // with the cursor at the end.
+  const hasStartText = handoff !== null;
   useEffect(() => {
-    if (!isEdit || !formShown) return;
+    if ((!isEdit && !hasStartText) || !formShown) return;
     const field = fieldRef.current;
     if (!field) return;
     field.focus();
     field.setSelectionRange(field.value.length, field.value.length);
-  }, [isEdit, formShown]);
+  }, [isEdit, hasStartText, formShown]);
 
   // Edit: the thing is gone, «Chiudi» takes the focus.
   const goneOnOpen = edit?.status === "gone";

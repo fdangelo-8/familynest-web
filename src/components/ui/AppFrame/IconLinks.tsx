@@ -3,17 +3,32 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { MouseEvent } from "react";
-import { Icon } from "../Icon/Icon";
+import { Icon, type IconName } from "../Icon/Icon";
 import { useNest } from "./NestProvider";
 
-/** Bell link to the notifications page. Shows the red dot only with new notifications. */
-export function NotificationsLink({ newCount = 0 }: { newCount?: number }) {
+/**
+ * Bell link to the notifications page. Shows the red dot only with new
+ * notifications. `current` is true on the notifications page itself
+ * (`aria-current="page"`, no change of look).
+ */
+export function NotificationsLink({
+  newCount = 0,
+  current = false,
+}: {
+  newCount?: number;
+  current?: boolean;
+}) {
   const label =
     newCount > 0
       ? `Notifiche, ${newCount} ${newCount === 1 ? "nuova" : "nuove"}`
       : "Notifiche";
   return (
-    <Link href="/notifiche" className="btn-icona" aria-label={label}>
+    <Link
+      href="/notifiche"
+      className="btn-icona"
+      aria-label={label}
+      aria-current={current ? "page" : undefined}
+    >
       <Icon name="bell" />
       {newCount > 0 ? (
         <span className="btn-icona__punto" aria-hidden="true" />
@@ -22,10 +37,25 @@ export function NotificationsLink({ newCount = 0 }: { newCount?: number }) {
   );
 }
 
-/** Magnifier link to the search page. */
-export function SearchLink({ label = "Cerca nel Nest" }: { label?: string }) {
+/**
+ * Magnifier link to the search page. On desktop it also announces the
+ * shortcut (`shortcut`: `aria-keyshortcuts`), because not every screen reader
+ * reads «⌘» in the name.
+ */
+export function SearchLink({
+  label = "Cerca nel Nest",
+  shortcut = false,
+}: {
+  label?: string;
+  shortcut?: boolean;
+}) {
   return (
-    <Link href="/ricerca" className="btn-icona" aria-label={label}>
+    <Link
+      href="/ricerca"
+      className="btn-icona"
+      aria-label={label}
+      aria-keyshortcuts={shortcut ? "Control+K Meta+K" : undefined}
+    >
       <Icon name="search" />
     </Link>
   );
@@ -61,6 +91,24 @@ function HistoryLink({
       aria-label={label}
       onClick={handleClick}
     >
+      <Icon name={icon} />
+    </Link>
+  );
+}
+
+/** Icon link to another page, on the right of a detail bar («Impostazioni delle notifiche»). */
+export function BarIconLink({
+  href,
+  icon,
+  label,
+}: {
+  href: string;
+  icon: IconName;
+  /** Accessible name, written as the action */
+  label: string;
+}) {
+  return (
+    <Link href={href} className="btn-icona" aria-label={label}>
       <Icon name={icon} />
     </Link>
   );

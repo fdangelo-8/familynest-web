@@ -12,6 +12,7 @@ import {
 } from "react";
 import type { IconName } from "../Icon/Icon";
 import { IconButton } from "../IconButton/IconButton";
+import { BarIconLink } from "./IconLinks";
 
 /**
  * The icon button on the right of the mobile top bar of a detail page
@@ -25,6 +26,8 @@ type BarActionSpec = {
   inactive: boolean;
   /** Two-state button (e.g. a pin): `aria-pressed`. Undefined = plain button */
   pressed?: boolean;
+  /** With an address the action is a link, not a button (no `onClick`) */
+  href?: string;
 };
 
 type BarActionContextValue = {
@@ -56,36 +59,51 @@ export function BarActionProvider({ children }: { children: ReactNode }) {
 }
 
 /**
- * Puts an icon button on the right of the mobile top bar while the component
- * is mounted. Renders nothing itself. Only detail bars show it.
+ * Puts an icon button, or an icon link, on the right of the mobile top bar
+ * while the component is mounted. Renders nothing itself. Only detail bars
+ * show it.
  */
+type BarActionProps = {
+  icon: IconName;
+  /** Accessible name, written as the action */
+  label: string;
+} & (
+  | {
+      href?: undefined;
+      inactive?: boolean;
+      /** Two-state button: `aria-pressed`. The label changes with the state. */
+      pressed?: boolean;
+      onClick: () => void;
+    }
+  | {
+      /** A link to another page: no `onClick`, never inactive or pressed */
+      href: string;
+      inactive?: undefined;
+      pressed?: undefined;
+      onClick?: undefined;
+    }
+);
+
 export function BarAction({
   icon,
   label,
   inactive = false,
   pressed,
+  href,
   onClick,
-}: {
-  icon: IconName;
-  /** Accessible name, written as the action */
-  label: string;
-  inactive?: boolean;
-  /** Two-state button: `aria-pressed`. The label changes with the state. */
-  pressed?: boolean;
-  onClick: () => void;
-}) {
+}: BarActionProps) {
   const context = useContext(BarActionContext);
   const setAction = context?.setAction;
   const setOnPress = context?.setOnPress;
 
   useEffect(() => {
-    setOnPress?.(onClick);
+    setOnPress?.(onClick ?? null);
   });
 
   useEffect(() => {
-    setAction?.({ icon, label, inactive, pressed });
+    setAction?.({ icon, label, inactive, pressed, href });
     return () => setAction?.(null);
-  }, [setAction, icon, label, inactive, pressed]);
+  }, [setAction, icon, label, inactive, pressed, href]);
 
   useEffect(() => () => setOnPress?.(null), [setOnPress]);
 
@@ -98,6 +116,11 @@ export function BarActionSlot() {
   const action = context?.action ?? null;
   if (!context || !action) {
     return <span className="barra__vuoto" aria-hidden="true" />;
+  }
+  if (action.href !== undefined) {
+    return (
+      <BarIconLink href={action.href} icon={action.icon} label={action.label} />
+    );
   }
   return (
     <IconButton

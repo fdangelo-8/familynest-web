@@ -4,6 +4,7 @@
  * placeholder pages. Pure functions, no React.
  */
 
+import type { IconName } from "@/components/ui/Icon/icon-paths";
 import { SPACES } from "@/lib/spaces";
 
 export type NavItem = "oggi" | "calendario" | "casa";
@@ -137,8 +138,17 @@ export type BarConfig =
       search?: boolean;
       /** Title in the middle: a `p`, not a heading (the page has its own h1) */
       title?: string;
+      /**
+       * The title is the page's h1 (`h1.barra__titolo`): below 1024 px it is
+       * the only visible h1, and the page does not write its own.
+       */
+      titleIsHeading?: boolean;
+      /** Icon link on the right, instead of the page's own action */
+      link?: { href: string; icon: IconName; label: string };
     }
-  | { kind: "close"; href: string };
+  | { kind: "close"; href: string }
+  /** No top bar: the page has its own (the search on mobile) */
+  | { kind: "none" };
 
 /** Shape of the mobile top bar for a route. */
 export function getBarConfig(pathname: string): BarConfig {
@@ -153,6 +163,25 @@ export function getBarConfig(pathname: string): BarConfig {
   }
   if (matchesPrefix(pathname, "/nest")) {
     return { kind: "close", href: "/oggi" };
+  }
+  // Search (#40): the field with «Annulla» is the bar.
+  if (matchesPrefix(pathname, "/ricerca")) {
+    return { kind: "none" };
+  }
+  // Notifiche (#39): «Notifiche» is the h1 of the page below 1024 px, and the
+  // gear leads to the settings of the notifications.
+  if (matchesPrefix(pathname, "/notifiche")) {
+    return {
+      kind: "detail",
+      fallback: "/oggi",
+      title: "Notifiche",
+      titleIsHeading: true,
+      link: {
+        href: "/impostazioni#notifiche",
+        icon: "settings-2",
+        label: "Impostazioni delle notifiche",
+      },
+    };
   }
   // «Il tuo profilo» (#38) and «Impostazioni» (#41) say where you are.
   if (matchesPrefix(pathname, "/profilo")) {

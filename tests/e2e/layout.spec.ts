@@ -681,7 +681,7 @@ test.describe("mobile 390 px", () => {
       ["/impostazioni", /\/nest$/],
       ["/membri", /\/nest$/],
       ["/notifiche", /\/oggi$/],
-      ["/ricerca", /\/oggi$/],
+      // «/ricerca» has no top bar on mobile (#40): «Annulla» is its way out.
     ];
     for (const [route, expected] of fallbacks) {
       const fresh = await context.newPage();
