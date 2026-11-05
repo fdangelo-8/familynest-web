@@ -440,6 +440,7 @@ test.describe("isolamento", () => {
 });
 
 test.describe("accessibilità", () => {
+  // axe uses timers of its own: the clock of the page must be running.
   const noBlocking = async (page: Page) => {
     await waitForAnimationsToEnd(page);
     expect(await blockingViolations(page)).toEqual([]);
@@ -459,7 +460,7 @@ test.describe("accessibilità", () => {
       to: "17:00",
       members: ["Giulia"],
     });
-    await open(page, baseURL, nest, "Giulia");
+    await open(page, baseURL, nest, "Giulia", { pause: false });
 
     await expect(page.getByTestId("sintesi")).toBeVisible();
     await expect(rows(page)).toHaveCount(2);
@@ -471,7 +472,7 @@ test.describe("accessibilità", () => {
     baseURL,
     solo,
   }) => {
-    await open(page, baseURL, solo, "Rita");
+    await open(page, baseURL, solo, "Rita", { pause: false });
 
     await expect(page.getByText("Tutto tranquillo")).toBeVisible();
     await noBlocking(page);
@@ -520,7 +521,10 @@ test.describe("accessibilità", () => {
     nest,
   }) => {
     await ca9(nest);
-    await open(page, baseURL, nest, "Giulia", { time: at(0, "15:40") });
+    await open(page, baseURL, nest, "Giulia", {
+      time: at(0, "15:40"),
+      pause: false,
+    });
 
     await page.context().setOffline(true);
     await expect(
