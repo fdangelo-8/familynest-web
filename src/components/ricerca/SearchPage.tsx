@@ -93,11 +93,23 @@ function Body({ ctrl }: { ctrl: SearchController }) {
       </>
     );
   }
-  if (phase === "error" || phase === "offline") {
+  if (phase === "error") {
     return (
       <>
         {chosenFilter ? <FilterChips ctrl={ctrl} counts={false} /> : null}
-        <SearchProblem ctrl={ctrl} offline={phase === "offline"} />
+        <SearchProblem ctrl={ctrl} offline={false} />
+      </>
+    );
+  }
+  if (phase === "offline") {
+    // The notice first, then what is already in the browser.
+    return (
+      <>
+        {chosenFilter ? <FilterChips ctrl={ctrl} counts={false} /> : null}
+        <SearchProblem ctrl={ctrl} offline />
+        <PeopleSection ctrl={ctrl} />
+        <RecentsSection ctrl={ctrl} />
+        <ExamplesSection ctrl={ctrl} />
       </>
     );
   }

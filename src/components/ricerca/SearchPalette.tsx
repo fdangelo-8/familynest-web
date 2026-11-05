@@ -272,7 +272,8 @@ export function SearchPalette({ direct }: { direct: boolean }) {
 
   const { phase } = ctrl;
   const results = phase === "ready" && ctrl.counts.all > 0;
-  const idle = phase === "idle";
+  // Offline keeps recent searches and examples under the notice.
+  const idle = phase === "idle" || phase === "offline";
   const listIds = results
     ? `${ctrl.uid}-risultati`
     : idle
@@ -390,7 +391,6 @@ export function SearchPalette({ direct }: { direct: boolean }) {
           aria-label={results ? "Risultati" : undefined}
           id={results ? `${ctrl.uid}-risultati` : undefined}
         >
-          {idle ? <IdleContent ctrl={ctrl} /> : null}
           {phase === "loading" ? (
             <SkeletonGroup aria-live="polite" data-testid="ricerca-caricamento">
               <Skeleton shape="riga" />
@@ -400,6 +400,7 @@ export function SearchPalette({ direct }: { direct: boolean }) {
           {phase === "error" || phase === "offline" ? (
             <SearchProblem ctrl={ctrl} offline={phase === "offline"} />
           ) : null}
+          {idle ? <IdleContent ctrl={ctrl} /> : null}
           {phase === "ready" && !results ? <NoResults ctrl={ctrl} /> : null}
           {results ? <ResultsContent ctrl={ctrl} /> : null}
         </div>

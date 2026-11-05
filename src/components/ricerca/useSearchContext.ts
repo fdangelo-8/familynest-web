@@ -61,7 +61,7 @@ export function useSearchContext(): SearchContext {
         if (household.error || !household.data) throw new Error("household");
         const members = await supabase
           .from("household_members")
-          .select("id, name, color, kind")
+          .select("id, name, color")
           .eq("household_id", household.data)
           .order("created_at", { ascending: true })
           .order("id", { ascending: true });
@@ -72,7 +72,6 @@ export function useSearchContext(): SearchContext {
             id: member.id,
             name: member.name,
             color: member.color as MemberColor,
-            kind: member.kind,
           })),
           meId: mine.error ? null : (mine.data?.id ?? null),
           userId,

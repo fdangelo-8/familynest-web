@@ -19,6 +19,7 @@ import {
   readRecentSearches,
   restoreRecentSearches,
 } from "@/lib/recent-searches";
+import { failureOf } from "@/lib/notifications";
 import { createClient } from "@/lib/supabase/client";
 import { readDraft, releaseDraft, writeDraft } from "./draft";
 import {
@@ -147,7 +148,7 @@ export function useSearchController({
   const announcement =
     searchable && search.announcedText !== null
       ? resultsAnnouncement(
-          search.announcedText,
+          cleanSearchText(search.announcedText),
           filter === "all" ? counts.all : counts[filter],
           filter,
         )
@@ -262,13 +263,51 @@ export function useSearchController({
     [search.version],
   );
 
+  /** Ticks waiting for the connection, as in Casa · Da fare: latest wish per thing */
+  const pending = useRef(new Map<string, boolean>());
+  const changeTickedRef = useRef(changeTicked);
+  useEffect(() => {
+    changeTickedRef.current = changeTicked;
+  });
+
+  /** Writes the tick: «ok», «network» (it waits) or «server» (it was refused). */
   const writeDone = useCallback(async (id: string, done: boolean) => {
-    const { error } = await createClient()
+    const { error, status } = await createClient()
       .from("todos")
       .update({ done_at: done ? new Date().toISOString() : null })
       .eq("id", id);
-    return error === null;
+    if (error === null) return "ok" as const;
+    return failureOf(status);
   }, []);
+
+  /** Sends a tick; the server refusing puts the box back and says so (false). */
+  const sendDone = useCallback(
+    async (id: string, done: boolean): Promise<boolean> => {
+      const result = await writeDone(id, done);
+      if (result === "ok") {
+        pending.current.delete(id);
+        return true;
+      }
+      if (result === "network") {
+        pending.current.set(id, done);
+        return true;
+      }
+      pending.current.delete(id);
+      changeTickedRef.current(id, !done);
+      showToast({ text: SAVE_FAILED_TEXT, icon: null, withoutNav: true });
+      return false;
+    },
+    [showToast, writeDone],
+  );
+
+  // The connection is back: what waited goes.
+  useEffect(() => {
+    const onOnline = () => {
+      for (const [id, done] of [...pending.current]) void sendDone(id, done);
+    };
+    window.addEventListener("online", onOnline);
+    return () => window.removeEventListener("online", onOnline);
+  }, [sendDone]);
 
   const toggleTodo = useCallback(
     async (row: RowModel, position: number) => {
@@ -277,14 +316,10 @@ export function useSearchController({
       const markDone = !doneIds.has(id);
       saving.current.add(id);
       changeTicked(id, markDone);
-      const saved = await writeDone(id, markDone);
+      const kept = await sendDone(id, markDone);
       saving.current.delete(id);
-      if (!saved) {
-        changeTicked(id, !markDone);
-        showToast({ text: SAVE_FAILED_TEXT, icon: null, withoutNav: true });
-        return;
-      }
-      if (!markDone) return;
+      // Refused by the server: the box is back and the toast said so.
+      if (!markDone || !kept) return;
       showToast({
         text: "Fatto:",
         emphasis: row.titleText,
@@ -293,15 +328,7 @@ export function useSearchController({
         onUndo: () => {
           void (async () => {
             changeTicked(id, false);
-            const undone = await writeDone(id, false);
-            if (!undone) {
-              changeTicked(id, true);
-              showToast({
-                text: SAVE_FAILED_TEXT,
-                icon: null,
-                withoutNav: true,
-              });
-            }
+            await sendDone(id, false);
             window.requestAnimationFrame(() => {
               document
                 .querySelector<HTMLElement>(
@@ -313,7 +340,7 @@ export function useSearchController({
         },
       });
     },
-    [changeTicked, doneIds, showToast, writeDone],
+    [changeTicked, doneIds, sendDone, showToast],
   );
 
   // ---- keyboard selection in the palette ----
@@ -333,7 +360,8 @@ export function useSearchController({
       }
       return list;
     }
-    if (phase === "idle") {
+    // Offline keeps recent searches and examples under the notice.
+    if (phase === "idle" || phase === "offline") {
       return [
         ...recents.map((recent, index) => ({
           key: `recent-${index}`,
@@ -391,8 +419,6 @@ export function useSearchController({
 
   const controller = {
     uid,
-    mode,
-    context,
     people,
     peopleById,
     meId,
@@ -414,8 +440,6 @@ export function useSearchController({
     remember,
     onRowClick,
     onAddClick,
-    open,
-    goAdd,
     doneIds,
     toggleTodo,
     items,
@@ -424,7 +448,6 @@ export function useSearchController({
     move,
     activateSelected,
     itemId,
-    close: onClose,
   };
   // The field's ref travels apart: an object holding a ref cannot be read
   // while rendering.

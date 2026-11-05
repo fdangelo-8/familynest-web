@@ -2,7 +2,6 @@ import type { IconName } from "@/components/ui/Icon/Icon";
 import type { MemberColor } from "@/components/ui/Avatar/Avatar";
 import { formatBusyLabel } from "@/lib/calendar";
 import {
-  URGENT_DAYS,
   addDaysToDayKey,
   dayAndMonth,
   daysUntilDay,
@@ -28,7 +27,6 @@ export type PersonView = {
   id: string;
   name: string;
   color: MemberColor;
-  kind: string;
 };
 
 /** Filter chips (mobile): everything, or one kind. */
@@ -65,6 +63,9 @@ export const KIND_HREFS = {
   todo: "/casa/da-fare",
   shopping_item: "/casa/spesa",
 } as const;
+
+/** A thing to do is red up to today + 3 days: the rule of Casa · Da fare (not the 14 days of the deadlines). */
+const TODO_URGENT_DAYS = 3;
 
 export const FIELD_PLACEHOLDER = "Cerca nel Nest";
 
@@ -213,7 +214,7 @@ function buildRow(
       info: parts.length > 0 ? capitalizeFirst(parts.join(", ")) : null,
       urgent:
         hit.dueDate !== null &&
-        hit.dueDate <= addDaysToDayKey(toDayKey(now), URGENT_DAYS),
+        hit.dueDate <= addDaysToDayKey(toDayKey(now), TODO_URGENT_DAYS),
       locked: false,
       avatarMemberId: hit.assigneeMemberId,
       todoId: hit.id,
