@@ -40,6 +40,11 @@ export type WishlistData = {
   items: WishItem[];
   /** `expires_at` of the active link (not disabled, not expired), or null */
   activeLinkExpiresAt: string | null;
+  /**
+   * The latest link when none is active: it ran out (`expired`) or was turned
+   * off (`disabled`). `null` when there was never a link or one is active.
+   */
+  endedLink: { kind: "expired" | "disabled"; expiresAt: string } | null;
   readAt: Date;
 };
 
@@ -128,6 +133,12 @@ export function birthdayTitle(birthDate: string | null, now: Date): string {
 
 export type ShareView =
   | { kind: "none" }
+  | {
+      kind: "expired";
+      /** «Era attivo fino al 15 dicembre» */
+      until: string;
+    }
+  | { kind: "disabled" }
   | { kind: "no-birth" }
   | {
       kind: "active";
@@ -161,6 +172,14 @@ export function shareView(data: WishlistData): ShareView {
     !nextBirthday(data.child.birthDate, data.readAt)
   ) {
     return { kind: "no-birth" };
+  }
+  if (data.endedLink?.kind === "disabled") return { kind: "disabled" };
+  if (data.endedLink?.kind === "expired") {
+    const lastDay = new Date(new Date(data.endedLink.expiresAt).getTime() - 1);
+    return {
+      kind: "expired",
+      until: `Era attivo fino al ${dayAndMonth(lastDay, data.readAt)}`,
+    };
   }
   return { kind: "none" };
 }

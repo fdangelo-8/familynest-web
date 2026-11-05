@@ -18,7 +18,6 @@ import {
 const TEXTS = {
   title: "Aggiungi un'idea",
   link: "Link del negozio",
-  linkHelp: "Prendiamo noi nome, foto e prezzo.",
   idea: "Oppure scrivi l'idea",
   ideaPlaceholder: "Es. corso di pattinaggio",
   note: "Nota per chi regala",
@@ -174,7 +173,6 @@ export function AddIdeaSheet({
         <TextField
           id={linkId}
           label={TEXTS.link}
-          help={TEXTS.linkHelp}
           type="url"
           inputMode="url"
           autoComplete="off"

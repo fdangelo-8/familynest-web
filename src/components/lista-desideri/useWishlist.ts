@@ -39,7 +39,7 @@ async function readWishlist(childId: string): Promise<ReadResult> {
       supabase
         .from("wishlists")
         .select(
-          "id, wishlist_items(id, title, url, shop_name, price_cents, note, created_at, wishlist_item_photos(content_type, data), wishlist_reservations(giver_name, created_at)), wishlist_share_links(expires_at, disabled_at)",
+          "id, wishlist_items(id, title, url, shop_name, price_cents, note, created_at, wishlist_item_photos(content_type, data), wishlist_reservations(giver_name, created_at)), wishlist_share_links(expires_at, disabled_at, created_at)",
         )
         .eq("member_id", childId)
         .maybeSingle(),
@@ -69,6 +69,11 @@ async function readWishlist(childId: string): Promise<ReadResult> {
     const active = asList(list.data?.wishlist_share_links).find(
       (link) => link.disabled_at === null && new Date(link.expires_at) > now,
     );
+    const latest = active
+      ? undefined
+      : [...asList(list.data?.wishlist_share_links)].sort((a, b) =>
+          b.created_at.localeCompare(a.created_at),
+        )[0];
 
     return {
       kind: "ok",
@@ -81,6 +86,12 @@ async function readWishlist(childId: string): Promise<ReadResult> {
         },
         items,
         activeLinkExpiresAt: active?.expires_at ?? null,
+        endedLink: latest
+          ? {
+              kind: latest.disabled_at === null ? "expired" : "disabled",
+              expiresAt: latest.expires_at,
+            }
+          : null,
         readAt: now,
       },
     };

@@ -5,6 +5,14 @@ import { Button } from "@/components/ui/Button/Button";
 import { Icon } from "@/components/ui/Icon/Icon";
 import type { ShareView } from "./model";
 
+const TITLES: Record<ShareView["kind"], string> = {
+  active: "Condivisa con un link",
+  none: "Non ancora condivisa",
+  "no-birth": "Non ancora condivisa",
+  expired: "Il link è scaduto",
+  disabled: "Link disattivato",
+};
+
 /**
  * The dark block of the sharing (#32 §3.3 and §6; designer §4): the state of
  * the link, its expiry and «Disattiva il link». The only dark element of the
@@ -26,7 +34,6 @@ export function ShareBlock({
   shareRef: Ref<HTMLButtonElement>;
   disableRef: Ref<HTMLButtonElement>;
 }) {
-  const shared = view.kind === "active";
   return (
     <div className="scheda scheda--scura">
       <ul className="lista lista--notte">
@@ -35,15 +42,17 @@ export function ShareBlock({
             <Icon name="link" />
           </span>
           <span className="riga-lista__testo">
-            <span className="riga-lista__titolo">
-              {shared ? "Condivisa con un link" : "Non ancora condivisa"}
-            </span>
+            <span className="riga-lista__titolo">{TITLES[view.kind]}</span>
             <span className="riga-lista__info">
               {view.kind === "active"
                 ? view.taken
                 : view.kind === "no-birth"
                   ? "Per condividere serve la data del compleanno."
-                  : "Crea il link e mandalo a nonni e parenti: vedono le idee e segnano cosa regalano."}
+                  : view.kind === "expired"
+                    ? `${view.until}. Condividi per crearne uno nuovo.`
+                    : view.kind === "disabled"
+                      ? "Chi lo apre vede che la lista non è più attiva. Condividi per crearne uno nuovo."
+                      : "Crea il link e mandalo a nonni e parenti: vedono le idee e segnano cosa regalano."}
             </span>
           </span>
           {view.kind === "no-birth" ? null : (

@@ -4990,7 +4990,7 @@ button.riga-regalo__titolo {
   color: inherit;
   text-align: start;
   cursor: pointer;
-  justify-self: start;
+  width: 100%;
   -webkit-tap-highlight-color: transparent;
 }
 button.riga-regalo__titolo::before {
