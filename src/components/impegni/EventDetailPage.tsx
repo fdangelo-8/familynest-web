@@ -60,6 +60,11 @@ export function EventDetailPage({
 
   const { state, reload, markMissing } = detail;
   const ready = state.status === "ready";
+  // An imported event changes only for its author (and only «Chi lo vede»).
+  const canEdit =
+    state.status !== "ready" ||
+    !state.link.isImported ||
+    state.occurrence.authorMemberId === state.meId;
 
   // After a «Riprova» that worked, the focus goes to the title.
   useEffect(() => {
@@ -92,7 +97,7 @@ export function EventDetailPage({
       tabIndex={-1}
       className="pagina pagina-desktop pagina-desktop--centrata"
     >
-      {state.status === "loading" || ready ? (
+      {state.status === "loading" || (ready && canEdit) ? (
         <BarAction
           icon="pencil"
           label="Modifica"
@@ -138,6 +143,7 @@ export function EventDetailPage({
             occurrence={state.occurrence}
             members={state.members}
             meId={state.meId}
+            link={state.link}
             now={now}
           />
           {desktop ? (
@@ -152,27 +158,33 @@ export function EventDetailPage({
                 {state.occurrence.location ? (
                   <DirectionsLink place={state.occurrence.location} />
                 ) : null}
-                <Button icon="pencil" onClick={openEdit}>
-                  Modifica
-                </Button>
+                {canEdit ? (
+                  <Button icon="pencil" onClick={openEdit}>
+                    Modifica
+                  </Button>
+                ) : null}
               </div>
             </div>
           ) : (
             <div className="dialogo__azioni">
-              <Button full icon="pencil" onClick={openEdit}>
-                Modifica
-              </Button>
+              {canEdit ? (
+                <Button full icon="pencil" onClick={openEdit}>
+                  Modifica
+                </Button>
+              ) : null}
               {state.occurrence.location ? (
                 <DirectionsLink place={state.occurrence.location} full />
               ) : null}
             </div>
           )}
           <EditEventSheet
-            open={editing}
+            open={editing && canEdit}
             onClose={() => setEditing(false)}
             occurrence={state.occurrence}
             members={state.members}
             meId={state.meId}
+            link={state.link}
+            alsoOnTarget={state.alsoOnTarget}
             now={now}
             onSaved={handleSaved}
             onMissing={markMissing}

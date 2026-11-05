@@ -29,6 +29,8 @@ const WEEKDAY_NAMES = [
   "domenica",
 ] as const;
 
+const PROVIDER_NAMES = { google: "Google", outlook: "Outlook" } as const;
+
 const RECURRENCE_NAMES = {
   none: "nessuna",
   weekly: "ogni settimana",
@@ -121,6 +123,8 @@ export async function buildExport(
     notifications,
     interests,
     ideas,
+    accounts,
+    calendars,
   ] = await Promise.all([
     supabase
       .from("events")
@@ -170,6 +174,20 @@ export async function buildExport(
       .select("title, url, note, created_at")
       .eq("added_by_member_id", me.id)
       .order("created_at", { ascending: true }),
+    // Linked calendars (#34): the policies give back only this person's own.
+    // Named columns on purpose: never credentials, tokens, the cursor or the
+    // ids the provider uses.
+    supabase
+      .from("calendar_accounts")
+      .select("id, provider, email, connected_at, last_synced_at")
+      .order("connected_at", { ascending: true })
+      .order("id", { ascending: true }),
+    supabase
+      .from("external_calendars")
+      .select(
+        "account_id, name, is_primary, is_read_only, is_enabled, direction, visibility, counts_for_free_time, weekdays_only, is_new_events_target, last_synced_at",
+      )
+      .order("name", { ascending: true }),
   ]);
   if (
     events.error ||
@@ -179,7 +197,9 @@ export async function buildExport(
     pinned.error ||
     notifications.error ||
     interests.error ||
-    ideas.error
+    ideas.error ||
+    accounts.error ||
+    calendars.error
   ) {
     return null;
   }
@@ -303,6 +323,27 @@ export async function buildExport(
       link: i.url,
       nota: i.note,
       aggiunta_il: romeDateTime(i.created_at),
+    })),
+    calendari_collegati: accounts.data.map((a) => ({
+      servizio: PROVIDER_NAMES[a.provider],
+      mail: a.email,
+      collegato_il: romeDateTime(a.connected_at),
+      ultima_sincronizzazione: dateTimeOrNull(a.last_synced_at),
+      calendari: calendars.data
+        .filter((c) => c.account_id === a.id)
+        .map((c) => ({
+          nome: c.name,
+          principale: c.is_primary,
+          sola_lettura: c.is_read_only,
+          sincronizzato: c.is_enabled,
+          direzione:
+            c.direction === "two_way" ? "entrata e uscita" : "solo in entrata",
+          chi_lo_vede: visibilityLabel(c.visibility),
+          conta_per_liberi_insieme: c.counts_for_free_time,
+          solo_giorni_feriali: c.weekdays_only,
+          dove_vanno_i_nuovi_impegni: c.is_new_events_target,
+          ultima_sincronizzazione: dateTimeOrNull(c.last_synced_at),
+        })),
     })),
     avvisi_degli_spazi: interests.data.map((i) => ({
       spazio: i.space,

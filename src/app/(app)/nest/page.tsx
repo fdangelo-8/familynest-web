@@ -8,6 +8,7 @@ import { ListRow } from "@/components/ui/List/List";
 import { PLACEHOLDERS } from "@/lib/app-routes";
 import { formatAge } from "@/lib/datetime";
 import { MAX_HOUSEHOLD_MEMBERS } from "@/lib/household-limits";
+import { nestCalendarsInfo, readLinkedCalendars } from "@/lib/linked-calendars";
 import { requireNest, type NestFrameData } from "@/lib/nest-frame";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/database";
@@ -29,6 +30,8 @@ type Loaded = {
   nestName: string;
   rows: Row[];
   admin: boolean;
+  /** «Outlook, Google · 3 attivi»; null without linked accounts */
+  calendarsInfo: string | null;
 };
 
 type Setting = {
@@ -39,13 +42,17 @@ type Setting = {
 };
 
 /** «Profili dei figli» only when the Nest has a child; it opens the first one. */
-function settingsFor(rows: ReadonlyArray<Row>): Setting[] {
+function settingsFor(
+  rows: ReadonlyArray<Row>,
+  calendarsInfo: string | null,
+): Setting[] {
   const children = rows.filter((row) => row.kind === "child");
   const first = children[0];
   return [
     {
       icon: "calendar-arrow-down",
       title: "Calendari collegati",
+      ...(calendarsInfo ? { info: calendarsInfo } : {}),
       href: "/calendari-collegati",
     },
     ...(first
@@ -73,9 +80,12 @@ async function load(frame: NestFrameData): Promise<Loaded | null> {
   const supabase = await createClient();
   // The session and the Nest name were already read by requireNest():
   // the colour is unique in the Nest, so it tells which member is the user.
-  const { data: householdId, error: householdError } = await supabase.rpc(
-    "current_household_id",
-  );
+  const [householdResult, linked] = await Promise.all([
+    supabase.rpc("current_household_id"),
+    readLinkedCalendars(supabase),
+  ]);
+  const { data: householdId, error: householdError } = householdResult;
+  if (!linked.ok) return null;
   if (householdError || !householdId || !frame.me || frame.nestName === null) {
     return null;
   }
@@ -137,7 +147,12 @@ async function load(frame: NestFrameData): Promise<Loaded | null> {
     };
   });
 
-  return { nestName: frame.nestName, rows, admin };
+  return {
+    nestName: frame.nestName,
+    rows,
+    admin,
+    calendarsInfo: nestCalendarsInfo(linked.summary),
+  };
 }
 
 function MemberRow({ row }: { row: Row }) {
@@ -170,7 +185,7 @@ export default async function Page() {
   const loaded = frame.failed ? null : await load(frame).catch(() => null);
   if (!loaded) return <NestError />;
 
-  const { nestName, rows, admin } = loaded;
+  const { nestName, rows, admin, calendarsInfo } = loaded;
   const full = rows.length >= MAX_HOUSEHOLD_MEMBERS;
 
   return (
@@ -208,7 +223,7 @@ export default async function Page() {
             </span>
           </Link>
           <ul className="scheda lista">
-            {settingsFor(rows).map((item) => (
+            {settingsFor(rows, calendarsInfo).map((item) => (
               <ListRow key={item.href} href={item.href}>
                 <span className="icona-riquadro">
                   <Icon name={item.icon} />

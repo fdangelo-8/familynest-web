@@ -87,6 +87,8 @@ export type RowModel = {
   urgent: boolean;
   /** Events only: a «Solo io» the reader sees in full */
   locked: boolean;
+  /** Events only: «Google», «Outlook»… for an imported event of the reader */
+  sourceLabel?: string | null;
   avatarMemberId: string | null;
   /** Things to do only: what the box on mobile changes */
   todoId: string | null;
@@ -161,6 +163,7 @@ function buildRow(
       info: `${timeInfo(hit, now)}${place}`,
       urgent: false,
       locked: hit.visibility === "private",
+      sourceLabel: hit.sourceLabel ?? null,
       avatarMemberId: hit.memberIds[0] ?? hit.authorMemberId,
       todoId: null,
     };

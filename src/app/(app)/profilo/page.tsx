@@ -10,6 +10,10 @@ import type { ChoosableColor } from "@/components/ui/ColorChoice/ColorChoice";
 import { SettingsMenu } from "@/components/ui/AppFrame/SettingsMenu";
 import { PLACEHOLDERS } from "@/lib/app-routes";
 import { requireNest, type NestFrameData } from "@/lib/nest-frame";
+import {
+  profileCalendarsInfo,
+  readLinkedCalendars,
+} from "@/lib/linked-calendars";
 import { createClient } from "@/lib/supabase/server";
 import { buildOutlook } from "./outlook";
 
@@ -47,7 +51,7 @@ async function load(frame: NestFrameData): Promise<Loaded> {
   const { data: householdId, error: householdError } = householdResult;
   if (householdError || !householdId) return { status: "error" };
 
-  const [profile, members, outcome] = await Promise.all([
+  const [profile, members, outcome, linked] = await Promise.all([
     supabase
       .from("profiles")
       .select(
@@ -60,6 +64,7 @@ async function load(frame: NestFrameData): Promise<Loaded> {
       .select("id, name, color, kind, user_id, created_at")
       .eq("household_id", householdId),
     supabase.rpc("get_account_deletion_outcome"),
+    readLinkedCalendars(supabase),
   ]);
   const outcomeRow = outcome.data?.[0];
   if (
@@ -67,6 +72,7 @@ async function load(frame: NestFrameData): Promise<Loaded> {
     !profile.data ||
     members.error ||
     outcome.error ||
+    !linked.ok ||
     !outcomeRow
   ) {
     return { status: "error" };
@@ -97,6 +103,13 @@ async function load(frame: NestFrameData): Promise<Loaded> {
         visibility: profile.data.default_event_visibility,
       },
       accessText: accessText(providers),
+      calendars: {
+        info: profileCalendarsInfo(linked.summary),
+        count:
+          linked.summary.providers.length > 0
+            ? linked.summary.enabledCount
+            : null,
+      },
       householdName: frame.nestName,
       outlook: buildOutlook(members.data, user.id, {
         deletes_household: outcomeRow.deletes_household,

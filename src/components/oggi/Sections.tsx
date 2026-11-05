@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { People } from "@/components/calendario/Rows";
+import { SourceLabel } from "@/components/calendario/SourceLabel";
 import {
   MAX_AVATARS,
   endInDay,
@@ -271,7 +272,12 @@ function EventRow({
       </span>
       <span className="riga-evento__testo">
         <span className="riga-evento__titolo">{event.title}</span>
-        {info ? <span className="riga-evento__info">{info}</span> : null}
+        {info || event.sourceLabel ? (
+          <span className="riga-evento__info">
+            <SourceLabel label={event.sourceLabel} />
+            {info}
+          </span>
+        ) : null}
       </span>
       <People
         people={participantsInNestOrder(event, members)}
@@ -358,10 +364,14 @@ export function ProssimoSection({
             </span>
           </span>
         </span>
-        {visibility ? (
+        {visibility || event.sourceLabel ? (
           <p className="prossimo__nota">
-            {/* No label of a linked calendar yet: the visibility stays on the right */}
-            <span aria-hidden="true" />
+            {/* The label of the source is on the left, the visibility on the right */}
+            {event.sourceLabel ? (
+              <SourceLabel label={event.sourceLabel} />
+            ) : (
+              <span aria-hidden="true" />
+            )}
             {visibility}
           </p>
         ) : null}
@@ -482,16 +492,27 @@ export function DopoSection({
 }
 
 /** «Oggi» when the lens has nothing today and nothing tomorrow. */
-export function TodayEmptySection({ p }: { p: string }) {
+export function TodayEmptySection({
+  p,
+  askForCalendar,
+}: {
+  p: string;
+  /** The person has no linked calendar: the text invites to link one */
+  askForCalendar: boolean;
+}) {
   return (
     <section className="sezione" aria-labelledby={`${p}oggi-t`}>
       <Head id={`${p}oggi-t`} title="Oggi" />
       <EmptyState
         icon="calendar"
         title="Giornata libera, per ora"
-        text=""
-        actions={<Link href="/aggiungi">Aggiungi un impegno</Link>}
-        after=" e lo vedi qui."
+        text={askForCalendar ? "Collega il calendario o" : ""}
+        actions={
+          <Link href="/aggiungi">
+            {askForCalendar ? "aggiungi un impegno" : "Aggiungi un impegno"}
+          </Link>
+        }
+        after={askForCalendar ? "." : " e lo vedi qui."}
       />
     </section>
   );
@@ -570,6 +591,11 @@ function WeekItem({ row, ctx }: { row: WeekRow; ctx: Ctx }) {
             {row.kind === "insieme" ? "Liberi insieme" : row.event.title}
           </span>
           <span className="riga-lista__info">
+            {row.kind === "event" && row.event.sourceLabel ? (
+              <>
+                <SourceLabel label={row.event.sourceLabel} />{" "}
+              </>
+            ) : null}
             {weekRowInfo(row, ctx.members, ctx.meId)}
           </span>
         </span>
@@ -1120,10 +1146,13 @@ function Word({
 export function Summary({
   view,
   inviter,
+  askForCalendar,
 }: {
   view: SummaryView;
   /** Who sent the invitation; null if that person left the Nest */
   inviter: string | null;
+  /** The person has no linked calendar: a second button leads to the page */
+  askForCalendar: boolean;
 }) {
   const hasShopping = view.shopping > 0;
 
@@ -1175,6 +1204,11 @@ export function Summary({
         <Button href="/calendario" small>
           Vedi la settimana
         </Button>
+        {askForCalendar ? (
+          <Button href="/calendari-collegati" variant="secondary" small>
+            Collega il calendario
+          </Button>
+        ) : null}
       </div>
     </section>
   );

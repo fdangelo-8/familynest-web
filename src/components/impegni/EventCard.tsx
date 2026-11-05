@@ -6,7 +6,11 @@ import { Tag } from "@/components/ui/Tag/Tag";
 import { VisuallyHidden } from "@/components/ui/VisuallyHidden/VisuallyHidden";
 import { VISIBILITY_LABELS } from "@/lib/calendar";
 import { toDayKey, type Instant } from "@/lib/datetime";
-import type { EventOccurrence } from "@/lib/household-events";
+import type {
+  EventCalendarLink,
+  EventOccurrence,
+} from "@/lib/household-events";
+import { SourceLabel } from "@/components/calendario/SourceLabel";
 import { type EventMember } from "@/components/evento-modulo/model";
 import {
   formatDayHeading,
@@ -25,11 +29,14 @@ export function EventCard({
   occurrence,
   members,
   meId,
+  link,
   now,
 }: {
   occurrence: EventOccurrence;
   members: ReadonlyArray<EventMember>;
   meId: string;
+  /** Where the event comes from; the provider is said only to its author */
+  link: EventCalendarLink;
   now: Instant;
 }) {
   const titleId = useId();
@@ -115,6 +122,15 @@ export function EventCard({
             <dd>
               <Avatar name={escort.name} color={escort.color} nameShown />
               {escort.id === meId ? "Tu" : escort.name}
+            </dd>
+          </>
+        ) : null}
+        {link.isImported && link.providerLabel ? (
+          <>
+            <dt>Origine</dt>
+            <dd>
+              <SourceLabel label={link.providerLabel} />
+              {link.calendarName ? ` ${link.calendarName}` : null}
             </dd>
           </>
         ) : null}
