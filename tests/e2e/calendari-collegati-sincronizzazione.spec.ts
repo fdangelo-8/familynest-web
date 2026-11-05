@@ -1,3 +1,4 @@
+import type { Locator } from "@playwright/test";
 import {
   GOOGLE,
   accountSection,
@@ -40,6 +41,11 @@ test.use({ locale: "it-IT", timezoneId: "Europe/Rome" });
 test.describe.configure({ timeout: 90_000 });
 
 const VISITA = "Visita in banca";
+
+/** The different texts of some blocks (a column of U appears with the event). */
+async function distinctTexts(blocks: Locator): Promise<string[]> {
+  return [...new Set(await blocks.allTextContents())].sort();
+}
 
 const visita = (from: number, to: number, extra: Partial<FakeEvent> = {}) =>
   ({
@@ -272,7 +278,7 @@ test.describe("sincronizzazione", () => {
       await u.asRita.signIn(page);
       await openDay(page, day);
       await expect(freeBlocks(page).first()).toBeAttached();
-      const before = (await freeBlocks(page).allTextContents()).join("|");
+      const before = await distinctTexts(freeBlocks(page));
 
       await u.provide(GOOGLE, "personale", [
         {
@@ -293,7 +299,7 @@ test.describe("sincronizzazione", () => {
 
       await openDay(page, day);
       await expect(freeBlocks(page).first()).toBeAttached();
-      expect((await freeBlocks(page).allTextContents()).join("|")).toBe(before);
+      expect(await distinctTexts(freeBlocks(page))).toEqual(before);
     });
   });
 

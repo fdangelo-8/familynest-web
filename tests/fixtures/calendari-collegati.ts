@@ -604,7 +604,13 @@ export function watchBodies(page: Page) {
   page.on("response", (response) => {
     const type = response.headers()["content-type"] ?? "";
     if (!/json|html|text\/x-component|text\/plain|xml/.test(type)) return;
-    pending.push(response.text().catch(() => ""));
+    // A body that never ends (a stream) must not hang the test: after a few
+    // seconds it counts as empty.
+    const body = response.text().catch(() => "");
+    const giveUp = new Promise<string>((resolve) =>
+      setTimeout(() => resolve(""), 8_000),
+    );
+    pending.push(Promise.race([body, giveUp]));
   });
   return {
     async texts(): Promise<string[]> {
