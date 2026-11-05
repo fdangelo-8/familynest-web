@@ -937,7 +937,7 @@ test.describe("il tuo colore (08)", () => {
         "true",
       );
       await continueButton(page).click();
-      await expect(page).toHaveURL(/\/onboarding\/calendario$/);
+      await expect(page).toHaveURL(/\/oggi$/);
       expect(await inviteCookie(page)).toBeUndefined();
 
       const davide = await nest.member(nest.davideId);
@@ -965,7 +965,7 @@ test.describe("il tuo colore (08)", () => {
       await page.goto("/invito/colore");
       await colorPageReady(page);
       await continueButton(page).click();
-      await expect(page).toHaveURL(/\/onboarding\/calendario$/);
+      await expect(page).toHaveURL(/\/oggi$/);
       expect((await nest.member(nest.davideId)).color).toBe("cobalto");
       expect((await nest.member(nest.davideId)).user_id).toBe(visitor.id);
     });
@@ -1011,7 +1011,7 @@ test.describe("il tuo colore (08)", () => {
         "true",
       );
       await continueButton(page).click();
-      await expect(page).toHaveURL(/\/onboarding\/calendario$/);
+      await expect(page).toHaveURL(/\/oggi$/);
       const davide = await nest.member(nest.davideId);
       expect(davide.user_id).toBe(visitor.id);
       expect(davide.color).toBe("basilico");
@@ -1120,7 +1120,7 @@ test.describe("il tuo colore (08)", () => {
       await button.dispatchEvent("click");
       await expect.poll(() => calls).toBe(1);
       release();
-      await expect(page).toHaveURL(/\/onboarding\/calendario$/);
+      await expect(page).toHaveURL(/\/oggi$/);
       expect(calls, "richieste della server action").toBe(1);
       expect((await nest.member(nest.davideId)).user_id).toBe(visitor.id);
     });

@@ -25,11 +25,21 @@ async function importedLine(supabase: Supabase): Promise<string | null> {
   try {
     const deadline = Date.now() + SYNC_WAIT_MS;
     for (;;) {
+      // The filter carries the current instant: Next merges identical GET
+      // requests of one render, and every round needs a fresh read.
       const accounts = await supabase
         .from("calendar_accounts")
-        .select("last_synced_at");
+        .select("last_synced_at, failing_since, status")
+        .lte("created_at", new Date().toISOString());
       if (accounts.error || accounts.data.length === 0) return null;
-      const waiting = accounts.data.some((a) => a.last_synced_at === null);
+      // Wait only for an account that is healthy and has not synced yet: a
+      // failed or paused one will not finish by waiting.
+      const waiting = accounts.data.some(
+        (a) =>
+          a.last_synced_at === null &&
+          a.failing_since === null &&
+          a.status === "active",
+      );
       if (!waiting || Date.now() >= deadline) break;
       await new Promise((resolve) => setTimeout(resolve, SYNC_POLL_MS));
     }
@@ -40,7 +50,9 @@ async function importedLine(supabase: Supabase): Promise<string | null> {
     if (counted.error || counted.data.length === 0) return null;
     const total = counted.data.reduce((sum, row) => sum + row.event_count, 0);
     if (total === 0) return null;
-    const names = counted.data.map((row) => PROVIDER_NAMES[row.provider]);
+    const names = counted.data
+      .filter((row) => row.event_count > 0)
+      .map((row) => PROVIDER_NAMES[row.provider]);
     const sources =
       names.length === 1
         ? (names[0] ?? "")

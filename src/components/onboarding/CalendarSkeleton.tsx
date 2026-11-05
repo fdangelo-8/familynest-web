@@ -2,38 +2,9 @@
 
 import { Brand, Claim, Stickers } from "@/components/accesso/parts";
 import { Button } from "@/components/ui/Button/Button";
-import { Icon } from "@/components/ui/Icon/Icon";
 import { Skeleton, SkeletonGroup } from "@/components/ui/Skeleton/Skeleton";
+import { Assurances, Heading } from "./CalendarParts";
 import styles from "./onboarding.module.css";
-
-const ASSURANCES = [
-  {
-    icon: "eye-off",
-    title: "Gli altri vedono solo che sei occupato",
-    text: "Mai il titolo né il luogo dei tuoi impegni di lavoro.",
-  },
-  {
-    icon: "repeat",
-    title: "In due direzioni",
-    text: "Quello che aggiungi qui può andare anche lì, e viceversa.",
-  },
-  {
-    icon: "sliders-horizontal",
-    title: "Scegli dopo cosa tenere",
-    text: "Da Impostazioni › Calendari collegati.",
-  },
-] as const;
-
-function Heading() {
-  return (
-    <div className="intestazione">
-      <p className="intestazione__sopra">Le tue giornate</p>
-      <h1 className="intestazione__titolo t-titolo-pagina">
-        Porta qui il tuo calendario
-      </h1>
-    </div>
-  );
-}
 
 function Providers() {
   return (
@@ -41,24 +12,6 @@ function Providers() {
       <Skeleton shape="riga" />
       <Skeleton shape="riga" />
     </SkeletonGroup>
-  );
-}
-
-function Assurances() {
-  return (
-    <ul className="scheda lista">
-      {ASSURANCES.map((item) => (
-        <li key={item.title} className="riga-lista">
-          <span className="icona-riquadro">
-            <Icon name={item.icon} />
-          </span>
-          <span className="riga-lista__testo">
-            <span className="riga-lista__titolo">{item.title}</span>
-            <span className="riga-lista__info">{item.text}</span>
-          </span>
-        </li>
-      ))}
-    </ul>
   );
 }
 

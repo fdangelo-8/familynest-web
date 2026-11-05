@@ -15,9 +15,10 @@ import { Brand, Claim, Stickers } from "@/components/accesso/parts";
 import type { LinkResult } from "@/lib/calendar-sync/oauth";
 import { Alert } from "@/components/ui/Alert/Alert";
 import { Button } from "@/components/ui/Button/Button";
-import { Icon, type IconName } from "@/components/ui/Icon/Icon";
+import { Icon } from "@/components/ui/Icon/Icon";
 import { Spinner } from "@/components/ui/Spinner/Spinner";
 import { VisuallyHidden } from "@/components/ui/VisuallyHidden/VisuallyHidden";
+import { Assurances, Heading } from "./CalendarParts";
 import styles from "./onboarding.module.css";
 import { Steps } from "./Steps";
 
@@ -52,24 +53,6 @@ const NAMES: Record<ProviderId, string> = {
   google: "Google",
   outlook: "Outlook",
 };
-
-const ASSURANCES: { icon: IconName; title: string; text: string }[] = [
-  {
-    icon: "eye-off",
-    title: "Gli altri vedono solo che sei occupato",
-    text: "Mai il titolo né il luogo dei tuoi impegni di lavoro.",
-  },
-  {
-    icon: "repeat",
-    title: "In due direzioni",
-    text: "Quello che aggiungi qui può andare anche lì, e viceversa.",
-  },
-  {
-    icon: "sliders-horizontal",
-    title: "Scegli dopo cosa tenere",
-    text: "Da Impostazioni › Calendari collegati.",
-  },
-];
 
 /** The account is there: the row says «Collegato», no notice is needed. */
 function isLinked(notice: CalendarNotice): boolean {
@@ -173,24 +156,6 @@ function Providers({
   );
 }
 
-function Assurances() {
-  return (
-    <ul className="scheda lista">
-      {ASSURANCES.map((item) => (
-        <li key={item.title} className="riga-lista">
-          <span className="icona-riquadro">
-            <Icon name={item.icon} />
-          </span>
-          <span className="riga-lista__testo">
-            <span className="riga-lista__titolo">{item.title}</span>
-            <span className="riga-lista__info">{item.text}</span>
-          </span>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
 function Notice({
   notice,
   offline,
@@ -221,9 +186,7 @@ function Notice({
   return (
     <Alert
       variant="errore"
-      icon={
-        notice.result === "no_calendar_permission" ? "circle-alert" : "wifi-off"
-      }
+      icon="circle-alert"
       action={
         <ConnectForm provider={notice.provider} onSubmit={onConnect}>
           <Button variant="link" type="submit">
@@ -234,17 +197,6 @@ function Notice({
     >
       {noticeText(notice)}
     </Alert>
-  );
-}
-
-function Heading() {
-  return (
-    <div className="intestazione">
-      <p className="intestazione__sopra">Le tue giornate</p>
-      <h1 className="intestazione__titolo t-titolo-pagina">
-        Porta qui il tuo calendario
-      </h1>
-    </div>
   );
 }
 
@@ -321,6 +273,9 @@ export function CalendarStep({
       prefetch={false}
       className="btn-link btn-link--secondario"
       aria-disabled={going || undefined}
+      onClick={(event) => {
+        if (going) event.preventDefault();
+      }}
     >
       Più tardi
     </Link>
