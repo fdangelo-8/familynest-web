@@ -602,6 +602,10 @@ export const freeBlocks = (page: Page) =>
 export function watchBodies(page: Page) {
   const pending: Promise<string>[] = [];
   page.on("response", (response) => {
+    // The page of the fake provider plays the part of Google or Microsoft: the
+    // code lives there by design. Only the answers of FamilyNest are checked.
+    if (new URL(response.url()).pathname.startsWith("/fornitore-finto/"))
+      return;
     const type = response.headers()["content-type"] ?? "";
     if (!/json|html|text\/x-component|text\/plain|xml/.test(type)) return;
     // A body that never ends (a stream) must not hang the test: after a few
