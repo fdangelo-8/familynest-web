@@ -4970,7 +4970,7 @@ button.riga-opzione:active:not(:disabled, [aria-disabled="true"]) {
   cursor: default;
 }
 
-/* Lista desideri (#32) e pagina pubblica (#33), richiesta condivisa #263:
+/* Lista desideri (#32) e pagina pubblica (#33), richiesta condivisa:
    solo token, nessun colore o misura scritti a mano. */
 
 /* 1. Riga che apre «Modifica l'idea»: il titolo-bottone copre tutta la riga con
@@ -4993,7 +4993,7 @@ button.riga-regalo__titolo::before {
   position: absolute;
   inset: 0;
 }
-/* Il fondo dello stato resta dentro il filo e segue gli angoli (come #204) */
+/* Il fondo dello stato resta dentro il filo e segue gli angoli (come le righe di Casa) */
 .scheda > .riga-regalo--modificabile {
   border: var(--border-sottile) solid transparent;
   border-top-width: var(--space-0);
