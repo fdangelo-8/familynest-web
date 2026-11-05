@@ -27,55 +27,116 @@ export type NestPerson = {
   color: Database["public"]["Enums"]["member_color"];
 };
 
-export type SpacesData = {
+/**
+ * Which people the page reads: "people" = names and colours of children and
+ * pets (Esplora), "children" / "pets" = only the names of those (the promise
+ * of Crescere / Zampe), "none" = only how many they are. Names reach the
+ * browser only where the page needs them.
+ */
+export type NamesRead = "people" | "children" | "pets" | "none";
+
+type ChildrenOf<N extends NamesRead> = N extends "people"
+  ? NestPerson[]
+  : N extends "children"
+    ? string[]
+    : null;
+type PetsOf<N extends NamesRead> = N extends "people"
+  ? NestPerson[]
+  : N extends "pets"
+    ? string[]
+    : null;
+
+export type SpacesData<N extends NamesRead = "people"> = {
   counts: MemberCounts;
-  /** Names and colours, in order of insertion. Never birth dates. */
-  children: NestPerson[];
-  pets: NestPerson[];
+  /** In order of insertion. Never birth dates. `null` = not read. */
+  children: ChildrenOf<N>;
+  pets: PetsOf<N>;
 };
 
 export type SpacesStatus = "loading" | "ready" | "error";
 
-type ReadResult =
-  { ok: true; data: SpacesData; pinned: SpaceKey[] } | { ok: false };
+type ReadResult<N extends NamesRead> =
+  { ok: true; data: SpacesData<N>; pinned: SpaceKey[] } | { ok: false };
+
+type Client = ReturnType<typeof createClient>;
+/** Names (and colours) asked by `names`, in order of insertion. */
+async function readNames(supabase: Client, names: NamesRead) {
+  const members = supabase.from("household_members");
+  if (names === "people") {
+    const { data, error } = await members
+      .select("name, color, kind")
+      .in("kind", ["child", "pet"])
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true });
+    if (error) return null;
+    return {
+      children: data.filter((m) => m.kind === "child"),
+      pets: data.filter((m) => m.kind === "pet"),
+    };
+  }
+  if (names === "none") return { children: [], pets: [] };
+  const kind = names === "children" ? "child" : "pet";
+  const { data, error } = await members
+    .select("name")
+    .eq("kind", kind)
+    .order("created_at", { ascending: true })
+    .order("id", { ascending: true });
+  if (error) return null;
+  const list = data.map((m) => ({ name: m.name }));
+  return names === "children"
+    ? { children: list, pets: [] }
+    : { children: [], pets: list };
+}
 
 /** Reads members and my pinned spaces in the browser (RLS applies). */
-async function readEverything(): Promise<ReadResult> {
+async function readEverything<N extends NamesRead>(
+  names: N,
+): Promise<ReadResult<N>> {
   try {
     const supabase = createClient();
-    const [people, adults, pinned] = await Promise.all([
-      // Only names and colours of children and pets: no birth date.
-      supabase
-        .from("household_members")
-        .select("name, color, kind")
-        .in("kind", ["child", "pet"])
-        .order("created_at", { ascending: true })
-        .order("id", { ascending: true }),
-      // Adults are only counted: their names never reach the browser.
+    const count = (kind: "adult" | "child" | "pet") =>
       supabase
         .from("household_members")
         .select("id", { count: "exact", head: true })
-        .eq("kind", "adult"),
+        .eq("kind", kind);
+    // Adults are only counted: their names never reach the browser.
+    const [adults, children, pets, listed, pinned] = await Promise.all([
+      count("adult"),
+      count("child"),
+      count("pet"),
+      readNames(supabase, names),
       getPinnedSpaces(supabase),
     ]);
-    if (people.error || adults.error || pinned.error) return { ok: false };
-    return {
-      ok: true,
-      data: {
-        counts: {
-          adults: adults.count ?? 0,
-          children: people.data.filter((m) => m.kind === "child").length,
-          pets: people.data.filter((m) => m.kind === "pet").length,
-        },
-        children: people.data
-          .filter((m) => m.kind === "child")
-          .map(({ name, color }) => ({ name, color })),
-        pets: people.data
-          .filter((m) => m.kind === "pet")
-          .map(({ name, color }) => ({ name, color })),
+    if (
+      adults.error ||
+      children.error ||
+      pets.error ||
+      !listed ||
+      pinned.error
+    ) {
+      return { ok: false };
+    }
+    const data = {
+      counts: {
+        adults: adults.count ?? 0,
+        children: children.count ?? 0,
+        pets: pets.count ?? 0,
       },
-      pinned: pinned.spaces,
+      children:
+        names === "people"
+          ? listed.children
+          : names === "children"
+            ? listed.children.map((m) => m.name)
+            : null,
+      pets:
+        names === "people"
+          ? listed.pets
+          : names === "pets"
+            ? listed.pets.map((m) => m.name)
+            : null,
     };
+    // The shape follows `names`, as the types of `SpacesData` say.
+    return { ok: true, data: data as SpacesData<N>, pinned: pinned.spaces };
   } catch {
     return { ok: false };
   }
@@ -89,10 +150,13 @@ function nameOf(key: SpaceKey): string {
  * Loads the Nest members and my pinned spaces, and pins / unpins with an
  * optimistic puntina, a toast with «Annulla» and the limit of six.
  */
-export function useSpaces(buttonRefs: RefObject<Map<SpaceKey, HTMLElement>>) {
+export function useSpaces<N extends NamesRead>(
+  buttonRefs: RefObject<Map<SpaceKey, { focus: () => void }>>,
+  names: N,
+) {
   const { showToast } = useToast();
   const [status, setStatus] = useState<SpacesStatus>("loading");
-  const [data, setData] = useState<SpacesData | null>(null);
+  const [data, setData] = useState<SpacesData<N> | null>(null);
   const [pinned, setPinned] = useState<SpaceKey[]>([]);
   const [retrying, startRetry] = useTransition();
 
@@ -108,7 +172,7 @@ export function useSpaces(buttonRefs: RefObject<Map<SpaceKey, HTMLElement>>) {
   }, []);
 
   const apply = useCallback(
-    (result: ReadResult) => {
+    (result: ReadResult<N>) => {
       if (!result.ok) {
         setStatus("error");
         return false;
@@ -124,23 +188,23 @@ export function useSpaces(buttonRefs: RefObject<Map<SpaceKey, HTMLElement>>) {
 
   useEffect(() => {
     let cancelled = false;
-    void readEverything().then((result) => {
+    void readEverything(names).then((result) => {
       if (!cancelled) apply(result);
     });
     return () => {
       cancelled = true;
     };
-  }, [apply]);
+  }, [apply, names]);
 
   /** Tries again; calls `onLoaded` when the page is ready. */
   const retry = useCallback(
     (onLoaded: () => void) => {
       startRetry(async () => {
-        const result = await readEverything();
+        const result = await readEverything(names);
         if (apply(result)) onLoaded();
       });
     },
-    [apply],
+    [apply, names],
   );
 
   const setSpace = useCallback(

@@ -58,8 +58,10 @@ function People({ people }: { people: NestPerson[] }) {
 export function EsploraPage() {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const buttonRefs = useRef(new Map<SpaceKey, HTMLElement>());
-  const { status, data, pinned, retrying, retry, toggle } =
-    useSpaces(buttonRefs);
+  const { status, data, pinned, retrying, retry, toggle } = useSpaces(
+    buttonRefs,
+    "people",
+  );
 
   const spaces: SpaceDef[] = data ? getAvailableSpaces(data.counts) : [];
 
