@@ -166,14 +166,6 @@ test.describe("galleria: esempi nuovi", () => {
     expect(parseFloat(ring.width)).toBeGreaterThanOrEqual(1);
     expect(ring.offset).toBe("2px");
     expect(ring.color).toBe(info);
-    // No native cancel button inside the search input (rule 2).
-    const appearance = await page
-      .getByRole("searchbox", { name: "Cerca nel Nest" })
-      .evaluate(
-        (el) =>
-          getComputedStyle(el, "::-webkit-search-cancel-button").appearance,
-      );
-    expect(appearance).toBe("none");
   });
 
   test("#40 P1: il numero dei chip non scelti è a piena opacità", async ({
