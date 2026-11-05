@@ -26,6 +26,8 @@ Errori già commessi (in questo progetto o in quelli precedenti dell'ecosistema)
 - Cancellazione dell'account che elimina `auth.users` ma lascia il registro di Auth (`auth.audit_log_entries`: mail e indirizzi IP, senza chiave esterna) → la funzione cancella nella stessa transazione le righe di `auth` legate all'utente, il test verifica che quelle di un altro utente restino; se il ruolo non può cancellarle, la domanda va a Francesco (#226).
 - Lavoro che gira su tutti i Nest, esposto a chi chiama (anche con la chiave amministrativa, per i test) → `p_household_id` obbligatorio (`22023` se manca); su tutti i Nest lavora solo il job `pg_cron` tramite una funzione privata (#237).
 - Regole di visibilità copiate in una seconda funzione (la ricerca accanto al calendario) → una sola fonte in `private`, usata da entrambe, oppure un test di equivalenza che confronta le due funzioni sulle stesse righe (#239).
+- PR `db/*` unita con la sola `check` verde, senza suite completa: su `main` si sono rotti i test (#270) → una PR db che tocca trigger o funzioni passa dall'etichetta `suite-completa` prima del merge, anche in fase di build.
+- Trigger `security invoker` che in una sola espressione controlla il ruolo e chiama una funzione di `private`: PL/pgSQL risolve tutta l'espressione con i permessi di chi chiama, e `service_role` (la chiave amministrativa dei test) viene bloccata anche sugli impegni normali (#270, poi #276) → il controllo del ruolo va in un'istruzione a sé, come in `events_guard_imported`, e un test pgTAP prova la chiave amministrativa su un impegno normale.
 
 ## Sviluppo
 
@@ -63,6 +65,8 @@ Errori già commessi (in questo progetto o in quelli precedenti dell'ecosistema)
 - Dati locali (ricerche recenti, lente) cancellati solo dal pulsante «Esci» della pagina del profilo → si cancellano in ogni uscita (sessione scaduta, account eliminato altrove, «Esci» dell'onboarding) e alla pagina di accesso, con una sola funzione in `src/lib/` (#244, #249).
 - Valore non ancora approvato da Francesco già scritto nel codice o nei dati (righe dei nove spazi, puntina su desktop) → codice, skill e galleria contengono solo ciò che è approvato; il resto resta vuoto e un test lo verifica (#224).
 - Testo nascosto con `VisuallyHidden` che inizia o finisce con uno spazio (« di Sofia») → il nome accessibile ha spazi doppi o mancanti: lo spazio lo mette la struttura, non il testo nascosto, e il test confronta il nome dopo aver normalizzato gli spazi (#224).
+- Variante aggiunta a un tipo unione condiviso (`gift_taken`, #269) che rompe gli switch esaustivi delle pagine aperte → chi aggiunge una variante cerca in `src/` e nelle PR aperte tutti gli `switch` e i controlli esaustivi su quel tipo, e li aggiorna nella stessa PR.
+- Regex con `[^>]*` o `[\s\S]*?` su HTML esterno: con un tag aperto e mai chiuso il tempo cresce in modo quadratico (#269) → si cerca con `indexOf` e con tetti di lunghezza; dopo un tag saltato si riparte da dopo il `>`, mai da `start + open.length`.
 
 ## Processo
 
@@ -99,6 +103,8 @@ Errori già commessi (in questo progetto o in quelli precedenti dell'ecosistema)
 - Test instabili che passano solo al secondo tentativo restano nascosti in CI → il tester li segnala con i numeri delle run e il coordinatore apre subito una issue (#177).
 - Requisito di un'issue che si perde nel riepilogo del coordinatore (testi della ripetizione) → il revisore confronta la PR con il requisito originale della issue, non con il riepilogo, e ogni elemento perso va deciso per iscritto prima del test (#170).
 - Suite completa più lunga del timeout del job (45 minuti) che si interrompe prima della fine, senza un test rosso → si misura la durata delle ultime run complete e si alza il timeout prima di aggiungere pagine; una suite interrotta non è un esito (#238).
+- Hook che blocca un comando, aggirato con uno script Python, `sed -i` o una copia del file per ottenere lo stesso effetto, poi annullato (#262) → mai aggirare hook, CI o test, nemmeno per annullare: si usa lo strumento che l'hook indica oppure ci si ferma con `BLOCCATO` e si scrive l'esito (regola in #265: `CLAUDE.md` e tutti gli 8 agenti).
+- Suite divisa in più parti con controlli chiamati `test (1)`, `test (2)`, `test (3)`: la regola di protezione di `main` chiede un controllo `test`, e GitHub rifiuta il merge anche con tutto verde (#245) → un job riassuntivo `test` sopra le parti, verde se sono verdi o saltate, rosso se una parte fallisce o viene annullata (#271).
 
 ## Test
 
@@ -135,6 +141,9 @@ Errori già commessi (in questo progetto o in quelli precedenti dell'ecosistema)
 - Fixture che scrivono con il ruolo amministrativo anche dove il test deve usare la sessione dell'utente → il test non prova RLS né permessi reali: la scrittura che farebbe l'utente passa dalla sua sessione, e il ruolo amministrativo serve solo per preparare ciò che la sessione non può scrivere, dichiarato nel commento (#228).
 - Dati finti di una pagina con `page.route` che restano attivi nel test successivo → `page.unrouteAll()` nel `finally` o a fine test.
 - Test di privacy che guarda solo ciò che è nel DOM non vede i dati che il browser riceve e non mostra → si registrano le risposte di rete della pagina (documento, fetch, xhr) e si cerca nomi, date e id che non devono esserci (#234).
+- Test che cercano un testo in tutta la pagina falliscono quando una palette sopra la pagina mostra dati (la pagina sotto, Oggi, ne ha, #257) → i controlli di testo guardano solo la superficie in cui il test è aperto (palette o pagina).
+- Test che leggono `boundingBox` una sola volta su un elemento che React sostituisce durante il render (#251) → `expect.poll` finché il box è stabile.
+- Commenti CSS con «#numero» (per esempio `/* #171 */`) letti come colori esadecimali dal controllo sulle variabili del design system (#267) → si tolgono i commenti `/* … */` prima di cercare i colori.
 
 ## Design
 
