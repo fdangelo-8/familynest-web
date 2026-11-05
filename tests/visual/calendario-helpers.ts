@@ -82,6 +82,9 @@ export async function openStep(
   await expect(page.locator("h1:visible")).toHaveText(
     "Porta qui il tuo calendario",
   );
+  // The title streams in after the shell: axe's «document-title» saw the page
+  // without it once (mobile, run 42098914945), so wait for it.
+  await expect(page).toHaveTitle("FamilyNest · Porta qui il tuo calendario");
   await hydrated(page);
 }
 
