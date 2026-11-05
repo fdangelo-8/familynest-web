@@ -98,17 +98,16 @@ export async function disconnectAccount(accountId: string): Promise<Saved> {
  * Asks the server to synchronise one account of the adult (`accountId`) or the
  * accounts that are out of date. Resolves when the work is finished.
  */
-export async function requestSync(accountId?: string): Promise<Saved> {
+export async function requestSync(accountId?: string): Promise<void> {
   try {
-    const response = await fetch("/calendari-collegati/sincronizza", {
+    await fetch("/calendari-collegati/sincronizza", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       cache: "no-store",
       body: JSON.stringify(accountId ? { accountId } : {}),
     });
-    return response.ok ? DONE : FAILED;
   } catch {
-    return FAILED;
+    // The scheduled job tries again.
   }
 }
 

@@ -489,9 +489,9 @@ export function CalendarsView({
             action={reconnect(account, "Ricollega")}
           >
             Non riusciamo a sincronizzare{" "}
-            <b>{PROVIDER_NAME[account.provider]}</b>{" "}
-            {account.failingSince ?? "da poco"}: la password potrebbe essere
-            cambiata.
+            <b>{PROVIDER_NAME[account.provider]}</b>
+            {account.failingSince ? ` ${account.failingSince}` : ""}: la
+            password potrebbe essere cambiata.
           </Alert>
         ))}
       {accounts

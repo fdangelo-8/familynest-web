@@ -114,7 +114,7 @@ export function joinNames(names: readonly string[]): string {
   return `${names.slice(0, -1).join(", ")} e ${names[names.length - 1]}`;
 }
 
-/** «Con «Occupato» Laura vede «Marco è occupato» e l'orario…» (mockup 26). */
+/** «Con «Occupato» Laura vede «Marco ha un impegno» e l'orario…» (the phrase the app really shows, #34). */
 export function visibilityHelp(
   visibility: Visibility,
   myName: string,
@@ -127,7 +127,7 @@ export function visibilityHelp(
   if (visibility === "household") {
     return `Tutto il Nest vede titolo, orario e luogo. ${change}`;
   }
-  const phrase = `«${myName} è occupato» e l'orario, senza titolo né luogo.`;
+  const phrase = `«${myName} ha un impegno» e l'orario, senza titolo né luogo.`;
   if (others.length === 0) return `Gli altri vedono ${phrase} ${change}`;
   const verb = others.length === 1 ? "vede" : "vedono";
   return `Con «Occupato» ${joinNames(others)} ${verb} ${phrase} ${change}`;

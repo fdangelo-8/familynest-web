@@ -223,7 +223,9 @@ export function CalendarSheet({
               {radio(
                 "incoming",
                 "Solo in entrata",
-                `Vedi i tuoi impegni di lavoro, ma FamilyNest non scrive su ${provider}.`,
+                // «di lavoro» only where the calendar is for work: Outlook (mockup, #35
+                // CA-4); the other providers are personal calendars (#34 §5a).
+                `Vedi i tuoi impegni${account.provider === "outlook" ? " di lavoro" : ""}, ma FamilyNest non scrive su ${provider}.`,
                 false,
               )}
             </div>
