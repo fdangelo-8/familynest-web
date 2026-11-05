@@ -1073,7 +1073,12 @@ test.describe("Aggiungi · Impegni · modulo · isolamento e privacy", () => {
 
     // Nothing of the other Nest reaches the page or the answers it reads.
     // Visible text of the page (not the scripts, which carry the examples).
-    const body = await page.locator("body").innerText();
+    // The only «Sofia» left is the fixed example of the page behind the sheet
+    // («Es. «nuoto Sofia giovedì alle 17»»), the same for every Nest.
+    const body = (await page.locator("body").innerText()).replaceAll(
+      "«nuoto Sofia giovedì alle 17»",
+      "",
+    );
     const answers = (await network.texts()).join("\n");
     for (const secret of [
       "Marco",
