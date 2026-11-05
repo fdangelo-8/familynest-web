@@ -1335,7 +1335,7 @@ function OverlaysSection() {
             onClick={() => setNamedOpen(true)}
             data-testid="foglio-nome-apri"
           >
-            Apri foglio con nome accessibile
+            Apri con nome accessibile
           </Button>
           <Sheet
             open={namedOpen}
