@@ -1,4 +1,5 @@
-import { createHash, createHmac, randomBytes } from "node:crypto";
+import "server-only";
+import { createHash, createHmac, hkdfSync, randomBytes } from "node:crypto";
 import { getCalendarEncryptionKey } from "@/lib/env";
 import { secretsMatch } from "./crypto";
 
@@ -64,9 +65,17 @@ export function isLinkResult(value: unknown): value is LinkResult {
 // none of the parts contains a dot.
 const COOKIE_VERSION = "v1";
 
-function sign(parts: string[], userId: string): string {
+// A key has one use only: the cookie is signed with a subkey derived (HKDF)
+// from the encryption key, never with the bytes that serve AES-256-GCM.
+function signingKey(): Buffer {
   const { key } = getCalendarEncryptionKey();
-  return createHmac("sha256", key)
+  return Buffer.from(
+    hkdfSync("sha256", key, "", "familynest:calendar-oauth-cookie", 32),
+  );
+}
+
+function sign(parts: string[], userId: string): string {
+  return createHmac("sha256", signingKey())
     .update(["calendar-oauth", userId, ...parts].join("|"))
     .digest("base64url");
 }

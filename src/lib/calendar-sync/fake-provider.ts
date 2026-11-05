@@ -79,6 +79,8 @@ export type FakeLogEntry = {
   /** Token issued or revoked by the fake (it means nothing elsewhere). */
   token?: string;
   title?: string;
+  /** Everything the fake received with «Anche su»: nothing else was sent. */
+  outgoing?: OutgoingEvent;
 };
 
 type FakeStore = {
@@ -216,6 +218,7 @@ function openFakeSession(
         location: event.location ?? undefined,
         startsAt: event.startsAt,
         endsAt: event.endsAt,
+        isPrivate: event.isPrivate,
         version: "1",
       });
       found.revision += 1;
@@ -226,6 +229,7 @@ function openFakeSession(
         calendarId: found.id,
         eventId: id,
         title: event.title,
+        outgoing: { ...event },
       });
       return { id, version: "1" };
     },
@@ -240,6 +244,7 @@ function openFakeSession(
         location: event.location ?? undefined,
         startsAt: event.startsAt,
         endsAt: event.endsAt,
+        isPrivate: event.isPrivate,
         version,
       });
       found.revision += 1;
@@ -250,6 +255,7 @@ function openFakeSession(
         calendarId: found.id,
         eventId,
         title: event.title,
+        outgoing: { ...event },
       });
       return { version };
     },

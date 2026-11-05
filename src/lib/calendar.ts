@@ -197,6 +197,9 @@ export function busyIntervals(
 ): BusyInterval[] {
   const result: BusyInterval[] = [];
   for (const event of events) {
+    // Imported events of a calendar with «Conta per «Liberi insieme»» off,
+    // and all-day ones (stored with that flag off), busy nobody.
+    if (event.countsForFreeTime === false) continue;
     const start = new Date(event.startsAt).getTime();
     const end = new Date(event.endsAt).getTime();
     for (const memberId of adultIds) {

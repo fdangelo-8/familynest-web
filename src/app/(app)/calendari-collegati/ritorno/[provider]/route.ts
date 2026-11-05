@@ -4,11 +4,12 @@ import { redirectToDestination } from "@/lib/calendar-sync/link-response";
 import {
   OAUTH_COOKIE,
   checkOAuth,
+  type LinkDestination,
   type LinkResult,
 } from "@/lib/calendar-sync/oauth";
 import { providerForNewLink } from "@/lib/calendar-sync/providers";
 import { refreshCalendarList, syncAccount } from "@/lib/calendar-sync/sync";
-import { isProviderId } from "@/lib/calendar-sync/types";
+import { isProviderId, type CalendarProvider } from "@/lib/calendar-sync/types";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -47,90 +48,104 @@ export async function GET(
     });
   }
 
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.getUser();
-  if (error || !data.user) {
-    return NextResponse.redirect(new URL("/accesso", origin), {
-      status: 303,
-      headers: {
-        "Cache-Control": "no-store",
-        "Referrer-Policy": "no-referrer",
-      },
-    });
-  }
-  const userId = data.user.id;
-
-  const check = checkOAuth({
-    cookieValue: request.cookies.get(OAUTH_COOKIE)?.value,
-    stateFromProvider: searchParams.get("state"),
-    userId,
-    provider: providerId,
-  });
+  // Whatever happens below, the answer is a 303 to a clean address (no `code`,
+  // no `state`), the access just given is revoked if it was not kept, and the
+  // cookie of `state` is deleted.
+  let destination: LinkDestination = "page";
   const finish = (result: LinkResult) =>
-    redirectToDestination(origin, check.destination, providerId, result);
-  if (!check.ok) return finish("failed");
-
-  // The user refused, or cancelled, on the page of the provider.
-  if (searchParams.get("error") === "access_denied") return finish("denied");
-  const code = searchParams.get("code");
-  if (searchParams.has("error") || !code) return finish("failed");
-
-  let linked: Awaited<ReturnType<typeof exchange>>;
-  try {
-    linked = await exchange(origin, providerId, code, check.codeVerifier);
-  } catch {
-    return finish("failed");
-  }
-
-  if (!linked.calendarGranted) {
-    // Nothing is kept: the access just given is returned to the provider.
+    redirectToDestination(origin, destination, providerId, result);
+  let issued: { provider: CalendarProvider; refreshToken: string } | null =
+    null;
+  const revokeIssued = async () => {
+    if (!issued) return;
+    const { provider, refreshToken } = issued;
+    issued = null;
     try {
-      await linked.provider.revoke(linked.refreshToken);
+      await provider.revoke(refreshToken);
     } catch {
       // Best effort: the user can also remove it from the account settings.
     }
-    return finish("no_calendar_permission");
-  }
+  };
 
-  const admin = createAdminClient();
-  const { data: saved, error: saveError } = await admin.rpc(
-    "save_calendar_account",
-    {
-      p_user_id: userId,
-      p_provider: providerId,
-      p_provider_account_id: linked.account.id,
-      p_email: linked.account.email,
-      p_credentials_ciphertext: encryptCredentials(linked.refreshToken),
-      p_is_fake: linked.isFake,
-    },
-  );
-  if (saveError || !saved?.[0]) {
-    try {
-      await linked.provider.revoke(linked.refreshToken);
-    } catch {
-      // Best effort, as above.
-    }
-    // FN008: the adult has 5 accounts already.
-    return finish(saveError?.code === "FN008" ? "limit" : "failed");
-  }
-  const accountId = saved[0].account_id;
-
-  // The calendars are there when the page opens; the events come right after.
   try {
-    const session = await linked.provider.openSession(linked.refreshToken);
-    await refreshCalendarList(admin, accountId, session);
-  } catch {
-    // The account is saved; the next synchronisation reads the calendars.
-  }
-  after(async () => {
-    try {
-      await syncAccount(createAdminClient(), accountId);
-    } catch {
-      // The scheduled job tries again.
+    const supabase = await createClient();
+    const { data, error } = await supabase.auth.getUser();
+    if (error || !data.user) {
+      return NextResponse.redirect(new URL("/accesso", origin), {
+        status: 303,
+        headers: {
+          "Cache-Control": "no-store",
+          "Referrer-Policy": "no-referrer",
+        },
+      });
     }
-  });
+    const userId = data.user.id;
 
-  return finish("linked");
+    const check = checkOAuth({
+      cookieValue: request.cookies.get(OAUTH_COOKIE)?.value,
+      stateFromProvider: searchParams.get("state"),
+      userId,
+      provider: providerId,
+    });
+    destination = check.destination;
+    if (!check.ok) return finish("failed");
+
+    // The user refused, or cancelled, on the page of the provider.
+    if (searchParams.get("error") === "access_denied") return finish("denied");
+    const code = searchParams.get("code");
+    if (searchParams.has("error") || !code) return finish("failed");
+
+    const linked = await exchange(origin, providerId, code, check.codeVerifier);
+    issued = { provider: linked.provider, refreshToken: linked.refreshToken };
+
+    if (!linked.calendarGranted) {
+      // Nothing is kept: the access just given is returned to the provider.
+      await revokeIssued();
+      return finish("no_calendar_permission");
+    }
+
+    const admin = createAdminClient();
+    const { data: saved, error: saveError } = await admin.rpc(
+      "save_calendar_account",
+      {
+        p_user_id: userId,
+        p_provider: providerId,
+        p_provider_account_id: linked.account.id,
+        p_email: linked.account.email,
+        p_credentials_ciphertext: encryptCredentials(linked.refreshToken),
+        p_is_fake: linked.isFake,
+      },
+    );
+    if (saveError || !saved?.[0]) {
+      await revokeIssued();
+      // FN008: the adult has 5 accounts already.
+      return finish(saveError?.code === "FN008" ? "limit" : "failed");
+    }
+    const accountId = saved[0].account_id;
+    // From here the account is kept: the token must not be revoked.
+    const keptToken = linked.refreshToken;
+    issued = null;
+
+    // The calendars are there when the page opens; the events come right after.
+    try {
+      const session = await linked.provider.openSession(keptToken);
+      await refreshCalendarList(admin, accountId, session);
+    } catch {
+      // The account is saved; the next synchronisation reads the calendars.
+    }
+    after(async () => {
+      try {
+        await syncAccount(createAdminClient(), accountId);
+      } catch {
+        // The scheduled job tries again.
+      }
+    });
+
+    return finish("linked");
+  } catch {
+    await revokeIssued();
+    return finish("failed");
+  }
 }
 
 async function exchange(

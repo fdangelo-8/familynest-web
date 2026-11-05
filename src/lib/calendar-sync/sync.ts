@@ -1,6 +1,7 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Json } from "@/types/database";
+import { isFakeCalendarProviderEnabled } from "@/lib/env";
 import { decryptCredentials } from "./crypto";
 import { providerFor } from "./providers";
 import {
@@ -27,6 +28,17 @@ import {
  */
 
 type Admin = ReturnType<typeof createAdminClient>;
+
+/**
+ * Counts the answers of the database that came back with an error. Only the
+ * number travels: no message, no data (they could carry a title or a name).
+ */
+export type Tally = { dbErrors: number };
+
+function noteError(tally: Tally | undefined, result: { error: unknown }) {
+  if (result.error && tally) tally.dbErrors += 1;
+  return !result.error;
+}
 
 export const SYNC_WINDOW_PAST_DAYS = 30;
 export const SYNC_WINDOW_FUTURE_MONTHS = 12;
@@ -85,9 +97,12 @@ export function toSyncEvent(event: ProviderEvent): Record<string, Json> {
 // nearest to now stay (the database keeps at most 2,000 anyway).
 function nearestEvents(events: ProviderEvent[], now: Date): ProviderEvent[] {
   if (events.length <= MAX_EVENTS_PER_CALL) return events;
-  const distance = (e: ProviderEvent) =>
-    Math.abs(Date.parse(e.startsAt ?? e.startDate ?? "") - now.getTime()) ||
-    Number.MAX_SAFE_INTEGER;
+  const distance = (e: ProviderEvent) => {
+    const gap = Math.abs(
+      Date.parse(e.startsAt ?? e.startDate ?? "") - now.getTime(),
+    );
+    return Number.isNaN(gap) ? Number.MAX_SAFE_INTEGER : gap;
+  };
   return [...events]
     .sort((a, b) => distance(a) - distance(b))
     .slice(0, MAX_EVENTS_PER_CALL);
@@ -98,13 +113,17 @@ async function recordResult(
   accountId: string,
   outcome: "ok" | "auth_error" | "temporary_error",
   now: Date,
+  tally?: Tally,
 ): Promise<void> {
   // A failure to record is not worth stopping the others: the next run tries.
-  await admin.rpc("record_calendar_sync_result", {
-    p_account_id: accountId,
-    p_outcome: outcome,
-    p_at: now.toISOString(),
-  });
+  noteError(
+    tally,
+    await admin.rpc("record_calendar_sync_result", {
+      p_account_id: accountId,
+      p_outcome: outcome,
+      p_at: now.toISOString(),
+    }),
+  );
 }
 
 async function saveCalendars(
@@ -141,6 +160,7 @@ async function syncCalendars(
   accountId: string,
   session: ProviderSession,
   now: Date,
+  tally?: Tally,
 ): Promise<"ok" | "temporary_error"> {
   const { data: rows, error } = await admin
     .from("external_calendars")
@@ -174,10 +194,13 @@ async function syncCalendars(
       // The credentials are refused for the whole account.
       if (caught instanceof ProviderAuthError) throw caught;
       failed += 1;
-      await admin.rpc("mark_external_calendar_failing", {
-        p_calendar_id: row.id,
-        p_at: now.toISOString(),
-      });
+      noteError(
+        tally,
+        await admin.rpc("mark_external_calendar_failing", {
+          p_calendar_id: row.id,
+          p_at: now.toISOString(),
+        }),
+      );
     }
   }
   return failed === rows.length ? "temporary_error" : "ok";
@@ -187,6 +210,7 @@ async function syncOne(
   admin: Admin,
   account: AccountRow,
   now: Date,
+  tally?: Tally,
 ): Promise<AccountSyncResult> {
   let session: ProviderSession;
   try {
@@ -196,11 +220,11 @@ async function syncOne(
     );
   } catch (caught) {
     if (caught instanceof ProviderAuthError) {
-      await recordResult(admin, account.id, "auth_error", now);
+      await recordResult(admin, account.id, "auth_error", now, tally);
       return "auth_error";
     }
     if (caught instanceof ProviderTemporaryError) {
-      await recordResult(admin, account.id, "temporary_error", now);
+      await recordResult(admin, account.id, "temporary_error", now, tally);
       return "temporary_error";
     }
     // Not configured here, or credentials this server cannot read (wrong key):
@@ -210,13 +234,13 @@ async function syncOne(
 
   try {
     await saveCalendars(admin, account.id, await session.listCalendars());
-    const outcome = await syncCalendars(admin, account.id, session, now);
-    await recordResult(admin, account.id, outcome, now);
+    const outcome = await syncCalendars(admin, account.id, session, now, tally);
+    await recordResult(admin, account.id, outcome, now, tally);
     return outcome;
   } catch (caught) {
     const outcome =
       caught instanceof ProviderAuthError ? "auth_error" : "temporary_error";
-    await recordResult(admin, account.id, outcome, now);
+    await recordResult(admin, account.id, outcome, now, tally);
     return outcome;
   }
 }
@@ -226,6 +250,7 @@ export async function syncAccount(
   admin: Admin,
   accountId: string,
   now: Date = new Date(),
+  tally?: Tally,
 ): Promise<AccountSyncResult> {
   const { data, error } = await admin
     .from("calendar_accounts")
@@ -233,7 +258,7 @@ export async function syncAccount(
     .eq("id", accountId)
     .maybeSingle();
   if (error || !data || data.status === "reconnect") return "skipped";
-  return syncOne(admin, data, now);
+  return syncOne(admin, data, now, tally);
 }
 
 /**
@@ -299,13 +324,16 @@ async function inPool<T>(
 /** The scheduled job: every account (the oldest synchronisation first). */
 export async function syncAllAccounts(
   admin: Admin,
-  options: { now?: Date; deadline: number },
+  options: { now?: Date; deadline: number; tally?: Tally },
 ): Promise<Record<AccountSyncResult, number>> {
   const now = options.now ?? new Date();
   const { data, error } = await admin
     .from("calendar_accounts")
     .select(ACCOUNT_COLUMNS)
     .neq("status", "reconnect")
+    // Fake accounts live only where the fake provider does, and the real ones
+    // are left alone there (#34 §9: production ignores the fake ones).
+    .eq("is_fake", isFakeCalendarProviderEnabled())
     .order("last_synced_at", { ascending: true, nullsFirst: true })
     .limit(500);
   if (error) throw new Error("Accounts could not be read.");
@@ -317,7 +345,7 @@ export async function syncAllAccounts(
     skipped: 0,
   };
   await inPool(data, 4, options.deadline, async (account) => {
-    totals[await syncOne(admin, account, now)] += 1;
+    totals[await syncOne(admin, account, now, options.tally)] += 1;
   });
   return totals;
 }
@@ -334,6 +362,7 @@ export async function processRevocations(
   const { data, error } = await admin
     .from("calendar_credential_revocations")
     .select("id, provider, is_fake, credentials_ciphertext")
+    .eq("is_fake", isFakeCalendarProviderEnabled())
     .order("created_at", { ascending: true })
     .limit(200);
   if (error) throw new Error("Revocations could not be read.");
@@ -375,12 +404,19 @@ const OUTBOX_BATCH = 50;
  */
 export async function processOutbox(
   admin: Admin,
-  options: { now?: Date; deadline: number },
+  options: { now?: Date; deadline: number; tally?: Tally },
 ): Promise<{ done: number; failed: number }> {
   const now = options.now ?? new Date();
+  const tally = options.tally;
   const { data: items, error } = await admin
     .from("calendar_outbox")
-    .select("id, action, event_id, provider_event_id, attempts, calendar_id")
+    .select(
+      "id, action, event_id, provider_event_id, attempts, calendar_id, external_calendars!inner(calendar_accounts!inner(is_fake))",
+    )
+    .eq(
+      "external_calendars.calendar_accounts.is_fake",
+      isFakeCalendarProviderEnabled(),
+    )
     .lte("next_attempt_at", now.toISOString())
     .order("next_attempt_at", { ascending: true })
     .limit(OUTBOX_BATCH);
@@ -407,7 +443,7 @@ export async function processOutbox(
         );
       } catch (caught) {
         if (caught instanceof ProviderAuthError) {
-          await recordResult(admin, accountId, "auth_error", now);
+          await recordResult(admin, accountId, "auth_error", now, tally);
         }
       }
     }
@@ -420,10 +456,13 @@ export async function processOutbox(
     const retry = async () => {
       result.failed += 1;
       const minutes = Math.min(5 * 2 ** item.attempts, 360);
-      await admin.rpc("fail_calendar_outbox_item", {
-        p_id: item.id,
-        p_retry_at: new Date(now.getTime() + minutes * 60_000).toISOString(),
-      });
+      noteError(
+        tally,
+        await admin.rpc("fail_calendar_outbox_item", {
+          p_id: item.id,
+          p_retry_at: new Date(now.getTime() + minutes * 60_000).toISOString(),
+        }),
+      );
     };
 
     const { data: calendar } = await admin
@@ -447,12 +486,17 @@ export async function processOutbox(
       if (item.action === "delete") {
         if (!item.provider_event_id) throw new Error("Invalid outbox item.");
         await session.deleteEvent(target, item.provider_event_id);
-        await admin.rpc("complete_calendar_outbox_item", { p_id: item.id });
+        const completed = await admin.rpc("complete_calendar_outbox_item", {
+          p_id: item.id,
+        });
+        if (!noteError(tally, completed)) throw new Error("Not completed.");
       } else {
         if (!item.event_id) throw new Error("Invalid outbox item.");
         const { data: event } = await admin
           .from("events")
-          .select("title, location, starts_at, ends_at")
+          .select(
+            "title, location, starts_at, ends_at, recurrence, recurrence_until, recurrence_weekdays",
+          )
           .eq("id", item.event_id)
           .maybeSingle();
         if (!event) {
@@ -464,19 +508,42 @@ export async function processOutbox(
           location: event.location,
           startsAt: event.starts_at,
           endsAt: event.ends_at,
+          recurrence:
+            event.recurrence === "none"
+              ? null
+              : {
+                  frequency: event.recurrence,
+                  weekdays: event.recurrence_weekdays,
+                  until: event.recurrence_until,
+                },
+          isPrivate: true as const,
         };
         if (item.action === "create") {
           const created = await session.createEvent(target, outgoing);
-          const { data: kept } = await admin.rpc(
-            "complete_calendar_outbox_item",
-            {
+          // The link between the copy and the event must be saved, or the next
+          // run would create a second copy: one more try, and if the database
+          // still refuses, the copy just made is deleted before the retry.
+          let kept: boolean | null = null;
+          let saved = false;
+          for (let attempt = 0; attempt < 2 && !saved; attempt += 1) {
+            const completed = await admin.rpc("complete_calendar_outbox_item", {
               p_id: item.id,
               p_provider_event_id: created.id,
               ...(created.version
                 ? { p_provider_version: created.version }
                 : {}),
-            },
-          );
+            });
+            saved = noteError(tally, completed);
+            if (saved) kept = completed.data;
+          }
+          if (!saved) {
+            try {
+              await session.deleteEvent(target, created.id);
+            } catch {
+              // Nothing more can be done from here.
+            }
+            throw new Error("Not completed.");
+          }
           // The user switched «Anche su» off meanwhile: the copy goes.
           if (kept === false) await session.deleteEvent(target, created.id);
         } else {
@@ -486,10 +553,11 @@ export async function processOutbox(
             item.provider_event_id,
             outgoing,
           );
-          await admin.rpc("complete_calendar_outbox_item", {
+          const completed = await admin.rpc("complete_calendar_outbox_item", {
             p_id: item.id,
             ...(updated.version ? { p_provider_version: updated.version } : {}),
           });
+          if (!noteError(tally, completed)) throw new Error("Not completed.");
         }
       }
       result.done += 1;
@@ -511,9 +579,13 @@ export async function runScheduledJob(
   revocations: { revoked: number; kept: number };
   accounts: Record<AccountSyncResult, number>;
   outbox: { done: number; failed: number };
+  /** Answers of the database that came back with an error (a count only). */
+  dbErrors: number;
 }> {
+  const tally: Tally = { dbErrors: 0 };
+  const withTally = { ...options, tally };
   const revocations = await processRevocations(admin, options);
-  const outbox = await processOutbox(admin, options);
-  const accounts = await syncAllAccounts(admin, options);
-  return { revocations, accounts, outbox };
+  const outbox = await processOutbox(admin, withTally);
+  const accounts = await syncAllAccounts(admin, withTally);
+  return { revocations, accounts, outbox, dbErrors: tally.dbErrors };
 }

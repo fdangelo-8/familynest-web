@@ -90,9 +90,11 @@ export function getCalendarEncryptionKey(version?: number): {
 }
 
 // The fake calendar provider (#34 §11) for development and tests: it needs the
-// variable, and it never exists in production, whatever the variable says.
+// variable, and it never exists on Vercel (production or previews), whatever the
+// variable says: its state lives in the memory of one process.
 export function isFakeCalendarProviderEnabled(): boolean {
-  if (process.env.VERCEL_ENV === "production") return false;
+  if (process.env.VERCEL || process.env.VERCEL_ENV === "production")
+    return false;
   return process.env.CALENDAR_FAKE_PROVIDER === "1";
 }
 

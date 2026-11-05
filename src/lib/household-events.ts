@@ -5,7 +5,7 @@ import { isValidDayKey, toDayKey, type Instant } from "@/lib/datetime";
 
 /**
  * The only place where pages read the events of the Nest (issue #88, decision
- * on PR #96): it calls the `list_household_events` function and tells apart,
+ * on PR #96): it calls the `list_household_events_with_source` function and tells apart,
  * in the type, the rows the caller may see in full from the «Occupato» rows of
  * the others, which the database already strips of every detail.
  */
@@ -28,6 +28,12 @@ export type FullEvent = {
   escortMemberId: string | null;
   /** Participants, in the order of the Nest members */
   memberIds: string[];
+  /**
+   * False if the event comes from a linked calendar with «Conta per «Liberi
+   * insieme»» off (issue #34): it does not make its author busy there.
+   * Missing means true (events built by hand, without the column).
+   */
+  countsForFreeTime?: boolean;
 };
 
 /**
@@ -40,6 +46,8 @@ export type MaskedEvent = {
   endsAt: string;
   visibility: "busy";
   authorMemberId: string;
+  /** Said even on masked rows: it tells nothing about the content. */
+  countsForFreeTime?: boolean;
 };
 
 export type HouseholdEvent = FullEvent | MaskedEvent;
@@ -50,7 +58,7 @@ export type ListEventsResult =
   | { ok: false };
 
 type Row =
-  Database["public"]["Functions"]["list_household_events"]["Returns"][number];
+  Database["public"]["Functions"]["list_household_events_with_source"]["Returns"][number];
 
 /**
  * The generated types declare these columns non-null, but the function returns
@@ -64,6 +72,7 @@ type RawRow = Omit<
   | "escort_member_id"
   | "member_ids"
   | "author_member_id"
+  | "counts_for_free_time"
 > & {
   id: string | null;
   author_member_id: string | null;
@@ -71,12 +80,15 @@ type RawRow = Omit<
   location: string | null;
   escort_member_id: string | null;
   member_ids: string[] | null;
+  /** Missing or null counts as true: only an explicit false leaves it out. */
+  counts_for_free_time?: boolean | null;
 };
 
 function toEvent(raw: RawRow): HouseholdEvent | null {
   // The database never sends «Solo io» of others and masks «Occupato» of
   // others: that guarantee is theirs. Here a row that is not provably complete
   // is reduced to the allowed fields, and rows that cannot exist are dropped.
+  const countsForFreeTime = raw.counts_for_free_time !== false;
   const hasDetails =
     raw.is_masked !== true &&
     raw.id !== null &&
@@ -94,6 +106,7 @@ function toEvent(raw: RawRow): HouseholdEvent | null {
       location: raw.location,
       escortMemberId: raw.escort_member_id,
       memberIds: raw.member_ids as string[],
+      countsForFreeTime,
     };
   }
   // Anything that is not provably a full row is treated as «Occupato»: only
@@ -105,6 +118,7 @@ function toEvent(raw: RawRow): HouseholdEvent | null {
     endsAt: raw.ends_at,
     visibility: "busy",
     authorMemberId: raw.author_member_id,
+    countsForFreeTime,
   };
 }
 
@@ -136,10 +150,13 @@ export async function listHouseholdEvents(
   let rows: unknown;
   try {
     const supabase = client ?? createBrowserClient();
-    const { data, error } = await supabase.rpc("list_household_events", {
-      p_from: fromDate.toISOString(),
-      p_to: toDate.toISOString(),
-    });
+    const { data, error } = await supabase.rpc(
+      "list_household_events_with_source",
+      {
+        p_from: fromDate.toISOString(),
+        p_to: toDate.toISOString(),
+      },
+    );
     if (error || !Array.isArray(data)) return { ok: false };
     rows = data;
   } catch {
@@ -225,6 +242,8 @@ type RawOccurrence = Omit<
   recurrence_until: string | null;
   recurrence_weekdays: number[] | null;
   member_ids: string[] | null;
+  /** Missing or null counts as true: only an explicit false leaves it out. */
+  counts_for_free_time?: boolean | null;
 };
 
 function toOccurrence(raw: RawOccurrence): EventOccurrence | null {

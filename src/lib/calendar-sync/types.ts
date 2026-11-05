@@ -84,12 +84,27 @@ export type EventsPage = {
   cursor: string | null;
 };
 
-/** What «Anche su» sends to the provider. */
+/** The repetition of an event sent with «Anche su»; null for a single event. */
+export type OutgoingRecurrence = {
+  frequency: "weekly" | "monthly";
+  /** Days of the week of a weekly series, as FamilyNest stores them. */
+  weekdays: number[] | null;
+  /** Last day of the series (`YYYY-MM-DD`), null if it has no end. */
+  until: string | null;
+} | null;
+
+/**
+ * What «Anche su» sends to the provider (#34 §16): only title, start, end,
+ * place and repetition, always marked private. Never notes, people, escort.
+ * `isPrivate` is the literal `true`: an adapter cannot send a public copy.
+ */
 export type OutgoingEvent = {
   title: string;
   location: string | null;
   startsAt: string;
   endsAt: string;
+  recurrence: OutgoingRecurrence;
+  isPrivate: true;
 };
 
 /** A session with a short-lived access token, kept in memory only. */

@@ -8,7 +8,7 @@ import {
 
 /*
  * Which provider answers (#34 §11): the fake one when it is switched on
- * (development, tests, previews) and when the account is a fake account; the
+ * (development and tests, never on Vercel) and when the account is a fake account; the
  * real one otherwise. The real adapters of Google (#34 part 3) and Outlook
  * (#35) are added to `REAL` when they exist; until then a real provider is
  * simply unavailable, and nobody pretends otherwise.

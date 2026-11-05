@@ -1925,8 +1925,7 @@ function LinkedCalendarParts() {
               <span>
                 <span className="scelta__titolo">Solo in entrata</span>
                 <span className="scelta__info">
-                  Vedi i tuoi impegni di lavoro, ma FamilyNest non scrive su
-                  Outlook.
+                  Vedi i tuoi impegni, ma FamilyNest non scrive su Outlook.
                 </span>
               </span>
               <span />
