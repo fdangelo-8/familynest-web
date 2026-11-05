@@ -625,6 +625,7 @@ export type Database = {
           recipient_member_id: string;
           todo_id: string | null;
           updated_at: string;
+          wishlist_reservation_id: string | null;
         };
         ComputedFields: never;
         Insert: {
@@ -645,6 +646,7 @@ export type Database = {
           recipient_member_id: string;
           todo_id?: string | null;
           updated_at?: string;
+          wishlist_reservation_id?: string | null;
         };
         Update: {
           actor_member_id?: string | null;
@@ -664,6 +666,7 @@ export type Database = {
           recipient_member_id?: string;
           todo_id?: string | null;
           updated_at?: string;
+          wishlist_reservation_id?: string | null;
         };
         Relationships: [
           {
@@ -706,6 +709,13 @@ export type Database = {
             columns: ["todo_id", "household_id"];
             isOneToOne: false;
             referencedRelation: "todos";
+            referencedColumns: ["id", "household_id"];
+          },
+          {
+            foreignKeyName: "notifications_wishlist_reservation_fkey";
+            columns: ["wishlist_reservation_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "wishlist_reservations";
             referencedColumns: ["id", "household_id"];
           },
         ];
@@ -952,6 +962,256 @@ export type Database = {
           },
         ];
       };
+      wishlist_item_photos: {
+        Row: {
+          content_type: string;
+          created_at: string;
+          data: string;
+          household_id: string;
+          item_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          content_type: string;
+          created_at?: string;
+          data: string;
+          household_id: string;
+          item_id: string;
+        };
+        Update: {
+          content_type?: string;
+          created_at?: string;
+          data?: string;
+          household_id?: string;
+          item_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "wishlist_item_photos_household_id_fkey";
+            columns: ["household_id"];
+            isOneToOne: false;
+            referencedRelation: "households";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "wishlist_item_photos_item_fkey";
+            columns: ["item_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "wishlist_items";
+            referencedColumns: ["id", "household_id"];
+          },
+        ];
+      };
+      wishlist_items: {
+        Row: {
+          added_by_member_id: string | null;
+          created_at: string;
+          household_id: string;
+          id: string;
+          note: string | null;
+          price_cents: number | null;
+          shop_name: string | null;
+          title: string;
+          updated_at: string;
+          url: string | null;
+          wishlist_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          added_by_member_id?: string | null;
+          created_at?: string;
+          household_id: string;
+          id?: string;
+          note?: string | null;
+          price_cents?: number | null;
+          shop_name?: string | null;
+          title: string;
+          updated_at?: string;
+          url?: string | null;
+          wishlist_id: string;
+        };
+        Update: {
+          added_by_member_id?: string | null;
+          created_at?: string;
+          household_id?: string;
+          id?: string;
+          note?: string | null;
+          price_cents?: number | null;
+          shop_name?: string | null;
+          title?: string;
+          updated_at?: string;
+          url?: string | null;
+          wishlist_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "wishlist_items_added_by_fkey";
+            columns: ["added_by_member_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "household_members";
+            referencedColumns: ["id", "household_id"];
+          },
+          {
+            foreignKeyName: "wishlist_items_household_id_fkey";
+            columns: ["household_id"];
+            isOneToOne: false;
+            referencedRelation: "households";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "wishlist_items_wishlist_fkey";
+            columns: ["wishlist_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "wishlists";
+            referencedColumns: ["id", "household_id"];
+          },
+        ];
+      };
+      wishlist_reservations: {
+        Row: {
+          created_at: string;
+          giver_key_hash: string | null;
+          giver_name: string;
+          household_id: string;
+          id: string;
+          item_id: string;
+          share_link_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          giver_key_hash?: string | null;
+          giver_name: string;
+          household_id: string;
+          id?: string;
+          item_id: string;
+          share_link_id: string;
+        };
+        Update: {
+          created_at?: string;
+          giver_key_hash?: string | null;
+          giver_name?: string;
+          household_id?: string;
+          id?: string;
+          item_id?: string;
+          share_link_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "wishlist_reservations_household_id_fkey";
+            columns: ["household_id"];
+            isOneToOne: false;
+            referencedRelation: "households";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "wishlist_reservations_item_fkey";
+            columns: ["item_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "wishlist_items";
+            referencedColumns: ["id", "household_id"];
+          },
+          {
+            foreignKeyName: "wishlist_reservations_share_link_fkey";
+            columns: ["share_link_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "wishlist_share_links";
+            referencedColumns: ["id", "household_id"];
+          },
+        ];
+      };
+      wishlist_share_links: {
+        Row: {
+          code: string;
+          created_at: string;
+          disabled_at: string | null;
+          expires_at: string;
+          household_id: string;
+          id: string;
+          occasion_date: string;
+          updated_at: string;
+          wishlist_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          code?: string;
+          created_at?: string;
+          disabled_at?: string | null;
+          expires_at: string;
+          household_id: string;
+          id?: string;
+          occasion_date: string;
+          updated_at?: string;
+          wishlist_id: string;
+        };
+        Update: {
+          code?: string;
+          created_at?: string;
+          disabled_at?: string | null;
+          expires_at?: string;
+          household_id?: string;
+          id?: string;
+          occasion_date?: string;
+          updated_at?: string;
+          wishlist_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "wishlist_share_links_household_id_fkey";
+            columns: ["household_id"];
+            isOneToOne: false;
+            referencedRelation: "households";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "wishlist_share_links_wishlist_fkey";
+            columns: ["wishlist_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "wishlists";
+            referencedColumns: ["id", "household_id"];
+          },
+        ];
+      };
+      wishlists: {
+        Row: {
+          created_at: string;
+          household_id: string;
+          id: string;
+          member_id: string;
+          member_kind: Database["public"]["Enums"]["member_kind"];
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          household_id?: string;
+          id?: string;
+          member_id: string;
+          member_kind?: Database["public"]["Enums"]["member_kind"];
+        };
+        Update: {
+          created_at?: string;
+          household_id?: string;
+          id?: string;
+          member_id?: string;
+          member_kind?: Database["public"]["Enums"]["member_kind"];
+        };
+        Relationships: [
+          {
+            foreignKeyName: "wishlists_household_id_fkey";
+            columns: ["household_id"];
+            isOneToOne: false;
+            referencedRelation: "households";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "wishlists_member_fkey";
+            columns: ["member_id", "household_id", "member_kind"];
+            isOneToOne: false;
+            referencedRelation: "household_members";
+            referencedColumns: ["id", "household_id", "kind"];
+          },
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -968,6 +1228,19 @@ export type Database = {
       add_space_interest: {
         Args: { p_space: Database["public"]["Enums"]["space_key"] };
         Returns: undefined;
+      };
+      add_wishlist_item: {
+        Args: {
+          p_member_id: string;
+          p_note?: string;
+          p_photo_base64?: string;
+          p_photo_content_type?: string;
+          p_price_cents?: number;
+          p_shop_name?: string;
+          p_title: string;
+          p_url?: string;
+        };
+        Returns: string;
       };
       clear_checked_shopping_items: {
         Args: { item_ids: string[] };
@@ -1043,6 +1316,11 @@ export type Database = {
         Args: { p_expect_household_deletion: boolean };
         Returns: undefined;
       };
+      delete_wishlist_item: { Args: { p_item_id: string }; Returns: undefined };
+      disable_wishlist_share_link: {
+        Args: { p_member_id: string };
+        Returns: undefined;
+      };
       get_account_deletion_outcome: {
         Args: Record<PropertyKey, never>;
         Returns: {
@@ -1080,6 +1358,24 @@ export type Database = {
           free_together: boolean;
           morning_digest: boolean;
           shopping: boolean;
+        }[];
+      };
+      get_public_wishlist: {
+        Args: { p_code: string; p_giver_key?: string };
+        Returns: {
+          child_color: Database["public"]["Enums"]["member_color"];
+          child_name: string;
+          items: Database["public"]["CompositeTypes"]["public_wishlist_item"][];
+          occasion_day: number;
+          occasion_month: number;
+          status: Database["public"]["Enums"]["wishlist_link_status"];
+        }[];
+      };
+      get_public_wishlist_photo: {
+        Args: { p_code: string; p_item_id: string };
+        Returns: {
+          content_type: string;
+          data_base64: string;
         }[];
       };
       invitation_preview: {
@@ -1123,6 +1419,15 @@ export type Database = {
         Args: { p_space: Database["public"]["Enums"]["space_key"] };
         Returns: undefined;
       };
+      reserve_public_wishlist_item: {
+        Args: {
+          p_code: string;
+          p_giver_key: string;
+          p_item_id: string;
+          p_name: string;
+        };
+        Returns: Database["public"]["Enums"]["wishlist_reservation_outcome"];
+      };
       restore_shopping_items: {
         Args: { item_ids: string[] };
         Returns: {
@@ -1148,6 +1453,10 @@ export type Database = {
           p_household_id: string;
           p_job: Database["public"]["Enums"]["notification_job"];
         };
+        Returns: number;
+      };
+      run_wishlist_cleanup: {
+        Args: { p_household_id: string; p_today?: string };
         Returns: number;
       };
       save_child_profile: {
@@ -1208,6 +1517,14 @@ export type Database = {
         };
         Returns: undefined;
       };
+      share_wishlist: {
+        Args: { p_member_id: string };
+        Returns: {
+          code: string;
+          expires_at: string;
+          occasion_date: string;
+        }[];
+      };
       space_interest_counts: {
         Args: Record<PropertyKey, never>;
         Returns: {
@@ -1258,6 +1575,10 @@ export type Database = {
         };
         Returns: undefined;
       };
+      update_wishlist_item: {
+        Args: { p_item_id: string; p_note?: string; p_title: string };
+        Returns: undefined;
+      };
     };
     Enums: {
       event_change_scope: "this" | "following";
@@ -1287,7 +1608,8 @@ export type Database = {
         | "deadline_reminder"
         | "free_together"
         | "event_time_changed"
-        | "shopping_added";
+        | "shopping_added"
+        | "gift_taken";
       notification_preference:
         | "events"
         | "assigned_todos"
@@ -1306,12 +1628,32 @@ export type Database = {
         | "expenses"
         | "children"
         | "pets";
+      wishlist_item_state: "free" | "mine" | "taken";
+      wishlist_link_status: "active" | "inactive";
+      wishlist_reservation_outcome:
+        | "reserved"
+        | "taken"
+        | "not_found"
+        | "inactive"
+        | "rate_limited"
+        | "invalid_name"
+        | "invalid_key";
     };
     CompositeTypes: {
       invitation_preview_member: {
         initial: string | null;
         color: Database["public"]["Enums"]["member_color"] | null;
         name: string | null;
+      };
+      public_wishlist_item: {
+        id: string | null;
+        title: string | null;
+        url: string | null;
+        shop_name: string | null;
+        note: string | null;
+        price_cents: number | null;
+        has_photo: boolean | null;
+        state: Database["public"]["Enums"]["wishlist_item_state"] | null;
       };
     };
   };
@@ -1469,6 +1811,7 @@ export const Constants = {
         "free_together",
         "event_time_changed",
         "shopping_added",
+        "gift_taken",
       ],
       notification_preference: [
         "events",
@@ -1489,6 +1832,17 @@ export const Constants = {
         "expenses",
         "children",
         "pets",
+      ],
+      wishlist_item_state: ["free", "mine", "taken"],
+      wishlist_link_status: ["active", "inactive"],
+      wishlist_reservation_outcome: [
+        "reserved",
+        "taken",
+        "not_found",
+        "inactive",
+        "rate_limited",
+        "invalid_name",
+        "invalid_key",
       ],
     },
   },
