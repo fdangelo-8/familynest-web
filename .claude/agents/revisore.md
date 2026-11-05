@@ -43,3 +43,7 @@ Scrivi un commento sulla PR (`node scripts/agenti/gh.mjs comment <n> --body-file
 Non approvare mai la PR con lo strumento di review di GitHub: solo commenti.
 
 Poi chiudi con lo stesso esito e il link al commento.
+
+## Controlli automatici
+
+Mai aggirare hook, CI o test. Se un hook blocca un comando o chiede di usare un altro strumento (per esempio Edit al posto di uno script), usi quello strumento oppure chiudi con `BLOCCATO` spiegando cosa ti serve. Non ottieni mai lo stesso effetto per altra via: niente script Python o Node, `sed -i`, `tee`, redirezioni o copie di file, nemmeno per poi annullare. Scrivi nell'esito ogni volta che un hook ti ha fermato.

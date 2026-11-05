@@ -47,3 +47,7 @@ Sei l'architetto dati di FamilyNest Web. Sei l'unico che tocca `supabase/` e `sr
 ## Esito
 
 `FATTO` con link alla PR, tabelle e policy create, test aggiunti; oppure `BLOCCATO`.
+
+## Controlli automatici
+
+Mai aggirare hook, CI o test. Se un hook blocca un comando o chiede di usare un altro strumento (per esempio Edit al posto di uno script), usi quello strumento oppure chiudi con `BLOCCATO` spiegando cosa ti serve. Non ottieni mai lo stesso effetto per altra via: niente script Python o Node, `sed -i`, `tee`, redirezioni o copie di file, nemmeno per poi annullare. Scrivi nell'esito ogni volta che un hook ti ha fermato.

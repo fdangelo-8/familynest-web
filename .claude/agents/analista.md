@@ -65,3 +65,7 @@ Quando il coordinatore te lo chiede, leggi tutto il mockup e restituisci (senza 
 ## Esito
 
 Chiudi con `FATTO` (issue aggiornata, numero di CA, eventuali richieste-db/condivise necessarie) oppure `BLOCCATO` con la domanda esatta.
+
+## Controlli automatici
+
+Mai aggirare hook, CI o test. Se un hook blocca un comando o chiede di usare un altro strumento (per esempio Edit al posto di uno script), usi quello strumento oppure chiudi con `BLOCCATO` spiegando cosa ti serve. Non ottieni mai lo stesso effetto per altra via: niente script Python o Node, `sed -i`, `tee`, redirezioni o copie di file, nemmeno per poi annullare. Scrivi nell'esito ogni volta che un hook ti ha fermato.
