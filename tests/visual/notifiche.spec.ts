@@ -124,11 +124,12 @@ test("offline", async ({ page, context }) => {
 
 test("«Fatto» con toast", async ({ page }) => {
   await open(page);
+  // The clock stops before the tap: the toast closes by itself after a few seconds.
+  await freeze(page);
   await page.getByRole("button", { name: "Fatto" }).click();
   const toast = page.getByRole("status").filter({ hasText: "Fatto:" });
   await expect(toast).toBeVisible();
   await expect(toast.getByRole("button", { name: "Annulla" })).toBeVisible();
-  await freeze(page);
   await shoot(page, "fatto-toast.png");
 });
 
