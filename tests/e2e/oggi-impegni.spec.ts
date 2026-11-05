@@ -65,10 +65,10 @@ test.describe("prossimo", () => {
     const prossimo = sec(page, "Prossimo");
     await expect(prossimo).toContainText("Visita dal pediatra");
     await expect(prossimo).toContainText("Fino alle 17:00");
-    await expect(prossimo).not.toContainText("la porta");
+    await expect(prossimo).not.toContainText("porta");
     await expect(prossimo).not.toContainText("Anna");
     await expect(sec(page, "Dopo")).toContainText("Allenamento di Leo");
-    await expect(sec(page, "Dopo")).toContainText("la porta Anna");
+    await expect(sec(page, "Dopo")).toContainText("porta Anna");
   });
 
   test("CA-9: passati 60 secondi «Prossimo» dice «tra 7 minuti», senza ricaricare", async ({

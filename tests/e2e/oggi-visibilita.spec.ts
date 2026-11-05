@@ -147,7 +147,10 @@ test.describe("lente e visibilità", () => {
       to: "22:00",
     });
     const net = watchNetwork(page);
-    await open(page, baseURL, bianchi, "Giulia", { lens: "nest" });
+    await open(page, baseURL, bianchi, "Giulia", {
+      lens: "nest",
+      now: at(d(0), "23:10"),
+    });
     const domani = sec(page, "Domani");
     await expect(domani).toBeVisible();
     await expect(domani).toContainText("Cena in famiglia");
@@ -171,7 +174,10 @@ test.describe("lente e visibilità", () => {
       to: "11:00",
       visibility: "busy",
     });
-    await open(page, baseURL, bianchi, "Giulia", { lens: "nest" });
+    await open(page, baseURL, bianchi, "Giulia", {
+      lens: "nest",
+      now: at(d(0), "23:10"),
+    });
     await expect(lensButton(page, "Nest")).toHaveAttribute(
       "aria-pressed",
       "true",
