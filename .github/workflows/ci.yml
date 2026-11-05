@@ -126,7 +126,8 @@ jobs:
           job: ${{ github.job }}
           token: ${{ github.token }}
 
-  test:
+  test-parte:
+    name: test (parte ${{ matrix.shard }})
     needs: [check, build]
     if: needs.check.outputs.app == 'true' && needs.check.outputs.tests == 'true'
     runs-on: ubuntu-latest
@@ -215,3 +216,19 @@ jobs:
         with:
           job: ${{ github.job }}
           token: ${{ github.token }}
+
+  # Single result of the three parts, with the name "test" that the main
+  # branch rules require. Skipped parts (no full-suite label) count as passed,
+  # as before the split; a failed or cancelled part fails this job.
+  test:
+    needs: test-parte
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Esito delle tre parti
+        run: |
+          echo "Esito delle parti: ${{ needs.test-parte.result }}"
+          case "${{ needs.test-parte.result }}" in
+            success|skipped) exit 0 ;;
+            *) exit 1 ;;
+          esac
