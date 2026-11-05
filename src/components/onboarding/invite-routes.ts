@@ -4,6 +4,7 @@
  * it.
  */
 export const PEOPLE_PATH = "/onboarding/persone";
+export const CALENDAR_PATH = "/onboarding/calendario";
 export const INVITE_PATH = "/onboarding/invito";
 export const READY_PATH = "/onboarding/pronto";
 

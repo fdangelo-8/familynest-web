@@ -96,14 +96,17 @@ function Body({
   nest,
   members,
   invites,
+  imported,
   layout,
 }: {
   nest: string;
   members: ReadyMember[];
   invites: string | null;
+  imported: string | null;
   layout: "mobile" | "desktop";
 }) {
   const rows: { icon: IconName; text: string }[] = [];
+  if (imported) rows.push({ icon: "calendar-check", text: imported });
   if (invites) rows.push({ icon: "send", text: invites });
   return (
     <div className="sezione">
@@ -126,17 +129,26 @@ export function ReadyScreen({
   nest,
   members,
   invites,
+  imported = null,
 }: {
   nest: string;
   members: ReadyMember[];
   /** Already worded line about the invitations; null when there are none */
   invites: string | null;
+  /** Already worded line about the imported events (#37); null when none */
+  imported?: string | null;
 }) {
   return (
     <main className={styles.root}>
       <div className={`${styles.mobile} schermo-notte tema-notte`}>
         <Brand />
-        <Body nest={nest} members={members} invites={invites} layout="mobile" />
+        <Body
+          nest={nest}
+          members={members}
+          invites={invites}
+          imported={imported}
+          layout="mobile"
+        />
         <div className="dialogo__azioni">
           <Button variant="chiaro" full href="/oggi">
             Vai a Oggi
@@ -150,6 +162,7 @@ export function ReadyScreen({
           nest={nest}
           members={members}
           invites={invites}
+          imported={imported}
           layout="desktop"
         />
         <div>
