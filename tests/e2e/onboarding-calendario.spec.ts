@@ -12,6 +12,10 @@ import {
   fakeCalendarSkipReason,
 } from "../fixtures/calendar-fake";
 import {
+  withNestAndVisitor,
+  type DeSantisNest,
+} from "../fixtures/invito-ingresso";
+import {
   createThrowawayUser,
   throwawayConfigured,
   throwawaySkipReason,
@@ -21,8 +25,10 @@ import {
 // Onboarding step 3, "Porta qui il tuo calendario" (#37). Tests that write use
 // throwaway users (UG), deleted at the end; the fake provider (FF) prepares the
 // accounts of one user and is reset in the `finally`. Selectors use roles and
-// the texts of the issue. Not covered here: the invited person (CA-14, CA-15,
-// fixture of #16), the slow fake on Pronto (CA-19) and iCloud (CA-9, #36).
+// the texts of the issue. Skipped with a reason: iCloud (CA-3 row, CA-9: the
+// provider of #36 is not on main), CA-5 (Calendari collegati is still a
+// placeholder) and the first half of CA-14 (the invitation still leads to
+// /oggi: AFTER_INVITE_PATH changes in a later shared PR).
 
 test.use({ locale: "it-IT", timezoneId: "Europe/Rome" });
 
@@ -39,7 +45,8 @@ function needsFake() {
   test.skip(!fakeCalendarConfigured(), fakeCalendarSkipReason);
 }
 
-type Type = "single" | "couple";
+// "adults-only": not "Solo io", but no adult without an account to invite.
+type Type = "single" | "couple" | "adults-only";
 
 /** A throwaway user with a Nest; "couple" adds Bea, an adult with no account. */
 async function withNest(
@@ -142,6 +149,15 @@ test.describe("contenuto e percorso", () => {
       await expect(
         page.getByRole("progressbar", { name: "Passo 3 di 4" }).filter(visible),
       ).toBeVisible();
+      // The «Indietro» arrow is drawn in the mobile header only.
+      const back = page
+        .getByRole("link", { name: "Indietro", exact: true })
+        .filter(visible);
+      if (test.info().project.name === "mobile") {
+        await expect(back).toHaveAttribute("href", "/onboarding/persone");
+      } else {
+        await expect(back).toHaveCount(0);
+      }
       for (const [name, info] of [
         ["Outlook", "Lavoro e calendari condivisi"],
         ["Google", "Per il calendario personale"],
@@ -426,6 +442,347 @@ test.describe("Pronto: la riga degli impegni", () => {
         await expect(
           page.getByText("1 impegno arrivato da Google").filter(visible),
         ).toBeVisible();
+      } finally {
+        await fake.reset(user.id);
+      }
+    });
+  });
+});
+
+const providerRows = (page: Page) =>
+  page
+    .getByRole("list", { name: "Calendari da collegare" })
+    .filter(visible)
+    .getByRole("listitem");
+
+test.describe("righe, percorso e disposizione", () => {
+  test("CA-3: le righe sono in ordine Outlook, Google (iCloud non è su main)", async ({
+    page,
+    baseURL,
+  }) => {
+    needsThrowaway();
+    await withNest("couple", async (user) => {
+      await open(page, user, baseURL);
+      await expect(providerRows(page)).toHaveCount(2);
+      await expect(providerRows(page).nth(0)).toContainText("Outlook");
+      await expect(providerRows(page).nth(1)).toContainText("Google");
+      await expect(collega(page, "iCloud")).toHaveCount(0);
+    });
+  });
+
+  test("CA-3: la riga iCloud con «Calendario di iPhone e Mac»", () => {
+    test.skip(true, "Fornitore iCloud (#36) non su main: la riga non c'è");
+  });
+
+  test("CA-9: foglio «Collega iCloud»", () => {
+    test.skip(true, "Fornitore iCloud (#36) non su main: nessun foglio");
+  });
+
+  test("CA-5: dopo il collegamento, «Personale» acceso e «Occupato»", () => {
+    test.skip(
+      true,
+      "/calendari-collegati è ancora un segnaposto: le impostazioni non si vedono",
+    );
+  });
+
+  test("CA-12: Nest senza adulti da invitare, «Più tardi» porta a /onboarding/pronto", async ({
+    page,
+    baseURL,
+  }) => {
+    needsThrowaway();
+    await withNest("adults-only", async (user) => {
+      await open(page, user, baseURL);
+      await expect(
+        page.getByRole("progressbar", { name: "Passo 3 di 4" }).filter(visible),
+      ).toBeVisible();
+      await later(page).click();
+      await expect(page).toHaveURL(/\/onboarding\/pronto$/);
+    });
+  });
+
+  test("CA-13: «Solo io», da «Chi c'è nel Nest?» «Continua» porta a «Passo 3 di 3»", async ({
+    page,
+    baseURL,
+  }) => {
+    needsThrowaway();
+    await withNest("single", async (user) => {
+      await user.signInContext(page.context(), baseURL as string);
+      await page.goto("/onboarding/persone");
+      await expect(page.locator("h1:visible")).toHaveText("Chi c'è nel Nest?");
+      await principal(page, "Continua").click();
+      await expect(page).toHaveURL(/\/onboarding\/calendario$/);
+      await expect(
+        page.getByRole("progressbar", { name: "Passo 3 di 3" }).filter(visible),
+      ).toBeVisible();
+    });
+  });
+
+  test("CA-23: su desktop disposizione divisa, «Più tardi» prima di «Continua senza calendario»", async ({
+    page,
+    baseURL,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "Solo desktop");
+    needsThrowaway();
+    await withNest("couple", async (user) => {
+      await open(page, user, baseURL);
+      const right = page.locator(".split-onboarding__passo").filter(visible);
+      await expect(right).toBeVisible();
+      await expect(right.getByRole("progressbar")).toBeVisible();
+      await expect(right.getByRole("heading", { level: 1 })).toHaveText(
+        "Porta qui il tuo calendario",
+      );
+      await expect(
+        right.getByRole("button", { name: /^Collega / }),
+      ).toHaveCount(2);
+      await expect(
+        right.getByText("Scegli dopo cosa tenere", { exact: true }),
+      ).toBeVisible();
+      const laterLink = right.getByRole("link", {
+        name: "Più tardi",
+        exact: true,
+      });
+      const main = right.getByRole("button", {
+        name: "Continua senza calendario",
+        exact: true,
+      });
+      const a = await laterLink.boundingBox();
+      const b = await main.boundingBox();
+      expect(a!.x).toBeLessThan(b!.x);
+      // Focus order: «Più tardi», then the main button.
+      await laterLink.focus();
+      await page.keyboard.press("Tab");
+      await expect(main).toBeFocused();
+    });
+  });
+
+  test("CA-10: due account Outlook → «2 account · N calendari»", async ({
+    page,
+    baseURL,
+  }) => {
+    needsFake();
+    const fake = fakeCalendar(baseURL as string);
+    await withNest("couple", async (user) => {
+      try {
+        await fake.setup({
+          userId: user.id,
+          provider: "outlook",
+          email: "o.uno@example.test",
+          calendars: STANDARD_FAKE_ACCOUNT.calendars,
+          nextConsent: true,
+        });
+        await open(page, user, baseURL);
+        await collega(page, "Outlook").click();
+        await page.getByRole("link", { name: "Consenti", exact: true }).click();
+        await expect(
+          page.getByText("o.uno@example.test · 3 calendari").filter(visible),
+        ).toBeVisible();
+
+        await fake.setup({
+          userId: user.id,
+          provider: "outlook",
+          email: "o.due@example.test",
+          calendars: STANDARD_FAKE_ACCOUNT.calendars,
+          nextConsent: true,
+        });
+        // The row has no «Collega» any more: the second link starts with the
+        // same POST the button makes (destination «onboarding»).
+        await page.evaluate(() => {
+          const form = document.createElement("form");
+          form.method = "post";
+          form.action = "/calendari-collegati/collega/outlook";
+          const field = document.createElement("input");
+          field.name = "destination";
+          field.value = "onboarding";
+          form.appendChild(field);
+          document.body.appendChild(form);
+          form.submit();
+        });
+        await page.getByRole("link", { name: "Consenti", exact: true }).click();
+        await expect(page).toHaveURL(/\/onboarding\/calendario$/);
+        await expect(
+          page.getByText(/^2 account · \d+ calendari$/).filter(visible),
+        ).toBeVisible();
+      } finally {
+        await fake.reset(user.id);
+      }
+    });
+  });
+});
+
+test.describe("chi entra con un invito", () => {
+  async function joined(
+    nest: DeSantisNest,
+    visitor: ThrowawayUser,
+    page: Page,
+    baseURL?: string,
+  ) {
+    const accepted = await visitor.client.rpc("accept_invitation_with_color", {
+      p_token: nest.invite.token,
+      p_color: "peonia",
+    });
+    expect(accepted.error).toBeNull();
+    await visitor.signInContext(page.context(), baseURL as string);
+    await page.goto(PATH);
+    await expect(page.locator("h1:visible")).toHaveText(
+      "Porta qui il tuo calendario",
+    );
+  }
+
+  test("CA-14: da «Il tuo colore» «Continua» porta al calendario", () => {
+    test.skip(
+      true,
+      "Il percorso dopo l'invito (AFTER_INVITE_PATH) arriva con una PR successiva",
+    );
+  });
+
+  test("CA-14, CA-16: l'invitato ha «Passo 2 di 3», nessuna freccia; «Continua senza calendario» porta a /oggi col benvenuto", async ({
+    page,
+    baseURL,
+  }) => {
+    needsThrowaway();
+    await withNestAndVisitor(async (nest, visitor) => {
+      await joined(nest, visitor, page, baseURL);
+      await expect(
+        page.getByRole("progressbar", { name: "Passo 2 di 3" }).filter(visible),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("link", { name: "Indietro", exact: true }),
+      ).toHaveCount(0);
+      // The address cannot change the role decided by the server.
+      await page.goto(`${PATH}?invitato=0`);
+      await expect(
+        page.getByRole("progressbar", { name: "Passo 2 di 3" }).filter(visible),
+      ).toBeVisible();
+      await principal(page, "Continua senza calendario").click();
+      await expect(page).toHaveURL(/\/oggi$/);
+      await expect(
+        page.getByRole("heading", { level: 1, name: /^Eccoti/ }),
+      ).toBeVisible();
+    });
+  });
+
+  test("CA-15: l'invitato collega Google, resta sul passo e «Continua» porta a /oggi", async ({
+    page,
+    baseURL,
+  }) => {
+    needsFake();
+    const fake = fakeCalendar(baseURL as string);
+    await withNestAndVisitor(async (nest, visitor) => {
+      try {
+        await fake.setup({
+          userId: visitor.id,
+          ...STANDARD_FAKE_ACCOUNT,
+          nextConsent: true,
+        });
+        await joined(nest, visitor, page, baseURL);
+        await collega(page, "Google").click();
+        await page.getByRole("link", { name: "Consenti", exact: true }).click();
+        await expect(page).toHaveURL(/\/onboarding\/calendario$/);
+        await expect(page.getByText("Collegato").filter(visible)).toBeVisible();
+        await principal(page, "Continua").click();
+        await expect(page).toHaveURL(/\/oggi$/);
+      } finally {
+        await fake.reset(visitor.id);
+      }
+    });
+  });
+});
+
+test.describe("Pronto: altri casi della riga degli impegni", () => {
+  test("CA-18: con Outlook e Google, in ordine di collegamento, «N impegni arrivati da Outlook e Google»", async ({
+    page,
+    baseURL,
+  }) => {
+    needsFake();
+    const fake = fakeCalendar(baseURL as string);
+    await withNest("single", async (user) => {
+      try {
+        const outlook = "o.finto@example.test";
+        await fake.setup({
+          userId: user.id,
+          provider: "outlook",
+          email: outlook,
+          calendars: STANDARD_FAKE_ACCOUNT.calendars,
+          nextConsent: true,
+        });
+        await open(page, user, baseURL);
+        await collega(page, "Outlook").click();
+        await page.getByRole("link", { name: "Consenti", exact: true }).click();
+        await expect(
+          page.getByText(`${outlook} · 3 calendari`).filter(visible),
+        ).toBeVisible();
+        await fake.setup({
+          userId: user.id,
+          ...STANDARD_FAKE_ACCOUNT,
+          nextConsent: true,
+        });
+        await collega(page, "Google").click();
+        await page.getByRole("link", { name: "Consenti", exact: true }).click();
+        await expect(
+          page.getByText("u.finto@example.test · 3 calendari").filter(visible),
+        ).toBeVisible();
+        await fake.setEvents({
+          userId: user.id,
+          provider: "outlook",
+          email: outlook,
+          calendarId: "personale",
+          events: events(2),
+        });
+        await fake.setEvents({
+          userId: user.id,
+          email: STANDARD_FAKE_ACCOUNT.email,
+          calendarId: "personale",
+          events: events(3),
+        });
+        await fake.sync(user.id);
+        await page.goto("/onboarding/pronto");
+        await expect(
+          page
+            .getByText("5 impegni arrivati da Outlook e Google")
+            .filter(visible),
+        ).toBeVisible();
+      } finally {
+        await fake.reset(user.id);
+      }
+    });
+  });
+
+  test("CA-19: con il finto lento Pronto mostra il caricamento e, entro 11 secondi, il riepilogo", async ({
+    page,
+    baseURL,
+  }) => {
+    test.setTimeout(60_000);
+    needsFake();
+    const fake = fakeCalendar(baseURL as string);
+    await withNest("single", async (user) => {
+      try {
+        await fake.setup({
+          userId: user.id,
+          ...STANDARD_FAKE_ACCOUNT,
+          nextConsent: true,
+        });
+        await fake.setEvents({
+          userId: user.id,
+          email: STANDARD_FAKE_ACCOUNT.email,
+          calendarId: "personale",
+          events: events(3),
+        });
+        await fake.fail({
+          userId: user.id,
+          email: STANDARD_FAKE_ACCOUNT.email,
+          slowMs: 4000,
+        });
+        await open(page, user, baseURL);
+        await collega(page, "Google").click();
+        await page.getByRole("link", { name: "Consenti", exact: true }).click();
+        await expect(page.getByText("Collegato").filter(visible)).toBeVisible();
+        await page.goto("/onboarding/pronto", { waitUntil: "commit" });
+        await expect(
+          page.getByText("Preparazione in corso").filter(visible),
+        ).toBeVisible();
+        await expect(
+          page.getByText(/impegni arrivati da Google$/).filter(visible),
+        ).toBeVisible({ timeout: 11_000 });
       } finally {
         await fake.reset(user.id);
       }
