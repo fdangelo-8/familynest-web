@@ -347,7 +347,7 @@ test.describe("collegamento con il fornitore finto", () => {
           const household = await user.client.rpc("current_household_id");
           const member = await user.admin
             .from("household_members")
-            .update({ user_id: rita.id })
+            .update({ user_id: rita.id, joined_at: new Date().toISOString() })
             .eq("household_id", household.data as string)
             .eq("name", "Bea");
           expect(member.error).toBeNull();

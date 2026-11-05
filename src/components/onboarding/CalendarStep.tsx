@@ -142,16 +142,20 @@ function Providers({
               <Icon name="check" size="s" />
               Collegato
             </span>
-          ) : connecting === row.provider ? (
-            <span className="btn-tenue" aria-busy="true">
-              <Spinner />
-              Collegamento
-            </span>
           ) : (
+            // The form stays in the page while the button turns into the
+            // spinner: removing it during the submit would cancel the post.
             <ConnectForm provider={row.provider} onSubmit={onConnect}>
-              <Button variant="tenue" type="submit" disabled={offline}>
-                Collega <VisuallyHidden>{row.name}</VisuallyHidden>
-              </Button>
+              {connecting === row.provider ? (
+                <span className="btn-tenue" aria-busy="true">
+                  <Spinner />
+                  Collegamento
+                </span>
+              ) : (
+                <Button variant="tenue" type="submit" disabled={offline}>
+                  Collega <VisuallyHidden>{row.name}</VisuallyHidden>
+                </Button>
+              )}
             </ConnectForm>
           )}
         </li>
@@ -250,7 +254,7 @@ export function CalendarStep({
 }: CalendarStepProps) {
   const router = useRouter();
   // The result cookie is deleted after the first read; the notice stays here.
-  const [notice, setNotice] = useState(initialNotice);
+  const [notice] = useState(initialNotice);
   const [connecting, setConnecting] = useState<ProviderId | null>(null);
   const [going, setGoing] = useState(false);
   const online = useSyncExternalStore(
@@ -290,8 +294,9 @@ export function CalendarStep({
     return () => window.removeEventListener("pageshow", restore);
   }, []);
 
+  // The notice and the forms stay: the page leaves for the provider anyway,
+  // and unmounting a form during its submit would cancel the post.
   function connect(provider: ProviderId) {
-    setNotice(null);
     setConnecting(provider);
   }
 
