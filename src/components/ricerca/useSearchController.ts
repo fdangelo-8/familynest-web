@@ -30,7 +30,6 @@ import {
   eventGroupInfo,
   resultsAnnouncement,
   type FilterKey,
-  type PersonView,
   type RowGroups,
   type RowModel,
 } from "./model";
@@ -41,8 +40,6 @@ export type SurfaceMode = "page" | "palette";
 
 /** Something the arrows can select in the palette. */
 export type NavItem = { key: string; activate: () => void };
-
-const NO_PEOPLE: PersonView[] = [];
 
 /** Order of the groups on screen. */
 const GROUP_ORDER = ["event", "deadline", "todo", "shopping_item"] as const;
@@ -68,9 +65,7 @@ export function useSearchController({
   const { showToast } = useToast();
   const uid = useId();
   const context = useSearchContext();
-  const people = context.status === "loading" ? NO_PEOPLE : context.people;
-  const userId = context.status === "loading" ? null : context.userId;
-  const meId = context.status === "loading" ? null : context.meId;
+  const { people, userId, meId } = context;
 
   const [text, setTextState] = useState(() => readDraft());
   const [filter, setFilter] = useState<FilterKey>("all");

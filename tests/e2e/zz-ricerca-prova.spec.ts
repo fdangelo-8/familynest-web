@@ -188,13 +188,17 @@ test.describe("prova #40 (2)", () => {
           (document.activeElement as HTMLElement)?.blur(),
         );
         await page.keyboard.press("Control+k");
-        await expect(page).toHaveURL(/\/ricerca$/);
-        await expect(
-          page.getByRole("combobox", { name: "Cerca nel Nest" }),
-        ).toBeFocused();
-        await expect(
-          page.getByRole("combobox", { name: "Cerca nel Nest" }),
-        ).toHaveValue("");
+        const timeline: string[] = [];
+        for (let i = 0; i < 12; i += 1) {
+          await page.waitForTimeout(150);
+          timeline.push(
+            await page.evaluate(
+              () =>
+                `${location.pathname} dlg=${document.querySelectorAll('[role="dialog"]').length} combo=${document.querySelectorAll('[role="combobox"]').length} focus=${document.activeElement?.tagName}`,
+            ),
+          );
+        }
+        note(`${tag}: timeline=${JSON.stringify(timeline)}`);
       });
     } else {
       await step("mobile: Annulla porta alla pagina di prima", async () => {

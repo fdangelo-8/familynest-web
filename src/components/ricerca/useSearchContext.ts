@@ -5,18 +5,30 @@ import { createClient } from "@/lib/supabase/client";
 import type { PersonView } from "./model";
 import type { MemberColor } from "@/components/ui/Avatar/Avatar";
 
-export type SearchContext =
-  | { status: "loading" }
-  | {
-      /** `failed`: the people could not be read; the search still works */
-      status: "ready" | "failed";
-      /** In the order of the Nest (adults, children and animals) */
-      people: PersonView[];
-      /** The member of the signed-in user */
-      meId: string | null;
-      /** Account of the browser, for the recent searches */
-      userId: string | null;
-    };
+export type SearchContext = {
+  /**
+   * `failed`: the people could not be read; the search still works.
+   * Until `ready` or `failed` the people are not known.
+   */
+  status: "loading" | "ready" | "failed";
+  /** In the order of the Nest (adults, children and animals) */
+  people: PersonView[];
+  /** The member of the signed-in user */
+  meId: string | null;
+  /**
+   * Account of the browser, for the recent searches. Known as soon as the
+   * session is read, before the people: the recent searches do not wait.
+   */
+  userId: string | null;
+};
+
+const NO_PEOPLE: PersonView[] = [];
+const LOADING: SearchContext = {
+  status: "loading",
+  people: NO_PEOPLE,
+  meId: null,
+  userId: null,
+};
 
 /**
  * Reads, in the browser, who lives in the Nest and who is looking: the chips
@@ -24,7 +36,7 @@ export type SearchContext =
  * frame only carries the names it shows, not the ids the search needs.
  */
 export function useSearchContext(): SearchContext {
-  const [context, setContext] = useState<SearchContext>({ status: "loading" });
+  const [context, setContext] = useState<SearchContext>(LOADING);
 
   useEffect(() => {
     let cancelled = false;
@@ -35,6 +47,7 @@ export function useSearchContext(): SearchContext {
         const supabase = createClient();
         const { data: sessionData } = await supabase.auth.getSession();
         userId = sessionData.session?.user.id ?? null;
+        if (!cancelled) setContext((current) => ({ ...current, userId }));
         const [household, mine] = await Promise.all([
           supabase.rpc("current_household_id"),
           userId
@@ -65,7 +78,7 @@ export function useSearchContext(): SearchContext {
           userId,
         };
       } catch {
-        next = { status: "failed", people: [], meId: null, userId };
+        next = { status: "failed", people: NO_PEOPLE, meId: null, userId };
       }
       if (!cancelled) setContext(next);
     })();
