@@ -131,7 +131,7 @@ test.describe("condividere e disattivare il link", () => {
     only390();
     needsThrowaway();
     await withFigli(async (ctx) => {
-      await seedList(ctx);
+      await seedList(ctx, ctx.mia, ["I1", "I2", "I3"]);
       await setBirth(ctx.admin, ctx.mia, birthIn(10));
       await openList(page, baseURL, ctx, "Ugo", ctx.mia, "Mia");
       const block = shareBlock(page);
@@ -303,7 +303,11 @@ test.describe("condividere e disattivare il link", () => {
           "Link disattivato. Chi lo apre vede che la lista non è più attiva.",
         ),
       ).toBeVisible();
-      await expect(shareBlock(page)).toContainText("Non ancora condivisa");
+      await expect(shareBlock(page)).toContainText("Link disattivato");
+      await expect(shareBlock(page)).toContainText(
+        "Chi lo apre vede che la lista non è più attiva. Condividi per crearne uno nuovo.",
+      );
+      await expect(shareButton(page)).toBeVisible();
       expect(await activeLinksOf(ctx)).toHaveLength(0);
 
       expect(await visitorSees(browser, baseURL, page, path)).toBe(NOT_ACTIVE);
@@ -330,7 +334,11 @@ test.describe("condividere e disattivare il link", () => {
       await confirmDialog(page, "Disattivare il link?")
         .getByRole("button", { name: "Disattiva", exact: true })
         .click();
-      await expect(shareBlock(page)).toContainText("Non ancora condivisa");
+      await expect(shareBlock(page)).toContainText("Link disattivato");
+      await expect(shareBlock(page)).toContainText(
+        "Chi lo apre vede che la lista non è più attiva. Condividi per crearne uno nuovo.",
+      );
+      await expect(shareButton(page)).toBeVisible();
 
       await shareButton(page).click();
       await expect(shareBlock(page)).toContainText("Condivisa con un link");
@@ -343,7 +351,7 @@ test.describe("condividere e disattivare il link", () => {
     });
   });
 
-  test("CA-40: un link scaduto non si mostra: «Non ancora condivisa» e «Condividi» crea un codice nuovo", async ({
+  test("CA-40: un link scaduto dice «Il link è scaduto» e «Condividi» crea un codice nuovo", async ({
     page,
     baseURL,
   }) => {
@@ -359,7 +367,8 @@ test.describe("condividere e disattivare il link", () => {
       await allowClipboard(page.context());
       await openList(page, baseURL, ctx, "Ugo", ctx.mia, "Mia");
       const block = shareBlock(page);
-      await expect(block).toContainText("Non ancora condivisa");
+      await expect(block).toContainText("Il link è scaduto");
+      await expect(block).toContainText("Condividi per crearne uno nuovo.");
       await expect(shareButton(page)).toBeVisible();
       await shareButton(page).click();
       await expect(toastWith(page, COPIED)).toBeVisible();

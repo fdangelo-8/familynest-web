@@ -84,7 +84,7 @@ test.describe("aggiungere un'idea", () => {
       ).toBeVisible();
       await expect(
         dialog.getByText("Prendiamo noi nome, foto e prezzo."),
-      ).toBeVisible();
+      ).toHaveCount(0);
 
       const link = field(dialog, "Link del negozio");
       const idea = field(dialog, "Oppure scrivi l'idea");
