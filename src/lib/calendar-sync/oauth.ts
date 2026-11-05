@@ -45,6 +45,8 @@ export function isLinkDestination(value: unknown): value is LinkDestination {
  *   an error);
  * - no_calendar_permission: the calendar permission was left off, nothing saved;
  * - limit: the adult has 5 accounts already, nothing saved;
+ * - admin_approval: the provider says an administrator must approve the app
+ *   first (the Workspace or Microsoft 365 administrator), nothing saved;
  * - failed: anything else (the provider, the network, the database).
  */
 export const LINK_RESULTS = [
@@ -52,8 +54,15 @@ export const LINK_RESULTS = [
   "denied",
   "no_calendar_permission",
   "limit",
+  "admin_approval",
   "failed",
 ] as const;
+
+/**
+ * The `error` the provider sends back when an administrator must approve the
+ * app before the user can link (mapped to `admin_approval`, see the route).
+ */
+export const ADMIN_APPROVAL_ERROR = "admin_policy_enforced";
 
 export type LinkResult = (typeof LINK_RESULTS)[number];
 

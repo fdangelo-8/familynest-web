@@ -2,6 +2,7 @@ import { after, NextResponse, type NextRequest } from "next/server";
 import { encryptCredentials } from "@/lib/calendar-sync/crypto";
 import { redirectToDestination } from "@/lib/calendar-sync/link-response";
 import {
+  ADMIN_APPROVAL_ERROR,
   OAUTH_COOKIE,
   checkOAuth,
   type LinkDestination,
@@ -24,6 +25,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
  * outside. The result reaches the page in a short cookie (see oauth.ts).
  *
  * - the user refused (`error`): nothing saved, result `denied` (a notice);
+ * - an administrator must approve the app first: nothing saved, result
+ *   `admin_approval`;
  * - the calendar permission was left off: nothing saved, the access just given
  *   is revoked, result `no_calendar_permission`;
  * - 5 accounts already: nothing saved, result `limit`;
@@ -92,6 +95,8 @@ export async function GET(
 
     // The user refused, or cancelled, on the page of the provider.
     if (searchParams.get("error") === "access_denied") return finish("denied");
+    if (searchParams.get("error") === ADMIN_APPROVAL_ERROR)
+      return finish("admin_approval");
     const code = searchParams.get("code");
     if (searchParams.has("error") || !code) return finish("failed");
 

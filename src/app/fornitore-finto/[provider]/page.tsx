@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { mintFakeConsentCodes } from "@/lib/calendar-sync/fake-provider";
+import { ADMIN_APPROVAL_ERROR } from "@/lib/calendar-sync/oauth";
 import { isProviderId } from "@/lib/calendar-sync/types";
 import { isFakeCalendarProviderEnabled } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
@@ -89,6 +90,12 @@ async function FakeProviderConsent({ params, searchParams }: PageProps) {
         ) : null}
         <a className="btn-secondary" href={back({ error: "access_denied" })}>
           Nega
+        </a>
+        <a
+          className="btn-secondary"
+          href={back({ error: ADMIN_APPROVAL_ERROR })}
+        >
+          {"Serve l'approvazione dell'amministratore"}
         </a>
       </div>
     </main>
