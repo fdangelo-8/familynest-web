@@ -472,6 +472,10 @@ test.describe("segnaposto", () => {
     // /ricerca is no longer a placeholder (#40): see the test right below the loop
     // and tests/e2e/ricerca-*.spec.ts.
     if (route === "/ricerca") continue;
+    // /calendari-collegati is no longer a placeholder (#34, #35): its h1 and
+    // title are still checked by the other tests of this file; the page itself
+    // by the tests of «Calendari collegati».
+    if (route === "/calendari-collegati") continue;
     test(`CA-6: A apre ${route}: stato 200, un solo h1 «${h1}», titolo, segnaposto`, async ({
       page,
       baseURL,
