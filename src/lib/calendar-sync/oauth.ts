@@ -41,19 +41,32 @@ export function isLinkDestination(value: unknown): value is LinkDestination {
 /**
  * What happened when the user came back:
  * - linked: the account is saved, the first synchronisation has started;
+ * - already_linked: the provider account was already linked by this adult; the
+ *   row is updated as before, the page says which mail is already linked (the
+ *   mail is read from the database, never from this cookie);
  * - denied: the user refused or cancelled on the provider page (a notice, not
  *   an error);
  * - no_calendar_permission: the calendar permission was left off, nothing saved;
  * - limit: the adult has 5 accounts already, nothing saved;
+ * - admin_approval: the provider says an administrator must approve the app
+ *   first (the Workspace or Microsoft 365 administrator), nothing saved;
  * - failed: anything else (the provider, the network, the database).
  */
 export const LINK_RESULTS = [
   "linked",
+  "already_linked",
   "denied",
   "no_calendar_permission",
   "limit",
+  "admin_approval",
   "failed",
 ] as const;
+
+/**
+ * The `error` the provider sends back when an administrator must approve the
+ * app before the user can link (mapped to `admin_approval`, see the route).
+ */
+export const ADMIN_APPROVAL_ERROR = "admin_policy_enforced";
 
 export type LinkResult = (typeof LINK_RESULTS)[number];
 

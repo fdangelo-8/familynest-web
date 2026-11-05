@@ -277,7 +277,8 @@ function openFakeSession(
 export function createFakeProvider(id: ProviderId): CalendarProvider {
   return {
     id,
-    canRevoke: true,
+    // Microsoft has no service that revokes a credential (#35): as the real one.
+    canRevoke: id !== "outlook",
     authorizationUrl({ state, codeChallenge, redirectUri }) {
       const url = new URL(`/fornitore-finto/${id}`, redirectUri);
       url.searchParams.set("state", state);

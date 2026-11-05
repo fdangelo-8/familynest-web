@@ -1319,6 +1319,7 @@ function ListSection({ rowCards }: { rowCards: boolean }) {
 function OverlaysSection() {
   const toast = useToast();
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [namedOpen, setNamedOpen] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [nestedOpen, setNestedOpen] = useState(false);
   const [nestedDeleted, setNestedDeleted] = useState(0);
@@ -1328,6 +1329,32 @@ function OverlaysSection() {
   return (
     <>
       <Section id="foglio" title="Foglio (mobile) e modale (desktop)">
+        <Example caption="foglio con nome accessibile diverso dal titolo (ariaLabel, #290)">
+          <Button
+            variant="secondary"
+            onClick={() => setNamedOpen(true)}
+            data-testid="foglio-nome-apri"
+          >
+            Apri con nome accessibile
+          </Button>
+          <Sheet
+            open={namedOpen}
+            onClose={() => setNamedOpen(false)}
+            title="Personale · Google"
+            ariaLabel="Personale · Google, impostazioni del calendario"
+            data-testid="foglio-nome"
+            footer={
+              <Button full onClick={() => setNamedOpen(false)}>
+                Fatto
+              </Button>
+            }
+          >
+            <p className="t-corpo">
+              Il titolo resta visibile; il nome letto dal lettore di schermo
+              comincia uguale e dice che sono le impostazioni del calendario.
+            </p>
+          </Sheet>
+        </Example>
         <Example caption="foglio · sotto 1024 px · modale · da 1024 px">
           <Button
             variant="secondary"

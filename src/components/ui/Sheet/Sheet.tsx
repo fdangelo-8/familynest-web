@@ -24,6 +24,11 @@ export type SheetProps = {
   onBack?: () => void;
   /** Required: becomes the `h2` and the accessible name of the dialog */
   title: string;
+  /**
+   * Optional accessible name of the dialog, used instead of `title` (`aria-label`).
+   * The visible title does not change. It should start with the visible title.
+   */
+  ariaLabel?: string;
   /** Body content, same on mobile and desktop */
   children: ReactNode;
   /** Actions at the bottom. Mobile: after the content. Desktop: `.modale__piede`. */
@@ -62,6 +67,7 @@ function SheetContent({
   onClose,
   onBack,
   title,
+  ariaLabel,
   children,
   footer,
   footerEnd,
@@ -166,7 +172,8 @@ function SheetContent({
         )}
         role="dialog"
         aria-modal="true"
-        aria-labelledby={titleId}
+        aria-labelledby={ariaLabel ? undefined : titleId}
+        aria-label={ariaLabel}
         aria-describedby={describedBy}
         data-testid={testId}
       >
