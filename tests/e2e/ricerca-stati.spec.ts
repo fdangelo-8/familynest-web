@@ -1,3 +1,4 @@
+import type { Page } from "@playwright/test";
 import { dialogOf, fieldOf } from "../fixtures/aggiungi";
 import {
   alerts,
@@ -32,6 +33,10 @@ import {
 // relative to T, a Tuesday (fixtures/ricerca.ts).
 
 test.use({ locale: "it-IT", timezoneId: "Europe/Rome" });
+
+/** Alerts of the search itself: Today, below the palette, has its own offline alert. */
+const inSearch = (page: Page) =>
+  surface(page).getByRole("alert").filter({ hasText: /\S/ });
 
 const ERROR_TEXT =
   "Non siamo riusciti a cercare. Controlla la connessione e riprova.";
@@ -307,9 +312,9 @@ test.describe("caricamento, errore, offline", () => {
     await page.context().setOffline(true);
     await typeSearch(page, "nuoto");
 
-    await expect(alerts(page)).toContainText(OFFLINE_TEXT);
+    await expect(inSearch(page)).toContainText(OFFLINE_TEXT);
     await expect(
-      alerts(page).getByRole("button", { name: "Riprova" }),
+      inSearch(page).getByRole("button", { name: "Riprova" }),
     ).toBeVisible();
     await expect(allRows(page)).toHaveCount(0);
     await expect(page.getByTestId("ricerca-esempi")).toBeVisible();
@@ -318,7 +323,7 @@ test.describe("caricamento, errore, offline", () => {
     }
 
     await page.context().setOffline(false);
-    await expect(alerts(page)).toHaveCount(0);
+    await expect(inSearch(page)).toHaveCount(0);
     await expect(rowsOf(page, "event")).toHaveCount(3);
     await expect(rowsOf(page, "deadline")).toHaveCount(1);
     await expect(rowsOf(page, "todo")).toHaveCount(1);
