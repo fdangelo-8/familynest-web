@@ -454,6 +454,8 @@ test.describe("segnaposto", () => {
     // /profilo is no longer a placeholder (#38): see tests/e2e/profilo-pagina.spec.ts
     // (the h1 is the name of the account).
     if (route === "/profilo") continue;
+    // /impostazioni is no longer a placeholder (#41): see tests/e2e/impostazioni.spec.ts.
+    if (route === "/impostazioni") continue;
     test(`CA-6: A apre ${route}: stato 200, un solo h1 «${h1}», titolo, segnaposto`, async ({
       page,
       baseURL,
