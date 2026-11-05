@@ -1,13 +1,12 @@
+import { SearchOverlay } from "@/components/ricerca/SearchEntry";
 import { requireNest } from "@/lib/nest-frame";
 
 /**
- * `/ricerca` opened directly (typed address, reload, link): the search over
- * the page of the address, Today for the page below (#40), like `/aggiungi`.
- *
- * The content comes with the page of the search (#40); until then nothing is
- * drawn here.
+ * `/ricerca` opened directly (typed address, reload, link): the palette over
+ * Today (from 1024 px), like `/aggiungi`. Under 1024 px the page of the search
+ * is the page itself and this slot draws nothing.
  */
 export default async function Page() {
   await requireNest();
-  return null;
+  return <SearchOverlay direct />;
 }
