@@ -498,13 +498,26 @@ test.describe("punto 8: Vai al contenuto", () => {
       page,
       context,
       baseURL,
-    }) => {
+    }, info) => {
       await loginAs("A", { context, baseURL });
       await openFrame(page, route);
       await expect(
         page.getByRole("link", { name: "Vai al contenuto" }),
       ).toHaveCount(1);
       await expect(page.getByRole("main")).toHaveCount(1);
+      if (route === "/ricerca" && info.project.name === "mobile") {
+        // on a phone it is the real page (#40, section 3): by specification
+        // the focus opens inside the search field, so the first Tab goes on
+        // to «Annulla». The skip link is still the first stop of the page:
+        // Shift+Tab from the field must land on it, and it must come before
+        // the only <main>.
+        await expect(page.getByRole("searchbox")).toBeFocused();
+        await page.keyboard.press("Shift+Tab");
+        await expect(
+          page.getByRole("link", { name: "Vai al contenuto" }),
+        ).toBeFocused();
+        return;
+      }
       await page.keyboard.press("Tab");
       if (route === "/aggiungi") {
         // opened directly it is a modal sheet over Today (#164): the focus is
