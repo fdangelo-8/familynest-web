@@ -2163,6 +2163,30 @@ function PageParts() {
           </div>
         </div>
       </Example>
+      <Example caption="riga-evento--passato (testo secondario, senza opacità)">
+        <div className="colonna" data-testid="riga-passata">
+          <div
+            className="riga-evento riga-evento--compatta riga-evento--passato"
+            data-testid="riga-passata-normale"
+          >
+            <span className="riga-evento__ora">8:00</span>
+            <span className="riga-evento__testo">
+              <span className="riga-evento__titolo">Scuola Sofia</span>
+              <span className="riga-evento__info">la porta Laura</span>
+            </span>
+          </div>
+          <div
+            className="riga-evento riga-evento--compatta riga-evento--insieme riga-evento--passato"
+            data-testid="riga-passata-insieme"
+          >
+            <span className="riga-evento__ora">19:00</span>
+            <span className="riga-evento__testo">
+              <span className="riga-evento__titolo">Cena dai nonni</span>
+              <span className="riga-evento__info">li porta Marco</span>
+            </span>
+          </div>
+        </div>
+      </Example>
       <Example caption="oggi-solo-mobile e oggi-solo-desktop · lista-partenza__passi">
         <div className="colonna" data-testid="oggi-disposizioni">
           <p className="oggi-solo-mobile t-nota" data-testid="oggi-solo-mobile">

@@ -1017,8 +1017,11 @@
 .riga-evento--occupato .avatar {
   --anello: var(--color-occupato-1);
 }
-.riga-evento--passato {
-  opacity: var(--opacity-passato);
+.riga-evento--passato,
+.riga-evento--passato .riga-evento__ora,
+.riga-evento--passato .riga-evento__titolo,
+.riga-evento--passato .riga-evento__info {
+  color: var(--color-inchiostro-2); /* #241 */
 }
 .riga-evento--compatta {
   min-height: var(--size-riga);
