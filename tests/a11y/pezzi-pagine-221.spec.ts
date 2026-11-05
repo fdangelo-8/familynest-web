@@ -129,3 +129,44 @@ test("a11y: disposizioni di Oggi, una sola visibile per larghezza, e passi in el
     ),
   ).toEqual([]);
 });
+
+test("a11y: esempi nuovi di Button, ColorChoice e Alert (#236), senza violazioni", async ({
+  page,
+}) => {
+  for (const id of ["pezzi-bottoni-236", "pezzi-alert-251"]) {
+    const example = page.getByTestId(id);
+    await example.scrollIntoViewIfNeeded();
+    await expect(example).toBeVisible();
+    const results = await new AxeBuilder({ page })
+      .include(`[data-testid="${id}"]`)
+      .analyze();
+    expect(
+      results.violations.filter((v) =>
+        ["serious", "critical"].includes(v.impact ?? ""),
+      ),
+    ).toEqual([]);
+  }
+});
+
+test("a11y: bottoni con pressed e aria-haspopup, stato esposto e altezza di 44 px", async ({
+  page,
+}) => {
+  const example = page.getByTestId("pezzi-bottoni-236");
+  const off = example.getByRole("button", { name: "Avvisami quando è pronto" });
+  const on = example.getByRole("button", {
+    name: "Ti avvisiamo appena è pronto",
+  });
+  await expect(off).toHaveAttribute("aria-pressed", "false");
+  await expect(on).toHaveAttribute("aria-pressed", "true");
+  await expect(
+    example.getByRole("button", { name: "Elimina l'account" }),
+  ).toHaveAttribute("aria-haspopup", "dialog");
+  await expect(example.getByRole("radiogroup")).toHaveAttribute(
+    "aria-busy",
+    "true",
+  );
+  for (const button of [off, on]) {
+    const box = await button.boundingBox();
+    expect(box?.height ?? 0).toBeGreaterThanOrEqual(43.5);
+  }
+});

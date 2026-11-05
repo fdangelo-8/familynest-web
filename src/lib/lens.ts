@@ -37,3 +37,12 @@ export function setLens(lens: Lens): void {
   }
   listeners.forEach((listener) => listener());
 }
+
+/** Leaving the account: the lens of this session leaves with the person. */
+export function clearLens(): void {
+  try {
+    window.sessionStorage.removeItem(LENS_STORAGE_KEY);
+  } catch {
+    // Storage not available: nothing was kept.
+  }
+}

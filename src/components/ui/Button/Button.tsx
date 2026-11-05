@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { MouseEvent, ReactNode } from "react";
+import type { MouseEvent, ReactNode, Ref } from "react";
 import { cx } from "../cx";
 import { Icon, type IconName } from "../Icon/Icon";
 import { Spinner } from "../Spinner/Spinner";
@@ -55,6 +55,12 @@ export type ButtonProps = {
    * («Fatto», «Apri» on every row), the row's text explains it.
    */
   "aria-describedby"?: string;
+  /** The button opens a dialog or a sheet (`aria-haspopup`) */
+  "aria-haspopup"?: "dialog" | "menu" | true;
+  /** Two-state button (`aria-pressed`), e.g. «Avvisami». Undefined = plain button */
+  pressed?: boolean;
+  /** Ref of the `<button>` (not used with `href`), to move the focus back to it */
+  buttonRef?: Ref<HTMLButtonElement>;
   children: ReactNode;
   "data-testid"?: string;
 };
@@ -75,6 +81,9 @@ export function Button({
   onClick,
   className,
   "aria-describedby": describedBy,
+  "aria-haspopup": hasPopup,
+  pressed,
+  buttonRef,
   children,
   "data-testid": testId,
 }: ButtonProps) {
@@ -116,6 +125,8 @@ export function Button({
         aria-busy={loading || undefined}
         aria-disabled={inactive || undefined}
         aria-describedby={describedBy}
+        aria-haspopup={hasPopup}
+        aria-pressed={pressed}
         tabIndex={disabled ? -1 : undefined}
         onClick={handleClick}
         data-testid={testId}
@@ -127,6 +138,7 @@ export function Button({
 
   return (
     <button
+      ref={buttonRef}
       type={type}
       form={form}
       className={classes}
@@ -134,6 +146,8 @@ export function Button({
       aria-busy={loading || undefined}
       aria-disabled={loading || inactiveProp || undefined}
       aria-describedby={describedBy}
+      aria-haspopup={hasPopup}
+      aria-pressed={pressed}
       onClick={handleClick}
       data-testid={testId}
     >
