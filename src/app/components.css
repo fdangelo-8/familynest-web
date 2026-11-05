@@ -3869,6 +3869,8 @@ main[tabindex="-1"]:focus {
 .casella:disabled,
 .tondo-spunta:disabled,
 .selettore__voce:disabled,
+.scelta:disabled,
+.scelta[aria-disabled="true"],
 .btn-icona:disabled,
 .btn-tenue:disabled,
 .btn-tratteggiato:disabled,
@@ -3925,7 +3927,7 @@ main[tabindex="-1"]:focus {
       .btn-icona--piccolo
     ),
   .chip:hover:not(:disabled, [aria-pressed="true"], .chip--statico),
-  .scelta:hover:not(:disabled) {
+  .scelta:hover:not(:disabled, [aria-disabled="true"]) {
     background: var(--color-carta);
   }
   .btn-tenue:hover:not(:disabled, [aria-disabled="true"]),
@@ -3968,7 +3970,7 @@ main[tabindex="-1"]:focus {
     .btn-icona--carta,
     .btn-icona--piccolo
   ),
-.scelta:active:not(:disabled) {
+.scelta:active:not(:disabled, [aria-disabled="true"]) {
   background: var(--color-carta);
 }
 .btn-tenue:active:not(:disabled, [aria-disabled="true"]),
@@ -5118,6 +5120,15 @@ a.riga-regalo__titolo::before {
   .pubblica-solo-desktop {
     display: none;
   }
+}
+
+/* Testa di una sezione con un testo lungo a destra (la mail di un account):
+   va a capo, allineato a destra, mai troncato. Con testi corti nessun pixel
+   cambia. */
+.sezione__testa > .sezione__info {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  text-align: end;
 }
 
 /* =========================================================
