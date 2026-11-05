@@ -132,6 +132,12 @@ test.describe("aggiungere un'idea", () => {
           "Feltrinelli · lo vuole tanto",
         );
         await expect(first.locator(".riga-regalo__prezzo")).toHaveText("18 €");
+        const saved = await ideasOfNest(ctx);
+        const { data: photoRows } = await ctx.admin
+          .from("wishlist_item_photos")
+          .select("content_type")
+          .eq("item_id", saved[0]!.id);
+        expect(photoRows, "foto copiata nel database").toHaveLength(1);
         const image = first.locator("img.foto__immagine");
         await expect(image).toHaveCount(1);
         expect(await image.getAttribute("src")).not.toContain(
