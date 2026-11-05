@@ -5047,6 +5047,9 @@ button.riga-regalo__titolo::before {
 }
 
 /* 4. Etichetta («Zia Carla») larga quanto il testo dentro la riga del regalo */
+.riga-regalo .riga-lista__testo {
+  grid-template-columns: minmax(0, 1fr);
+}
 .riga-regalo .riga-lista__testo > .etichetta {
   justify-self: start;
   max-width: 100%;
