@@ -12,6 +12,9 @@ import {
   fakeCalendarSkipReason,
 } from "../fixtures/calendar-fake";
 import {
+  colorPageReady,
+  continueButton,
+  linkOf,
   withNestAndVisitor,
   type DeSantisNest,
 } from "../fixtures/invito-ingresso";
@@ -27,8 +30,7 @@ import {
 // accounts of one user and is reset in the `finally`. Selectors use roles and
 // the texts of the issue. Skipped with a reason: iCloud (CA-3 row, CA-9: the
 // provider of #36 is not on main), CA-5 (Calendari collegati is still a
-// placeholder) and the first half of CA-14 (the invitation still leads to
-// /oggi: AFTER_INVITE_PATH changes in a later shared PR).
+// placeholder).
 
 test.use({ locale: "it-IT", timezoneId: "Europe/Rome" });
 
@@ -628,11 +630,24 @@ test.describe("chi entra con un invito", () => {
     );
   }
 
-  test("CA-14: da «Il tuo colore» «Continua» porta al calendario", () => {
-    test.skip(
-      true,
-      "Il percorso dopo l'invito (AFTER_INVITE_PATH) arriva con una PR successiva",
-    );
+  test("CA-14: da «Il tuo colore» «Continua» porta al calendario", async ({
+    page,
+    baseURL,
+  }) => {
+    needsThrowaway();
+    await withNestAndVisitor(async (nest, visitor) => {
+      await visitor.signInContext(page.context(), baseURL as string);
+      await page.goto(
+        linkOf(new URL(baseURL as string).origin, nest.invite.token),
+      );
+      await page.goto("/invito/colore");
+      await colorPageReady(page);
+      await continueButton(page).click();
+      await expect(page).toHaveURL(/\/onboarding\/calendario$/);
+      await expect(page.locator("h1:visible")).toHaveText(
+        "Porta qui il tuo calendario",
+      );
+    });
   });
 
   test("CA-14, CA-16: l'invitato ha «Passo 2 di 3», nessuna freccia; «Continua senza calendario» porta a /oggi col benvenuto", async ({
