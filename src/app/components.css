@@ -4115,6 +4115,11 @@ main[tabindex="-1"]:focus {
 .scheda a.riga-scadenza:active {
   background-color: var(--color-carta);
 }
+/* Calendari collegati (#293): il titolo disabilitato (offline) sbiadisce come gli altri controlli. */
+.riga-lista--modificabile button.riga-lista__titolo:disabled {
+  opacity: var(--opacity-disabilitato);
+  cursor: not-allowed;
+}
 
 /* #133: testa del profilo in caricamento. .intestazione prende tutta la
    larghezza disponibile, così titolo e testo-corto (70% e 35%) si vedono, e
