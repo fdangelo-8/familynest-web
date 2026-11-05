@@ -184,3 +184,65 @@ insert into public.child_teachers (id, household_id, member_id, sort_order, name
 values
   ('a7000000-0000-4000-8000-000000000001', '11111111-1111-4111-8111-111111111111',
    'a1000000-0000-4000-8000-000000000003', 1, 'Maestra Bianchi', 'Italiano e storia', '039 000 0000');
+
+-- Wish list (issue #259, for pages #32 and #33): the six ideas of the mockup for Sofia, four
+-- to give and two already taken (by «Nonna Anna» and «Zia Carla»). Invented texts, no link
+-- of a real shop, no photo, no health data (D1). Nobody else has a list.
+-- No active link: the code of a working link must never be in the repository. The two
+-- reservations need the link they were made with, so the seed has one link of Sofia, for
+-- her next birthday, already disabled; its code is drawn by the column default when the
+-- seed runs. The seed keeps no «Regalo preso» notification (the trigger writes them; they
+-- are deleted below), so the bell of Marco does not change in the page tests.
+insert into public.wishlists (id, household_id, member_id, created_at)
+values
+  ('d1000000-0000-4000-8000-000000000001', '11111111-1111-4111-8111-111111111111',
+   'a1000000-0000-4000-8000-000000000003', now() - interval '10 days');
+
+-- Created one minute apart: «Da regalare» shows the most recent first (Diario … Biglietti).
+insert into public.wishlist_items (
+  id, household_id, wishlist_id, title, shop_name, price_cents, note, added_by_member_id, created_at
+)
+values
+  ('d2000000-0000-4000-8000-000000000001', '11111111-1111-4111-8111-111111111111',
+   'd1000000-0000-4000-8000-000000000001', 'Casco per la bici', null, 3500, null,
+   'a1000000-0000-4000-8000-000000000001', now() - interval '10 days'),
+  ('d2000000-0000-4000-8000-000000000002', '11111111-1111-4111-8111-111111111111',
+   'd1000000-0000-4000-8000-000000000001', 'Puzzle da 1000 pezzi', null, 2200, null,
+   'a1000000-0000-4000-8000-000000000001', now() - interval '10 days' + interval '1 minute'),
+  ('d2000000-0000-4000-8000-000000000003', '11111111-1111-4111-8111-111111111111',
+   'd1000000-0000-4000-8000-000000000001', 'Biglietti per il musical', null, 6000,
+   'Un''esperienza da fare con la nonna', 'a1000000-0000-4000-8000-000000000001',
+   now() - interval '10 days' + interval '2 minutes'),
+  ('d2000000-0000-4000-8000-000000000004', '11111111-1111-4111-8111-111111111111',
+   'd1000000-0000-4000-8000-000000000001', 'Cuffie senza fili per bambini', 'MediaWorld', 3900, null,
+   'a1000000-0000-4000-8000-000000000001', now() - interval '10 days' + interval '3 minutes'),
+  ('d2000000-0000-4000-8000-000000000005', '11111111-1111-4111-8111-111111111111',
+   'd1000000-0000-4000-8000-000000000001', 'Set di acquerelli con pennelli', 'Amazon', 2400, null,
+   'a1000000-0000-4000-8000-000000000001', now() - interval '10 days' + interval '4 minutes'),
+  ('d2000000-0000-4000-8000-000000000006', '11111111-1111-4111-8111-111111111111',
+   'd1000000-0000-4000-8000-000000000001', 'Diario segreto con lucchetto', 'Feltrinelli', 1800, 'Lo vuole tanto',
+   'a1000000-0000-4000-8000-000000000001', now() - interval '10 days' + interval '5 minutes');
+
+insert into public.wishlist_share_links (
+  id, household_id, wishlist_id, occasion_date, expires_at, disabled_at, created_at
+)
+select
+  'd3000000-0000-4000-8000-000000000001', '11111111-1111-4111-8111-111111111111',
+  'd1000000-0000-4000-8000-000000000001', o.day, private.wishlist_link_expires_at(o.day),
+  now() - interval '1 day', now() - interval '9 days'
+from (
+  select private.wishlist_next_birthday('2016-12-14', (now() at time zone 'Europe/Rome')::date) as day
+) o;
+
+-- «Già presi» shows the most recently taken first: Casco (Nonna Anna), then Puzzle (Zia Carla).
+insert into public.wishlist_reservations (id, household_id, item_id, share_link_id, giver_name, created_at)
+values
+  ('d4000000-0000-4000-8000-000000000001', '11111111-1111-4111-8111-111111111111',
+   'd2000000-0000-4000-8000-000000000002', 'd3000000-0000-4000-8000-000000000001', 'Zia Carla',
+   now() - interval '8 days'),
+  ('d4000000-0000-4000-8000-000000000002', '11111111-1111-4111-8111-111111111111',
+   'd2000000-0000-4000-8000-000000000001', 'd3000000-0000-4000-8000-000000000001', 'Nonna Anna',
+   now() - interval '7 days');
+
+delete from public.notifications n
+where n.kind = 'gift_taken';

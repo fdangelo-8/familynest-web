@@ -389,7 +389,7 @@ test.describe("CSS nuovo nel blocco del designer (#221)", () => {
   test("le regole nuove usano solo variabili del design system", () => {
     const start = designerBlock.indexOf("Impostazioni della casa (#41)");
     expect(start).toBeGreaterThan(0);
-    // Comments cite issue numbers («#171»), which look like hex colors.
+    // comments may mention issue numbers such as "#258": only real rules count
     const added = designerBlock.slice(start).replace(/\/\*[\s\S]*?\*\//g, "");
     expect(added).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
     expect(added).not.toMatch(/\brgba?\(/);
