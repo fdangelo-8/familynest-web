@@ -225,8 +225,9 @@ export type NewEventRepetition = {
 };
 
 /**
- * Turns «Si ripete» into the repetition of a new event: weekly repeats on the
- * weekday of `day` (`YYYY-MM-DD`), monthly on the same day of the month, no
+ * Turns «Si ripete» into the repetition of a new event. `day` (`YYYY-MM-DD`)
+ * is already valid: `validateForm` has checked it. Weekly repeats on the
+ * weekday of `day`, monthly on the same day of the month, no
  * last day. «current» only exists for events already saved: it counts as «Mai».
  */
 export function newEventRepetition(
