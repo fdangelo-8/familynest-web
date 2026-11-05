@@ -273,66 +273,32 @@ test.describe("collegamento con il fornitore finto", () => {
   }) => {
     needsFake();
     const fake = fakeCalendar(baseURL as string);
-    let release!: () => void;
-    const gate = new Promise<void>((resolve) => {
-      release = resolve;
-    });
     await withNest("couple", async (user) => {
       try {
         await fake.setup({ userId: user.id, ...STANDARD_FAKE_ACCOUNT });
         await open(page, user, baseURL);
-        // The trip to the provider is held by the test.
-        await page.route(
-          "**/calendari-collegati/collega/google",
-          async (route) => {
-            await gate;
-            await route.abort().catch(() => undefined);
-          },
+        // The page is hydrated once React owns the form.
+        await page.waitForFunction(() =>
+          Object.keys(document.querySelector("form") ?? {}).some((key) =>
+            key.startsWith("__reactProps"),
+          ),
         );
-        // The post is held: the click must not wait for the navigation.
-        await collega(page, "Google").click({ noWaitAfter: true });
-        // Locators wait for a navigation in flight, so the page is read
-        // straight from the document that is still on screen.
-        let last = "";
-        await expect
-          .poll(async () => {
-            try {
-              const state = await page.evaluate(() => {
-                const shown = (e: Element) =>
-                  (e as HTMLElement).offsetParent !== null;
-                const all = (selector: string) =>
-                  [...document.querySelectorAll(selector)].filter(shown);
-                const text = (e: Element) => (e.textContent ?? "").trim();
-                return {
-                  spinner: all(".btn-tenue[aria-busy=true]").map(text),
-                  mainDisabled: all("button")
-                    .filter((e) => text(e) === "Continua senza calendario")
-                    .map((e) => (e as HTMLButtonElement).disabled),
-                  laterActive: all("a")
-                    .filter((e) => text(e) === "Più tardi")
-                    .map((e) => !e.hasAttribute("aria-disabled")),
-                  outlookActive: all("button")
-                    .filter((e) => text(e).startsWith("Collega"))
-                    .map((e) => !(e as HTMLButtonElement).disabled),
-                };
-              });
-              last = JSON.stringify(state);
-            } catch (error) {
-              last = `evaluate failed: ${String(error).slice(0, 120)}`;
-            }
-            return last;
-          })
-          .toBe(
-            JSON.stringify({
-              spinner: ["Collegamento"],
-              mainDisabled: [true],
-              laterActive: [true],
-              outlookActive: [true],
-            }),
-          );
+        // The trip to the provider is held by the test: the submit is
+        // cancelled in the capture phase, after which React still runs its
+        // own handler, so the page shows what it shows while it waits.
+        await page.evaluate(() =>
+          document.addEventListener("submit", (e) => e.preventDefault(), true),
+        );
+        await collega(page, "Google").click();
+        await expect(
+          page.getByText("Collegamento", { exact: true }).filter(visible),
+        ).toBeVisible();
+        await expect(
+          principal(page, "Continua senza calendario"),
+        ).toBeDisabled();
+        await expect(later(page)).toBeEnabled();
+        await expect(collega(page, "Outlook")).toBeEnabled();
       } finally {
-        // The page closes with the test: no unrouteAll while a post is held.
-        release();
         await fake.reset(user.id);
       }
     });
