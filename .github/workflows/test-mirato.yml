@@ -93,6 +93,8 @@ jobs:
           echo "::add-mask::$encryption_key"
           {
             echo "CALENDAR_FAKE_PROVIDER=1"
+            # Wish list (#32): the only local shop the link reader may open in tests.
+            echo "SHOP_LINK_TEST_ORIGIN=http://127.0.0.1:4010"
             echo "CALENDAR_SYNC_SECRET=$sync_secret"
             echo "CALENDAR_ENCRYPTION_KEY=$encryption_key"
           } >> "$env_file"
