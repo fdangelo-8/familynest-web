@@ -53,6 +53,15 @@ export type FakeLogEntry = {
   eventId?: string;
   token?: string;
   title?: string;
+  /** Everything the fake received with «Anche su» (nothing else was sent). */
+  outgoing?: {
+    title: string;
+    location: string | null;
+    startsAt: string;
+    endsAt: string;
+    recurrence: unknown;
+    isPrivate: boolean;
+  };
 };
 
 /** The «Google finto standard» of the specification (#34 §CA). */

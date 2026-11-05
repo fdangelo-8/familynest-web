@@ -1,3 +1,4 @@
+import type { Page } from "@playwright/test";
 import {
   GOOGLE,
   addDays,
@@ -14,6 +15,7 @@ import {
   withLinkerRita,
   type Linker,
 } from "../fixtures/calendari-collegati";
+import type { FakeLogEntry } from "../fixtures/calendar-fake";
 import {
   barEditButton,
   buttonOf,
@@ -63,6 +65,76 @@ async function linkedWithVisit(
   await u.fake.sync(u.user.id);
   await u.waitForEvents(VISITA, 1);
 }
+
+/**
+ * Records the answers of the functions that tell where an event comes from,
+ * as the browser of an adult sees them (LEZIONI: the network, not only the DOM).
+ */
+function watchSourceAnswers(page: Page) {
+  const pending: Promise<string>[] = [];
+  const rpc =
+    /\/rest\/v1\/rpc\/(list_household_events_with_source|get_event_calendar_link|search_household)$/;
+  page.on("response", (response) => {
+    if (!rpc.test(new URL(response.url()).pathname)) return;
+    pending.push(response.text().catch(() => ""));
+  });
+  return {
+    count: () => pending.length,
+    /** Fails if any answer names the provider, the calendar or the mail. */
+    async expectNoOrigin() {
+      for (const text of await Promise.all(pending)) {
+        expect(text).not.toMatch(/google|outlook|personale|u\.finto@example/i);
+      }
+    },
+  };
+}
+
+/** An event of U with notes, created with the session of U (RLS applies). */
+async function createWithNotes(u: Linker, title: string): Promise<string> {
+  const { data, error } = await u.user.client.rpc("create_event", {
+    p_title: title,
+    p_starts_at: at(today(), 17),
+    p_ends_at: at(today(), 18),
+    p_member_ids: [u.adminMemberId],
+    p_visibility: "household",
+    p_location: "Piscina comunale",
+    p_notes: "Portare la cuffia",
+  });
+  if (error || !data) throw new Error("Impegno di prova non creato");
+  return data;
+}
+
+/** Runs the queue of «Anche su» until the register has what the test waits for. */
+async function waitForLog(
+  u: Linker,
+  action: "create" | "update" | "delete",
+  match: (entry: FakeLogEntry) => boolean,
+  count = 1,
+) {
+  await expect
+    .poll(
+      async () => {
+        await u.fake.outbox();
+        return (await u.fake.log(u.user.id)).filter(
+          (entry) => entry.action === action && match(entry),
+        ).length;
+      },
+      { timeout: 30_000 },
+    )
+    .toBe(count);
+}
+
+/** Sends an event of U to the calendar chosen, as «Anche su» does. */
+async function sendNow(u: Linker, id: string) {
+  const { error } = await u.user.client.rpc("set_event_also_on", {
+    p_event_id: id,
+    p_enabled: true,
+  });
+  if (error) throw new Error("Impegno di prova non mandato");
+}
+
+const logOf = async (u: Linker, action: FakeLogEntry["action"]) =>
+  (await u.fake.log(u.user.id)).filter((entry) => entry.action === action);
 
 async function visitId(u: Linker): Promise<string> {
   return (await u.events(VISITA))[0]!.id;
@@ -147,12 +219,16 @@ test.describe("etichetta della fonte", () => {
 
       await page.context().clearCookies();
       await u.rita.signInContext(page.context(), baseURL as string);
+      const seen = watchSourceAnswers(page);
       await page.goto("/oggi");
       await expect(
         page.getByRole("link", { name: new RegExp(VISITA) }).first(),
       ).toBeVisible();
       await page.getByRole("button", { name: /Nest/ }).first().click();
       await expect(page.getByRole("main")).not.toContainText("Google");
+      // The network too: what reached Rita's browser has no provider, calendar or mail.
+      await expect.poll(() => seen.count()).toBeGreaterThan(0);
+      await seen.expectNoOrigin();
     });
   });
 });
@@ -176,11 +252,14 @@ test.describe("etichetta della fonte nella ricerca", () => {
 
       await page.context().clearCookies();
       await u.rita.signInContext(page.context(), baseURL as string);
+      const seen = watchSourceAnswers(page);
       await page.goto("/ricerca");
       await expectReady(page);
       await typeSearch(page, "Visita");
       await expect(rowsOf(page, "event").first()).toContainText(VISITA);
       await expect(rowsOf(page, "event").first()).not.toContainText("Google");
+      await expect.poll(() => seen.count()).toBeGreaterThan(0);
+      await seen.expectNoOrigin();
     });
   });
 });
@@ -239,6 +318,7 @@ test.describe("impegni importati in Dettaglio", () => {
       await linkedWithVisit(browser, u, "household");
       const id = await visitId(u);
       await u.rita.signInContext(page.context(), baseURL as string);
+      const seen = watchSourceAnswers(page);
       await page.goto(detailPath(id));
       await expect(
         page.getByRole("heading", { level: 1, name: VISITA }),
@@ -246,6 +326,8 @@ test.describe("impegni importati in Dettaglio", () => {
       await expect(pageEditButton(page)).toHaveCount(0);
       await expect(barEditButton(page)).toHaveCount(0);
       await expect(page.getByRole("main")).not.toContainText("Google");
+      await expect.poll(() => seen.count()).toBeGreaterThan(0);
+      await seen.expectNoOrigin();
 
       const change = await u.rita.client
         .from("events")
@@ -271,7 +353,7 @@ test.describe("«Anche su» nel modulo dell'impegno", () => {
     if (error) throw new Error("Calendario dei nuovi impegni non scelto");
   }
 
-  test("CA-49, CA-50 e CA-51: «Anche su Google» manda la copia privata, la aggiorna, la toglie; senza calendario scelto la riga non c'è", async ({
+  test("CA-51: con «Dove vanno i nuovi impegni» = «Nessuno» nel modulo di un impegno di U non c'è «Anche su»", async ({
     page,
     browser,
     baseURL,
@@ -283,20 +365,29 @@ test.describe("«Anche su» nel modulo dell'impegno", () => {
       await createNestEvent(u, NUOTO, today(), [17, 0], [18, 0]);
       const id = (await u.events(NUOTO))[0]!.id;
       await u.signIn(page);
-
-      // «Nessuno»: no row (CA-51).
       await chooseTarget(u, null);
       await page.goto(detailPath(id));
       await waitHydrated(page.getByRole("heading", { level: 1 }));
-      let dialog = await openForm(page);
+      const dialog = await openForm(page);
       await expect(dialog.getByRole("switch")).toHaveCount(0);
-      await page.keyboard.press("Escape");
-      await expect(editDialog(page)).toHaveCount(0);
+    });
+  });
 
+  test("CA-49: «Anche su Google» manda a «Personale» titolo, orari e luogo come privato, senza note né persone, e dopo la sincronizzazione c'è una sola riga", async ({
+    page,
+    browser,
+    baseURL,
+  }) => {
+    needsFake();
+    await withLinker(baseURL, async (u) => {
+      await u.prepare(GOOGLE);
+      await linkInBackground(browser, u, "google");
       await chooseTarget(u, "Personale");
+      const id = await createWithNotes(u, NUOTO);
+      await u.signIn(page);
       await page.goto(detailPath(id));
       await waitHydrated(page.getByRole("heading", { level: 1 }));
-      dialog = await openForm(page);
+      const dialog = await openForm(page);
       await expect(dialog).toContainText("Nel calendario Personale");
       const toggle = dialog.getByRole("switch", {
         name: "Anche su Google",
@@ -308,33 +399,166 @@ test.describe("«Anche su» nel modulo dell'impegno", () => {
       await expect(toastOf(page, "Modifiche salvate")).toBeVisible();
       await expect(editDialog(page)).toHaveCount(0);
 
-      await u.fake.outbox();
-      await expect
-        .poll(async () =>
-          (await u.fake.log(u.user.id)).filter(
-            (entry) => entry.action === "create" && entry.title === NUOTO,
-          ),
-        )
-        .toHaveLength(1);
+      await waitForLog(u, "create", (entry) => entry.title === NUOTO);
+      const [created] = await logOf(u, "create");
+      expect(created?.calendarId).toBe("personale");
+      expect(created?.email).toBe(GOOGLE.email);
+      const sent = created?.outgoing;
+      expect(sent?.title).toBe(NUOTO);
+      expect(sent?.location).toBe("Piscina comunale");
+      expect(new Date(sent!.startsAt).getTime()).toBe(
+        new Date(at(today(), 17)).getTime(),
+      );
+      expect(new Date(sent!.endsAt).getTime()).toBe(
+        new Date(at(today(), 18)).getTime(),
+      );
+      expect(sent?.isPrivate).toBe(true);
+      // Nothing else left: no notes, no people.
+      for (const key of ["notes", "description", "attendees", "members"]) {
+        expect(sent).not.toHaveProperty(key);
+      }
+      expect(JSON.stringify(created)).not.toContain("cuffia");
 
-      // Off again: the copy at the provider is deleted.
+      // The next synchronisation brings the copy back: still one row.
+      await u.fake.sync(u.user.id);
+      expect(await u.events(NUOTO)).toHaveLength(1);
+      await u.fake.sync(u.user.id);
+      expect(await u.events(NUOTO)).toHaveLength(1);
+    });
+  });
+
+  test("CA-50: cambiare l'orario di un impegno mandato manda un aggiornamento e spegnere «Anche su Google» una cancellazione", async ({
+    page,
+    browser,
+    baseURL,
+  }) => {
+    needsFake();
+    await withLinker(baseURL, async (u) => {
+      await u.prepare(GOOGLE);
+      await linkInBackground(browser, u, "google");
+      await chooseTarget(u, "Personale");
+      const id = await createWithNotes(u, NUOTO);
+      await sendNow(u, id);
+      await waitForLog(u, "create", (entry) => entry.title === NUOTO);
+      const [created] = await logOf(u, "create");
+
+      await u.signIn(page);
+      await page.goto(detailPath(id));
+      await waitHydrated(page.getByRole("heading", { level: 1 }));
+      let dialog = await openForm(page);
+      await fieldOf(dialog, "Dalle").fill("16:00");
+      await pressSave(page);
+      await expect(toastOf(page, "Modifiche salvate")).toBeVisible();
+      await expect(editDialog(page)).toHaveCount(0);
+
+      await waitForLog(
+        u,
+        "update",
+        (entry) =>
+          entry.eventId === created?.eventId &&
+          new Date(entry.outgoing?.startsAt ?? 0).getTime() ===
+            new Date(at(today(), 16)).getTime(),
+      );
+
+      // Off: the copy at the provider is deleted.
       dialog = await openForm(page);
-      await expect(
-        dialog.getByRole("switch", { name: "Anche su Google", exact: true }),
-      ).toHaveAttribute("aria-checked", "true");
+      const toggle = dialog.getByRole("switch", {
+        name: "Anche su Google",
+        exact: true,
+      });
+      await expect(toggle).toHaveAttribute("aria-checked", "true");
+      await toggle.click();
+      await pressSave(page);
+      await expect(toastOf(page, "Modifiche salvate")).toBeVisible();
+      await waitForLog(
+        u,
+        "delete",
+        (entry) => entry.eventId === created?.eventId,
+      );
+    });
+  });
+
+  test("CA-50: eliminare in FamilyNest un impegno mandato cancella la sua copia dal fornitore", async ({
+    page,
+    browser,
+    baseURL,
+  }) => {
+    needsFake();
+    await withLinker(baseURL, async (u) => {
+      await u.prepare(GOOGLE);
+      await linkInBackground(browser, u, "google");
+      await chooseTarget(u, "Personale");
+      const id = await createWithNotes(u, NUOTO);
+      await sendNow(u, id);
+      await waitForLog(u, "create", (entry) => entry.title === NUOTO);
+      const [created] = await logOf(u, "create");
+
+      await u.signIn(page);
+      await page.goto(detailPath(id));
+      await waitHydrated(page.getByRole("heading", { level: 1 }));
+      const dialog = await openForm(page);
+      await buttonOf(dialog, "Elimina impegno").click();
+      await buttonOf(confirmDialog(page), "Elimina impegno").click();
+      await expect(page).toHaveURL(/\/calendario/);
+      expect(await u.events(NUOTO)).toHaveLength(0);
+
+      await waitForLog(
+        u,
+        "delete",
+        (entry) => entry.eventId === created?.eventId,
+      );
+    });
+  });
+
+  test("CA-52: con il fornitore non raggiungibile il salvataggio riesce, e quando torna la copia viene creata", async ({
+    page,
+    browser,
+    baseURL,
+  }) => {
+    needsFake();
+    await withLinker(baseURL, async (u) => {
+      await u.prepare(GOOGLE);
+      await linkInBackground(browser, u, "google");
+      await chooseTarget(u, "Personale");
+      const id = await createWithNotes(u, NUOTO);
+      await u.signIn(page);
+      await page.goto(detailPath(id));
+      await waitHydrated(page.getByRole("heading", { level: 1 }));
+      const dialog = await openForm(page);
+      await fieldOf(dialog, "Titolo").fill(`${NUOTO} 2`);
       await dialog
         .getByRole("switch", { name: "Anche su Google", exact: true })
         .click();
+
+      const provider = {
+        userId: u.user.id,
+        email: GOOGLE.email,
+        provider: GOOGLE.provider,
+      };
+      await u.fake.fail({ ...provider, unreachable: true });
       await pressSave(page);
       await expect(toastOf(page, "Modifiche salvate")).toBeVisible();
-      await u.fake.outbox();
-      await expect
-        .poll(async () =>
-          (await u.fake.log(u.user.id)).filter(
-            (entry) => entry.action === "delete",
-          ),
+      await expect(editDialog(page)).toHaveCount(0);
+      await expect(page.getByTestId("anche-su-errore")).toHaveCount(0);
+      expect(await u.events(`${NUOTO} 2`)).toHaveLength(1);
+
+      // The scheduled job meets the unreachable provider: nothing is created.
+      const first = await u.fake.outbox();
+      expect(first.done).toBe(0);
+      expect(await logOf(u, "create")).toHaveLength(0);
+
+      // The provider is back and the retry is due: the copy is created.
+      await u.fake.fail({ ...provider, unreachable: false });
+      const due = await u.user.admin
+        .from("calendar_outbox")
+        .update(
+          { next_attempt_at: new Date(Date.now() - 60_000).toISOString() },
+          { count: "exact" },
         )
-        .toHaveLength(1);
+        .eq("event_id", id);
+      expect(due.error).toBeNull();
+      expect(due.count).toBe(1);
+      await waitForLog(u, "create", (entry) => entry.title === `${NUOTO} 2`);
     });
   });
 
@@ -367,7 +591,7 @@ test.describe("«Anche su» nel modulo dell'impegno", () => {
     return data;
   }
 
-  test("la serie mandata che si divide: «Salva tutti i prossimi» manda la serie nuova al fornitore", async ({
+  test("CA-50: la serie mandata che si divide con «Anche su» acceso manda la serie nuova al fornitore", async ({
     page,
     browser,
     baseURL,
@@ -401,7 +625,49 @@ test.describe("«Anche su» nel modulo dell'impegno", () => {
     });
   });
 
-  test("se solo «Anche su» non riesce l'impegno resta salvato, il foglio si chiude e «Riprova» manda solo «Anche su»", async ({
+  test("CA-50: la serie mandata che si divide con «Anche su» spento ritira la copia della serie di partenza e non manda la nuova", async ({
+    page,
+    browser,
+    baseURL,
+  }) => {
+    needsFake();
+    await withLinker(baseURL, async (u) => {
+      await u.prepare(GOOGLE);
+      await linkInBackground(browser, u, "google");
+      const id = await weeklySent(u, NUOTO);
+      const [created] = await logOf(u, "create");
+      await u.signIn(page);
+      await page.goto(detailPath(id, addDays(today(), 7)));
+      await waitHydrated(page.getByRole("heading", { level: 1 }));
+      const dialog = await openForm(page);
+      const toggle = dialog.getByRole("switch", {
+        name: "Anche su Google",
+        exact: true,
+      });
+      await expect(toggle).toHaveAttribute("aria-checked", "true");
+      await toggle.click();
+      await fieldOf(dialog, "Titolo").fill(`${NUOTO} 2`);
+      await pressSave(page);
+      await buttonOf(confirmDialog(page), "Salva tutti i prossimi").click();
+      await expect(toastOf(page, "Modifiche salvate")).toBeVisible();
+      await expect(editDialog(page)).toHaveCount(0);
+
+      await waitForLog(
+        u,
+        "delete",
+        (entry) => entry.eventId === created?.eventId,
+      );
+      await u.fake.outbox();
+      expect(
+        (await logOf(u, "create")).filter(
+          (entry) => entry.title === `${NUOTO} 2`,
+        ),
+      ).toHaveLength(0);
+      expect((await u.events(`${NUOTO} 2`)).length).toBe(1);
+    });
+  });
+
+  test("CA-52: se solo «Anche su» non riesce l'impegno resta salvato, il foglio si chiude e «Riprova» manda solo «Anche su»", async ({
     page,
     browser,
     baseURL,
