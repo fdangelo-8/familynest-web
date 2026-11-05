@@ -68,13 +68,16 @@ export async function openAdd(
   baseURL: string | undefined,
   nest: CasaNest,
   who: string,
-  options: { lens?: "io" | "nest"; time?: Date } = {},
+  options: { lens?: "io" | "nest" | null; time?: Date } = {},
 ): Promise<void> {
   const { lens = "io", time = NOW } = options;
   await setClock(page, time);
-  await page.addInitScript((value) => {
-    window.sessionStorage.setItem("familynest.lens", value);
-  }, lens);
+  // `lens: null` leaves the session empty: the lens is the one of the profile.
+  if (lens) {
+    await page.addInitScript((value) => {
+      window.sessionStorage.setItem("familynest.lens", value);
+    }, lens);
+  }
   await nest.signIn(page, baseURL, who);
   await page.goto("/oggi");
   await expect(

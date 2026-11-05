@@ -10,9 +10,9 @@ import {
   type MutableRefObject,
   type ReactNode,
 } from "react";
-import type { NestMember, NestSelf } from "@/lib/nest-types";
+import type { NestMember, NestPreferences, NestSelf } from "@/lib/nest-types";
 
-type NestContextValue = {
+type NestContextValue = NestPreferences & {
   /** null when the Nest data could not be read */
   nestName: string | null;
   members: NestMember[];
@@ -34,8 +34,10 @@ export function NestProvider({
   nestName,
   members,
   me,
+  startLens,
+  defaultVisibility,
   children,
-}: {
+}: NestPreferences & {
   nestName: string | null;
   members: NestMember[];
   me: NestSelf | null;
@@ -54,8 +56,15 @@ export function NestProvider({
   }, [pathname]);
 
   const value = useMemo(
-    () => ({ nestName, members, me, hasPreviousPage }),
-    [nestName, members, me],
+    () => ({
+      nestName,
+      members,
+      me,
+      startLens,
+      defaultVisibility,
+      hasPreviousPage,
+    }),
+    [nestName, members, me, startLens, defaultVisibility],
   );
   return <NestContext.Provider value={value}>{children}</NestContext.Provider>;
 }

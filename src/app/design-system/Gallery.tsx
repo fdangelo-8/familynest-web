@@ -2163,6 +2163,73 @@ function PageParts() {
           </div>
         </div>
       </Example>
+      <Example caption="riga-evento--passato (testo secondario, senza opacità)">
+        <div className="colonna" data-testid="riga-passata">
+          <div
+            className="riga-evento riga-evento--compatta riga-evento--passato"
+            data-testid="riga-passata-normale"
+          >
+            <span className="riga-evento__ora">8:00</span>
+            <span className="riga-evento__testo">
+              <span className="riga-evento__titolo">Scuola Sofia</span>
+              <span className="riga-evento__info">la porta Laura</span>
+            </span>
+          </div>
+          <div
+            className="riga-evento riga-evento--compatta riga-evento--insieme riga-evento--passato"
+            data-testid="riga-passata-insieme"
+          >
+            <span className="riga-evento__ora">19:00</span>
+            <span className="riga-evento__testo">
+              <span className="riga-evento__titolo">Cena dai nonni</span>
+              <span className="riga-evento__info">li porta Marco</span>
+            </span>
+          </div>
+        </div>
+      </Example>
+      <Example caption="oggi-solo-mobile e oggi-solo-desktop · lista-partenza__passi">
+        <div className="colonna" data-testid="oggi-disposizioni">
+          <p className="oggi-solo-mobile t-nota" data-testid="oggi-solo-mobile">
+            Si vede sotto 1024 px
+          </p>
+          <p
+            className="oggi-solo-desktop t-nota"
+            data-testid="oggi-solo-desktop"
+          >
+            Si vede da 1024 px
+          </p>
+          <section className="scheda scheda--evidenza lista-partenza">
+            <p className="lista-partenza__sopra">
+              <span>Per cominciare</span>
+              <span>1 di 3</span>
+            </p>
+            <h4 className="lista-partenza__titolo t-titolo-scheda">
+              Tre cose e la casa è pronta
+            </h4>
+            <ul className="lista-partenza__passi" data-testid="lista-passi">
+              <li>
+                <div className="passo-partenza is-fatto">
+                  <span className="passo-partenza__cerchio" aria-hidden="true">
+                    <Icon name="check" size="s" />
+                  </span>
+                  <span className="passo-partenza__testo">Crea il Nest</span>
+                </div>
+              </li>
+              <li>
+                <div className="passo-partenza">
+                  <span
+                    className="passo-partenza__cerchio"
+                    aria-hidden="true"
+                  />
+                  <span className="passo-partenza__testo">
+                    Scrivi la prima cosa da comprare
+                  </span>
+                </div>
+              </li>
+            </ul>
+          </section>
+        </div>
+      </Example>
     </Section>
   );
 }

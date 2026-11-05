@@ -29,6 +29,8 @@ async function AppFrame({
       nestName={frame.nestName}
       members={frame.members}
       me={frame.me}
+      startLens={frame.startLens}
+      defaultVisibility={frame.defaultVisibility}
     >
       <BarActionProvider>
         <SkipLink />

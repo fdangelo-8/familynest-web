@@ -1,4 +1,9 @@
-import { formatTime, fromFieldValues, type CalendarDay } from "@/lib/datetime";
+import {
+  formatTime,
+  fromFieldValues,
+  type CalendarDay,
+  type Instant,
+} from "@/lib/datetime";
 import type {
   FullEvent,
   HouseholdEvent,
@@ -28,6 +33,33 @@ export const BUSY_TITLE = "Occupato";
 /** Text of the «Occupato» of another person: no gender, no detail. */
 export function formatBusyLabel(name: string): string {
   return `${name} ha un impegno`;
+}
+
+/**
+ * Accessible name of an «Occupato» of someone else, from the start and end
+ * shown in the row or block (already cut to the day): `Paolo ha un impegno, dalle 9:00
+ * alle 15:00`. The only place where this sentence is written.
+ */
+export function formatBusyAccessibleName(
+  name: string,
+  start: Instant,
+  end: Instant,
+): string {
+  return `${formatBusyLabel(name)}, dalle ${formatTime(start)} alle ${formatTime(end)}`;
+}
+
+/**
+ * Sentence of who takes the children to an event: «la porta Laura», «li porta
+ * Marco», «la porti tu», «li porti tu». `many` is true when the event has more
+ * than one person. The caller decides who the escort is (and what to do when
+ * the escort is not found). The only place where this sentence is written.
+ */
+export function formatEscortPhrase(
+  escort: { kind: "me" } | { kind: "member"; name: string },
+  many: boolean,
+): string {
+  if (escort.kind === "me") return many ? "li porti tu" : "la porti tu";
+  return many ? `li porta ${escort.name}` : `la porta ${escort.name}`;
 }
 
 /* ---------- Lens ---------- */

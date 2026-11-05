@@ -14,6 +14,7 @@ import {
   formatFreeEveningRow,
   formatFreeEveningWindow,
   formatHiddenCount,
+  formatEscortPhrase,
   formatWithYou,
   hiddenByLens,
   isInvolved,
@@ -1244,5 +1245,15 @@ test.describe("listHouseholdEvents contro la RPC vera (#88)", () => {
     expect(await listHouseholdEvents(from, oneDay, unreachable)).toEqual({
       ok: false,
     });
+  });
+});
+
+test.describe("formatEscortPhrase (#241)", () => {
+  test("the four cases", () => {
+    const marco = { kind: "member", name: "Marco" } as const;
+    expect(formatEscortPhrase(marco, false)).toBe("la porta Marco");
+    expect(formatEscortPhrase(marco, true)).toBe("li porta Marco");
+    expect(formatEscortPhrase({ kind: "me" }, false)).toBe("la porti tu");
+    expect(formatEscortPhrase({ kind: "me" }, true)).toBe("li porti tu");
   });
 });

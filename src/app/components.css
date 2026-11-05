@@ -1017,8 +1017,11 @@
 .riga-evento--occupato .avatar {
   --anello: var(--color-occupato-1);
 }
-.riga-evento--passato {
-  opacity: var(--opacity-passato);
+.riga-evento--passato,
+.riga-evento--passato .riga-evento__ora,
+.riga-evento--passato .riga-evento__titolo,
+.riga-evento--passato .riga-evento__info {
+  color: var(--color-inchiostro-2); /* #241 */
 }
 .riga-evento--compatta {
   min-height: var(--size-riga);
@@ -4825,6 +4828,28 @@ button.griglia-mese__cella--selezionata {
 }
 .btn-icona[aria-pressed="true"]:active:not(:disabled, [aria-disabled="true"]) {
   background: var(--color-notte-2);
+}
+
+/* Oggi (#30, richiesta condivisa 231): le due disposizioni stanno nel codice,
+   ciascuna nascosta dall'altra parte (sotto / da 1024 px, come
+   .casa-solo-mobile e .casa-solo-desktop); l'elenco dei passi della lista di
+   partenza è una griglia senza stile di elenco. */
+@media (min-width: 1024px) {
+  .oggi-solo-mobile {
+    display: none;
+  }
+}
+@media (max-width: 1023px) {
+  .oggi-solo-desktop {
+    display: none;
+  }
+}
+.lista-partenza__passi {
+  display: grid;
+  gap: var(--space-1);
+  margin: var(--space-0);
+  padding: var(--space-0);
+  list-style: none;
 }
 
 /* =========================================================

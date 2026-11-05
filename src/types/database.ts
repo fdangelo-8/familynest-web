@@ -606,6 +606,110 @@ export type Database = {
           },
         ];
       };
+      notifications: {
+        Row: {
+          actor_member_id: string | null;
+          created_at: string;
+          created_on: string | null;
+          days_before: number | null;
+          deadline_id: string | null;
+          evening_date: string | null;
+          event_id: string | null;
+          free_from: string | null;
+          household_id: string;
+          id: string;
+          item_count: number | null;
+          kind: Database["public"]["Enums"]["notification_kind"];
+          occurrence_date: string | null;
+          read_at: string | null;
+          recipient_member_id: string;
+          todo_id: string | null;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          actor_member_id?: string | null;
+          created_at?: string;
+          created_on?: never;
+          days_before?: number | null;
+          deadline_id?: string | null;
+          evening_date?: string | null;
+          event_id?: string | null;
+          free_from?: string | null;
+          household_id: string;
+          id?: string;
+          item_count?: number | null;
+          kind: Database["public"]["Enums"]["notification_kind"];
+          occurrence_date?: string | null;
+          read_at?: string | null;
+          recipient_member_id: string;
+          todo_id?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          actor_member_id?: string | null;
+          created_at?: string;
+          created_on?: never;
+          days_before?: number | null;
+          deadline_id?: string | null;
+          evening_date?: string | null;
+          event_id?: string | null;
+          free_from?: string | null;
+          household_id?: string;
+          id?: string;
+          item_count?: number | null;
+          kind?: Database["public"]["Enums"]["notification_kind"];
+          occurrence_date?: string | null;
+          read_at?: string | null;
+          recipient_member_id?: string;
+          todo_id?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "notifications_actor_fkey";
+            columns: ["actor_member_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "household_members";
+            referencedColumns: ["id", "household_id"];
+          },
+          {
+            foreignKeyName: "notifications_deadline_fkey";
+            columns: ["deadline_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "deadlines";
+            referencedColumns: ["id", "household_id"];
+          },
+          {
+            foreignKeyName: "notifications_event_fkey";
+            columns: ["event_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "events";
+            referencedColumns: ["id", "household_id"];
+          },
+          {
+            foreignKeyName: "notifications_household_id_fkey";
+            columns: ["household_id"];
+            isOneToOne: false;
+            referencedRelation: "households";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "notifications_recipient_fkey";
+            columns: ["recipient_member_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "household_members";
+            referencedColumns: ["id", "household_id"];
+          },
+          {
+            foreignKeyName: "notifications_todo_fkey";
+            columns: ["todo_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "todos";
+            referencedColumns: ["id", "household_id"];
+          },
+        ];
+      };
       pinned_spaces: {
         Row: {
           household_id: string;
@@ -888,6 +992,10 @@ export type Database = {
         Args: Record<PropertyKey, never>;
         Returns: boolean;
       };
+      count_unread_notifications: {
+        Args: Record<PropertyKey, never>;
+        Returns: number;
+      };
       create_event: {
         Args: {
           p_ends_at: string;
@@ -1003,6 +1111,10 @@ export type Database = {
           visibility: Database["public"]["Enums"]["event_visibility"];
         }[];
       };
+      mark_notifications_read: {
+        Args: { p_ids: string[] };
+        Returns: undefined;
+      };
       pin_space: {
         Args: { p_space: Database["public"]["Enums"]["space_key"] };
         Returns: undefined;
@@ -1030,6 +1142,14 @@ export type Database = {
           isSetofReturn: true;
         };
       };
+      run_notification_job: {
+        Args: {
+          p_at?: string;
+          p_household_id: string;
+          p_job: Database["public"]["Enums"]["notification_job"];
+        };
+        Returns: number;
+      };
       save_child_profile: {
         Args: {
           p_birth_date?: string;
@@ -1048,6 +1168,38 @@ export type Database = {
           p_teachers: Json;
         };
         Returns: undefined;
+      };
+      search_household: {
+        Args: {
+          p_from?: string;
+          p_kinds?: Database["public"]["Enums"]["search_result_kind"][];
+          p_member_id?: string;
+          p_text?: string;
+          p_to?: string;
+        };
+        Returns: {
+          assignee_member_id: string;
+          author_member_id: string;
+          due_date: string;
+          ends_at: string;
+          escort_member_id: string;
+          for_member_id: string;
+          id: string;
+          is_masked: boolean;
+          is_private: boolean;
+          kind: Database["public"]["Enums"]["search_result_kind"];
+          location: string;
+          member_ids: string[];
+          occurrence_day: string;
+          quantity: string;
+          recurrence: Database["public"]["Enums"]["event_recurrence"];
+          recurrence_weekdays: number[];
+          series_starts_on: string;
+          sort_index: number;
+          starts_at: string;
+          title: string;
+          visibility: Database["public"]["Enums"]["event_visibility"];
+        }[];
       };
       set_notification_preference: {
         Args: {
@@ -1128,12 +1280,21 @@ export type Database = {
         | "basilico"
         | "cannella";
       member_kind: "adult" | "child" | "pet";
+      notification_job:
+        "free_together" | "deadline_reminders" | "shopping_digest" | "purge";
+      notification_kind:
+        | "todo_assigned"
+        | "deadline_reminder"
+        | "free_together"
+        | "event_time_changed"
+        | "shopping_added";
       notification_preference:
         | "events"
         | "assigned_todos"
         | "shopping"
         | "free_together"
         | "morning_digest";
+      search_result_kind: "event" | "deadline" | "todo" | "shopping_item";
       space_key:
         | "meals"
         | "couple"
@@ -1296,6 +1457,19 @@ export const Constants = {
         "cannella",
       ],
       member_kind: ["adult", "child", "pet"],
+      notification_job: [
+        "free_together",
+        "deadline_reminders",
+        "shopping_digest",
+        "purge",
+      ],
+      notification_kind: [
+        "todo_assigned",
+        "deadline_reminder",
+        "free_together",
+        "event_time_changed",
+        "shopping_added",
+      ],
       notification_preference: [
         "events",
         "assigned_todos",
@@ -1303,6 +1477,7 @@ export const Constants = {
         "free_together",
         "morning_digest",
       ],
+      search_result_kind: ["event", "deadline", "todo", "shopping_item"],
       space_key: [
         "meals",
         "couple",
