@@ -170,3 +170,70 @@ test("a11y: bottoni con pressed e aria-haspopup, stato esposto e altezza di 44 p
     expect(box?.height ?? 0).toBeGreaterThanOrEqual(43.5);
   }
 });
+
+// #258 / PR #261: option row as a button, in-progress state, sheet with onBack.
+test("a11y: riga-opzione come bottone, 44 px, fuoco visibile e ordine del fuoco (#258)", async ({
+  page,
+}) => {
+  const example = page.getByTestId("riga-opzione-258");
+  await example.scrollIntoViewIfNeeded();
+  const rows = example.locator("button.riga-opzione");
+  await expect(rows).toHaveCount(2);
+  for (let i = 0; i < 2; i++) {
+    const box = await rows.nth(i).boundingBox();
+    expect(box!.height).toBeGreaterThanOrEqual(44);
+  }
+  // Inactive controls keep full opacity but stay announced as disabled.
+  await expect(rows.nth(1)).toHaveAttribute("aria-disabled", "true");
+  await expect(rows.nth(1)).toHaveCSS("opacity", "1");
+  await expect(
+    example.getByRole("button", { name: "Più dettagli" }),
+  ).toHaveAttribute("aria-disabled", "true");
+  await rows.nth(0).focus();
+  const outline = await rows.nth(0).evaluate((el) => {
+    const cs = getComputedStyle(el);
+    return { style: cs.outlineStyle, width: parseFloat(cs.outlineWidth) };
+  });
+  expect(outline.style).not.toBe("none");
+  expect(outline.width).toBeGreaterThan(0);
+  await page.keyboard.press("Tab");
+  await expect(rows.nth(1)).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(
+    example.getByRole("button", { name: "Più dettagli" }),
+  ).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(
+    example.getByRole("button", { name: "Apri foglio con ritorno" }),
+  ).toBeFocused();
+});
+
+test("a11y: foglio con ritorno, Esc e X tornano indietro senza chiudere, senza trappole (#258)", async ({
+  page,
+}) => {
+  const example = page.getByTestId("riga-opzione-258");
+  await example.scrollIntoViewIfNeeded();
+  await example
+    .getByRole("button", { name: "Apri foglio con ritorno" })
+    .click();
+  const dialog = page.getByRole("dialog", { name: "Nuovo impegno" });
+  await expect(dialog).toBeVisible();
+  const counter = page.getByTestId("foglio-ritorno-n");
+  await page.keyboard.press("Escape");
+  await expect(counter).toHaveText("Indietro: 1");
+  await expect(dialog).toBeVisible();
+  await dialog
+    .getByRole("button", { name: "Chiudi", exact: true })
+    .first()
+    .click();
+  await expect(counter).toHaveText("Indietro: 2");
+  await expect(dialog).toBeVisible();
+  const results = await new AxeBuilder({ page }).analyze();
+  expect(
+    results.violations.filter((v) =>
+      ["serious", "critical"].includes(v.impact ?? ""),
+    ),
+  ).toEqual([]);
+  await dialog.getByRole("button", { name: "Chiudi il foglio" }).click();
+  await expect(dialog).toBeHidden();
+});

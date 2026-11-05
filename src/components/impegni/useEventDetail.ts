@@ -8,7 +8,7 @@ import {
 } from "@/lib/household-events";
 import { createClient } from "@/lib/supabase/client";
 import type { Database } from "@/types/database";
-import type { EventMember } from "./model";
+import type { EventMember } from "@/components/evento-modulo/model";
 
 type Client = SupabaseClient<Database>;
 
