@@ -20,7 +20,6 @@ import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
 import { Icon } from "@/components/ui/Icon/Icon";
 import { useToast } from "@/components/ui/Toast/ToastProvider";
 import { Toggle } from "@/components/ui/Toggle/Toggle";
-import { VisuallyHidden } from "@/components/ui/VisuallyHidden/VisuallyHidden";
 import { CalendarSheet } from "./CalendarSheet";
 import { ConnectForm } from "./ConnectForm";
 import { ConnectSheet } from "./ConnectSheet";
@@ -53,7 +52,7 @@ export type CalendarsViewProps = {
   staleAccountIds: string[];
   /** «15:40»: when the page was read */
   loadedAt: string;
-  /** Mail of the account just linked again (read from the database) */
+  /** Mail of the account just linked again (read from the database); the sentence depends on `linkNotice.result` */
   alreadyLinkedEmail: string | null;
   /** What the way back from the provider said, if the adult just came back */
   linkNotice: LinkNotice | null;
@@ -245,12 +244,13 @@ export function CalendarsView({
     if (!notice || shown.current) return;
     shown.current = true;
     void clearLinkResult().catch(() => undefined);
-    if (notice.result === "already_linked") {
+    if (notice.result === "already_linked" || notice.result === "relinked") {
       if (alreadyLinkedEmail) {
         showToast({
           icon: null,
           lead: alreadyLinkedEmail,
-          text: "è già collegato.",
+          text:
+            notice.result === "relinked" ? "ricollegato." : "è già collegato.",
           withoutNav: true,
         });
       }
@@ -407,7 +407,8 @@ export function CalendarsView({
     if (
       !notice ||
       notice.result === "linked" ||
-      notice.result === "already_linked"
+      notice.result === "already_linked" ||
+      notice.result === "relinked"
     ) {
       return null;
     }
@@ -551,32 +552,27 @@ export function CalendarsView({
           </Alert>
         ))}
       {unlinked === "outlook" ? (
-        <Alert
-          variant="info"
-          action={
-            <span>
-              <a
-                className="btn-link"
-                href={MICROSOFT_PERSONAL}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Account personale
-              </a>{" "}
-              <a
-                className="btn-link"
-                href={MICROSOFT_WORK}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Account di lavoro
-              </a>
-            </span>
-          }
-        >
+        <Alert variant="info">
           FamilyNest non può più usare il tuo account <b>Outlook</b>. Se vuoi,
           togli il permesso anche dalla pagina Microsoft delle app con accesso
           al tuo account.
+          <br />
+          <a
+            className="btn-link"
+            href={MICROSOFT_PERSONAL}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Account personale
+          </a>{" "}
+          <a
+            className="btn-link"
+            href={MICROSOFT_WORK}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Account di lavoro
+          </a>
         </Alert>
       ) : null}
       {sync ? (
@@ -763,12 +759,12 @@ function AccountSection({
                   type="button"
                   className="riga-lista__titolo"
                   aria-haspopup="dialog"
+                  aria-label={`${calendar.name}: impostazioni`}
                   aria-describedby={infoId}
                   disabled={!online}
                   onClick={() => onOpen(calendar.id)}
                 >
                   {calendar.name}
-                  <VisuallyHidden>: impostazioni</VisuallyHidden>
                 </button>
                 <span
                   id={infoId}

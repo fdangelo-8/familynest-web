@@ -204,7 +204,12 @@ export function CalendarSheet({
           )
         }
       >
-        <form id={formId} onSubmit={submit} noValidate>
+        <form
+          id={formId}
+          className="modulo-foglio"
+          onSubmit={submit}
+          noValidate
+        >
           <div className="campo">
             <span className="campo__etichetta">Direzione</span>
             <div

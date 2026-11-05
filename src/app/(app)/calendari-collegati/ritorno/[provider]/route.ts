@@ -30,7 +30,9 @@ import { createAdminClient } from "@/lib/supabase/admin";
  * - the calendar permission was left off: nothing saved, the access just given
  *   is revoked, result `no_calendar_permission`;
  * - 5 accounts already: nothing saved, result `limit`;
- * - the same account again: its row is updated, result `already_linked`;
+ * - the same account again: its row is updated; result `relinked` when it had
+ *   a problem before (the adult came to link it again), `already_linked`
+ *   otherwise;
  * - otherwise the account is saved,
  *   its calendars are read with the starting choices of #34 §6, and the first
  *   synchronisation starts after the answer.
@@ -113,6 +115,12 @@ export async function GET(
     }
 
     const admin = createAdminClient();
+    const hadProblem = await accountHadProblem(
+      admin,
+      userId,
+      providerId,
+      linked.account.id,
+    );
     const { data: saved, error: saveError } = await admin.rpc(
       "save_calendar_account",
       {
@@ -131,7 +139,11 @@ export async function GET(
     }
     const accountId = saved[0].account_id;
     // is_new is false when this adult had the same provider account already.
-    const result: LinkResult = saved[0].is_new ? "linked" : "already_linked";
+    const result: LinkResult = saved[0].is_new
+      ? "linked"
+      : hadProblem
+        ? "relinked"
+        : "already_linked";
     // From here the account is kept: the token must not be revoked.
     const keptToken = linked.refreshToken;
     issued = null;
@@ -155,6 +167,37 @@ export async function GET(
   } catch {
     await revokeIssued();
     return finish("failed");
+  }
+}
+
+/**
+ * Whether the account was in trouble before this link (the save puts it back
+ * to «active», so it must be read first). Any doubt counts as «no problem».
+ */
+async function accountHadProblem(
+  admin: ReturnType<typeof createAdminClient>,
+  userId: string,
+  providerId: "google" | "outlook",
+  providerAccountId: string,
+): Promise<boolean> {
+  try {
+    const { data: member } = await admin
+      .from("household_members")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("kind", "adult")
+      .maybeSingle();
+    if (!member) return false;
+    const { data: account } = await admin
+      .from("calendar_accounts")
+      .select("status")
+      .eq("member_id", member.id)
+      .eq("provider", providerId)
+      .eq("provider_account_id", providerAccountId)
+      .maybeSingle();
+    return !!account && account.status !== "active";
+  } catch {
+    return false;
   }
 }
 
