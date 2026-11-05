@@ -495,9 +495,21 @@ export async function createDeadlines(
   return ids;
 }
 
-export async function moveDeadline(ctx: FigliCtx, id: string, due: string) {
+/**
+ * Moves a deadline with the session of its author (RLS applies). The
+ * administrative role cannot update this table: the check on `reminder_days`
+ * calls a function granted to `authenticated` only.
+ */
+export async function moveDeadline(
+  ctx: FigliCtx,
+  id: string,
+  due: string,
+  by = "Ugo",
+) {
   await must(
-    ctx.admin.from("deadlines").update({ due_date: due }).eq("id", id),
+    ctx.nest.users[by]!.client.from("deadlines")
+      .update({ due_date: due })
+      .eq("id", id),
     "Scadenza di prova spostata",
   );
 }
