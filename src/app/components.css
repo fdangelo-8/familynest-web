@@ -4785,6 +4785,11 @@ button.griglia-mese__cella--selezionata {
   box-shadow: inset 0 var(--border-sottile) 0 var(--color-filo);
 }
 
+/* Campi affiancati: se sotto uno compare l'aiuto, l'altro non scende */
+.campo-doppio {
+  align-items: start;
+}
+
 /* Tre campi corti affiancati (taglie) */
 .campo-doppio--tre {
   grid-template-columns: repeat(3, minmax(0, 1fr));
