@@ -9,6 +9,160 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      calendar_accounts: {
+        Row: {
+          connected_at: string;
+          created_at: string;
+          credentials_ciphertext: string;
+          email: string;
+          failing_since: string | null;
+          household_id: string;
+          id: string;
+          is_fake: boolean;
+          last_synced_at: string | null;
+          member_id: string;
+          member_kind: Database["public"]["Enums"]["member_kind"];
+          provider: Database["public"]["Enums"]["calendar_provider"];
+          provider_account_id: string;
+          status: Database["public"]["Enums"]["calendar_account_status"];
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          connected_at?: string;
+          created_at?: string;
+          credentials_ciphertext: string;
+          email: string;
+          failing_since?: string | null;
+          household_id: string;
+          id?: string;
+          is_fake?: boolean;
+          last_synced_at?: string | null;
+          member_id: string;
+          member_kind?: Database["public"]["Enums"]["member_kind"];
+          provider: Database["public"]["Enums"]["calendar_provider"];
+          provider_account_id: string;
+          status?: Database["public"]["Enums"]["calendar_account_status"];
+          updated_at?: string;
+        };
+        Update: {
+          connected_at?: string;
+          created_at?: string;
+          credentials_ciphertext?: string;
+          email?: string;
+          failing_since?: string | null;
+          household_id?: string;
+          id?: string;
+          is_fake?: boolean;
+          last_synced_at?: string | null;
+          member_id?: string;
+          member_kind?: Database["public"]["Enums"]["member_kind"];
+          provider?: Database["public"]["Enums"]["calendar_provider"];
+          provider_account_id?: string;
+          status?: Database["public"]["Enums"]["calendar_account_status"];
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "calendar_accounts_household_id_fkey";
+            columns: ["household_id"];
+            isOneToOne: false;
+            referencedRelation: "households";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "calendar_accounts_member_fkey";
+            columns: ["member_id", "household_id", "member_kind"];
+            isOneToOne: false;
+            referencedRelation: "household_members";
+            referencedColumns: ["id", "household_id", "kind"];
+          },
+        ];
+      };
+      calendar_credential_revocations: {
+        Row: {
+          created_at: string;
+          credentials_ciphertext: string;
+          id: string;
+          is_fake: boolean;
+          provider: Database["public"]["Enums"]["calendar_provider"];
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          credentials_ciphertext: string;
+          id?: string;
+          is_fake: boolean;
+          provider: Database["public"]["Enums"]["calendar_provider"];
+        };
+        Update: {
+          created_at?: string;
+          credentials_ciphertext?: string;
+          id?: string;
+          is_fake?: boolean;
+          provider?: Database["public"]["Enums"]["calendar_provider"];
+        };
+        Relationships: [];
+      };
+      calendar_outbox: {
+        Row: {
+          action: Database["public"]["Enums"]["calendar_outbox_action"];
+          attempts: number;
+          calendar_id: string;
+          created_at: string;
+          event_id: string | null;
+          household_id: string;
+          id: string;
+          next_attempt_at: string;
+          provider_event_id: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          action: Database["public"]["Enums"]["calendar_outbox_action"];
+          attempts?: number;
+          calendar_id: string;
+          created_at?: string;
+          event_id?: string | null;
+          household_id: string;
+          id?: string;
+          next_attempt_at?: string;
+          provider_event_id?: string | null;
+        };
+        Update: {
+          action?: Database["public"]["Enums"]["calendar_outbox_action"];
+          attempts?: number;
+          calendar_id?: string;
+          created_at?: string;
+          event_id?: string | null;
+          household_id?: string;
+          id?: string;
+          next_attempt_at?: string;
+          provider_event_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "calendar_outbox_calendar_fkey";
+            columns: ["calendar_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "external_calendars";
+            referencedColumns: ["id", "household_id"];
+          },
+          {
+            foreignKeyName: "calendar_outbox_event_fkey";
+            columns: ["event_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "events";
+            referencedColumns: ["id", "household_id"];
+          },
+          {
+            foreignKeyName: "calendar_outbox_household_id_fkey";
+            columns: ["household_id"];
+            isOneToOne: false;
+            referencedRelation: "households";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       child_profiles: {
         Row: {
           clothing_size: string | null;
@@ -280,6 +434,77 @@ export type Database = {
           },
         ];
       };
+      event_external_links: {
+        Row: {
+          calendar_id: string;
+          created_at: string;
+          event_id: string;
+          household_id: string;
+          id: string;
+          is_busy_on_provider: boolean;
+          is_private_on_provider: boolean;
+          occurrence_key: string;
+          origin: Database["public"]["Enums"]["external_event_origin"];
+          provider_event_id: string;
+          provider_version: string | null;
+          updated_at: string;
+          visibility_overridden: boolean;
+        };
+        ComputedFields: never;
+        Insert: {
+          calendar_id: string;
+          created_at?: string;
+          event_id: string;
+          household_id: string;
+          id?: string;
+          is_busy_on_provider?: boolean;
+          is_private_on_provider?: boolean;
+          occurrence_key?: string;
+          origin: Database["public"]["Enums"]["external_event_origin"];
+          provider_event_id: string;
+          provider_version?: string | null;
+          updated_at?: string;
+          visibility_overridden?: boolean;
+        };
+        Update: {
+          calendar_id?: string;
+          created_at?: string;
+          event_id?: string;
+          household_id?: string;
+          id?: string;
+          is_busy_on_provider?: boolean;
+          is_private_on_provider?: boolean;
+          occurrence_key?: string;
+          origin?: Database["public"]["Enums"]["external_event_origin"];
+          provider_event_id?: string;
+          provider_version?: string | null;
+          updated_at?: string;
+          visibility_overridden?: boolean;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "event_external_links_calendar_fkey";
+            columns: ["calendar_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "external_calendars";
+            referencedColumns: ["id", "household_id"];
+          },
+          {
+            foreignKeyName: "event_external_links_event_fkey";
+            columns: ["event_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "events";
+            referencedColumns: ["id", "household_id"];
+          },
+          {
+            foreignKeyName: "event_external_links_household_id_fkey";
+            columns: ["household_id"];
+            isOneToOne: false;
+            referencedRelation: "households";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       event_members: {
         Row: {
           created_at: string;
@@ -394,6 +619,88 @@ export type Database = {
           },
           {
             foreignKeyName: "events_household_id_fkey";
+            columns: ["household_id"];
+            isOneToOne: false;
+            referencedRelation: "households";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      external_calendars: {
+        Row: {
+          account_id: string;
+          counts_for_free_time: boolean;
+          created_at: string;
+          direction: Database["public"]["Enums"]["calendar_direction"];
+          failing_since: string | null;
+          household_id: string;
+          id: string;
+          is_enabled: boolean;
+          is_new_events_target: boolean;
+          is_primary: boolean;
+          is_read_only: boolean;
+          last_synced_at: string | null;
+          member_id: string;
+          name: string;
+          provider_calendar_id: string;
+          sync_cursor: string | null;
+          updated_at: string;
+          visibility: Database["public"]["Enums"]["event_visibility"];
+          weekdays_only: boolean;
+        };
+        ComputedFields: never;
+        Insert: {
+          account_id: string;
+          counts_for_free_time?: boolean;
+          created_at?: string;
+          direction?: Database["public"]["Enums"]["calendar_direction"];
+          failing_since?: string | null;
+          household_id: string;
+          id?: string;
+          is_enabled?: boolean;
+          is_new_events_target?: boolean;
+          is_primary?: boolean;
+          is_read_only?: boolean;
+          last_synced_at?: string | null;
+          member_id: string;
+          name: string;
+          provider_calendar_id: string;
+          sync_cursor?: string | null;
+          updated_at?: string;
+          visibility?: Database["public"]["Enums"]["event_visibility"];
+          weekdays_only?: boolean;
+        };
+        Update: {
+          account_id?: string;
+          counts_for_free_time?: boolean;
+          created_at?: string;
+          direction?: Database["public"]["Enums"]["calendar_direction"];
+          failing_since?: string | null;
+          household_id?: string;
+          id?: string;
+          is_enabled?: boolean;
+          is_new_events_target?: boolean;
+          is_primary?: boolean;
+          is_read_only?: boolean;
+          last_synced_at?: string | null;
+          member_id?: string;
+          name?: string;
+          provider_calendar_id?: string;
+          sync_cursor?: string | null;
+          updated_at?: string;
+          visibility?: Database["public"]["Enums"]["event_visibility"];
+          weekdays_only?: boolean;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "external_calendars_account_fkey";
+            columns: ["account_id", "household_id", "member_id"];
+            isOneToOne: false;
+            referencedRelation: "calendar_accounts";
+            referencedColumns: ["id", "household_id", "member_id"];
+          },
+          {
+            foreignKeyName: "external_calendars_household_id_fkey";
             columns: ["household_id"];
             isOneToOne: false;
             referencedRelation: "households";
@@ -1261,9 +1568,24 @@ export type Database = {
           isSetofReturn: true;
         };
       };
+      complete_calendar_outbox_item: {
+        Args: {
+          p_id: string;
+          p_provider_event_id?: string;
+          p_provider_version?: string;
+        };
+        Returns: boolean;
+      };
       complete_starter_list: {
         Args: Record<PropertyKey, never>;
         Returns: boolean;
+      };
+      count_imported_events: {
+        Args: { p_from: string };
+        Returns: {
+          event_count: number;
+          provider: Database["public"]["Enums"]["calendar_provider"];
+        }[];
       };
       count_unread_notifications: {
         Args: Record<PropertyKey, never>;
@@ -1321,11 +1643,26 @@ export type Database = {
         Args: { p_member_id: string };
         Returns: undefined;
       };
+      fail_calendar_outbox_item: {
+        Args: { p_id: string; p_retry_at: string };
+        Returns: undefined;
+      };
       get_account_deletion_outcome: {
         Args: Record<PropertyKey, never>;
         Returns: {
           deletes_household: boolean;
           next_admin_member_id: string;
+        }[];
+      };
+      get_event_calendar_link: {
+        Args: { p_event_id: string };
+        Returns: {
+          calendar_id: string;
+          calendar_name: string;
+          is_imported: boolean;
+          is_sent: boolean;
+          provider: Database["public"]["Enums"]["calendar_provider"];
+          visibility_overridden: boolean;
         }[];
       };
       get_event_occurrence: {
@@ -1407,12 +1744,42 @@ export type Database = {
           visibility: Database["public"]["Enums"]["event_visibility"];
         }[];
       };
+      list_household_events_with_source: {
+        Args: { p_from: string; p_to: string };
+        Returns: {
+          author_member_id: string;
+          counts_for_free_time: boolean;
+          ends_at: string;
+          escort_member_id: string;
+          id: string;
+          is_imported: boolean;
+          is_masked: boolean;
+          location: string;
+          member_ids: string[];
+          source_provider: Database["public"]["Enums"]["calendar_provider"];
+          starts_at: string;
+          title: string;
+          visibility: Database["public"]["Enums"]["event_visibility"];
+        }[];
+      };
+      mark_external_calendar_failing: {
+        Args: { p_at?: string; p_calendar_id: string };
+        Returns: undefined;
+      };
       mark_notifications_read: {
         Args: { p_ids: string[] };
         Returns: undefined;
       };
       pin_space: {
         Args: { p_space: Database["public"]["Enums"]["space_key"] };
+        Returns: undefined;
+      };
+      record_calendar_sync_result: {
+        Args: {
+          p_account_id: string;
+          p_at?: string;
+          p_outcome: Database["public"]["Enums"]["calendar_sync_outcome"];
+        };
         Returns: undefined;
       };
       remove_space_interest: {
@@ -1459,6 +1826,20 @@ export type Database = {
         Args: { p_household_id: string; p_today?: string };
         Returns: number;
       };
+      save_calendar_account: {
+        Args: {
+          p_credentials_ciphertext: string;
+          p_email: string;
+          p_is_fake?: boolean;
+          p_provider: Database["public"]["Enums"]["calendar_provider"];
+          p_provider_account_id: string;
+          p_user_id: string;
+        };
+        Returns: {
+          account_id: string;
+          is_new: boolean;
+        }[];
+      };
       save_child_profile: {
         Args: {
           p_birth_date?: string;
@@ -1477,6 +1858,10 @@ export type Database = {
           p_teachers: Json;
         };
         Returns: undefined;
+      };
+      save_external_calendars: {
+        Args: { p_account_id: string; p_calendars: Json };
+        Returns: number;
       };
       search_household: {
         Args: {
@@ -1505,10 +1890,19 @@ export type Database = {
           recurrence_weekdays: number[];
           series_starts_on: string;
           sort_index: number;
+          source_provider: Database["public"]["Enums"]["calendar_provider"];
           starts_at: string;
           title: string;
           visibility: Database["public"]["Enums"]["event_visibility"];
         }[];
+      };
+      set_event_also_on: {
+        Args: { p_enabled: boolean; p_event_id: string };
+        Returns: undefined;
+      };
+      set_new_events_calendar: {
+        Args: { p_calendar_id: string };
+        Returns: undefined;
       };
       set_notification_preference: {
         Args: {
@@ -1531,6 +1925,19 @@ export type Database = {
           adults: number;
           households: number;
           space: Database["public"]["Enums"]["space_key"];
+        }[];
+      };
+      sync_external_calendar_events: {
+        Args: {
+          p_at?: string;
+          p_calendar_id: string;
+          p_cursor?: string;
+          p_events: Json;
+          p_full: boolean;
+        };
+        Returns: {
+          deleted_count: number;
+          imported_count: number;
         }[];
       };
       undo_added_shopping_items: {
@@ -1581,9 +1988,15 @@ export type Database = {
       };
     };
     Enums: {
+      calendar_account_status: "active" | "reconnect" | "temporary_error";
+      calendar_direction: "two_way" | "incoming";
+      calendar_outbox_action: "create" | "update" | "delete";
+      calendar_provider: "google" | "outlook";
+      calendar_sync_outcome: "ok" | "auth_error" | "temporary_error";
       event_change_scope: "this" | "following";
       event_recurrence: "none" | "weekly" | "monthly";
       event_visibility: "private" | "busy" | "household";
+      external_event_origin: "imported" | "sent";
       household_type:
         "single" | "couple" | "family_with_children" | "roommates";
       invitation_preview_status: "valid" | "invalid";
@@ -1779,9 +2192,15 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      calendar_account_status: ["active", "reconnect", "temporary_error"],
+      calendar_direction: ["two_way", "incoming"],
+      calendar_outbox_action: ["create", "update", "delete"],
+      calendar_provider: ["google", "outlook"],
+      calendar_sync_outcome: ["ok", "auth_error", "temporary_error"],
       event_change_scope: ["this", "following"],
       event_recurrence: ["none", "weekly", "monthly"],
       event_visibility: ["private", "busy", "household"],
+      external_event_origin: ["imported", "sent"],
       household_type: ["single", "couple", "family_with_children", "roommates"],
       invitation_preview_status: ["valid", "invalid"],
       invitation_status: ["pending", "accepted", "revoked"],
