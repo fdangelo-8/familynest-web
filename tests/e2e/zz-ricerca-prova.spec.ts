@@ -1,4 +1,3 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { hasTestUser, signInAs } from "../fixtures/visual-login";
 
@@ -7,253 +6,211 @@ import { hasTestUser, signInAs } from "../fixtures/visual-login";
 const facts: string[] = [];
 const note = (text: string) => facts.push(text);
 
-type Person = { id: string; name: string };
-
-function romeDay(offset: number): string {
-  const d = new Date(Date.now() + offset * 86_400_000);
-  return new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Rome" }).format(
-    d,
-  );
+async function step(name: string, run: () => Promise<void>) {
+  try {
+    await run();
+    note(`ok   ${name}`);
+  } catch (error) {
+    note(`FAIL ${name}: ${String(error).split("\n").slice(0, 6).join(" | ")}`);
+  }
 }
 
-function row(partial: Record<string, unknown>) {
-  return {
-    sort_index: 1,
-    kind: "event",
-    id: null,
-    title: null,
-    location: null,
-    starts_at: null,
-    ends_at: null,
-    occurrence_day: null,
-    visibility: null,
-    author_member_id: null,
-    member_ids: null,
-    escort_member_id: null,
-    recurrence: null,
-    recurrence_weekdays: null,
-    series_starts_on: null,
-    due_date: null,
-    is_private: null,
-    assignee_member_id: null,
-    for_member_id: null,
-    quantity: null,
-    is_masked: false,
-    ...partial,
-  };
+function rpcCalls(page: Page) {
+  const calls: string[] = [];
+  page.on("request", (request) => {
+    if (request.url().includes("/rpc/search_household")) {
+      calls.push(`${request.method()} ${request.postData()}`);
+    }
+  });
+  return calls;
 }
 
-async function axe(page: Page, label: string) {
-  const results = await new AxeBuilder({ page }).analyze();
-  const bad = results.violations.filter((v) =>
-    ["serious", "critical"].includes(v.impact ?? ""),
-  );
-  note(
-    `${label}: axe ${bad.length === 0 ? "ok" : JSON.stringify(bad.map((v) => ({ id: v.id, n: v.nodes.map((n) => n.target.join(" ")).slice(0, 3) })))}`,
-  );
-}
-
-test.describe("prova #40", () => {
+test.describe("prova #40 (2)", () => {
   test.skip(!hasTestUser("A"), "no user");
 
-  test("percorso", async ({ page, baseURL }, testInfo) => {
-    test.setTimeout(120_000);
+  test("percorso reale", async ({ page, baseURL }, testInfo) => {
+    test.setTimeout(150_000);
     const desktop = testInfo.project.name === "desktop";
     const tag = desktop ? "d" : "m";
     await signInAs(page.context(), baseURL as string, "A");
-    let people: Person[] = [];
-    page.on("response", async (response) => {
-      const url = response.url();
-      if (
-        url.includes("/rest/v1/household_members") &&
-        url.includes("color") &&
-        url.includes("kind")
-      ) {
-        try {
-          people = (await response.json()) as Person[];
-        } catch {
-          // ignore
-        }
-      }
-    });
-    let mode: "ok" | "empty" | "error" = "ok";
-    const requests: string[] = [];
-    await page
-      .context()
-      .route("**/rest/v1/rpc/search_household", async (route) => {
-        requests.push(
-          `${route.request().method()} ${route.request().url().includes("nuoto")}`,
-        );
-        if (mode === "error") {
-          await route.fulfill({ status: 500, body: "{}" });
-          return;
-        }
-        if (mode === "empty") {
-          await route.fulfill({ json: [] });
-          return;
-        }
-        const id = (name: string) =>
-          people.find((p) => p.name === name)?.id ?? null;
-        const today = romeDay(0);
-        const next = romeDay(2);
-        const far = romeDay(40);
-        await route.fulfill({
-          json: [
-            row({
-              id: "11111111-1111-4111-8111-111111111111",
-              title: "Nuoto Sofia",
-              location: "Piscina comunale",
-              starts_at: `${today}T15:00:00Z`,
-              ends_at: `${today}T16:30:00Z`,
-              occurrence_day: today,
-              visibility: "household",
-              author_member_id: id("Marco"),
-              member_ids: [id("Sofia")],
-              recurrence: "weekly",
-              recurrence_weekdays: [2, 4],
-              series_starts_on: today,
-            }),
-            row({
-              id: "11111111-1111-4111-8111-111111111111",
-              title: "Nuoto Sofia",
-              starts_at: `${next}T15:00:00Z`,
-              ends_at: `${next}T16:30:00Z`,
-              occurrence_day: next,
-              visibility: "household",
-              author_member_id: id("Marco"),
-              member_ids: [id("Sofia")],
-              recurrence: "weekly",
-              recurrence_weekdays: [2, 4],
-              series_starts_on: today,
-            }),
-            row({
-              id: "11111111-1111-4111-8111-111111111111",
-              title: "Nuoto Sofia",
-              starts_at: `${far}T15:00:00Z`,
-              ends_at: `${far}T16:30:00Z`,
-              occurrence_day: far,
-              visibility: "private",
-              author_member_id: id("Marco"),
-              member_ids: [id("Sofia")],
-              recurrence: "weekly",
-              recurrence_weekdays: [2, 4],
-              series_starts_on: today,
-            }),
-            row({
-              kind: "deadline",
-              id: "22222222-2222-4222-8222-222222222222",
-              title: "Iscrizione al corso di nuoto",
-              due_date: romeDay(14),
-              for_member_id: id("Sofia"),
-            }),
-            row({
-              kind: "todo",
-              id: "33333333-3333-4333-8333-333333333333",
-              title: "Comprare la cuffia da nuoto",
-              due_date: romeDay(2),
-              assignee_member_id: id("Laura"),
-            }),
-            row({
-              kind: "shopping_item",
-              id: "44444444-4444-4444-8444-444444444444",
-              title: "Crema per nuotatori",
-              quantity: "2 pezzi",
-            }),
-          ],
-        });
-      });
+    const calls = rpcCalls(page);
+    const urls: string[] = [];
+    page.on("request", (r) => urls.push(r.url()));
 
-    await page.goto(desktop ? "/casa/spesa" : "/calendario");
+    await page.goto(desktop ? "/casa/spesa" : "/casa/da-fare");
     await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible();
     await page.waitForTimeout(1500);
-    const lens = desktop
-      ? page.getByRole("link", { name: "Cerca nel Nest (⌘K)" })
-      : page.getByRole("link", { name: "Cerca nel Nest", exact: true });
-    await lens.click();
-    await expect(page).toHaveURL(/\/ricerca$/);
+    const open = async () => {
+      const lens = desktop
+        ? page.getByRole("link", { name: "Cerca nel Nest (⌘K)" })
+        : page.getByRole("link", { name: "Cerca nel Nest", exact: true });
+      await lens.click();
+      await expect(page).toHaveURL(/\/ricerca$/);
+    };
+    await open();
     const field = page.getByRole(desktop ? "combobox" : "searchbox", {
       name: "Cerca nel Nest",
     });
-    await expect(field).toBeVisible();
     await expect(field).toBeFocused();
-    note(`${tag}: title=${await page.title()} url=${page.url()}`);
-    note(
-      `${tag}: mains=${await page.getByRole("main").count()} h1=${await page.getByRole("heading", { level: 1 }).count()}`,
-    );
     await page.waitForTimeout(1500);
-    await page.screenshot({ path: testInfo.outputPath(`${tag}-1-idle.png`) });
-    await axe(page, `${tag} idle`);
 
-    await field.pressSequentially("nuoto");
-    await expect(page.getByTestId("ricerca-gruppo-event")).toBeVisible();
-    await page.waitForTimeout(500);
-    await page.screenshot({
-      path: testInfo.outputPath(`${tag}-2-risultati.png`),
+    await step("ricerca reale vuota", async () => {
+      await field.pressSequentially("zzzz qqqq");
+      await expect(page.getByTestId("ricerca-vuoto")).toBeVisible();
+      await expect(page.getByTestId("ricerca-vuoto")).toContainText(
+        "Nessun risultato per «zzzz qqqq»",
+      );
+      note(`${tag}: calls=${JSON.stringify(calls)}`);
     });
-    await axe(page, `${tag} risultati`);
-    note(
-      `${tag}: annuncio=${await page.getByTestId("ricerca-annuncio").textContent()}`,
-    );
-    if (desktop) {
+
+    await step("persona reale: cose di Sofia", async () => {
+      await field.fill("");
+      await field.pressSequentially("cose di Sofia");
+      await page.waitForTimeout(2000);
       note(
-        `${tag}: active0=${await field.getAttribute("aria-activedescendant")}`,
+        `${tag}: sofia errore=${await page.getByTestId("ricerca-errore").count()} vuoto=${await page.getByTestId("ricerca-vuoto").count()} annuncio=${await page.getByTestId("ricerca-annuncio").textContent()}`,
       );
-      await page.keyboard.press("ArrowDown");
-      await page.keyboard.press("ArrowDown");
-      await page.screenshot({
-        path: testInfo.outputPath(`${tag}-3-frecce.png`),
-      });
-      const activeId = await field.getAttribute("aria-activedescendant");
+      note(`${tag}: calls=${JSON.stringify(calls.slice(-1))}`);
+    });
+
+    await step("periodo reale: questo weekend / scade a novembre", async () => {
+      await field.fill("scade a novembre");
+      await page.waitForTimeout(2000);
       note(
-        `${tag}: active2=${await page.locator(`[id="${activeId}"]`).textContent()}`,
+        `${tag}: novembre errore=${await page.getByTestId("ricerca-errore").count()} annuncio=${await page.getByTestId("ricerca-annuncio").textContent()}`,
       );
-    } else {
-      const chips = await page
-        .getByTestId("ricerca-filtri")
-        .getByRole("button")
-        .allTextContents();
-      note(`${tag}: chips=${JSON.stringify(chips)}`);
-      await page.getByRole("button", { name: /^Spesa/ }).click();
-      await page.screenshot({
-        path: testInfo.outputPath(`${tag}-3-spesa.png`),
-      });
-      await page.getByRole("button", { name: /^Tutto/ }).click();
-      const box = page.getByRole("checkbox", {
-        name: "Segna come fatto: Comprare la cuffia da nuoto",
-      });
-      await box.click();
-      await page.waitForTimeout(800);
-      await page.screenshot({
-        path: testInfo.outputPath(`${tag}-4-casella.png`),
-      });
-      note(`${tag}: casella checked=${await box.getAttribute("aria-checked")}`);
-    }
+      note(`${tag}: calls=${JSON.stringify(calls.slice(-1))}`);
+    });
 
-    mode = "empty";
-    await field.fill("piscina olimpica");
-    await expect(page.getByTestId("ricerca-vuoto")).toBeVisible();
-    await page.waitForTimeout(400);
-    await page.screenshot({ path: testInfo.outputPath(`${tag}-5-vuoto.png`) });
-    await axe(page, `${tag} vuoto`);
+    await step("indirizzo senza testo", async () => {
+      expect(
+        urls.filter((u) => /zzzz|qqqq|nuoto|Sofia|weekend/i.test(u)),
+      ).toEqual([]);
+    });
 
-    mode = "error";
-    await field.fill("nuoto in vasca");
-    await expect(page.getByTestId("ricerca-errore")).toBeVisible();
-    await page.waitForTimeout(400);
-    await page.screenshot({ path: testInfo.outputPath(`${tag}-6-errore.png`) });
-    await axe(page, `${tag} errore`);
-
-    note(`${tag}: requests=${JSON.stringify(requests)}`);
-    if (desktop) {
+    await step("aggiungilo apre Aggiungi", async () => {
+      await field.fill("piscina olimpica");
+      await page.getByRole("link", { name: "aggiungilo" }).click();
+      await expect(page).toHaveURL(/\/aggiungi$/);
+      const phrase = page.getByRole("textbox", {
+        name: "Cosa vuoi aggiungere?",
+      });
+      await expect(phrase).toHaveValue("piscina olimpica");
+      note(`${tag}: aggiungi url=${page.url()}`);
       await page.keyboard.press("Escape");
-      await expect(page).toHaveURL(/\/casa\/spesa$/);
+      await page.waitForTimeout(600);
+      note(`${tag}: dopo chiusura url=${page.url()}`);
+    });
+
+    await step(
+      "recenti: salva con aggiungilo, ricarica, cancella e annulla",
+      async () => {
+        if (!/\/ricerca$/.test(page.url())) await open();
+        const recents = page.getByTestId("ricerca-recenti");
+        note(`${tag}: recenti visibili=${await recents.count()}`);
+        if ((await recents.count()) > 0) {
+          note(
+            `${tag}: recenti=${JSON.stringify(await recents.getByRole("button").allTextContents())}`,
+          );
+          await page
+            .getByRole("button", { name: "Cancella le ricerche recenti" })
+            .click();
+          await expect(
+            page.getByText("Ricerche recenti cancellate."),
+          ).toBeVisible();
+          await expect(recents).toHaveCount(0);
+          await expect(field).toBeFocused();
+          await page
+            .getByRole("button", { name: "Annulla", exact: true })
+            .click();
+          await expect(page.getByTestId("ricerca-recenti")).toHaveCount(1);
+          note(
+            `${tag}: ripristinate=${JSON.stringify(await page.getByTestId("ricerca-recenti").getByRole("button").allTextContents())}`,
+          );
+        }
+      },
+    );
+
+    await step("offline", async () => {
+      await field.fill("");
+      await page.context().setOffline(true);
+      await field.pressSequentially("nuoto");
+      await expect(page.getByTestId("ricerca-offline")).toBeVisible();
       note(
-        `${tag}: focus dopo Esc=${await page.evaluate(() => document.activeElement?.getAttribute("aria-label"))}`,
+        `${tag}: offline testo=${await page.getByTestId("ricerca-offline").textContent()}`,
       );
+      await page.context().setOffline(false);
+      await expect(page.getByTestId("ricerca-offline")).toHaveCount(0);
+      await page.waitForTimeout(1500);
+      note(
+        `${tag}: online di nuovo, vuoto=${await page.getByTestId("ricerca-vuoto").count()} errore=${await page.getByTestId("ricerca-errore").count()}`,
+      );
+    });
+
+    if (desktop) {
+      await step("desktop: Ctrl+K con la palette aperta", async () => {
+        await field.fill("nuoto");
+        await page.keyboard.press("Control+k");
+        await expect(field).toBeFocused();
+        await expect(field).toHaveValue("nuoto");
+        await expect(page).toHaveURL(/\/ricerca$/);
+        await page
+          .getByRole("button", { name: "Cancella le ricerche recenti" })
+          .count();
+      });
+      await step("desktop: Tab resta nel dialogo", async () => {
+        await field.fill("");
+        const seen: string[] = [];
+        for (let i = 0; i < 4; i += 1) {
+          await page.keyboard.press("Tab");
+          seen.push(
+            await page.evaluate(
+              () =>
+                document.activeElement?.getAttribute("aria-label") ??
+                document.activeElement?.textContent?.slice(0, 20) ??
+                "",
+            ),
+          );
+        }
+        note(`${tag}: tab=${JSON.stringify(seen)}`);
+      });
+      await step("desktop: Esc con testo chiude", async () => {
+        await field.focus();
+        await field.fill("nuoto");
+        await page.keyboard.press("Escape");
+        await expect(page).toHaveURL(/\/casa\/spesa$/);
+        await expect(
+          page.getByRole("dialog", { name: "Cerca nel Nest" }),
+        ).toHaveCount(0);
+      });
+      await step("desktop: Ctrl+K da corpo apre", async () => {
+        await page.evaluate(() =>
+          (document.activeElement as HTMLElement)?.blur(),
+        );
+        await page.keyboard.press("Control+k");
+        await expect(page).toHaveURL(/\/ricerca$/);
+        await expect(
+          page.getByRole("combobox", { name: "Cerca nel Nest" }),
+        ).toBeFocused();
+        await expect(
+          page.getByRole("combobox", { name: "Cerca nel Nest" }),
+        ).toHaveValue("");
+      });
     } else {
-      await page.getByRole("link", { name: "Annulla" }).click();
-      await expect(page).toHaveURL(/\/calendario$/);
+      await step("mobile: Annulla porta alla pagina di prima", async () => {
+        await page.getByRole("link", { name: "Annulla" }).click();
+        await expect(page).toHaveURL(/\/casa\/da-fare$/);
+      });
+      await step("mobile: direttamente, Annulla va a Oggi", async () => {
+        await page.goto("/ricerca");
+        await expect(
+          page.getByRole("searchbox", { name: "Cerca nel Nest" }),
+        ).toBeFocused();
+        await page.getByRole("link", { name: "Annulla" }).click();
+        await expect(page).toHaveURL(/\/oggi$/);
+      });
     }
+
     expect(facts.join("\n")).toBe("zz-ricerca-prova");
   });
 });
