@@ -5,6 +5,7 @@ import {
 } from "../fixtures/scadenze-fake";
 import { NORMAL_LIST, installSpesaFake } from "../fixtures/spesa-fake";
 import { NORMAL_TODOS, installTodosFake } from "../fixtures/todos-fake";
+import { waitForAnimationsToEnd } from "../fixtures/animations";
 import { hasTestUser, signInAs } from "../fixtures/visual-login";
 
 // Layout and navigation (#10): the app frame in every section, at 390 and
@@ -25,7 +26,14 @@ const PAGES = [
   { route: "/calendario", file: "calendario", h1: "19 – 25 ottobre" },
   { route: "/casa/spesa", file: "casa-spesa", h1: "Casa" },
   { route: "/notifiche", file: "notifiche", h1: "Notifiche" },
-  { route: "/ricerca", file: "ricerca", h1: "Ricerca" },
+  // Ricerca (#40): the search page at 390 px (h1 for screen readers only),
+  // the palette over Oggi at 1280 px (h1 of Oggi).
+  {
+    route: "/ricerca",
+    file: "ricerca",
+    h1: "Cerca nel Nest",
+    h1Desktop: "Oggi",
+  },
   { route: "/profilo", file: "profilo", h1: "Marco D'Angelo" },
   {
     route: "/calendari-collegati",
@@ -69,11 +77,18 @@ async function open(page: import("@playwright/test").Page, route: string) {
 }
 
 for (const p of PAGES) {
-  test(`cornice: ${p.route}`, async ({ page }) => {
+  test(`cornice: ${p.route}`, async ({ page }, testInfo) => {
     await open(page, p.route);
+    const h1 =
+      testInfo.project.name === "desktop" && p.h1Desktop ? p.h1Desktop : p.h1;
     await expect(
-      page.getByRole("heading", { level: 1, name: p.h1 }),
+      page.getByRole("heading", { level: 1, name: h1 }),
     ).toBeVisible();
+    if (p.route === "/ricerca") {
+      // The field has the focus when the page is ready (and so the ring).
+      await expect(page.locator("input.campo-ricerca__input")).toBeFocused();
+      await waitForAnimationsToEnd(page);
+    }
     await expect(page).toHaveScreenshot(`${p.file}.png`);
   });
 }

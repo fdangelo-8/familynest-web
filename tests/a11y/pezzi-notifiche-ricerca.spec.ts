@@ -6,7 +6,7 @@ import { hasTestUser, signInAs } from "../fixtures/visual-login";
 // Gallery examples (/design-system?pezzi-pagine=1) at 390 and 1280 px, measured
 // against the designer's CSS of #39 (a.parola, .parola--a-capo) and #40
 // (campo-ricerca focus ring, palette scroll, long empty-state title, P1 chips),
-// plus axe; and /ricerca at 390 px (no top bar, «Torna a Oggi»).
+// plus axe; and /ricerca at 390 px (the real page since #257: no top bar, field and «Annulla»).
 
 test.use({
   locale: "it-IT",
@@ -269,16 +269,24 @@ test.describe("/ricerca a 390 px (utente A)", () => {
     test.skip(!signedIn, "utente di test A non ancora creato");
   });
 
-  test("niente barra in alto, c'è «Torna a Oggi», axe pulito", async ({
+  test("pagina vera: niente barra in alto, campo e «Annulla», axe pulito", async ({
     page,
   }) => {
     await page.goto("/ricerca");
     await expect(page.getByRole("main")).toBeVisible();
-    const back = page.getByRole("link", { name: "Torna a Oggi" });
-    await expect(back).toBeVisible();
-    await expect(back).toHaveAttribute("href", "/oggi");
+    await expect(
+      page.getByRole("searchbox", { name: "Cerca nel Nest" }),
+    ).toBeVisible();
+    const cancel = page.getByRole("link", { name: "Annulla" });
+    await expect(cancel).toBeVisible();
+    await expect(page.getByRole("link", { name: "Torna a Oggi" })).toHaveCount(
+      0,
+    );
     expect(await page.locator(".barra").count()).toBe(0);
     await expect(page.locator("h1:visible")).toHaveCount(1);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+      "Cerca nel Nest",
+    );
     await expectNoBlocking(page);
   });
 });
