@@ -5,6 +5,7 @@ import {
 } from "../fixtures/scadenze-fake";
 import { NORMAL_LIST, installSpesaFake } from "../fixtures/spesa-fake";
 import { NORMAL_TODOS, installTodosFake } from "../fixtures/todos-fake";
+import { installNotificheFake } from "../fixtures/notifiche-visuale";
 import { hasTestUser, signInAs } from "../fixtures/visual-login";
 
 // Layout and navigation (#10): the app frame in every section, at 390 and
@@ -59,9 +60,18 @@ async function open(page: import("@playwright/test").Page, route: string) {
     // Same for the Scadenze column (#128).
     await installScadenzeFake(page, { deadlines: NORMAL_DEADLINES });
   }
+  // Notifiche (#39) reads its notifications in the browser: a fixed list,
+  // served by a fake. The page clock is the one of the test (20 October, 15:00).
+  const isNotifiche = route === "/notifiche";
+  if (isNotifiche) await installNotificheFake(page);
   await page.goto(route);
   await expect(page.getByRole("main")).toBeVisible();
   if (isSpesa) await expect(page.getByTestId("spesa-riga")).toHaveCount(7);
+  if (isNotifiche) {
+    await expect(page.getByTestId("notifica")).toHaveCount(5, {
+      timeout: 20_000,
+    });
+  }
   // The week of Calendario reads its events in the browser: wait for them.
   if (route === "/calendario")
     await expect(page.locator('[aria-busy="true"]')).toHaveCount(0);
