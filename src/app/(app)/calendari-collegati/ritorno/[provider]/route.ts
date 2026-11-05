@@ -64,6 +64,8 @@ export async function GET(
     if (!issued) return;
     const { provider, refreshToken } = issued;
     issued = null;
+    // Without a revocation service (Outlook, #35) the user removes it from the account.
+    if (!provider.canRevoke) return;
     try {
       await provider.revoke(refreshToken);
     } catch {
