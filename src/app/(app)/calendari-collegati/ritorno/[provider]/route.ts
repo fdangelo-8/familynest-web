@@ -169,13 +169,25 @@ export async function GET(
       const session = await linked.provider.openSession(keptToken);
       // Outlook sends a new refresh token at every renewal: keep the new one.
       if (session.rotatedRefreshToken) {
-        await admin.rpc("update_calendar_account_credentials", {
-          p_account_id: accountId,
-          p_previous_ciphertext: ciphertext,
-          p_credentials_ciphertext: encryptCredentials(
-            session.rotatedRefreshToken,
-          ),
-        });
+        const { data: updated, error: updateError } = await admin.rpc(
+          "update_calendar_account_credentials",
+          {
+            p_account_id: accountId,
+            p_previous_ciphertext: ciphertext,
+            p_credentials_ciphertext: encryptCredentials(
+              session.rotatedRefreshToken,
+            ),
+          },
+        );
+        if (updateError || updated !== true) {
+          // We go on: the account is saved and the previous token is still
+          // valid, so the next synchronisation renews it again. Only a fixed
+          // message is logged, never the token or the error text.
+          console.error(
+            "calendar-link: rotated refresh token not saved",
+            updateError?.code ?? "not-updated",
+          );
+        }
       }
       await refreshCalendarList(admin, accountId, session);
     } catch {

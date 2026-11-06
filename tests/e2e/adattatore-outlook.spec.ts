@@ -9,6 +9,7 @@ import {
 import {
   CLIENT_ID,
   NOW,
+  assertNoUnexpectedRequests,
   createMock,
   idToken,
   type Reply,
@@ -63,7 +64,8 @@ async function openSession(mock: ReturnType<typeof createMock>) {
   return createOutlookProvider(mock.options()).openSession(SECRET_TOKEN);
 }
 
-const DELTA = /\/me\/calendars\/primary\/calendarView\/delta\?startDateTime=/;
+const DELTA =
+  /^https:\/\/graph\.microsoft\.com\/v1\.0\/me\/calendars\/primary\/calendarView\/delta\?startDateTime=/;
 const DELTA_LINK = "https://graph.microsoft.com/v1.0/delta?token=D1";
 
 function item(extra: Record<string, unknown> = {}) {
@@ -91,6 +93,8 @@ const SINGLE: OutgoingEvent = {
   recurrence: null,
   isPrivate: true,
 };
+
+test.afterEach(assertNoUnexpectedRequests);
 
 test.describe("adattatore Outlook", () => {
   test("CA-2: indirizzo di consenso", () => {
@@ -142,6 +146,40 @@ test.describe("adattatore Outlook", () => {
       tokenReply({
         id_token: idToken(
           claims({ email: undefined, preferred_username: "anna@example.com" }),
+        ),
+      }),
+    );
+    mock.on("GET", CALENDARS_PROBE, { json: { value: [] } });
+    const result = await createOutlookProvider(mock.options()).exchangeCode(
+      EXCHANGE,
+    );
+    expect(result.account.email).toBe("anna@example.com");
+  });
+
+  test("una mail con una sola lettera prima della chiocciola è valida", async () => {
+    const mock = createMock();
+    mock.on(
+      "POST",
+      TOKEN,
+      tokenReply({
+        id_token: idToken(claims({ email: "a@example.com" })),
+      }),
+    );
+    mock.on("GET", CALENDARS_PROBE, { json: { value: [] } });
+    const result = await createOutlookProvider(mock.options()).exchangeCode(
+      EXCHANGE,
+    );
+    expect(result.account.email).toBe("a@example.com");
+  });
+
+  test("email non valida: si passa a preferred_username", async () => {
+    const mock = createMock();
+    mock.on(
+      "POST",
+      TOKEN,
+      tokenReply({
+        id_token: idToken(
+          claims({ email: "no-at", preferred_username: "anna@example.com" }),
         ),
       }),
     );
@@ -348,6 +386,76 @@ test.describe("adattatore Outlook", () => {
     expect(page.full).toBe(true);
     expect(mock.calls.some((c) => c.url.includes("evil.example"))).toBe(false);
     mock.done();
+  });
+
+  test("un nextLink di un altro host non si chiama (calendari)", async () => {
+    const mock = createMock();
+    const session = await openSession(mock);
+    mock.on(
+      "GET",
+      `${GRAPH}/me/calendars?$select=id,name,canEdit,isDefaultCalendar&$top=100`,
+      {
+        json: {
+          "@odata.nextLink": "https://evil.example/calendars?page=2",
+          value: [{ id: "c1", name: "Calendario", canEdit: true }],
+        },
+      },
+    );
+    await expect(session.listCalendars()).rejects.toBeInstanceOf(
+      ProviderTemporaryError,
+    );
+    expect(mock.calls.some((c) => c.url.includes("evil.example"))).toBe(false);
+  });
+
+  test("un nextLink di un altro host non si chiama (eventi)", async () => {
+    const mock = createMock();
+    const session = await openSession(mock);
+    mock.on("GET", DELTA, {
+      json: {
+        "@odata.nextLink": "https://evil.example/delta?page=2",
+        value: [item()],
+      },
+    });
+    await expect(
+      session.listEvents({ id: "primary" }, WINDOW, null),
+    ).rejects.toBeInstanceOf(ProviderTemporaryError);
+    expect(mock.calls.some((c) => c.url.includes("evil.example"))).toBe(false);
+  });
+
+  test("un deltaLink di un altro host nella risposta non si salva", async () => {
+    const mock = createMock();
+    const session = await openSession(mock);
+    mock.on("GET", DELTA, {
+      json: {
+        "@odata.deltaLink": "https://evil.example/delta?token=x",
+        value: [item()],
+      },
+    });
+    const page = await session.listEvents({ id: "primary" }, WINDOW, null);
+    expect(page.cursor).toBeNull();
+  });
+
+  test("@removed nella lettura completa si ignora", async () => {
+    const mock = createMock();
+    const session = await openSession(mock);
+    mock.on("GET", DELTA, {
+      json: {
+        "@odata.deltaLink": DELTA_LINK,
+        value: [{ id: "x", "@removed": { reason: "deleted" } }, item()],
+      },
+    });
+    const page = await session.listEvents({ id: "primary" }, WINDOW, null);
+    expect(page.events.map((e) => e.id)).toEqual(["e1"]);
+  });
+
+  test("la richiesta delta non usa $select", async () => {
+    const mock = createMock();
+    const session = await openSession(mock);
+    mock.on("GET", DELTA, {
+      json: { "@odata.deltaLink": DELTA_LINK, value: [] },
+    });
+    await session.listEvents({ id: "primary" }, WINDOW, null);
+    expect(mock.calls[1]?.url).not.toContain("$select");
   });
 
   test("CA-15: @removed in lettura incrementale, poi lettura completa", async () => {
@@ -733,9 +841,11 @@ test.describe("adattatore Outlook", () => {
       await expect(
         session.createEvent({ id: "primary" }, SINGLE),
       ).rejects.toBeInstanceOf(ProviderTemporaryError);
-      expect(mock.calls.filter((c) => c.url.includes("/events"))).toHaveLength(
-        1,
-      );
+      expect(
+        mock.calls.filter(
+          (c) => c.url === `${GRAPH}/me/calendars/primary/events`,
+        ),
+      ).toHaveLength(1);
     }
   });
 

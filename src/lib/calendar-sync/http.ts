@@ -289,7 +289,7 @@ export function isValidEmail(value: unknown): value is string {
     value.length <= 254 &&
     value === value.trim() &&
     !/\s/.test(value) &&
-    value.indexOf("@") > 1
+    value.indexOf("@") > 0
   );
 }
 

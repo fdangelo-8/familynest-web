@@ -9,6 +9,7 @@ import {
 import {
   CLIENT_ID,
   NOW,
+  assertNoUnexpectedRequests,
   createMock,
   idToken,
   type Reply,
@@ -59,6 +60,9 @@ async function openSession(mock: ReturnType<typeof createMock>) {
 }
 
 const EVENTS_URL = `${API}/calendars/primary/events`;
+const DELETE_E1 = new RegExp(
+  `^${EVENTS_URL.replace(/[.]/g, "\\.")}/e1\\?sendUpdates=none$`,
+);
 const eventsRoute = new RegExp(`^${EVENTS_URL.replace(/[.]/g, "\\.")}\\?`);
 
 function item(extra: Record<string, unknown> = {}) {
@@ -86,6 +90,8 @@ const SINGLE: OutgoingEvent = {
   recurrence: null,
   isPrivate: true,
 };
+
+test.afterEach(assertNoUnexpectedRequests);
 
 test.describe("adattatore Google", () => {
   test("CA-1: indirizzo di consenso", () => {
@@ -675,7 +681,7 @@ test.describe("adattatore Google", () => {
     const session = await createGoogleProvider(mock.options()).openSession(
       SECRET_TOKEN,
     );
-    mock.on("DELETE", /sendUpdates=none$/, { status: 401 }, { status: 204 });
+    mock.on("DELETE", DELETE_E1, { status: 401 }, { status: 204 });
     await session.deleteEvent({ id: "primary" }, "e1");
     expect(mock.calls.filter((c) => c.url === TOKEN)).toHaveLength(2);
     expect(mock.calls[3]?.headers.authorization).toBe("Bearer a2");
@@ -691,7 +697,7 @@ test.describe("adattatore Google", () => {
     const second = await createGoogleProvider(refused.options()).openSession(
       SECRET_TOKEN,
     );
-    refused.on("DELETE", /sendUpdates=none$/, { status: 401 }, { status: 401 });
+    refused.on("DELETE", DELETE_E1, { status: 401 }, { status: 401 });
     await expect(
       second.deleteEvent({ id: "primary" }, "e1"),
     ).rejects.toBeInstanceOf(ProviderAuthError);

@@ -61,8 +61,6 @@ const WEEKDAY_NAMES = [
   "saturday",
   "sunday",
 ] as const;
-const EVENT_SELECT =
-  "id,seriesMasterId,type,originalStart,changeKey,subject,location,start,end,isAllDay,isCancelled,showAs,sensitivity,responseStatus";
 
 export function createOutlookProvider(
   options: AdapterOptions,
@@ -97,7 +95,9 @@ export function createOutlookProvider(
       const claims = readIdToken(token.idToken);
       const tid = stringOf(claims.tid);
       const oid = stringOf(claims.oid);
-      const email = claims.email ?? claims.preferred_username;
+      const email = isValidEmail(claims.email)
+        ? claims.email
+        : claims.preferred_username;
       if (
         !hasAudience(claims, options.clientId) ||
         !isNotExpired(claims, options.now()) ||
@@ -241,8 +241,12 @@ function createSession(
       const body = recordOf(answer.body);
       for (const raw of arrayOf(body.value)) {
         const item = recordOf(raw);
-        // A removal cannot be tied to one occurrence: read everything.
-        if ("@removed" in item) return "full";
+        if ("@removed" in item) {
+          // A removal cannot be tied to one occurrence: read everything.
+          if (incremental) return "full";
+          // In a full read there is nothing to remove.
+          continue;
+        }
         const event = toProviderEvent(item);
         if (event) events.push(event);
       }
@@ -281,7 +285,7 @@ function createSession(
     }
     const first = `${GRAPH}/me/calendars/${seg(calendar.id)}/calendarView/delta?startDateTime=${encodeURIComponent(
       window.from.toISOString(),
-    )}&endDateTime=${encodeURIComponent(window.to.toISOString())}&$select=${EVENT_SELECT}`;
+    )}&endDateTime=${encodeURIComponent(window.to.toISOString())}`;
     const full = await readDelta(first, false);
     if (full === "full") throw new ProviderTemporaryError();
     return {

@@ -33,11 +33,25 @@ export const NOW = new Date("2026-11-06T10:00:00Z");
 export const CLIENT_ID = "test-client-id";
 export const CLIENT_SECRET = "test-client-secret";
 
+const created: { unexpected: string[] }[] = [];
+
+/**
+ * Registered in every spec with `test.afterEach(assertNoUnexpectedRequests)`:
+ * fails the test if any mock created in it received an unprepared request,
+ * even when the test never called `done()` and the adapter swallowed the error.
+ */
+export function assertNoUnexpectedRequests() {
+  const found = created.flatMap((m) => m.unexpected);
+  created.length = 0;
+  expect(found).toEqual([]);
+}
+
 export function createMock() {
   const routes: Route[] = [];
   const calls: Call[] = [];
   const unexpected: string[] = [];
   const sleeps: number[] = [];
+  created.push({ unexpected });
 
   const fetchMock = (async (
     input: string | URL | Request,
