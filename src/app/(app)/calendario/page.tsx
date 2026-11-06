@@ -7,7 +7,12 @@ export const metadata: Metadata = {
   title: PLACEHOLDERS["calendario"].browserTitle,
 };
 
-export default async function Page() {
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  await searchParams;
   // Session and Nest check before anything else (the layout is not a guard).
   const frame = await requireNest();
   // The frame already shows its own error: nothing to read here.
