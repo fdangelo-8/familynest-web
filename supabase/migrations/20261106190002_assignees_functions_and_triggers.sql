@@ -25,8 +25,10 @@
 --   the tests and fixtures). Such a write is translated into the new table: on insert the
 --   person becomes the only one; on update the new person stays (or is added) and every
 --   other is removed, as with one single person; null removes everybody. The writes of the
---   database itself (the sync below, foreign key actions while a member leaves) are
---   recognised by the trigger depth and never translated back;
+--   database itself are never translated back: the sync below is recognised by the
+--   trigger depth, the foreign key action of a member who leaves (`on delete set null`,
+--   whose triggers run at the end of the outer statement) by the member that no longer
+--   exists;
 -- - a later migration removes the column and this translation, once the pages of spec 333
 --   §6 read the new tables.
 
@@ -342,9 +344,9 @@ create trigger shopping_item_assignees_touch_item
 
 -- todos:
 -- - a write of the compatibility column by a statement of the app, the tests, the
---   fixtures or the seed (trigger depth 1) is translated into todo_assignees (see the
---   header). The writes made by the database (depth > 1: the sync above, foreign key
---   actions while a member leaves) are already consistent and are left alone;
+--   fixtures or the seed is translated into todo_assignees (see the header). The writes
+--   made by the database (the sync above, depth > 1; the foreign key action of a member
+--   who leaves) are already consistent and are left alone;
 -- - «Solo io» keeps only its author among the people, also when the thing becomes
 --   «Solo io» (23514), checked after the translation, so that «Solo io» and «nobody» in
 --   one statement (as the pages on main do) is accepted.
@@ -370,8 +372,16 @@ begin
     return null;
   end if;
 
+  -- The foreign key action of a member who leaves (`on delete set null`) is not a write
+  -- of a page: its triggers run at the end of the outer statement (depth 1), when the
+  -- member no longer exists. Its links go with it and todo_assignees_sync_todo moves the
+  -- column to the next person.
   if new.assignee_member_id is distinct from old.assignee_member_id
-     and new.assignee_member_id is distinct from private.todo_first_assignee(new.id) then
+     and new.assignee_member_id is distinct from private.todo_first_assignee(new.id)
+     and not (
+       new.assignee_member_id is null
+       and not exists (select 1 from public.household_members m where m.id = old.assignee_member_id)
+     ) then
     delete from public.todo_assignees a
     where a.todo_id = new.id
       and a.member_id is distinct from new.assignee_member_id;
@@ -420,8 +430,13 @@ begin
     return null;
   end if;
 
+  -- Foreign key action of a member who leaves: see todos_sync_assignees.
   if new.assignee_member_id is distinct from old.assignee_member_id
-     and new.assignee_member_id is distinct from private.deadline_first_assignee(new.id) then
+     and new.assignee_member_id is distinct from private.deadline_first_assignee(new.id)
+     and not (
+       new.assignee_member_id is null
+       and not exists (select 1 from public.household_members m where m.id = old.assignee_member_id)
+     ) then
     delete from public.deadline_assignees a
     where a.deadline_id = new.id
       and a.member_id is distinct from new.assignee_member_id;

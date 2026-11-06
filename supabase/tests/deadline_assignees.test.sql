@@ -12,7 +12,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(47);
+select plan(50);
 
 -- ---------------------------------------------------------------------------
 -- Schema and privileges
@@ -192,6 +192,27 @@ select results_eq(
   $$ values ('a1000000-0000-4000-8000-000000000002'::uuid) $$,
   'Laura is its person'
 );
+
+-- A member leaves: their rows go, the first person moves on.
+select lives_ok(
+  $$ select set_config('test.d4', public.create_deadline(
+       p_title => 'Per Laura e Sofia', p_due_date => '2026-12-01',
+       p_assignee_member_ids => array['a1000000-0000-4000-8000-000000000002', 'a1000000-0000-4000-8000-000000000003']::uuid[]
+     )::text, true) $$,
+  'a deadline with Laura and Sofia'
+);
+reset role;
+select lives_ok(
+  $$ delete from public.household_members where id = 'a1000000-0000-4000-8000-000000000002' $$,
+  'Laura is removed from Casa D''Angelo'
+);
+select results_eq(
+  $$ select d.assignee_member_id, (select array_agg(a.member_id) from public.deadline_assignees a where a.deadline_id = d.id)
+     from public.deadlines d where d.id = current_setting('test.d4')::uuid $$,
+  $$ values ('a1000000-0000-4000-8000-000000000003'::uuid, array['a1000000-0000-4000-8000-000000000003']::uuid[]) $$,
+  'Sofia stays and becomes the first person'
+);
+set local role authenticated;
 
 -- ---------------------------------------------------------------------------
 -- Isolation: Giulia (B)
