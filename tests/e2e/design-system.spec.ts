@@ -74,9 +74,26 @@ test.describe("token e base", () => {
     "--color-membro-basilico": "#649100",
     "--color-membro-cannella": "#af8273",
   };
-  const APPROVED_TOKENS = { ...APPROVED_TOKENS_52, ...APPROVED_TOKENS_74 };
+  // #313 (text enlarged to 200%): minimum sizes that follow the text, in rem.
+  const APPROVED_TOKENS_313: Record<string, string> = {
+    "--size-modulo-min": "9.5rem",
+    "--size-contatore-min": "6rem",
+    "--size-dati-min": "8rem",
+  };
+  const APPROVED_TOKENS = {
+    ...APPROVED_TOKENS_52,
+    ...APPROVED_TOKENS_74,
+    ...APPROVED_TOKENS_313,
+  };
 
-  test("CA-1: i token coincidono con tokens.css, più le differenze approvate (#52, #74)", async ({
+  // #313: the typographic scale is in rem (px of the mockup / 16); only the
+  // initials of the avatars stay in px.
+  const isRemText = (name: string) =>
+    /^--text-.+-(size|line)$/.test(name) && !name.startsWith("--text-avatar-");
+  const pxToRem = (value: string) =>
+    value.replace(/^([\d.]+)px$/, (_, px: string) => `${Number(px) / 16}rem`);
+
+  test("CA-1: i token coincidono con tokens.css, più le differenze approvate (#52, #74, #313)", async ({
     page,
   }) => {
     const tokens = tokensFromMockup();
@@ -93,6 +110,7 @@ test.describe("token e base", () => {
           (_, ref: string) => tokens[ref]!,
         );
       }
+      if (isRemText(name)) source = pxToRem(source.trim());
       const wanted = normalize(source);
       expect(normalize(actual[name]!), name).toBe(wanted);
     }

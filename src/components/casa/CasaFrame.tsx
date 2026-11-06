@@ -289,17 +289,18 @@ export function CasaFrame({
         </div>
         {filter ? <PersonFilter layout="desktop" {...filter} /> : null}
       </div>
-      <SectionSwitcher
-        aria-label="Sezione della casa"
-        items={SECTIONS.map((section) => ({
-          key: section.key,
-          label: section.title,
-          href: section.href,
-          count: counts?.[section.key],
-        }))}
-        current={current}
-        className="casa-solo-mobile"
-      />
+      <div className="casa-solo-mobile contenitore-selettore">
+        <SectionSwitcher
+          aria-label="Sezione della casa"
+          items={SECTIONS.map((section) => ({
+            key: section.key,
+            label: section.title,
+            href: section.href,
+            count: counts?.[section.key],
+          }))}
+          current={current}
+        />
+      </div>
       {offlineAlert}
       {filter && !loading && !hideFilterOnMobile ? (
         <PersonFilter layout="mobile" {...filter} />
