@@ -6,6 +6,20 @@ import {
   type Page,
 } from "@playwright/test";
 import { waitForAnimationsToEnd } from "../fixtures/animations";
+import {
+  RATE_LIMIT,
+  createPasswordUser,
+  keysConfigured,
+  keysSkipReason,
+  mailField,
+  mockAuth,
+  modeVoice,
+  passwordField,
+  recoveryLink,
+  submitButton,
+  submitMailForm,
+  untilHydrated,
+} from "../fixtures/accesso-password";
 import { buildNest, type CasaNest } from "../fixtures/casa";
 import {
   THURSDAY,
@@ -639,6 +653,11 @@ const needsUserA = () =>
     ? null
     : "TEST_USER_A_* o chiavi Supabase non impostati";
 
+const needsSupabaseUrl = () =>
+  process.env.NEXT_PUBLIC_SUPABASE_URL
+    ? null
+    : "NEXT_PUBLIC_SUPABASE_URL non impostato";
+
 const ready = (page: Page) =>
   page.evaluate(() => document.fonts.ready).then(() => undefined);
 
@@ -676,6 +695,258 @@ const scenes: Scene[] = [
     run: async ({ page }, check) => {
       await check(async () => {
         await page.goto("/accesso/mail");
+        await expect(page.locator("h1:visible")).toHaveCount(1);
+        await ready(page);
+      });
+    },
+  },
+  // Sign-in with mail and password (#327): every page and the states with
+  // notices and errors, which are the ones that change the layout.
+  {
+    title: "accesso con la mail: Registrati",
+    run: async ({ page }, check) => {
+      await check(async () => {
+        await page.goto("/accesso/mail");
+        await untilHydrated(
+          () => modeVoice(page, "Registrati").click({ timeout: 2000 }),
+          () =>
+            expect(
+              page.getByRole("heading", {
+                level: 1,
+                name: "Crea il tuo account",
+              }),
+            ).toBeVisible({ timeout: 1000 }),
+        );
+        await passwordField(page, "Scegli una password").fill(
+          "una-password-di-prova",
+        );
+        await expect(
+          page.locator(".regole-password__regola--rispettata"),
+        ).toBeVisible();
+        await ready(page);
+      });
+    },
+  },
+  {
+    title: "accesso con la mail: errori dei campi",
+    run: async ({ page }, check) => {
+      await check(async () => {
+        await page.goto("/accesso/mail");
+        await untilHydrated(
+          () => submitButton(page).click({ timeout: 2000, noWaitAfter: true }),
+          () =>
+            expect(mailField(page)).toHaveAttribute("aria-invalid", "true", {
+              timeout: 1000,
+            }),
+        );
+        await ready(page);
+      });
+    },
+  },
+  {
+    title: "accesso con la mail: credenziali sbagliate",
+    skipReason: needsSupabaseUrl,
+    run: async ({ page }, check) => {
+      await mockAuth(page, "/token", {
+        kind: "status",
+        status: 400,
+        body: { code: 400, error_code: "invalid_credentials", msg: "no" },
+      });
+      await check(async () => {
+        await page.goto("/accesso/mail");
+        await submitMailForm(
+          page,
+          { mode: "Entra", email: "marco@esempio.test", password: "x-y-z-123" },
+          () =>
+            expect(
+              page.getByRole("alert").filter({
+                hasText: "La mail e la password non corrispondono.",
+              }),
+            ).toBeVisible({ timeout: 3000 }),
+        );
+        await ready(page);
+      });
+    },
+  },
+  {
+    title: "accesso con la mail: mail non confermata",
+    skipReason: needsSupabaseUrl,
+    run: async ({ page }, check) => {
+      await mockAuth(page, "/token", {
+        kind: "status",
+        status: 400,
+        body: { code: 400, error_code: "email_not_confirmed", msg: "no" },
+      });
+      await check(async () => {
+        await page.goto("/accesso/mail");
+        await submitMailForm(
+          page,
+          { mode: "Entra", email: "marco@esempio.test", password: "x-y-z-123" },
+          () =>
+            expect(
+              page
+                .getByRole("status")
+                .filter({ hasText: "Questa mail non è ancora confermata." }),
+            ).toBeVisible({ timeout: 3000 }),
+        );
+        await ready(page);
+      });
+    },
+  },
+  {
+    title: "accesso con la mail: troppi tentativi",
+    skipReason: needsSupabaseUrl,
+    run: async ({ page }, check) => {
+      await mockAuth(page, "/token", RATE_LIMIT);
+      await check(async () => {
+        await page.goto("/accesso/mail");
+        await submitMailForm(
+          page,
+          { mode: "Entra", email: "marco@esempio.test", password: "x-y-z-123" },
+          () =>
+            expect(
+              page
+                .getByRole("status")
+                .filter({ hasText: "Troppi tentativi di fila." }),
+            ).toBeVisible({ timeout: 3000 }),
+        );
+        await ready(page);
+      });
+    },
+  },
+  {
+    title: "accesso con la mail: senza connessione",
+    skipReason: needsSupabaseUrl,
+    run: async ({ page }, check) => {
+      await mockAuth(page, "/token", { kind: "abort" });
+      await check(async () => {
+        await page.goto("/accesso/mail");
+        await submitMailForm(
+          page,
+          { mode: "Entra", email: "marco@esempio.test", password: "x-y-z-123" },
+          () =>
+            expect(
+              page
+                .getByRole("alert")
+                .filter({ hasText: "Non siamo riusciti a farti entrare." }),
+            ).toBeVisible({ timeout: 3000 }),
+        );
+        await ready(page);
+      });
+    },
+  },
+  {
+    title: "controlla la posta",
+    skipReason: needsSupabaseUrl,
+    run: async ({ page }, check) => {
+      await mockAuth(page, "/signup", { kind: "ok" });
+      await check(async () => {
+        await page.goto("/accesso/mail");
+        await submitMailForm(
+          page,
+          {
+            mode: "Registrati",
+            email: "una-mail-molto-lunga-per-provare-il-testo@esempio.test",
+            password: "una-password-di-prova",
+          },
+          () =>
+            expect(
+              page.getByRole("heading", {
+                level: 1,
+                name: "Controlla la posta",
+              }),
+            ).toBeVisible({ timeout: 3000 }),
+        );
+        await ready(page);
+      });
+    },
+  },
+  {
+    title: "password dimenticata",
+    run: async ({ page }, check) => {
+      await check(async () => {
+        await page.goto("/accesso/password-dimenticata");
+        await expect(page.locator("h1:visible")).toHaveCount(1);
+        await ready(page);
+      });
+    },
+  },
+  {
+    title: "password dimenticata: errore",
+    run: async ({ page }, check) => {
+      await check(async () => {
+        await page.goto("/accesso/password-dimenticata");
+        await untilHydrated(
+          () => submitButton(page).click({ timeout: 2000, noWaitAfter: true }),
+          () =>
+            expect(mailField(page)).toHaveAttribute("aria-invalid", "true", {
+              timeout: 1000,
+            }),
+        );
+        await ready(page);
+      });
+    },
+  },
+  {
+    title: "ti abbiamo scritto",
+    skipReason: needsSupabaseUrl,
+    run: async ({ page }, check) => {
+      await mockAuth(page, "/recover", { kind: "ok" });
+      await check(async () => {
+        await page.goto("/accesso/password-dimenticata");
+        await untilHydrated(
+          async () => {
+            await mailField(page).fill("marco@esempio.test", { timeout: 2000 });
+            await submitButton(page).click({
+              timeout: 2000,
+              noWaitAfter: true,
+            });
+          },
+          () =>
+            expect(
+              page.getByRole("heading", {
+                level: 1,
+                name: "Ti abbiamo scritto",
+              }),
+            ).toBeVisible({ timeout: 3000 }),
+        );
+        await ready(page);
+      });
+    },
+  },
+  {
+    title: "nuova password",
+    skipReason: () => (keysConfigured() ? null : keysSkipReason),
+    run: async ({ page }, check) => {
+      const user = await createPasswordUser({ nest: true });
+      try {
+        await check(async () => {
+          // A recovery link works once: a new one for every opening.
+          await page.goto(await recoveryLink(user.email));
+          await expect(page).toHaveURL(/\/accesso\/nuova-password$/);
+          await expect(page.locator("h1:visible")).toHaveCount(1);
+          await ready(page);
+        });
+      } finally {
+        await user.remove();
+      }
+    },
+  },
+  {
+    title: "link scaduto (conferma)",
+    run: async ({ page }, check) => {
+      await check(async () => {
+        await page.goto("/accesso/link-scaduto?tipo=conferma");
+        await expect(page.locator("h1:visible")).toHaveCount(1);
+        await ready(page);
+      });
+    },
+  },
+  {
+    title: "link scaduto (password)",
+    run: async ({ page }, check) => {
+      await check(async () => {
+        await page.goto("/accesso/link-scaduto?tipo=password");
         await expect(page.locator("h1:visible")).toHaveCount(1);
         await ready(page);
       });
