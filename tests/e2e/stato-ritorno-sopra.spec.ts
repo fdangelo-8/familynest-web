@@ -41,6 +41,61 @@ async function markNode(page: Page): Promise<void> {
     .evaluate((node, name) => node.setAttribute(name, "same"), PROBE);
 }
 
+const GONE_TEXT = "Questo impegno non c'è più";
+
+/**
+ * Installs, before the action, an observer that records whether the skeleton
+ * (`main [aria-busy="true"]`) or the «non c'è più» text ever showed up, even
+ * for a single frame: it reads the added nodes of every mutation, not only the
+ * final DOM.
+ */
+async function watchFlashes(page: Page): Promise<void> {
+  await page.evaluate(
+    ([gone]) => {
+      const w = window as unknown as {
+        __flash: { skeleton: boolean; gone: boolean };
+      };
+      w.__flash = { skeleton: false, gone: false };
+      const busy = (el: Element) =>
+        el.matches('[aria-busy="true"]') && el.closest("main") !== null;
+      const scan = (node: Node) => {
+        if (node.textContent?.includes(gone)) w.__flash.gone = true;
+        if (node.nodeType !== 1) return;
+        const el = node as Element;
+        if (busy(el)) w.__flash.skeleton = true;
+        for (const d of el.querySelectorAll('[aria-busy="true"]'))
+          if (busy(d)) w.__flash.skeleton = true;
+      };
+      new MutationObserver((records) => {
+        for (const r of records) {
+          r.addedNodes.forEach(scan);
+          if (r.type === "attributes" && r.target.nodeType === 1)
+            scan(r.target);
+          if (r.type === "characterData") scan(r.target);
+        }
+      }).observe(document, {
+        subtree: true,
+        childList: true,
+        attributes: true,
+        attributeFilter: ["aria-busy"],
+        characterData: true,
+      });
+      scan(document.documentElement);
+    },
+    [GONE_TEXT],
+  );
+}
+
+async function flashes(
+  page: Page,
+): Promise<{ skeleton: boolean; gone: boolean }> {
+  return page.evaluate(
+    () =>
+      (window as unknown as { __flash: { skeleton: boolean; gone: boolean } })
+        .__flash,
+  );
+}
+
 /** A short window, so that every page can scroll. */
 async function shortViewport(page: Page): Promise<void> {
   const size = page.viewportSize();
@@ -68,16 +123,21 @@ async function openAndEscape(
   page: Page,
   opener: Locator,
   scroll: number,
+  onBelow?: () => Promise<void>,
 ): Promise<void> {
   await waitHydrated(opener);
   await opener.focus();
+  await watchFlashes(page);
   await expect(async () => {
     if (!(await addDialog(page).isVisible())) await opener.click();
     await expect(addDialog(page)).toBeVisible({ timeout: 3000 });
   }).toPass({ timeout: 30_000 });
+  await onBelow?.();
   await page.keyboard.press("Escape");
   await expect(addDialog(page)).toHaveCount(0);
+  await onBelow?.();
 
+  expect((await flashes(page)).skeleton).toBe(false);
   await expect(loading(page)).toHaveCount(0);
   await expect(
     page.getByRole("main").getByRole("heading", { level: 1 }),
@@ -116,7 +176,8 @@ test("sopra la pagina (Calendario giorno, giornata libera): aprire Aggiungi e ch
 }) => {
   await casa.signIn(page, baseURL, "Marco");
   // A day with nothing in it: the page has its own «Aggiungi qualcosa».
-  await page.goto(`/calendario/giorno?giorno=${addDays(romeDay(), 3)}`);
+  const freeDay = addDays(romeDay(), 3);
+  await page.goto(`/calendario/giorno?giorno=${freeDay}`);
   await expect(
     page.getByRole("main").getByRole("heading", { level: 1 }),
   ).toBeVisible({
@@ -126,7 +187,17 @@ test("sopra la pagina (Calendario giorno, giornata libera): aprire Aggiungi e ch
   const opener = page
     .getByRole("main")
     .getByRole("link", { name: "Aggiungi qualcosa" });
-  await openAndEscape(page, opener, 0);
+  // The page below stays on the day of the query (today + 3), with the sheet
+  // open and after Esc.
+  const dayNumber = String(Number(freeDay.slice(8, 10)));
+  const stillOnDay = async () => {
+    await expect(
+      page.getByRole("main").getByRole("heading", { level: 1 }),
+    ).toHaveText(new RegExp(`\\b${dayNumber}\\b`));
+    expect(new URL(page.url()).searchParams.get("giorno")).toBe(freeDay);
+  };
+  await stillOnDay();
+  await openAndEscape(page, opener, 0, stillOnDay);
 });
 
 test("sopra la pagina (Calendario giorno, con impegni): aprire Aggiungi e chiudere con Esc non riparte la pagina", async ({
@@ -189,14 +260,22 @@ test("sopra la pagina (dettaglio impegno): dopo un salvataggio, aprire e chiuder
   // 2. Open Add from the navigation and close it.
   const opener = page.getByRole("link", { name: "Aggiungi", exact: true });
   await waitHydrated(opener);
+  await markNode(page);
+  await watchFlashes(page);
   await expect(async () => {
     if (!(await addDialog(page).isVisible())) await opener.click();
     await expect(addDialog(page)).toBeVisible({ timeout: 3000 });
   }).toPass({ timeout: 30_000 });
+  // With the sheet still open, nothing «gone» or loading shows below.
+  await expect(h1(page, newTitle)).toBeVisible();
+  expect(await flashes(page)).toEqual({ skeleton: false, gone: false });
   await page.keyboard.press("Escape");
   await expect(addDialog(page)).toHaveCount(0);
 
-  // 3. The new values, not the old occurrence and not «non c'è più».
+  // 3. The new values, not the old occurrence and not «non c'è più»; the
+  // page was not mounted again.
+  await expect(h1(page, newTitle)).toHaveAttribute(PROBE, "same");
+  expect(await flashes(page)).toEqual({ skeleton: false, gone: false });
   await expect(h1(page, newTitle)).toBeVisible();
   await expect(card(page)).toContainText(textRx(dayLabel(newDay), false));
   await expect(page.getByText("Questo impegno non c'è più")).toHaveCount(0);
