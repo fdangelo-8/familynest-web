@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   Fragment,
   useLayoutEffect,
@@ -39,26 +39,27 @@ function useRevealCount(): number {
 }
 
 /**
- * A number that goes up every time the address (path and query) is one this
- * component has already shown. The router keeps a hidden copy of the lower
- * levels too (`figli/a` then `figli/b` then `figli/a`, `?giorno=` changes):
- * they hide inside the page, not around the caller, so the reveal above does
- * not see them. An address never shown before costs nothing.
+ * A number that goes up every time the path is one this component has
+ * already shown. The router keeps a hidden copy of the lower levels too
+ * (`figli/a` then `figli/b` then `figli/a`, `calendario/giorno` then
+ * `calendario/mese`): they hide inside the page, not around the caller, so the
+ * reveal above does not see them. A path never shown before costs nothing.
+ * The query is left out on purpose: the pages that step through a query
+ * (`?giorno=`, `?settimana=`) rely on the hidden copy to keep what they have
+ * already read when the connection is lost (#26, CA-35).
  */
 function useRevisitCount(): number {
   const pathname = usePathname();
-  const query = useSearchParams().toString();
-  const address = query ? `${pathname}?${query}` : pathname;
   const [track, setTrack] = useState(() => ({
-    address,
-    seen: new Set<string>([address]),
+    pathname,
+    seen: new Set<string>([pathname]),
     revisits: 0,
   }));
-  if (track.address !== address) {
+  if (track.pathname !== pathname) {
     setTrack({
-      address,
-      seen: new Set(track.seen).add(address),
-      revisits: track.revisits + (track.seen.has(address) ? 1 : 0),
+      pathname,
+      seen: new Set(track.seen).add(pathname),
+      revisits: track.revisits + (track.seen.has(pathname) ? 1 : 0),
     });
   }
   return track.revisits;
