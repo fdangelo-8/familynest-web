@@ -334,7 +334,11 @@ test.describe("percorso della casa", () => {
     );
     await typeSearch(page, "cuffia");
     await expect(rowsOf(page, "todo")).toHaveCount(1);
-    await expect(rowsOf(page, "todo")).toHaveAttribute("href", "/casa/da-fare");
+    // On the phone the row of a thing to do holds a box and the title is the
+    // link; on desktop the whole row is the link.
+    await expect(
+      rowsOf(page, "todo").locator("xpath=self::a | descendant::a"),
+    ).toHaveAttribute("href", "/casa/da-fare");
     await typeSearch(page, "latte");
     await expect(emptyTitle(page)).toContainText(
       "Nessun risultato per «latte»",
