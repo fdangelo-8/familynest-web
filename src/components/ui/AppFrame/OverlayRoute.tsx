@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useLayoutEffect, useState, type ReactNode } from "react";
+import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 
 /**
  * Content of an intercepted route (a sheet over the current page), drawn only
@@ -28,9 +28,16 @@ export function OverlayRoute({
 }) {
   const pathname = usePathname();
   const [shown, setShown] = useState(true);
+  const wasHidden = useRef(false);
   useLayoutEffect(() => {
-    setShown(true);
-    return () => setShown(false);
+    if (wasHidden.current) {
+      wasHidden.current = false;
+      setShown(true);
+    }
+    return () => {
+      wasHidden.current = true;
+      setShown(false);
+    };
   }, []);
   return pathname === path && shown ? children : null;
 }
