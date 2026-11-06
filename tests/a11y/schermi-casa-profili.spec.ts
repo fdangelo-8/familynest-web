@@ -418,7 +418,38 @@ async function textProblems(page: Page): Promise<Found[]> {
           break;
         }
       }
-      for (const q of real) lines.push({ el, r: q, layer, text: text.trim() });
+      // Overlaps count only on the visible part: intersect each line with every
+      // ancestor whose overflow is not visible (also auto and scroll, #313).
+      for (const q of real) {
+        let left = q.left;
+        let right = q.right;
+        let top = q.top;
+        let bottom = q.bottom;
+        for (
+          let a = el.parentElement;
+          a && a !== document.body;
+          a = a.parentElement
+        ) {
+          const o = getComputedStyle(a);
+          if (o.overflowX === "visible" && o.overflowY === "visible") continue;
+          const ar = a.getBoundingClientRect();
+          if (o.overflowX !== "visible") {
+            left = Math.max(left, ar.left);
+            right = Math.min(right, ar.right);
+          }
+          if (o.overflowY !== "visible") {
+            top = Math.max(top, ar.top);
+            bottom = Math.min(bottom, ar.bottom);
+          }
+        }
+        if (right <= left || bottom <= top) continue;
+        lines.push({
+          el,
+          r: new DOMRect(left, top, right - left, bottom - top),
+          layer,
+          text: text.trim(),
+        });
+      }
     }
     for (let i = 0; i < lines.length; i++) {
       for (let j = i + 1; j < lines.length; j++) {
