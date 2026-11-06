@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { addDaysToDayKey, startOfDay } from "@/lib/datetime";
+import { subscribeEventsChanged } from "@/lib/events-changed";
 import { listHouseholdEvents } from "@/lib/household-events";
 import { createClient } from "@/lib/supabase/client";
 import type { Database } from "@/types/database";
@@ -137,7 +138,11 @@ export function usePeriodData(periodKey: string, days: number): PeriodData {
     const reload = () => void read(currentKey.current, currentDays.current);
     window.addEventListener("online", reload);
     window.addEventListener("offline", reload);
+    // An event was saved from Add over this page: the page stays as it is,
+    // so it reads again instead of relying on a new mount.
+    const stop = subscribeEventsChanged(reload);
     return () => {
+      stop();
       window.removeEventListener("online", reload);
       window.removeEventListener("offline", reload);
     };
