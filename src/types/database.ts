@@ -1948,6 +1948,14 @@ export type Database = {
         Args: { p_space: Database["public"]["Enums"]["space_key"] };
         Returns: undefined;
       };
+      update_calendar_account_credentials: {
+        Args: {
+          p_account_id: string;
+          p_credentials_ciphertext: string;
+          p_previous_ciphertext: string;
+        };
+        Returns: boolean;
+      };
       update_event: {
         Args: {
           p_day: string;
