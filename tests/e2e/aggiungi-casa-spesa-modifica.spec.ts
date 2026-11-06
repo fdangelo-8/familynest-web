@@ -382,6 +382,8 @@ test.describe("Aggiungi · modifica della Spesa · salvataggio", () => {
     await s.nameField.fill("Latte di soia");
     await s.quantity.fill("1 l");
     await s.button("Salva").click();
+    // The sheet has left (the page below is /casa/spesa again) before undoing
+    await expect(s.dialog).toHaveCount(0);
     const toast = toastWith(page, "Modifiche salvate.");
     await toast.getByRole("button", { name: "Annulla" }).click();
 
@@ -501,20 +503,18 @@ test.describe("Aggiungi · modifica della Spesa · errori di compilazione", () =
     const s = editSheet(page);
     await s.nameField.fill("uova");
     await s.button("Salva").click();
+    await expect(s.dialog).toHaveCount(0);
     await expect(toastWith(page, "Modifiche salvate.")).toBeVisible();
     await expect(titlesOf(toTake(page))).toHaveText(["uova"]);
 
     await tapRow(page, "uova");
     await s.nameField.fill("UOVA");
     await s.button("Salva").click();
+    // No error under the name: the sheet closes and the row has the new name
+    await expect(s.dialog).toHaveCount(0);
     await expect(titlesOf(toTake(page))).toHaveText(["UOVA"]);
-    await expect(alertText(page)).toHaveCount(0);
   });
 });
-
-/** The visible alerts (Next.js keeps an empty one for the route announcer). */
-const alertText = (page: Page) =>
-  page.getByRole("alert").filter({ hasText: /\S/ });
 
 // -------------------------------------------------------------- Assegnazione
 

@@ -120,9 +120,11 @@ async function tabOrder(page: Page, stops: number) {
         const style = getComputedStyle(el);
         const outline =
           style.outlineStyle !== "none" && parseFloat(style.outlineWidth) > 0;
-        // The field has its own ring: inset shadow, no outline (as in the mockup)
+        // The fields have their own ring: inset shadow, no outline (as in the mockup)
         return (
-          outline || (el.tagName === "TEXTAREA" && style.boxShadow !== "none")
+          outline ||
+          ((el.tagName === "TEXTAREA" || el.tagName === "INPUT") &&
+            style.boxShadow !== "none")
         );
       }),
     );
