@@ -2,15 +2,19 @@
 -- households.first_shopping_item_at (trigger and backfill rule),
 -- households.starter_list_completed_at with complete_starter_list(),
 -- current_member_welcome().
--- Seed ids: A = Marco (Casa D'Angelo, admin; Laura has a valid pending invitation),
--- B = Giulia (Casa Bianchi, admin; Anna has an expired pending invitation),
--- B2 = Paolo (Casa Bianchi, not admin, joined without invitation), C = Chiara (no
--- household). Created here: D and E, two new users without household.
+-- Issue #34 part 2 (CA-56): complete_starter_list() also needs the step «Collega il tuo
+-- calendario», at least one linked calendar account of the administrator who calls
+-- (migration starter_list_requires_linked_calendar).
+-- Seed ids: A = Marco (Casa D'Angelo, admin; Laura has a valid pending invitation; no
+-- linked calendar), B = Giulia (Casa Bianchi, admin; Anna has an expired pending
+-- invitation; no linked calendar), B2 = Paolo (Casa Bianchi, not admin, joined without
+-- invitation; one account of the fake provider), C = Chiara (no household). Created here:
+-- D and E, two new users without household.
 -- Every check runs inside one transaction, so now() is the same everywhere.
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(67);
+select plan(84);
 
 insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, created_at, updated_at)
 values
@@ -52,6 +56,20 @@ select results_eq(
       ('shopping_items_record_first_item', true, 'search_path=""')
   $$,
   'the three functions are security definer with an empty search_path'
+);
+select ok(
+  (select p.prosrc from pg_proc p where p.oid = 'public.complete_starter_list()'::regprocedure)
+    like '%public.calendar_accounts%'
+  and (select p.prosrc from pg_proc p where p.oid = 'public.complete_starter_list()'::regprocedure)
+    not like '%private.%',
+  'CA-56: complete_starter_list() reads the linked accounts and calls nothing of the schema private'
+);
+select ok(
+  not has_table_privilege('authenticated', 'public.calendar_accounts', 'insert')
+  and not has_table_privilege('authenticated', 'public.calendar_accounts', 'update')
+  and not has_column_privilege('authenticated', 'public.calendar_accounts', 'credentials_ciphertext', 'select')
+  and not has_table_privilege('anon', 'public.calendar_accounts', 'select'),
+  'no new privilege on calendar_accounts: the app still cannot link an account by itself'
 );
 select ok(
   not has_function_privilege('anon', 'public.complete_starter_list()', 'execute')
@@ -362,11 +380,84 @@ select is_empty($$ select 1 from public.invitations $$, 'E (not administrator) r
 set local request.jwt.claims to '{"sub":"cccccccc-0000-4000-8000-000000000001","role":"authenticated"}';
 
 select is_empty($$ select * from public.current_member_welcome() $$, 'C (the inviter) gets no welcome');
-select is(public.complete_starter_list(), true, 'item added and invitation accepted: completed');
+
+-- CA-56: the step «Collega il tuo calendario» of the administrator who calls.
+select is(
+  public.complete_starter_list(),
+  false,
+  'CA-56: item added and invitation accepted, but C has no linked calendar: not completed'
+);
+select is(
+  (select h.starter_list_completed_at from public.households h),
+  null,
+  'CA-56: a refusal for the missing calendar changes nothing'
+);
+
+-- E (Ugo, not administrator) links a calendar: it is not C's.
+reset role;
+insert into public.calendar_accounts (household_id, member_id, provider, provider_account_id, email, is_fake, credentials_ciphertext)
+select m.household_id, m.id, 'google', 'fake-ugo', 'ugo.finto@example.test', true, 'v1:test.placeholder.not.a.credential.000101'
+from public.household_members m
+where m.user_id = 'eeeeeeee-0000-4000-8000-000000000001';
+set local role authenticated;
+set local request.jwt.claims to '{"sub":"eeeeeeee-0000-4000-8000-000000000001","role":"authenticated"}';
+select throws_ok(
+  $$ select public.complete_starter_list() $$,
+  '42501',
+  'permission denied for function complete_starter_list',
+  'E (not administrator) with a linked calendar still cannot complete the starter list'
+);
+set local request.jwt.claims to '{"sub":"cccccccc-0000-4000-8000-000000000001","role":"authenticated"}';
+select is(
+  public.complete_starter_list(),
+  false,
+  'CA-56: the calendar of another adult of the household (E) does not count for C'
+);
+select is_empty(
+  $$ select a.id from public.calendar_accounts a $$,
+  'C does not even see the account of E'
+);
+
+-- C links a calendar, then unlinks it («Scollega») before completing.
+reset role;
+insert into public.calendar_accounts (household_id, member_id, provider, provider_account_id, email, is_fake, credentials_ciphertext)
+select m.household_id, m.id, 'google', 'fake-chiara', 'chiara.finto@example.test', true, 'v1:test.placeholder.not.a.credential.000102'
+from public.household_members m
+where m.user_id = 'cccccccc-0000-4000-8000-000000000001';
+set local role authenticated;
+set local request.jwt.claims to '{"sub":"cccccccc-0000-4000-8000-000000000001","role":"authenticated"}';
+select lives_ok(
+  $$ delete from public.calendar_accounts $$,
+  'C unlinks her calendar'
+);
+select is(
+  public.complete_starter_list(),
+  false,
+  'CA-56: an unlinked calendar does not count'
+);
+
+-- C links it again: every step is done.
+reset role;
+insert into public.calendar_accounts (household_id, member_id, provider, provider_account_id, email, is_fake, credentials_ciphertext)
+select m.household_id, m.id, 'google', 'fake-chiara', 'chiara.finto@example.test', true, 'v1:test.placeholder.not.a.credential.000103'
+from public.household_members m
+where m.user_id = 'cccccccc-0000-4000-8000-000000000001';
+set local role authenticated;
+set local request.jwt.claims to '{"sub":"cccccccc-0000-4000-8000-000000000001","role":"authenticated"}';
+select is(
+  public.complete_starter_list(),
+  true,
+  'CA-55: item added, invitation accepted and calendar linked: completed'
+);
 select is(
   (select h.starter_list_completed_at from public.households h),
   now(),
   'starter_list_completed_at = time of the completion'
+);
+select is(
+  (select count(*)::integer from public.calendar_accounts a),
+  1,
+  'completing the list changes nothing of the accounts'
 );
 
 reset role;
@@ -392,6 +483,17 @@ select is(
   now() - interval '2 hours',
   'the time of the completion never changes'
 );
+-- Unlinking the calendar does not reopen the list either.
+select lives_ok(
+  $$ delete from public.calendar_accounts $$,
+  'C unlinks her calendar after the completion'
+);
+select is(public.complete_starter_list(), true, 'CA-56: unlinked after the completion: still completed');
+select is(
+  (select h.starter_list_completed_at from public.households h),
+  now() - interval '2 hours',
+  'the time of the completion still does not change'
+);
 
 -- ---------------------------------------------------------------------------
 -- complete_starter_list() in the seed households: isolation and expired invitations.
@@ -413,8 +515,40 @@ set local request.jwt.claims to '{"sub":"bbbbbbbb-0000-4000-8000-000000000001","
 
 select is(
   public.complete_starter_list(),
+  false,
+  'CA-56: B: items added and the only pending invitation (Anna) is expired, but the calendar of Paolo is not Giulia''s: not completed'
+);
+select is(
+  (select h.starter_list_completed_at from public.households h),
+  null,
+  'CA-56: Casa Bianchi stays not completed'
+);
+
+-- Giulia links a calendar that is now to «Ricollega»: still a linked calendar (the page
+-- /calendari-collegati shows it).
+reset role;
+insert into public.calendar_accounts (
+  household_id, member_id, provider, provider_account_id, email, is_fake, credentials_ciphertext, status, failing_since
+)
+values (
+  '22222222-2222-4222-8222-222222222222', 'b1000000-0000-4000-8000-000000000001', 'google', 'fake-giulia',
+  'giulia.finto@example.test', true, 'v1:test.placeholder.not.a.credential.000104', 'reconnect', now()
+);
+set local role authenticated;
+set local request.jwt.claims to '{"sub":"aaaaaaaa-0000-4000-8000-000000000001","role":"authenticated"}';
+
+select is(
+  public.complete_starter_list(),
+  false,
+  'A: the calendar of Giulia (another household) changes nothing for Casa D''Angelo'
+);
+
+set local request.jwt.claims to '{"sub":"bbbbbbbb-0000-4000-8000-000000000001","role":"authenticated"}';
+
+select is(
+  public.complete_starter_list(),
   true,
-  'B: items added and the only pending invitation (Anna) is expired: completed'
+  'B: items added, the only pending invitation (Anna) is expired and a calendar linked (also to «Ricollega»): completed'
 );
 
 reset role;
@@ -436,7 +570,20 @@ select lives_ok(
   $$ update public.invitations set status = 'revoked' where member_id = 'a1000000-0000-4000-8000-000000000002' $$,
   'A revokes the invitation of Laura'
 );
-select is(public.complete_starter_list(), true, 'A: no pending invitation left, completed');
+select is(
+  public.complete_starter_list(),
+  false,
+  'CA-56: A: no pending invitation left, but no linked calendar: not completed'
+);
+reset role;
+insert into public.calendar_accounts (household_id, member_id, provider, provider_account_id, email, is_fake, credentials_ciphertext)
+values (
+  '11111111-1111-4111-8111-111111111111', 'a1000000-0000-4000-8000-000000000001', 'outlook', 'fake-marco',
+  'marco.finto@example.test', true, 'v1:test.placeholder.not.a.credential.000105'
+);
+set local role authenticated;
+set local request.jwt.claims to '{"sub":"aaaaaaaa-0000-4000-8000-000000000001","role":"authenticated"}';
+select is(public.complete_starter_list(), true, 'A: no pending invitation left and an Outlook calendar linked: completed');
 
 -- ---------------------------------------------------------------------------
 -- current_member_welcome(): only who joined with an invitation, only for 24 hours,
