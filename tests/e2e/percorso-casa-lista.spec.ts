@@ -80,6 +80,24 @@ const emptyAction = (page: Page, label: Column, name: string) =>
     .getByRole("link", { name, exact: true })
     .or(column(page, label).getByRole("button", { name, exact: true }));
 
+test.afterEach(async ({ page }, testInfo) => {
+  if (testInfo.status === testInfo.expectedStatus) return;
+  // DIAG (temporary)
+  const body = await page
+    .locator("body")
+    .innerText()
+    .catch(() => "n/a");
+  const dialogs = await page
+    .locator('[role="dialog"]')
+    .evaluateAll((els) => els.map((el) => el.outerHTML.slice(0, 400)))
+    .catch(() => []);
+  console.log(
+    "DIAG",
+    page.url(),
+    JSON.stringify({ body: body.slice(0, 1500), dialogs }),
+  );
+});
+
 test.describe("percorso della casa", () => {
   test("percorso: creo da Casa e da Aggiungi, spunto, modifico, ritrovo in Oggi e in Ricerca; un altro Nest non vede niente", async ({
     page,
