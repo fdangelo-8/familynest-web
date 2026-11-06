@@ -50,40 +50,36 @@ const GONE_TEXT = "Questo impegno non c'è più";
  * final DOM.
  */
 async function watchFlashes(page: Page): Promise<void> {
-  await page.evaluate(
-    ([gone]) => {
-      const w = window as unknown as {
-        __flash: { skeleton: boolean; gone: boolean };
-      };
-      w.__flash = { skeleton: false, gone: false };
-      const busy = (el: Element) =>
-        el.matches('[aria-busy="true"]') && el.closest("main") !== null;
-      const scan = (node: Node) => {
-        if (node.textContent?.includes(gone)) w.__flash.gone = true;
-        if (node.nodeType !== 1) return;
-        const el = node as Element;
-        if (busy(el)) w.__flash.skeleton = true;
-        for (const d of el.querySelectorAll('[aria-busy="true"]'))
-          if (busy(d)) w.__flash.skeleton = true;
-      };
-      new MutationObserver((records) => {
-        for (const r of records) {
-          r.addedNodes.forEach(scan);
-          if (r.type === "attributes" && r.target.nodeType === 1)
-            scan(r.target);
-          if (r.type === "characterData") scan(r.target);
-        }
-      }).observe(document, {
-        subtree: true,
-        childList: true,
-        attributes: true,
-        attributeFilter: ["aria-busy"],
-        characterData: true,
-      });
-      scan(document.documentElement);
-    },
-    [GONE_TEXT],
-  );
+  await page.evaluate((gone) => {
+    const w = window as unknown as {
+      __flash: { skeleton: boolean; gone: boolean };
+    };
+    w.__flash = { skeleton: false, gone: false };
+    const busy = (el: Element) =>
+      el.matches('[aria-busy="true"]') && el.closest("main") !== null;
+    const scan = (node: Node) => {
+      if (node.textContent?.includes(gone)) w.__flash.gone = true;
+      if (node.nodeType !== 1) return;
+      const el = node as Element;
+      if (busy(el)) w.__flash.skeleton = true;
+      for (const d of el.querySelectorAll('[aria-busy="true"]'))
+        if (busy(d)) w.__flash.skeleton = true;
+    };
+    new MutationObserver((records) => {
+      for (const r of records) {
+        r.addedNodes.forEach(scan);
+        if (r.type === "attributes" && r.target.nodeType === 1) scan(r.target);
+        if (r.type === "characterData") scan(r.target);
+      }
+    }).observe(document, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      attributeFilter: ["aria-busy"],
+      characterData: true,
+    });
+    scan(document.documentElement);
+  }, GONE_TEXT);
 }
 
 async function flashes(
