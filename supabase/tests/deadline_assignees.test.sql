@@ -12,7 +12,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(50);
+select plan(52);
 
 -- ---------------------------------------------------------------------------
 -- Schema and privileges
@@ -154,6 +154,17 @@ select results_eq(
      from public.deadlines d where d.id = current_setting('test.d1')::uuid $$,
   $$ values (true, 'a1000000-0000-4000-8000-000000000001'::uuid, array['a1000000-0000-4000-8000-000000000001']::uuid[]) $$,
   '«Solo io», only Marco'
+);
+select throws_ok(
+  $$ select public.update_deadline(current_setting('test.d1')::uuid, 'Rinnovo assicurazione', '2026-12-20',
+       array['a1000000-0000-4000-8000-000000000001']::uuid[], null, null, null, array[30]::smallint[]) $$,
+  '22023', null,
+  'a null «Solo io» is refused, never turned into «Tutto il Nest»'
+);
+select is(
+  (select d.is_private from public.deadlines d where d.id = current_setting('test.d1')::uuid),
+  true,
+  'after the refused null the deadline is still «Solo io»'
 );
 select throws_ok(
   $$ insert into public.deadline_assignees (deadline_id, member_id)

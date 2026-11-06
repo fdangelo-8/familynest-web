@@ -11,7 +11,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(74);
+select plan(77);
 
 -- ---------------------------------------------------------------------------
 -- Schema and privileges
@@ -92,6 +92,11 @@ select results_eq(
   $$ select i.name, i.quantity from public.shopping_items i where i.checked_at is null order by i.created_at, i.id $$,
   $$ values ('LATTE'::text, '2 l'::text), ('detersivo piatti', null), ('Mele', '1 kg') $$,
   'the list keeps its order with the new names'
+);
+select throws_ok(
+  $$ update public.shopping_items set name = 'Latte', checked_at = null where id = 'a3000000-0000-4000-8000-000000000004' $$,
+  '23505', null,
+  'renaming like LATTE while putting it back in the list (one update) is refused'
 );
 select lives_ok(
   $$ update public.shopping_items set checked_at = null where id = 'a3000000-0000-4000-8000-000000000004' $$,
@@ -337,6 +342,34 @@ select results_eq(
             ('Mele rosse', true, array['a1000000-0000-4000-8000-000000000003']::uuid[]) $$,
   'Mele rosse is back with Sofia (Tommaso has left), LATTE with nobody'
 );
+-- The order saved, not the order of the members (Laura and Marco come before Sofia).
+reset role;
+insert into private.removed_shopping_items (
+  id, household_id, name, quantity, added_by_member_id, checked_at, created_at, assignee_member_ids
+) values (
+  'a3000000-0000-4000-8000-000000000009', '11111111-1111-4111-8111-111111111111', 'Farina', null,
+  'a1000000-0000-4000-8000-000000000001', now(), now(),
+  array['a1000000-0000-4000-8000-000000000003', 'a1000000-0000-4000-8000-000000000002',
+        'a1000000-0000-4000-8000-000000000001']::uuid[]
+);
+set local role authenticated;
+select lives_ok(
+  $$ select * from public.restore_shopping_items(array['a3000000-0000-4000-8000-000000000009']::uuid[]) $$,
+  '«Annulla» of Farina (Sofia, Laura, Marco)'
+);
+select results_eq(
+  $$ select a.member_id from public.shopping_item_assignees a
+     join public.household_members m on m.id = a.member_id
+     where a.shopping_item_id = 'a3000000-0000-4000-8000-000000000009'
+     order by a.created_at, m.created_at, m.id $$,
+  $$ values ('a1000000-0000-4000-8000-000000000003'::uuid), ('a1000000-0000-4000-8000-000000000002'::uuid),
+            ('a1000000-0000-4000-8000-000000000001'::uuid) $$,
+  'the people come back in the order saved, not in the order of the members'
+);
+-- Farina is not part of the list checked below.
+reset role;
+delete from public.shopping_items where id = 'a3000000-0000-4000-8000-000000000009';
+set local role authenticated;
 
 -- ---------------------------------------------------------------------------
 -- Isolation: Giulia (B)

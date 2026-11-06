@@ -10,11 +10,14 @@
 --    shopping_items_to_buy_name_unique): a thing to buy renamed like ANOTHER thing to buy,
 --    ignoring case. Changing only upper and lower case is accepted (no other thing has
 --    that name); a name present only among the taken things is accepted; «Rimetti in
---    lista» (checked_at back to null without a new name) is never refused, as before.
+--    lista» (checked_at back to null without a new name) is never refused, as before;
+--    one update that renames a taken thing and puts it back in the list is checked
+--    like a rename (the pages do not do it, but the table does not allow it either).
 -- 2. clear_checked_shopping_items(): the removed items keep their people
 --    (private.removed_shopping_items.assignee_member_ids, in their order).
 -- 3. restore_shopping_items(): puts the people back, only those still adults or children
---    of the household (someone who left in the meantime is skipped, without error).
+--    of the household (someone who left in the meantime is skipped, without error), in
+--    the order saved.
 -- Same arguments, results, errors and privileges as #62: `create or replace` keeps the
 -- owner and the grants.
 
@@ -49,10 +52,10 @@ begin
     new.quantity := nullif(btrim(regexp_replace(new.quantity, '\s+', ' ', 'g')), '');
   end if;
 
-  -- A thing to buy that stays to buy and gets another name: no other thing to buy with
+  -- A thing that is to buy after the update and gets another name (renamed while to buy,
+  -- or renamed and put back in the list in the same update): no other thing to buy with
   -- that name, ignoring case. Same lock as the insert (read committed, see #62).
   if new.name is distinct from old.name
-     and old.checked_at is null
      and new.checked_at is null then
     perform pg_advisory_xact_lock(hashtextextended('public.shopping_items:' || new.household_id::text, 0));
     if exists (
@@ -194,9 +197,11 @@ begin
   from unnest(v_taken) as t;
 
   -- The people, in their order, once the items exist again: only those still adults or
-  -- children of the household.
-  insert into public.shopping_item_assignees (shopping_item_id, member_id, household_id)
-  select t.id, m.id, v_household_id
+  -- children of the household. The order is kept in created_at (one microsecond per
+  -- position, the order every reader uses: created_at, then the members); this function
+  -- runs as its owner, so the guard of the link table leaves created_at as given.
+  insert into public.shopping_item_assignees (shopping_item_id, member_id, household_id, created_at)
+  select t.id, m.id, v_household_id, now() + x.position * interval '1 microsecond'
   from unnest(v_taken) as t
   cross join lateral unnest(t.assignee_member_ids) with ordinality as x (member_id, position)
   join public.household_members m

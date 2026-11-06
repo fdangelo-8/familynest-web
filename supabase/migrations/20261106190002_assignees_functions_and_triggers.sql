@@ -95,10 +95,29 @@ begin
     new.created_at := now();
   end if;
 
+  -- Row lock on the thing (concurrency of «Solo io»): without it, an insert could read
+  -- the thing as shared while the author, in another transaction, makes it «Solo io»;
+  -- the check of todos_sync_assignees would not see this link (not yet committed) and
+  -- the foreign key only takes FOR KEY SHARE, so another person would stay on a «Solo
+  -- io» thing. With the lock:
+  -- - a change of the thing (update_todo locks it FOR UPDATE, a direct UPDATE takes FOR
+  --   NO KEY UPDATE) waits for this transaction, and its check then sees this link;
+  -- - this insert waits for a change already under way and, in read committed, reads the
+  --   new version of the row (RLS included): «Solo io» of someone else gives 42501 (no
+  --   longer visible) or 23514 below.
+  -- FOR NO KEY UPDATE rather than FOR SHARE: same effect on the change of visibility, but
+  -- two transactions adding the first person at the same time are queued instead of
+  -- ending in a deadlock (both holding FOR SHARE, then both updating the compatibility
+  -- column in todo_assignees_sync_todo). It does not block the foreign keys (FOR KEY
+  -- SHARE) nor any plain read. The API roles have the UPDATE privilege on columns of
+  -- todos and the update policy has the same condition as the select policy, so the lock
+  -- finds exactly the rows the caller sees. A single-session pgTAP test cannot reproduce
+  -- the concurrency: this comment is the record of the rule.
   select t.is_private, t.created_by_member_id into v_is_private, v_author
   from public.todos t
   where t.id = new.todo_id
-    and t.household_id = new.household_id;
+    and t.household_id = new.household_id
+  for no key update;
   if not found then
     if v_is_api then
       raise exception 'new row violates row-level security policy for table "todo_assignees"'
@@ -151,10 +170,16 @@ begin
     new.created_at := now();
   end if;
 
+  -- Row lock on the deadline, for the same reason as todo_assignees_before_insert (a
+  -- deadline made «Solo io» while another person is added): the change waits for this
+  -- insert and sees it, or this insert waits for the change and reads the new row.
+  -- FOR NO KEY UPDATE to queue two first additions instead of a deadlock in
+  -- deadline_assignees_sync_deadline.
   select d.is_private, d.created_by_member_id into v_is_private, v_author
   from public.deadlines d
   where d.id = new.deadline_id
-    and d.household_id = new.household_id;
+    and d.household_id = new.household_id
+  for no key update;
   if not found then
     if v_is_api then
       raise exception 'new row violates row-level security policy for table "deadline_assignees"'
@@ -346,10 +371,11 @@ create trigger shopping_item_assignees_touch_item
 -- - a write of the compatibility column by a statement of the app, the tests, the
 --   fixtures or the seed is translated into todo_assignees (see the header). The writes
 --   made by the database (the sync above, depth > 1; the foreign key action of a member
---   who leaves) are already consistent and are left alone;
+--   who leaves) are already consistent and are not translated;
 -- - «Solo io» keeps only its author among the people, also when the thing becomes
 --   «Solo io» (23514), checked after the translation, so that «Solo io» and «nobody» in
---   one statement (as the pages on main do) is accepted.
+--   one statement (as the pages on main do) is accepted; also for the writes of the
+--   database itself.
 -- Security definer: it writes the links on behalf of the database (the change of the
 -- thing itself already passed RLS and the guards of todos).
 create or replace function private.todos_sync_assignees()
@@ -369,6 +395,16 @@ begin
   end if;
 
   if pg_trigger_depth() > 1 then
+    -- A write of the database itself: no translation, but «Solo io» is checked anyway
+    -- (protection against a future trigger that changes is_private).
+    if new.is_private and exists (
+      select 1
+      from public.todo_assignees a
+      where a.todo_id = new.id
+        and a.member_id is distinct from new.created_by_member_id
+    ) then
+      raise exception 'only the author takes care of a «Solo io» thing' using errcode = '23514';
+    end if;
     return null;
   end if;
 
@@ -427,6 +463,15 @@ begin
   end if;
 
   if pg_trigger_depth() > 1 then
+    -- A write of the database itself: «Solo io» checked anyway, see todos_sync_assignees.
+    if new.is_private and exists (
+      select 1
+      from public.deadline_assignees a
+      where a.deadline_id = new.id
+        and a.member_id is distinct from new.created_by_member_id
+    ) then
+      raise exception 'only the author takes care of a «Solo io» deadline' using errcode = '23514';
+    end if;
     return null;
   end if;
 

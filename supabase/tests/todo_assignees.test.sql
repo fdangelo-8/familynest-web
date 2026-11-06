@@ -13,7 +13,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(94);
+select plan(96);
 
 -- ---------------------------------------------------------------------------
 -- Schema
@@ -322,6 +322,17 @@ select results_eq(
      from public.todos t where t.id = current_setting('test.t1')::uuid $$,
   $$ values (true, 'a1000000-0000-4000-8000-000000000001'::uuid, array['a1000000-0000-4000-8000-000000000001']::uuid[]) $$,
   '«Solo io», only Marco'
+);
+select throws_ok(
+  $$ select public.update_todo(current_setting('test.t1')::uuid, 'Comprare il regalo per Sofia',
+       array['a1000000-0000-4000-8000-000000000001']::uuid[], null, null, null) $$,
+  '22023', null,
+  'a null «Solo io» is refused, never turned into «Tutto il Nest»'
+);
+select is(
+  (select t.is_private from public.todos t where t.id = current_setting('test.t1')::uuid),
+  true,
+  'after the refused null the thing is still «Solo io»'
 );
 select throws_ok(
   $$ insert into public.todo_assignees (todo_id, member_id)

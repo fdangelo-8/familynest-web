@@ -34,7 +34,8 @@
 -- - P0001 'use POST': called through the Data API with a method other than POST;
 -- - 42501: no signed-in user or no household (add_shopping_items); changing «Solo io» of
 --   a thing of someone else (trigger); a write the RLS refuses;
--- - 22023: invalid people (null list, a null id, more than 20) or invalid items;
+-- - 22023: invalid people (null list, a null id, more than 20), invalid items, or a null
+--   «Solo io» in update_todo / update_deadline (never turned into «Tutto il Nest»);
 -- - P0002: the thing to change does not exist or is not visible to the caller (same
 --   error in every case: nothing about another household leaks);
 -- - 23514: a person who is not an adult or a child of the household, someone else on a
@@ -101,6 +102,10 @@ begin
      or cardinality(p_assignee_member_ids) > 20 then
     raise exception 'invalid assignees' using errcode = '22023';
   end if;
+  -- No silent «Tutto il Nest»: the app always sends the visibility it shows.
+  if p_is_private is null then
+    raise exception 'invalid visibility' using errcode = '22023';
+  end if;
 
   -- RLS: only a thing the caller sees (and may therefore change).
   perform 1 from public.todos t where t.id = p_todo_id for update;
@@ -117,7 +122,7 @@ begin
   set title = p_title,
       for_member_id = p_for_member_id,
       due_date = p_due_date,
-      is_private = coalesce(p_is_private, false)
+      is_private = p_is_private
   where t.id = p_todo_id;
 
   insert into public.todo_assignees (todo_id, member_id)
@@ -197,6 +202,10 @@ begin
      or cardinality(p_assignee_member_ids) > 20 then
     raise exception 'invalid assignees' using errcode = '22023';
   end if;
+  -- No silent «Tutto il Nest»: the app always sends the visibility it shows.
+  if p_is_private is null then
+    raise exception 'invalid visibility' using errcode = '22023';
+  end if;
 
   perform 1 from public.deadlines d where d.id = p_deadline_id for update;
   if not found then
@@ -212,7 +221,7 @@ begin
       due_date = p_due_date,
       note = p_note,
       for_member_id = p_for_member_id,
-      is_private = coalesce(p_is_private, false),
+      is_private = p_is_private,
       reminder_days = p_reminder_days
   where d.id = p_deadline_id;
 
