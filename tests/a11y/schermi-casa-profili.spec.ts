@@ -546,10 +546,12 @@ for (const spec of PAGES) {
           `l'h1 raddoppia (${at100} px -> ${at200} px)`,
         )
         .toBeCloseTo(2, 1);
-      await attach(page, testInfo, `${spec.name}-${w}x${h}-200`);
+      // Measure everything before the screenshot: a full-page screenshot
+      // drops the browser font size.
       const overflow = await overflowProblems(page);
       const touch = await touchProblems(page);
       const text = await textProblems(page);
+      await attach(page, testInfo, `${spec.name}-${w}x${h}-200`);
       expect.soft(overflow, "overflow al 200%").toEqual([]);
       expect.soft(touch.bad, "aree di tocco sotto 44 px al 200%").toEqual([]);
       expect.soft(text, "testo tagliato o sovrapposto al 200%").toEqual([]);
