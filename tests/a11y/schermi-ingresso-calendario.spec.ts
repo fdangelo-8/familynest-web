@@ -1,4 +1,10 @@
-import { expect, test, type Locator, type Page } from "@playwright/test";
+import {
+  expect,
+  test,
+  type CDPSession,
+  type Locator,
+  type Page,
+} from "@playwright/test";
 import { waitForAnimationsToEnd } from "../fixtures/animations";
 import { buildNest, type CasaNest } from "../fixtures/casa";
 import {
@@ -214,13 +220,15 @@ async function touchProblems(page: Page): Promise<Problems> {
  * Sets the browser font size (16 px = 100%, 32 px = 200%). It applies to the
  * next navigation, so call it BEFORE the `open()` that goes to the page.
  */
+const fontSessions = new WeakMap<Page, CDPSession>();
 async function setBrowserFontSize(page: Page, px: 16 | 32) {
-  const cdp = await page.context().newCDPSession(page);
-  try {
-    await cdp.send("Page.setFontSizes", { fontSizes: { standard: px } });
-  } finally {
-    await cdp.detach();
+  // One session per page, never detached: detaching resets the font size.
+  let cdp = fontSessions.get(page);
+  if (!cdp) {
+    cdp = await page.context().newCDPSession(page);
+    fontSessions.set(page, cdp);
   }
+  await cdp.send("Page.setFontSizes", { fontSizes: { standard: px } });
 }
 
 /** Font size in px of the first visible `main h1` (or h1), or null. */
