@@ -96,15 +96,15 @@ test("CA-1 (dettaglio impegno): il modulo di modifica non si ripresenta aperto n
   });
   await casa.signIn(page, baseURL, "Marco");
   await startAtCalendar(page);
-  const link = () =>
-    page
-      .getByRole("main")
-      .locator(`a[href^="/impegni/${id}"]`)
-      .filter({ visible: true })
-      .first();
+  // The event has no handy link on both sizes (on the desktop a click only
+  // chooses the block): the app's router opens it, like a link would.
+  const openEvent = async () => {
+    await waitHydrated(nestSquare(page));
+    await navigateInApp(page, `/impegni/${id}?giorno=${romeDay()}`);
+  };
 
   // 1. Open the event and start an edit.
-  await tap(link());
+  await openEvent();
   await expect(page).toHaveURL(new RegExp(`/impegni/${id}`));
   await expect(h1(page, title)).toBeVisible({ timeout: 20_000 });
   const dialog = await openForm(page);
@@ -116,8 +116,9 @@ test("CA-1 (dettaglio impegno): il modulo di modifica non si ripresenta aperto n
   // 2. Leave the page.
   await goBackTo(page, /\/calendario/);
 
-  // 3. Come back through the link of the calendar.
-  await tap(link());
+  // 3. Come back the same way.
+  await openEvent();
+  await expect(page).toHaveURL(new RegExp(`/impegni/${id}`));
 
   // 4. Specification (#19): the card, the form closed; reopened it shows the
   // saved values, not what was written before (CA-21).
