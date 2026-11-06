@@ -1,6 +1,6 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { usePageSearchParams } from "@/components/ui/AppFrame/usePageSearchParams";
 import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import { Alert } from "@/components/ui/Alert/Alert";
 import { Button } from "@/components/ui/Button/Button";
@@ -76,7 +76,7 @@ function OpeningBody({ desktop }: { desktop: boolean }) {
 }
 
 function MonthContent({ nowMs }: { nowMs: number }) {
-  const searchParams = useSearchParams();
+  const searchParams = usePageSearchParams();
   const isDesktop = useIsDesktop();
   const [lens] = useLens();
 

@@ -44,7 +44,7 @@ async function markNode(page: Page): Promise<void> {
 /** A short window, so that every page can scroll. */
 async function shortViewport(page: Page): Promise<void> {
   const size = page.viewportSize();
-  await page.setViewportSize({ width: size?.width ?? 390, height: 280 });
+  await page.setViewportSize({ width: size?.width ?? 390, height: 460 });
 }
 
 async function scrollDown(page: Page): Promise<number> {
