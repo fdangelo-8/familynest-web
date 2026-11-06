@@ -767,16 +767,28 @@ test.describe("CA-11: stessi stili del mockup", () => {
     // Approved difference (#52): only the color of the box-shadow may differ.
     // Both colors are asserted separately by the compare function.
     shadowColor?: { ours: string; mock: string };
+    // Approved difference (#313, text up to 200%): buttons that may wrap have
+    // padding-block var(--space-2) instead of 0. At 100% the size is the same
+    // (min-height), so only the left and right padding are compared.
+    inlinePaddingOnly?: boolean;
   };
   const STATIC_SECTIONS: Spec[] = [
     // Height follows the wrapping of the sample text (line-height is checked).
     { id: "t-display", selector: ".t-display", skip: ["height"] },
     { id: "icona", selector: "svg.icona" },
-    { id: "btn-primary", selector: ".btn-primary" },
-    { id: "btn-secondary", selector: ".btn-secondary" },
-    { id: "btn-chiaro", selector: ".btn-chiaro" },
+    { id: "btn-primary", selector: ".btn-primary", inlinePaddingOnly: true },
+    {
+      id: "btn-secondary",
+      selector: ".btn-secondary",
+      inlinePaddingOnly: true,
+    },
+    { id: "btn-chiaro", selector: ".btn-chiaro", inlinePaddingOnly: true },
     { id: "btn-tenue", selector: ".btn-tenue" },
-    { id: "btn-tratteggiato", selector: ".btn-tratteggiato" },
+    {
+      id: "btn-tratteggiato",
+      selector: ".btn-tratteggiato",
+      inlinePaddingOnly: true,
+    },
     // The first .btn-link of the mockup sits on a dark (tema-notte) frame, the
     // gallery shows it on paper: the secondary link is on paper in both.
     { id: "btn-link", selector: ".btn-link--secondario" },
@@ -884,6 +896,13 @@ test.describe("CA-11: stessi stili del mockup", () => {
         );
       const split = (values: Record<string, string> | null) => {
         const rest = drop(values);
+        if (spec.inlinePaddingOnly && rest["padding"]) {
+          // Computed shorthand: "a", "a b", "a b c" or "a b c d".
+          const parts = rest["padding"].split(" ");
+          const right = parts[1] ?? parts[0]!;
+          const left = parts[3] ?? right;
+          rest["padding"] = `${right} ${left}`;
+        }
         if (!spec.shadowColor) return { rest, color: "" };
         const shadow = rest["box-shadow"] ?? "";
         const match = shadow.match(/^(rgba?\([^)]*\))\s*(.*)$/);
