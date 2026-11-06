@@ -4577,7 +4577,7 @@ button.riga-lista {
   }
 }
 
-/* Nome nella testa della colonna: i nomi lunghi finiscono con i puntini */
+/* Nome nella testa della colonna: i nomi lunghi vanno a capo (#313) */
 .giorno-persone__persona {
   min-width: var(--space-0);
 }
