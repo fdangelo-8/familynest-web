@@ -63,7 +63,6 @@ export function NewEventForm({
         locks={{ visibility: false, people: false }}
         visibilityText={visibilityHelp(values.visibility, true, null)}
         peopleLockedText={null}
-        hideEscort
       />
       {saveFailed ? <Alert variant="errore">{SAVE_FAILED_TEXT}</Alert> : null}
     </form>

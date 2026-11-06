@@ -250,7 +250,7 @@ test.describe("Aggiungi · Spesa, Da fare, Scadenza: regione live", () => {
     await expect(
       live.getByRole("group", { name: "Chi se ne occupa" }),
     ).toHaveCount(0);
-    await expect(live.getByLabel("Data", { exact: true })).toHaveCount(0);
+    await expect(live.getByLabel("Entro", { exact: true })).toHaveCount(0);
   });
 
   test("scadenza: nessuna regione senza «riguarda»; la scheda non è live", async ({
@@ -371,7 +371,7 @@ test.describe("Aggiungi · Spesa, Da fare, Scadenza: fuoco", () => {
       "Da fare",
       "Spesa",
       "Scadenza",
-      "Data",
+      "Entro",
       ...PEOPLE,
       "Lo vede tutto il Nest",
       "Lo vedo solo io",
@@ -398,11 +398,11 @@ test.describe("Aggiungi · Spesa, Da fare, Scadenza: fuoco", () => {
       "Da fare",
       "Spesa",
       "Scadenza",
-      "Data",
+      "Scade il",
+      ...REMINDERS,
       ...PEOPLE,
       "Lo vede tutto il Nest",
       "Lo vedo solo io",
-      ...REMINDERS,
       "Aggiungi alle scadenze",
     ]);
     expect(rings).toEqual(rings.map(() => true));
@@ -441,7 +441,7 @@ test.describe("Aggiungi · Spesa, Da fare, Scadenza: fuoco", () => {
     expect(order).toEqual([
       "Titolo",
       "Togli Per Sofia",
-      "Data",
+      "Entro",
       ...PEOPLE,
       "Lo vede tutto il Nest",
       "Lo vedo solo io",

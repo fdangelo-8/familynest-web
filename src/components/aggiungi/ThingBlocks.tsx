@@ -105,21 +105,35 @@ export type ChoosablePerson = {
  * nobody; a second tap takes one away.
  */
 export function WhoManyGroup({
+  id,
   people,
   meId,
   chosenIds,
   onToggle,
+  fromPhrase = false,
 }: {
+  /** Unique id of the group (the label and the help hang from it) */
+  id: string;
   /** «Tu» first, then the others */
   people: readonly ChoosablePerson[];
   meId: string | null;
   chosenIds: readonly string[];
   onToggle: (id: string) => void;
+  /** The people come from «<Nome> deve» in the phrase: «Preso dalla frase» */
+  fromPhrase?: boolean;
 }) {
   return (
     <div className="campo">
-      <span className="campo__etichetta">Chi se ne occupa</span>
-      <ChipGroup aria-label="Chi se ne occupa">
+      <span className="campo__etichetta" id={`${id}-etichetta`}>
+        Chi se ne occupa
+      </span>
+      <div
+        id={id}
+        role="group"
+        aria-labelledby={`${id}-etichetta`}
+        aria-describedby={fromPhrase ? `${id}-aiuto` : undefined}
+        className="gruppo-chip"
+      >
         {people.map((person) => (
           <Chip
             key={person.id}
@@ -138,7 +152,12 @@ export function WhoManyGroup({
             {person.id === meId ? "Tu" : person.name}
           </Chip>
         ))}
-      </ChipGroup>
+      </div>
+      {fromPhrase ? (
+        <p className="campo__aiuto" id={`${id}-aiuto`}>
+          Preso dalla frase
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -149,40 +168,54 @@ export function WhoManyGroup({
  * thing the voices are shown but cannot be changed.
  */
 export function VisibilityGroup({
+  id,
   isPrivate,
   onChange,
-  locked,
+  lockedText,
 }: {
+  /** Unique prefix of the id of the sentence */
+  id: string;
   isPrivate: boolean;
   onChange: (isPrivate: boolean) => void;
-  locked: boolean;
+  /** Whoever did not create the thing cannot change it: the sentence says why */
+  lockedText?: string;
 }) {
+  const locked = lockedText !== undefined;
+  const textId = `${id}-aiuto`;
   return (
     <div className="campo">
       <span className="campo__etichetta" aria-hidden="true">
         Chi lo vede
       </span>
-      <SegmentedControl<"nest" | "me">
-        aria-label="Chi lo vede"
-        paper
-        value={isPrivate ? "me" : "nest"}
-        onChange={(value) => onChange(value === "me")}
-        options={[
-          {
-            value: "nest",
-            label: "Lo vede tutto il Nest",
-            icon: "users",
-            disabled: locked,
-          },
-          {
-            value: "me",
-            label: "Lo vedo solo io",
-            icon: "lock",
-            disabled: locked,
-          },
-        ]}
-        data-testid="aggiungi-visibilita"
-      />
+      <div className="contenitore-selettore">
+        <SegmentedControl<"nest" | "me">
+          aria-label="Chi lo vede"
+          paper
+          value={isPrivate ? "me" : "nest"}
+          onChange={(value) => onChange(value === "me")}
+          describedBy={locked ? textId : undefined}
+          options={[
+            {
+              value: "nest",
+              label: "Lo vede tutto il Nest",
+              icon: "users",
+              disabled: locked,
+            },
+            {
+              value: "me",
+              label: "Lo vedo solo io",
+              icon: "lock",
+              disabled: locked,
+            },
+          ]}
+          data-testid="aggiungi-visibilita"
+        />
+      </div>
+      {locked ? (
+        <p className="campo__aiuto" id={textId}>
+          {lockedText}
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -210,19 +243,21 @@ export function EventVisibilityGroup({
       <span className="campo__etichetta" aria-hidden="true">
         Chi lo vede
       </span>
-      <SegmentedControl<EventVisibility>
-        aria-label="Chi lo vede"
-        paper
-        value={value}
-        onChange={onChange}
-        describedBy={textId}
-        options={[
-          { value: "private", label: "Solo io", icon: "lock" },
-          { value: "busy", label: "Occupato", icon: "eye-off" },
-          { value: "household", label: "Tutti", icon: "users" },
-        ]}
-        data-testid="aggiungi-visibilita"
-      />
+      <div className="contenitore-selettore">
+        <SegmentedControl<EventVisibility>
+          aria-label="Chi lo vede"
+          paper
+          value={value}
+          onChange={onChange}
+          describedBy={textId}
+          options={[
+            { value: "private", label: "Solo io", icon: "lock" },
+            { value: "busy", label: "Occupato", icon: "eye-off" },
+            { value: "household", label: "Tutti", icon: "users" },
+          ]}
+          data-testid="aggiungi-visibilita"
+        />
+      </div>
       <p className="campo__aiuto" id={textId} aria-live="polite">
         {text}
       </p>

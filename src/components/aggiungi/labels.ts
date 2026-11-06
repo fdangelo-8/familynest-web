@@ -25,10 +25,6 @@ export const MEMBERS_FAILED_TEXT =
 const MISSING_TITLE =
   "Manca cosa c'è da fare: scrivi per esempio «dentista giovedì alle 16».";
 
-/** Under «Giorno» and under «Dalle» / «Alle» (#333): no example, the field is right there. */
-export const MISSING_DAY_TEXT = "Manca il giorno.";
-export const MISSING_TIME_TEXT = "Manca l'ora.";
-
 /** The message under the phrase (the title), or null when the phrase can be saved. */
 export function validatePhrase(parsed: ParsedPhrase): string | null {
   if (parsed.title === "") return MISSING_TITLE;

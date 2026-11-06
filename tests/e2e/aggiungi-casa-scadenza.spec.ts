@@ -167,9 +167,7 @@ test.describe("Aggiungi · Scadenza · creazione", () => {
     // #333: the date error is under «Data», with the focus on the field
     await s.field.fill("passaporto");
     await s.button("Aggiungi alle scadenze").click();
-    await s.expectDateError(
-      "Manca la data: sceglila qui sotto o scrivila nella frase.",
-    );
+    await s.expectDateError("Manca la data: sceglila o scrivila nella frase.");
 
     await s.field.fill("scade il 7 dicembre");
     await s.button("Aggiungi alle scadenze").click();

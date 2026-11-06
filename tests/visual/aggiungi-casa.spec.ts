@@ -147,7 +147,7 @@ test.describe("Da fare", () => {
     await expect(
       dialog.getByRole("button", { name: "Lo vede tutto il Nest" }),
     ).toHaveAttribute("aria-pressed", "true");
-    await expect(dialog.getByLabel("Data", { exact: true })).toHaveValue(
+    await expect(dialog.getByLabel("Entro", { exact: true })).toHaveValue(
       "2026-10-23",
     );
     await shoot(page, "da-fare.png");
@@ -261,7 +261,7 @@ test.describe("Modifica", () => {
     await expect(
       page.getByRole("button", { name: "Togli Per Sofia" }),
     ).toBeVisible();
-    await expect(page.getByLabel("Data", { exact: true })).toHaveValue(
+    await expect(page.getByLabel("Entro", { exact: true })).toHaveValue(
       "2026-10-23",
     );
     await shoot(page, "modifica-da-fare.png");

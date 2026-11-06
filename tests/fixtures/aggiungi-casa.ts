@@ -85,7 +85,7 @@ export function sheet(page: Page, mode: "add" | "edit" = "add") {
     /** The region of the labels («Per Sofia»). */
     labels: dialog.locator('[aria-live="polite"]'),
     /** The field «Data» of Da fare and Scadenza (#333). */
-    date: dialog.getByLabel("Data", { exact: true }),
+    date: dialog.getByLabel(/^(Entro|Scade il)$/),
     who,
     /** A chip of «Chi se ne occupa»; «Tu» is the signed-in member. */
     person: (name: string) => who.getByRole("button", { name, exact: true }),
@@ -114,7 +114,7 @@ export function sheet(page: Page, mode: "add" | "edit" = "add") {
     },
     /** The text of the error under «Data», and the focus on it. */
     expectDateError: async (text: string) => {
-      const date = dialog.getByLabel("Data", { exact: true });
+      const date = dialog.getByLabel(/^(Entro|Scade il)$/);
       await expect(date).toHaveAttribute("aria-invalid", "true");
       await expect(date).toHaveAccessibleDescription(text);
       await expect(date).toBeFocused();

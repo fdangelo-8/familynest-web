@@ -54,6 +54,52 @@ test.describe("Aggiungi · Impegno · campi", () => {
     await expect(s.dialog.getByText("La porta")).toHaveCount(0);
   });
 
+  // Specifica grafica §3: «Preso dalla frase» sotto i campi che seguono la frase
+  test("«Preso dalla frase»: sotto Giorno, Dalle, Alle e Chi solo se la frase li dice; sparisce al cambio a mano", async ({
+    page,
+    baseURL,
+    casa,
+  }) => {
+    await openAddFromNav(page, baseURL, casa, "Marco");
+    const s = sheet(page);
+    const f = impegnoFields(page);
+    await expect(s.dialog.getByText("Preso dalla frase")).toHaveCount(0);
+
+    await s.field.fill("nuoto Sofia giovedì dalle 17 alle 19");
+    for (const field of [f.day, f.from, f.to]) {
+      await expect(field).toHaveAccessibleDescription("Preso dalla frase");
+    }
+    await expect(f.who).toHaveAccessibleDescription("Preso dalla frase");
+
+    await f.day.fill("2026-10-23");
+    await expect(f.day).not.toHaveAccessibleDescription("Preso dalla frase");
+    await f.person("Tu").click();
+    await expect(f.who).not.toHaveAccessibleDescription("Preso dalla frase");
+
+    // Only the start of the day: «Alle» is the default hour, not from the phrase
+    await s.field.fill("nuoto giovedì alle 17");
+    await expect(f.from).toHaveAccessibleDescription("Preso dalla frase");
+    await expect(f.to).not.toHaveAccessibleDescription("Preso dalla frase");
+  });
+
+  test("«Preso dalla frase» in Da fare: sotto «Entro» e «Chi se ne occupa» solo se la frase li dice", async ({
+    page,
+    baseURL,
+    casa,
+  }) => {
+    await openAddFromNav(page, baseURL, casa, "Marco");
+    const s = sheet(page);
+    await s.type("Scadenza").click();
+    await s.field.fill("bollo auto");
+    // The «Tu» of a new Scadenza is not from the phrase
+    await expect(s.dialog.getByText("Preso dalla frase")).toHaveCount(0);
+    await s.field.fill("Laura deve pagare il bollo il 7 dicembre");
+    await expect(s.date).toHaveAccessibleDescription("Preso dalla frase");
+    await expect(s.who).toHaveAccessibleDescription("Preso dalla frase");
+    await s.person("Sofia").click();
+    await expect(s.who).not.toHaveAccessibleDescription("Preso dalla frase");
+  });
+
   test("CA-5: «dentista» con Giorno, Dalle e Alle scelti a mano si salva con quei valori", async ({
     page,
     baseURL,
@@ -135,7 +181,10 @@ test.describe("Aggiungi · Impegno · campi", () => {
     await expect(
       who.getByRole("button", { name: "Sofia", exact: true }),
     ).toHaveAttribute("aria-pressed", "true");
-    await expect(form.getByText("La porta")).toHaveCount(0);
+    // «La porta» is in the form (specifica grafica §4), nobody chosen
+    const porta = form.getByRole("group", { name: "La porta", exact: true });
+    await expect(porta).toBeVisible();
+    await expect(porta.locator('[aria-pressed="true"]')).toHaveCount(0);
 
     await form.getByRole("button", { name: "Chiudi" }).click();
     await expect(sheet(page).dialog).toBeVisible();
@@ -146,7 +195,9 @@ test.describe("Aggiungi · Impegno · campi", () => {
     ).toBeFocused();
   });
 
-  test("CA-2: l'impegno salvato dal foglio non ha accompagnatore, né dal foglio né dal modulo", async ({
+  // CA-2 (sostituito dal §4 della specifica grafica): «La porta» non è nel foglio,
+  // è nel modulo aperto da «Più dettagli» / «Tutti i dettagli».
+  test("CA-2: «La porta» c'è nel modulo, senza nessuno scelto: salvando così l'impegno non ha accompagnatore, scegliendo «Laura» ce l'ha", async ({
     page,
     baseURL,
     casa,
@@ -158,7 +209,9 @@ test.describe("Aggiungi · Impegno · campi", () => {
     await s.dialog.getByTestId("aggiungi-ingresso-details").click();
     const form = page.getByRole("dialog", { name: "Nuovo impegno" });
     await expect(form).toBeVisible();
-    await expect(form.getByText("La porta")).toHaveCount(0);
+    const porta = form.getByRole("group", { name: "La porta", exact: true });
+    await expect(porta).toBeVisible();
+    await expect(porta.locator('[aria-pressed="true"]')).toHaveCount(0);
     await form.getByRole("button", { name: "Metti in giovedì 22" }).click();
     await expect(toastOf(page)).toBeVisible();
     const rows = await eventsOf(casa);
@@ -166,7 +219,27 @@ test.describe("Aggiungi · Impegno · campi", () => {
     expect(rows[0]!.escort_member_id).toBeNull();
   });
 
-  test("Manca il giorno / Manca l'ora: sotto i campi, con il fuoco sul primo, e non si salva niente", async ({
+  test("CA-2: scegliendo «Laura» in «La porta» l'impegno ha Laura", async ({
+    page,
+    baseURL,
+    casa,
+  }) => {
+    await openAddFromNav(page, baseURL, casa, "Marco");
+    const s = sheet(page);
+    await s.field.fill(PHRASE);
+    await s.dialog.getByTestId("aggiungi-ingresso-details").click();
+    const form = page.getByRole("dialog", { name: "Nuovo impegno" });
+    await form
+      .getByRole("group", { name: "La porta", exact: true })
+      .getByRole("button", { name: "Laura", exact: true })
+      .click();
+    await form.getByRole("button", { name: "Metti in giovedì 22" }).click();
+    await expect(toastOf(page)).toBeVisible();
+    const rows = await eventsOf(casa);
+    expect(rows[0]!.escort_member_id).toBe(casa.members["Laura"]);
+  });
+
+  test("Errori dei campi dell'impegno: gli stessi testi del modulo, sotto i campi, con il fuoco sul primo, e non si salva niente", async ({
     page,
     baseURL,
     casa,
@@ -178,15 +251,15 @@ test.describe("Aggiungi · Impegno · campi", () => {
     await s.button("Aggiungi").click();
 
     await expect(f.day).toHaveAttribute("aria-invalid", "true");
-    await expect(f.day).toHaveAccessibleDescription("Manca il giorno.");
+    await expect(f.day).toHaveAccessibleDescription("Scegli il giorno.");
     await expect(f.day).toBeFocused();
-    await expect(f.from).toHaveAccessibleDescription("Manca l'ora.");
+    await expect(f.from).toHaveAccessibleDescription("Scegli l'ora d'inizio.");
     expect(await eventsOf(casa)).toHaveLength(0);
 
     await f.day.fill("2026-10-23");
     await f.from.fill("16:00");
     await s.button("Metti in venerdì 23").click();
-    await expect(f.to).toHaveAccessibleDescription("Manca l'ora.");
+    await expect(f.to).toHaveAccessibleDescription("Scegli l'ora di fine.");
     await expect(f.to).toBeFocused();
     expect(await eventsOf(casa)).toHaveLength(0);
   });
@@ -298,9 +371,7 @@ test.describe("Aggiungi · Da fare e Scadenza · «Data»", () => {
     ).toBeVisible();
 
     await s.button("Aggiungi alle scadenze").click();
-    await s.expectDateError(
-      "Manca la data: sceglila qui sotto o scrivila nella frase.",
-    );
+    await s.expectDateError("Manca la data: sceglila o scrivila nella frase.");
     expect(await deadlinesOf(casa, "Marco")).toHaveLength(0);
 
     await s.date.fill("2026-12-07");
@@ -532,9 +603,7 @@ test.describe("Aggiungi · Spesa · «Chi se ne occupa» e cambio di tipo", () =
     await s.type("Scadenza").click();
     await s.field.fill("Compleanno Filippo – sld");
     await s.button("Aggiungi alle scadenze").click();
-    await s.expectDateError(
-      "Manca la data: sceglila qui sotto o scrivila nella frase.",
-    );
+    await s.expectDateError("Manca la data: sceglila o scrivila nella frase.");
     expect(await deadlinesOf(casa, "Marco")).toHaveLength(0);
     expect(await todosOf(casa, "Marco")).toHaveLength(0);
     expect(await shoppingOf(casa, "Marco")).toHaveLength(0);

@@ -113,7 +113,7 @@ export function validateDeadline(title: string): string | null {
 const LAST_DAY = "2100-12-31";
 
 export const DATE_MISSING_TEXT =
-  "Manca la data: sceglila qui sotto o scrivila nella frase.";
+  "Manca la data: sceglila o scrivila nella frase.";
 export const DATE_PAST_TEXT =
   "Questa data è già passata: scegli una data da oggi in poi.";
 export const DATE_TOO_FAR_TEXT = "Scegli una data entro il 2100.";

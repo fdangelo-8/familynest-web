@@ -80,8 +80,6 @@ import {
 import { NewEventForm } from "./NewEventForm";
 import {
   MEMBERS_FAILED_TEXT,
-  MISSING_DAY_TEXT,
-  MISSING_TIME_TEXT,
   SAVE_FAILED_TEXT,
   UNDO_FAILED_TEXT,
   atTime,
@@ -162,6 +160,9 @@ type PeopleState =
   | { status: "ready"; people: NestPerson[]; meId: string | null };
 
 type Client = ReturnType<typeof createClient>;
+
+/** Under a field whose value comes from the phrase (#333, specifica grafica §3) */
+const FROM_PHRASE = "Preso dalla frase";
 
 type EditKind = "da-fare" | "scadenza" | "spesa";
 
@@ -299,9 +300,10 @@ function noteOf(record: TodoRecord | DeadlineRecord): string | null {
 /** The errors under the fields of an Impegno (the title is checked under the phrase). */
 function eventFieldErrors(fields: EventFields): FieldErrors {
   const errors: FieldErrors = {};
-  if (!isValidDayKey(fields.day)) errors.day = MISSING_DAY_TEXT;
-  if (!fields.from) errors.from = MISSING_TIME_TEXT;
-  else if (!fields.to) errors.to = MISSING_TIME_TEXT;
+  // The same texts as the full form «Nuovo impegno»
+  if (!isValidDayKey(fields.day)) errors.day = ERROR_TEXTS.day;
+  if (!fields.from) errors.from = ERROR_TEXTS.from;
+  else if (!fields.to) errors.to = ERROR_TEXTS.to;
   else if (fields.from === fields.to) errors.to = ERROR_TEXTS.sameTime;
   if (fields.memberIds.length === 0) errors.people = ERROR_TEXTS.people;
   return errors;
@@ -861,7 +863,7 @@ export function AddSheet({
     pendingFocus.current = false;
     const root = document.querySelector('[data-testid="aggiungi-foglio"]');
     const order = [
-      '[data-testid="aggiungi-visibilita"] button[aria-pressed="true"]',
+      '[data-testid="aggiungi-visibilita"] button[aria-pressed="true"]:not(:disabled)',
       "textarea",
     ];
     for (const selector of order) {
@@ -1717,26 +1719,47 @@ export function AddSheet({
   const dateField = (
     <DateField
       id={dateId}
-      label="Data"
+      label={type === "scadenza" ? "Scade il" : "Entro"}
       value={dueDate}
       readOnly={saving}
+      help={
+        dateManual === undefined && phraseDate !== null
+          ? FROM_PHRASE
+          : undefined
+      }
       error={fieldErrors.date}
       onChange={(event) => changeDate(event.target.value)}
     />
   );
   const whoGroup = (
     <WhoManyGroup
+      id={`${fieldsPrefix}-occupa`}
       people={whoList}
       meId={meId}
       chosenIds={assigneeIds}
       onToggle={toggleAssignee}
+      fromPhrase={
+        assigneeManual === undefined &&
+        useParsed &&
+        common?.assigneeWritten === true
+      }
     />
   );
+  const authorName = record?.createdById
+    ? people.find((person) => person.id === record.createdById)?.name
+    : undefined;
   const visibilityGroup = (
     <VisibilityGroup
+      id={visibilityId}
       isPrivate={isPrivate}
       onChange={changeVisibility}
-      locked={!isAuthor}
+      lockedText={
+        isAuthor
+          ? undefined
+          : authorName
+            ? `Lo decide ${authorName}, che l'ha creata.`
+            : "Chi l'ha creata non è più nel Nest: resta così."
+      }
     />
   );
 
@@ -1758,6 +1781,7 @@ export function AddSheet({
           }}
         />
         <WhoManyGroup
+          id={`${fieldsPrefix}-occupa`}
           people={whoList}
           meId={meId}
           chosenIds={whoIds}
@@ -1770,6 +1794,7 @@ export function AddSheet({
       <>
         <ShoppingPreview rows={shoppingRows} />
         <WhoManyGroup
+          id={`${fieldsPrefix}-occupa`}
           people={whoList}
           meId={meId}
           chosenIds={whoIds}
@@ -1826,9 +1851,9 @@ export function AddSheet({
           </div>
         ) : null}
         {dateField}
+        <ReminderGroup chosen={reminders} onToggle={toggleReminder} />
         {whoGroup}
         {visibilityGroup}
-        <ReminderGroup chosen={reminders} onToggle={toggleReminder} />
       </>
     );
   }
@@ -1951,6 +1976,12 @@ export function AddSheet({
               label="Giorno"
               value={eventFields.day}
               readOnly={saving}
+              help={
+                eventManual.day === undefined &&
+                (parsed.dayKey !== null || parsed.time !== null)
+                  ? FROM_PHRASE
+                  : undefined
+              }
               error={fieldErrors.day}
               onChange={(event) =>
                 changeEventFields({ day: event.target.value })
@@ -1962,6 +1993,11 @@ export function AddSheet({
                 label="Dalle"
                 value={eventFields.from}
                 readOnly={saving}
+                help={
+                  eventManual.from === undefined && parsed.time !== null
+                    ? FROM_PHRASE
+                    : undefined
+                }
                 error={fieldErrors.from}
                 onChange={(event) =>
                   changeEventFields({ from: event.target.value })
@@ -1972,7 +2008,14 @@ export function AddSheet({
                 label="Alle"
                 value={eventFields.to}
                 readOnly={saving}
-                help={endsOtherDayHint(eventFields, 0) ?? undefined}
+                help={
+                  endsOtherDayHint(eventFields, 0) ??
+                  (eventManual.to === undefined &&
+                  parsed.time !== null &&
+                  parsed.time.end !== null
+                    ? FROM_PHRASE
+                    : undefined)
+                }
                 error={fieldErrors.to}
                 onChange={(event) =>
                   changeEventFields({ to: event.target.value })
@@ -1990,6 +2033,15 @@ export function AddSheet({
                 }
                 onToggle={(member) => toggleEventMember(member.id)}
                 disabled={false}
+                help={
+                  eventManual.memberIds === undefined &&
+                  parsed.memberIds.length > 0
+                    ? {
+                        id: `${eventFieldId(fieldsPrefix, "people")}-aiuto`,
+                        text: FROM_PHRASE,
+                      }
+                    : undefined
+                }
                 error={fieldErrors.people}
               />
             ) : null}

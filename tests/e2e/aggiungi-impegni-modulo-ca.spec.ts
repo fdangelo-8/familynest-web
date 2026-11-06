@@ -398,9 +398,11 @@ test.describe("Aggiungi · Impegni · modulo · già compilato", () => {
       "true",
     );
 
-    // #333: no «La porta» in the form opened from Aggiungi
-    await expect(groupOf(page, "La porta")).toHaveCount(0);
-    await expect(form.getByText("La porta")).toHaveCount(0);
+    // #333 (specifica grafica §4): «La porta» stays in the form, nobody chosen
+    await expectChips(groupOf(page, "La porta"), ["Tu", "Laura"]);
+    await expect(
+      groupOf(page, "La porta").getByRole("button", { pressed: true }),
+    ).toHaveCount(0);
 
     const visibility = groupOf(page, "Chi lo vede");
     await expect(visibility.getByRole("button", { pressed: true })).toHaveCount(
@@ -535,12 +537,13 @@ test.describe("Aggiungi · Impegni · modulo · già compilato", () => {
 // ------------------------------------------------------------------ Salvataggio
 
 test.describe("Aggiungi · Impegni · modulo · salvataggio", () => {
-  test("CA-8: «Tutti» si salva senza accompagnatore, il toast ha il giorno in grassetto", async ({
+  test("CA-8: «La porta» e «Tutti» si salvano, il toast ha il giorno in grassetto", async ({
     page,
     baseURL,
     casa,
   }) => {
     await openForm(page, baseURL, casa, "Marco");
+    await chip(page, "La porta", "Tu").click();
     await groupOf(page, "Chi lo vede")
       .getByRole("button", { name: "Tutti" })
       .click();
@@ -559,7 +562,7 @@ test.describe("Aggiungi · Impegni · modulo · salvataggio", () => {
     expect(row).toMatchObject({
       title: "Nuoto Sofia",
       visibility: "household",
-      escort_member_id: null,
+      escort_member_id: casa.members["Marco"],
       recurrence: "none",
       location: null,
       notes: null,
@@ -1013,7 +1016,7 @@ test.describe("Aggiungi · Impegni · modulo · isolamento e privacy", () => {
       "aria-pressed",
       "true",
     );
-    await expect(groupOf(page, "La porta")).toHaveCount(0);
+    await expectChips(groupOf(page, "La porta"), ["Tu", "Paolo", "Anna"]);
 
     // Nothing of the other Nest reaches the page or the answers it reads.
     // Visible text of the page (not the scripts, which carry the examples).

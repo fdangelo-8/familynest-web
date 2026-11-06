@@ -295,6 +295,81 @@ test.describe("Aggiungi · modifica · Da fare", () => {
     await s.expectVoice(PRIVATE);
   });
 
+  // Specifica grafica §6: the locked voices say why, and the focus never leaves the sheet.
+  test("CA-21: per chi non è l'autore una frase spiega perché le voci non cambiano; «Togli Per Leo» lascia il fuoco sul campo", async ({
+    page,
+    baseURL,
+    bianchi,
+  }) => {
+    const id = await bianchi.todo("Paolo", {
+      title: PALESTRA,
+      forMember: "Leo",
+    });
+    await openDirect(page, baseURL, bianchi, "Giulia", editUrl(id), {
+      mode: "edit",
+    });
+    const s = sheet(page, "edit");
+    await expect(s.visibility).toHaveAccessibleDescription(
+      "Lo decide Paolo, che l'ha creata.",
+    );
+    await s.button("Togli Per Leo").click();
+    await expect(labelText(page, /Per Leo$/)).toHaveCount(0);
+    // No voice can take the focus (they are disabled): it goes to the field
+    await expect(s.field).toBeFocused();
+  });
+
+  test("CA-21: una scadenza condivisa di Paolo modificata da Giulia resta condivisa", async ({
+    page,
+    baseURL,
+    bianchi,
+  }) => {
+    const id = await seedDeadline(bianchi, "Paolo", {
+      title: BOLLO,
+      due: "2026-12-07",
+    });
+    await openDirect(page, baseURL, bianchi, "Giulia", editUrl(id), {
+      mode: "edit",
+    });
+    const s = sheet(page, "edit");
+    await s.expectVoice(SHARED);
+    await expect(s.voice(PRIVATE)).toBeDisabled();
+    await s.field.focus();
+    await s.field.press("Control+End");
+    await s.field.pressSequentially(" scade il 9 dicembre");
+    await s.button("Salva").click();
+    await expect(toastWith(page, "Modifiche salvate.")).toBeVisible();
+    await expect
+      .poll(
+        async () =>
+          (await deadlinesOf(bianchi, "Paolo")).find((row) => row.id === id)
+            ?.due_date,
+      )
+      .toBe("2026-12-09");
+    const row = (await deadlinesOf(bianchi, "Paolo")).find((r) => r.id === id);
+    expect(row!.is_private).toBe(false);
+  });
+
+  test("«Preso dalla frase»: compare sotto la data solo quando la frase la dice, sparisce al cambio a mano", async ({
+    page,
+    baseURL,
+    casa,
+  }) => {
+    const id = await seedGita(casa);
+    await openDirect(page, baseURL, casa, "Marco", editUrl(id), {
+      mode: "edit",
+    });
+    const s = sheet(page, "edit");
+    // In Modifica the saved values are not «from the phrase» (R6)
+    await expect(s.dialog.getByText("Preso dalla frase")).toHaveCount(0);
+    await s.field.focus();
+    await s.field.press("Control+End");
+    await s.field.pressSequentially(" entro lunedì");
+    await expect(s.date).toHaveValue("2026-10-26");
+    await expect(s.date).toHaveAccessibleDescription("Preso dalla frase");
+    await s.date.fill("2026-10-27");
+    await expect(s.dialog.getByText("Preso dalla frase")).toHaveCount(0);
+  });
+
   test("CA-43: se Paolo elimina la cosa mentre Giulia ha il foglio aperto, «Salva» dà «non c'è più» e non crea niente", async ({
     page,
     baseURL,
