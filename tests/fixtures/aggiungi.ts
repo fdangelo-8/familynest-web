@@ -37,9 +37,57 @@ export const dialogOf = (page: Page) =>
 export const fieldOf = (page: Page) =>
   dialogOf(page).getByRole("textbox", { name: "Cosa vuoi aggiungere?" });
 
-/** The region with the labels under the field (the only polite live region of the sheet). */
+/**
+ * The polite live region under the fields of an Impegno: since #333 it is the
+ * sentence under «Chi lo vede» (the chips of what was understood are gone: the
+ * values are in the fields, see `impegnoFields`).
+ */
 export const labelsOf = (page: Page) =>
   dialogOf(page).locator('[aria-live="polite"]');
+
+/**
+ * The fields of an Impegno in the sheet (#333): «Giorno», «Dalle», «Alle»,
+ * «Chi» (several chips) and «Chi lo vede» (three voices).
+ */
+export const impegnoFields = (page: Page) => {
+  const dialog = dialogOf(page);
+  const who = dialog.getByRole("group", { name: "Chi", exact: true });
+  const visibility = dialog.getByRole("group", {
+    name: "Chi lo vede",
+    exact: true,
+  });
+  return {
+    day: dialog.getByLabel("Giorno", { exact: true }),
+    from: dialog.getByLabel("Dalle", { exact: true }),
+    to: dialog.getByLabel("Alle", { exact: true }),
+    who,
+    visibility,
+    /** A chip of «Chi» («Tu» is the signed-in member). */
+    person: (name: string) => who.getByRole("button", { name, exact: true }),
+    /** A voice of «Chi lo vede» («Solo io», «Occupato», «Tutti»). */
+    voice: (name: string) =>
+      visibility.getByRole("button", { name, exact: true }),
+    /** Exactly these people are pressed in «Chi». */
+    expectWho: async (names: string[]) => {
+      await expect(who.getByRole("button").first()).toBeVisible();
+      await expect(who.locator('[aria-pressed="true"]')).toHaveCount(
+        names.length,
+      );
+      for (const name of names) {
+        await expect(
+          who.getByRole("button", { name, exact: true }),
+        ).toHaveAttribute("aria-pressed", "true");
+      }
+    },
+    /** Exactly this voice of «Chi lo vede» is pressed. */
+    expectVisibility: async (name: string) => {
+      await expect(
+        visibility.getByRole("button", { name, exact: true }),
+      ).toHaveAttribute("aria-pressed", "true");
+      await expect(visibility.locator('[aria-pressed="true"]')).toHaveCount(1);
+    },
+  };
+};
 
 export const toastOf = (page: Page) => page.getByTestId("toast");
 
@@ -100,19 +148,18 @@ export async function openAdd(
  * «Nuovo» row of the preview only exists once the skeleton is gone; on mobile
  * there is nothing to look at, so the page is given two frames to commit.
  */
-export async function dayRead(page: Page, desktop: boolean): Promise<void> {
-  if (desktop) {
-    await expect(sideOf(page).getByText("Nuovo", { exact: true })).toBeVisible({
-      timeout: 15_000,
-    });
-  } else {
-    await page.evaluate(
-      () =>
-        new Promise<void>((resolve) =>
-          requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
-        ),
-    );
-  }
+export async function dayRead(page: Page): Promise<void> {
+  // #333: the preview column is gone, so there is nothing to wait for on the
+  // desktop either: the page is given the network to settle and two frames.
+  await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => {
+    // Realtime keeps a socket open: a page that never idles is not an error.
+  });
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+      ),
+  );
 }
 
 export { pauseClock };

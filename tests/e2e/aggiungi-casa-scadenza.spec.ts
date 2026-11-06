@@ -43,6 +43,7 @@ test.describe("Aggiungi · Scadenza · creazione", () => {
       day: "Lunedì 7 dicembre",
       title: "Bollo auto",
     });
+    await expect(s.date).toHaveValue("2026-12-07");
     for (const name of ["30 giorni prima", "7 giorni", "1 giorno"]) {
       await expect(s.reminder(name)).toHaveAttribute("aria-pressed", "true");
     }
@@ -163,10 +164,11 @@ test.describe("Aggiungi · Scadenza · creazione", () => {
     const s = sheet(page);
     await s.type("Scadenza").click();
 
+    // #333: the date error is under «Data», with the focus on the field
     await s.field.fill("passaporto");
     await s.button("Aggiungi alle scadenze").click();
-    await s.expectError(
-      "Manca la data: scrivi per esempio «bollo auto scade il 7 dicembre».",
+    await s.expectDateError(
+      "Manca la data: sceglila qui sotto o scrivila nella frase.",
     );
 
     await s.field.fill("scade il 7 dicembre");
@@ -177,8 +179,8 @@ test.describe("Aggiungi · Scadenza · creazione", () => {
 
     await s.field.fill("passaporto scade il 1/3/2026");
     await s.button("Aggiungi alle scadenze").click();
-    await s.expectError(
-      "Questa data è già passata: scrivi una data da oggi in poi.",
+    await s.expectDateError(
+      "Questa data è già passata: scegli una data da oggi in poi.",
     );
 
     await expect(s.dialog).toBeVisible();
@@ -231,7 +233,7 @@ test.describe("Aggiungi · Scadenza · creazione", () => {
 });
 
 test.describe("Aggiungi · Scadenza · «Solo io»", () => {
-  test("CA-65: nella scadenza il bottone della visibilità passa a «Lo vedi solo tu» e sceglie «Tu»", async ({
+  test("CA-65: nella scadenza «Lo vedo solo io» lascia scelto solo «Tu»", async ({
     page,
     baseURL,
     casa,
@@ -239,12 +241,13 @@ test.describe("Aggiungi · Scadenza · «Solo io»", () => {
     await openAddFromNav(page, baseURL, casa, "Marco");
     const s = sheet(page);
     await s.field.fill("Laura deve pagare il bollo il 7 dicembre");
-    await expect(s.visibility).toHaveAccessibleName(SHARED);
+    await s.expectVoice(SHARED);
     await expect(s.person("Laura")).toHaveAttribute("aria-pressed", "true");
 
-    await s.visibility.click();
-    await expect(s.visibility).toHaveAccessibleName(PRIVATE);
+    await s.voice(PRIVATE).click();
+    await s.expectVoice(PRIVATE);
     await expect(s.person("Tu")).toHaveAttribute("aria-pressed", "true");
+    await expect(s.person("Laura")).toHaveAttribute("aria-pressed", "false");
     await expectNames(s.who, ["Tu", "Laura", "Sofia", "Tommaso"]);
   });
 
@@ -257,8 +260,8 @@ test.describe("Aggiungi · Scadenza · «Solo io»", () => {
     await openAddFromNav(page, baseURL, bianchi, "Paolo");
     const s = sheet(page);
     await s.field.fill("assicurazione della casa scade il 20 gennaio");
-    await s.visibility.click();
-    await expect(s.visibility).toHaveAccessibleName(PRIVATE);
+    await s.voice(PRIVATE).click();
+    await s.expectVoice(PRIVATE);
     await s.button("Aggiungi alle scadenze").click();
     await expect(
       toastWith(page, "Aggiunta alle scadenze: Assicurazione della casa."),
