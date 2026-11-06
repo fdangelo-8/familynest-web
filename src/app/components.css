@@ -4932,7 +4932,14 @@ a.parola--insieme:active {
   justify-self: stretch;
   align-self: stretch;
   margin-left: calc(-1 * var(--space-4));
-  padding-left: calc(var(--space-4) + var(--size-icona-m) + var(--space-3));
+  /* Il tratto del gap (12 px) prima dell'elemento finale resta toccabile:
+     l'input lo copre e il testo si ferma dove si fermava prima. L'elemento
+     finale, dopo nel DOM, resta sopra. */
+  margin-right: calc(-1 * var(--space-3));
+  padding-left: calc(
+    var(--space-4) + var(--size-icona-m) + var(--space-3) + var(--space-half)
+  );
+  padding-right: calc(var(--space-3) + var(--space-half));
   border-radius: inherit;
 }
 .campo-ricerca
