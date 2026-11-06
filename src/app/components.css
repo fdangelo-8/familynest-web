@@ -2565,16 +2565,17 @@ button.riga-lista {
 }
 .griglia-mese__numero {
   min-width: var(--size-avatar-s);
-  min-height: var(--size-avatar-s); /* #313 */
+  /* #313: al 100% il cerchio resta di 24 px (con min-height la riga di 26 px
+     lo allungherebbe e sposterebbe il numero); col testo grande cresce con
+     il numero (18 px × 4/3 = 24 px al 100%) */
+  height: max(var(--size-avatar-s), calc(var(--text-cella-size) * 4 / 3));
   border-radius: var(--radius-tondo);
   display: grid;
   place-items: center;
   font-family: var(--font-titoli);
   font-weight: var(--weight-sottile);
   font-size: var(--text-cella-size);
-  /* #313: al 100% il cerchio resta di 24 px (con min-height la riga di 26 px
-     lo allungherebbe); col testo grande segue la dimensione del numero */
-  line-height: max(var(--size-avatar-s), var(--text-cella-size));
+  line-height: var(--text-cella-line);
   font-variant-numeric: tabular-nums;
 }
 .griglia-mese__punti {
