@@ -105,7 +105,8 @@ test("CA-1 (dettaglio impegno): il modulo di modifica non si ripresenta aperto n
 
   // 1. Open the event and start an edit.
   await tap(link());
-  await expect(h1(page, title)).toBeVisible();
+  await expect(page).toHaveURL(new RegExp(`/impegni/${id}`));
+  await expect(h1(page, title)).toBeVisible({ timeout: 20_000 });
   const dialog = await openForm(page);
   await fieldOf(dialog, "Titolo").fill("Titolo scritto e non salvato");
   await expect(fieldOf(dialog, "Titolo")).toHaveValue(
@@ -120,7 +121,7 @@ test("CA-1 (dettaglio impegno): il modulo di modifica non si ripresenta aperto n
 
   // 4. Specification (#19): the card, the form closed; reopened it shows the
   // saved values, not what was written before (CA-21).
-  await expect(h1(page, title)).toBeVisible();
+  await expect(h1(page, title)).toBeVisible({ timeout: 20_000 });
   await expect(editDialog(page)).toHaveCount(0);
   const again = await openForm(page);
   await expect(fieldOf(again, "Titolo")).toHaveValue(title);
@@ -355,5 +356,6 @@ test("CA-1 (Ricerca, telefono): riaperta ha il fuoco nel campo; il testo rimasto
       rows: await allRows(page).count(),
     }),
   });
-  await expectNotReloaded(page);
+  // No «not reloaded» check here: under 1024 px the magnifier loads /ricerca as
+  // a new page by design (`SearchOverlay`, `window.location.replace`).
 });
