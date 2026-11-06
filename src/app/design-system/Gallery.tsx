@@ -92,6 +92,7 @@ export function Gallery() {
   const rowCards = useQueryFlag("righe-scheda");
   const pageParts = useQueryFlag("pezzi-pagine");
   const passwordField = useQueryFlag("campo-password");
+  const splitUnico = useQueryFlag("split-unico");
   return (
     <main className={styles.pagina}>
       <h1 className="t-titolo-pagina">Design system</h1>
@@ -107,6 +108,7 @@ export function Gallery() {
       <EditableRowsSection />
       <MonthSection />
       {passwordField ? <PasswordFieldSection /> : null}
+      {splitUnico ? <SplitUnicoSection /> : null}
       {pageParts ? <PageParts /> : null}
       {pageParts ? <WishlistParts /> : null}
       {pageParts ? <LinkedCalendarParts /> : null}
@@ -648,6 +650,56 @@ function PasswordFieldSection() {
           disabled
           data-testid="campo-password-disabilitato"
         />
+      </Example>
+    </Section>
+  );
+}
+
+// #345: the single-DOM onboarding step is shown only with ?split-unico=1, so
+// the reference of the whole gallery does not change.
+function SplitUnicoSection() {
+  return (
+    <Section id="split-onboarding-unico" title="Onboarding, un solo DOM">
+      <Example caption="split-onboarding--unico · passo sotto 1024 px, split da 1024 px">
+        <div
+          className="split-onboarding split-onboarding--unico"
+          data-testid="split-onboarding-unico"
+        >
+          <div className="split-onboarding__notte">
+            <p className="t-frase">Il vostro Nest, in un posto solo.</p>
+          </div>
+          <div className="split-onboarding__passo--unico">
+            <div className="passo-onboarding__testa">
+              <span aria-hidden="true" />
+              <span aria-hidden="true" />
+              <span className="barra__vuoto" aria-hidden="true" />
+            </div>
+            <div className="split-onboarding__mid">
+              <h3 className="t-titolo-pagina">Entra con la mail</h3>
+              <div className="split-onboarding__blocco">
+                <div className="sezione">
+                  <TextField
+                    label="Mail"
+                    type="email"
+                    autoComplete="email"
+                    defaultValue=""
+                  />
+                </div>
+                <div className="dialogo__azioni">
+                  <Button full>Continua</Button>
+                  <p className="t-nota t-secondario split-onboarding__solo-desktop">
+                    Solo da 1024 px
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="split-onboarding__legale">
+              <p className="t-nota t-secondario">
+                Continuando accetti le condizioni d&apos;uso.
+              </p>
+            </div>
+          </div>
+        </div>
       </Example>
     </Section>
   );

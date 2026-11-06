@@ -4,7 +4,10 @@ import {
   redirectToProvider,
 } from "@/lib/calendar-sync/link-response";
 import { isLinkDestination, startOAuth } from "@/lib/calendar-sync/oauth";
-import { providerForNewLink } from "@/lib/calendar-sync/providers";
+import {
+  isProviderConfigured,
+  providerForNewLink,
+} from "@/lib/calendar-sync/providers";
 import { isProviderId } from "@/lib/calendar-sync/types";
 import { createClient } from "@/lib/supabase/server";
 
@@ -48,6 +51,16 @@ export async function POST(
       status: 303,
       headers: NO_STORE,
     });
+  }
+
+  // No keys for this provider here: do not send the user anywhere.
+  if (!isProviderConfigured(providerId)) {
+    return redirectToDestination(
+      request.nextUrl.origin,
+      destination,
+      providerId,
+      "not_configured",
+    );
   }
 
   try {

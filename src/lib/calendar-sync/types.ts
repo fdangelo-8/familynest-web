@@ -109,6 +109,12 @@ export type OutgoingEvent = {
 
 /** A session with a short-lived access token, kept in memory only. */
 export interface ProviderSession {
+  /**
+   * A new refresh token the provider issued while the session was opened or
+   * renewed (Outlook sends one at every renewal); null when it did not. The
+   * caller saves it encrypted: the old one expires.
+   */
+  readonly rotatedRefreshToken: string | null;
   listCalendars(): Promise<ProviderCalendar[]>;
   listEvents(
     calendar: { id: string },

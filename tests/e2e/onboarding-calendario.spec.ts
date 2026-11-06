@@ -322,6 +322,30 @@ test.describe("collegamento con il fornitore finto", () => {
     });
   });
 
+  test("#329 CA-34: fornitore non configurato → avviso senza «Riprova», «Continua senza calendario» attivo", async ({
+    page,
+    baseURL,
+  }) => {
+    needsThrowaway();
+    await withNest("couple", async (user) => {
+      await page.context().addCookies([
+        {
+          name: "fn-calendar-link",
+          value: "google.not_configured",
+          url: baseURL as string,
+          httpOnly: true,
+        },
+      ]);
+      await open(page, user, baseURL);
+      const alert = page.locator(".avviso--errore[role=alert]").filter(visible);
+      await expect(alert).toHaveText(
+        "Per ora non è possibile collegare Google o Outlook. Premi «Continua senza calendario»: potrai collegarlo più avanti da Calendari collegati.",
+      );
+      await expect(alert.getByRole("button")).toHaveCount(0);
+      await expect(principal(page, "Continua senza calendario")).toBeEnabled();
+    });
+  });
+
   test("CA-7, CA-8: «Nega» → avviso con «Riprova»; «Riprova» + «Consenti» → «Collegato»", async ({
     page,
     baseURL,
