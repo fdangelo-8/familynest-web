@@ -52,6 +52,8 @@ export function isLinkDestination(value: unknown): value is LinkDestination {
  * - limit: the adult has 5 accounts already, nothing saved;
  * - admin_approval: the provider says an administrator must approve the app
  *   first (the Workspace or Microsoft 365 administrator), nothing saved;
+ * - not_configured: the provider has no keys on this server, so the user was
+ *   not sent anywhere (no «Riprova»: trying again cannot help);
  * - failed: anything else (the provider, the network, the database).
  */
 export const LINK_RESULTS = [
@@ -62,6 +64,7 @@ export const LINK_RESULTS = [
   "no_calendar_permission",
   "limit",
   "admin_approval",
+  "not_configured",
   "failed",
 ] as const;
 

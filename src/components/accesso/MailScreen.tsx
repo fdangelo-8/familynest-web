@@ -67,7 +67,11 @@ async function requestLink(address: string): Promise<SendResult> {
     const { error } = await supabase.auth.signInWithOtp({
       email: address,
       // A mail never seen creates the account at the first click on the link.
-      options: { shouldCreateUser: true },
+      // #326: without `emailRedirectTo` Supabase falls back on the Site URL.
+      options: {
+        shouldCreateUser: true,
+        emailRedirectTo: `${window.location.origin}/auth/confirm`,
+      },
     });
     if (!error) return "ok";
     if (

@@ -598,14 +598,16 @@ test.describe("link via mail: invio", () => {
 });
 
 test.describe("link via mail: ritorno", () => {
-  for (const url of [
-    "/auth/confirm?token_hash=non-valido&type=magiclink",
-    "/auth/confirm",
-    "/auth/confirm?token_hash=non-valido&type=recovery",
-  ]) {
+  for (const [url, tipo] of [
+    ["/auth/confirm?token_hash=non-valido&type=magiclink", "conferma"],
+    ["/auth/confirm", "conferma"],
+    ["/auth/confirm?token_hash=non-valido&type=recovery", "password"],
+  ] as const) {
     test(`CA-27: ${url} porta a /accesso/link-scaduto`, async ({ page }) => {
       await page.goto(url);
-      await expect(page).toHaveURL(/\/accesso\/link-scaduto$/);
+      await expect(page).toHaveURL(
+        new RegExp(`/accesso/link-scaduto\\?tipo=${tipo}$`),
+      );
       await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
       await page.goto("/oggi");
       await expect(page).toHaveURL(/\/accesso$/);
@@ -766,12 +768,12 @@ async function magicLink(address: string, next?: string) {
     auth: { autoRefreshToken: false, persistSession: false },
   });
   const { data, error } = await admin.auth.admin.generateLink({
-    type: "magiclink",
+    type: "magiclink", // the stored token also verifies as `email`
     email: address,
   });
   expect(error).toBeNull();
   const hash = data.properties!.hashed_token;
-  return `/auth/confirm?token_hash=${hash}&type=magiclink${
+  return `/auth/confirm?token_hash=${hash}&type=email${
     next ? `&next=${encodeURIComponent(next)}` : ""
   }`;
 }
@@ -829,7 +831,7 @@ test.describe("[CI-utenti] ritorno e sessione", () => {
       await expect(page).toHaveURL(/\/oggi$/);
       const second = await other.newPage();
       await second.goto(new URL(link, page.url()).toString());
-      await expect(second).toHaveURL(/\/accesso\/link-scaduto$/);
+      await expect(second).toHaveURL(/\/accesso\/link-scaduto\?tipo=conferma$/);
       await second.goto(new URL("/oggi", page.url()).toString());
       await expect(second).toHaveURL(/\/accesso$/);
     } finally {

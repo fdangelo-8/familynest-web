@@ -2,7 +2,7 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Json } from "@/types/database";
 import { isFakeCalendarProviderEnabled } from "@/lib/env";
-import { decryptCredentials } from "./crypto";
+import { decryptCredentials, encryptCredentials } from "./crypto";
 import { providerFor } from "./providers";
 import {
   ProviderAuthError,
@@ -206,6 +206,34 @@ async function syncCalendars(
   return failed === rows.length ? "temporary_error" : "ok";
 }
 
+/**
+ * A provider that sends a new refresh token at every renewal (Outlook): the new
+ * one is saved encrypted, but only if the stored value is still the one we
+ * read, so a «Ricollega» done meanwhile is not overwritten. A failure counts
+ * in the tally and never stops the work: the old token still works for a while.
+ */
+async function saveRotatedToken(
+  admin: Admin,
+  account: AccountRow,
+  session: ProviderSession,
+  tally?: Tally,
+): Promise<void> {
+  const rotated = session.rotatedRefreshToken;
+  if (!rotated) return;
+  try {
+    noteError(
+      tally,
+      await admin.rpc("update_calendar_account_credentials", {
+        p_account_id: account.id,
+        p_previous_ciphertext: account.credentials_ciphertext,
+        p_credentials_ciphertext: encryptCredentials(rotated),
+      }),
+    );
+  } catch {
+    if (tally) tally.dbErrors += 1;
+  }
+}
+
 async function syncOne(
   admin: Admin,
   account: AccountRow,
@@ -231,6 +259,7 @@ async function syncOne(
     // the account is not at fault, so its state does not change.
     return "skipped";
   }
+  await saveRotatedToken(admin, account, session, tally);
 
   try {
     await saveCalendars(admin, account.id, await session.listCalendars());
@@ -441,6 +470,7 @@ export async function processOutbox(
         session = await provider.openSession(
           decryptCredentials(account.credentials_ciphertext),
         );
+        await saveRotatedToken(admin, account, session, tally);
       } catch (caught) {
         if (caught instanceof ProviderAuthError) {
           await recordResult(admin, accountId, "auth_error", now, tally);

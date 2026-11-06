@@ -3742,7 +3742,8 @@ button.riga-lista {
    larghezza, il contenuto ha la larghezza delle pagine della fondamenta #10 (#11) */
 @media (min-width: 768px) {
   .schermo-notte,
-  .passo-onboarding {
+  .passo-onboarding,
+  .split-onboarding__passo--unico {
     padding-inline: max(
       var(--grid-margine-mobile),
       calc(
@@ -4444,6 +4445,77 @@ button.riga-lista {
   top: calc(50% - var(--size-icona-s) / 2);
   right: 100%;
   margin-right: var(--space-1);
+}
+
+/* Onboarding con un solo DOM per due disposizioni (#345): sotto 1024 px il passo
+   ha la disposizione di .passo-onboarding, da 1024 px quella di .split-onboarding.
+   Si usa solo con --unico: le pagine esistenti non cambiano. */
+.split-onboarding--unico {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+/* Il pannello notte esiste solo accanto al passo (da 1024 px) */
+.split-onboarding--unico > .split-onboarding__notte {
+  display: none;
+}
+.split-onboarding__passo--unico {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto 1fr auto;
+  gap: var(--space-5);
+  padding: var(--space-3) var(--grid-margine-mobile) var(--space-6);
+}
+/* Il centro non ha riquadro: titolo e blocco sono righe della griglia del passo */
+.split-onboarding__mid {
+  display: contents;
+}
+.split-onboarding__blocco {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: 1fr auto;
+  gap: var(--space-5);
+}
+/* La frase legale sta sotto i bottoni, come se fosse uno di loro */
+.split-onboarding__legale {
+  margin-top: calc(var(--space-2) - var(--space-5));
+}
+@media (max-width: 1023px) {
+  .split-onboarding--unico .split-onboarding__solo-desktop {
+    display: none;
+  }
+}
+@media (min-width: 1024px) {
+  .split-onboarding--unico {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  }
+  .split-onboarding--unico > .split-onboarding__notte {
+    display: grid;
+  }
+  /* Stessa scatola di .split-onboarding__passo; la riga della freccia resta (vuota) */
+  .split-onboarding--unico > .split-onboarding__passo--unico {
+    padding: var(--space-12) var(--space-16);
+    grid-template-rows: auto 1fr auto;
+    gap: var(--space-8);
+  }
+  .split-onboarding--unico .passo-onboarding__testa > * {
+    display: none;
+  }
+  .split-onboarding--unico .split-onboarding__mid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-2);
+    align-content: start;
+  }
+  .split-onboarding--unico .split-onboarding__blocco {
+    grid-template-rows: none;
+    gap: var(--space-2);
+  }
+  .split-onboarding--unico .split-onboarding__legale {
+    margin-top: 0;
+  }
 }
 
 /* Movimento ridotto: niente animazioni né transizioni, ovunque */
@@ -5233,6 +5305,99 @@ a.riga-regalo__titolo::before {
   min-width: 0;
   overflow-wrap: anywhere;
   text-align: end;
+}
+
+/* #327 · Campo password con mostra/nascondi */
+.campo-password {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+.campo-password .campo__input {
+  padding-right: calc(var(--size-tocco) + var(--space-2));
+}
+.campo-password .campo__input::-ms-reveal {
+  display: none;
+}
+.campo-password__mostra {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: var(--space-1);
+  margin-block: auto;
+  width: var(--size-tocco);
+  height: var(--size-tocco);
+  padding: var(--space-0);
+  border: 0;
+  border-radius: var(--radius-s);
+  background: transparent;
+  display: grid;
+  place-items: center;
+  color: var(--color-inchiostro-2);
+  cursor: pointer;
+}
+.campo-password__mostra[aria-pressed="true"] {
+  color: var(--color-inchiostro);
+}
+@media (hover: hover) {
+  .campo-password__mostra {
+    transition: background-color var(--durata-rapida) var(--curva);
+  }
+  .campo-password__mostra:hover {
+    background: var(--color-carta);
+    color: var(--color-inchiostro);
+  }
+}
+.campo-password__mostra:active {
+  background: var(--color-carta);
+}
+
+/* #327 · Regole della password */
+.regole-password {
+  display: grid;
+  gap: var(--space-1);
+  margin: var(--space-0);
+  padding: var(--space-0);
+  list-style: none;
+}
+.regole-password__regola {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-nota-size);
+  line-height: var(--text-nota-line);
+  color: var(--color-inchiostro-2);
+}
+.regole-password__segno {
+  width: var(--size-icona-s);
+  height: var(--size-icona-s);
+  flex: none;
+  border-radius: var(--radius-tondo);
+  box-shadow: inset 0 0 0 var(--border-medio) var(--color-inchiostro-2);
+}
+.regole-password__regola--rispettata {
+  color: var(--color-inchiostro);
+}
+.regole-password__regola--rispettata > .icona {
+  color: var(--color-ok);
+}
+
+/* #327 · Campi compilati dal browser: restano bianchi con il loro bordo */
+.campo__input:-webkit-autofill {
+  -webkit-text-fill-color: var(--color-inchiostro);
+  box-shadow:
+    inset 0 0 0 var(--border-sottile) var(--color-filo-campo),
+    inset 0 0 0 var(--size-azione) var(--color-superficie);
+}
+.campo__input:-webkit-autofill:focus {
+  box-shadow:
+    inset 0 0 0 var(--border-medio) var(--color-inchiostro),
+    inset 0 0 0 var(--size-azione) var(--color-superficie);
+}
+.campo--errore .campo__input:-webkit-autofill {
+  box-shadow:
+    inset 0 0 0 var(--border-medio) var(--color-allerta),
+    inset 0 0 0 var(--size-azione) var(--color-superficie);
 }
 
 /* =========================================================
