@@ -9,7 +9,34 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(22);
+select plan(30);
+
+-- The error of a statement as the caller receives it: code, message, detail and hint.
+-- '{}' when the statement works. Created in pg_temp: gone with the session.
+create function pg_temp.error_of(p_sql text)
+returns jsonb
+language plpgsql
+as $$
+declare
+  v_state text;
+  v_message text;
+  v_detail text;
+  v_hint text;
+begin
+  execute p_sql;
+  return '{}'::jsonb;
+exception when others then
+  get stacked diagnostics
+    v_state = returned_sqlstate,
+    v_message = message_text,
+    v_detail = pg_exception_detail,
+    v_hint = pg_exception_hint;
+  return jsonb_build_object(
+    'state', v_state, 'message', v_message,
+    'detail', coalesce(v_detail, ''), 'hint', coalesce(v_hint, '')
+  );
+end;
+$$;
 
 -- ---------------------------------------------------------------------------
 -- Schema and privileges
@@ -33,6 +60,13 @@ select ok(
   and not has_function_privilege('authenticated', 'public.update_calendar_account_credentials(uuid, text, text)', 'execute')
   and not has_function_privilege('anon', 'public.update_calendar_account_credentials(uuid, text, text)', 'execute'),
   'only service_role executes it'
+);
+select ok(
+  (select p.proacl is not null
+          and not exists (select 1 from aclexplode(p.proacl) a where a.grantee = 0)
+   from pg_proc p
+   where p.oid = 'public.update_calendar_account_credentials(uuid, text, text)'::regprocedure),
+  'PUBLIC has no privilege on it'
 );
 
 -- A row of the revocation queue and a failing state, to show they do not change.
@@ -109,8 +143,42 @@ select throws_ok(
        'e1000000-0000-4000-8000-000000000001',
        'v1:test.placeholder.not.a.credential.renewed01',
        'a-plain-refresh-token-that-is-not-encrypted') $$,
-  '23514', null,
-  'new credentials with an invalid format are refused'
+  '23514', 'invalid credentials format',
+  'new credentials with an invalid format are refused, with a generic message'
+);
+-- The constraint would add the whole row (email, account at the provider, the token) as
+-- DETAIL: the function refuses first, with no detail and nothing of the value.
+select is(
+  pg_temp.error_of($$ select public.update_calendar_account_credentials(
+    'e1000000-0000-4000-8000-000000000001',
+    'v1:test.placeholder.not.a.credential.renewed01',
+    'a-plain-refresh-token-that-is-not-encrypted') $$),
+  '{"state": "23514", "message": "invalid credentials format", "detail": "", "hint": ""}'::jsonb,
+  'the refusal of the format has no detail and no hint'
+);
+select ok(
+  strpos(
+    pg_temp.error_of($$ select public.update_calendar_account_credentials(
+      'e1000000-0000-4000-8000-000000000001',
+      'v1:test.placeholder.not.a.credential.renewed01',
+      'a-plain-refresh-token-that-is-not-encrypted') $$)::text,
+    'plain-refresh-token') = 0
+  and strpos(
+    pg_temp.error_of($$ select public.update_calendar_account_credentials(
+      'e1000000-0000-4000-8000-000000000001',
+      'v1:test.placeholder.not.a.credential.renewed01',
+      'a-plain-refresh-token-that-is-not-encrypted') $$)::text,
+    'paolo') = 0,
+  'the error holds neither the token, nor the email, nor the account at the provider'
+);
+select is(
+  pg_temp.error_of(format(
+    'select public.update_calendar_account_credentials(%L, %L, %L)',
+    'e1000000-0000-4000-8000-000000000001',
+    'v1:test.placeholder.not.a.credential.renewed01',
+    'v1:' || repeat('a', 8190))),
+  '{"state": "23514", "message": "invalid credentials format", "detail": "", "hint": ""}'::jsonb,
+  'credentials longer than 8,192 characters: the same generic refusal'
 );
 select throws_ok(
   $$ select public.update_calendar_account_credentials(
@@ -141,7 +209,43 @@ select throws_ok(
        'v1:test.placeholder.not.a.credential.renewed01',
        'v1:test.placeholder.not.a.credential.renewed02') $$,
   'P0001', 'use POST',
-  'only POST through the Data API'
+  'only POST through the Data API (GET)'
+);
+set local request.method to 'HEAD';
+select throws_ok(
+  $$ select public.update_calendar_account_credentials(
+       'e1000000-0000-4000-8000-000000000001',
+       'v1:test.placeholder.not.a.credential.renewed01',
+       'v1:test.placeholder.not.a.credential.renewed02') $$,
+  'P0001', 'use POST',
+  'only POST through the Data API (HEAD)'
+);
+set local request.method to 'PUT';
+select throws_ok(
+  $$ select public.update_calendar_account_credentials(
+       'e1000000-0000-4000-8000-000000000001',
+       'v1:test.placeholder.not.a.credential.renewed01',
+       'v1:test.placeholder.not.a.credential.renewed02') $$,
+  'P0001', 'use POST',
+  'only POST through the Data API (PUT)'
+);
+set local request.method to 'PATCH';
+select throws_ok(
+  $$ select public.update_calendar_account_credentials(
+       'e1000000-0000-4000-8000-000000000001',
+       'v1:test.placeholder.not.a.credential.renewed01',
+       'v1:test.placeholder.not.a.credential.renewed02') $$,
+  'P0001', 'use POST',
+  'only POST through the Data API (PATCH)'
+);
+set local request.method to 'DELETE';
+select throws_ok(
+  $$ select public.update_calendar_account_credentials(
+       'e1000000-0000-4000-8000-000000000001',
+       'v1:test.placeholder.not.a.credential.renewed01',
+       'v1:test.placeholder.not.a.credential.renewed02') $$,
+  'P0001', 'use POST',
+  'only POST through the Data API (DELETE)'
 );
 set local request.method to 'POST';
 
