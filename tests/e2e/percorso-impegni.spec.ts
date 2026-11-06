@@ -24,6 +24,7 @@ import {
   closeStarterList,
   eventBlocks,
   inToday,
+  isMobile,
   visibleIn,
   monthRowsOf,
   openDay,
@@ -190,15 +191,21 @@ test.describe("percorso: aggiungo, ritrovo, modifico, elimino", () => {
         await expect(h1(rita, YOGA)).toBeVisible();
 
         await openToday(rita);
-        await expect(visibleIn(rita, YOGA).first()).toBeVisible();
-        await expect(rita.getByRole("main")).toContainText("19:00");
+        // «Domani» is on the desktop; the phone shows tomorrow only when today
+        // is empty (CA-17 of Oggi), which depends on the hour of the run.
+        if (!isMobile(rita)) {
+          await expect(visibleIn(rita, YOGA).first()).toBeVisible();
+          await expect(rita.getByRole("main")).toContainText("19:00");
+        }
         await expect(inToday(rita, CUCINA)).toHaveCount(0);
       });
 
       // 9. Oggi di Ilaria: Yoga alle 19:00 e non il corso eliminato.
       await openToday(page);
-      await expect(visibleIn(page, YOGA).first()).toBeVisible();
-      await expect(page.getByRole("main")).toContainText("19:00");
+      if (!isMobile(page)) {
+        await expect(visibleIn(page, YOGA).first()).toBeVisible();
+        await expect(page.getByRole("main")).toContainText("19:00");
+      }
       await expect(inToday(page, CUCINA)).toHaveCount(0);
 
       // 10. Elimino anche Yoga dal Dettaglio: sparisce da Oggi, dalla ricerca e
