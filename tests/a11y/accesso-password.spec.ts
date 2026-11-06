@@ -300,6 +300,45 @@ test.describe("/accesso/mail · Entra", () => {
     await expectNoBlocking(page);
   });
 
+  test("«Rimanda la mail» dall'avviso: durante l'invio l'avviso resta, il bottone è in caricamento e il fuoco non va al body", async ({
+    page,
+  }) => {
+    needSupabase();
+    await mockAuth(page, "/token", {
+      ...bad,
+      body: { code: 400, error_code: "email_not_confirmed", msg: "no" },
+    });
+    let release: () => void = () => {};
+    const held = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    await page.route(`${supabaseUrl}/auth/v1/resend*`, async (route) => {
+      await held;
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: "{}",
+      });
+    });
+    await submit(page, () =>
+      expect(
+        statusWith(page, "Questa mail non è ancora confermata."),
+      ).toBeVisible({ timeout: 3000 }),
+    );
+    const resend = page.getByRole("button", { name: "Rimanda la mail" });
+    await resend.focus();
+    await resend.click();
+    await expect(resend).toHaveAttribute("aria-busy", "true");
+    await expect(
+      statusWith(page, "Questa mail non è ancora confermata."),
+    ).toBeVisible();
+    await expect(resend).toBeFocused();
+    release();
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Controlla la posta" }),
+    ).toBeFocused();
+  });
+
   test("troppi tentativi: axe, avviso con role=status", async ({ page }) => {
     needSupabase();
     await mockAuth(page, "/token", RATE_LIMIT);

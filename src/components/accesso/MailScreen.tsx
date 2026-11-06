@@ -200,9 +200,16 @@ export function MailScreen({ hasInvite }: { hasInvite: boolean }) {
     busy.current = true;
     last.current = { action, email: address, password: secret };
     setPending(action === "resend" ? "resend" : "form");
-    setNotice(null);
+    // «Rimanda la mail» from the notice keeps the notice (and its button, in
+    // loading) on screen while the request runs, so the focus stays on it.
+    const fromNotice = action === "resend" && notice?.kind === "unconfirmed";
+    if (!fromNotice) setNotice(null);
     const outcome = await request(action, address, secret);
     busy.current = false;
+    // The password is only needed again for «Riprova» after a network error.
+    if (outcome !== "network") {
+      last.current = { ...last.current, password: "" };
+    }
 
     if (outcome === "entered") {
       // The page for a signed-in person sends them to their destination
@@ -213,6 +220,11 @@ export function MailScreen({ hasInvite }: { hasInvite: boolean }) {
     setPending(null);
 
     const context: Context = action;
+    if (fromNotice) {
+      // The button that had the focus goes away with the old notice.
+      if (outcome === "ok") setNotice(null);
+      else emailRef.current?.focus();
+    }
     switch (outcome) {
       case "ok":
         if (action === "resend" && view === "sent") {
