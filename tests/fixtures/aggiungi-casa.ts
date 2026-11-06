@@ -116,7 +116,10 @@ export function sheet(page: Page, mode: "add" | "edit" = "add") {
     expectDateError: async (text: string) => {
       const date = dialog.getByLabel(/^(Entro|Scade il)$/);
       await expect(date).toHaveAttribute("aria-invalid", "true");
-      await expect(date).toHaveAccessibleDescription(text);
+      // The help «Preso dalla frase» may come first, then the error
+      await expect(date).toHaveAccessibleDescription(
+        new RegExp(`${text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`),
+      );
       await expect(date).toBeFocused();
     },
     /** Exactly this voice of «Chi lo vede» is the pressed one. */
