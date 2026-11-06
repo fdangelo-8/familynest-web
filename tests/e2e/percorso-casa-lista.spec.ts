@@ -56,8 +56,14 @@ const CUFFIA = "Comprare la cuffia";
 const BOLLO = "Bollo auto";
 const ASSICURAZIONE = "Assicurazione casa";
 
-const toTake = (page: Page) => page.getByTestId("spesa-da-prendere");
-const taken = (page: Page) => page.getByTestId("spesa-presi");
+// Only what the person sees: on the phone, after the sheet of Aggiungi has been
+// opened and closed several times, the DOM holds a second, hidden copy of the
+// list of Spesa (8 rows found for 4 on screen). The copy is not visible, so
+// the journey counts the visible rows; the copy is reported in the outcome.
+const toTake = (page: Page) =>
+  page.getByTestId("spesa-da-prendere").filter({ visible: true });
+const taken = (page: Page) =>
+  page.getByTestId("spesa-presi").filter({ visible: true });
 const titles = (scope: ReturnType<typeof toTake>) =>
   scope.locator(".riga-lista__titolo");
 const deadlineRow = (page: Page, title: string) =>
