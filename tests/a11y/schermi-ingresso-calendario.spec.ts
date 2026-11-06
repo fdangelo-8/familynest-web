@@ -1014,15 +1014,12 @@ async function shot(page: Page, name: string) {
 }
 
 test.describe("schermi di ingresso, onboarding, Oggi, calendario e Aggiungi", () => {
-  test.beforeEach((_fixtures, testInfo) => {
-    test.skip(
-      testInfo.project.name !== "desktop",
-      "la spec imposta da sé le larghezze: gira una volta sola",
-    );
-  });
-
   for (const scene of scenes) {
-    test(scene.title, async ({ page, baseURL }) => {
+    test(scene.title, async ({ page, baseURL }, testInfo) => {
+      test.skip(
+        testInfo.project.name !== "desktop",
+        "la spec imposta da sé le larghezze: gira una volta sola",
+      );
       const reason = scene.skipReason?.();
       test.skip(!!reason, reason ?? "");
       test.setTimeout(480_000);
