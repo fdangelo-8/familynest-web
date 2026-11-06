@@ -144,18 +144,21 @@ test.describe("Da fare", () => {
     await expect(
       dialog.getByRole("button", { name: "Dai a Laura" }),
     ).toBeVisible();
-    await expect(dialog.getByTestId("aggiungi-visibilita")).toHaveText(
-      "Lo vede tutto il Nest",
+    await expect(
+      dialog.getByRole("button", { name: "Lo vede tutto il Nest" }),
+    ).toHaveAttribute("aria-pressed", "true");
+    await expect(dialog.getByLabel("Data", { exact: true })).toHaveValue(
+      "2026-10-23",
     );
     await shoot(page, "da-fare.png");
   });
 
   test("solo io", async ({ page }) => {
     const { dialog } = await write(page, "Da fare", TODO_PHRASE);
-    await dialog.getByTestId("aggiungi-visibilita").click();
-    await expect(dialog.getByTestId("aggiungi-visibilita")).toHaveText(
-      "Lo vedi solo tu",
-    );
+    await dialog.getByRole("button", { name: "Lo vedo solo io" }).click();
+    await expect(
+      dialog.getByRole("button", { name: "Lo vedo solo io" }),
+    ).toHaveAttribute("aria-pressed", "true");
     await shoot(page, "da-fare-solo-io.png");
   });
 
@@ -256,8 +259,11 @@ test.describe("Modifica", () => {
   test("cosa da fare", async ({ page }) => {
     await edit(page, EDIT_TODO, { thing: TODO_THING });
     await expect(
-      page.getByRole("button", { name: "Togli la data" }),
+      page.getByRole("button", { name: "Togli Per Sofia" }),
     ).toBeVisible();
+    await expect(page.getByLabel("Data", { exact: true })).toHaveValue(
+      "2026-10-23",
+    );
     await shoot(page, "modifica-da-fare.png");
   });
 

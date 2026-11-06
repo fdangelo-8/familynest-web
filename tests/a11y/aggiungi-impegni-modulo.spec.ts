@@ -26,10 +26,6 @@ test.beforeEach(async ({ page, context, baseURL }) => {
   await page.clock.install({ time: NOW });
 });
 
-function isDesktop(testInfo: { project: { name: string } }) {
-  return testInfo.project.name === "desktop";
-}
-
 async function open(page: Page) {
   await page.goto("/aggiungi");
   const dialog = page.getByRole("dialog", { name: "Aggiungi" });
@@ -230,49 +226,40 @@ test.describe("Aggiungi · Impegni · modulo: fuoco e tastiera", () => {
     expect(await focused(page)).toBe("Chiudi");
   });
 
-  test("dalle righe il fuoco va sul campo giusto e torna sulla riga", async ({
+  // #333: the four rows of the summary are gone; the fields are in the sheet.
+  test("foglio con la frase: ordine del Tab dei campi dell'impegno, senza «La porta»", async ({
     page,
-  }, testInfo) => {
-    test.skip(!isDesktop(testInfo), "le righe sono bottoni solo da 1024 px");
+  }) => {
     await installFakes(page);
-    const { dialog } = await openWithPhrase(page);
-    const cases = [
-      ["day", /^Giorno$/],
-      // the chips read «S» + «Sofia»: the first pressed one, then «Tu» of «La porta»
-      ["people", /Sofia$/],
-      ["escort", /Tu$/],
-      ["visibility", /Occupato$/],
-    ] as const;
-    for (const [row, target] of cases) {
-      const button = dialog.getByTestId(`aggiungi-ingresso-${row}`);
-      await button.click();
-      await expect(formOf(page)).toBeVisible();
-      expect(await focused(page)).toMatch(target);
-      await page.keyboard.press("Escape");
-      await expect(formOf(page)).toHaveCount(0);
-      await expect(
-        dialog.getByTestId(`aggiungi-ingresso-${row}`),
-      ).toBeFocused();
+    const { dialog, field } = await openWithPhrase(page);
+    await expect(dialog.getByText("La porta")).toHaveCount(0);
+    await field.focus();
+    const order: string[] = [await focused(page)];
+    const entryName = /^(Più|Tutti i) dettagli$/;
+    for (let i = 0; i < 40; i++) {
+      await page.keyboard.press("Tab");
+      const name = await focused(page);
+      order.push(name);
+      expect(await ringVisible(page)).toBe(true);
+      expect(
+        await page.evaluate(() =>
+          document.activeElement?.closest('[role="dialog"]') ? true : false,
+        ),
+      ).toBe(true);
+      if (entryName.test(name)) break;
     }
-  });
-
-  test("gli ingressi hanno nome accessibile uguale al testo visibile", async ({
-    page,
-  }, testInfo) => {
-    test.skip(!isDesktop(testInfo), "le righe sono bottoni solo da 1024 px");
-    await installFakes(page);
-    const { dialog } = await openWithPhrase(page);
-    for (const row of ["day", "people", "escort", "visibility"]) {
-      const button = dialog.getByTestId(`aggiungi-ingresso-${row}`);
-      await expect(button).not.toHaveAttribute("aria-label", /.+/);
-    }
-    await expect(
-      dialog.getByRole("button", { name: /^Giovedì 22 ottobre/ }),
-    ).toBeVisible();
-    await expect(dialog.getByRole("button", { name: /^Chi / })).toHaveCount(2);
-    await expect(
-      dialog.getByRole("button", { name: /^La porta / }),
-    ).toBeVisible();
+    // The native date and time fields have one stop per part: same name in a row
+    const stops = order.filter((name, i) => name !== order[i - 1]);
+    const types = ["Impegno", "Da fare", "Spesa", "Scadenza"];
+    const fields = ["Giorno", "Dalle", "Alle"];
+    expect(stops.slice(0, 1 + types.length + fields.length)).toEqual([
+      "Cosa vuoi aggiungere?",
+      ...types,
+      ...fields,
+    ]);
+    // The people (the first pressed chip reads «S» + «Sofia») and the three voices
+    expect(stops.slice(-4, -1)).toEqual(["Solo io", "Occupato", "Tutti"]);
+    expect(stops.at(-1)).toMatch(entryName);
   });
 });
 
@@ -303,14 +290,24 @@ test.describe("Aggiungi · Impegni · modulo: aree di tocco", () => {
     }
   });
 
-  test("righe del riepilogo (desktop) da 44 px", async ({ page }, testInfo) => {
-    test.skip(!isDesktop(testInfo), "le righe sono bottoni solo da 1024 px");
+  test("campi del foglio: le persone e le tre voci della visibilità da 44 px", async ({
+    page,
+  }) => {
     await installFakes(page);
     const { dialog } = await openWithPhrase(page);
-    for (const row of ["day", "people", "escort", "visibility"]) {
-      const button = dialog.getByTestId(`aggiungi-ingresso-${row}`);
-      expect(await missedPoints(button)).toEqual([]);
-      expect((await button.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    const controls = [
+      ...(await dialog
+        .getByRole("group", { name: "Chi", exact: true })
+        .getByRole("button")
+        .all()),
+      ...(await dialog
+        .getByRole("group", { name: "Chi lo vede", exact: true })
+        .getByRole("button")
+        .all()),
+    ];
+    expect(controls.length).toBeGreaterThanOrEqual(5);
+    for (const control of controls) {
+      expect(await missedPoints(control)).toEqual([]);
     }
   });
 });

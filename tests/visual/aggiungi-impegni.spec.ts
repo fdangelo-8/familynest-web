@@ -78,20 +78,27 @@ test("vuoto", async ({ page }) => {
   await installFakes(page);
   const { dialog } = await open(page);
   await expect(dialog.getByRole("button", { name: "Aggiungi" })).toBeDisabled();
-  await expect(
-    page.getByRole("button", { name: "cena da Marta venerdì alle 20" }),
-  ).toBeVisible();
+  // #333: no examples; the fields of the Impegno are there with the empty phrase
+  await expect(dialog.getByText("Esempi", { exact: true })).toHaveCount(0);
+  await expect(dialog.getByLabel("Giorno", { exact: true })).toBeVisible();
   await shoot(page, "vuoto.png");
 });
 
-test("frase riconosciuta con le etichette", async ({ page }) => {
+test("frase riconosciuta con i campi compilati", async ({ page }) => {
   const served = await installFakes(page);
   const { dialog, field } = await open(page);
   await field.pressSequentially(PHRASE);
-  const labels = dialog.locator('[aria-live="polite"]');
-  await expect(labels).toContainText("Giovedì 22");
-  await expect(labels).toContainText("17:00");
-  await expect(labels).toContainText("Sofia");
+  await expect(dialog.getByLabel("Giorno", { exact: true })).toHaveValue(
+    "2026-10-22",
+  );
+  await expect(dialog.getByLabel("Dalle", { exact: true })).toHaveValue(
+    "17:00",
+  );
+  await expect(
+    dialog
+      .getByRole("group", { name: "Chi", exact: true })
+      .getByRole("button", { pressed: true }),
+  ).toHaveCount(1);
   await expect(
     dialog.getByRole("button", { name: "Metti in giovedì 22" }),
   ).toBeEnabled();
@@ -100,18 +107,19 @@ test("frase riconosciuta con le etichette", async ({ page }) => {
   await shoot(page, "frase-riconosciuta.png");
 });
 
-test("anteprima con gli Occupato degli altri", async ({ page }, testInfo) => {
-  test.skip(!isDesktop(testInfo), "l'anteprima c'è solo da 1024 px");
+// #333 (answer 2 of Francesco): the preview of the day is gone from the desktop modal.
+test("desktop: la modale è singola, senza anteprima della giornata", async ({
+  page,
+}, testInfo) => {
+  test.skip(!isDesktop(testInfo), "la colonna c'era solo da 1024 px");
   await installFakes(page, { events: THURSDAY });
   const { dialog, field } = await open(page);
   await field.pressSequentially(PHRASE);
-  await expect(page.getByText("Anteprima", { exact: true })).toBeVisible();
-  await expect(page.getByText("Colloquio con la maestra")).toBeVisible();
   await expect(page.getByText("Laura ha un impegno").first()).toBeVisible();
-  await expect(
-    dialog.getByText("Caricamento in corso", { exact: true }),
-  ).toHaveCount(0);
-  await shoot(page, "anteprima-occupato.png");
+  await expect(page.getByText("Anteprima", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("Colloquio con la maestra")).toHaveCount(0);
+  await expect(dialog.getByRole("complementary")).toHaveCount(0);
+  await shoot(page, "modale-singola-con-avviso.png");
 });
 
 test("avviso «chi accompagna?»", async ({ page }) => {
@@ -162,7 +170,9 @@ test("persone del Nest non lette", async ({ page }) => {
     "Non riusciamo a caricare le persone del Nest",
   );
   await field.pressSequentially(PHRASE);
-  await expect(dialog.getByText("Giovedì 22").first()).toBeVisible();
+  await expect(dialog.getByLabel("Giorno", { exact: true })).toHaveValue(
+    "2026-10-22",
+  );
   await shoot(page, "persone-non-lette.png");
 });
 

@@ -142,7 +142,7 @@ test.describe("Aggiungi · Spesa, Da fare, Scadenza: axe", () => {
     page,
   }) => {
     const { dialog } = await write(page, "Da fare", TODO_PHRASE);
-    await dialog.getByTestId("aggiungi-visibilita").click();
+    await dialog.getByRole("button", { name: "Lo vedo solo io" }).click();
     expect(await blocking(page, '[role="dialog"]')).toEqual([]);
   });
 
@@ -231,8 +231,10 @@ test.describe("Aggiungi · Spesa, Da fare, Scadenza: axe", () => {
   });
 });
 
+// #333: the date, the people and the visibility are fields; the only polite region
+// is the label «Per <Nome>» (what the phrase said, not a control), when there is one.
 test.describe("Aggiungi · Spesa, Da fare, Scadenza: regione live", () => {
-  test("da fare: una sola regione, con data, «Per» e visibilità; le persone fuori", async ({
+  test("da fare: una sola regione, solo con «Per»; data, persone e visibilità fuori", async ({
     page,
   }) => {
     const { dialog } = await write(
@@ -243,16 +245,23 @@ test.describe("Aggiungi · Spesa, Da fare, Scadenza: regione live", () => {
     const live = dialog.locator("[aria-live]");
     await expect(live).toHaveCount(1);
     await expect(live).toHaveAttribute("aria-live", "polite");
-    await expect(live).toContainText("Entro");
     await expect(live).toContainText("Per Sofia");
-    await expect(live.getByTestId("aggiungi-visibilita")).toBeVisible();
+    await expect(live.getByTestId("aggiungi-visibilita")).toHaveCount(0);
     await expect(
       live.getByRole("group", { name: "Chi se ne occupa" }),
     ).toHaveCount(0);
+    await expect(live.getByLabel("Data", { exact: true })).toHaveCount(0);
   });
 
-  test("scadenza: una sola regione; la scheda non è live", async ({ page }) => {
-    const { dialog } = await write(page, "Scadenza", DEADLINE_PHRASE);
+  test("scadenza: nessuna regione senza «riguarda»; la scheda non è live", async ({
+    page,
+  }) => {
+    const { dialog, field } = await write(page, "Scadenza", DEADLINE_PHRASE);
+    await expect(dialog.locator("[aria-live]")).toHaveCount(0);
+    await expect(
+      dialog.locator("[aria-live]").getByTestId("aggiungi-scadenza-anteprima"),
+    ).toHaveCount(0);
+    await field.pressSequentially(" per Sofia");
     await expect(dialog.locator("[aria-live]")).toHaveCount(1);
     await expect(
       dialog.locator("[aria-live]").getByTestId("aggiungi-scadenza-anteprima"),
@@ -267,15 +276,15 @@ test.describe("Aggiungi · Spesa, Da fare, Scadenza: regione live", () => {
     await expect(dialog.locator("[aria-live]")).toHaveCount(0);
   });
 
-  test("modifica: una sola regione, l'etichetta tolta non si annuncia", async ({
+  test("modifica: una sola regione con «Per Sofia»; tolta, non resta niente da annunciare", async ({
     page,
   }) => {
     const { dialog } = await edit(page, EDIT_TODO, { thing: TODO_THING });
     const live = dialog.locator("[aria-live]");
     await expect(live).toHaveCount(1);
-    await dialog.getByRole("button", { name: "Togli la data" }).click();
-    await expect(live).toHaveCount(1);
-    await expect(live).not.toContainText("Entro");
+    await expect(live).toContainText("Per Sofia");
+    await dialog.getByRole("button", { name: "Togli Per Sofia" }).click();
+    await expect(dialog.locator("[aria-live]")).toHaveCount(0);
   });
 });
 
@@ -330,66 +339,89 @@ test.describe("Aggiungi · Spesa, Da fare, Scadenza: fuoco", () => {
     ).toBeFocused();
   });
 
-  test("ordine in Da fare: campo, tipi, visibilità, persone, invio", async ({
+  // #333: «Data» is a native date field (one stop per part: same name in a row,
+  // counted once), then the people, then the two voices of the visibility.
+  /** The stops of the Tab, deduplicated, from the field until `last` is reached. */
+  async function stopsUntil(page: Page, last: string) {
+    const order: string[] = [];
+    const rings: boolean[] = [];
+    for (let i = 0; i < 40; i += 1) {
+      const { order: one, rings: ring } = await tabOrder(page, 1);
+      order.push(one[0]!);
+      rings.push(ring[0]!);
+      if (one[0] === last) break;
+    }
+    return {
+      order: order.filter((name, i) => name !== order[i - 1]),
+      rings,
+    };
+  }
+
+  test("ordine in Da fare: campo, tipi, data, persone, visibilità, invio", async ({
     page,
-  }, testInfo) => {
+  }) => {
     const { dialog } = await write(page, "Da fare", "chiamare la nonna");
     await dialog.getByRole("textbox").focus();
     await page.keyboard.press("Shift+Tab");
     expect(await focused(page)).toBe("Chiudi");
-    const { order, rings } = await tabOrder(page, 11);
+    const { order, rings } = await stopsUntil(page, "Aggiungi ai da fare");
     expect(order).toEqual([
       "Cosa vuoi aggiungere?",
       "Impegno",
       "Da fare",
       "Spesa",
       "Scadenza",
-      "Lo vede tutto il Nest",
+      "Data",
       ...PEOPLE,
+      "Lo vede tutto il Nest",
+      "Lo vedo solo io",
       "Aggiungi ai da fare",
     ]);
     expect(rings).toEqual(rings.map(() => true));
-    // After the button: on desktop the examples of the side column (they stay
-    // while a type is being written), on mobile the start of the sheet
+    // After the button the Tab goes back to the start of the sheet (#333: no
+    // side column of examples any more)
     await page.keyboard.press("Tab");
-    expect(await focused(page)).toBe(
-      isDesktop(testInfo) ? "cena da Marta venerdì alle 20" : "Chiudi",
-    );
+    expect(await focused(page)).toBe("Chiudi");
   });
 
-  test("ordine in Scadenza: campo, tipi, visibilità, persone, avvisi, invio", async ({
+  test("ordine in Scadenza: campo, tipi, data, persone, visibilità, avvisi, invio", async ({
     page,
   }) => {
     const { dialog } = await write(page, "Scadenza", DEADLINE_PHRASE);
     await dialog.getByRole("textbox").focus();
     await page.keyboard.press("Shift+Tab");
     expect(await focused(page)).toBe("Chiudi");
-    const { order, rings } = await tabOrder(page, 15);
+    const { order, rings } = await stopsUntil(page, "Aggiungi alle scadenze");
     expect(order).toEqual([
       "Cosa vuoi aggiungere?",
       "Impegno",
       "Da fare",
       "Spesa",
       "Scadenza",
-      "Lo vede tutto il Nest",
+      "Data",
       ...PEOPLE,
+      "Lo vede tutto il Nest",
+      "Lo vedo solo io",
       ...REMINDERS,
       "Aggiungi alle scadenze",
     ]);
     expect(rings).toEqual(rings.map(() => true));
   });
 
-  test("ordine in Spesa: l'anteprima non ha controlli", async ({ page }) => {
+  test("ordine in Spesa: l'anteprima non ha controlli; le persone sì", async ({
+    page,
+  }) => {
     const { dialog } = await write(page, "Spesa", "latte, pane e 6 uova");
     await dialog.getByRole("textbox").focus();
     await page.keyboard.press("Shift+Tab");
-    const { order } = await tabOrder(page, 6);
+    const { order } = await stopsUntil(page, "Aggiungi 3 cose");
     expect(order).toEqual([
       "Cosa vuoi aggiungere?",
       "Impegno",
       "Da fare",
       "Spesa",
       "Scadenza",
+      ...PEOPLE,
       "Aggiungi 3 cose",
     ]);
   });
@@ -401,32 +433,31 @@ test.describe("Aggiungi · Spesa, Da fare, Scadenza: fuoco", () => {
     await dialog.getByRole("textbox", { name: "Titolo" }).focus();
     await page.keyboard.press("Shift+Tab");
     expect(await focused(page)).toBe("Chiudi");
-    const { order, rings } = await tabOrder(page, 10);
     // Mobile: «Salva» then «Elimina»; desktop: «Elimina» then «Salva» (as in the mockup 11)
     const end = isDesktop(testInfo)
       ? ["Elimina cosa da fare", "Salva"]
       : ["Salva", "Elimina cosa da fare"];
+    const { order, rings } = await stopsUntil(page, end[1]!);
     expect(order).toEqual([
       "Titolo",
-      "Togli la data",
       "Togli Per Sofia",
-      "Lo vede tutto il Nest",
+      "Data",
       ...PEOPLE,
+      "Lo vede tutto il Nest",
+      "Lo vedo solo io",
       ...end,
     ]);
     expect(rings).toEqual(rings.map(() => true));
   });
 
-  test("dopo «Togli la data» il fuoco va a «Togli Per Sofia», poi alla visibilità", async ({
+  test("dopo «Togli Per Sofia» il fuoco va alla voce scelta della visibilità", async ({
     page,
   }) => {
     const { dialog } = await edit(page, EDIT_TODO, { thing: TODO_THING });
-    await dialog.getByRole("button", { name: "Togli la data" }).click();
-    await expect(
-      dialog.getByRole("button", { name: "Togli Per Sofia" }),
-    ).toBeFocused();
     await dialog.getByRole("button", { name: "Togli Per Sofia" }).click();
-    await expect(dialog.getByTestId("aggiungi-visibilita")).toBeFocused();
+    await expect(
+      dialog.getByRole("button", { name: "Lo vede tutto il Nest" }),
+    ).toBeFocused();
   });
 
   test("la cosa non c'è più: il fuoco va su «Chiudi»", async ({ page }) => {
@@ -449,7 +480,8 @@ test.describe("Aggiungi · Spesa, Da fare, Scadenza: aree di tocco", () => {
           .getByRole("group", { name: "Tipo" })
           .getByRole("button", { name }),
       ),
-      dialog.getByTestId("aggiungi-visibilita"),
+      dialog.getByRole("button", { name: "Lo vede tutto il Nest" }),
+      dialog.getByRole("button", { name: "Lo vedo solo io" }),
       ...PEOPLE.map((name) =>
         dialog
           .getByRole("group", { name: "Chi se ne occupa" })
@@ -483,12 +515,7 @@ test.describe("Aggiungi · Spesa, Da fare, Scadenza: aree di tocco", () => {
 
   test("modifica: «Togli», «Salva» ed «Elimina»", async ({ page }) => {
     const { dialog } = await edit(page, EDIT_TODO, { thing: TODO_THING });
-    for (const name of [
-      "Togli la data",
-      "Togli Per Sofia",
-      "Salva",
-      "Elimina cosa da fare",
-    ]) {
+    for (const name of ["Togli Per Sofia", "Salva", "Elimina cosa da fare"]) {
       expect(
         await missedPoints(dialog.getByRole("button", { name })),
         name,
@@ -540,7 +567,7 @@ test.describe("Aggiungi · Spesa, Da fare, Scadenza: contrasto", () => {
       "Laura deve firmare per Sofia entro venerdì",
     );
     expect(await contrastFailures(page)).toEqual([]);
-    await dialog.getByTestId("aggiungi-visibilita").click();
+    await dialog.getByRole("button", { name: "Lo vedo solo io" }).click();
     expect(await contrastFailures(page)).toEqual([]);
   });
 
