@@ -144,6 +144,14 @@ export async function installSpesaFake(
     return route.fulfill({ status: 204, headers: CORS, body: "" });
   });
 
+  // Nobody takes care of the faked things (the people are read with the list)
+  await page.route("**/rest/v1/shopping_item_assignees*", async (route) => {
+    if (route.request().method() === "OPTIONS") {
+      return route.fulfill({ status: 204, headers: CORS });
+    }
+    return json(route, 200, []);
+  });
+
   await page.route("**/rest/v1/shopping_items*", async (route) => {
     const request = route.request();
     const method = request.method();

@@ -9,7 +9,10 @@ import {
   type RefObject,
 } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { subscribeListsChanged } from "@/components/aggiungi/coordination";
+import {
+  notifyListsRefreshed,
+  subscribeListsChanged,
+} from "@/components/aggiungi/coordination";
 import { useToast } from "@/components/ui/Toast/ToastProvider";
 import { createClient } from "@/lib/supabase/client";
 import type { Database } from "@/types/database";
@@ -69,8 +72,13 @@ export function readSettleMs(): number {
   return raw.endsWith("ms") ? value : value * 1000;
 }
 
-function toItem(row: ItemRow, keys: Map<string, string>): ShoppingItem {
+function toItem(
+  row: ItemRow,
+  keys: Map<string, string>,
+  assignees: ReadonlyMap<string, string[]>,
+): ShoppingItem {
   return {
+    assigneeIds: assignees.get(row.id) ?? [],
     key: keys.get(row.id) ?? row.id,
     id: row.id,
     name: row.name,
@@ -101,7 +109,12 @@ export async function readIdentity(supabase: Client): Promise<Identity | null> {
 }
 
 type ReadResult =
-  | { kind: "ok"; rows: ItemRow[]; members: ShoppingMember[] }
+  | {
+      kind: "ok";
+      rows: ItemRow[];
+      members: ShoppingMember[];
+      assignees: Map<string, string[]>;
+    }
   | { kind: "network" }
   | { kind: "error" };
 
@@ -109,7 +122,7 @@ async function readEverything(
   supabase: Client,
   householdId: string,
 ): Promise<ReadResult> {
-  const [itemsResult, membersResult] = await Promise.all([
+  const [itemsResult, membersResult, assigneesResult] = await Promise.all([
     supabase
       .from("shopping_items")
       .select("id, name, quantity, checked_at, created_at, added_by_member_id")
@@ -122,15 +135,40 @@ async function readEverything(
       .eq("household_id", householdId)
       .order("created_at", { ascending: true })
       .order("id", { ascending: true }),
+    supabase
+      .from("shopping_item_assignees")
+      .select("shopping_item_id, member_id, created_at")
+      .eq("household_id", householdId)
+      .order("created_at", { ascending: true }),
   ]);
-  const failure = itemsResult.error ?? membersResult.error;
+  const failure =
+    itemsResult.error ?? membersResult.error ?? assigneesResult.error;
   if (failure) {
     return isNetworkError(failure) ? { kind: "network" } : { kind: "error" };
+  }
+  const members = membersResult.data ?? [];
+  // The order of the people: when they were added, then the order of the Nest.
+  const position = new Map(members.map((member, index) => [member.id, index]));
+  const sorted = [...(assigneesResult.data ?? [])].sort(
+    (a, b) =>
+      (a.created_at < b.created_at
+        ? -1
+        : a.created_at > b.created_at
+          ? 1
+          : 0) ||
+      (position.get(a.member_id) ?? 0) - (position.get(b.member_id) ?? 0),
+  );
+  const assignees = new Map<string, string[]>();
+  for (const link of sorted) {
+    const list = assignees.get(link.shopping_item_id) ?? [];
+    list.push(link.member_id);
+    assignees.set(link.shopping_item_id, list);
   }
   return {
     kind: "ok",
     rows: itemsResult.data ?? [],
-    members: membersResult.data ?? [],
+    members,
+    assignees,
   };
 }
 
@@ -251,7 +289,11 @@ export function useShoppingList({
 
   /** Server truth replaces the local list, keeping the React keys. */
   const applyRead = useCallback(
-    (rows: ItemRow[], nextMembers: ShoppingMember[]) => {
+    (
+      rows: ItemRow[],
+      nextMembers: ShoppingMember[],
+      assignees: ReadonlyMap<string, string[]>,
+    ) => {
       const keys = new Map<string, string>();
       for (const item of itemsRef.current) keys.set(item.id, item.key);
       // Remember what had the focus: a change by someone else can remove it.
@@ -272,8 +314,11 @@ export function useShoppingList({
           ];
         } else if (row?.dataset.itemKey) {
           const inTaken = row.closest('[data-testid="spesa-presi"]');
+          const control = active.closest("[data-edit-id]")
+            ? "[data-edit-id]"
+            : '[role="checkbox"]';
           focusRequest.current = [
-            `[data-item-key="${CSS.escape(row.dataset.itemKey)}"] [role="checkbox"]`,
+            `[data-item-key="${CSS.escape(row.dataset.itemKey)}"] ${control}`,
             ...(inTaken ? ['[data-testid="spesa-presi"] h3'] : []),
             ...headings,
           ];
@@ -285,7 +330,7 @@ export function useShoppingList({
           ];
         }
       }
-      setItems(() => rows.map((row) => toItem(row, keys)));
+      setItems(() => rows.map((row) => toItem(row, keys, assignees)));
       setMembers(nextMembers);
     },
     [rootRef, setItems],
@@ -319,7 +364,8 @@ export function useShoppingList({
       return;
     }
     setNetworkDown(false);
-    applyRead(result.rows, result.members);
+    applyRead(result.rows, result.members, result.assignees);
+    notifyListsRefreshed("shopping");
   }, [applyRead, getClient, queueIsBusy]);
 
   const scheduleRefetch = useCallback(() => {
@@ -518,7 +564,7 @@ export function useShoppingList({
       identityRef.current = identity;
       setHouseholdId(identity.householdId);
       setMeMemberId(identity.meMemberId);
-      applyRead(result.rows, result.members);
+      applyRead(result.rows, result.members, result.assignees);
       setStatus("ready");
       setRetrying(false);
     })();
@@ -668,6 +714,7 @@ export function useShoppingList({
           checkedAt: null,
           createdAt: new Date().toISOString(),
           authorId: identityRef.current?.meMemberId ?? null,
+          assigneeIds: [],
         },
       ]);
       setAnnouncement(`Aggiunto: ${name}`);
