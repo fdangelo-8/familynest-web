@@ -147,6 +147,16 @@ test("Calendario settimana dopo aver aperto e chiuso Aggiungi: nessuna richiesta
   await expectQuiet(page, "calendario dopo Aggiungi");
 });
 
+test("Calendario mese fermo: nessuna richiesta ripetuta", async ({
+  page,
+  baseURL,
+  casa,
+}) => {
+  await casa.signIn(page, baseURL, "Marco");
+  await ready(page, `/calendario/mese?mese=${romeDay().slice(0, 7)}`);
+  await expectQuiet(page, "calendario mese");
+});
+
 test("Casa ferma: nessuna richiesta ripetuta", async ({
   page,
   baseURL,
