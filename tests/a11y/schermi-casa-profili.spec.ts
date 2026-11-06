@@ -127,8 +127,11 @@ async function attach(
   fullPage = true,
 ) {
   await page.mouse.move(0, 0);
-  const body = await page.screenshot({ fullPage });
-  await testInfo.attach(name, { body, contentType: "image/png" });
+  const file = testInfo.outputPath(
+    `${name.replace(/[^A-Za-z0-9._-]+/g, "_")}.png`,
+  );
+  await page.screenshot({ path: file, fullPage });
+  await testInfo.attach(name, { path: file, contentType: "image/png" });
 }
 
 type Found = Record<string, unknown>;
@@ -301,11 +304,30 @@ async function textProblems(page: Page): Promise<Found[]> {
       return parts.join(" > ");
     };
     type Line = { el: Element; r: DOMRect; layer: boolean; text: string };
+    // Visually hidden by design (1 px box, or inside a collapsed clipping box).
+    const hiddenByClip = (el: Element) => {
+      for (
+        let a: Element | null = el;
+        a && a !== document.body;
+        a = a.parentElement
+      ) {
+        const o = getComputedStyle(a);
+        const clips = (v: string) => v === "hidden" || v === "clip";
+        if (
+          (clips(o.overflowX) || clips(o.overflowY) || o.clip !== "auto") &&
+          (a.clientWidth <= 1 || a.clientHeight <= 1)
+        )
+          return true;
+        if (a.getBoundingClientRect().width <= 1) return true;
+      }
+      return false;
+    };
     const lines: Line[] = [];
     for (const el of document.body.querySelectorAll("*")) {
       if (el.closest("svg,.sprite-icone,script,style")) continue;
       const cs = getComputedStyle(el);
       if (cs.display === "none" || cs.visibility === "hidden") continue;
+      if (hiddenByClip(el)) continue;
       const texts = [...el.childNodes].filter(
         (c) => c.nodeType === 3 && (c.textContent ?? "").trim().length > 0,
       );
@@ -486,19 +508,45 @@ for (const spec of PAGES) {
       page,
     }, testInfo) => {
       await openPage(page, spec, w, h);
+      // 1) root font size at 200%, as asked. If the app uses px sizes this has
+      //    no effect (annotated below).
+      const before = await page.evaluate(
+        () =>
+          getComputedStyle(
+            document.querySelector("main h1, main p, main span")!,
+          ).fontSize,
+      );
       await page.evaluate(() => {
         document.documentElement.style.fontSize = "200%";
       });
+      const afterRoot = await page.evaluate(
+        () =>
+          getComputedStyle(
+            document.querySelector("main h1, main p, main span")!,
+          ).fontSize,
+      );
+      testInfo.annotations.push({
+        type: "font-radice-200%-ha-effetto",
+        description: `${before} -> ${afterRoot}`,
+      });
+      // 2) emulation of the system font scale (Android/iOS): every computed
+      //    font size and line height doubled, boxes unchanged.
+      await page.evaluate(() => {
+        const items = [...document.body.querySelectorAll("*")].map((el) => {
+          const cs = getComputedStyle(el);
+          return {
+            el: el as HTMLElement,
+            fs: parseFloat(cs.fontSize),
+            lh: cs.lineHeight,
+          };
+        });
+        for (const { el, fs, lh } of items) {
+          el.style.fontSize = `${fs * 2}px`;
+          if (lh !== "normal") el.style.lineHeight = `${parseFloat(lh) * 2}px`;
+        }
+      });
       await waitForAnimationsToEnd(page);
       await attach(page, testInfo, `${spec.name}-${w}x${h}-200`);
-      const scale = await page.evaluate(() => {
-        const t = document.querySelector("main h1, main p, main span");
-        return t ? getComputedStyle(t).fontSize : "";
-      });
-      testInfo.annotations.push({
-        type: "font-size-di-prova",
-        description: scale,
-      });
       const overflow = await overflowProblems(page);
       const text = await textProblems(page);
       expect.soft(overflow, "overflow al 200%").toEqual([]);
@@ -538,11 +586,15 @@ const SHEETS: SheetSpec[] = [
     name: "Modifica profilo figlio",
     open: async (page) => {
       await page.goto(`/figli/${SOFIA}`);
-      const pencil = page.getByRole("button", {
-        name: "Modifica il profilo di Sofia",
-      });
-      await expect(pencil).toBeVisible({ timeout: 30_000 });
-      await pencil.click();
+      // Pencil of the bar (mobile); on desktop the profile has no pencil while
+      // incomplete: «Aggiungi la scuola» opens the same sheet.
+      const opener = page
+        .getByRole("button", {
+          name: /^(Modifica il profilo di Sofia|Aggiungi la scuola)$/,
+        })
+        .first();
+      await expect(opener).toBeVisible({ timeout: 30_000 });
+      await opener.click();
       await expect(page.getByRole("dialog")).toBeVisible();
     },
   },
