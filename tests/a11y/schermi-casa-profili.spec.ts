@@ -417,7 +417,8 @@ async function keyboardProblems(
     if (!visible) continue;
     n++;
     await handle.focus();
-    const res = await handle.evaluate((el) => {
+    const res = await handle.evaluate((node) => {
+      const el = node as HTMLElement;
       const r = el.getBoundingClientRect();
       const vh = window.innerHeight;
       const cx = r.left + r.width / 2;
