@@ -13,5 +13,5 @@ import { ResetOnReveal } from "@/components/ui/AppFrame/ResetOnReveal";
  * around each page it keeps, a template is inside it.
  */
 export default function AppTemplate({ children }: { children: ReactNode }) {
-  return <ResetOnReveal>{children}</ResetOnReveal>;
+  return <>{children}</>;
 }
