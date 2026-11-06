@@ -12,8 +12,6 @@ test.use({
   reducedMotion: "reduce",
 });
 
-const MAIL = "marco.dangelo@example.com";
-
 async function expectNoBlocking(page: Page) {
   const results = await new AxeBuilder({ page }).analyze();
   expect(
@@ -75,40 +73,6 @@ async function tabOrder(page: Page, max = 12) {
 // the step has taken effect.
 async function until(step: () => Promise<void>) {
   await expect(step).toPass({ timeout: 15_000 });
-}
-
-async function fillAndSubmit(
-  page: Page,
-  value: string,
-  done: () => Promise<void>,
-) {
-  await until(async () => {
-    await page
-      .getByLabel("La tua mail")
-      .filter({ visible: true })
-      .fill(value, { timeout: 2000 });
-    await page
-      .getByRole("button", { name: "Mandami il link" })
-      .filter({ visible: true })
-      .click({ timeout: 2000, noWaitAfter: true });
-    await done();
-  });
-}
-
-async function mockOtp(page: Page) {
-  await page.route("**/auth/v1/otp**", (route) =>
-    route.fulfill({ status: 200, contentType: "application/json", body: "{}" }),
-  );
-}
-
-async function reachCheckMail(page: Page) {
-  await mockOtp(page);
-  await page.goto("/accesso/mail");
-  await fillAndSubmit(page, MAIL, async () => {
-    await expect(
-      page.getByRole("heading", { level: 1, name: "Controlla la posta" }),
-    ).toBeVisible({ timeout: 2000 });
-  });
 }
 
 test.describe("/accesso", () => {
@@ -184,109 +148,6 @@ test.describe("/accesso", () => {
   });
 });
 
-test.describe("/accesso/mail", () => {
-  test("inserimento: axe, un solo h1, ordine del focus", async ({
-    page,
-  }, info) => {
-    await page.goto("/accesso/mail");
-    await expectOneH1(page);
-    await expectNoBlocking(page);
-    const field = page.getByLabel("La tua mail").filter({ visible: true });
-    if (info.project.name === "desktop") {
-      // From 1024 px the field takes the focus on arrival.
-      await expect(field).toBeFocused();
-      expect(await tabOrder(page)).toEqual([
-        "Mandami il link",
-        "Torna all'accesso",
-        "Termini d'uso",
-        "Informativa sulla privacy",
-      ]);
-    } else {
-      await expect(field).not.toBeFocused();
-      expect(await tabOrder(page)).toEqual([
-        "Indietro",
-        "La tua mail",
-        "Mandami il link",
-        "Termini d'uso",
-        "Informativa sulla privacy",
-      ]);
-    }
-  });
-
-  test("errore del campo: axe, aria-invalid e aria-describedby", async ({
-    page,
-  }) => {
-    await mockOtp(page);
-    await page.goto("/accesso/mail");
-    const field = page.getByLabel("La tua mail").filter({ visible: true });
-    await until(async () => {
-      await page
-        .getByRole("button", { name: "Mandami il link" })
-        .filter({ visible: true })
-        .click({ timeout: 2000, noWaitAfter: true });
-      await expect(field).toHaveAttribute("aria-invalid", "true", {
-        timeout: 1000,
-      });
-    });
-    const describedBy = await field.getAttribute("aria-describedby");
-    expect(describedBy).toBeTruthy();
-    await expect(page.locator(`[id="${describedBy}"]`)).toContainText(
-      "Scrivi la tua mail per ricevere il link.",
-    );
-    await expectOneH1(page);
-    await expectNoBlocking(page);
-    // The focus goes to the wrong field.
-    await expect(field).toBeFocused();
-    expect(await focusRingVisible(page)).toBe(true);
-  });
-
-  test("errore di invio: axe con l'avviso", async ({ page }) => {
-    await page.route("**/auth/v1/otp**", (route) => route.abort("failed"));
-    await page.goto("/accesso/mail");
-    await fillAndSubmit(page, MAIL, async () => {
-      await expect(page.locator(".avviso--errore:visible")).toBeVisible({
-        timeout: 2000,
-      });
-    });
-    await expect(page.locator(".avviso--errore:visible")).toHaveAttribute(
-      "role",
-      "alert",
-    );
-    await expectOneH1(page);
-    await expectNoBlocking(page);
-  });
-
-  test("controlla la posta: axe, h1 con il focus, ordine del focus", async ({
-    page,
-  }, info) => {
-    await reachCheckMail(page);
-    await expectOneH1(page);
-    await expect(
-      page.getByRole("heading", { level: 1, name: "Controlla la posta" }),
-    ).toBeFocused();
-    await expectNoBlocking(page);
-    // «Mandami un altro link» waits 60 seconds and is disabled: it is skipped.
-    const order = await tabOrder(page);
-    expect(order).toEqual(
-      info.project.name === "desktop"
-        ? ["Usa un'altra mail", "Torna all'accesso"]
-        : ["Usa un'altra mail"],
-    );
-  });
-});
-
-test.describe("/accesso/link-scaduto", () => {
-  test("axe, un solo h1, ordine del focus", async ({ page }) => {
-    await page.goto("/accesso/link-scaduto");
-    await expectOneH1(page);
-    await expectNoBlocking(page);
-    expect(await tabOrder(page)).toEqual([
-      "Mandami un nuovo link",
-      "Torna all'accesso",
-    ]);
-  });
-});
-
 for (const [route, h1] of [
   ["/termini", "Termini d'uso"],
   ["/privacy", "Informativa sulla privacy"],
@@ -302,11 +163,13 @@ for (const [route, h1] of [
   });
 }
 
+// The pages with the mail and password forms (#327) have controls whose touch
+// area is wider than their box (selector, links): they are measured with
+// elementFromPoint in tests/a11y/accesso-password.spec.ts.
 test.describe("aree di tocco su mobile", () => {
   for (const route of [
     "/accesso",
     "/accesso?errore=google",
-    "/accesso/mail",
     "/accesso/link-scaduto",
     "/termini",
     "/privacy",
