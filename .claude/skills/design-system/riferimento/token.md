@@ -2,7 +2,7 @@
 
 > Parte di consultazione della skill `design-system` (`../SKILL.md`): tutti i valori. Le regole sempre valide sono nella skill.
 
-Tutti i valori di `docs/mockup/tokens.css`, senza arrotondamenti. Nome variabile → valore → uso.
+Tutti i valori di `docs/mockup/tokens.css`, senza arrotondamenti. Nome variabile → valore → uso. Unica conversione: dalla #313 dimensioni e interlinee del testo sono in rem (stesso valore a 16 px), vedi «Scala tipografica».
 
 ### Colori: base
 
@@ -101,64 +101,66 @@ Distanza (CIEDE2000, vista tipica) del colore nuovo più vicino a ciascuno dei 5
 
 ### Scala tipografica (mobile; *-desktop dove cambia)
 
-| Variabile                           | Valore    | Uso                                         |
-| ----------------------------------- | --------- | ------------------------------------------- |
-| `--text-display-size`               | `44px`    |                                             |
-| `--text-display-line`               | `48px`    |                                             |
-| `--text-display-tracking`           | `-.04em`  |                                             |
-| `--text-display-desktop-size`       | `56px`    |                                             |
-| `--text-display-desktop-line`       | `60px`    |                                             |
-| `--text-ora-xl-size`                | `64px`    |                                             |
-| `--text-ora-xl-line`                | `56px`    |                                             |
-| `--text-ora-xl-tracking`            | `-.04em`  |                                             |
-| `--text-ora-l-size`                 | `52px`    |                                             |
-| `--text-ora-l-line`                 | `48px`    |                                             |
-| `--text-ora-l-tracking`             | `-.04em`  |                                             |
-| `--text-numero-size`                | `44px`    |                                             |
-| `--text-numero-line`                | `48px`    |                                             |
-| `--text-numero-tracking`            | `-.04em`  |                                             |
-| `--text-titolo-pagina-size`         | `32px`    |                                             |
-| `--text-titolo-pagina-line`         | `36px`    |                                             |
-| `--text-titolo-pagina-tracking`     | `-.03em`  |                                             |
-| `--text-titolo-pagina-desktop-size` | `40px`    |                                             |
-| `--text-titolo-pagina-desktop-line` | `44px`    |                                             |
-| `--text-titolo-scheda-size`         | `22px`    |                                             |
-| `--text-titolo-scheda-line`         | `26px`    |                                             |
-| `--text-titolo-scheda-tracking`     | `-.02em`  |                                             |
-| `--text-frase-size`                 | `22px`    |                                             |
-| `--text-frase-line`                 | `30px`    |                                             |
-| `--text-frase-tracking`             | `-.015em` |                                             |
-| `--text-sezione-size`               | `15px`    |                                             |
-| `--text-sezione-line`               | `24px`    |                                             |
-| `--text-corpo-forte-size`           | `15px`    |                                             |
-| `--text-corpo-forte-line`           | `20px`    |                                             |
-| `--text-corpo-size`                 | `15px`    |                                             |
-| `--text-corpo-line`                 | `22px`    |                                             |
-| `--text-ora-riga-size`              | `15px`    |                                             |
-| `--text-ora-riga-line`              | `20px`    |                                             |
-| `--text-ora-riga-tracking`          | `-.01em`  |                                             |
-| `--text-nota-size`                  | `13px`    |                                             |
-| `--text-nota-line`                  | `18px`    |                                             |
-| `--text-etichetta-size`             | `12px`    |                                             |
-| `--text-etichetta-line`             | `16px`    |                                             |
-| `--text-etichetta-tracking`         | `.02em`   |                                             |
-| `--text-micro-size`                 | `11px`    |                                             |
-| `--text-micro-line`                 | `14px`    |                                             |
-| `--text-controllo-size`             | `14px`    | testo di bottoni, selettori, righe compatte |
-| `--text-controllo-line`             | `20px`    | testo di bottoni, selettori, righe compatte |
-| `--text-numero-m-size`              | `36px`    | giorni alle scadenze                        |
-| `--text-numero-m-line`              | `36px`    | giorni alle scadenze                        |
-| `--text-numero-s-size`              | `30px`    | contatori piccoli                           |
-| `--text-numero-s-line`              | `34px`    | contatori piccoli                           |
-| `--text-cella-size`                 | `18px`    | numeri del mese e della striscia            |
-| `--text-cella-line`                 | `26px`    | numeri del mese e della striscia            |
-| `--text-avatar-xs-size`             | `8px`     |                                             |
-| `--text-avatar-s-size`              | `10px`    |                                             |
-| `--text-avatar-m-size`              | `13px`    |                                             |
-| `--text-avatar-l-size`              | `18px`    |                                             |
-| `--text-avatar-xl-size`             | `30px`    |                                             |
-| `--tracking-codice`                 | `.12em`   |                                             |
-| `--tracking-maiuscolo`              | `.08em`   |                                             |
+Dalla #313 (testo ingrandito, WCAG 1.4.4) dimensioni e interlinee sono in **rem**: px di `tokens.css` diviso 16. Con la radice a 16 px (impostazione normale) il valore in px è identico al mockup; con il carattere di sistema o del browser più grande, il testo cresce. Le interlinee sono in rem e non senza unità: senza unità i figli erediterebbero il rapporto e al 100% la geometria cambierebbe (una riga da 22 px diventerebbe 17,6 px). Il tracking resta in `em`. Le iniziali degli avatar (`--text-avatar-*`) restano in px: il cerchio ha una misura fissa e il nome c'è sempre come testo o nome accessibile. Nei test i valori si confrontano con `tokens.css` × 16 (CA-1 della #313).
+
+| Variabile                           | Valore      | px a 16 | Uso                                         |
+| ----------------------------------- | ----------- | ------- | ------------------------------------------- |
+| `--text-display-size`               | `2.75rem`   | 44      |                                             |
+| `--text-display-line`               | `3rem`      | 48      |                                             |
+| `--text-display-tracking`           | `-.04em`    | —       |                                             |
+| `--text-display-desktop-size`       | `3.5rem`    | 56      |                                             |
+| `--text-display-desktop-line`       | `3.75rem`   | 60      |                                             |
+| `--text-ora-xl-size`                | `4rem`      | 64      |                                             |
+| `--text-ora-xl-line`                | `3.5rem`    | 56      |                                             |
+| `--text-ora-xl-tracking`            | `-.04em`    | —       |                                             |
+| `--text-ora-l-size`                 | `3.25rem`   | 52      |                                             |
+| `--text-ora-l-line`                 | `3rem`      | 48      |                                             |
+| `--text-ora-l-tracking`             | `-.04em`    | —       |                                             |
+| `--text-numero-size`                | `2.75rem`   | 44      |                                             |
+| `--text-numero-line`                | `3rem`      | 48      |                                             |
+| `--text-numero-tracking`            | `-.04em`    | —       |                                             |
+| `--text-titolo-pagina-size`         | `2rem`      | 32      |                                             |
+| `--text-titolo-pagina-line`         | `2.25rem`   | 36      |                                             |
+| `--text-titolo-pagina-tracking`     | `-.03em`    | —       |                                             |
+| `--text-titolo-pagina-desktop-size` | `2.5rem`    | 40      |                                             |
+| `--text-titolo-pagina-desktop-line` | `2.75rem`   | 44      |                                             |
+| `--text-titolo-scheda-size`         | `1.375rem`  | 22      |                                             |
+| `--text-titolo-scheda-line`         | `1.625rem`  | 26      |                                             |
+| `--text-titolo-scheda-tracking`     | `-.02em`    | —       |                                             |
+| `--text-frase-size`                 | `1.375rem`  | 22      |                                             |
+| `--text-frase-line`                 | `1.875rem`  | 30      |                                             |
+| `--text-frase-tracking`             | `-.015em`   | —       |                                             |
+| `--text-sezione-size`               | `0.9375rem` | 15      |                                             |
+| `--text-sezione-line`               | `1.5rem`    | 24      |                                             |
+| `--text-corpo-forte-size`           | `0.9375rem` | 15      |                                             |
+| `--text-corpo-forte-line`           | `1.25rem`   | 20      |                                             |
+| `--text-corpo-size`                 | `0.9375rem` | 15      |                                             |
+| `--text-corpo-line`                 | `1.375rem`  | 22      |                                             |
+| `--text-ora-riga-size`              | `0.9375rem` | 15      |                                             |
+| `--text-ora-riga-line`              | `1.25rem`   | 20      |                                             |
+| `--text-ora-riga-tracking`          | `-.01em`    | —       |                                             |
+| `--text-nota-size`                  | `0.8125rem` | 13      |                                             |
+| `--text-nota-line`                  | `1.125rem`  | 18      |                                             |
+| `--text-etichetta-size`             | `0.75rem`   | 12      |                                             |
+| `--text-etichetta-line`             | `1rem`      | 16      |                                             |
+| `--text-etichetta-tracking`         | `.02em`     | —       |                                             |
+| `--text-micro-size`                 | `0.6875rem` | 11      |                                             |
+| `--text-micro-line`                 | `0.875rem`  | 14      |                                             |
+| `--text-controllo-size`             | `0.875rem`  | 14      | testo di bottoni, selettori, righe compatte |
+| `--text-controllo-line`             | `1.25rem`   | 20      | testo di bottoni, selettori, righe compatte |
+| `--text-numero-m-size`              | `2.25rem`   | 36      | giorni alle scadenze                        |
+| `--text-numero-m-line`              | `2.25rem`   | 36      | giorni alle scadenze                        |
+| `--text-numero-s-size`              | `1.875rem`  | 30      | contatori piccoli                           |
+| `--text-numero-s-line`              | `2.125rem`  | 34      | contatori piccoli                           |
+| `--text-cella-size`                 | `1.125rem`  | 18      | numeri del mese e della striscia            |
+| `--text-cella-line`                 | `1.625rem`  | 26      | numeri del mese e della striscia            |
+| `--text-avatar-xs-size`             | `8px`       | 8       | resta in px (#313)                          |
+| `--text-avatar-s-size`              | `10px`      | 10      | resta in px (#313)                          |
+| `--text-avatar-m-size`              | `13px`      | 13      | resta in px (#313)                          |
+| `--text-avatar-l-size`              | `18px`      | 18      | resta in px (#313)                          |
+| `--text-avatar-xl-size`             | `30px`      | 30      | resta in px (#313)                          |
+| `--tracking-codice`                 | `.12em`     | —       |                                             |
+| `--tracking-maiuscolo`              | `.08em`     | —       |                                             |
 
 ### Punti di rottura (riferimento: le media query non leggono le variabili)
 
@@ -285,6 +287,28 @@ Distanza (CIEDE2000, vista tipica) del colore nuovo più vicino a ciascuno dei 5
 | `--size-frame-mobile-altezza`  | `844px`  |                                                   |
 | `--size-frame-desktop`         | `1280px` |                                                   |
 | `--size-frame-desktop-altezza` | `800px`  |                                                   |
+
+Tutte le misure qui sopra restano in px anche dopo la #313: con il testo grande non crescono (barra, avatar, icone, interruttore, casella restano come nel mockup); a crescere sono il testo e le altezze minime dei controlli che lo contengono (`min-height`, vedi `componenti.md`, «Testo ingrandito»).
+
+### Misure minime che seguono il testo (**aggiunte**, #313)
+
+In rem: con il testo normale valgono i px a destra, con il testo grande crescono e fanno scattare le disposizioni a una colonna. Non sono nel mockup: il test CA-1 le elenca tra le differenze approvate (#313).
+
+| Variabile              | Valore   | px a 16 | Uso                                                                      |
+| ---------------------- | -------- | ------- | ------------------------------------------------------------------------ |
+| `--size-modulo-min`    | `9.5rem` | 152     | colonna minima delle schede di Esplora e di `.griglia-contatori` (a due) |
+| `--size-contatore-min` | `6rem`   | 96      | colonna minima di `.griglia-contatori--tre`                              |
+| `--size-dati-min`      | `8rem`   | 128     | base di `.prossimo__dati` accanto all'ora (Prossimo, Dettaglio impegno)  |
+
+### Larghezze delle query di contenitore (#313)
+
+Come le media query, non leggono le variabili: si scrivono i numeri, in rem (nella query `rem` è la radice reale, quindi con 16 px non scattano mai alle misure del mockup). Sono le sole ammesse.
+
+| Contenitore (`container-name`) | Su                                      | Query             | Cosa cambia                                    |
+| ------------------------------ | --------------------------------------- | ----------------- | ---------------------------------------------- |
+| `barra`                        | `.nav-basso`                            | `(width < 13rem)` | «Aggiungi» diventa il quadrato con il solo «+» |
+| `riga`                         | `.riga-lista`, `.riga-regalo`           | `(width < 16rem)` | valore, etichetta o azione scendono sotto      |
+| `selettore`                    | `.contenitore-selettore` (classe nuova) | `(width < 17rem)` | le voci del selettore si impilano              |
 
 ### Movimento
 
