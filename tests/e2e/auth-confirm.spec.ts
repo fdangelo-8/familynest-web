@@ -169,13 +169,23 @@ test.describe("[CI-utenti] /auth/confirm: link validi", () => {
 
   test("type=recovery: cookie di recupero e /accesso/nuova-password, next ignorato", async ({
     page,
+    baseURL,
   }) => {
     needKeys();
     const user = await createThrowawayUser("Carla");
     try {
-      await page.goto(`${await linkFor(user.email, "recovery")}&next=/oggi`);
-      await expect(page).toHaveURL(/\/accesso\/nuova-password$/);
-      expect(page.url()).not.toContain("token_hash");
+      // The route alone: the page of the new password is another PR.
+      const response = await page
+        .context()
+        .request.get(`${await linkFor(user.email, "recovery")}&next=/oggi`, {
+          maxRedirects: 0,
+        });
+      expect(response.status()).toBe(303);
+      const location = response.headers()["location"] ?? "";
+      expect(new URL(location, baseURL!).pathname).toBe(
+        "/accesso/nuova-password",
+      );
+      expect(location).not.toContain("token_hash");
       const cookie = (await page.context().cookies()).find(
         (c) => c.name === RECOVERY_COOKIE,
       );
@@ -193,17 +203,22 @@ test.describe("[CI-utenti] /auth/confirm: link validi", () => {
   test("un link usato due volte porta a /accesso/link-scaduto", async ({
     page,
     browser,
+    baseURL,
   }) => {
     needKeys();
     const user = await createThrowawayUser("Carla");
-    const other = await browser.newContext();
+    const other = await browser.newContext({ baseURL });
     try {
       const link = await linkFor(user.email, "recovery");
-      await page.goto(link);
-      await expect(page).toHaveURL(/\/accesso\/nuova-password$/);
-      const second = await other.newPage();
-      await second.goto(new URL(link, page.url()).toString());
-      await expect(second).toHaveURL(/\/accesso\/link-scaduto\?tipo=password$/);
+      const first = await page.context().request.get(link, { maxRedirects: 0 });
+      expect(first.headers()["location"]).toContain("/accesso/nuova-password");
+      const second = await other.request.get(link, { maxRedirects: 0 });
+      expect(second.status()).toBe(303);
+      expect(second.headers()["location"]).toContain(
+        "/accesso/link-scaduto?tipo=password",
+      );
+      const names = (await other.cookies()).map((c) => c.name);
+      expect(names).not.toContain(RECOVERY_COOKIE);
     } finally {
       await other.close();
       await user.remove();
