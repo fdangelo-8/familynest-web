@@ -122,7 +122,7 @@ async function onboarding(page: Page): Promise<string> {
 
   // 5. Pronto, then Oggi.
   await expect(page).toHaveURL(/\/onboarding\/pronto$/);
-  await expect(h1(page)).toHaveText(NEST);
+  await expect(h1(page)).toHaveText(`${NEST} è pronta.`);
   await expect(page.getByRole("list").getByRole("listitem")).toHaveText(
     "Invito condiviso con Marco",
   );
