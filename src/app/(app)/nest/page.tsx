@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { InviteSomeone } from "@/components/nest/InviteSomeone";
 import { NestError } from "@/components/nest/NestError";
+import { ResetOnReveal } from "@/components/ui/AppFrame/ResetOnReveal";
 import { Avatar } from "@/components/ui/Avatar/Avatar";
 import { Icon, type IconName } from "@/components/ui/Icon/Icon";
 import { ListRow } from "@/components/ui/List/List";
@@ -241,13 +242,15 @@ export default async function Page() {
             ))}
           </ul>
           {admin ? (
-            <InviteSomeone
-              full={full}
-              taken={rows.map((row) => ({
-                color: row.color,
-                by: row.name,
-              }))}
-            />
+            <ResetOnReveal>
+              <InviteSomeone
+                full={full}
+                taken={rows.map((row) => ({
+                  color: row.color,
+                  by: row.name,
+                }))}
+              />
+            </ResetOnReveal>
           ) : null}
         </div>
       </div>

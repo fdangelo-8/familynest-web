@@ -1,12 +1,7 @@
 "use client";
 
-import {
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { useEffect, type ReactNode } from "react";
+import { useResetOnReveal } from "@/components/ui/AppFrame/ResetOnReveal";
 import { useIsDesktop } from "@/components/ui/overlay";
 import { markSearchFromApp } from "./from-app";
 import { SearchPage } from "./SearchPage";
@@ -40,17 +35,7 @@ export function SearchOverlay({ direct }: { direct: boolean }) {
   // shows them again when the same route comes back: a search opened a second
   // time would come back with the text, the results and the half-done closing
   // of the first. Every time the route is shown again the palette starts over.
-  const [instance, setInstance] = useState(0);
-  const wasHidden = useRef(false);
-  useLayoutEffect(() => {
-    if (wasHidden.current) {
-      wasHidden.current = false;
-      setInstance((count) => count + 1);
-    }
-    return () => {
-      wasHidden.current = true;
-    };
-  }, []);
+  const instance = useResetOnReveal();
 
   useEffect(() => {
     // The real width, not the first render's: the hook says «mobile» until

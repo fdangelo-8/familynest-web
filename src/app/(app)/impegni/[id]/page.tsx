@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { EventDetailPage } from "@/components/impegni/EventDetailPage";
+import { ResetOnReveal } from "@/components/ui/AppFrame/ResetOnReveal";
 import { isValidDayKey } from "@/lib/datetime";
 import { requireNest } from "@/lib/nest-frame";
 
@@ -27,5 +28,9 @@ export default async function Page({
 
   // The event is read in the browser: the HTML of the server has no data of
   // the event, only its address.
-  return <EventDetailPage eventId={id} day={day} />;
+  return (
+    <ResetOnReveal>
+      <EventDetailPage eventId={id} day={day} />
+    </ResetOnReveal>
+  );
 }

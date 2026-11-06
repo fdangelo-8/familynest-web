@@ -5,6 +5,7 @@ import {
   type NotificationValues,
 } from "@/components/impostazioni/NotificationSettings";
 import { SettingsError } from "@/components/impostazioni/SettingsError";
+import { ResetOnReveal } from "@/components/ui/AppFrame/ResetOnReveal";
 import { SettingsMenu } from "@/components/ui/AppFrame/SettingsMenu";
 import { Avatar, type MemberColor } from "@/components/ui/Avatar/Avatar";
 import { ListRow } from "@/components/ui/List/List";
@@ -210,11 +211,13 @@ export default async function Page() {
             <NotificationSettings initial={notifications} />
           </section>
 
-          <LeaveHousehold
-            householdName={nestName}
-            blocked={blocked}
-            lastAdult={lastAdult}
-          />
+          <ResetOnReveal>
+            <LeaveHousehold
+              householdName={nestName}
+              blocked={blocked}
+              lastAdult={lastAdult}
+            />
+          </ResetOnReveal>
         </div>
       </div>
     </main>

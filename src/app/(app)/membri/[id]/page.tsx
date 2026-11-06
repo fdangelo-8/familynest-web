@@ -10,6 +10,7 @@ import {
   inviteSentText,
   inviteSubtitle,
 } from "@/components/membri/texts";
+import { ResetOnReveal } from "@/components/ui/AppFrame/ResetOnReveal";
 import { MEMBER_COLORS } from "@/components/ui/Avatar/Avatar";
 import type { ChoosableColor } from "@/components/ui/ColorChoice/ColorChoice";
 import { SettingsMenu } from "@/components/ui/AppFrame/SettingsMenu";
@@ -150,7 +151,9 @@ export default async function Page({
       <div className="colonne colonne--menu">
         <SettingsMenu />
         <div className="colonna">
-          <MemberView {...loaded.props} />
+          <ResetOnReveal>
+            <MemberView {...loaded.props} />
+          </ResetOnReveal>
         </div>
       </div>
     </main>
