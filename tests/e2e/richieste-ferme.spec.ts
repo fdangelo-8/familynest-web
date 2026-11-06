@@ -1,5 +1,10 @@
 import type { Page, Request } from "@playwright/test";
-import { addDays, romeDay, weekdayIndex } from "../fixtures/casa";
+import {
+  addDays,
+  isMobileProject,
+  romeDay,
+  weekdayIndex,
+} from "../fixtures/casa";
 import { createNuoto, expect, test } from "../fixtures/impegni";
 import { waitHydrated } from "../fixtures/profilo";
 
@@ -12,15 +17,28 @@ import { waitHydrated } from "../fixtures/profilo";
 // own throwaway Nest (Marco is its administrator).
 
 test.use({ locale: "it-IT", timezoneId: "Europe/Rome" });
-test.describe.configure({ timeout: 150_000 });
+test.describe.configure({ timeout: 90_000 });
 
-const SETTLE_MS = 8000;
-const WINDOW_MS = 30_000;
+// The loop starts from links to `/calendario?settimana=…` that are visible
+// only on desktop. The real loop makes about 270 requests a second, so a
+// window of 10 s is plenty. Desktop project only.
+test.beforeEach(() => {
+  test.skip(
+    isMobileProject(),
+    "il ciclo parte da link visibili solo su desktop",
+  );
+});
+
+const SETTLE_MS = 5000;
+const WINDOW_MS = 10_000;
 /** Most times the same database read may repeat while the page stays still. */
 const MAX_SAME_READ = 2;
 
 type Seen = { url: string; kind: string };
 
+// If the headers are missing a page request is classified by its resource
+// type (`fetch`) and escapes the first check; the cap on the same request
+// (MAX_SAME_READ) still catches it.
 function describeRequest(request: Request): Seen {
   const url = new URL(request.url());
   const headers = request.headers();
@@ -155,7 +173,25 @@ test("Calendario mese fermo: nessuna richiesta ripetuta", async ({
 }) => {
   await casa.signIn(page, baseURL, "Marco");
   await ready(page, `/calendario/mese?mese=${romeDay().slice(0, 7)}`);
+  // Only meaningful if the links that could loop are visible.
+  await expect(
+    page.locator('a[href^="/calendario/giorno?"]').first(),
+  ).toBeVisible();
   await expectQuiet(page, "calendario mese");
+});
+
+test("Calendario giorno fermo: nessuna richiesta ripetuta", async ({
+  page,
+  baseURL,
+  casa,
+}) => {
+  await casa.signIn(page, baseURL, "Marco");
+  await ready(page, `/calendario/giorno?giorno=${romeDay()}`);
+  // Only meaningful if the link to the week (DayGrid) is visible.
+  await expect(
+    page.locator('a[href^="/calendario?settimana="]').first(),
+  ).toBeVisible();
+  await expectQuiet(page, "calendario giorno");
 });
 
 test("Casa ferma: nessuna richiesta ripetuta", async ({
