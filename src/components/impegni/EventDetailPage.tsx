@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BarAction } from "@/components/ui/AppFrame/BarAction";
 import { Button } from "@/components/ui/Button/Button";
@@ -10,7 +11,7 @@ import { PageError } from "@/components/ui/PageError/PageError";
 import { Skeleton, SkeletonGroup } from "@/components/ui/Skeleton/Skeleton";
 import { useToast } from "@/components/ui/Toast/ToastProvider";
 import { VisuallyHidden } from "@/components/ui/VisuallyHidden/VisuallyHidden";
-import { startOfDay } from "@/lib/datetime";
+import { isValidDayKey, startOfDay } from "@/lib/datetime";
 import { createClient } from "@/lib/supabase/client";
 import { eventHref } from "@/lib/household-events";
 import { Alert } from "@/components/ui/Alert/Alert";
@@ -38,6 +39,12 @@ function DirectionsLink({ place, full }: { place: string; full?: boolean }) {
   );
 }
 
+/** The id in `/impegni/<id>`, or null for any other address. */
+function idFromPath(pathname: string): string | null {
+  const match = /^\/impegni\/([^/]+)\/?$/.exec(pathname);
+  return match?.[1] ?? null;
+}
+
 /**
  * Dettaglio impegno (#19): everything about one occurrence of an event, and
  * the way to change or delete it. The event is read in the browser after the
@@ -45,13 +52,21 @@ function DirectionsLink({ place, full }: { place: string; full?: boolean }) {
  * own and the server HTML carries nothing of the event.
  */
 export function EventDetailPage({
-  eventId,
-  day,
+  eventId: firstEventId,
+  day: firstDay,
 }: {
   eventId: string;
   /** `giorno` of the address, if valid */
   day: string | null;
 }) {
+  // What the page shows is what the address says now, not the props: a save
+  // changes the address with `history.replaceState`, and coming back with
+  // «Indietro» the router restores the props it had before the save.
+  const pathname = usePathname();
+  const queryDay = useSearchParams().get("giorno");
+  const eventId = idFromPath(pathname) ?? firstEventId;
+  const day =
+    queryDay === null ? firstDay : isValidDayKey(queryDay) ? queryDay : null;
   const detail = useEventDetail(eventId, day);
   const { showToast } = useToast();
   const desktop = useIsDesktop();
