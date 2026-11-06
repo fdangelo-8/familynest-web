@@ -355,6 +355,8 @@ async function keyboardProblems(page: Page): Promise<Problems> {
       height: size.height - KEYBOARD_HEIGHT,
     });
     const field = page.locator(`[data-qa-field="${i}"]`);
+    // A field the sheet already focused would not scroll again: blur first.
+    await field.evaluate((el) => (el as HTMLElement).blur());
     await field.focus();
     await page.evaluate(
       () =>
