@@ -87,55 +87,59 @@
   --weight-pieno: 700;
 
   /* ---------- Scala tipografica (mobile; *-desktop dove cambia) ---------- */
-  --text-display-size: 44px;
-  --text-display-line: 48px;
+  /* In rem dalla #313: px del mockup / 16 (commento = px a 16). Interlinee in
+     rem, mai senza unità: senza unità i figli erediterebbero il rapporto e
+     al 100% la geometria cambierebbe. Tracking in em. */
+  --text-display-size: 2.75rem; /* 44px */
+  --text-display-line: 3rem; /* 48px */
   --text-display-tracking: -0.04em;
-  --text-display-desktop-size: 56px;
-  --text-display-desktop-line: 60px;
-  --text-ora-xl-size: 64px;
-  --text-ora-xl-line: 56px;
+  --text-display-desktop-size: 3.5rem; /* 56px */
+  --text-display-desktop-line: 3.75rem; /* 60px */
+  --text-ora-xl-size: 4rem; /* 64px */
+  --text-ora-xl-line: 3.5rem; /* 56px */
   --text-ora-xl-tracking: -0.04em;
-  --text-ora-l-size: 52px;
-  --text-ora-l-line: 48px;
+  --text-ora-l-size: 3.25rem; /* 52px */
+  --text-ora-l-line: 3rem; /* 48px */
   --text-ora-l-tracking: -0.04em;
-  --text-numero-size: 44px;
-  --text-numero-line: 48px;
+  --text-numero-size: 2.75rem; /* 44px */
+  --text-numero-line: 3rem; /* 48px */
   --text-numero-tracking: -0.04em;
-  --text-titolo-pagina-size: 32px;
-  --text-titolo-pagina-line: 36px;
+  --text-titolo-pagina-size: 2rem; /* 32px */
+  --text-titolo-pagina-line: 2.25rem; /* 36px */
   --text-titolo-pagina-tracking: -0.03em;
-  --text-titolo-pagina-desktop-size: 40px;
-  --text-titolo-pagina-desktop-line: 44px;
-  --text-titolo-scheda-size: 22px;
-  --text-titolo-scheda-line: 26px;
+  --text-titolo-pagina-desktop-size: 2.5rem; /* 40px */
+  --text-titolo-pagina-desktop-line: 2.75rem; /* 44px */
+  --text-titolo-scheda-size: 1.375rem; /* 22px */
+  --text-titolo-scheda-line: 1.625rem; /* 26px */
   --text-titolo-scheda-tracking: -0.02em;
-  --text-frase-size: 22px;
-  --text-frase-line: 30px;
+  --text-frase-size: 1.375rem; /* 22px */
+  --text-frase-line: 1.875rem; /* 30px */
   --text-frase-tracking: -0.015em;
-  --text-sezione-size: 15px;
-  --text-sezione-line: 24px;
-  --text-corpo-forte-size: 15px;
-  --text-corpo-forte-line: 20px;
-  --text-corpo-size: 15px;
-  --text-corpo-line: 22px;
-  --text-ora-riga-size: 15px;
-  --text-ora-riga-line: 20px;
+  --text-sezione-size: 0.9375rem; /* 15px */
+  --text-sezione-line: 1.5rem; /* 24px */
+  --text-corpo-forte-size: 0.9375rem; /* 15px */
+  --text-corpo-forte-line: 1.25rem; /* 20px */
+  --text-corpo-size: 0.9375rem; /* 15px */
+  --text-corpo-line: 1.375rem; /* 22px */
+  --text-ora-riga-size: 0.9375rem; /* 15px */
+  --text-ora-riga-line: 1.25rem; /* 20px */
   --text-ora-riga-tracking: -0.01em;
-  --text-nota-size: 13px;
-  --text-nota-line: 18px;
-  --text-etichetta-size: 12px;
-  --text-etichetta-line: 16px;
+  --text-nota-size: 0.8125rem; /* 13px */
+  --text-nota-line: 1.125rem; /* 18px */
+  --text-etichetta-size: 0.75rem; /* 12px */
+  --text-etichetta-line: 1rem; /* 16px */
   --text-etichetta-tracking: 0.02em;
-  --text-micro-size: 11px;
-  --text-micro-line: 14px;
-  --text-controllo-size: 14px;
-  --text-controllo-line: 20px; /* testo di bottoni, selettori, righe compatte */
-  --text-numero-m-size: 36px;
-  --text-numero-m-line: 36px; /* giorni alle scadenze */
-  --text-numero-s-size: 30px;
-  --text-numero-s-line: 34px; /* contatori piccoli */
-  --text-cella-size: 18px;
-  --text-cella-line: 26px; /* numeri del mese e della striscia */
+  --text-micro-size: 0.6875rem; /* 11px */
+  --text-micro-line: 0.875rem; /* 14px */
+  --text-controllo-size: 0.875rem; /* 14px */
+  --text-controllo-line: 1.25rem; /* 20px: testo di bottoni, selettori, righe compatte */
+  --text-numero-m-size: 2.25rem; /* 36px */
+  --text-numero-m-line: 2.25rem; /* 36px: giorni alle scadenze */
+  --text-numero-s-size: 1.875rem; /* 30px */
+  --text-numero-s-line: 2.125rem; /* 34px: contatori piccoli */
+  --text-cella-size: 1.125rem; /* 18px */
+  --text-cella-line: 1.625rem; /* 26px: numeri del mese e della striscia */
+  /* Iniziali degli avatar: restano in px (cerchio di misura fissa, #313). */
   --text-avatar-xs-size: 8px;
   --text-avatar-s-size: 10px;
   --text-avatar-m-size: 13px;
@@ -249,6 +253,11 @@
   --size-frame-desktop: 1280px;
   --size-frame-desktop-altezza: 800px;
 
+  /* ---------- Misure minime che seguono il testo (#313, in rem) ---------- */
+  --size-modulo-min: 9.5rem; /* 152px: colonna minima di Esplora e dei contatori a due */
+  --size-contatore-min: 6rem; /* 96px: colonna minima dei contatori a tre */
+  --size-dati-min: 8rem; /* 128px: base dei dati accanto all'ora nel Prossimo */
+
   /* ---------- Movimento ---------- */
   --durata-rapida: 200ms;
   --durata-normale: 300ms;
@@ -291,6 +300,7 @@ body {
   color: var(--color-inchiostro);
   background: var(--color-carta);
   -webkit-font-smoothing: antialiased;
+  overflow-wrap: break-word; /* #313 */
   text-align: left;
 }
 

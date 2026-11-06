@@ -42,7 +42,7 @@ export function BottomNav() {
         <span className="btn-aggiungi__piu">
           <Icon name="plus" size="s" />
         </span>
-        Aggiungi
+        <span className="btn-aggiungi__testo">Aggiungi</span>
       </Link>
     </nav>
   );

@@ -408,7 +408,7 @@ export function ProfileView({
                   Scarica tutto quello che hai inserito
                 </span>
               </span>
-              <span className="riga-lista__valore">
+              <span className="riga-lista__valore riga-lista__valore--icona">
                 {exporting ? <Spinner /> : <Icon name="chevron-right" />}
               </span>
             </button>

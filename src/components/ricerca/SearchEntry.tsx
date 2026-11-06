@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { useEffect, type ReactNode } from "react";
 import { useIsDesktop } from "@/components/ui/overlay";
 import { markSearchFromApp } from "./from-app";
 import { SearchPage } from "./SearchPage";
@@ -36,22 +30,10 @@ export function SearchPageSwitch({ today }: { today: ReactNode }) {
 export function SearchOverlay({ direct }: { direct: boolean }) {
   const desktop = useIsDesktop();
 
-  // The router keeps the routes it leaves (hidden, with their state) and
-  // shows them again when the same route comes back: a search opened a second
-  // time would come back with the text, the results and the half-done closing
-  // of the first. Every time the route is shown again the palette starts over.
-  const [instance, setInstance] = useState(0);
-  const wasHidden = useRef(false);
-  useLayoutEffect(() => {
-    if (wasHidden.current) {
-      wasHidden.current = false;
-      setInstance((count) => count + 1);
-    }
-    return () => {
-      wasHidden.current = true;
-    };
-  }, []);
-
+  // The router keeps the routes it leaves hidden, with their state: a search
+  // opened a second time would come back with the text and the results of the
+  // first. `src/app/(app)/template.tsx` starts every page over when it is
+  // shown again, so the palette needs nothing of its own.
   useEffect(() => {
     // The real width, not the first render's: the hook says «mobile» until
     // the page is hydrated.
@@ -60,5 +42,5 @@ export function SearchOverlay({ direct }: { direct: boolean }) {
     window.location.replace("/ricerca");
   }, [direct, desktop]);
 
-  return desktop ? <SearchPalette key={instance} direct={direct} /> : null;
+  return desktop ? <SearchPalette direct={direct} /> : null;
 }
