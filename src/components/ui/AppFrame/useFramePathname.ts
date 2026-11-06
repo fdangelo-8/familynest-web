@@ -6,7 +6,7 @@ import { useState } from "react";
  * one is open `usePathname()` says its address, but the page below must not
  * change.
  */
-const OVERLAY_PATHS: readonly string[] = ["/aggiungi", "/ricerca"];
+export const OVERLAY_PATHS: readonly string[] = ["/aggiungi", "/ricerca"];
 
 /**
  * Pathname the frame (bars, navigation) should follow. While Add or the

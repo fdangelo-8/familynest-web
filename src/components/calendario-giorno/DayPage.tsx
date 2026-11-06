@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
+import { usePageSearchParams } from "@/components/ui/AppFrame/usePageSearchParams";
 import { useLayoutEffect, useEffect, useMemo, useRef, useState } from "react";
 import { Alert } from "@/components/ui/Alert/Alert";
 import { Button } from "@/components/ui/Button/Button";
@@ -111,7 +112,7 @@ function LoadingBody({ desktop }: { desktop: boolean }) {
 }
 
 function DayContent({ nowMs }: { nowMs: number }) {
-  const searchParams = useSearchParams();
+  const searchParams = usePageSearchParams();
   const pathname = usePathname();
   const isDesktop = useIsDesktop();
   const [lens] = useLens();
@@ -407,7 +408,7 @@ function DayContent({ nowMs }: { nowMs: number }) {
         ) : (
           <>
             {period}
-            {switcher}
+            <div className="contenitore-selettore">{switcher}</div>
           </>
         )}
         <PageError
@@ -430,7 +431,7 @@ function DayContent({ nowMs }: { nowMs: number }) {
     return (
       <main id="contenuto" tabIndex={-1} className="pagina pagina-desktop">
         {period}
-        {switcher}
+        <div className="contenitore-selettore">{switcher}</div>
         {alert}
         {hiddenLine}
         {loading ? <LoadingBody desktop={false} /> : null}

@@ -384,7 +384,7 @@ export function MemberView({
             <span className="riga-lista__testo">
               <span className="riga-lista__titolo">Modifica nome e colore</span>
             </span>
-            <span className="riga-lista__valore">
+            <span className="riga-lista__valore riga-lista__valore--icona">
               <Icon name="chevron-right" />
             </span>
           </button>
@@ -433,7 +433,7 @@ export function MemberView({
                     {invite ? invite.expiresText : "Il link vale 7 giorni"}
                   </span>
                 </span>
-                <span className="riga-lista__valore">
+                <span className="riga-lista__valore riga-lista__valore--icona">
                   {sending ? <Spinner /> : <Icon name="chevron-right" />}
                 </span>
               </button>
