@@ -1,7 +1,12 @@
 import { type Page } from "@playwright/test";
 import { column, setClock } from "../fixtures/casa";
 import { NOW, dialogOf } from "../fixtures/aggiungi";
-import { sheet, toastWith, waitForSheet } from "../fixtures/aggiungi-casa";
+import {
+  sheet,
+  tapRowTitle,
+  toastWith,
+  waitForSheet,
+} from "../fixtures/aggiungi-casa";
 import { expect, greeting, test } from "../fixtures/oggi";
 import { showColumn } from "../fixtures/percorso-casa";
 
@@ -120,5 +125,26 @@ test.describe("Aggiungi più volte di seguito", () => {
       "aria-pressed",
       "true",
     );
+  });
+
+  test("percorso: dopo aver modificato una cosa da fare, il titolo di un'altra riga apre «Modifica» senza ricaricare", async ({
+    page,
+    baseURL,
+    casa,
+  }) => {
+    await casa.todo("Marco", { title: "Prenotare la palestra" });
+    await casa.todo("Marco", { title: "Ritirare il pacco" });
+    await setClock(page, NOW);
+    await casa.signIn(page, baseURL, "Marco");
+    await page.goto("/casa/da-fare");
+    await showColumn(page, "Da fare");
+    await tapRowTitle(page, "Prenotare la palestra");
+    await sheet(page, "edit").person("Laura").click();
+    await sheet(page, "edit").button("Salva").click();
+    await expect(sheet(page, "edit").dialog).toHaveCount(0);
+    await expect(toastWith(page, "Modifiche salvate.")).toBeVisible();
+
+    await tapRowTitle(page, "Ritirare il pacco");
+    await expect(sheet(page, "edit").field).toHaveValue("Ritirare il pacco");
   });
 });

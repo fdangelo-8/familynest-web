@@ -260,6 +260,8 @@ test.describe("percorso della casa", () => {
       .not.toBeNull();
 
     // ---- Modifico: il da fare passa a Laura «entro lunedì», la scadenza cambia data
+    await reloadCasa(page);
+    await showColumn(page, "Da fare");
     await tapRowTitle(page, CUFFIA);
     const edit = sheet(page, "edit");
     await edit.person("Laura").click();
@@ -274,6 +276,7 @@ test.describe("percorso della casa", () => {
       todoRow(page, CUFFIA).locator(".riga-lista__info"),
     ).toContainText("Per Sofia, entro 26 ottobre");
 
+    await reloadCasa(page);
     await showColumn(page, "Scadenze");
     await deadlineRow(page, BOLLO).getByRole("link").click();
     await waitForSheet(page, "edit");
