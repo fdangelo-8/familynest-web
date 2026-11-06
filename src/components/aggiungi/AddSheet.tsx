@@ -1588,18 +1588,20 @@ export function AddSheet({
         </div>
 
         {isEdit ? null : (
-          <SegmentedControl<AddType>
-            aria-label="Tipo"
-            paper
-            value={type}
-            onChange={pickType}
-            options={[
-              { value: "impegno", label: "Impegno", icon: "calendar" },
-              { value: "da-fare", label: "Da fare", icon: "square-check" },
-              { value: "spesa", label: "Spesa", icon: "shopping-basket" },
-              { value: "scadenza", label: "Scadenza", icon: "file-clock" },
-            ]}
-          />
+          <div className="contenitore-selettore">
+            <SegmentedControl<AddType>
+              aria-label="Tipo"
+              paper
+              value={type}
+              onChange={pickType}
+              options={[
+                { value: "impegno", label: "Impegno", icon: "calendar" },
+                { value: "da-fare", label: "Da fare", icon: "square-check" },
+                { value: "spesa", label: "Spesa", icon: "shopping-basket" },
+                { value: "scadenza", label: "Scadenza", icon: "file-clock" },
+              ]}
+            />
+          </div>
         )}
 
         {peopleState.status === "error" ? (

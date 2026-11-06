@@ -78,7 +78,7 @@ function Row({ view, group }: { view: DeadlineView; group: string }) {
           {hiddenNote ? <VisuallyHidden>{hiddenNote}</VisuallyHidden> : null}
         </span>
         {deadline.isPrivate ? (
-          <span className="riga-lista__valore">
+          <span className="riga-lista__valore riga-lista__valore--icona">
             <span className="riga-lista__lucchetto" data-testid="lucchetto">
               <Icon name="lock" size="s" />
             </span>
