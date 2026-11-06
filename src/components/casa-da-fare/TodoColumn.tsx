@@ -100,7 +100,7 @@ function Row({
         ) : null}
       </span>
       {todo.isPrivate ? (
-        <span className="riga-lista__valore">
+        <span className="riga-lista__valore riga-lista__valore--icona">
           <span
             className="riga-lista__lucchetto"
             aria-hidden="true"

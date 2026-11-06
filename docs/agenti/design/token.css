@@ -370,7 +370,7 @@
 @container riga (width < 16rem) {
   .riga-lista__testo
     ~ :is(
-      .riga-lista__valore,
+      .riga-lista__valore:not(.riga-lista__valore--icona),
       .etichetta,
       .riga-regalo__prezzo,
       .selettore,

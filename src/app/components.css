@@ -304,7 +304,6 @@
   font-size: var(--text-corpo-forte-size);
   font-weight: var(--weight-pieno);
   cursor: pointer;
-  white-space: nowrap; /* #313 */
 }
 .btn-aggiungi__piu {
   width: var(--size-etichetta);
@@ -4572,9 +4571,7 @@ button.riga-lista {
 }
 .giorno-persone__nome {
   max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  text-align: center; /* #313 */
 }
 
 /* Lucchetto prima del titolo di un impegno «Solo io» */
@@ -5482,7 +5479,7 @@ body {
 @container riga (width < 16rem) {
   .riga-lista__testo
     ~ :is(
-      .riga-lista__valore,
+      .riga-lista__valore:not(.riga-lista__valore--icona),
       .etichetta,
       .riga-regalo__prezzo,
       .selettore,
