@@ -56,6 +56,8 @@ export type House = {
 export type Household = {
   firstShoppingAt: string | null;
   starterCompletedAt: string | null;
+  /** The person has linked at least one calendar account (#34) */
+  hasLinkedCalendar: boolean;
 };
 
 export type InviteEntry = {
@@ -184,14 +186,20 @@ export async function readHouse(
 }
 
 async function readHousehold(client: Client): Promise<Household | null> {
-  const { data, error } = await client
-    .from("households")
-    .select("first_shopping_item_at, starter_list_completed_at")
-    .maybeSingle();
-  if (error || !data) return null;
+  const [household, accounts] = await Promise.all([
+    client
+      .from("households")
+      .select("first_shopping_item_at, starter_list_completed_at")
+      .maybeSingle(),
+    // The policies give back only the person's own accounts; nothing but
+    // whether there is one leaves this function.
+    client.from("calendar_accounts").select("id").limit(1),
+  ]);
+  if (household.error || !household.data || accounts.error) return null;
   return {
-    firstShoppingAt: data.first_shopping_item_at,
-    starterCompletedAt: data.starter_list_completed_at,
+    firstShoppingAt: household.data.first_shopping_item_at,
+    starterCompletedAt: household.data.starter_list_completed_at,
+    hasLinkedCalendar: accounts.data.length > 0,
   };
 }
 

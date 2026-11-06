@@ -602,6 +602,8 @@ test.describe("listHouseholdEvents", () => {
       escortMemberId: null,
       memberIds: ["m-1", "m-2"],
       countsForFreeTime: true,
+      // no provider in the row: the label is null (#34 part 2)
+      sourceLabel: null,
     });
     expect(hidden).toEqual({
       masked: true,

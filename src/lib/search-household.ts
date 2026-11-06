@@ -3,6 +3,7 @@ import { createClient as createBrowserClient } from "@/lib/supabase/client";
 import type { Database } from "@/types/database";
 import { isValidDayKey } from "@/lib/datetime";
 import { eventHref } from "@/lib/household-events";
+import { providerName } from "@/lib/linked-calendars";
 
 /**
  * The only place where pages call `search_household` (issue #40, lessons of
@@ -57,6 +58,8 @@ export type EventHit = {
   recurrenceWeekdays: number[];
   /** First day of the series, `YYYY-MM-DD`, for «ogni martedì e giovedì» */
   seriesStartsOn: string;
+  /** «Google», «Outlook»: where it was imported from; only for its author (#34) */
+  sourceLabel?: string | null;
 };
 
 /**
@@ -146,7 +149,9 @@ type RawRow = Omit<
   | "starts_at"
   | "ends_at"
   | "visibility"
+  | "source_provider"
 > & {
+  source_provider?: Row["source_provider"] | null;
   id: string | null;
   title: string | null;
   location: string | null;
@@ -213,6 +218,7 @@ function toEventHit(raw: RawRow): EventHit | MaskedEventHit | null {
       recurrence: raw.recurrence as Recurrence,
       recurrenceWeekdays: raw.recurrence_weekdays ?? [],
       seriesStartsOn: raw.series_starts_on as string,
+      sourceLabel: providerName(raw.source_provider ?? null),
     };
   }
   // Not masked and not provably complete: dropped, never shown half.

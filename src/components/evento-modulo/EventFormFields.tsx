@@ -1,5 +1,6 @@
 "use client";
 
+import { Alert } from "@/components/ui/Alert/Alert";
 import { Avatar } from "@/components/ui/Avatar/Avatar";
 import { Chip } from "@/components/ui/Chip/Chip";
 import {
@@ -10,6 +11,8 @@ import {
   TimeField,
 } from "@/components/ui/Field/Field";
 import { Icon, type IconName } from "@/components/ui/Icon/Icon";
+import { cx } from "@/components/ui/cx";
+import { Toggle } from "@/components/ui/Toggle/Toggle";
 import type { EventVisibility } from "@/lib/calendar";
 import {
   NOTES_MAX_LENGTH,
@@ -48,6 +51,25 @@ export type EventFormFieldsProps = {
   visibilityText: string;
   /** The sentence under «La porta» when «Chi» and «La porta» are locked */
   peopleLockedText: string | null;
+  /**
+   * An imported event (#34): everything but «Chi lo vede» is read-only, and
+   * this sentence says where it is changed («Si cambia su Google»).
+   */
+  readOnlyDetails?: { text: string };
+  /** The row «Anche su …» after «Chi lo vede» (#34, §16); missing = no row */
+  alsoOn?: AlsoOnRow;
+};
+
+export type AlsoOnRow = {
+  /** «Anche su Google» */
+  title: string;
+  /** «Nel calendario Personale», or the warning when `warning` is true */
+  info: string;
+  checked: boolean;
+  disabled: boolean;
+  /** The info is a warning (the account needs «Ricollega») */
+  warning: boolean;
+  onChange: (checked: boolean) => void;
 };
 
 const VISIBILITY_CHOICES: ReadonlyArray<{
@@ -171,7 +193,11 @@ export function EventFormFields({
   locks,
   visibilityText,
   peopleLockedText,
+  readOnlyDetails,
+  alsoOn,
 }: EventFormFieldsProps) {
+  const detailsLocked = readOnlyDetails !== undefined;
+  const alsoOnInfoId = `${idPrefix}-anche-su-info`;
   const id = (key: FieldKey) => fieldId(idPrefix, key);
   const visibilityTextId = `${idPrefix}-vede-aiuto`;
   const lockedTextId = `${idPrefix}-persone-aiuto`;
@@ -189,8 +215,12 @@ export function EventFormFields({
 
   return (
     <>
+      {readOnlyDetails ? (
+        <Alert variant="info">{readOnlyDetails.text}</Alert>
+      ) : null}
       <TextField
         id={id("title")}
+        disabled={detailsLocked}
         label="Titolo"
         maxLength={TITLE_MAX_LENGTH}
         autoComplete="off"
@@ -202,6 +232,7 @@ export function EventFormFields({
       <DateField
         id={id("day")}
         label="Giorno"
+        disabled={detailsLocked}
         value={values.day}
         error={errors.day}
         onChange={(event) => onChange({ day: event.target.value })}
@@ -211,6 +242,7 @@ export function EventFormFields({
         <TimeField
           id={id("from")}
           label="Dalle"
+          disabled={detailsLocked}
           value={values.from}
           error={errors.from}
           onChange={(event) => onChange({ from: event.target.value })}
@@ -218,6 +250,7 @@ export function EventFormFields({
         <TimeField
           id={id("to")}
           label="Alle"
+          disabled={detailsLocked}
           value={values.to}
           help={endsHint ?? undefined}
           error={errors.to}
@@ -228,6 +261,7 @@ export function EventFormFields({
       <SelectField
         id={id("repeat")}
         label="Si ripete"
+        disabled={detailsLocked}
         value={values.repeat}
         error={errors.repeat}
         onChange={(event) =>
@@ -244,6 +278,7 @@ export function EventFormFields({
       <TextField
         id={`${idPrefix}-dove`}
         label="Dove"
+        disabled={detailsLocked}
         maxLength={PLACE_MAX_LENGTH}
         autoComplete="off"
         value={values.place}
@@ -257,7 +292,7 @@ export function EventFormFields({
         meId={meId}
         isPressed={(member) => values.memberIds.includes(member.id)}
         onToggle={toggleMember}
-        disabled={locks.people}
+        disabled={locks.people || detailsLocked}
         error={errors.people}
       />
 
@@ -272,7 +307,7 @@ export function EventFormFields({
             escortId: values.escortId === member.id ? null : member.id,
           })
         }
-        disabled={locks.people}
+        disabled={locks.people || detailsLocked}
         help={
           locks.people && peopleLockedText
             ? { id: lockedTextId, text: peopleLockedText }
@@ -318,10 +353,36 @@ export function EventFormFields({
         </p>
       </div>
 
+      {alsoOn ? (
+        <div className="riga-lista riga-lista--senza-inizio">
+          <span className="riga-lista__testo">
+            <span className="riga-lista__titolo">{alsoOn.title}</span>
+            <span
+              className={cx(
+                "riga-lista__info",
+                alsoOn.warning && "riga-lista__info--allerta",
+              )}
+              id={alsoOnInfoId}
+            >
+              {alsoOn.info}
+            </span>
+          </span>
+          <Toggle
+            checked={alsoOn.checked}
+            disabled={alsoOn.disabled}
+            onChange={alsoOn.onChange}
+            aria-label={alsoOn.title}
+            aria-describedby={alsoOnInfoId}
+            data-testid="impegno-anche-su"
+          />
+        </div>
+      ) : null}
+
       <TextField
         multiline
         id={`${idPrefix}-note`}
         label="Note"
+        disabled={detailsLocked}
         maxLength={NOTES_MAX_LENGTH}
         value={values.notes}
         onChange={(event) => onChange({ notes: event.target.value })}

@@ -296,9 +296,16 @@ function OggiContent({ nowMs }: { nowMs: number }) {
     />
   ) : null;
 
+  // The invitation to link a calendar only when the reading says there is none.
+  const askForCalendar = data.household?.hasLinkedCalendar === false;
+
   const starterOrSummary = (p: string) =>
     summary ? (
-      <Summary view={summary} inviter={inviter} />
+      <Summary
+        view={summary}
+        inviter={inviter}
+        askForCalendar={askForCalendar}
+      />
     ) : showStarter && starter ? (
       <StarterList view={starter} p={p} />
     ) : null;
@@ -316,7 +323,7 @@ function OggiContent({ nowMs }: { nowMs: number }) {
           <DomaniSection view={eventsView} ctx={ctx} p={p} columns={false} />
         );
       }
-      return <TodayEmptySection p={p} />;
+      return <TodayEmptySection p={p} askForCalendar={askForCalendar} />;
     }
     const prossimo = <ProssimoSection view={eventsView} ctx={ctx} p={p} />;
     const dopo = <DopoSection view={eventsView} ctx={ctx} p={p} />;

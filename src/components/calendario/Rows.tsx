@@ -11,6 +11,7 @@ import {
 } from "@/lib/calendar";
 import { formatTime, formatWeekParam, type CalendarDay } from "@/lib/datetime";
 import { eventHref } from "@/lib/household-events";
+import { SourceLabel } from "./SourceLabel";
 import {
   MAX_AVATARS,
   endInDay,
@@ -175,7 +176,12 @@ export function DayRow({
             </>
           ) : null}
         </span>
-        {info ? <span className="riga-evento__info">{info}</span> : null}
+        {info || full.sourceLabel ? (
+          <span className="riga-evento__info">
+            <SourceLabel label={full.sourceLabel} />
+            {info}
+          </span>
+        ) : null}
       </span>
       <People
         people={participantsInNestOrder(full, members)}
