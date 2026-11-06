@@ -17,7 +17,8 @@ type Client = ReturnType<typeof createClient>;
 export type TodoValues = {
   title: string;
   dueDate: string | null;
-  assigneeId: string | null;
+  /** Who takes care of it, in order; empty = nobody */
+  assigneeIds: string[];
   forId: string | null;
   isPrivate: boolean;
 };
@@ -25,11 +26,17 @@ export type TodoValues = {
 export type DeadlineValues = {
   title: string;
   dueDate: string;
-  assigneeId: string | null;
+  assigneeIds: string[];
   forId: string | null;
   isPrivate: boolean;
   /** Days before: 30, 7, 1 and 0 (the day itself) */
   reminders: number[];
+  /**
+   * The note of the row. The sheet neither shows nor changes it: it is read
+   * and sent back so that a save does not erase it (`update_deadline` writes
+   * every column).
+   */
+  note: string | null;
 };
 
 export type TodoRecord = TodoValues & {
@@ -138,55 +145,28 @@ export type ShoppingSave =
   { status: "ok"; saved: number; ids: string[] } | { status: "failed" };
 
 /**
- * One insert per thing, in the order of the phrase (they all get their own
- * time, so the list keeps that order). A thing that someone else added in the
- * meantime (`23505`) is skipped. The ids of the new rows are read back with a
- * separate query (no `select` after a write): the only thing still to take with
- * a name just saved is the new row, because two of them cannot coexist.
+ * All the things of the phrase in one call (`add_shopping_items`), in the
+ * order of the phrase, with the same people for every one. A thing that
+ * someone else added in the meantime is skipped by the database; the ids of
+ * the things saved come back, for «Annulla».
  */
 export async function saveShopping(
   supabase: Client,
   entries: readonly ShoppingEntry[],
+  assigneeIds: readonly string[],
 ): Promise<ShoppingSave> {
-  const savedKeys = new Set<string>();
   try {
-    for (const entry of entries) {
-      const { error } = await supabase.from("shopping_items").insert({
+    const { data, error } = await supabase.rpc("add_shopping_items", {
+      p_items: entries.map((entry) => ({
         name: entry.name,
-        ...(entry.quantity ? { quantity: entry.quantity } : {}),
-      });
-      if (!error) {
-        savedKeys.add(nameKey(entry.name));
-      } else if (error.code !== "23505") {
-        return { status: "failed" };
-      }
-    }
+        quantity: entry.quantity,
+      })),
+      p_assignee_member_ids: [...assigneeIds],
+    });
+    if (error || !Array.isArray(data)) return { status: "failed" };
+    return { status: "ok", saved: data.length, ids: data };
   } catch {
     return { status: "failed" };
-  }
-  let ids: string[] = [];
-  if (savedKeys.size > 0) {
-    const after = await readNewItems(supabase, savedKeys);
-    ids = after ?? [];
-  }
-  return { status: "ok", saved: savedKeys.size, ids };
-}
-
-async function readNewItems(
-  supabase: Client,
-  savedKeys: ReadonlySet<string>,
-): Promise<string[] | null> {
-  try {
-    const { data, error } = await supabase
-      .from("shopping_items")
-      .select("id, name")
-      .is("checked_at", null);
-    if (error || !data) return null;
-    return data
-      .filter((row) => savedKeys.has(nameKey(row.name)))
-      .map((row) => row.id);
-  } catch {
-    return null;
   }
 }
 
@@ -327,81 +307,74 @@ export async function deleteShoppingItem(
 /* ---------- Da fare ---------- */
 
 const TODO_COLUMNS =
-  "id, title, assignee_member_id, for_member_id, due_date, is_private, created_by_member_id";
-const DEADLINE_COLUMNS = `${TODO_COLUMNS}, reminder_days`;
+  "id, title, for_member_id, due_date, is_private, created_by_member_id";
+const DEADLINE_COLUMNS = `${TODO_COLUMNS}, reminder_days, note`;
 
-export type Created =
-  { status: "ok"; findId: () => Promise<string | null> } | { status: "failed" };
+export type Created = { status: "ok"; id: string } | { status: "failed" };
 
+/**
+ * A new thing to do with its people, in one call (`create_todo`): the id, the
+ * author and the Nest are the database's. The id comes back for «Annulla».
+ */
 export async function createTodo(
   supabase: Client,
   values: TodoValues,
-  meId: string | null,
 ): Promise<Created> {
   try {
-    const { error } = await supabase.from("todos").insert({
-      title: values.title,
-      assignee_member_id: values.assigneeId,
-      for_member_id: values.forId,
-      due_date: values.dueDate,
-      is_private: values.isPrivate,
+    const { data, error } = await supabase.rpc("create_todo", {
+      p_title: values.title,
+      p_assignee_member_ids: values.assigneeIds,
+      ...(values.forId ? { p_for_member_id: values.forId } : {}),
+      ...(values.dueDate ? { p_due_date: values.dueDate } : {}),
+      p_is_private: values.isPrivate,
     });
-    if (error) return { status: "failed" };
+    if (error || typeof data !== "string") return { status: "failed" };
+    return { status: "ok", id: data };
   } catch {
     return { status: "failed" };
   }
-  // The id is the database's: read it back (no select after a write).
-  const lookup = findNewestId(supabase, "todos", values.title, meId);
-  return { status: "ok", findId: () => lookup };
 }
 
 export async function createDeadline(
   supabase: Client,
   values: DeadlineValues,
-  meId: string | null,
 ): Promise<Created> {
   try {
-    const { error } = await supabase.from("deadlines").insert({
-      title: values.title,
-      due_date: values.dueDate,
-      assignee_member_id: values.assigneeId,
-      for_member_id: values.forId,
-      is_private: values.isPrivate,
-      reminder_days: values.reminders,
+    const { data, error } = await supabase.rpc("create_deadline", {
+      p_title: values.title,
+      p_due_date: values.dueDate,
+      p_assignee_member_ids: values.assigneeIds,
+      ...(values.forId ? { p_for_member_id: values.forId } : {}),
+      p_is_private: values.isPrivate,
+      p_reminder_days: values.reminders,
     });
-    if (error) return { status: "failed" };
+    if (error || typeof data !== "string") return { status: "failed" };
+    return { status: "ok", id: data };
   } catch {
     return { status: "failed" };
   }
-  const lookup = findNewestId(supabase, "deadlines", values.title, meId);
-  return { status: "ok", findId: () => lookup };
 }
 
-/**
- * The newest row of the author with this title: the one just created. The
- * query never carries the title (it would end up in addresses and logs): it
- * asks for the author's latest rows and compares the title here. Without the
- * author there is no «Annulla», so it can never touch someone else's thing.
- */
-async function findNewestId(
+/** The people of a thing, in the order they were added. */
+async function readAssignees(
   supabase: Client,
-  table: "todos" | "deadlines",
-  title: string,
-  meId: string | null,
-): Promise<string | null> {
-  if (!meId) return null;
-  try {
-    const { data, error } = await supabase
-      .from(table)
-      .select("id, title")
-      .eq("created_by_member_id", meId)
-      .order("created_at", { ascending: false })
-      .limit(20);
-    if (error || !data) return null;
-    return data.find((row) => row.title === title)?.id ?? null;
-  } catch {
-    return null;
-  }
+  table: "todo_assignees" | "deadline_assignees",
+  id: string,
+): Promise<string[] | null> {
+  const { data, error } =
+    table === "todo_assignees"
+      ? await supabase
+          .from("todo_assignees")
+          .select("member_id, created_at")
+          .eq("todo_id", id)
+          .order("created_at", { ascending: true })
+      : await supabase
+          .from("deadline_assignees")
+          .select("member_id, created_at")
+          .eq("deadline_id", id)
+          .order("created_at", { ascending: true });
+  if (error || !data) return null;
+  return data.map((row) => row.member_id);
 }
 
 export async function readTodo(
@@ -409,12 +382,12 @@ export async function readTodo(
   id: string,
 ): Promise<ReadResult<TodoRecord>> {
   try {
-    const { data, error } = await supabase
-      .from("todos")
-      .select(TODO_COLUMNS)
-      .eq("id", id)
-      .maybeSingle();
-    if (error) return { status: "failed" };
+    const [thing, assignees] = await Promise.all([
+      supabase.from("todos").select(TODO_COLUMNS).eq("id", id).maybeSingle(),
+      readAssignees(supabase, "todo_assignees", id),
+    ]);
+    if (thing.error || assignees === null) return { status: "failed" };
+    const data = thing.data;
     if (!data) return { status: "gone" };
     return {
       status: "found",
@@ -422,7 +395,7 @@ export async function readTodo(
         id: data.id,
         title: data.title,
         dueDate: data.due_date,
-        assigneeId: data.assignee_member_id,
+        assigneeIds: assignees,
         forId: data.for_member_id,
         isPrivate: data.is_private,
         createdById: data.created_by_member_id,
@@ -438,12 +411,16 @@ export async function readDeadline(
   id: string,
 ): Promise<ReadResult<DeadlineRecord>> {
   try {
-    const { data, error } = await supabase
-      .from("deadlines")
-      .select(DEADLINE_COLUMNS)
-      .eq("id", id)
-      .maybeSingle();
-    if (error) return { status: "failed" };
+    const [thing, assignees] = await Promise.all([
+      supabase
+        .from("deadlines")
+        .select(DEADLINE_COLUMNS)
+        .eq("id", id)
+        .maybeSingle(),
+      readAssignees(supabase, "deadline_assignees", id),
+    ]);
+    if (thing.error || assignees === null) return { status: "failed" };
+    const data = thing.data;
     if (!data) return { status: "gone" };
     return {
       status: "found",
@@ -451,11 +428,12 @@ export async function readDeadline(
         id: data.id,
         title: data.title,
         dueDate: data.due_date,
-        assigneeId: data.assignee_member_id,
+        assigneeIds: assignees,
         forId: data.for_member_id,
         isPrivate: data.is_private,
         createdById: data.created_by_member_id,
         reminders: data.reminder_days,
+        note: data.note,
       },
     };
   } catch {
@@ -463,39 +441,27 @@ export async function readDeadline(
   }
 }
 
-/** Is the row still there for this user? A separate read, never `select` after the write. */
-async function stillThere(
-  supabase: Client,
-  table: "todos" | "deadlines",
-  id: string,
-): Promise<WriteResult> {
-  const { data, error } = await supabase
-    .from(table)
-    .select("id")
-    .eq("id", id)
-    .maybeSingle();
-  if (error) return "failed";
-  return data ? "ok" : "gone";
-}
-
+/**
+ * The write goes through `update_todo` / `update_deadline` (thing and people in
+ * one transaction). `P0002` is a thing that is not there (any more) for this user.
+ */
 export async function updateTodo(
   supabase: Client,
   id: string,
   values: TodoValues,
 ): Promise<WriteResult> {
   try {
-    const { error } = await supabase
-      .from("todos")
-      .update({
-        title: values.title,
-        assignee_member_id: values.assigneeId,
-        for_member_id: values.forId,
-        due_date: values.dueDate,
-        is_private: values.isPrivate,
-      })
-      .eq("id", id);
-    if (error) return "failed";
-    return await stillThere(supabase, "todos", id);
+    const { error } = await supabase.rpc("update_todo", {
+      p_todo_id: id,
+      p_title: values.title,
+      p_assignee_member_ids: values.assigneeIds,
+      // The functions take null as «none»; the generated types do not know it.
+      p_for_member_id: values.forId as string,
+      p_due_date: values.dueDate as string,
+      p_is_private: values.isPrivate,
+    });
+    if (!error) return "ok";
+    return error.code === "P0002" ? "gone" : "failed";
   } catch {
     return "failed";
   }
@@ -507,19 +473,18 @@ export async function updateDeadline(
   values: DeadlineValues,
 ): Promise<WriteResult> {
   try {
-    const { error } = await supabase
-      .from("deadlines")
-      .update({
-        title: values.title,
-        due_date: values.dueDate,
-        assignee_member_id: values.assigneeId,
-        for_member_id: values.forId,
-        is_private: values.isPrivate,
-        reminder_days: values.reminders,
-      })
-      .eq("id", id);
-    if (error) return "failed";
-    return await stillThere(supabase, "deadlines", id);
+    const { error } = await supabase.rpc("update_deadline", {
+      p_deadline_id: id,
+      p_title: values.title,
+      p_due_date: values.dueDate,
+      p_assignee_member_ids: values.assigneeIds,
+      p_note: values.note as string,
+      p_for_member_id: values.forId as string,
+      p_is_private: values.isPrivate,
+      p_reminder_days: values.reminders,
+    });
+    if (!error) return "ok";
+    return error.code === "P0002" ? "gone" : "failed";
   } catch {
     return "failed";
   }

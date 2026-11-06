@@ -3,8 +3,10 @@ import { Avatar, type MemberColor } from "../ui/Avatar/Avatar";
 import { Chip, ChipGroup } from "../ui/Chip/Chip";
 import { cx } from "../ui/cx";
 import { Icon } from "../ui/Icon/Icon";
+import { SegmentedControl } from "../ui/SegmentedControl/SegmentedControl";
 import { Tag } from "../ui/Tag/Tag";
 import { VisuallyHidden } from "../ui/VisuallyHidden/VisuallyHidden";
+import type { EventVisibility } from "../../lib/calendar";
 import type { HowMuch } from "../../lib/datetime";
 import { REMINDERS } from "./texts";
 
@@ -98,47 +100,10 @@ export type ChoosablePerson = {
   color: MemberColor;
 };
 
-/** «Chi se ne occupa»: one at a time; the one chosen goes away with a second tap. */
-export function WhoGroup({
-  people,
-  meId,
-  chosenId,
-  onChoose,
-}: {
-  /** «Tu» first, then the others */
-  people: readonly ChoosablePerson[];
-  meId: string | null;
-  chosenId: string | null;
-  onChoose: (id: string) => void;
-}) {
-  return (
-    <div className="campo">
-      <span className="campo__etichetta">Chi se ne occupa</span>
-      <ChipGroup aria-label="Chi se ne occupa">
-        {people.map((person) => (
-          <Chip
-            key={person.id}
-            person
-            pressed={person.id === chosenId}
-            onClick={() => onChoose(person.id)}
-            leading={
-              <Avatar
-                name={person.name}
-                color={person.color}
-                size="s"
-                nameShown
-              />
-            }
-          >
-            {person.id === meId ? "Tu" : person.name}
-          </Chip>
-        ))}
-      </ChipGroup>
-    </div>
-  );
-}
-
-/** «Chi se ne occupa» of Spesa: any number of people; a second tap takes one away. */
+/**
+ * «Chi se ne occupa» of Da fare, Scadenza and Spesa: any number of people, or
+ * nobody; a second tap takes one away.
+ */
 export function WhoManyGroup({
   people,
   meId,
@@ -178,32 +143,90 @@ export function WhoManyGroup({
   );
 }
 
-/** «Lo vede tutto il Nest» / «Lo vedi solo tu»: a button whose name says its state. */
-export function VisibilityChip({
+/**
+ * «Chi lo vede» of Da fare and Scadenza: two voices, always shown, one chosen
+ * («Lo vede tutto il Nest», «Lo vedo solo io»). For whoever did not create the
+ * thing the voices are shown but cannot be changed.
+ */
+export function VisibilityGroup({
   isPrivate,
-  onToggle,
+  onChange,
+  locked,
 }: {
   isPrivate: boolean;
-  onToggle: () => void;
+  onChange: (isPrivate: boolean) => void;
+  locked: boolean;
 }) {
   return (
-    <Chip
-      action
-      icon={isPrivate ? "lock" : "users"}
-      onClick={onToggle}
-      data-testid="aggiungi-visibilita"
-    >
-      {isPrivate ? "Lo vedi solo tu" : "Lo vede tutto il Nest"}
-    </Chip>
+    <div className="campo">
+      <span className="campo__etichetta" aria-hidden="true">
+        Chi lo vede
+      </span>
+      <SegmentedControl<"nest" | "me">
+        aria-label="Chi lo vede"
+        paper
+        value={isPrivate ? "me" : "nest"}
+        onChange={(value) => onChange(value === "me")}
+        options={[
+          {
+            value: "nest",
+            label: "Lo vede tutto il Nest",
+            icon: "users",
+            disabled: locked,
+          },
+          {
+            value: "me",
+            label: "Lo vedo solo io",
+            icon: "lock",
+            disabled: locked,
+          },
+        ]}
+        data-testid="aggiungi-visibilita"
+      />
+    </div>
   );
 }
 
-/** Same look, for whoever did not create the thing: it cannot be changed. */
-export function VisibilityLabel() {
+/**
+ * «Chi lo vede» of an Impegno: its three voices, always shown, with the
+ * sentence that says what the chosen one means (the same as the full form).
+ */
+export function EventVisibilityGroup({
+  id,
+  value,
+  onChange,
+  text,
+}: {
+  /** Unique prefix of the ids of the sentence */
+  id: string;
+  value: EventVisibility;
+  onChange: (value: EventVisibility) => void;
+  /** The sentence under the voices */
+  text: string;
+}) {
+  const textId = `${id}-aiuto`;
   return (
-    <Chip static icon="users">
-      Lo vede tutto il Nest
-    </Chip>
+    <div className="campo">
+      <span className="campo__etichetta" aria-hidden="true">
+        Chi lo vede
+      </span>
+      <SegmentedControl<EventVisibility>
+        aria-label="Chi lo vede"
+        paper
+        value={value}
+        onChange={onChange}
+        describedBy={textId}
+        options={[
+          { value: "private", label: "Solo io", icon: "lock" },
+          { value: "busy", label: "Occupato", icon: "eye-off" },
+          { value: "household", label: "Tutti", icon: "users" },
+        ]}
+        data-testid="aggiungi-visibilita"
+      />
+      <p className="campo__aiuto" id={textId} aria-live="polite">
+        {text}
+      </p>
+    </div>
   );
 }
 
