@@ -1,5 +1,5 @@
 import type { Locator, Page } from "@playwright/test";
-import { romeDay } from "../fixtures/casa";
+import { isMobileProject, romeDay } from "../fixtures/casa";
 import {
   card,
   createEvent,
@@ -101,7 +101,11 @@ test("sopra la pagina (Oggi): aprire Aggiungi e chiudere con Esc non riparte la 
   });
   await markNode(page);
   const scroll = await scrollDown(page);
-  const opener = page.getByRole("main").locator("a.campo-rapido");
+  // On the phone the quick field sits under the floating bar once scrolled:
+  // the opener is the «Aggiungi» of the bar.
+  const opener = isMobileProject()
+    ? page.getByRole("link", { name: "Aggiungi", exact: true })
+    : page.getByRole("main").locator("a.campo-rapido");
   await openAndEscape(page, opener, scroll);
 });
 
