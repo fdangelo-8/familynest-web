@@ -305,7 +305,8 @@
   container: riga / inline-size;
 }
 /* Blocco a tutta larghezza che contiene un .selettore (Casa:
-   div.casa-solo-mobile; Aggiungi: genitore del selettore del tipo).
+   div.casa-solo-mobile; Aggiungi: genitore del selettore del tipo; Calendario
+   giorno, settimana e mese: involucro del SectionSwitcher, solo sotto 1024 px).
    Mai su .lente o su .nav-alto__azioni. */
 .contenitore-selettore {
   container: selettore / inline-size;

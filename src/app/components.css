@@ -2615,9 +2615,21 @@ button.riga-lista {
   display: grid;
   gap: var(--space-2);
 }
+.giorno-persone,
+.vista-giorno,
+.griglia-settimana {
+  /* Colonna delle ore: 48 px al 100%, cresce con il testo (#313) */
+  --colonna-ore: max(
+    var(--size-colonna-ora),
+    calc(3.25 * var(--text-etichetta-size))
+  );
+}
 .giorno-persone__testa {
   display: grid;
-  grid-template-columns: var(--size-colonna-ora) repeat(var(--persone), 1fr);
+  grid-template-columns: var(--colonna-ore) repeat(
+      var(--persone),
+      minmax(0, 1fr)
+    ); /* #313 */
   gap: var(--space-1);
 }
 .giorno-persone__persona {
@@ -2633,7 +2645,7 @@ button.riga-lista {
 }
 .giorno-persone__corpo {
   display: grid;
-  grid-template-columns: var(--size-colonna-ora) 1fr;
+  grid-template-columns: var(--colonna-ore) minmax(0, 1fr); /* #313 */
   padding-top: var(--space-2);
 }
 .colonna-ore {
@@ -2742,7 +2754,7 @@ button.riga-lista {
 .griglia-settimana {
   --h: var(--size-ora-desktop);
   display: grid;
-  grid-template-columns: var(--size-colonna-ora) repeat(7, minmax(0, 1fr));
+  grid-template-columns: var(--colonna-ore) repeat(7, minmax(0, 1fr)); /* #313 */
 }
 .griglia-settimana__angolo {
   box-shadow: inset 0 calc(-1 * var(--border-sottile)) 0 var(--color-filo-2);
@@ -4549,7 +4561,7 @@ button.riga-lista {
 @media (max-width: 1023px) {
   .giorno-persone--larga {
     min-width: calc(
-      var(--size-colonna-ora) + var(--persone) * var(--size-colonna-giorni) +
+      var(--colonna-ore) + var(--persone) * var(--size-colonna-giorni) +
         (var(--persone) - 1) * var(--space-1)
     );
   }
@@ -4561,7 +4573,7 @@ button.riga-lista {
     background: var(--color-carta);
   }
   .vista-giorno {
-    scroll-padding-left: var(--size-colonna-ora);
+    scroll-padding-left: var(--colonna-ore);
   }
 }
 
@@ -5430,7 +5442,8 @@ body {
   container: riga / inline-size;
 }
 /* Blocco a tutta larghezza che contiene un .selettore (Casa:
-   div.casa-solo-mobile; Aggiungi: genitore del selettore del tipo) */
+   div.casa-solo-mobile; Aggiungi: genitore del selettore del tipo; Calendario
+   giorno, settimana e mese: involucro del SectionSwitcher, solo sotto 1024 px) */
 .contenitore-selettore {
   container: selettore / inline-size;
 }
