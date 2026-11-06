@@ -281,10 +281,10 @@ test.describe("Aggiungi · modifica · Da fare", () => {
     await s.field.pressSequentially(" domani");
     await s.button("Salva").click();
     await expect(toastWith(page, "Modifiche salvate.")).toBeVisible();
-    await expect
-      .poll(async () => (await todosOf(bianchi, "Paolo"))[0]?.due_date)
-      .toBe("2026-10-21");
-    expect((await todosOf(bianchi, "Paolo"))[0]!.is_private).toBe(false);
+    const byId = async () =>
+      (await todosOf(bianchi, "Paolo")).find((row) => row.id === byPaolo.id);
+    await expect.poll(async () => (await byId())?.due_date).toBe("2026-10-21");
+    expect((await byId())!.is_private).toBe(false);
 
     await page.goto(editUrl(byGiulia.id));
     await waitForSheet(page, "edit");
