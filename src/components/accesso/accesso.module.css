@@ -27,3 +27,81 @@
 .address {
   overflow-wrap: anywhere;
 }
+
+/* ---- Mail and password screens (#327): one DOM for both sizes ---- */
+
+.layout {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* The night panel exists only beside the step (from 1024 px). */
+.layout > .panel {
+  display: none;
+}
+
+/* Below 1024 px the step has its own grid (.passo-onboarding): arrow, title,
+   the block (fields at the top, buttons at the bottom), legal sentence.
+   `mid` takes no box, so title and block are rows of the step grid. */
+.mid {
+  display: contents;
+}
+
+.block {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: var(--space-5);
+}
+
+/* The legal sentence sits under the buttons, as if it were one of them. */
+.legal {
+  margin-top: calc(var(--space-2) - var(--space-5));
+}
+
+/* «Torna all'accesso» replaces the arrow of the header on the split screen. */
+@media (max-width: 1023px) {
+  .layout .desktopOnly {
+    display: none;
+  }
+}
+
+@media (min-width: 1024px) {
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  }
+
+  .layout > .panel {
+    display: grid;
+  }
+
+  /* Same box as .split-onboarding__passo. The arrow is not shown, but its row
+     stays (empty) so that the content starts where the mockup puts it. */
+  .layout > .step {
+    padding: var(--space-12) var(--space-16);
+    grid-template-rows: auto 1fr auto;
+    gap: var(--space-8);
+  }
+
+  .head > * {
+    display: none;
+  }
+
+  .mid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-2);
+    align-content: start;
+  }
+
+  .block {
+    grid-template-rows: none;
+    gap: var(--space-2);
+  }
+
+  .legal {
+    margin-top: 0;
+  }
+}
