@@ -647,7 +647,7 @@ export function WeekSection({
                       : `Altri ${week.more} impegni nel calendario`}
                   </span>
                 </span>
-                <span className="riga-lista__valore">
+                <span className="riga-lista__valore riga-lista__valore--icona">
                   <Icon name="chevron-right" />
                 </span>
               </Link>
@@ -749,7 +749,7 @@ export function TodoSection({
                     : `Altri ${view.more} da fare`}
                 </span>
               </span>
-              <span className="riga-lista__valore">
+              <span className="riga-lista__valore riga-lista__valore--icona">
                 <Icon name="chevron-right" />
               </span>
             </Link>
@@ -836,7 +836,7 @@ export function NelNestSection({
                   {shopping.shoppingInfo}
                 </span>
               </span>
-              <span className="riga-lista__valore">
+              <span className="riga-lista__valore riga-lista__valore--icona">
                 <Icon name="chevron-right" />
               </span>
             </Link>

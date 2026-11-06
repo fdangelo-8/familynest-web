@@ -407,7 +407,7 @@ function DayContent({ nowMs }: { nowMs: number }) {
         ) : (
           <>
             {period}
-            {switcher}
+            <div className="contenitore-selettore">{switcher}</div>
           </>
         )}
         <PageError
@@ -430,7 +430,7 @@ function DayContent({ nowMs }: { nowMs: number }) {
     return (
       <main id="contenuto" tabIndex={-1} className="pagina pagina-desktop">
         {period}
-        {switcher}
+        <div className="contenitore-selettore">{switcher}</div>
         {alert}
         {hiddenLine}
         {loading ? <LoadingBody desktop={false} /> : null}

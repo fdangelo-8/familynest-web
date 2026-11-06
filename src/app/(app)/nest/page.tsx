@@ -171,7 +171,7 @@ function MemberRow({ row }: { row: Row }) {
         </span>
         <span className="riga-lista__info">{row.info}</span>
       </span>
-      <span className="riga-lista__valore">
+      <span className="riga-lista__valore riga-lista__valore--icona">
         <Icon name="chevron-right" />
       </span>
     </>
@@ -234,7 +234,7 @@ export default async function Page() {
                     <span className="riga-lista__info">{item.info}</span>
                   ) : null}
                 </span>
-                <span className="riga-lista__valore">
+                <span className="riga-lista__valore riga-lista__valore--icona">
                   <Icon name="chevron-right" />
                 </span>
               </ListRow>

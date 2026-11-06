@@ -102,7 +102,7 @@ export function EveningsPanel({
                   }}
                 >
                   {content}
-                  <span className="riga-lista__valore">
+                  <span className="riga-lista__valore riga-lista__valore--icona">
                     <Icon name="chevron-right" />
                   </span>
                 </Link>

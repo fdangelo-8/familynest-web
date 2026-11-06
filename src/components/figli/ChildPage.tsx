@@ -359,7 +359,7 @@ function WeekRow({ event }: { event: FullEvent }) {
         <span className="riga-lista__titolo">{event.title}</span>
         <span className="riga-lista__info">{eventInfo(event)}</span>
       </span>
-      <span className="riga-lista__valore">
+      <span className="riga-lista__valore riga-lista__valore--icona">
         {event.visibility === "private" ? (
           <span className="riga-lista__lucchetto">
             <Icon name="lock" size="s" />
@@ -467,7 +467,7 @@ function SchoolSection({ view }: { view: SchoolView }) {
                   href={teacher.href}
                 >
                   {body}
-                  <span className="riga-lista__valore">
+                  <span className="riga-lista__valore riga-lista__valore--icona">
                     <Icon name="chevron-right" />
                   </span>
                   <VisuallyHidden>, chiama</VisuallyHidden>
@@ -533,7 +533,7 @@ function WishlistSection({ data }: { data: ChildData }) {
               {wishlistRowInfo(wishlist.shared, wishlist.taken)}
             </span>
           </span>
-          <span className="riga-lista__valore">
+          <span className="riga-lista__valore riga-lista__valore--icona">
             <Icon name="chevron-right" />
           </span>
         </ListRow>
