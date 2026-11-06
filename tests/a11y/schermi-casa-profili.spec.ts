@@ -10,8 +10,9 @@ import { signInAsCached } from "../fixtures/visual-login-cached";
 //   1. no horizontal scroll and no visible element outside the viewport;
 //   2. touch areas >= 44 x 44 px under 768 px (measured with elementFromPoint,
 //      so an area made with a transparent ::before counts);
-//   3. root font size at 200% (360 and 390): no cut or overlapping text, no
-//      horizontal scroll;
+//   3. browser font size at 32 px = 200% (360 and 390), set with CDP
+//      Page.setFontSizes BEFORE the navigation: `main h1` really doubles, no cut
+//      or overlapping text, no horizontal scroll, touch areas >= 44 px;
 //   4. keyboard (360 and 390): text fields stay visible with the viewport 300 px
 //      shorter;
 //   5. bottom sheets: open whole, scroll, main button reachable, close.
@@ -32,6 +33,7 @@ const WIDTHS: Array<[number, number]> = [
   [393, 852],
   [412, 915],
   [430, 932],
+  [640, 800],
   [768, 1024],
   [1280, 800],
   [1440, 900],
@@ -103,6 +105,16 @@ test.beforeEach(async ({ page, context, baseURL }, testInfo) => {
 });
 
 // ------------------------------------------------------------------ helpers
+
+/** Browser font size (16 px = 100%, 32 px = 200%): applies to the next goto. */
+async function setBrowserFontSize(page: Page, px: 16 | 32) {
+  const cdp = await page.context().newCDPSession(page);
+  try {
+    await cdp.send("Page.setFontSizes", { fontSizes: { standard: px } });
+  } finally {
+    await cdp.detach();
+  }
+}
 
 async function openPage(page: Page, spec: PageSpec, w: number, h: number) {
   await page.setViewportSize({ width: w, height: h });
@@ -340,7 +352,19 @@ async function textProblems(page: Page): Promise<Found[]> {
         rects.push(...range.getClientRects());
         text += (t.textContent ?? "").trim() + " ";
       }
-      const real = rects.filter((q) => q.width > 1 && q.height > 1);
+      // getClientRects gives the font area (Parkinsans is about 1.42 em):
+      // shrink every rectangle to the line height, centred.
+      const fsz = parseFloat(cs.fontSize);
+      const lh = cs.lineHeight.endsWith("px")
+        ? parseFloat(cs.lineHeight)
+        : fsz * 1.2;
+      const real = rects
+        .filter((q) => q.width > 1 && q.height > 1)
+        .map((q) => {
+          const hh = Math.min(q.height, lh);
+          const top = q.top + (q.height - hh) / 2;
+          return new DOMRect(q.left, top, q.width, hh);
+        });
       if (real.length === 0) continue;
       // Cut by its own box.
       const ownClip =
@@ -507,49 +531,30 @@ for (const spec of PAGES) {
     test(`${spec.name} ${w}x${h}: testo ingrandito al 200%`, async ({
       page,
     }, testInfo) => {
-      await openPage(page, spec, w, h);
-      // 1) root font size at 200%, as asked. If the app uses px sizes this has
-      //    no effect (annotated below).
-      const before = await page.evaluate(
-        () =>
-          getComputedStyle(
-            document.querySelector("main h1, main p, main span")!,
-          ).fontSize,
-      );
-      await page.evaluate(() => {
-        document.documentElement.style.fontSize = "200%";
-      });
-      const afterRoot = await page.evaluate(
-        () =>
-          getComputedStyle(
-            document.querySelector("main h1, main p, main span")!,
-          ).fontSize,
-      );
-      testInfo.annotations.push({
-        type: "font-radice-200%-ha-effetto",
-        description: `${before} -> ${afterRoot}`,
-      });
-      // 2) emulation of the system font scale (Android/iOS): every computed
-      //    font size and line height doubled, boxes unchanged.
-      await page.evaluate(() => {
-        const items = [...document.body.querySelectorAll("*")].map((el) => {
-          const cs = getComputedStyle(el);
-          return {
-            el: el as HTMLElement,
-            fs: parseFloat(cs.fontSize),
-            lh: cs.lineHeight,
-          };
+      const h1Size = () =>
+        page.evaluate(() => {
+          const h1 = document.querySelector("main h1");
+          return h1 ? parseFloat(getComputedStyle(h1).fontSize) : null;
         });
-        for (const { el, fs, lh } of items) {
-          el.style.fontSize = `${fs * 2}px`;
-          if (lh !== "normal") el.style.lineHeight = `${parseFloat(lh) * 2}px`;
-        }
-      });
-      await waitForAnimationsToEnd(page);
+      // 100% first, to measure the heading.
+      await openPage(page, spec, w, h);
+      const at100 = await h1Size();
+      // 200%: the browser font size is set before the page is loaded again.
+      await setBrowserFontSize(page, 32);
+      await openPage(page, spec, w, h);
+      const at200 = await h1Size();
+      expect
+        .soft(
+          at100 && at200 ? at200 / at100 : 2,
+          `l'h1 raddoppia (${at100} px -> ${at200} px)`,
+        )
+        .toBeCloseTo(2, 1);
       await attach(page, testInfo, `${spec.name}-${w}x${h}-200`);
       const overflow = await overflowProblems(page);
+      const touch = await touchProblems(page);
       const text = await textProblems(page);
       expect.soft(overflow, "overflow al 200%").toEqual([]);
+      expect.soft(touch.bad, "aree di tocco sotto 44 px al 200%").toEqual([]);
       expect.soft(text, "testo tagliato o sovrapposto al 200%").toEqual([]);
     });
   }
