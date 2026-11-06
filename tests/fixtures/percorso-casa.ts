@@ -46,11 +46,13 @@ export async function goTo(
  */
 export async function showColumn(page: Page, label: Column): Promise<void> {
   if (isMobileProject()) {
-    const voice = switcher(page).getByRole("link", {
-      name: new RegExp(`^${label}`),
-    });
+    // The voice of the page that is open is not a link: it is only tapped
+    // when it leads somewhere.
+    const voice = switcher(page)
+      .locator(".selettore__voce")
+      .filter({ hasText: new RegExp(`^${label}`) });
     await expect(voice).toBeVisible({ timeout: 20_000 });
-    if ((await voice.getAttribute("aria-current")) === null) {
+    if ((await voice.evaluate((el) => el.tagName)) === "A") {
       await voice.click();
     }
   }

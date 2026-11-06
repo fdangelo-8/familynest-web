@@ -65,8 +65,24 @@ const deadlineRow = (page: Page, title: string) =>
     .getByTestId("scadenza-riga")
     .filter({ hasText: title });
 
+/**
+ * Loads the page of Casa again before opening the sheet of Aggiungi a second
+ * time. KNOWN DEFECT (see percorso-casa-aggiungi-ripetuto.spec.ts): without a
+ * reload the second opening in the same session changes the address but shows
+ * no sheet. This journey is about everything that comes after, so it does not
+ * depend on it; the defect has its own tests.
+ */
+async function reloadCasa(page: Page): Promise<void> {
+  await page.reload();
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Casa" }),
+  ).toBeVisible({ timeout: 20_000 });
+  await expect(page.locator('[aria-busy="true"]')).toHaveCount(0);
+}
+
 /** Opens the sheet of Aggiungi from the navigation, wherever the person is. */
 async function openAddFromHere(page: Page): Promise<void> {
+  await reloadCasa(page);
   await expect(async () => {
     await page.getByRole("link", { name: "Aggiungi", exact: true }).click();
     await expect(dialogOf(page)).toBeVisible({ timeout: 2000 });
@@ -79,24 +95,6 @@ const emptyAction = (page: Page, label: Column, name: string) =>
   column(page, label)
     .getByRole("link", { name, exact: true })
     .or(column(page, label).getByRole("button", { name, exact: true }));
-
-test.afterEach(async ({ page }, testInfo) => {
-  if (testInfo.status === testInfo.expectedStatus) return;
-  // DIAG (temporary)
-  const body = await page
-    .locator("body")
-    .innerText()
-    .catch(() => "n/a");
-  const dialogs = await page
-    .locator('[role="dialog"]')
-    .evaluateAll((els) => els.map((el) => el.outerHTML.slice(0, 400)))
-    .catch(() => []);
-  console.log(
-    "DIAG",
-    page.url(),
-    JSON.stringify({ body: body.slice(0, 1500), dialogs }),
-  );
-});
 
 test.describe("percorso della casa", () => {
   test("percorso: creo da Casa e da Aggiungi, spunto, modifico, ritrovo in Oggi e in Ricerca; un altro Nest non vede niente", async ({
@@ -149,6 +147,7 @@ test.describe("percorso della casa", () => {
     await expect(todoGroup(page, "Questa settimana")).toContainText(NONNA);
 
     // ---- Da Casa: «Scadenze» vuoto porta ad Aggiungi con «Scadenza» scelta
+    await reloadCasa(page);
     await showColumn(page, "Scadenze");
     await expect(
       column(page, "Scadenze").getByText("Nessuna scadenza"),

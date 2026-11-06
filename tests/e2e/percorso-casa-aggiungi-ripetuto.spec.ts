@@ -37,6 +37,33 @@ test.describe("Aggiungi più volte di seguito", () => {
     );
   });
 
+  test("percorso: con l'orologio vero, dalla barra, due cose di seguito: il foglio si apre la seconda volta", async ({
+    page,
+    baseURL,
+    casa,
+  }) => {
+    await casa.signIn(page, baseURL, "Marco");
+    await page.goto("/oggi");
+    await expect(
+      page.getByRole("heading", { level: 1, name: greeting }),
+    ).toBeVisible({ timeout: 20_000 });
+    await expect(async () => {
+      await page.getByRole("link", { name: "Aggiungi", exact: true }).click();
+      await expect(dialogOf(page)).toBeVisible({ timeout: 2000 });
+    }).toPass();
+    await waitForSheet(page, "add");
+    await sheet(page).field.fill("latte e pane");
+    await sheet(page).button("Aggiungi 2 cose").click();
+    await expect(sheet(page).dialog).toHaveCount(0);
+    await expect(toastWith(page, "2 cose aggiunte alla spesa.")).toBeVisible();
+    await expect(page).toHaveURL(/\/oggi$/);
+
+    await openAddFromBar(page);
+    await sheet(page).field.fill("devo portare le scarpe dal calzolaio");
+    await sheet(page).button("Aggiungi ai da fare").click();
+    await expect(sheet(page).dialog).toHaveCount(0);
+  });
+
   test("percorso: dalla barra, due cose di seguito: il foglio si apre la seconda volta", async ({
     page,
     baseURL,
