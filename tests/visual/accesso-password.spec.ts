@@ -471,8 +471,9 @@ test.describe("accesso con mail e password: nuova password", () => {
       await expect(heading(page, "Scegli una nuova password")).toBeVisible();
       // The test user has a random address: show a fixed one, so the picture
       // (and the wrapping of the line) is always the same.
-      await page.locator("main b").evaluate((element, address) => {
-        element.textContent = address;
+      // (the address is written in both layouts of the page: change all.)
+      await page.locator("main b").evaluateAll((elements, address) => {
+        for (const element of elements) element.textContent = address;
       }, MAIL);
       await shot(page, "nuova-password.png");
 
