@@ -4918,6 +4918,36 @@ a.parola--insieme:active {
   appearance: none;
 }
 
+/* 2b. Area di tocco del campo (#312): il campo copre tutto il riquadro
+       a sinistra dell'elemento finale. Resta nella griglia, così icona e
+       elemento finale (Annulla, esc) tengono colonna 1 e colonna 3; il
+       testo parte dopo icona e spazio e si ferma prima dell'elemento finale. */
+.campo-ricerca > .icona {
+  grid-row: 1;
+  grid-column: 1;
+}
+.campo-ricerca > .campo-ricerca__input {
+  grid-row: 1;
+  grid-column: 1 / 3;
+  justify-self: stretch;
+  align-self: stretch;
+  margin-left: calc(-1 * var(--space-4));
+  /* Il tratto del gap (12 px) prima dell'elemento finale resta toccabile:
+     l'input lo copre e il testo si ferma dove si fermava prima. L'elemento
+     finale, dopo nel DOM, resta sopra. */
+  margin-right: calc(-1 * var(--space-3));
+  padding-left: calc(
+    var(--space-4) + var(--size-icona-m) + var(--space-3) + var(--space-half)
+  );
+  padding-right: calc(var(--space-3) + var(--space-half));
+  border-radius: inherit;
+}
+.campo-ricerca
+  > :not(.icona):not(.campo-ricerca__input):not(.visivamente-nascosto) {
+  grid-row: 1;
+  grid-column: 3;
+}
+
 /* 3. Pagina senza barra (Ricerca su mobile): sotto la tacca del telefono */
 .pagina--stretta-alto {
   padding-top: calc(var(--space-3) + env(safe-area-inset-top));
