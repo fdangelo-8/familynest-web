@@ -70,6 +70,30 @@ export function validateShopping(
     : null;
 }
 
+/** Messages under the fields when a thing of Spesa is edited (name, then quantity). */
+export function validateShoppingEdit(
+  name: string,
+  quantity: string,
+): { name: string | null; quantity: string | null } {
+  return {
+    name:
+      name === ""
+        ? "Scrivi cosa manca."
+        : length(name) > SHOPPING_NAME_MAX
+          ? `Il nome può avere al massimo ${SHOPPING_NAME_MAX} caratteri.`
+          : null,
+    quantity:
+      length(quantity) > SHOPPING_QUANTITY_MAX
+        ? `La quantità può avere al massimo ${SHOPPING_QUANTITY_MAX} caratteri.`
+        : null,
+  };
+}
+
+/** Under the name: another thing still to buy has it. */
+export function shoppingDuplicateText(name: string): string {
+  return `${name} è già in lista.`;
+}
+
 /** Message under the field for Da fare, or null when it can be saved. */
 export function validateTodo(title: string): string | null {
   if (title === "") {
@@ -139,9 +163,10 @@ export const DEFAULT_REMINDERS: readonly number[] = [30, 7, 1];
 
 /** Consequence shown in the dialog that asks to delete. */
 export function deleteConsequence(
-  kind: "da-fare" | "scadenza",
+  kind: "da-fare" | "scadenza" | "spesa",
   isPrivate: boolean,
 ): string {
+  if (kind === "spesa") return "Sparisce dalla spesa di tutto il Nest.";
   if (kind === "da-fare") {
     return isPrivate
       ? "Sparisce dalla tua lista."

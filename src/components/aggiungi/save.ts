@@ -206,6 +206,124 @@ export async function undoShopping(
   }
 }
 
+/* ---------- Spesa: edit ---------- */
+
+export type ShoppingValues = {
+  name: string;
+  /** Null when there is none */
+  quantity: string | null;
+  /** Who takes care of it, in order */
+  assigneeIds: string[];
+};
+
+export type ShoppingRecord = ShoppingValues & { id: string };
+
+/**
+ * A thing still to buy, by its id (RLS limits the read to the Nest). One taken
+ * (or none) is «gone»: the sheet does not edit the taken things.
+ */
+export async function readShoppingItem(
+  supabase: Client,
+  id: string,
+): Promise<ReadResult<ShoppingRecord>> {
+  try {
+    const [item, links] = await Promise.all([
+      supabase
+        .from("shopping_items")
+        .select("id, name, quantity, checked_at")
+        .eq("id", id)
+        .maybeSingle(),
+      supabase
+        .from("shopping_item_assignees")
+        .select("member_id, created_at")
+        .eq("shopping_item_id", id)
+        .order("created_at", { ascending: true }),
+    ]);
+    if (item.error || links.error) return { status: "failed" };
+    if (!item.data || item.data.checked_at !== null) return { status: "gone" };
+    return {
+      status: "found",
+      record: {
+        id: item.data.id,
+        name: item.data.name,
+        quantity: item.data.quantity,
+        assigneeIds: (links.data ?? []).map((link) => link.member_id),
+      },
+    };
+  } catch {
+    return { status: "failed" };
+  }
+}
+
+export type ShoppingWriteResult =
+  "ok" | "gone" | "failed" | { duplicate: string };
+
+/**
+ * The name of ANOTHER thing still to buy with the same name (ignoring case),
+ * or null. `undefined` when the list could not be read.
+ */
+export async function findShoppingDuplicate(
+  supabase: Client,
+  id: string,
+  name: string,
+): Promise<string | null | undefined> {
+  try {
+    const { data, error } = await supabase
+      .from("shopping_items")
+      .select("id, name")
+      .is("checked_at", null);
+    if (error || !data) return undefined;
+    const key = nameKey(name);
+    return (
+      data.find((row) => row.id !== id && nameKey(row.name) === key)?.name ??
+      null
+    );
+  } catch {
+    return undefined;
+  }
+}
+
+/** Name, quantity and people in one call (all or nothing). */
+export async function updateShoppingItem(
+  supabase: Client,
+  id: string,
+  values: ShoppingValues,
+): Promise<ShoppingWriteResult> {
+  try {
+    const { error } = await supabase.rpc("update_shopping_item", {
+      p_item_id: id,
+      p_name: values.name,
+      p_quantity: values.quantity ?? "",
+      p_assignee_member_ids: values.assigneeIds,
+    });
+    if (!error) return "ok";
+    if (error.code === "P0002") return "gone";
+    if (error.code === "23505") {
+      const other = await findShoppingDuplicate(supabase, id, values.name);
+      return { duplicate: other ?? values.name };
+    }
+    return "failed";
+  } catch {
+    return "failed";
+  }
+}
+
+/** A thing already gone counts as removed. */
+export async function deleteShoppingItem(
+  supabase: Client,
+  id: string,
+): Promise<"ok" | "failed"> {
+  try {
+    const { error } = await supabase
+      .from("shopping_items")
+      .delete()
+      .eq("id", id);
+    return error ? "failed" : "ok";
+  } catch {
+    return "failed";
+  }
+}
+
 /* ---------- Da fare ---------- */
 
 const TODO_COLUMNS =
