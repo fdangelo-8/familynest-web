@@ -108,12 +108,9 @@ test.beforeEach(async ({ page, context, baseURL }, testInfo) => {
 
 /** Browser font size (16 px = 100%, 32 px = 200%): applies to the next goto. */
 async function setBrowserFontSize(page: Page, px: 16 | 32) {
+  // The session must stay attached: detaching resets the font size.
   const cdp = await page.context().newCDPSession(page);
-  try {
-    await cdp.send("Page.setFontSizes", { fontSizes: { standard: px } });
-  } finally {
-    await cdp.detach();
-  }
+  await cdp.send("Page.setFontSizes", { fontSizes: { standard: px } });
 }
 
 async function openPage(page: Page, spec: PageSpec, w: number, h: number) {
