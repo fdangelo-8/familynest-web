@@ -147,4 +147,54 @@ test.describe("Aggiungi più volte di seguito", () => {
     await tapRowTitle(page, "Ritirare il pacco");
     await expect(sheet(page, "edit").field).toHaveValue("Ritirare il pacco");
   });
+
+  test("CA-3 (#319): dopo tre aperture e chiusure del foglio su Spesa, ogni riga è una sola volta nel DOM, anche tra gli elementi nascosti", async ({
+    page,
+    baseURL,
+    casa,
+  }) => {
+    const items = ["Latte", "Pane", "Uova"];
+    await casa.shopping("Marco", items);
+    await setClock(page, NOW);
+    await casa.signIn(page, baseURL, "Marco");
+    await page.goto("/casa/spesa");
+    await showColumn(page, "Spesa");
+    // No visibility filter: the hidden copy is exactly what is being looked for.
+    const rows = page.getByTestId("spesa-riga");
+    await expect(rows).toHaveCount(items.length, { timeout: 20_000 });
+
+    for (let round = 0; round < 3; round += 1) {
+      await openAddFromBar(page);
+      await page.keyboard.press("Escape");
+      await expect(sheet(page).dialog).toHaveCount(0);
+    }
+
+    await expect(rows).toHaveCount(items.length);
+    for (const item of items) {
+      await expect(
+        page.getByTestId("spesa-riga").filter({ hasText: item }),
+      ).toHaveCount(1);
+    }
+    await expect(page.getByTestId("spesa-da-prendere")).toHaveCount(1);
+  });
+
+  test("percorso (#319): da /aggiungi aperto da indirizzo, salvo e riapro Aggiungi dalla barra: il foglio si apre ed è uno solo nel DOM", async ({
+    page,
+    baseURL,
+    casa,
+  }) => {
+    await setClock(page, NOW);
+    await casa.signIn(page, baseURL, "Marco");
+    await page.goto("/aggiungi");
+    await waitForSheet(page, "add");
+    await expect(page.getByTestId("aggiungi-foglio")).toHaveCount(1);
+    await sheet(page).field.fill("latte e pane");
+    await sheet(page).button("Aggiungi 2 cose").click();
+    await expect(sheet(page).dialog).toHaveCount(0);
+    await expect(toastWith(page, "2 cose aggiunte alla spesa.")).toBeVisible();
+
+    await openAddFromBar(page);
+    await expect(page.getByTestId("aggiungi-foglio")).toHaveCount(1);
+    await expect(sheet(page).dialog).toBeVisible();
+  });
 });
