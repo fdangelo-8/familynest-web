@@ -48,6 +48,8 @@ type FakeAccount = {
   authFailsFrom: number | null;
   unreachable: boolean;
   slowMs: number;
+  /** Every renewal issues a new refresh token (as Outlook does). */
+  rotateTokens: boolean;
 };
 
 type FakeUser = {
@@ -184,6 +186,7 @@ function findAccount(token: string): {
 function openFakeSession(
   account: FakeAccount,
   userId: string,
+  rotatedRefreshToken: string | null,
 ): ProviderSession {
   const calendarOf = (id: string): FakeCalendar => {
     const calendar = account.calendars.get(id);
@@ -191,6 +194,7 @@ function openFakeSession(
     return calendar;
   };
   return {
+    rotatedRefreshToken,
     async listCalendars() {
       return [...account.calendars.values()].map((c) => ({
         id: c.id,
@@ -323,7 +327,24 @@ export function createFakeProvider(id: ProviderId): CalendarProvider {
       }
       if (account.slowMs > 0) await sleep(account.slowMs);
       if (account.unreachable) throw new ProviderTemporaryError();
-      return openFakeSession(account, token.userId);
+      let rotated: string | null = null;
+      if (account.rotateTokens) {
+        // The new token works for the same account; the old one stays valid
+        // for now, as at Microsoft. The register says which one is the new.
+        rotated = `fake-refresh-${random()}`;
+        store().tokens.set(rotated, {
+          userId: token.userId,
+          accountKey: token.accountKey,
+          revoked: false,
+        });
+        record({
+          action: "token",
+          userId: token.userId,
+          email: account.email,
+          token: rotated,
+        });
+      }
+      return openFakeSession(account, token.userId, rotated);
     },
     async revoke(refreshToken) {
       const entry = store().tokens.get(refreshToken);
@@ -405,6 +426,8 @@ export type FakeControl =
       authFailsFrom?: string | null;
       unreachable?: boolean;
       slowMs?: number;
+      /** Every renewal gives back a new refresh token. */
+      rotateTokens?: boolean;
     }
   | { action: "log"; userId?: string };
 
@@ -474,6 +497,7 @@ export function applyFakeControl(body: unknown): {
         authFailsFrom: null,
         unreachable: false,
         slowMs: 0,
+        rotateTokens: false,
       });
       if (control.nextConsent) u.nextConsentKey = key;
       return { ok: true };
@@ -503,6 +527,9 @@ export function applyFakeControl(body: unknown): {
         account.unreachable = control.unreachable;
       }
       if (control.slowMs !== undefined) account.slowMs = control.slowMs;
+      if (control.rotateTokens !== undefined) {
+        account.rotateTokens = control.rotateTokens;
+      }
       return { ok: true };
     }
     case "log": {

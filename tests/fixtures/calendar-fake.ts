@@ -138,6 +138,8 @@ export function fakeCalendar(baseURL: string) {
       authFailsFrom?: string | null;
       unreachable?: boolean;
       slowMs?: number;
+      /** Every renewal gives back a new refresh token (as Outlook does). */
+      rotateTokens?: boolean;
       provider?: "google" | "outlook";
     }) {
       return call<{ ok: boolean }>(baseURL, { action: "fail", ...params });

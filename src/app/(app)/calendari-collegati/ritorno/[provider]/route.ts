@@ -8,7 +8,10 @@ import {
   type LinkDestination,
   type LinkResult,
 } from "@/lib/calendar-sync/oauth";
-import { providerForNewLink } from "@/lib/calendar-sync/providers";
+import {
+  isProviderConfigured,
+  providerForNewLink,
+} from "@/lib/calendar-sync/providers";
 import { refreshCalendarList, syncAccount } from "@/lib/calendar-sync/sync";
 import { isProviderId, type CalendarProvider } from "@/lib/calendar-sync/types";
 import { createClient } from "@/lib/supabase/server";
@@ -98,6 +101,18 @@ export async function GET(
     destination = check.destination;
     if (!check.ok) return finish("failed");
 
+    // No keys for this provider here: nothing to ask it (trying again cannot help).
+    if (!isProviderConfigured(providerId)) return finish("not_configured");
+
+    // Microsoft: the organisation must approve the app first (the code is in
+    // the description, whatever `error` says).
+    const description = searchParams.get("error_description") ?? "";
+    if (
+      description.includes("AADSTS65001") ||
+      description.includes("AADSTS90094")
+    ) {
+      return finish("admin_approval");
+    }
     // The user refused, or cancelled, on the page of the provider.
     if (searchParams.get("error") === "access_denied") return finish("denied");
     if (searchParams.get("error") === ADMIN_APPROVAL_ERROR)
@@ -115,6 +130,7 @@ export async function GET(
     }
 
     const admin = createAdminClient();
+    const ciphertext = encryptCredentials(linked.refreshToken);
     const hadProblem = await accountHadProblem(
       admin,
       userId,
@@ -128,7 +144,7 @@ export async function GET(
         p_provider: providerId,
         p_provider_account_id: linked.account.id,
         p_email: linked.account.email,
-        p_credentials_ciphertext: encryptCredentials(linked.refreshToken),
+        p_credentials_ciphertext: ciphertext,
         p_is_fake: linked.isFake,
       },
     );
@@ -151,6 +167,16 @@ export async function GET(
     // The calendars are there when the page opens; the events come right after.
     try {
       const session = await linked.provider.openSession(keptToken);
+      // Outlook sends a new refresh token at every renewal: keep the new one.
+      if (session.rotatedRefreshToken) {
+        await admin.rpc("update_calendar_account_credentials", {
+          p_account_id: accountId,
+          p_previous_ciphertext: ciphertext,
+          p_credentials_ciphertext: encryptCredentials(
+            session.rotatedRefreshToken,
+          ),
+        });
+      }
       await refreshCalendarList(admin, accountId, session);
     } catch {
       // The account is saved; the next synchronisation reads the calendars.
