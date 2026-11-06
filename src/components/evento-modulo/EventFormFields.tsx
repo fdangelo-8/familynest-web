@@ -58,6 +58,11 @@ export type EventFormFieldsProps = {
   readOnlyDetails?: { text: string };
   /** The row «Anche su …» after «Chi lo vede» (#34, §16); missing = no row */
   alsoOn?: AlsoOnRow;
+  /**
+   * Leaves «La porta» out (the new event of Aggiungi, #333): the event is
+   * saved without an escort. «Modifica impegno» never sets it.
+   */
+  hideEscort?: boolean;
 };
 
 export type AlsoOnRow = {
@@ -111,7 +116,8 @@ export function focusField(prefix: string, key: FocusKey): void {
   element.focus();
 }
 
-function PeopleChips({
+/** A group of person chips, one or several pressed: «Chi» and «La porta». */
+export function PeopleChips({
   id,
   label,
   people,
@@ -195,6 +201,7 @@ export function EventFormFields({
   peopleLockedText,
   readOnlyDetails,
   alsoOn,
+  hideEscort = false,
 }: EventFormFieldsProps) {
   const detailsLocked = readOnlyDetails !== undefined;
   const alsoOnInfoId = `${idPrefix}-anche-su-info`;
@@ -296,25 +303,27 @@ export function EventFormFields({
         error={errors.people}
       />
 
-      <PeopleChips
-        id={id("escort")}
-        label="La porta"
-        people={adults}
-        meId={meId}
-        isPressed={(member) => values.escortId === member.id}
-        onToggle={(member) =>
-          onChange({
-            escortId: values.escortId === member.id ? null : member.id,
-          })
-        }
-        disabled={locks.people || detailsLocked}
-        help={
-          locks.people && peopleLockedText
-            ? { id: lockedTextId, text: peopleLockedText }
-            : undefined
-        }
-        error={errors.escort}
-      />
+      {hideEscort ? null : (
+        <PeopleChips
+          id={id("escort")}
+          label="La porta"
+          people={adults}
+          meId={meId}
+          isPressed={(member) => values.escortId === member.id}
+          onToggle={(member) =>
+            onChange({
+              escortId: values.escortId === member.id ? null : member.id,
+            })
+          }
+          disabled={locks.people || detailsLocked}
+          help={
+            locks.people && peopleLockedText
+              ? { id: lockedTextId, text: peopleLockedText }
+              : undefined
+          }
+          error={errors.escort}
+        />
+      )}
 
       <div className="campo">
         <span className="campo__etichetta" aria-hidden="true">
