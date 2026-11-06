@@ -379,6 +379,7 @@ async function keyboardProblems(page: Page): Promise<Problems> {
         top: Math.round(r.top),
         bottom: Math.round(r.bottom),
         vh,
+        focused: document.activeElement === el,
         scroll: (() => {
           for (let a = el.parentElement; a; a = a.parentElement) {
             const o = getComputedStyle(a).overflowY;
@@ -399,10 +400,11 @@ async function keyboardProblems(page: Page): Promise<Problems> {
       inside: boolean;
       free: boolean;
       scroll: string;
+      focused: boolean;
     };
     if (!state.inside) {
       out.push(
-        `campo "${state.name}" fuori vista: ${state.top}..${state.bottom} su altezza ${state.vh}; contenitore: ${state.scroll}`,
+        `campo "${state.name}" fuori vista: ${state.top}..${state.bottom} su altezza ${state.vh}; contenitore: ${state.scroll}; con il fuoco: ${state.focused}`,
       );
     } else if (!state.free) {
       out.push(`campo "${state.name}" coperto da un altro elemento`);
