@@ -1132,10 +1132,8 @@ test.describe("schermi di ingresso, onboarding, Oggi, calendario e Aggiungi", ()
               await setBrowserFontSize(page, 32);
               try {
                 await open();
-                await shot(
-                  page,
-                  `${scene.title} ${width}x${height} testo 200%`,
-                );
+                // The screenshot goes last: taking a full-page screenshot
+                // drops the font size, so measure everything before it.
                 const headingAt200 = await headingFontSize(page);
                 expect
                   .soft(
@@ -1163,6 +1161,10 @@ test.describe("schermi di ingresso, onboarding, Oggi, calendario e Aggiungi", ()
                     `${tag} testo 200%: testo tagliato o sovrapposto`,
                   )
                   .toEqual([]);
+                await shot(
+                  page,
+                  `${scene.title} ${width}x${height} testo 200%`,
+                );
               } finally {
                 await setBrowserFontSize(page, 16);
               }
