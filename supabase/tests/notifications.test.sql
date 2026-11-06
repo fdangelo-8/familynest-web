@@ -124,14 +124,14 @@ select ok(
   (select bool_and(p.prosecdef)
    from pg_proc p
    where p.oid in (
-     'private.todos_notify_assignee()'::regprocedure,
+     'private.todo_assignees_notify()'::regprocedure,
      'private.events_notify_time_change()'::regprocedure,
      'private.event_exceptions_notify_time_change()'::regprocedure,
      'private.shopping_items_record_addition()'::regprocedure
    )),
   'the triggers that write notifications are security definer (search_path checked in 00_schema)'
 );
-select has_trigger('public', 'todos', 'todos_notify_assignee', 'trigger on todos');
+select has_trigger('public', 'todo_assignees', 'todo_assignees_notify', 'trigger on todo_assignees (#337: one row per person)');
 select has_trigger('public', 'events', 'events_notify_time_change', 'trigger on events');
 select has_trigger('public', 'event_exceptions', 'event_exceptions_notify_time_change', 'trigger on event_exceptions');
 select has_trigger('public', 'shopping_items', 'shopping_items_record_addition', 'trigger on shopping_items');
@@ -178,7 +178,7 @@ select ok(
   'the jobs for the tests: service_role only'
 );
 select ok(
-  not has_function_privilege('authenticated', 'private.todos_notify_assignee()', 'execute')
+  not has_function_privilege('authenticated', 'private.todo_assignees_notify()', 'execute')
   and not has_function_privilege('authenticated', 'private.events_notify_time_change()', 'execute')
   and not has_function_privilege('authenticated', 'private.event_exceptions_notify_time_change()', 'execute')
   and not has_function_privilege('authenticated', 'private.shopping_items_record_addition()', 'execute')

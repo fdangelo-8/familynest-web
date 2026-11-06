@@ -68,10 +68,12 @@ select ok(
 );
 select ok(
   has_column_privilege('authenticated', 'public.shopping_items', 'checked_at', 'update')
-  and not has_column_privilege('authenticated', 'public.shopping_items', 'name', 'update')
-  and not has_column_privilege('authenticated', 'public.shopping_items', 'quantity', 'update')
-  and not has_column_privilege('authenticated', 'public.shopping_items', 'household_id', 'update'),
-  'CA-DB-5: the app updates only checked_at'
+  and has_column_privilege('authenticated', 'public.shopping_items', 'name', 'update')
+  and has_column_privilege('authenticated', 'public.shopping_items', 'quantity', 'update')
+  and not has_column_privilege('authenticated', 'public.shopping_items', 'household_id', 'update')
+  and not has_column_privilege('authenticated', 'public.shopping_items', 'added_by_member_id', 'update')
+  and not has_column_privilege('authenticated', 'public.shopping_items', 'created_at', 'update'),
+  'CA-DB-5 (changed by #337 for #335): the app updates checked_at, name and quantity only'
 );
 select ok(
   not has_function_privilege('anon', 'public.clear_checked_shopping_items(uuid[])', 'execute')
@@ -251,15 +253,18 @@ select results_eq(
   $$ values (current_setting('test.detersivo_checked_at')::timestamptz) $$,
   'CA-DB-12: checking again an item already taken keeps the first check time'
 );
-select throws_ok(
-  $$ update public.shopping_items set name = 'Pane integrale' where id = 'a3000000-0000-4000-8000-000000000002' $$,
-  '42501', null,
-  'CA-DB-12: the name cannot be changed'
+-- #337 (for #335): name and quantity can be changed, stored normalised.
+select results_eq(
+  $$ update public.shopping_items set name = '  Pane   integrale ', quantity = ' 3 '
+     where id = 'a3000000-0000-4000-8000-000000000002' returning name, quantity $$,
+  $$ values ('Pane integrale'::text, '3'::text) $$,
+  '#337: the name and the quantity can be changed, cleaned of spaces'
 );
-select throws_ok(
-  $$ update public.shopping_items set quantity = '3' where id = 'a3000000-0000-4000-8000-000000000002' $$,
-  '42501', null,
-  'CA-DB-12: the quantity cannot be changed'
+select results_eq(
+  $$ update public.shopping_items set name = 'Pane', quantity = '   '
+     where id = 'a3000000-0000-4000-8000-000000000002' returning name, quantity $$,
+  $$ values ('Pane'::text, null::text) $$,
+  '#337: back to Pane; a blank quantity is stored as null'
 );
 select throws_ok(
   $$ update public.shopping_items set household_id = '22222222-2222-4222-8222-222222222222'
@@ -287,11 +292,15 @@ select results_eq(
 );
 
 -- ---------------------------------------------------------------------------
--- Delete only taken items (CA-DB-14)
+-- Delete (CA-DB-14, changed by #337 for #335: items to buy can be deleted too, only in
+-- the household of the caller; tested in shopping_items_edit.test.sql, so that Mele stays
+-- here for the strappo below)
 -- ---------------------------------------------------------------------------
-select is_empty(
-  $$ delete from public.shopping_items where id = 'a3000000-0000-4000-8000-000000000003' returning id $$,
-  'CA-DB-14: an item to buy cannot be deleted (0 rows)'
+select ok(
+  (select p.qual from pg_policies p
+   where p.schemaname = 'public' and p.tablename = 'shopping_items' and p.policyname = 'shopping_items_delete')
+  !~ 'checked_at',
+  '#337: the delete policy no longer limits the deletion to the taken items'
 );
 select ok(
   exists (select 1 from public.shopping_items i where i.id = 'a3000000-0000-4000-8000-000000000003'),
