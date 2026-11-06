@@ -16,7 +16,6 @@ import {
   toastOf,
 } from "../fixtures/impegni";
 import { loaded, openLink, rowOf, textOf } from "../fixtures/notifiche";
-import { eventRows } from "../fixtures/oggi";
 import {
   addByForm,
   addByPhrase,
@@ -25,6 +24,7 @@ import {
   closeStarterList,
   eventBlocks,
   inToday,
+  visibleIn,
   monthRowsOf,
   openDay,
   openDetailFromDay,
@@ -35,7 +35,6 @@ import {
   searchEmpty,
   searchFor,
   searchRows,
-  section,
   setNestLens,
   weekLinks,
 } from "../fixtures/percorso-impegni";
@@ -177,7 +176,7 @@ test.describe("percorso: aggiungo, ritrovo, modifico, elimino", () => {
       await expect(searchRows(page, CUCINA)).toHaveCount(0);
 
       // 7. Notifiche (di Rita): «Ilaria ha spostato Yoga Rita», con «Apri».
-      // 8. Oggi di Rita: «Domani» ha Yoga alle 19:00.
+      // 8. Oggi di Rita: «Domani c'è Yoga Rita alle 19:00».
       await asOther(browser, page, u.asRita, async (rita) => {
         await rita.goto("/notifiche");
         await loaded(rita);
@@ -191,25 +190,21 @@ test.describe("percorso: aggiungo, ritrovo, modifico, elimino", () => {
         await expect(h1(rita, YOGA)).toBeVisible();
 
         await openToday(rita);
-        await expect(eventRows(section(rita, "Domani"))).toContainText([
-          "19:00",
-        ]);
-        await expect(inToday(rita, YOGA).first()).toBeVisible();
+        await expect(visibleIn(rita, YOGA).first()).toBeVisible();
+        await expect(rita.getByRole("main")).toContainText("19:00");
         await expect(inToday(rita, CUCINA)).toHaveCount(0);
       });
 
-      // 9. Oggi di Ilaria: «Domani» ha Yoga alle 19:00 e non il corso eliminato.
+      // 9. Oggi di Ilaria: Yoga alle 19:00 e non il corso eliminato.
       await openToday(page);
-      const domani = section(page, "Domani");
-      await expect(domani).toBeVisible();
-      await expect(eventRows(domani)).toHaveCount(1);
-      await expect(eventRows(domani)).toContainText(YOGA);
-      await expect(eventRows(domani)).toContainText("19:00");
+      await expect(visibleIn(page, YOGA).first()).toBeVisible();
+      await expect(page.getByRole("main")).toContainText("19:00");
       await expect(inToday(page, CUCINA)).toHaveCount(0);
 
       // 10. Elimino anche Yoga dal Dettaglio: sparisce da Oggi, dalla ricerca e
       // dalle notifiche di Rita (la cosa non si può più leggere).
-      await eventRows(domani).click();
+      await openDay(page, tomorrow);
+      await openDetailFromDay(page, YOGA);
       await expect(page).toHaveURL(new RegExp(`/impegni/${yoga.id}`));
       await expect(h1(page, YOGA)).toBeVisible();
       await waitHydrated(h1(page, YOGA));

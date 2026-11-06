@@ -16,6 +16,9 @@ export { addDays, eventBlocks, openDay, romeDay };
 export const LENS_KEY = "familynest.lens";
 const GREETING = /^(Buongiorno|Buon pomeriggio|Buonasera|Eccoti)/;
 
+export const isMobile = (page: Page) =>
+  (page.viewportSize()?.width ?? 0) < 1024;
+
 const escapeRe = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 /** The lens «Nest» for the whole session of the page, so every page lists all. */

@@ -20,6 +20,7 @@ import {
   closeStarterList,
   eventBlocks,
   inToday,
+  isMobile,
   visibleIn,
   monthRowsOf,
   openDay,
@@ -101,8 +102,11 @@ test.describe("percorso: collego, sincronizzo, scollego", () => {
       await expect(searchRows(page, VISITA)).toHaveCount(1);
       await openToday(page);
       await expect(inToday(page, VISITA).first()).toBeAttached();
-      // Domani (desktop) o «Questa settimana» (telefono, con un impegno oggi).
-      await expect(visibleIn(page, CENA).first()).toBeVisible();
+      // «Domani» c'è solo sul desktop: sul telefono, con un impegno oggi, Oggi
+      // mostra solo la giornata di oggi (CA-17 di Oggi).
+      if (!isMobile(page)) {
+        await expect(visibleIn(page, CENA).first()).toBeVisible();
+      }
 
       // 5. Il fornitore cambia: la visita sparisce, la cena si sposta, arriva
       // il dentista; dopo la sincronizzazione il Nest si allinea.
@@ -139,8 +143,10 @@ test.describe("percorso: collego, sincronizzo, scollego", () => {
       await expect(eventBlocks(page, CENA)).toHaveCount(1);
       await openToday(page);
       await expect(inToday(page, VISITA)).toHaveCount(0);
-      await expect(visibleIn(page, DENTISTA).first()).toBeVisible();
-      await expect(visibleIn(page, CENA).first()).toBeVisible();
+      if (!isMobile(page)) {
+        await expect(visibleIn(page, DENTISTA).first()).toBeVisible();
+        await expect(visibleIn(page, CENA).first()).toBeVisible();
+      }
       await searchFor(page, "banca");
       await expect(searchEmpty(page)).toBeVisible();
 
