@@ -71,6 +71,7 @@ export function createMock() {
     });
     const route = routes.find(
       (r) =>
+        r.replies.length > 0 &&
         r.method === method &&
         (typeof r.match === "string" ? r.match === url : r.match.test(url)),
     );
