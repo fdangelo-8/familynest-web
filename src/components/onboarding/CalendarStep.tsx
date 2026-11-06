@@ -64,6 +64,9 @@ function noticeText(notice: CalendarNotice): string {
   if (notice.result === "no_calendar_permission") {
     return `${name} ci ha dato l'accesso all'account ma non al calendario. Riprova e lascia la spunta su «Calendario».`;
   }
+  if (notice.result === "not_configured") {
+    return "Per ora non è possibile collegare Google o Outlook. Premi «Continua senza calendario»: potrai collegarlo più avanti da Calendari collegati.";
+  }
   if (notice.result === "admin_approval") {
     return `Il tuo account di lavoro non permette di collegare app esterne a ${name}. Chiedi a chi gestisce gli account in ufficio di approvare FamilyNest, oppure collega un altro calendario.`;
   }
@@ -183,6 +186,9 @@ function Notice({
     );
   }
   if (!notice || isLinked(notice)) return null;
+  if (notice.result === "not_configured") {
+    return <Alert variant="errore">{noticeText(notice)}</Alert>;
+  }
   return (
     <Alert
       variant="errore"

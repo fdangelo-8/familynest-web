@@ -457,6 +457,14 @@ export function CalendarsView({
             FamilyNest, oppure collega un altro calendario.
           </Alert>
         );
+      case "not_configured":
+        return (
+          <Alert variant="errore">
+            Per ora non è possibile collegare Google o Outlook: il servizio non
+            è ancora attivo su FamilyNest. Intanto puoi aggiungere gli impegni a
+            mano.
+          </Alert>
+        );
       case "limit":
         return (
           <Alert variant="errore">
