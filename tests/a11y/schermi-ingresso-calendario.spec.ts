@@ -275,7 +275,28 @@ async function textProblems(page: Page): Promise<Problems> {
         }
       }
       if (!lines.length) continue;
-      items.push({ el, lines });
+      // Overlaps count only on the visible part: intersect each line with every
+      // ancestor whose overflow is not visible (also auto and scroll, #313).
+      const shown = [];
+      for (const l0 of lines) {
+        let l = { ...l0 };
+        for (let a = el.parentElement; a && a !== document.body && l; a = a.parentElement) {
+          const s = getComputedStyle(a);
+          if (s.overflowX === "visible" && s.overflowY === "visible") continue;
+          const ar = a.getBoundingClientRect();
+          if (s.overflowX !== "visible") {
+            l.left = Math.max(l.left, ar.left);
+            l.right = Math.min(l.right, ar.right);
+          }
+          if (s.overflowY !== "visible") {
+            l.top = Math.max(l.top, ar.top);
+            l.bottom = Math.min(l.bottom, ar.bottom);
+          }
+          if (l.right <= l.left || l.bottom <= l.top) l = null;
+        }
+        if (l) shown.push(l);
+      }
+      if (shown.length) items.push({ el, lines: shown });
       // The day-calendar blocks clip their text on purpose (height = duration).
       if (el.closest(".blocco-orario")) continue;
       // Clipped: a line leaves an ancestor that hides its overflow.
