@@ -5235,6 +5235,99 @@ a.riga-regalo__titolo::before {
   text-align: end;
 }
 
+/* #327 · Campo password con mostra/nascondi */
+.campo-password {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+.campo-password .campo__input {
+  padding-right: calc(var(--size-tocco) + var(--space-2));
+}
+.campo-password .campo__input::-ms-reveal {
+  display: none;
+}
+.campo-password__mostra {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: var(--space-1);
+  margin-block: auto;
+  width: var(--size-tocco);
+  height: var(--size-tocco);
+  padding: var(--space-0);
+  border: 0;
+  border-radius: var(--radius-s);
+  background: transparent;
+  display: grid;
+  place-items: center;
+  color: var(--color-inchiostro-2);
+  cursor: pointer;
+}
+.campo-password__mostra[aria-pressed="true"] {
+  color: var(--color-inchiostro);
+}
+@media (hover: hover) {
+  .campo-password__mostra {
+    transition: background-color var(--durata-rapida) var(--curva);
+  }
+  .campo-password__mostra:hover {
+    background: var(--color-carta);
+    color: var(--color-inchiostro);
+  }
+}
+.campo-password__mostra:active {
+  background: var(--color-carta);
+}
+
+/* #327 · Regole della password */
+.regole-password {
+  display: grid;
+  gap: var(--space-1);
+  margin: var(--space-0);
+  padding: var(--space-0);
+  list-style: none;
+}
+.regole-password__regola {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-nota-size);
+  line-height: var(--text-nota-line);
+  color: var(--color-inchiostro-2);
+}
+.regole-password__segno {
+  width: var(--size-icona-s);
+  height: var(--size-icona-s);
+  flex: none;
+  border-radius: var(--radius-tondo);
+  box-shadow: inset 0 0 0 var(--border-medio) var(--color-inchiostro-2);
+}
+.regole-password__regola--rispettata {
+  color: var(--color-inchiostro);
+}
+.regole-password__regola--rispettata > .icona {
+  color: var(--color-ok);
+}
+
+/* #327 · Campi compilati dal browser: restano bianchi con il loro bordo */
+.campo__input:-webkit-autofill {
+  -webkit-text-fill-color: var(--color-inchiostro);
+  box-shadow:
+    inset 0 0 0 var(--border-sottile) var(--color-filo-campo),
+    inset 0 0 0 var(--size-azione) var(--color-superficie);
+}
+.campo__input:-webkit-autofill:focus {
+  box-shadow:
+    inset 0 0 0 var(--border-medio) var(--color-inchiostro),
+    inset 0 0 0 var(--size-azione) var(--color-superficie);
+}
+.campo--errore .campo__input:-webkit-autofill {
+  box-shadow:
+    inset 0 0 0 var(--border-medio) var(--color-allerta),
+    inset 0 0 0 var(--size-azione) var(--color-superficie);
+}
+
 /* =========================================================
    CORNICE DELL'APP (fondamenta layout e navigazione, #10)
    Il mockup mette tutto dentro una cornice fissa: qui le regole

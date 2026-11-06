@@ -21,6 +21,7 @@ import { Icon } from "@/components/ui/Icon/Icon";
 import { ColorChoice } from "@/components/ui/ColorChoice/ColorChoice";
 import { IconButton } from "@/components/ui/IconButton/IconButton";
 import { List, ListRow } from "@/components/ui/List/List";
+import { PasswordField } from "@/components/ui/PasswordField/PasswordField";
 import { PageError } from "@/components/ui/PageError/PageError";
 import { QuickAddField } from "@/components/ui/QuickAddField/QuickAddField";
 import { SectionSwitcher } from "@/components/ui/SegmentedControl/SectionSwitcher";
@@ -90,6 +91,7 @@ function useQueryFlag(name: string): boolean {
 export function Gallery() {
   const rowCards = useQueryFlag("righe-scheda");
   const pageParts = useQueryFlag("pezzi-pagine");
+  const passwordField = useQueryFlag("campo-password");
   return (
     <main className={styles.pagina}>
       <h1 className="t-titolo-pagina">Design system</h1>
@@ -104,6 +106,7 @@ export function Gallery() {
       <DayViewSection />
       <EditableRowsSection />
       <MonthSection />
+      {passwordField ? <PasswordFieldSection /> : null}
       {pageParts ? <PageParts /> : null}
       {pageParts ? <WishlistParts /> : null}
       {pageParts ? <LinkedCalendarParts /> : null}
@@ -596,6 +599,57 @@ function FieldsSection() {
         </Example>
       </Section>
     </>
+  );
+}
+
+// #327: the password field is shown only with ?campo-password=1, so the
+// reference of the whole gallery does not change.
+function PasswordFieldSection() {
+  const [typed, setTyped] = useState("");
+  const [short, setShort] = useState("abc");
+  return (
+    <Section id="campo-password" title="Campo password">
+      <Example caption="campo-password · con regole">
+        <PasswordField
+          label="Password"
+          autoComplete="new-password"
+          value={typed}
+          onChange={(event) => setTyped(event.target.value)}
+          rules
+          data-testid="campo-password-regole"
+        />
+      </Example>
+      <Example caption="campo-password · accesso, senza regole">
+        <PasswordField
+          label="Password"
+          autoComplete="current-password"
+          value="segreta-segreta"
+          onChange={() => {}}
+          data-testid="campo-password-accesso"
+        />
+      </Example>
+      <Example caption="campo--errore · con regole">
+        <PasswordField
+          label="Password"
+          autoComplete="new-password"
+          value={short}
+          onChange={(event) => setShort(event.target.value)}
+          error="La password è troppo corta: servono almeno 8 caratteri."
+          rules
+          data-testid="campo-password-errore"
+        />
+      </Example>
+      <Example caption="campo-password · disabilitato">
+        <PasswordField
+          label="Password"
+          autoComplete="current-password"
+          value="segreta-segreta"
+          onChange={() => {}}
+          disabled
+          data-testid="campo-password-disabilitato"
+        />
+      </Example>
+    </Section>
   );
 }
 
