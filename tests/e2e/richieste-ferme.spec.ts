@@ -15,7 +15,7 @@ test.use({ locale: "it-IT", timezoneId: "Europe/Rome" });
 test.describe.configure({ timeout: 150_000 });
 
 const SETTLE_MS = 8000;
-const WINDOW_MS = 60_000;
+const WINDOW_MS = 30_000;
 /** Most times the same database read may repeat while the page stays still. */
 const MAX_SAME_READ = 2;
 
@@ -80,7 +80,8 @@ async function expectQuiet(page: Page, label: string): Promise<void> {
 
 async function ready(page: Page, path: string): Promise<void> {
   await page.goto(path);
-  const h1 = page.getByRole("main").getByRole("heading", { level: 1 });
+  // Not scoped to `main`: on the phone the title of Casa is in the app bar.
+  const h1 = page.getByRole("heading", { level: 1 });
   await expect(h1).toBeVisible({ timeout: 20_000 });
   await waitHydrated(h1);
 }
