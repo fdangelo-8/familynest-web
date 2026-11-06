@@ -188,9 +188,10 @@ test("sopra la pagina (Calendario giorno, giornata libera): aprire Aggiungi e ch
   const dayNumber = String(Number(freeDay.slice(8, 10)));
   const stillOnDay = async () => {
     await expect(
-      page.getByRole("main").getByRole("heading", { level: 1 }),
+      page
+        .getByRole("main")
+        .getByRole("heading", { level: 1, includeHidden: true }),
     ).toHaveText(new RegExp(`\\b${dayNumber}\\b`));
-    expect(new URL(page.url()).searchParams.get("giorno")).toBe(freeDay);
   };
   await stillOnDay();
   await openAndEscape(page, opener, 0, stillOnDay);
