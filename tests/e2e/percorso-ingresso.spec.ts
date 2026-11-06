@@ -174,7 +174,7 @@ test("percorso completo: accesso, onboarding, invito, Nest, uscita e cancellazio
     await ilaria.signInContext(page.context(), origin);
     const link = await onboarding(page);
     expect(await ilaria.nestCount()).toBe(1);
-    const nest = await ilaria.admin
+    const nest = await ilaria.client
       .from("households")
       .select("id, name, household_type")
       .single();
@@ -279,7 +279,7 @@ test("percorso dell'invitato: entra col link e cancella il suo account, il Nest 
     const origin = baseURL as string;
     await ilaria.signInContext(page.context(), origin);
     const link = await onboarding(page);
-    const nest = await ilaria.admin.from("households").select("id").single();
+    const nest = await ilaria.client.from("households").select("id").single();
     const householdId = nest.data!.id as string;
 
     await page.context().clearCookies();
