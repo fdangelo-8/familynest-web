@@ -1818,6 +1818,7 @@ button.riga-lista {
 }
 
 .campo-ricerca {
+  position: relative;
   display: grid;
   grid-template-columns: var(--size-icona-m) 1fr auto;
   gap: var(--space-3);
@@ -1829,9 +1830,19 @@ button.riga-lista {
   box-shadow: inset 0 0 0 var(--border-medio) var(--color-inchiostro);
 }
 .campo-ricerca__input {
+  /* Area di tocco (#312): il campo copre tutto il riquadro; il testo
+     resta dove stava con l'icona, cioè dopo padding, icona e spazio */
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   border: 0;
+  border-radius: inherit;
   background: transparent;
   outline: none;
+  padding: var(--space-0) var(--space-4) var(--space-0)
+    calc(var(--space-4) + var(--size-icona-m) + var(--space-3));
   font-size: var(--text-corpo-size);
   color: var(--color-inchiostro);
   min-width: var(--space-0);
