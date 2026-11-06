@@ -581,8 +581,11 @@ test.describe("[CI-stack] password dimenticata e nuova password", () => {
       await normal.goto("/accesso/nuova-password");
       await expect(normal).toHaveURL(/\/accesso\/link-scaduto\?tipo=password$/);
       // …and the session is untouched
-      await normal.goto("/oggi");
-      await expect(normal).toHaveURL(/\/oggi$/);
+      // (the page that redirected may still be finishing: retry the visit)
+      await expect(async () => {
+        await normal.goto("/oggi");
+        await expect(normal).toHaveURL(/\/oggi$/, { timeout: 3000 });
+      }).toPass({ timeout: 15_000 });
 
       // CA-29: a recovery link already used
       const link = await recoveryLink(user.email);

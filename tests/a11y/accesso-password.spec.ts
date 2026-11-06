@@ -477,7 +477,7 @@ test.describe("/accesso/mail · Controlla la posta", () => {
     await expectNoBlocking(page);
   });
 
-  test("avvisi di «Rimanda la mail»: axe con limite (status) e rete (alert)", async ({
+  test("«Rimanda la mail» con troppe richieste: axe con l'avviso informativo (status)", async ({
     page,
   }) => {
     needSupabase();
@@ -499,6 +499,8 @@ test.describe("/accesso/mail · Controlla la posta", () => {
     await expect(
       statusWith(page, "La mail di prima è appena partita."),
     ).toBeVisible();
+    // axe uses timers: the frozen clock has to run again.
+    await page.clock.resume();
     await expectNoBlocking(page);
   });
 });

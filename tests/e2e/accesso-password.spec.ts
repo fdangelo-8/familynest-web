@@ -444,7 +444,11 @@ test.describe("Registrati: esiti di Supabase", () => {
     await page.clock.install({ time: new Date("2026-11-06T10:00:00Z") });
     await page.goto("/accesso/mail");
     await page.clock.pauseAt(new Date("2026-11-06T10:00:05Z"));
-    await reachCheckMail(page);
+    await submitMailForm(
+      page,
+      { mode: "Registrati", email: MAIL, password: PASSWORD_OK },
+      () => expect(checkPosta(page)).toBeVisible({ timeout: 3000 }),
+    );
     await page.clock.runFor(60_000);
     await resendButton(page).click();
     await expect(
@@ -465,7 +469,11 @@ test.describe("Registrati: esiti di Supabase", () => {
     await page.clock.install({ time: new Date("2026-11-06T10:00:00Z") });
     await page.goto("/accesso/mail");
     await page.clock.pauseAt(new Date("2026-11-06T10:00:05Z"));
-    await reachCheckMail(page);
+    await submitMailForm(
+      page,
+      { mode: "Registrati", email: MAIL, password: PASSWORD_OK },
+      () => expect(checkPosta(page)).toBeVisible({ timeout: 3000 }),
+    );
     await page.clock.runFor(60_000);
     await resendButton(page).click();
     await expect(

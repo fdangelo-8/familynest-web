@@ -5,8 +5,9 @@ export const metadata: Metadata = {
   title: "FamilyNest · Accesso",
 };
 
-// Shared by /accesso, /accesso/mail and /accesso/link-scaduto. Each page
-// checks the session itself (a layout is not a guard). Reading the session is
+// Shared by /accesso, /accesso/mail, /accesso/password-dimenticata,
+// /accesso/nuova-password and /accesso/link-scaduto. Each page checks the
+// session itself (a layout is not a guard). Reading the session is
 // request-time data, so it sits inside <Suspense>.
 export default function AccessoLayout({
   children,
