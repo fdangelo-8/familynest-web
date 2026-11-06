@@ -61,10 +61,11 @@ import { PATH as CALENDAR_STEP_PATH } from "../visual/calendario-helpers";
 //     in the other specs). Exceptions only the ones written in the design-system
 //     skill ("Aree di tocco"): links inside a sentence, `.legale__link`, the
 //     decorative `.quadrato-nest--notte`, `.nav-alto__voce` (from 1024 px);
-//  3. enlarged text (system font at 200%) at 360 and 390 px: no clipped or
-//     overlapping text and no horizontal scroll. Chromium on desktop has no
-//     system font scale and the app sizes text in px, so the test doubles the
-//     computed `font-size` (and the px `line-height`) of every element;
+//  3. enlarged text (browser font size at 32 px, i.e. 200%) at 360 and 390 px:
+//     no clipped or overlapping text, no horizontal scroll, touch areas of 44 px
+//     and `main h1` really twice as big as at 100%. The font size is set with
+//     CDP `Page.setFontSizes` BEFORE the navigation (never change the root
+//     once the page is drawn: container queries in rem do not recompute);
 //  4. keyboard on the text fields at 360 and 390 px: with the viewport 300 px
 //     shorter (the keyboard) the focused field stays visible and not covered;
 //  5. bottom sheets: they open whole inside the viewport, scroll with the wheel
@@ -88,6 +89,7 @@ const WIDTHS: Array<[number, number]> = [
   [393, 852],
   [412, 915],
   [430, 932],
+  [640, 800],
   [768, 1024],
   [1280, 800],
   [1440, 900],
@@ -208,30 +210,28 @@ async function touchProblems(page: Page): Promise<Problems> {
   })()`) as Promise<Problems>;
 }
 
-/** Doubles the text like the system font scale does (px sizes included). */
-async function enlargeText(page: Page) {
-  await page.evaluate(`(() => {
-    const els = [...document.querySelectorAll("body *")];
-    const values = els.map((el) => {
-      const s = getComputedStyle(el);
-      return [
-        parseFloat(s.fontSize),
-        s.lineHeight.endsWith("px") ? parseFloat(s.lineHeight) : null,
-      ];
-    });
-    els.forEach((el, i) => {
-      const [size, line] = values[i];
-      el.style.setProperty("font-size", size * 2 + "px", "important");
-      if (line !== null) el.style.setProperty("line-height", line * 2 + "px", "important");
-    });
-    document.documentElement.style.setProperty("font-size", "200%", "important");
-  })()`);
-  await page.evaluate(
-    () =>
-      new Promise<void>((resolve) =>
-        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
-      ),
-  );
+/**
+ * Sets the browser font size (16 px = 100%, 32 px = 200%). It applies to the
+ * next navigation, so call it BEFORE the `open()` that goes to the page.
+ */
+async function setBrowserFontSize(page: Page, px: 16 | 32) {
+  const cdp = await page.context().newCDPSession(page);
+  try {
+    await cdp.send("Page.setFontSizes", { fontSizes: { standard: px } });
+  } finally {
+    await cdp.detach();
+  }
+}
+
+/** Font size in px of the first visible `main h1` (or h1), or null. */
+async function headingFontSize(page: Page): Promise<number | null> {
+  return page.evaluate(() => {
+    const list = [...document.querySelectorAll("main h1, h1")];
+    const h1 = list.find((el) =>
+      el.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true }),
+    );
+    return h1 ? parseFloat(getComputedStyle(h1).fontSize) : null;
+  });
 }
 
 async function textProblems(page: Page): Promise<Problems> {
@@ -248,15 +248,28 @@ async function textProblems(page: Page): Promise<Problems> {
       const er = el.getBoundingClientRect();
       if (er.width <= 1 || er.height <= 1) continue;
       const lines = [];
+      const own_s = getComputedStyle(el);
+      const fs = parseFloat(own_s.fontSize);
+      const lh = own_s.lineHeight.endsWith("px") ? parseFloat(own_s.lineHeight) : fs * 1.2;
       for (const node of own) {
         const range = document.createRange();
         range.selectNodeContents(node);
         for (const rect of range.getClientRects()) {
-          if (rect.width > 2 && rect.height > 2) lines.push(rect);
+          if (rect.width <= 2 || rect.height <= 2) continue;
+          // getClientRects gives the font area (Parkinsans is about 1.42 em):
+          // shrink it to the line height, centred.
+          const h = Math.min(rect.height, lh);
+          const top = rect.top + (rect.height - h) / 2;
+          lines.push({
+            left: rect.left, right: rect.right, width: rect.width,
+            top, bottom: top + h, height: h,
+          });
         }
       }
       if (!lines.length) continue;
       items.push({ el, lines });
+      // The day-calendar blocks clip their text on purpose (height = duration).
+      if (el.closest(".blocco-orario")) continue;
       // Clipped: a line leaves an ancestor that hides its overflow.
       let flagged = false;
       for (let a = el; a && a !== document.body && !flagged; a = a.parentElement) {
@@ -1045,6 +1058,7 @@ test.describe("schermi di ingresso, onboarding, Oggi, calendario e Aggiungi", ()
             await page.setViewportSize({ width, height });
             await open();
             await shot(page, `${scene.title} ${width}x${height}`);
+            const headingAt100 = await headingFontSize(page);
 
             expect
               .soft(
@@ -1107,21 +1121,43 @@ test.describe("schermi di ingresso, onboarding, Oggi, calendario e Aggiungi", ()
             }
 
             if (ENLARGED_AT.has(width)) {
-              await open();
-              await enlargeText(page);
-              await shot(page, `${scene.title} ${width}x${height} testo 200%`);
-              expect
-                .soft(
-                  listed(await overflowProblems(page)),
-                  `${tag} testo 200%: scorrimento orizzontale`,
-                )
-                .toEqual([]);
-              expect
-                .soft(
-                  listed(await textProblems(page)),
-                  `${tag} testo 200%: testo tagliato o sovrapposto`,
-                )
-                .toEqual([]);
+              await setBrowserFontSize(page, 32);
+              try {
+                await open();
+                await shot(
+                  page,
+                  `${scene.title} ${width}x${height} testo 200%`,
+                );
+                const headingAt200 = await headingFontSize(page);
+                expect
+                  .soft(
+                    headingAt100 && headingAt200
+                      ? headingAt200 / headingAt100
+                      : 2,
+                    `${tag} testo 200%: l'h1 raddoppia (${headingAt100} px -> ${headingAt200} px)`,
+                  )
+                  .toBeCloseTo(2, 1);
+                expect
+                  .soft(
+                    listed(await touchProblems(page)),
+                    `${tag} testo 200%: aree di tocco sotto 44 x 44 px`,
+                  )
+                  .toEqual([]);
+                expect
+                  .soft(
+                    listed(await overflowProblems(page)),
+                    `${tag} testo 200%: scorrimento orizzontale`,
+                  )
+                  .toEqual([]);
+                expect
+                  .soft(
+                    listed(await textProblems(page)),
+                    `${tag} testo 200%: testo tagliato o sovrapposto`,
+                  )
+                  .toEqual([]);
+              } finally {
+                await setBrowserFontSize(page, 16);
+              }
             }
           });
         }
