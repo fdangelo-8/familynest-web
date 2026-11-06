@@ -379,6 +379,15 @@ async function keyboardProblems(page: Page): Promise<Problems> {
         top: Math.round(r.top),
         bottom: Math.round(r.bottom),
         vh,
+        scroll: (() => {
+          for (let a = el.parentElement; a; a = a.parentElement) {
+            const o = getComputedStyle(a).overflowY;
+            if (o === "auto" || o === "scroll" || o === "hidden") {
+              return `${o} ${a.className.toString().split(" ")[0]} top=${a.scrollTop} h=${a.clientHeight}/${a.scrollHeight} rect=${Math.round(a.getBoundingClientRect().top)}`;
+            }
+          }
+          return "nessun contenitore";
+        })(),
         inside: r.top >= 0 && r.bottom <= vh,
         free: !!hit && (hit === el || el.contains(hit)),
       };
@@ -389,10 +398,11 @@ async function keyboardProblems(page: Page): Promise<Problems> {
       vh: number;
       inside: boolean;
       free: boolean;
+      scroll: string;
     };
     if (!state.inside) {
       out.push(
-        `campo "${state.name}" fuori vista: ${state.top}..${state.bottom} su altezza ${state.vh}`,
+        `campo "${state.name}" fuori vista: ${state.top}..${state.bottom} su altezza ${state.vh}; contenitore: ${state.scroll}`,
       );
     } else if (!state.free) {
       out.push(`campo "${state.name}" coperto da un altro elemento`);
@@ -444,7 +454,7 @@ async function sheetProblems(
       return (
         (s.overflowY === "hidden" || s.overflowY === "clip") &&
         c.scrollHeight > c.clientHeight + 2 &&
-        c.clientHeight > 0
+        c.clientHeight > 4
       );
     });
     const sr = scroller?.getBoundingClientRect();
