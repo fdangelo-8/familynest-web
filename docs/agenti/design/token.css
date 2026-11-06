@@ -364,6 +364,28 @@
   ); /* #313 */
 }
 
+/* Calendario giorno: il blocco è contenitore di tipo size (altezza e
+   larghezza le decidono le classi di posizione). Si aggiunge alla regola
+   esistente di .blocco-orario. */
+.blocco-orario {
+  container: blocco / size; /* #313 */
+}
+
+/* Orario nascosto alla vista quando non sta intero sotto il titolo (#313).
+   Soglia = 2 × --space-1 + --space-half + --text-etichetta-line + --text-micro-line
+   = 10px + 1.875rem. La parte max(…) annulla la soglia fino al 100%
+   (16 px: 10 + 30 − 40 = 0 px, nessun blocco è più basso), e vale 0 dal 125% in su. */
+@container blocco (height < calc(10px + 1.875rem - max(0px, 200px - 10rem))) {
+  .blocco-orario__ora {
+    position: absolute;
+    width: var(--border-sottile);
+    height: var(--border-sottile);
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
 /* Righe con valore o azione a destra (.riga-regalo usa anche lei
    .riga-lista__testo). -3 / -1 = colonna del testo + colonna di fine; con
    .riga-lista--senza-inizio (due colonne) è già 1 / -1. Icona, freccia,

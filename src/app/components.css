@@ -2687,6 +2687,7 @@ button.riga-lista {
   gap: var(--space-half);
   color: var(--color-inchiostro);
   cursor: pointer;
+  container: blocco / size; /* #313 */
 }
 .blocco-orario__titolo {
   font-size: var(--text-etichetta-size);
@@ -5482,6 +5483,21 @@ body {
   .selettore__voce {
     white-space: normal;
     min-height: calc(var(--size-controllo) - 2 * var(--space-1));
+  }
+}
+
+/* Orario nascosto alla vista quando non sta intero sotto il titolo (#313).
+   Soglia = 2 × --space-1 + --space-half + --text-etichetta-line + --text-micro-line
+   = 10px + 1.875rem. La parte max(…) annulla la soglia fino al 100%
+   (16 px: 10 + 30 − 40 = 0 px, nessun blocco è più basso), e vale 0 dal 125% in su. */
+@container blocco (height < calc(10px + 1.875rem - max(0px, 200px - 10rem))) {
+  .blocco-orario__ora {
+    position: absolute;
+    width: var(--border-sottile);
+    height: var(--border-sottile);
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 }
 
