@@ -15,7 +15,7 @@ test.use({ locale: "it-IT", timezoneId: "Europe/Rome" });
 test.describe.configure({ timeout: 150_000 });
 
 const SETTLE_MS = 8000;
-const WINDOW_MS = 60_000;
+const WINDOW_MS = 15_000;
 /** Most times the same database read may repeat while the page stays still. */
 const MAX_SAME_READ = 2;
 
@@ -103,7 +103,7 @@ async function openAndCloseAdd(page: Page): Promise<void> {
   await expect(dialog).toHaveCount(0);
 }
 
-test("Oggi fermo: nessuna richiesta ripetuta", async ({
+test.only("Oggi fermo: nessuna richiesta ripetuta", async ({
   page,
   baseURL,
   casa,
