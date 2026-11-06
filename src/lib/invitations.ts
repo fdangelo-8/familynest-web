@@ -12,8 +12,8 @@ export const INVITE_COOKIE_NAME = "familynest_invito";
 /** How long the cookie lives at most (it expires earlier with the invitation). */
 export const INVITE_COOKIE_MAX_AGE_SECONDS = 24 * 60 * 60;
 
-/** Where the invited person goes after «Continua» (will become `/onboarding/calendario` with #37). */
-export const AFTER_INVITE_PATH = "/oggi";
+/** Where the invited person goes after «Continua»: the calendar step of the onboarding (#299). */
+export const AFTER_INVITE_PATH = "/onboarding/calendario";
 
 /** Welcome page and colour page of the invited person. */
 export const INVITE_WELCOME_PATH = "/invito";

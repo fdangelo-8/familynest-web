@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient as createBrowserClient } from "@/lib/supabase/client";
 import type { Database } from "@/types/database";
+import { providerName } from "@/lib/linked-calendars";
 import { isValidDayKey, toDayKey, type Instant } from "@/lib/datetime";
 
 /**
@@ -34,6 +35,12 @@ export type FullEvent = {
    * Missing means true (events built by hand, without the column).
    */
   countsForFreeTime?: boolean;
+  /**
+   * «Google», «Outlook»: where the event was imported from, said by the
+   * database only to its author (null for everybody else, even on a «Tutto il
+   * Nest» event). It is the label of the source (#34, §13).
+   */
+  sourceLabel?: string | null;
 };
 
 /**
@@ -73,7 +80,9 @@ type RawRow = Omit<
   | "member_ids"
   | "author_member_id"
   | "counts_for_free_time"
+  | "source_provider"
 > & {
+  source_provider?: Row["source_provider"] | null;
   id: string | null;
   author_member_id: string | null;
   title: string | null;
@@ -107,6 +116,7 @@ function toEvent(raw: RawRow): HouseholdEvent | null {
       escortMemberId: raw.escort_member_id,
       memberIds: raw.member_ids as string[],
       countsForFreeTime,
+      sourceLabel: providerName(raw.source_provider ?? null),
     };
   }
   // Anything that is not provably a full row is treated as «Occupato»: only
@@ -317,4 +327,70 @@ export async function getEventOccurrence(
   const occurrence = toOccurrence(first as RawOccurrence);
   // A row that cannot be read is an error, not «not found».
   return occurrence ? { ok: true, occurrence } : { ok: false };
+}
+
+/**
+ * Where an event comes from, as the database says it to the reader (#34,
+ * §15 and §16). `isImported` is told to everybody (it makes the event
+ * read-only); the provider, the calendar and `isSent` only to the author.
+ */
+export type EventCalendarLink = {
+  /** Arrived from a linked calendar: it changes only there */
+  isImported: boolean;
+  /** Sent to a linked calendar with «Anche su» (also while waiting to go) */
+  isSent: boolean;
+  /** «Google», «Outlook»; null for who is not the author */
+  providerLabel: string | null;
+  calendarName: string | null;
+};
+
+export type EventCalendarLinkResult =
+  { ok: true; link: EventCalendarLink } | { ok: false };
+
+/** Reads where one event comes from. Never throws: a failure gives `{ ok: false }`. */
+export async function getEventCalendarLink(
+  id: string,
+  client?: SupabaseClient<Database>,
+): Promise<EventCalendarLinkResult> {
+  if (!UUID.test(id)) return { ok: false };
+  try {
+    const supabase = client ?? createBrowserClient();
+    const { data, error } = await supabase.rpc("get_event_calendar_link", {
+      p_event_id: id,
+    });
+    if (error || !Array.isArray(data)) return { ok: false };
+    // The generated types say non-null; the function sends null to non-authors.
+    const row = data[0] as
+      | {
+          is_imported: boolean | null;
+          is_sent: boolean | null;
+          provider: string | null;
+          calendar_name: string | null;
+        }
+      | undefined;
+    // No row: the reader cannot read the event, so there is no source to say.
+    // Not an error: the database refuses every change to an imported event anyway.
+    if (!row) {
+      return {
+        ok: true,
+        link: {
+          isImported: false,
+          isSent: false,
+          providerLabel: null,
+          calendarName: null,
+        },
+      };
+    }
+    return {
+      ok: true,
+      link: {
+        isImported: row.is_imported === true,
+        isSent: row.is_sent === true,
+        providerLabel: providerName(row.provider),
+        calendarName: row.calendar_name,
+      },
+    };
+  } catch {
+    return { ok: false };
+  }
 }

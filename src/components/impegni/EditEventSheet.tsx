@@ -14,11 +14,15 @@ import {
   deleteToast,
   saveDialogTitle,
 } from "@/lib/event-texts";
-import type { EventOccurrence } from "@/lib/household-events";
+import type {
+  EventCalendarLink,
+  EventOccurrence,
+} from "@/lib/household-events";
 import { createClient } from "@/lib/supabase/client";
 import {
   EventFormFields,
   focusField,
+  type AlsoOnRow,
 } from "@/components/evento-modulo/EventFormFields";
 import {
   ERROR_TEXTS,
@@ -31,6 +35,12 @@ import {
   type FieldKey,
   type FormErrors,
 } from "@/components/evento-modulo/model";
+import {
+  saveImportedVisibility,
+  setAlsoOn,
+  type AlsoOnRetry,
+  type AlsoOnTarget,
+} from "./also-on";
 import {
   allDialogText,
   calendarHref,
@@ -55,6 +65,8 @@ import {
 
 const SAVE_FAILED =
   "Non riusciamo a salvare le modifiche. Controlla la connessione e riprova.";
+const ALSO_ON_FAILED =
+  "Non siamo riusciti a mandare l'impegno al calendario esterno. Controlla la connessione e riprova.";
 const DELETE_FAILED =
   "Non riusciamo a eliminare l'impegno. Controlla la connessione e riprova.";
 
@@ -76,12 +88,21 @@ export type EditEventSheetProps = {
   members: ReadonlyArray<EventMember>;
   /** Member id of the signed-in user */
   meId: string;
+  /** Where the event comes from: an imported one changes only «Chi lo vede» */
+  link: EventCalendarLink;
+  /** The calendar of «Dove vanno i nuovi impegni» of the signed-in user */
+  alsoOnTarget: AlsoOnTarget | null;
   now: Instant;
   /**
    * The change is saved. The page reads the occurrence again, updates the
    * address and shows the toast; the sheet leaves when this resolves.
    */
-  onSaved: (saved: { id: string; day: string }) => Promise<void>;
+  onSaved: (saved: {
+    id: string;
+    day: string;
+    /** The event is saved but «Anche su» failed: the page offers «Riprova» */
+    alsoOnRetry?: AlsoOnRetry;
+  }) => Promise<void>;
   /** The event turned out to be gone (deleted by someone else) */
   onMissing: () => void;
 };
@@ -101,6 +122,8 @@ function EditEventSheetOpen({
   occurrence: openedOccurrence,
   members,
   meId,
+  link,
+  alsoOnTarget,
   now,
   onSaved,
   onMissing,
@@ -121,6 +144,7 @@ function EditEventSheetOpen({
   const [saving, setSaving] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [dialog, setDialog] = useState<DialogState | null>(null);
+  const [alsoOnChecked, setAlsoOnChecked] = useState(link.isSent);
   const busy = useRef(false);
   // Field that gets the focus when the dialog above the form has left.
   const pendingFocus = useRef<FieldKey | null>(null);
@@ -134,6 +158,31 @@ function EditEventSheetOpen({
   const author = members.find((m) => m.id === occurrence.authorMemberId);
   const isAuthor = occurrence.authorMemberId === meId;
   const authorName = author?.name ?? null;
+  const imported = link.isImported;
+  const alsoOnChanged = alsoOnChecked !== link.isSent;
+
+  // «Anche su …»: only the author, only for an event born here, and only with
+  // a calendar chosen in «Dove vanno i nuovi impegni» (or a copy to take back).
+  const alsoOnProvider = link.isSent
+    ? (link.providerLabel ?? alsoOnTarget?.providerLabel ?? null)
+    : (alsoOnTarget?.providerLabel ?? null);
+  const alsoOnCalendar = link.isSent
+    ? (link.calendarName ?? alsoOnTarget?.calendarName ?? null)
+    : (alsoOnTarget?.calendarName ?? null);
+  const alsoOnBroken = alsoOnTarget?.broken === true;
+  const alsoOnRow: AlsoOnRow | undefined =
+    isAuthor && !imported && alsoOnProvider && alsoOnCalendar
+      ? {
+          title: `Anche su ${alsoOnProvider}`,
+          info: alsoOnBroken
+            ? `${alsoOnProvider} non si sincronizza: ricollegalo da Calendari collegati.`
+            : `Nel calendario ${alsoOnCalendar}`,
+          checked: alsoOnChecked,
+          disabled: alsoOnBroken || saving,
+          warning: alsoOnBroken,
+          onChange: setAlsoOnChecked,
+        }
+      : undefined;
 
   const change = (patch: Partial<EventFormValues>) =>
     setValues((current) => ({ ...current, ...patch }));
@@ -141,9 +190,10 @@ function EditEventSheetOpen({
   /** Tells what a save outcome means for the form. */
   async function settle(
     outcome: SaveOutcome,
+    alsoOnRetry?: AlsoOnRetry,
   ): Promise<"done" | "field" | "failed"> {
     if (outcome.ok) {
-      await onSaved({ id: outcome.id, day: outcome.day });
+      await onSaved({ id: outcome.id, day: outcome.day, alsoOnRetry });
       setLeaving(true);
       return "done";
     }
@@ -169,10 +219,15 @@ function EditEventSheetOpen({
     }
   }
 
-  async function saveNow(scope: SaveScope, times: Times) {
-    if (busy.current) return;
-    busy.current = true;
-    setSaving(true);
+  /**
+   * Saves the form and then sends or takes back the copy of «Anche su». The
+   * save stays valid if only «Anche su» fails: `retry` then says what to send
+   * again (never the event itself).
+   */
+  async function saveWithAlsoOn(
+    scope: SaveScope,
+    times: Times,
+  ): Promise<{ outcome: SaveOutcome; retry?: AlsoOnRetry }> {
     const outcome = await saveEvent(
       supabase(),
       occurrence,
@@ -180,7 +235,35 @@ function EditEventSheetOpen({
       times,
       scope,
     );
-    const result = await settle(outcome);
+    // Without the row there is nothing to send. A split of the series gives a
+    // new event: it follows the switch even if the switch did not change.
+    const split = outcome.ok && outcome.id !== occurrence.id;
+    if (!outcome.ok || !alsoOnRow || !(alsoOnChanged || split)) {
+      return { outcome };
+    }
+    const calls = [{ id: outcome.id, enabled: alsoOnChecked }];
+    // Switched off while the series split: the copy of the old series goes too.
+    if (split && !alsoOnChecked) {
+      calls.push({ id: occurrence.id, enabled: false });
+    }
+    const retry: AlsoOnRetry = {
+      calls,
+      providerLabel: alsoOnProvider ?? "il calendario esterno",
+    };
+    for (const call of calls) {
+      if (!(await setAlsoOn(supabase(), call.id, call.enabled))) {
+        return { outcome, retry };
+      }
+    }
+    return { outcome };
+  }
+
+  async function saveNow(scope: SaveScope, times: Times) {
+    if (busy.current) return;
+    busy.current = true;
+    setSaving(true);
+    const { outcome, retry } = await saveWithAlsoOn(scope, times);
+    const result = await settle(outcome, retry);
     if (result === "done") return; // stays busy until the sheet has left
     busy.current = false;
     setSaving(false);
@@ -192,14 +275,8 @@ function EditEventSheetOpen({
   }
 
   async function saveInDialog(scope: SaveScope, times: Times) {
-    const outcome = await saveEvent(
-      supabase(),
-      occurrence,
-      values,
-      times,
-      scope,
-    );
-    const result = await settle(outcome);
+    const { outcome, retry } = await saveWithAlsoOn(scope, times);
+    const result = await settle(outcome, retry);
     return result === "failed" ? false : undefined;
   }
 
@@ -233,9 +310,59 @@ function EditEventSheetOpen({
     return undefined;
   }
 
+  /** Only the switch of «Anche su» changed: nothing of the event is saved. */
+  async function saveAlsoOnOnly() {
+    busy.current = true;
+    setSaving(true);
+    const sent = await setAlsoOn(supabase(), occurrence.id, alsoOnChecked);
+    const result = await settle(
+      sent
+        ? { ok: true, id: occurrence.id, day: occurrence.occurrenceDate }
+        : { ok: false, reason: "failed" },
+    );
+    if (result === "done") return;
+    busy.current = false;
+    setSaving(false);
+    if (result === "failed") setAlertText(ALSO_ON_FAILED);
+  }
+
+  /** An imported event: only «Chi lo vede» goes to the database. */
+  async function saveImported() {
+    if (values.visibility === initial.visibility) {
+      setLeaving(true);
+      return;
+    }
+    busy.current = true;
+    setSaving(true);
+    const result = await saveImportedVisibility(
+      supabase(),
+      occurrence.id,
+      values.visibility,
+    );
+    if (result === "ok") {
+      const settled = await settle({
+        ok: true,
+        id: occurrence.id,
+        day: occurrence.occurrenceDate,
+      });
+      if (settled === "done") return;
+    }
+    busy.current = false;
+    setSaving(false);
+    setAlertText(
+      result === "private-at-source"
+        ? `Su ${link.providerLabel ?? "il calendario"} questo impegno è privato: non si può mostrare a tutto il Nest.`
+        : SAVE_FAILED,
+    );
+  }
+
   function submit() {
     if (busy.current) return;
     setAlertText(null);
+    if (imported) {
+      void saveImported();
+      return;
+    }
     const { errors: found, times } = validateForm(values, offset);
     setErrors(found);
     const first = firstErrorField(found);
@@ -247,7 +374,8 @@ function EditEventSheetOpen({
 
     const kind = classifySave(occurrence, initial, values, members);
     if (kind.kind === "none") {
-      setLeaving(true);
+      if (alsoOnChanged) void saveAlsoOnOnly();
+      else setLeaving(true);
     } else if (kind.kind === "direct") {
       void saveNow("following", times);
     } else if (kind.kind === "choice") {
@@ -309,7 +437,10 @@ function EditEventSheetOpen({
       Elimina impegno
     </Button>
   );
-  const footer = desktop ? (
+  // An imported event is deleted on its calendar, never from here.
+  const footer = imported ? (
+    save
+  ) : desktop ? (
     <>
       {remove}
       {save}
@@ -400,6 +531,14 @@ function EditEventSheetOpen({
               authorName,
             )}
             peopleLockedText={peopleLockedHelp(authorName)}
+            readOnlyDetails={
+              imported
+                ? {
+                    text: `Si cambia su ${link.providerLabel ?? "il calendario di origine"}`,
+                  }
+                : undefined
+            }
+            alsoOn={alsoOnRow}
           />
           {alertText ? (
             <Alert variant="errore" data-testid="impegno-errore">

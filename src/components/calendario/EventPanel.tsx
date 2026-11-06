@@ -4,6 +4,7 @@ import { Icon } from "@/components/ui/Icon/Icon";
 import { VisuallyHidden } from "@/components/ui/VisuallyHidden/VisuallyHidden";
 import { formatTime } from "@/lib/datetime";
 import { eventHref } from "@/lib/household-events";
+import { SourceLabel } from "./SourceLabel";
 import {
   MAX_AVATARS,
   participantsInNestOrder,
@@ -56,7 +57,14 @@ export function EventPanel({
           </span>
         </span>
         <span className="prossimo__nota">
-          <span>{note}</span>
+          {event.sourceLabel ? (
+            <span className="riga-evento__info">
+              <SourceLabel label={event.sourceLabel} />
+              {note}
+            </span>
+          ) : (
+            <span>{note}</span>
+          )}
           {people.length > 0 && people.length <= MAX_AVATARS ? (
             <span
               className="avatar-gruppo"

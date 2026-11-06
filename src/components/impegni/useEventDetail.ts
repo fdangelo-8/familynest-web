@@ -3,12 +3,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
+  getEventCalendarLink,
   getEventOccurrence,
+  type EventCalendarLink,
   type EventOccurrence,
 } from "@/lib/household-events";
 import { createClient } from "@/lib/supabase/client";
 import type { Database } from "@/types/database";
 import type { EventMember } from "@/components/evento-modulo/model";
+import { readAlsoOnTarget, type AlsoOnTarget } from "./also-on";
 
 type Client = SupabaseClient<Database>;
 
@@ -24,6 +27,10 @@ export type DetailState =
       members: EventMember[];
       /** Member id of the signed-in user */
       meId: string;
+      /** Where the event comes from (imported or sent to a linked calendar) */
+      link: EventCalendarLink;
+      /** The calendar of «Dove vanno i nuovi impegni» of the reader, if any */
+      alsoOnTarget: AlsoOnTarget | null;
     };
 
 type Read =
@@ -32,6 +39,8 @@ type Read =
       occurrence: EventOccurrence;
       members: EventMember[];
       meId: string;
+      link: EventCalendarLink;
+      alsoOnTarget: AlsoOnTarget | null;
     }
   | { kind: "missing" }
   | { kind: "error" };
@@ -67,17 +76,22 @@ async function read(
   day: string | null,
 ): Promise<Read> {
   try {
-    const [occurrence, people] = await Promise.all([
+    const [occurrence, people, link, target] = await Promise.all([
       getEventOccurrence(id, day, supabase),
       readMembers(supabase),
+      getEventCalendarLink(id, supabase),
+      readAlsoOnTarget(supabase),
     ]);
     if (!occurrence.ok || !people) return { kind: "error" };
     if (!occurrence.occurrence) return { kind: "missing" };
+    if (!link.ok || target === "error") return { kind: "error" };
     return {
       kind: "ok",
       occurrence: occurrence.occurrence,
       members: people.members,
       meId: people.meId,
+      link: link.link,
+      alsoOnTarget: target,
     };
   } catch {
     return { kind: "error" };
@@ -132,6 +146,8 @@ export function useEventDetail(
           occurrence: result.occurrence,
           members: result.members,
           meId: result.meId,
+          link: result.link,
+          alsoOnTarget: result.alsoOnTarget,
         });
       } else {
         setState({ status: result.kind });

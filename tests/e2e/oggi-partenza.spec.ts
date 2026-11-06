@@ -17,9 +17,12 @@ import {
   test,
 } from "../fixtures/oggi";
 
-// Oggi (#30): lista di partenza e primo accesso di chi è stato invitato
-// (CA-31 ... CA-34, CA-50, CA-51). Every test builds its own throwaway Nest
-// and users (deleted at the end); the starter list is open in these Nests.
+// Oggi (#30, #34 parte 2): lista di partenza e primo accesso di chi è stato
+// invitato (CA-31 ... CA-34, CA-50, CA-51, CA-55). Every test builds its own
+// throwaway Nest and users (deleted at the end); the starter list is open in
+// these Nests. The list has four steps: «Collega il tuo calendario» is done
+// when the administrator has an account linked (the fake provider: a row of
+// `calendar_accounts` marked `is_fake`, which the real synchronisation ignores).
 
 test.use({ locale: "it-IT", timezoneId: "Europe/Rome" });
 
@@ -109,6 +112,43 @@ async function accept(
 
 const starter = (page: Page, title: string) => sec(page, title);
 
+/**
+ * Links a calendar of the fake provider to `memberName` (an adult with an
+ * account), as the consent page of the fake would. Prepared with the
+ * administrative key on purpose: the test is about what Oggi does with it.
+ */
+async function linkCalendar(ctx: Ctx, memberName = "Giulia"): Promise<void> {
+  const user = ctx.nest.users[memberName];
+  const memberId = ctx.nest.members[memberName];
+  if (!user || !memberId) throw new Error("Adulto di prova non trovato");
+  const account = await user.admin
+    .from("calendar_accounts")
+    .insert({
+      household_id: ctx.nest.householdId,
+      member_id: memberId,
+      provider: "google",
+      provider_account_id: "giulia-finto",
+      email: "giulia.finto@example.test",
+      credentials_ciphertext: `v1:${"A".repeat(40)}`,
+      is_fake: true,
+    })
+    .select("id")
+    .single();
+  if (account.error || !account.data) {
+    throw new Error("Account di prova non collegato");
+  }
+  const calendar = await user.admin.from("external_calendars").insert({
+    household_id: ctx.nest.householdId,
+    member_id: memberId,
+    account_id: account.data.id,
+    provider_calendar_id: "personale",
+    name: "Personale",
+    is_primary: true,
+    is_enabled: true,
+  });
+  if (calendar.error) throw new Error("Calendario di prova non collegato");
+}
+
 async function addAndRemoveFirstItem(ctx: Ctx) {
   const { error } = await ctx.owner.client
     .from("shopping_items")
@@ -122,36 +162,40 @@ async function addAndRemoveFirstItem(ctx: Ctx) {
 }
 
 test.describe("lista di partenza", () => {
-  test("CA-31: la lista dice «Per cominciare», «1 di 3», «Tre cose e la casa è pronta» e ha i tre passi, senza «Collega il tuo calendario»", async ({
+  test("CA-31 e CA-55: la lista dice «Per cominciare», «1 di 4», «Quattro cose e la casa è pronta» e ha i quattro passi, con «Collega il tuo calendario» come link a /calendari-collegati", async ({
     page,
     baseURL,
   }) => {
     await withStarterNest([GIULIA, BEA], async (ctx) => {
       await invite(ctx, "Bea");
       await open(page, baseURL, ctx.nest, "Giulia");
-      const list = starter(page, "Tre cose e la casa è pronta");
+      const list = starter(page, "Quattro cose e la casa è pronta");
       await expect(list).toBeVisible();
       await expect(list).toContainText("Per cominciare");
-      await expect(list).toContainText("1 di 3");
+      await expect(list).toContainText("1 di 4");
       const steps = list.getByRole("listitem");
-      await expect(steps).toHaveCount(3);
+      await expect(steps).toHaveCount(4);
       await expect(steps.nth(0)).toContainText("Crea il Nest");
       await expect(steps.nth(0)).toContainText(", fatto");
       await expect(steps.nth(0).getByRole("link")).toHaveCount(0);
-      await expect(steps.nth(1)).toContainText(
+      await expect(steps.nth(1)).toContainText("Collega il tuo calendario");
+      await expect(steps.nth(1)).toContainText(", da fare");
+      await expect(
+        list.getByRole("link", { name: /Collega il tuo calendario/ }),
+      ).toHaveAttribute("href", "/calendari-collegati");
+      await expect(steps.nth(2)).toContainText(
         "Scrivi la prima cosa da comprare",
       );
       await expect(
         list.getByRole("link", { name: /Scrivi la prima cosa da comprare/ }),
       ).toHaveAttribute("href", "/casa/spesa");
-      await expect(steps.nth(2)).toContainText("Aspetta che Bea entri");
-      await expect(steps.nth(2)).toContainText("Invito inviato");
+      await expect(steps.nth(3)).toContainText("Aspetta che Bea entri");
+      await expect(steps.nth(3)).toContainText("Invito inviato");
       await expect(list.getByRole("link", { name: /Aspetta/ })).toHaveCount(0);
-      await expect(list).not.toContainText("Collega il tuo calendario");
     });
   });
 
-  test("CA-32: con la prima cosa aggiunta e tolta il passo è «fatto», resta un link e la testa dice «2 di 3»", async ({
+  test("CA-32: con la prima cosa aggiunta e tolta il passo è «fatto», resta un link e la testa dice «2 di 4»", async ({
     page,
     baseURL,
   }) => {
@@ -159,8 +203,8 @@ test.describe("lista di partenza", () => {
       await invite(ctx, "Bea");
       await addAndRemoveFirstItem(ctx);
       await open(page, baseURL, ctx.nest, "Giulia");
-      const list = starter(page, "Tre cose e la casa è pronta");
-      await expect(list).toContainText("2 di 3");
+      const list = starter(page, "Quattro cose e la casa è pronta");
+      await expect(list).toContainText("2 di 4");
       const step = list.getByRole("link", {
         name: /Scrivi la prima cosa da comprare/,
       });
@@ -170,23 +214,32 @@ test.describe("lista di partenza", () => {
     });
   });
 
-  test("CA-33: «Solo io» ha «1 di 2», «Due cose…» e nessun passo «Aspetta che…»; aggiunta la prima cosa la lista si chiude e non ricompare", async ({
+  test("CA-33: «Solo io» ha «1 di 3», «Tre cose…» e nessun passo «Aspetta che…»; con un calendario collegato e la prima cosa aggiunta la lista si chiude e non ricompare", async ({
     page,
     baseURL,
   }) => {
     await withStarterNest([GIULIA], async (ctx) => {
       await open(page, baseURL, ctx.nest, "Giulia");
-      const list = starter(page, "Due cose e la casa è pronta");
+      const list = starter(page, "Tre cose e la casa è pronta");
       await expect(list).toContainText("Per cominciare");
-      await expect(list).toContainText("1 di 2");
+      await expect(list).toContainText("1 di 3");
       await expect(list).not.toContainText("Aspetta che");
+
+      // With the calendar linked the step is done (CA-55).
+      await linkCalendar(ctx);
+      await reopen(page);
+      const linked = starter(page, "Tre cose e la casa è pronta");
+      await expect(linked).toContainText("2 di 3");
+      await expect(
+        linked.getByRole("link", { name: /Collega il tuo calendario/ }),
+      ).toContainText(", fatto");
 
       const { error } = await ctx.owner.client
         .from("shopping_items")
         .insert({ name: "Latte" });
       if (error) throw new Error("Cosa da prendere non aggiunta");
       await reopen(page);
-      await expect(starter(page, "Due cose e la casa è pronta")).toHaveCount(0);
+      await expect(starter(page, "Tre cose e la casa è pronta")).toHaveCount(0);
       await expect(page.getByText("Per cominciare")).toHaveCount(0);
       // The database has been asked to close it.
       await expect
@@ -201,12 +254,12 @@ test.describe("lista di partenza", () => {
         .not.toBeNull();
 
       await reopen(page);
-      await expect(starter(page, "Due cose e la casa è pronta")).toHaveCount(0);
+      await expect(starter(page, "Tre cose e la casa è pronta")).toHaveCount(0);
       await expect(page.getByText("Per cominciare")).toHaveCount(0);
     });
   });
 
-  test("CA-50: con un invito scaduto la lista non ha il passo «Aspetta che Bea entri» e dice «1 di 2»", async ({
+  test("CA-50: con un invito scaduto la lista non ha il passo «Aspetta che Bea entri» e dice «1 di 3»", async ({
     page,
     baseURL,
   }) => {
@@ -221,9 +274,9 @@ test.describe("lista di partenza", () => {
         .eq("household_id", ctx.nest.householdId);
       if (error) throw new Error("Scadenza dell'invito di prova non scritta");
       await open(page, baseURL, ctx.nest, "Giulia");
-      const list = starter(page, "Due cose e la casa è pronta");
+      const list = starter(page, "Tre cose e la casa è pronta");
       await expect(list).toBeVisible();
-      await expect(list).toContainText("1 di 2");
+      await expect(list).toContainText("1 di 3");
       await expect(list).not.toContainText("Aspetta che Bea entri");
       await expect(list).not.toContainText("Invito inviato");
     });
@@ -330,7 +383,9 @@ test.describe("accessibilità", () => {
     await withStarterNest([GIULIA, BEA], async (ctx) => {
       await invite(ctx, "Bea");
       await open(page, baseURL, ctx.nest, "Giulia");
-      await expect(starter(page, "Tre cose e la casa è pronta")).toBeVisible();
+      await expect(
+        starter(page, "Quattro cose e la casa è pronta"),
+      ).toBeVisible();
       await expectAccessible(page, "lista di partenza");
     });
   });

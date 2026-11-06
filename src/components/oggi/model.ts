@@ -584,7 +584,7 @@ export function buildSpacesView(
 /* ---------- Starter list ---------- */
 
 export type StarterStep = {
-  key: "nest" | "spesa" | "invito";
+  key: "nest" | "calendario" | "spesa" | "invito";
   done: boolean;
   text: string;
   /** `Invito inviato`, `Inviti inviati` */
@@ -625,6 +625,12 @@ export function buildStarter(input: {
 
   const steps: StarterStep[] = [
     { key: "nest", done: true, text: "Crea il Nest" },
+    {
+      key: "calendario",
+      done: household.hasLinkedCalendar,
+      text: "Collega il tuo calendario",
+      href: "/calendari-collegati",
+    },
     {
       key: "spesa",
       done: household.firstShoppingAt !== null,

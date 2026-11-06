@@ -48,6 +48,8 @@ export type ProfileViewProps = {
   accessText: string;
   householdName: string;
   outlook: DeletionOutlook;
+  /** Row «Calendari collegati»: the providers, and how many calendars are on */
+  calendars: { info: string; count: number | null };
 };
 
 type PrefKey = keyof Preferences;
@@ -106,6 +108,7 @@ export function ProfileView({
   accessText,
   householdName,
   outlook,
+  calendars,
 }: ProfileViewProps) {
   const router = useRouter();
   const { showToast } = useToast();
@@ -351,9 +354,10 @@ export function ProfileView({
               </span>
               <span className="riga-lista__testo">
                 <span className="riga-lista__titolo">Calendari collegati</span>
-                <span className="riga-lista__info">Nessuno collegato</span>
+                <span className="riga-lista__info">{calendars.info}</span>
               </span>
               <span className="riga-lista__valore">
+                {calendars.count}
                 <Icon name="chevron-right" size="s" />
               </span>
             </Link>

@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/Checkbox/Checkbox";
 import { cx } from "@/components/ui/cx";
 import { Icon } from "@/components/ui/Icon/Icon";
 import { VisuallyHidden } from "@/components/ui/VisuallyHidden/VisuallyHidden";
+import { SourceLabel } from "@/components/calendario/SourceLabel";
 import type { TitlePart } from "./highlight";
 import type { RowModel } from "./model";
 import type { SearchController } from "./useSearchController";
@@ -44,7 +45,7 @@ function RowAvatar({
 }
 
 function Info({ row }: { row: RowModel }) {
-  if (row.info === null) return null;
+  if (row.info === null && !row.sourceLabel) return null;
   return (
     <span
       className={cx(
@@ -52,6 +53,8 @@ function Info({ row }: { row: RowModel }) {
         row.urgent && "riga-lista__info--allerta",
       )}
     >
+      <SourceLabel label={row.sourceLabel} />
+      {row.sourceLabel && row.info ? " " : null}
       {row.info}
       {row.urgent && row.kind === "deadline" ? (
         <VisuallyHidden>, urgente</VisuallyHidden>
