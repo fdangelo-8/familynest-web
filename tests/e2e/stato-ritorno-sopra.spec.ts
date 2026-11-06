@@ -105,13 +105,12 @@ test("sopra la pagina (Oggi): aprire Aggiungi e chiudere con Esc non riparte la 
   await openAndEscape(page, opener, scroll);
 });
 
-test("sopra la pagina (Calendario giorno): aprire Aggiungi e chiudere con Esc non riparte la pagina", async ({
+test("sopra la pagina (Calendario giorno, giornata libera): aprire Aggiungi e chiudere con Esc non riparte la pagina", async ({
   page,
   baseURL,
   casa,
 }) => {
   await casa.signIn(page, baseURL, "Marco");
-  await shortViewport(page);
   // A day with nothing in it: the page has its own «Aggiungi qualcosa».
   await page.goto(`/calendario/giorno?giorno=${addDays(romeDay(), 3)}`);
   await expect(
@@ -120,10 +119,36 @@ test("sopra la pagina (Calendario giorno): aprire Aggiungi e chiudere con Esc no
     timeout: 20_000,
   });
   await markNode(page);
-  const scroll = await scrollDown(page);
   const opener = page
     .getByRole("main")
     .getByRole("link", { name: "Aggiungi qualcosa" });
+  await openAndEscape(page, opener, 0);
+});
+
+test("sopra la pagina (Calendario giorno, con impegni): aprire Aggiungi e chiudere con Esc non riparte la pagina", async ({
+  page,
+  baseURL,
+  casa,
+}) => {
+  const day = romeDay();
+  await createEvent(casa, "Marco", {
+    title: "Impegno sotto il foglio",
+    day,
+    from: "10:00",
+    to: "10:30",
+    members: ["Marco"],
+  });
+  await casa.signIn(page, baseURL, "Marco");
+  await shortViewport(page);
+  await page.goto(`/calendario/giorno?giorno=${day}`);
+  await expect(
+    page.getByRole("main").getByRole("heading", { level: 1 }),
+  ).toBeVisible({
+    timeout: 20_000,
+  });
+  await markNode(page);
+  const scroll = await scrollDown(page);
+  const opener = page.getByRole("link", { name: "Aggiungi", exact: true });
   await openAndEscape(page, opener, scroll);
 });
 
