@@ -90,6 +90,11 @@ export function PasswordField({
           className="campo__input"
           type={visible ? "text" : "password"}
           autoComplete={autoComplete}
+          spellCheck={false}
+          autoCapitalize="none"
+          {...(autoComplete === "new-password"
+            ? { passwordrules: "minlength: 8; maxlength: 72;" }
+            : {})}
           value={value}
           aria-describedby={describedBy}
           aria-invalid={error ? true : undefined}

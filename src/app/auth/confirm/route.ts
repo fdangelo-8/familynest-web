@@ -4,6 +4,7 @@ import { resolveDestination } from "@/lib/auth/destination";
 import {
   RECOVERY_COOKIE_NAME,
   RECOVERY_PATH,
+  clearRecoveryCookieOptions,
   newRecoveryCookieValue,
   recoveryCookieOptions,
 } from "@/lib/auth/recovery-cookie";
@@ -62,12 +63,24 @@ export async function GET(request: NextRequest) {
       return response;
     }
 
+    // A confirmation must not leave an open recovery behind.
+    const cookieStore = request.cookies;
+    const hadRecovery = cookieStore.has(RECOVERY_COOKIE_NAME);
+
     const destination = await resolveDestination(
       supabase,
       searchParams.get("next"),
     );
     // The final address no longer contains `token_hash`.
-    return NextResponse.redirect(new URL(destination, origin), 303);
+    const response = NextResponse.redirect(new URL(destination, origin), 303);
+    if (hadRecovery) {
+      response.cookies.set(
+        RECOVERY_COOKIE_NAME,
+        "",
+        clearRecoveryCookieOptions(origin),
+      );
+    }
+    return response;
   } catch {
     return expired();
   }

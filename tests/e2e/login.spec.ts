@@ -598,14 +598,16 @@ test.describe("link via mail: invio", () => {
 });
 
 test.describe("link via mail: ritorno", () => {
-  for (const url of [
-    "/auth/confirm?token_hash=non-valido&type=magiclink",
-    "/auth/confirm",
-    "/auth/confirm?token_hash=non-valido&type=recovery",
-  ]) {
+  for (const [url, tipo] of [
+    ["/auth/confirm?token_hash=non-valido&type=magiclink", "conferma"],
+    ["/auth/confirm", "conferma"],
+    ["/auth/confirm?token_hash=non-valido&type=recovery", "password"],
+  ] as const) {
     test(`CA-27: ${url} porta a /accesso/link-scaduto`, async ({ page }) => {
       await page.goto(url);
-      await expect(page).toHaveURL(/\/accesso\/link-scaduto\?tipo=\w+$/);
+      await expect(page).toHaveURL(
+        new RegExp(`/accesso/link-scaduto\\?tipo=${tipo}$`),
+      );
       await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
       await page.goto("/oggi");
       await expect(page).toHaveURL(/\/accesso$/);

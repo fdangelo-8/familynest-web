@@ -47,6 +47,26 @@ test("mostra e nasconde la password, il focus resta sul bottone", async ({
   await expect(toggle).toHaveAttribute("aria-pressed", "false");
 });
 
+test("il campo non usa correttore né maiuscole, anche con la password mostrata", async ({
+  page,
+}) => {
+  const input = page.getByTestId("campo-password-regole");
+  const toggle = page
+    .locator("#campo-password .campo")
+    .first()
+    .getByRole("button", { name: "Mostra la password" });
+  for (const shown of [false, true]) {
+    if (shown) await toggle.click();
+    await expect(input).toHaveAttribute("type", shown ? "text" : "password");
+    await expect(input).toHaveAttribute("spellcheck", "false");
+    await expect(input).toHaveAttribute("autocapitalize", "none");
+    await expect(input).toHaveAttribute(
+      "passwordrules",
+      "minlength: 8; maxlength: 72;",
+    );
+  }
+});
+
 test("la regola passa a «fatto» con 8 caratteri, senza regione live", async ({
   page,
 }) => {
