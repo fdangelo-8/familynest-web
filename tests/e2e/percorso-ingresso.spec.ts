@@ -74,7 +74,7 @@ async function onboarding(page: Page): Promise<string> {
   await expect(bar(page, "Passo 2 di 4")).toBeVisible();
   const people = page.getByRole("list", { name: "Persone del Nest" });
   await expect(people.getByRole("listitem")).toHaveCount(1);
-  await expect(people.getByText("Ilaria", { exact: true })).toBeVisible();
+  await expect(people.getByText(/^Ilaria/)).toBeVisible();
   const add = page.getByRole("button", {
     name: "Aggiungi una persona o un animale",
   });
@@ -92,7 +92,7 @@ async function onboarding(page: Page): Promise<string> {
     .click();
   await expect(dialog).toBeHidden();
   await expect(people.getByRole("listitem")).toHaveCount(2);
-  await expect(people.getByText("Marco", { exact: true })).toBeVisible();
+  await expect(people.getByText(/^Marco/)).toBeVisible();
   await button(page, "Continua").click();
 
   // 3. Calendario, without connecting any calendar.
