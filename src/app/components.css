@@ -1818,7 +1818,6 @@ button.riga-lista {
 }
 
 .campo-ricerca {
-  position: relative;
   display: grid;
   grid-template-columns: var(--size-icona-m) 1fr auto;
   gap: var(--space-3);
@@ -1830,19 +1829,9 @@ button.riga-lista {
   box-shadow: inset 0 0 0 var(--border-medio) var(--color-inchiostro);
 }
 .campo-ricerca__input {
-  /* Area di tocco (#312): il campo copre tutto il riquadro; il testo
-     resta dove stava con l'icona, cioè dopo padding, icona e spazio */
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
   border: 0;
-  border-radius: inherit;
   background: transparent;
   outline: none;
-  padding: var(--space-0) var(--space-4) var(--space-0)
-    calc(var(--space-4) + var(--size-icona-m) + var(--space-3));
   font-size: var(--text-corpo-size);
   color: var(--color-inchiostro);
   min-width: var(--space-0);
@@ -4927,6 +4916,29 @@ a.parola--insieme:active {
 .campo-ricerca__input::-webkit-search-decoration {
   -webkit-appearance: none;
   appearance: none;
+}
+
+/* 2b. Area di tocco del campo (#312): il campo copre tutto il riquadro
+       a sinistra dell'elemento finale. Resta nella griglia, così icona e
+       elemento finale (Annulla, esc) tengono colonna 1 e colonna 3; il
+       testo parte dopo icona e spazio e si ferma prima dell'elemento finale. */
+.campo-ricerca > .icona {
+  grid-row: 1;
+  grid-column: 1;
+}
+.campo-ricerca > .campo-ricerca__input {
+  grid-row: 1;
+  grid-column: 1 / 3;
+  justify-self: stretch;
+  align-self: stretch;
+  margin-left: calc(-1 * var(--space-4));
+  padding-left: calc(var(--space-4) + var(--size-icona-m) + var(--space-3));
+  border-radius: inherit;
+}
+.campo-ricerca
+  > :not(.icona):not(.campo-ricerca__input):not(.visivamente-nascosto) {
+  grid-row: 1;
+  grid-column: 3;
 }
 
 /* 3. Pagina senza barra (Ricerca su mobile): sotto la tacca del telefono */
