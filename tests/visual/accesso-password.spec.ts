@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type CDPSession, type Page } from "@playwright/test";
 import {
   RATE_LIMIT,
   alertWith,
@@ -87,8 +87,32 @@ async function sendForgot(page: Page, done: () => Promise<void>) {
   }, done);
 }
 
+/** CDP session that enlarged the text of the page (200% tests only). */
+let enlargedText: CDPSession | undefined;
+
 async function shot(page: Page, name: string) {
   await settle(page);
+  if (enlargedText) {
+    // A full-page screenshot of Playwright resets the browser font size and
+    // the picture would show the text at 100%: the whole page is captured with
+    // the protocol instead, keeping the enlarged text.
+    const { cssContentSize } = await enlargedText.send("Page.getLayoutMetrics");
+    const { data } = await enlargedText.send("Page.captureScreenshot", {
+      format: "png",
+      captureBeyondViewport: true,
+      clip: {
+        x: 0,
+        y: 0,
+        width: cssContentSize.width,
+        height: cssContentSize.height,
+        scale: 1,
+      },
+    });
+    expect(Buffer.from(data, "base64")).toMatchSnapshot(name, {
+      maxDiffPixelRatio: 0.02,
+    });
+    return;
+  }
   await expect(page).toHaveScreenshot(name, { fullPage: true });
 }
 
@@ -445,6 +469,11 @@ test.describe("accesso con mail e password: nuova password", () => {
       await page.goto(await recoveryLink(user.email));
       await expect(page).toHaveURL(/\/accesso\/nuova-password$/);
       await expect(heading(page, "Scegli una nuova password")).toBeVisible();
+      // The test user has a random address: show a fixed one, so the picture
+      // (and the wrapping of the line) is always the same.
+      await page.locator("main b").evaluate((element, address) => {
+        element.textContent = address;
+      }, MAIL);
       await shot(page, "nuova-password.png");
 
       const field = passwordField(page, "Nuova password");
@@ -474,8 +503,13 @@ test.describe("accesso con mail e password: testo al 200%", () => {
   test.beforeEach(async ({ page }, info) => {
     test.skip(info.project.name !== "mobile", "solo a 390 px");
     await page.clock.install({ time: START });
-    const cdp = await page.context().newCDPSession(page);
-    await cdp.send("Page.setFontSizes", { fontSizes: { standard: 32 } });
+    enlargedText = await page.context().newCDPSession(page);
+    await enlargedText.send("Page.setFontSizes", {
+      fontSizes: { standard: 32 },
+    });
+  });
+  test.afterEach(() => {
+    enlargedText = undefined;
   });
 
   test("entra con il testo al 200%", async ({ page }) => {
