@@ -29,9 +29,6 @@ test("CA-10: nessun valore scritto a mano fuori da :root", () => {
       // Variable declarations in :root and media query widths are allowed.
       if (/^\s*--[a-z0-9-]+\s*:/.test(code)) return;
       if (/^\s*@media/.test(code)) return;
-      // Same for container query conditions (#313): like @media, they do not
-      // accept variables. Only the condition line is exempt, never the body.
-      if (/^\s*@container/.test(code)) return;
       if (FORBIDDEN.test(code))
         offenders.push(`${file}:${index + 1}: ${line.trim()}`);
     });

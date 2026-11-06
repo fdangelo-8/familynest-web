@@ -373,10 +373,9 @@
 
 /* Orario nascosto alla vista quando non sta intero sotto il titolo (#313).
    Soglia = 2 × --space-1 + --space-half + --text-etichetta-line + --text-micro-line
-   = 10px + 1.875rem. Scritta in pt (7.5pt = 10px, 150pt = 200px) perché il
-   controllo CA-10 vieta i px fuori da :root e dalle @media. La parte max(…) annulla la soglia fino al 100%
+   = 10px + 1.875rem. La parte max(…) annulla la soglia fino al 100%
    (16 px: 10 + 30 − 40 = 0 px, nessun blocco è più basso), e vale 0 dal 125% in su. */
-@container blocco (height < calc(7.5pt + 1.875rem - max(0pt, 150pt - 10rem))) {
+@container blocco (height < calc(10px + 1.875rem - max(0px, 200px - 10rem))) {
   .blocco-orario__ora {
     position: absolute;
     width: var(--border-sottile);
