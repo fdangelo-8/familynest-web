@@ -12,6 +12,13 @@
    issue #52): --color-filo-campo e --color-allerta-scuro.
    Aggiunte approvate della #74 (Nest fino a 10 persone): i 5 colori
    nuovi dei membri (lampone, ceruleo, peonia, basilico, cannella).
+   Testo ingrandito (#313, WCAG 1.4.4): i --text-*-size e --text-*-line
+   sono in rem (px del mockup / 16), così seguono il carattere scelto
+   nel sistema o nel browser. Al 100% (radice 16 px) i valori in px sono
+   identici a tokens.css. Restano in px --text-avatar-*, spaziature,
+   raggi, bordi, ombre e tutti i --size-* tranne i tre --size-*-min
+   aggiunti con la #313 (in rem, misure minime che seguono il testo).
+   In fondo al file: contenitori e classi nuove della #313.
    ========================================================= */
 :root {
   /* ---------- Colori: base ---------- */
@@ -87,55 +94,59 @@
   --weight-pieno: 700;
 
   /* ---------- Scala tipografica (mobile; *-desktop dove cambia) ---------- */
-  --text-display-size: 44px;
-  --text-display-line: 48px;
+  /* In rem dalla #313: px del mockup / 16 (commento = px a 16). Interlinee in
+     rem, mai senza unità: senza unità i figli erediterebbero il rapporto e
+     al 100% la geometria cambierebbe. Tracking in em. */
+  --text-display-size: 2.75rem; /* 44px */
+  --text-display-line: 3rem; /* 48px */
   --text-display-tracking: -0.04em;
-  --text-display-desktop-size: 56px;
-  --text-display-desktop-line: 60px;
-  --text-ora-xl-size: 64px;
-  --text-ora-xl-line: 56px;
+  --text-display-desktop-size: 3.5rem; /* 56px */
+  --text-display-desktop-line: 3.75rem; /* 60px */
+  --text-ora-xl-size: 4rem; /* 64px */
+  --text-ora-xl-line: 3.5rem; /* 56px */
   --text-ora-xl-tracking: -0.04em;
-  --text-ora-l-size: 52px;
-  --text-ora-l-line: 48px;
+  --text-ora-l-size: 3.25rem; /* 52px */
+  --text-ora-l-line: 3rem; /* 48px */
   --text-ora-l-tracking: -0.04em;
-  --text-numero-size: 44px;
-  --text-numero-line: 48px;
+  --text-numero-size: 2.75rem; /* 44px */
+  --text-numero-line: 3rem; /* 48px */
   --text-numero-tracking: -0.04em;
-  --text-titolo-pagina-size: 32px;
-  --text-titolo-pagina-line: 36px;
+  --text-titolo-pagina-size: 2rem; /* 32px */
+  --text-titolo-pagina-line: 2.25rem; /* 36px */
   --text-titolo-pagina-tracking: -0.03em;
-  --text-titolo-pagina-desktop-size: 40px;
-  --text-titolo-pagina-desktop-line: 44px;
-  --text-titolo-scheda-size: 22px;
-  --text-titolo-scheda-line: 26px;
+  --text-titolo-pagina-desktop-size: 2.5rem; /* 40px */
+  --text-titolo-pagina-desktop-line: 2.75rem; /* 44px */
+  --text-titolo-scheda-size: 1.375rem; /* 22px */
+  --text-titolo-scheda-line: 1.625rem; /* 26px */
   --text-titolo-scheda-tracking: -0.02em;
-  --text-frase-size: 22px;
-  --text-frase-line: 30px;
+  --text-frase-size: 1.375rem; /* 22px */
+  --text-frase-line: 1.875rem; /* 30px */
   --text-frase-tracking: -0.015em;
-  --text-sezione-size: 15px;
-  --text-sezione-line: 24px;
-  --text-corpo-forte-size: 15px;
-  --text-corpo-forte-line: 20px;
-  --text-corpo-size: 15px;
-  --text-corpo-line: 22px;
-  --text-ora-riga-size: 15px;
-  --text-ora-riga-line: 20px;
+  --text-sezione-size: 0.9375rem; /* 15px */
+  --text-sezione-line: 1.5rem; /* 24px */
+  --text-corpo-forte-size: 0.9375rem; /* 15px */
+  --text-corpo-forte-line: 1.25rem; /* 20px */
+  --text-corpo-size: 0.9375rem; /* 15px */
+  --text-corpo-line: 1.375rem; /* 22px */
+  --text-ora-riga-size: 0.9375rem; /* 15px */
+  --text-ora-riga-line: 1.25rem; /* 20px */
   --text-ora-riga-tracking: -0.01em;
-  --text-nota-size: 13px;
-  --text-nota-line: 18px;
-  --text-etichetta-size: 12px;
-  --text-etichetta-line: 16px;
+  --text-nota-size: 0.8125rem; /* 13px */
+  --text-nota-line: 1.125rem; /* 18px */
+  --text-etichetta-size: 0.75rem; /* 12px */
+  --text-etichetta-line: 1rem; /* 16px */
   --text-etichetta-tracking: 0.02em;
-  --text-micro-size: 11px;
-  --text-micro-line: 14px;
-  --text-controllo-size: 14px;
-  --text-controllo-line: 20px; /* testo di bottoni, selettori, righe compatte */
-  --text-numero-m-size: 36px;
-  --text-numero-m-line: 36px; /* giorni alle scadenze */
-  --text-numero-s-size: 30px;
-  --text-numero-s-line: 34px; /* contatori piccoli */
-  --text-cella-size: 18px;
-  --text-cella-line: 26px; /* numeri del mese e della striscia */
+  --text-micro-size: 0.6875rem; /* 11px */
+  --text-micro-line: 0.875rem; /* 14px */
+  --text-controllo-size: 0.875rem; /* 14px */
+  --text-controllo-line: 1.25rem; /* 20px: testo di bottoni, selettori, righe compatte */
+  --text-numero-m-size: 2.25rem; /* 36px */
+  --text-numero-m-line: 2.25rem; /* 36px: giorni alle scadenze */
+  --text-numero-s-size: 1.875rem; /* 30px */
+  --text-numero-s-line: 2.125rem; /* 34px: contatori piccoli */
+  --text-cella-size: 1.125rem; /* 18px */
+  --text-cella-line: 1.625rem; /* 26px: numeri del mese e della striscia */
+  /* Iniziali degli avatar: restano in px (cerchio di misura fissa, #313). */
   --text-avatar-xs-size: 8px;
   --text-avatar-s-size: 10px;
   --text-avatar-m-size: 13px;
@@ -249,6 +260,11 @@
   --size-frame-desktop: 1280px;
   --size-frame-desktop-altezza: 800px;
 
+  /* ---------- Misure minime che seguono il testo (#313, in rem) ---------- */
+  --size-modulo-min: 9.5rem; /* 152px: colonna minima di Esplora e dei contatori a due */
+  --size-contatore-min: 6rem; /* 96px: colonna minima dei contatori a tre */
+  --size-dati-min: 8rem; /* 128px: base dei dati accanto all'ora nel Prossimo */
+
   /* ---------- Movimento ---------- */
   --durata-rapida: 200ms;
   --durata-normale: 300ms;
@@ -265,4 +281,114 @@
   --z-velo: 5;
   --z-foglio: 6;
   --z-toast: 7;
+}
+
+/* =========================================================
+   Testo ingrandito (#313): contenitori e classi nuove.
+   Non vanno in globals.css con :root: vanno in fondo a
+   src/app/components.css, nel blocco «Testo ingrandito (#313)».
+   Le larghezze delle query di contenitore (13rem, 16rem, 17rem) sono
+   scritte a mano come quelle delle media query: le variabili lì non
+   funzionano. In rem la query usa la radice reale: con 16 px non scatta
+   mai alle misure del mockup, con il testo grande sì.
+   Un contenitore deve avere larghezza decisa dal genitore (mai largo
+   quanto il contenuto) e diventa riferimento dei discendenti
+   position: absolute/fixed: niente fogli, menu o toast dentro.
+   ========================================================= */
+
+/* Contenitori */
+.nav-basso {
+  container: barra / inline-size;
+}
+.riga-lista,
+.riga-regalo {
+  container: riga / inline-size;
+}
+/* Blocco a tutta larghezza che contiene un .selettore (Casa:
+   div.casa-solo-mobile; Aggiungi: genitore del selettore del tipo).
+   Mai su .lente o su .nav-alto__azioni. */
+.contenitore-selettore {
+  container: selettore / inline-size;
+}
+
+/* Barra in basso: la colonna di «Aggiungi» la decide il bottone, così il
+   container query (che non può cambiare il contenitore stesso) la stringe. */
+.nav-basso {
+  grid-template-columns: minmax(0, 1fr) auto; /* #313 */
+}
+.nav-basso__voci {
+  grid-template-columns: repeat(3, minmax(max-content, 1fr)); /* #313 */
+}
+.nav-basso .btn-aggiungi {
+  min-width: var(--size-cta-aggiungi); /* #313 */
+  padding-inline: var(--space-3); /* #313 */
+}
+
+@container barra (width < 13rem) {
+  .nav-basso .btn-aggiungi {
+    width: var(--size-barra);
+    min-width: var(--size-barra);
+    padding-inline: var(--space-0);
+  }
+  /* La parola resta per i lettori di schermo: stile di .visivamente-nascosto */
+  .btn-aggiungi__testo {
+    position: absolute;
+    width: var(--border-sottile);
+    height: var(--border-sottile);
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+/* Selettore impilato (Casa, Aggiungi) */
+@container selettore (width < 17rem) {
+  .selettore {
+    grid-auto-flow: row;
+    height: auto;
+    row-gap: var(--space-3);
+  }
+  .selettore__voce {
+    white-space: normal;
+    min-height: calc(var(--size-controllo) - 2 * var(--space-1));
+  }
+}
+
+/* Area di tocco della voce (#63) che non taglia una voce più alta di 44 px:
+   al 100% (voce 32 px) il ritaglio resta -6 px sopra e sotto, come prima. */
+.selettore__voce {
+  clip-path: inset(
+    calc((min(100%, var(--size-tocco)) - var(--size-tocco)) / 2)
+      calc(-1 * var(--space-1))
+  ); /* #313 */
+}
+
+/* Righe con valore o azione a destra (.riga-regalo usa anche lei
+   .riga-lista__testo). -3 / -1 = colonna del testo + colonna di fine; con
+   .riga-lista--senza-inizio (due colonne) è già 1 / -1. Icona, freccia,
+   interruttore, casella, .btn-icona e avatar restano a destra. */
+@container riga (width < 16rem) {
+  .riga-lista__testo
+    ~ :is(
+      .riga-lista__valore,
+      .etichetta,
+      .riga-regalo__prezzo,
+      .selettore,
+      .btn--piccolo,
+      .btn-tenue,
+      .btn-link
+    ) {
+    grid-column: -3 / -1;
+    justify-self: start;
+  }
+  .riga-lista__testo ~ .selettore {
+    justify-self: stretch;
+    grid-auto-flow: row;
+    height: auto;
+    row-gap: var(--space-3);
+  }
+  .riga-lista__testo ~ .selettore .selettore__voce {
+    white-space: normal;
+    min-height: calc(var(--size-controllo) - 2 * var(--space-1));
+  }
 }
