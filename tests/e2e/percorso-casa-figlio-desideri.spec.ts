@@ -23,7 +23,6 @@ import {
   openSheet,
   pageText,
   readProfile,
-  recordResponses,
   saveButton,
   section,
   setBirth,
@@ -32,7 +31,7 @@ import {
   withAltraCasa,
   withFigli,
 } from "../fixtures/figlio";
-import { contextLike } from "../fixtures/percorso-casa";
+import { contextLike, recordBodies } from "../fixtures/percorso-casa";
 import {
   throwawayConfigured,
   throwawaySkipReason,
@@ -175,7 +174,7 @@ test.describe("percorso del figlio e della lista desideri", () => {
       try {
         expect(await visitorContext.cookies()).toEqual([]);
         const visitor = await visitorContext.newPage();
-        const responses = recordResponses(visitor);
+        const responses = recordBodies(visitor);
         await visitor.goto(address);
         await expect(h1(visitor)).toHaveText("Il compleanno di Mia");
         await expect(cards(visitor)).toHaveCount(2);
@@ -217,7 +216,7 @@ test.describe("percorso del figlio e della lista desideri", () => {
 
         // Un altro anonimo vede l'idea «Già preso», senza il nome.
         const second = await secondContext.newPage();
-        const secondResponses = recordResponses(second);
+        const secondResponses = recordBodies(second);
         await second.goto(address);
         await expect(h1(second)).toHaveText("Il compleanno di Mia");
         await expect(publicRow(second, IDEA)).toContainText("Già preso");
@@ -278,7 +277,7 @@ test.describe("percorso del figlio e della lista desideri", () => {
         try {
           await altra.nest.signInContext(vitoContext, baseURL, "Vito");
           const vito = await vitoContext.newPage();
-          const vitoResponses = recordResponses(vito);
+          const vitoResponses = recordBodies(vito);
           for (const path of [`/figli/${ctx.mia}`, listPath(ctx.mia)]) {
             await vito.goto(path);
             await expect(h1(vito), path).toHaveText(NOT_FOUND);

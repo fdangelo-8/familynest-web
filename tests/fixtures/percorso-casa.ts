@@ -60,3 +60,27 @@ export async function showColumn(page: Page, label: Column): Promise<void> {
 /** The text of the whole page, for the «never seen» checks. */
 export const bodyText = (page: Page): Promise<string> =>
   page.locator("body").innerText();
+
+/**
+ * Like `recordResponses` of figlio.ts, but a body that never ends (a stream
+ * kept open by the page) is given up after 10 seconds instead of blocking the
+ * test until its timeout.
+ */
+export function recordBodies(page: Page) {
+  const pending: Promise<string>[] = [];
+  page.on("response", (response) => {
+    const type = response.headers()["content-type"] ?? "";
+    if (!/html|json|x-component|text\/plain/.test(type)) return;
+    pending.push(
+      Promise.race([
+        response.text().catch(() => ""),
+        new Promise<string>((resolve) => setTimeout(() => resolve(""), 10_000)),
+      ]),
+    );
+  });
+  return {
+    async text(): Promise<string> {
+      return (await Promise.all(pending)).join("\n");
+    },
+  };
+}
