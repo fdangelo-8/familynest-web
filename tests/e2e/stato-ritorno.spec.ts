@@ -8,16 +8,68 @@ import {
   weekdayIndex,
 } from "../fixtures/casa";
 import {
+  card,
   createEvent,
+  dayLabel,
   editDialog,
   expect,
   fieldOf,
   h1,
   navigateInApp,
   openForm,
+  pressSave,
   test,
+  textRx,
+  toastOf,
 } from "../fixtures/impegni";
-import { waitHydrated } from "../fixtures/profilo";
+import {
+  accountSection,
+  button,
+  directionRadio,
+  GOOGLE,
+  linkFromPage,
+  needsFake,
+  openSettings,
+  settingsDialog,
+  targetRow,
+  withLinker,
+  type Linker,
+} from "../fixtures/calendari-collegati";
+import {
+  addDialog,
+  addTrigger,
+  birthIn,
+  createList,
+  disableButton,
+  editDialog as ideaDialog,
+  field as ideaField,
+  fillIdea,
+  IDEAS,
+  insertIdea,
+  insertLink,
+  listPath,
+  nextDecember14,
+  openAdd,
+  openIdea,
+  shareBlock,
+  wishH1,
+} from "../fixtures/desideri";
+import {
+  field as childField,
+  openSheet as openChildSheet,
+  pencil as childPencil,
+  setBirth,
+  sheetOf as childSheet,
+} from "../fixtures/figlio";
+import {
+  deleteButton,
+  deleteDialog,
+  sheetOf as profileSheet,
+  signOutButton,
+  signOutDialog,
+  valueOf,
+  waitHydrated,
+} from "../fixtures/profilo";
 import { allRows, field, isMobile } from "../fixtures/ricerca";
 
 // Stato che torna tornando su una pagina (#322, da #319). With
@@ -360,3 +412,405 @@ test("CA-1 (Ricerca, telefono): riaperta ha il fuoco nel campo; il testo rimasto
   // No «not reloaded» check here: under 1024 px the magnifier loads /ricerca as
   // a new page by design (`SearchOverlay`, `window.location.replace`).
 });
+
+// ----------------------------------------------- #324: other pages with state
+
+/**
+ * Leaves the page with the router of the app (a sheet that is open covers the
+ * navigation of the frame) and comes back with the browser's Back, a soft
+ * navigation to the page that Next kept hidden.
+ */
+async function leaveAndComeBack(page: Page, url: RegExp): Promise<void> {
+  await navigateInApp(page, "/calendario");
+  await expect(page).toHaveURL(/\/calendario/);
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible({
+    timeout: 20_000,
+  });
+  await goBackTo(page, url);
+}
+
+// Review of #325, suggestion 1: after a save `handleSaved` changes the address
+// with `history.replaceState`; the page that comes back must show what was
+// saved, not the event as it was before.
+test("CA-1 (dettaglio impegno salvato): tornando con Indietro dopo aver cambiato il giorno, la scheda mostra i valori salvati", async ({
+  page,
+  baseURL,
+  casa,
+}) => {
+  const title = "Gara di nuoto prima";
+  const newTitle = "Gara di nuoto dopo";
+  const day = romeDay();
+  const newDay = addDays(day, 1);
+  const id = await createEvent(casa, "Marco", {
+    title,
+    day,
+    from: "10:00",
+    to: "10:30",
+    members: ["Marco"],
+  });
+  await casa.signIn(page, baseURL, "Marco");
+  await startAtCalendar(page);
+
+  // 1. Open the event (router), change title and day, save.
+  await waitHydrated(nestSquare(page));
+  await navigateInApp(page, `/impegni/${id}?giorno=${day}`);
+  await expect(h1(page, title)).toBeVisible({ timeout: 20_000 });
+  const dialog = await openForm(page);
+  await fieldOf(dialog, "Titolo").fill(newTitle);
+  await fieldOf(dialog, "Giorno").fill(newDay);
+  await pressSave(page);
+  await expect(editDialog(page)).toBeHidden();
+  await expect(toastOf(page, "Modifiche salvate")).toBeVisible();
+  await expect(h1(page, newTitle)).toBeVisible();
+  await expect(page).toHaveURL(new RegExp(`giorno=${newDay}`));
+
+  // 2. Leave with the navigation of the app.
+  await tap(
+    mainNav(page).getByRole("link", { name: "Calendario", exact: true }),
+  );
+  await expect(page).toHaveURL(/\/calendario/);
+
+  // 3. Come back with the browser's Back.
+  await goBackTo(page, new RegExp(`/impegni/.*giorno=${newDay}`));
+
+  // 4. The saved values, the form closed.
+  await expect(h1(page, newTitle)).toBeVisible({ timeout: 20_000 });
+  await expect(h1(page, title)).toHaveCount(0);
+  await expect(card(page)).toContainText(textRx(dayLabel(newDay), false));
+  await expect(editDialog(page)).toHaveCount(0);
+  const again = await openForm(page);
+  await expect(fieldOf(again, "Titolo")).toHaveValue(newTitle);
+  await expect(fieldOf(again, "Giorno")).toHaveValue(newDay);
+  await expectNotReloaded(page);
+});
+
+// ------------------------------------------------------------ profilo figlio
+
+test("CA-1 (profilo di un figlio): il foglio di modifica non si ripresenta aperto né con il testo scritto", async ({
+  page,
+  baseURL,
+  casa,
+}) => {
+  const sofia = casa.members["Sofia"]!;
+  await casa.signIn(page, baseURL, "Marco");
+  await startAtCalendar(page);
+  const open = async () => {
+    await waitHydrated(nestSquare(page));
+    await navigateInApp(page, `/figli/${sofia}`);
+    await expect(page).toHaveURL(new RegExp(`/figli/${sofia}$`));
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Sofia", {
+      timeout: 20_000,
+    });
+    await waitHydrated(childPencil(page, "Sofia"));
+  };
+
+  // 1. Open the profile, the edit sheet, write another name.
+  await open();
+  const sheet = await openChildSheet(page, "Sofia");
+  await childField(sheet, "Nome").fill("Sofietta");
+  await expect(childField(sheet, "Nome")).toHaveValue("Sofietta");
+
+  // 2-3. Leave and come back.
+  await leaveAndComeBack(page, new RegExp(`/figli/${sofia}$`));
+
+  // 4. Specification (#31): «Ogni apertura riparte dai dati salvati».
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Sofia");
+  await expect(childSheet(page, "Sofia")).toHaveCount(0);
+  const again = await openChildSheet(page, "Sofia");
+  await expect(childField(again, "Nome")).toHaveValue("Sofia");
+  await expectNotReloaded(page);
+});
+
+// ------------------------------------------------------------ lista desideri
+
+test.describe("lista desideri", () => {
+  async function openWishlist(page: Page, childId: string): Promise<void> {
+    await waitHydrated(nestSquare(page));
+    await navigateInApp(page, listPath(childId));
+    await expect(h1(page, wishH1("Sofia"))).toBeVisible({ timeout: 20_000 });
+  }
+
+  test("CA-1 (lista desideri, aggiungi): il foglio non si ripresenta aperto e, riaperto, ha i campi vuoti", async ({
+    page,
+    baseURL,
+    casa,
+  }) => {
+    const sofia = casa.members["Sofia"]!;
+    const scope = {
+      admin: casa.users["Marco"]!.admin,
+      householdId: casa.householdId,
+    };
+    const listId = await createList(scope, sofia);
+    await insertIdea(scope, listId, IDEAS.I1);
+    await casa.signIn(page, baseURL, "Marco");
+    await startAtCalendar(page);
+
+    await openWishlist(page, sofia);
+    await waitHydrated(addTrigger(page));
+    const dialog = await openAdd(page);
+    await fillIdea(dialog, { idea: "Corso di pattinaggio" });
+    await expect(ideaField(dialog, "Oppure scrivi l'idea")).toHaveValue(
+      "Corso di pattinaggio",
+    );
+
+    await leaveAndComeBack(page, new RegExp(`/figli/${sofia}/lista-desideri`));
+
+    // Specification (#32): «Ogni apertura riparte da campi vuoti».
+    await expect(h1(page, wishH1("Sofia"))).toBeVisible();
+    await expect(addDialog(page)).toHaveCount(0);
+    const again = await openAdd(page);
+    await expect(ideaField(again, "Oppure scrivi l'idea")).toHaveValue("");
+    await expect(ideaField(again, "Link del negozio")).toHaveValue("");
+    await expectNotReloaded(page);
+  });
+
+  test("CA-1 (lista desideri, modifica): il foglio non si ripresenta aperto né con il testo scritto", async ({
+    page,
+    baseURL,
+    casa,
+  }) => {
+    const sofia = casa.members["Sofia"]!;
+    const scope = {
+      admin: casa.users["Marco"]!.admin,
+      householdId: casa.householdId,
+    };
+    const listId = await createList(scope, sofia);
+    await insertIdea(scope, listId, IDEAS.I1);
+    await casa.signIn(page, baseURL, "Marco");
+    await startAtCalendar(page);
+
+    await openWishlist(page, sofia);
+    const dialog = await openIdea(page, IDEAS.I1.title);
+    await ideaField(dialog, "Nota per chi regala").fill("Quello blu");
+
+    await leaveAndComeBack(page, new RegExp(`/figli/${sofia}/lista-desideri`));
+
+    // Specification (#32 §5.3): closing without saving loses what was written.
+    await expect(h1(page, wishH1("Sofia"))).toBeVisible();
+    await expect(ideaDialog(page)).toHaveCount(0);
+    const again = await openIdea(page, IDEAS.I1.title);
+    await expect(ideaField(again, "Nota per chi regala")).toHaveValue(
+      IDEAS.I1.note!,
+    );
+    await expectNotReloaded(page);
+  });
+
+  test("CA-1 (lista desideri, disattiva il link): il dialogo di conferma non si ripresenta aperto", async ({
+    page,
+    baseURL,
+    casa,
+  }) => {
+    const sofia = casa.members["Sofia"]!;
+    const scope = {
+      admin: casa.users["Marco"]!.admin,
+      householdId: casa.householdId,
+    };
+    const listId = await createList(scope, sofia);
+    await insertIdea(scope, listId, IDEAS.I1);
+    await setBirth(scope.admin, sofia, birthIn(10));
+    await insertLink(scope, listId, { occasion: nextDecember14() });
+    await casa.signIn(page, baseURL, "Marco");
+    await startAtCalendar(page);
+
+    await openWishlist(page, sofia);
+    await expect(shareBlock(page)).toContainText("Condivisa con un link");
+    await waitHydrated(disableButton(page));
+    await disableButton(page).click();
+    await expect(page.getByRole("alertdialog")).toBeVisible();
+
+    await leaveAndComeBack(page, new RegExp(`/figli/${sofia}/lista-desideri`));
+
+    await expect(h1(page, wishH1("Sofia"))).toBeVisible();
+    await expect(page.getByRole("alertdialog")).toHaveCount(0);
+    await expect(shareBlock(page)).toContainText("Condivisa con un link");
+    await expectNotReloaded(page);
+  });
+});
+
+// ------------------------------------------------------ calendari collegati
+
+test.describe("calendari collegati", () => {
+  test.describe.configure({ timeout: 180_000 });
+
+  /** U linked to the standard Google, on the page, marked as not reloaded. */
+  async function linkedPage(u: Linker, page: Page) {
+    await u.prepare(GOOGLE);
+    await u.signIn(page);
+    await linkFromPage(page, "google");
+    await markPage(page);
+    return accountSection(page, "google", GOOGLE.email);
+  }
+  const back = /\/calendari-collegati$/;
+
+  test("CA-1 (calendari collegati, impostazioni di un calendario): il foglio non si ripresenta aperto né con la scelta non salvata", async ({
+    page,
+    baseURL,
+  }) => {
+    needsFake();
+    await withLinker(baseURL, async (u) => {
+      const section = await linkedPage(u, page);
+      const dialog = await openSettings(page, section, "Personale");
+      await directionRadio(dialog, "Solo in entrata").click();
+      await expect(directionRadio(dialog, "Solo in entrata")).toBeChecked();
+
+      await leaveAndComeBack(page, back);
+
+      // Specification (#34): closing without «Salva» changes nothing.
+      await expect(settingsDialog(page, "Personale")).toHaveCount(0);
+      const again = await openSettings(
+        page,
+        accountSection(page, "google", GOOGLE.email),
+        "Personale",
+      );
+      await expect(directionRadio(again, "Solo in entrata")).not.toBeChecked();
+      await expectNotReloaded(page);
+    });
+  });
+
+  test("CA-1 (calendari collegati, collega un altro account): il foglio non si ripresenta aperto", async ({
+    page,
+    baseURL,
+  }) => {
+    needsFake();
+    await withLinker(baseURL, async (u) => {
+      await linkedPage(u, page);
+      await button(page, "Collega un altro account").click();
+      const connect = page.getByRole("dialog", {
+        name: "Collega un altro account",
+      });
+      await expect(connect).toBeVisible();
+
+      await leaveAndComeBack(page, back);
+
+      await expect(connect).toHaveCount(0);
+      await expectNotReloaded(page);
+    });
+  });
+
+  test("CA-1 (calendari collegati, dove vanno i nuovi impegni): il foglio non si ripresenta aperto né con la scelta non salvata", async ({
+    page,
+    baseURL,
+  }) => {
+    needsFake();
+    await withLinker(baseURL, async (u) => {
+      await linkedPage(u, page);
+      const value = targetRow(page).locator(".riga-lista__valore");
+      await expect(value).toHaveText("Personale");
+      await targetRow(page).click();
+      const target = page.getByRole("dialog", {
+        name: "Dove vanno i nuovi impegni",
+        exact: true,
+      });
+      await expect(target).toBeVisible();
+      await target.getByRole("radio", { name: /^Nessuno/ }).click();
+
+      await leaveAndComeBack(page, back);
+
+      await expect(target).toHaveCount(0);
+      await expect(value).toHaveText("Personale");
+      await targetRow(page).click();
+      await expect(
+        target.getByRole("radio", { name: /^Personale · Google/ }),
+      ).toBeChecked();
+      await expectNotReloaded(page);
+    });
+  });
+});
+
+// ------------------------------------------------------------------- profilo
+
+test.describe("profilo", () => {
+  async function openProfilePage(page: Page): Promise<void> {
+    await waitHydrated(nestSquare(page));
+    await navigateInApp(page, "/profilo");
+    await expect(page).toHaveURL(/\/profilo$/);
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible({
+      timeout: 20_000,
+    });
+    await waitHydrated(signOutButton(page));
+  }
+
+  test("CA-1 (profilo, scelta «All'apertura»): il foglio non si ripresenta aperto", async ({
+    page,
+    baseURL,
+    casa,
+  }) => {
+    await casa.signIn(page, baseURL, "Marco");
+    await startAtCalendar(page);
+    await openProfilePage(page);
+    const before = await valueOf(page, "All'apertura").innerText();
+    await valueOf(page, "All'apertura").click();
+    await expect(profileSheet(page, "All'apertura")).toBeVisible();
+
+    await leaveAndComeBack(page, /\/profilo$/);
+
+    // Specification (#38 §4): the sheets are closed; the choice is the saved one.
+    await expect(signOutButton(page)).toBeVisible();
+    await expect(profileSheet(page, "All'apertura")).toHaveCount(0);
+    await expect(valueOf(page, "All'apertura")).toHaveText(before);
+    await expectNotReloaded(page);
+  });
+
+  test("CA-1 (profilo, «Sintesi del mattino»): il foglio dell'orario non si ripresenta aperto", async ({
+    page,
+    baseURL,
+    casa,
+  }) => {
+    await casa.signIn(page, baseURL, "Marco");
+    await startAtCalendar(page);
+    await openProfilePage(page);
+    await valueOf(page, "Sintesi del mattino").click();
+    await expect(profileSheet(page, "Sintesi del mattino")).toBeVisible();
+
+    await leaveAndComeBack(page, /\/profilo$/);
+
+    await expect(signOutButton(page)).toBeVisible();
+    await expect(profileSheet(page, "Sintesi del mattino")).toHaveCount(0);
+    await expectNotReloaded(page);
+  });
+
+  test("CA-1 (profilo, «Esci»): il dialogo di conferma non si ripresenta aperto", async ({
+    page,
+    baseURL,
+    casa,
+  }) => {
+    await casa.signIn(page, baseURL, "Marco");
+    await startAtCalendar(page);
+    await openProfilePage(page);
+    await signOutButton(page).click();
+    await expect(signOutDialog(page)).toBeVisible();
+
+    await leaveAndComeBack(page, /\/profilo$/);
+
+    // Specification (#38): «Annulla»/Esc close it; the page stays as it was.
+    await expect(signOutButton(page)).toBeVisible();
+    await expect(signOutDialog(page)).toHaveCount(0);
+    await expectNotReloaded(page);
+  });
+
+  test("CA-1 (profilo, «Elimina l'account»): il dialogo di conferma non si ripresenta aperto", async ({
+    page,
+    baseURL,
+    casa,
+  }) => {
+    await casa.signIn(page, baseURL, "Marco");
+    await startAtCalendar(page);
+    await openProfilePage(page);
+    await waitHydrated(deleteButton(page));
+    await deleteButton(page).click();
+    await expect(deleteDialog(page)).toBeVisible();
+
+    await leaveAndComeBack(page, /\/profilo$/);
+
+    await expect(deleteButton(page)).toBeVisible();
+    await expect(deleteDialog(page)).toHaveCount(0);
+    await expectNotReloaded(page);
+  });
+});
+
+// Calendario · Giorno (`DayPage`, `openPiece`): NOT tested on purpose. The
+// panel «Altri impegni» (desktop, block «+N») is a choice of the user inside
+// the page, and the specification of #26 says only that it is kept while the
+// data update («la scelta fatta a mano dall'utente non cambia») and that the
+// «Impegno» panel restarts from the rule of §7 when the day changes. It does
+// not say what happens when the page is left and reached again: to be decided.
