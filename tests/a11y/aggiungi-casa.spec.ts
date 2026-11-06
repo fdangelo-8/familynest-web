@@ -360,8 +360,8 @@ test.describe("Aggiungi · Spesa, Da fare, Scadenza: fuoco", () => {
   test("ordine in Da fare: campo, tipi, data, persone, visibilità, invio", async ({
     page,
   }) => {
-    const { dialog } = await write(page, "Da fare", "chiamare la nonna");
-    await dialog.getByRole("textbox").focus();
+    const { field } = await write(page, "Da fare", "chiamare la nonna");
+    await field.focus();
     await page.keyboard.press("Shift+Tab");
     expect(await focused(page)).toBe("Chiudi");
     const { order, rings } = await stopsUntil(page, "Aggiungi ai da fare");
@@ -387,8 +387,8 @@ test.describe("Aggiungi · Spesa, Da fare, Scadenza: fuoco", () => {
   test("ordine in Scadenza: campo, tipi, data, persone, visibilità, avvisi, invio", async ({
     page,
   }) => {
-    const { dialog } = await write(page, "Scadenza", DEADLINE_PHRASE);
-    await dialog.getByRole("textbox").focus();
+    const { field } = await write(page, "Scadenza", DEADLINE_PHRASE);
+    await field.focus();
     await page.keyboard.press("Shift+Tab");
     expect(await focused(page)).toBe("Chiudi");
     const { order, rings } = await stopsUntil(page, "Aggiungi alle scadenze");
@@ -411,8 +411,8 @@ test.describe("Aggiungi · Spesa, Da fare, Scadenza: fuoco", () => {
   test("ordine in Spesa: l'anteprima non ha controlli; le persone sì", async ({
     page,
   }) => {
-    const { dialog } = await write(page, "Spesa", "latte, pane e 6 uova");
-    await dialog.getByRole("textbox").focus();
+    const { field } = await write(page, "Spesa", "latte, pane e 6 uova");
+    await field.focus();
     await page.keyboard.press("Shift+Tab");
     const { order } = await stopsUntil(page, "Aggiungi 3 cose");
     expect(order).toEqual([

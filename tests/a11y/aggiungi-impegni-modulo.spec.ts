@@ -126,7 +126,12 @@ test.describe("Aggiungi · Impegni · modulo: axe", () => {
     const { field } = await open(page);
     await field.pressSequentially("dentista giovedì");
     await field.press("Enter");
-    await expect(field).toHaveAttribute("aria-invalid", "true");
+    // #333: the missing time is an error under «Dalle», not under the phrase
+    await expect(
+      page.getByRole("dialog", { name: "Aggiungi" }).getByLabel("Dalle", {
+        exact: true,
+      }),
+    ).toHaveAttribute("aria-invalid", "true");
     expect(await blocking(page, '[role="dialog"]')).toEqual([]);
   });
 
