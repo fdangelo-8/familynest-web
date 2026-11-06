@@ -2469,7 +2469,6 @@ button.riga-lista {
 }
 .periodo {
   display: flex;
-  flex-wrap: wrap; /* #313 */
   justify-content: space-between;
   align-items: center;
   gap: var(--space-3);
@@ -2573,7 +2572,9 @@ button.riga-lista {
   font-family: var(--font-titoli);
   font-weight: var(--weight-sottile);
   font-size: var(--text-cella-size);
-  line-height: var(--text-cella-line);
+  /* #313: al 100% il cerchio resta di 24 px (con min-height la riga di 26 px
+     lo allungherebbe); col testo grande segue la dimensione del numero */
+  line-height: max(var(--size-avatar-s), var(--text-cella-size));
   font-variant-numeric: tabular-nums;
 }
 .griglia-mese__punti {
@@ -3834,6 +3835,7 @@ button.riga-lista {
 .vai-al-contenuto:not(:focus) {
   width: var(--border-sottile);
   height: var(--border-sottile);
+  min-height: 0; /* #313: il bottone ha min-height */
   padding: 0;
   overflow: hidden;
   clip-path: inset(50%);
@@ -5397,6 +5399,9 @@ body {
     gap: var(--space-3);
     grid-auto-flow: dense;
   }
+  .scheda-modulo--largo {
+    grid-column: span 2; /* #313: a 4 colonne ne occupa due, come prima */
+  }
   .spazi-fissati {
     grid-template-columns: 1fr;
   }
@@ -5488,9 +5493,10 @@ body {
 
 /* Orario nascosto alla vista quando non sta intero sotto il titolo (#313).
    Soglia = 2 × --space-1 + --space-half + --text-etichetta-line + --text-micro-line
-   = 10px + 1.875rem. La parte max(…) annulla la soglia fino al 100%
+   = 10px + 1.875rem. Scritta in pt (7.5pt = 10px, 150pt = 200px) perché il
+   controllo CA-10 vieta i px fuori da :root e dalle @media. La parte max(…) annulla la soglia fino al 100%
    (16 px: 10 + 30 − 40 = 0 px, nessun blocco è più basso), e vale 0 dal 125% in su. */
-@container blocco (height < calc(10px + 1.875rem - max(0px, 200px - 10rem))) {
+@container blocco (height < calc(7.5pt + 1.875rem - max(0pt, 150pt - 10rem))) {
   .blocco-orario__ora {
     position: absolute;
     width: var(--border-sottile);
