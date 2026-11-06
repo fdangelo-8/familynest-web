@@ -90,10 +90,10 @@ export function LegalLine({
   );
 }
 
-/** Link of the mobile header: back to the sign-in page. */
-export function BackLink() {
+/** Link of the mobile header: back to the sign-in page (or to `href`). */
+export function BackLink({ href = "/accesso" }: { href?: string }) {
   return (
-    <Link href="/accesso" className="btn-icona" aria-label="Indietro">
+    <Link href={href} className="btn-icona" aria-label="Indietro">
       <Icon name="arrow-left" />
     </Link>
   );

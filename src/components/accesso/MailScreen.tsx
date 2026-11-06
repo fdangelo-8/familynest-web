@@ -1,259 +1,262 @@
 "use client";
 
-import {
-  useEffect,
-  useId,
-  useRef,
-  useState,
-  type FormEvent,
-  type ReactNode,
-  type RefObject,
-} from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { Alert } from "@/components/ui/Alert/Alert";
 import { Button } from "@/components/ui/Button/Button";
-import { cx } from "@/components/ui/cx";
-import { Icon, type IconName } from "@/components/ui/Icon/Icon";
-import { List, ListRow } from "@/components/ui/List/List";
-import { Spinner } from "@/components/ui/Spinner/Spinner";
+import { PasswordField } from "@/components/ui/PasswordField/PasswordField";
+import { SegmentedControl } from "@/components/ui/SegmentedControl/SegmentedControl";
 import { useToast } from "@/components/ui/Toast/ToastProvider";
 import { createClient } from "@/lib/supabase/client";
+import { AuthLayout, Intro, ToAccessLink, ToAccessRow } from "./AuthLayout";
+import {
+  PASSWORD_TEXT,
+  confirmUrl,
+  isRateLimit,
+  seconds,
+  validateEmail,
+  validateNewPassword,
+} from "./fields";
+import { MailField } from "./MailField";
+import { HintList, LimitNotice, NetworkNotice, type HintRow } from "./notices";
 import styles from "./accesso.module.css";
-import { BackLink, Brand, Claim, LegalLine, Stickers } from "./parts";
+import { LegalLine } from "./parts";
+import { useCooldown } from "./useCooldown";
 
-// How long before a new link can be asked (Supabase limit).
-const WAIT_MS = 60_000;
-const MAX_EMAIL_LENGTH = 254;
+type Mode = "login" | "register";
+type Action = Mode | "resend";
+type Outcome =
+  | "entered"
+  | "ok"
+  | "limit"
+  | "network"
+  | "weak"
+  | "credentials"
+  | "unconfirmed";
+type Context = "login" | "register" | "resend";
+type Notice =
+  | { kind: "credentials" }
+  | { kind: "unconfirmed" }
+  | { kind: "limit"; context: Context }
+  | { kind: "network"; context: Context };
 
 const TEXT = {
-  empty: "Scrivi la tua mail per ricevere il link.",
-  invalid: "Controlla la mail: dovrebbe essere come nome@esempio.it.",
-  network:
-    "Non siamo riusciti a mandare il link. Controlla la connessione e riprova.",
-  rateForm:
-    "Hai appena chiesto un link per questa mail. Cercalo nella posta, oppure chiedine un altro tra un minuto.",
-  rateResend:
-    "Il link di prima è appena partito. Puoi chiederne un altro tra un minuto.",
-  sending: "Invio del link in corso",
-  resent: "Nuovo link mandato: usa quello più recente.",
+  emptyMail: {
+    login: "Scrivi la tua mail per entrare.",
+    register: "Scrivi la tua mail per registrarti.",
+  },
+  emptyPassword: {
+    login: "Scrivi la password per entrare.",
+    register: "Scegli una password per registrarti.",
+  },
+  limit: {
+    login: "Troppi tentativi di fila. Aspetta qualche minuto e riprova.",
+    register:
+      "Ti abbiamo appena mandato una mail. Cercala nella posta, oppure riprova tra un minuto.",
+    resend: "La mail di prima è appena partita. Puoi rimandarla tra un minuto.",
+  },
+  network: {
+    login:
+      "Non siamo riusciti a farti entrare. Controlla la connessione e riprova.",
+    register:
+      "Non siamo riusciti a creare l'account. Controlla la connessione e riprova.",
+    resend:
+      "Non siamo riusciti a mandare la mail. Controlla la connessione e riprova.",
+  },
+  credentials:
+    "La mail e la password non corrispondono. Se finora entravi con il link nella mail, la password non ce l'hai ancora: scegline una.",
+  unconfirmed:
+    "Questa mail non è ancora confermata. Apri la mail «Conferma il tuo indirizzo» che ti abbiamo mandato, oppure fattene mandare un'altra.",
+  resent: "Mail rimandata: usa quella più recente.",
 } as const;
 
-/** Trimmed address in, error text out (null = valid). */
-function validateEmail(value: string): string | null {
-  if (!value) return TEXT.empty;
-  if (value.length > MAX_EMAIL_LENGTH) return TEXT.invalid;
-  if (/\s/.test(value)) return TEXT.invalid;
-  const parts = value.split("@");
-  if (parts.length !== 2) return TEXT.invalid;
-  const [local, domain] = parts as [string, string];
-  if (local.length < 1) return TEXT.invalid;
-  if (domain.indexOf(".") < 1 || domain.endsWith(".")) return TEXT.invalid;
-  return null;
-}
+const MODES = [
+  { value: "login", label: "Entra" },
+  { value: "register", label: "Registrati" },
+] as const;
 
-function waitText(seconds: number): string {
-  return `Puoi chiederne un altro tra ${seconds} ${seconds === 1 ? "secondo" : "secondi"}.`;
-}
-
-function isVisible(el: HTMLElement | null): el is HTMLElement {
-  return el !== null && el.offsetParent !== null;
-}
-
-type SendMode = "first" | "resend";
-type SendResult = "ok" | "rate" | "network";
-type Notice = "network" | "rate" | null;
-
-async function requestLink(address: string): Promise<SendResult> {
-  try {
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOtp({
-      email: address,
-      // A mail never seen creates the account at the first click on the link.
-      // #326: without `emailRedirectTo` Supabase falls back on the Site URL.
-      options: {
-        shouldCreateUser: true,
-        emailRedirectTo: `${window.location.origin}/auth/confirm`,
-      },
-    });
-    if (!error) return "ok";
-    if (
-      error.status === 429 ||
-      error.code === "over_email_send_rate_limit" ||
-      error.code === "over_request_rate_limit"
-    ) {
-      return "rate";
-    }
-    return "network";
-  } catch {
-    return "network";
-  }
-}
-
-/** Button that can sit outside its form (`form` attribute) and shows the loading state. */
-function ActionButton({
-  variant,
-  loading,
-  disabled,
-  form,
-  describedBy,
-  onClick,
-  children,
-}: {
-  variant: "primary" | "secondary";
-  loading: boolean;
-  disabled?: boolean;
-  /** Submit button of the form with this id; without it, a plain button */
-  form?: string;
-  describedBy?: string;
-  onClick?: () => void;
-  children: ReactNode;
-}) {
-  return (
-    <button
-      type={form ? "submit" : "button"}
-      form={form}
-      className={cx(
-        variant === "primary" ? "btn-primary" : "btn-secondary",
-        "btn--pieno",
-        loading && "is-caricamento",
-      )}
-      disabled={disabled && !loading}
-      aria-busy={loading || undefined}
-      aria-describedby={describedBy}
-      onClick={(event) => {
-        if (loading) {
-          event.preventDefault();
-          return;
-        }
-        onClick?.();
-      }}
-    >
-      {loading ? <Spinner /> : null}
-      <span className="btn__testo">{loading ? TEXT.sending : children}</span>
-    </button>
-  );
-}
-
-function NoticeBox({
-  kind,
-  text,
-  onRetry,
-}: {
-  kind: "network" | "rate";
-  text: string;
-  onRetry?: () => void;
-}) {
-  if (kind === "network") {
-    return (
-      <div className="avviso avviso--errore" role="alert">
-        <Icon name="wifi-off" />
-        <p className="avviso__testo">{text}</p>
-        <Button variant="link" onClick={onRetry}>
-          Riprova
-        </Button>
-      </div>
-    );
-  }
-  return (
-    <div className="avviso avviso--info avviso--senza-azione" role="status">
-      <Icon name="clock" />
-      <p className="avviso__testo">{text}</p>
-    </div>
-  );
-}
-
-const WAIT_ROWS: ReadonlyArray<{
-  icon: IconName;
-  title: string;
-  info: string;
-}> = [
+const SENT_ROWS: ReadonlyArray<HintRow> = [
   { icon: "clock", title: "Vale un'ora", info: "E funziona una volta sola." },
   {
     icon: "search",
     title: "Non la trovi?",
     info: "Guarda nella posta indesiderata o nelle promozioni.",
   },
+  {
+    icon: "key-round",
+    title: "Hai già un account con questa mail?",
+    info: "Allora non ti arriva niente: entra con la tua password.",
+  },
 ];
 
+const INVITE_ROW: HintRow = {
+  icon: "users",
+  title: "Apri il link su questo dispositivo",
+  info: "Così entri subito nel Nest che ti ha invitato.",
+};
+
+/** Calls Supabase for one action and says how it went (never throws). */
+async function request(
+  action: Action,
+  email: string,
+  password: string,
+): Promise<Outcome> {
+  try {
+    const supabase = createClient();
+    if (action === "login") {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (!error) return "entered";
+      if (error.code === "invalid_credentials") return "credentials";
+      if (error.code === "email_not_confirmed") return "unconfirmed";
+      return isRateLimit(error) ? "limit" : "network";
+    }
+    if (action === "register") {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        // #326: without it Supabase falls back on the Site URL.
+        options: { emailRedirectTo: confirmUrl() },
+      });
+      if (!error) return data.session ? "entered" : "ok";
+      if (error.code === "weak_password") return "weak";
+      // A mail already registered looks like a new one (no enumeration, D2).
+      if (error.code === "user_already_exists") return "ok";
+      return isRateLimit(error) ? "limit" : "network";
+    }
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email,
+      options: { emailRedirectTo: confirmUrl() },
+    });
+    if (!error) return "ok";
+    return isRateLimit(error) ? "limit" : "network";
+  } catch {
+    return "network";
+  }
+}
+
 /**
- * `/accesso/mail`: M1 (the address) and M2 ("Controlla la posta") on the same
- * page. The address lives only in this component's memory: never in the URL,
- * never stored, so a reload starts again from an empty field.
+ * `/accesso/mail`: «Entra» and «Registrati» in one page, then «Controlla la
+ * posta». Mail and password live only in this component's memory: never in the
+ * URL, never stored, so a reload starts again from an empty form (#327).
+ * `hasInvite` only tells that the invitation cookie is there (the token never
+ * reaches the page).
  */
-export function MailScreen() {
+export function MailScreen({ hasInvite }: { hasInvite: boolean }) {
+  const router = useRouter();
   const { showToast } = useToast();
-  const base = useId();
+  const cooldown = useCooldown();
 
+  const [view, setView] = useState<"form" | "sent">("form");
+  const [mode, setMode] = useState<Mode>("login");
+  const [sentFrom, setSentFrom] = useState<Mode>("register");
   const [email, setEmail] = useState("");
-  const [sentEmail, setSentEmail] = useState<string | null>(null);
-  const [fieldError, setFieldError] = useState<string | null>(null);
-  const [sending, setSending] = useState(false);
-  const [notice, setNotice] = useState<Notice>(null);
-  const [until, setUntil] = useState(0);
-  const [now, setNow] = useState(0);
+  const [password, setPassword] = useState("");
+  const [shown, setShown] = useState(false);
+  const [errors, setErrors] = useState<{
+    email?: string | null;
+    password?: string | null;
+  }>({});
+  const [pending, setPending] = useState<"form" | "resend" | null>(null);
+  const [notice, setNotice] = useState<Notice | null>(null);
+
   const busy = useRef(false);
-  const lastAddress = useRef("");
+  const last = useRef<{ action: Action; email: string; password: string }>({
+    action: "login",
+    email: "",
+    password: "",
+  });
+  const emailRef = useRef<HTMLInputElement>(null);
+  const passwordRef = useRef<HTMLInputElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
 
-  const mobileInput = useRef<HTMLInputElement>(null);
-  const desktopInput = useRef<HTMLInputElement>(null);
-  const mobileTitle = useRef<HTMLHeadingElement>(null);
-  const desktopTitle = useRef<HTMLHeadingElement>(null);
-
-  function focusFirst(...refs: RefObject<HTMLElement | null>[]) {
-    for (const ref of refs) {
-      if (isVisible(ref.current)) {
-        ref.current.focus();
-        return;
-      }
-    }
-  }
-
-  // Focus: M2 -> the heading; M1 -> the field, only from 1024 px.
+  // Focus: «Controlla la posta» -> the title; the form -> the field, only from 1024 px.
   useEffect(() => {
-    if (sentEmail !== null) {
-      focusFirst(mobileTitle, desktopTitle);
+    if (view === "sent") {
+      titleRef.current?.focus();
     } else if (window.matchMedia("(min-width: 1024px)").matches) {
-      focusFirst(desktopInput);
+      emailRef.current?.focus();
     }
-  }, [sentEmail]);
+  }, [view]);
 
-  // Countdown of the wait before a new link (no live region: one update per
-  // second would be read aloud).
-  useEffect(() => {
-    if (sentEmail === null || until === 0) return;
-    const timer = window.setInterval(() => {
-      const t = Date.now();
-      setNow(t);
-      if (t >= until) window.clearInterval(timer);
-    }, 1000);
-    return () => window.clearInterval(timer);
-  }, [sentEmail, until]);
-
-  function startWait() {
-    const t = Date.now();
-    setNow(t);
-    setUntil(t + WAIT_MS);
+  function focusPasswordSoon() {
+    window.requestAnimationFrame(() => passwordRef.current?.focus());
   }
 
-  async function send(address: string, mode: SendMode) {
+  function changeMode(next: Mode) {
+    if (next === mode) return;
+    setMode(next);
+    setPassword("");
+    setShown(false);
+    setErrors({});
+    setNotice(null);
+  }
+
+  async function execute(action: Action, address: string, secret: string) {
     if (busy.current) return;
     busy.current = true;
-    lastAddress.current = address;
-    setSending(true);
-    setNotice(null);
-    const result = await requestLink(address);
+    last.current = { action, email: address, password: secret };
+    setPending(action === "resend" ? "resend" : "form");
+    // «Rimanda la mail» from the notice keeps the notice (and its button, in
+    // loading) on screen while the request runs, so the focus stays on it.
+    const fromNotice = action === "resend" && notice?.kind === "unconfirmed";
+    if (!fromNotice) setNotice(null);
+    const outcome = await request(action, address, secret);
     busy.current = false;
-    setSending(false);
+    // The password is only needed again for «Riprova» after a network error.
+    if (outcome !== "network") {
+      last.current = { ...last.current, password: "" };
+    }
 
-    if (result === "ok") {
-      setSentEmail(address);
-      startWait();
-      if (mode === "resend") {
-        showToast({ text: TEXT.resent, withoutNav: true });
-      }
-    } else if (result === "rate") {
-      if (mode === "resend") startWait();
-      setNotice("rate");
-    } else {
-      setNotice("network");
+    if (outcome === "entered") {
+      // The page for a signed-in person sends them to their destination
+      // (Nest, invitation or onboarding). The button stays in loading.
+      router.replace("/accesso/mail");
+      return;
+    }
+    setPending(null);
+
+    const context: Context = action;
+    if (fromNotice) {
+      // The button that had the focus goes away with the old notice.
+      if (outcome === "ok") setNotice(null);
+      else emailRef.current?.focus();
+    }
+    switch (outcome) {
+      case "ok":
+        if (action === "resend" && view === "sent") {
+          showToast({ text: TEXT.resent, withoutNav: true });
+        } else {
+          if (action !== "resend") setSentFrom(action);
+          else setSentFrom("login");
+          setPassword("");
+          setShown(false);
+          setView("sent");
+        }
+        cooldown.start();
+        break;
+      case "limit":
+        setNotice({ kind: "limit", context });
+        if (action === "resend") cooldown.start();
+        break;
+      case "weak":
+        setErrors({ password: PASSWORD_TEXT.weak });
+        focusPasswordSoon();
+        break;
+      case "credentials":
+        setPassword("");
+        setShown(false);
+        setNotice({ kind: "credentials" });
+        focusPasswordSoon();
+        break;
+      case "unconfirmed":
+        setNotice({ kind: "unconfirmed" });
+        break;
+      default:
+        setNotice({ kind: "network", context });
     }
   }
 
@@ -262,272 +265,217 @@ export function MailScreen() {
     if (busy.current) return;
     const address = email.trim();
     setEmail(address);
-    const problem = validateEmail(address);
-    setFieldError(problem);
-    if (problem) {
-      focusFirst(mobileInput, desktopInput);
+    setShown(false);
+    const problems = {
+      email: validateEmail(address, TEXT.emptyMail[mode]),
+      password:
+        mode === "login"
+          ? password
+            ? null
+            : TEXT.emptyPassword.login
+          : validateNewPassword(password, TEXT.emptyPassword.register),
+    };
+    setErrors(problems);
+    if (problems.email) {
+      emailRef.current?.focus();
       return;
     }
-    void send(address, "first");
+    if (problems.password) {
+      passwordRef.current?.focus();
+      return;
+    }
+    void execute(mode, address, password);
   }
 
-  function chooseAnotherMail() {
-    setSentEmail(null);
+  function retry() {
+    const { action, email: address, password: secret } = last.current;
+    void execute(action, address, secret);
+  }
+
+  function chooseMode(next: Mode) {
+    setView("form");
+    setMode(next);
     setNotice(null);
-    setFieldError(null);
+    setErrors({});
   }
 
-  const secondsLeft = Math.max(0, Math.ceil((until - now) / 1000));
-  const waiting = secondsLeft > 0;
+  const submitting = pending === "form";
+  const resending = pending === "resend";
 
-  const formId = (suffix: string) => `${base}-form-${suffix}`;
-  const noteId = (suffix: string) => `${base}-attesa-${suffix}`;
-
-  function renderField(
-    suffix: string,
-    inputRef: RefObject<HTMLInputElement | null>,
-  ) {
-    const inputId = `${base}-mail-${suffix}`;
-    const errorId = `${base}-errore-${suffix}`;
-    return (
-      <div className={cx("campo", fieldError && "campo--errore")}>
-        <label className="campo__etichetta" htmlFor={inputId}>
-          La tua mail
-        </label>
-        <input
-          ref={inputRef}
-          id={inputId}
-          className="campo__input"
-          type="email"
-          // No `name`: a native submit before hydration must not put the address in the URL.
-          autoComplete="email"
-          inputMode="email"
-          autoCapitalize="none"
-          spellCheck={false}
-          placeholder="nome@esempio.it"
-          value={email}
-          readOnly={sending}
-          onChange={(event) => setEmail(event.target.value)}
-          aria-invalid={fieldError ? true : undefined}
-          aria-describedby={fieldError ? errorId : undefined}
-        />
-        {fieldError ? (
-          <p className="campo__errore" id={errorId}>
-            <Icon name="circle-alert" size="s" />
-            {fieldError}
-          </p>
-        ) : null}
-      </div>
-    );
-  }
-
-  const formNotice =
-    notice === "network" ? (
-      <NoticeBox
-        kind="network"
-        text={TEXT.network}
-        onRetry={() => void send(lastAddress.current, "first")}
-      />
-    ) : notice === "rate" ? (
-      <NoticeBox kind="rate" text={TEXT.rateForm} />
-    ) : null;
-
-  const resendNotice =
-    notice === "network" ? (
-      <NoticeBox
-        kind="network"
-        text={TEXT.network}
-        onRetry={() => void send(sentEmail ?? "", "resend")}
-      />
-    ) : notice === "rate" ? (
-      <NoticeBox kind="rate" text={TEXT.rateResend} />
-    ) : null;
-
-  const formIntro = (
-    <div className="intestazione">
-      <p className="intestazione__sopra">Accesso con la mail</p>
-      <h1 className="intestazione__titolo t-titolo-pagina">
-        Qual è la tua mail?
-      </h1>
-      <p className="intestazione__sotto">
-        Ti mandiamo un link: lo apri e sei dentro, senza password.
-      </p>
-    </div>
-  );
-
-  function renderSentIntro(titleRef: RefObject<HTMLHeadingElement | null>) {
-    return (
-      <div className="intestazione">
-        <p className="intestazione__sopra">Accesso con la mail</p>
-        <h1
-          ref={titleRef}
-          tabIndex={-1}
-          className="intestazione__titolo t-titolo-pagina"
-        >
-          Controlla la posta
-        </h1>
-        <p className="intestazione__sotto">
-          Ti abbiamo mandato un link a{" "}
-          <b className={styles.address}>{sentEmail}</b>. Apri la mail e tocca
-          «Entra in FamilyNest».
-        </p>
-      </div>
-    );
-  }
-
-  const hints = (
-    <List className="scheda">
-      {WAIT_ROWS.map((row) => (
-        <ListRow key={row.title}>
-          <span className="icona-riquadro">
-            <Icon name={row.icon} />
-          </span>
-          <span className="riga-lista__testo">
-            <span className="riga-lista__titolo">{row.title}</span>
-            <span className="riga-lista__info">{row.info}</span>
-          </span>
-        </ListRow>
-      ))}
-    </List>
-  );
-
-  function renderResend(suffix: string) {
-    return (
-      <>
-        {resendNotice}
-        <ActionButton
-          variant="secondary"
-          loading={sending}
-          disabled={waiting}
-          describedBy={waiting ? noteId(suffix) : undefined}
-          onClick={() => void send(sentEmail ?? "", "resend")}
-        >
-          Mandami un altro link
-        </ActionButton>
-        {waiting ? (
-          <p className="t-nota t-secondario" id={noteId(suffix)}>
-            {waitText(secondsLeft)}
-          </p>
-        ) : null}
-      </>
-    );
-  }
-
-  const otherMailButton = (
-    <button type="button" className="btn-link" onClick={chooseAnotherMail}>
-      Usa un&apos;altra mail
-    </button>
-  );
-
-  const leftPanel = (
-    <div className="split-onboarding__notte">
-      <Brand />
-      <Stickers />
-      <Claim as="p" />
-    </div>
-  );
-
-  return (
-    <main className={styles.root}>
-      <div className={`${styles.mobile} passo-onboarding`}>
-        <div className="passo-onboarding__testa">
-          <BackLink />
-          <span aria-hidden="true" />
-          <span className="barra__vuoto" aria-hidden="true" />
-        </div>
-        {sentEmail === null ? (
-          <>
-            {formIntro}
-            <form
-              method="post"
-              action="/accesso/mail/invio"
-              id={formId("m")}
-              className="sezione"
-              noValidate
-              onSubmit={handleSubmit}
-            >
-              {formNotice}
-              {renderField("m", mobileInput)}
-            </form>
-            <div className="dialogo__azioni">
-              <ActionButton
-                variant="primary"
-                loading={sending}
-                form={formId("m")}
+  // ---------------------------------------------------------------- notices
+  function renderNotice() {
+    if (!notice) return null;
+    switch (notice.kind) {
+      case "credentials":
+        return (
+          <Alert
+            variant="errore"
+            role="alert"
+            action={
+              <Button variant="link" href="/accesso/password-dimenticata">
+                Scegli una password
+              </Button>
+            }
+          >
+            {TEXT.credentials}
+          </Alert>
+        );
+      case "unconfirmed":
+        return (
+          <Alert
+            variant="info"
+            role="status"
+            icon="info"
+            action={
+              <Button
+                variant="link"
+                loading={resending}
+                onClick={() => void execute("resend", email.trim(), "")}
               >
-                Mandami il link
-              </ActionButton>
-              <LegalLine className="t-nota t-secondario" />
-            </div>
-          </>
-        ) : (
-          <>
-            {renderSentIntro(mobileTitle)}
-            <div className="sezione">{hints}</div>
-            <div className="dialogo__azioni">
-              {renderResend("m")}
-              <div className="gruppo-chip">{otherMailButton}</div>
-            </div>
-          </>
-        )}
-      </div>
+                Rimanda la mail
+              </Button>
+            }
+          >
+            {TEXT.unconfirmed}
+          </Alert>
+        );
+      case "limit":
+        return <LimitNotice text={TEXT.limit[notice.context]} />;
+      case "network":
+        return (
+          <NetworkNotice text={TEXT.network[notice.context]} onRetry={retry} />
+        );
+    }
+  }
 
-      <div className={`${styles.desktop} split-onboarding`}>
-        {leftPanel}
-        <div className="split-onboarding__passo">
-          <span />
-          {sentEmail === null ? (
-            <>
-              <div className="sezione">
-                {formIntro}
-                {formNotice}
-                <form
-                  method="post"
-                  action="/accesso/mail/invio"
-                  id={formId("d")}
-                  className="sezione"
-                  noValidate
-                  onSubmit={handleSubmit}
-                >
-                  {renderField("d", desktopInput)}
-                </form>
-                <div className="dialogo__azioni">
-                  <ActionButton
-                    variant="primary"
-                    loading={sending}
-                    form={formId("d")}
-                  >
-                    Mandami il link
-                  </ActionButton>
-                  <div className="gruppo-chip">
-                    <Button variant="link" href="/accesso">
-                      Torna all&apos;accesso
-                    </Button>
-                  </div>
-                </div>
-              </div>
-              <LegalLine className="t-nota t-secondario" />
-            </>
-          ) : (
-            <>
-              <div className="sezione">
-                {renderSentIntro(desktopTitle)}
-                {hints}
-                <div className="dialogo__azioni">
-                  {renderResend("d")}
-                  <div className="gruppo-chip">
-                    {otherMailButton}
-                    <Button variant="link" href="/accesso">
-                      Torna all&apos;accesso
-                    </Button>
-                  </div>
-                </div>
-              </div>
-              <span />
-            </>
-          )}
-        </div>
-      </div>
-    </main>
+  // ------------------------------------------------------ Controlla la posta
+  if (view === "sent") {
+    const rows = hasInvite ? [...SENT_ROWS, INVITE_ROW] : SENT_ROWS;
+    const noteId = "accesso-mail-attesa";
+    return (
+      <AuthLayout
+        back="/accesso"
+        intro={
+          <Intro
+            eyebrow={
+              sentFrom === "register" ? "Registrazione" : "Accesso con la mail"
+            }
+            title="Controlla la posta"
+            titleRef={titleRef}
+          >
+            Se è un indirizzo nuovo, ti abbiamo mandato una mail a{" "}
+            <b className={styles.address}>{email}</b>. Aprila e tocca «Conferma
+            l&apos;indirizzo»: entri subito in FamilyNest.
+          </Intro>
+        }
+        body={<HintList rows={rows} />}
+        actions={
+          <>
+            {renderNotice()}
+            <Button
+              variant="secondary"
+              full
+              loading={resending}
+              disabled={cooldown.waiting && !resending}
+              aria-describedby={cooldown.waiting ? noteId : undefined}
+              onClick={() => void execute("resend", email, "")}
+            >
+              {resending ? "Invio della mail in corso" : "Rimanda la mail"}
+            </Button>
+            {cooldown.waiting ? (
+              <p className="t-nota t-secondario" id={noteId}>
+                {`Puoi rimandarla tra ${seconds(cooldown.secondsLeft)}.`}
+              </p>
+            ) : null}
+            <div className="gruppo-chip">
+              <Button variant="link" onClick={() => chooseMode("register")}>
+                Usa un&apos;altra mail
+              </Button>
+              <Button variant="link" onClick={() => chooseMode("login")}>
+                Entra con la password
+              </Button>
+              <ToAccessLink />
+            </div>
+          </>
+        }
+      />
+    );
+  }
+
+  // ------------------------------------------------------- Entra / Registrati
+  const login = mode === "login";
+  return (
+    <AuthLayout
+      back="/accesso"
+      intro={
+        <Intro
+          eyebrow="Accesso con la mail"
+          title={login ? "Entra con la mail" : "Crea il tuo account"}
+        >
+          {login
+            ? "Scrivi la mail e la password del tuo account."
+            : "Poi ti mandiamo una mail per confermare l'indirizzo."}
+        </Intro>
+      }
+      form={{
+        id: "accesso-mail-modulo",
+        action: "/accesso/mail/invio",
+        onSubmit: handleSubmit,
+      }}
+      body={
+        <>
+          <SegmentedControl
+            aria-label="Hai già un account?"
+            options={MODES}
+            value={mode}
+            onChange={changeMode}
+          />
+          {renderNotice()}
+          <MailField
+            id="accesso-mail-email"
+            value={email}
+            onChange={setEmail}
+            error={errors.email}
+            inputRef={emailRef}
+            readOnly={submitting}
+          />
+          <PasswordField
+            id="accesso-mail-password"
+            label={login ? "Password" : "Scegli una password"}
+            autoComplete={login ? "current-password" : "new-password"}
+            rules={!login}
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            error={errors.password ?? undefined}
+            inputRef={passwordRef}
+            readOnly={submitting}
+            shown={shown}
+            onShownChange={setShown}
+          />
+          {login ? (
+            <div className="gruppo-chip">
+              <Button variant="link" href="/accesso/password-dimenticata">
+                Password dimenticata?
+              </Button>
+            </div>
+          ) : null}
+        </>
+      }
+      actions={
+        <>
+          <Button variant="primary" type="submit" full loading={submitting}>
+            {submitting
+              ? login
+                ? "Accesso in corso"
+                : "Creazione dell'account in corso"
+              : login
+                ? "Entra"
+                : "Crea l'account"}
+          </Button>
+          <ToAccessRow />
+        </>
+      }
+      legal={<LegalLine className="t-nota t-secondario" />}
+    />
   );
 }
