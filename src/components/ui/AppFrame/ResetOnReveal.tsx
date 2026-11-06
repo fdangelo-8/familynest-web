@@ -8,6 +8,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { OVERLAY_PATHS } from "./useFramePathname";
 
 /**
  * A number that goes up every time the page that holds the caller is shown
@@ -55,7 +56,9 @@ function useRevisitCount(): number {
     seen: new Set<string>([pathname]),
     revisits: 0,
   }));
-  if (track.pathname !== pathname) {
+  // A sheet over the page (Add, search) is not a change: the page below stays
+  // as it is, and its address is not counted as seen.
+  if (!OVERLAY_PATHS.includes(pathname) && track.pathname !== pathname) {
     setTrack({
       pathname,
       seen: new Set(track.seen).add(pathname),

@@ -64,9 +64,22 @@ export function EventDetailPage({
   // «Indietro» the router restores the props it had before the save.
   const pathname = usePathname();
   const queryDay = useSearchParams().get("giorno");
-  const eventId = idFromPath(pathname) ?? firstEventId;
-  const day =
-    queryDay === null ? firstDay : isValidDayKey(queryDay) ? queryDay : null;
+  // With a sheet open over the page (Add, search) the address is not the
+  // page's: keep the last id and day read from its own address.
+  const [shown, setShown] = useState({
+    eventId: idFromPath(pathname) ?? firstEventId,
+    day:
+      queryDay === null ? firstDay : isValidDayKey(queryDay) ? queryDay : null,
+  });
+  const addressId = idFromPath(pathname);
+  if (addressId !== null) {
+    const addressDay =
+      queryDay === null ? firstDay : isValidDayKey(queryDay) ? queryDay : null;
+    if (shown.eventId !== addressId || shown.day !== addressDay) {
+      setShown({ eventId: addressId, day: addressDay });
+    }
+  }
+  const { eventId, day } = shown;
   const detail = useEventDetail(eventId, day);
   const { showToast } = useToast();
   const desktop = useIsDesktop();
