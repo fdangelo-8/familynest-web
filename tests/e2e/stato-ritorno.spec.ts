@@ -56,6 +56,8 @@ import {
 } from "../fixtures/desideri";
 import {
   field as childField,
+  FULL_MIA,
+  writeProfile,
   openSheet as openChildSheet,
   pencil as childPencil,
   setBirth,
@@ -474,8 +476,9 @@ test("CA-1 (dettaglio impegno salvato): tornando con Indietro dopo aver cambiato
   await goBackTo(page, new RegExp(`/impegni/.*giorno=${newDay}`));
 
   // 4. The saved values, the form closed.
-  await expect(h1(page, newTitle)).toBeVisible({ timeout: 20_000 });
-  await expect(h1(page, title)).toHaveCount(0);
+  await expect(
+    page.getByRole("main").getByRole("heading", { level: 1 }),
+  ).toHaveText(newTitle, { timeout: 20_000 });
   await expect(card(page)).toContainText(textRx(dayLabel(newDay), false));
   await expect(editDialog(page)).toHaveCount(0);
   const again = await openForm(page);
@@ -492,6 +495,20 @@ test("CA-1 (profilo di un figlio): il foglio di modifica non si ripresenta apert
   casa,
 }) => {
   const sofia = casa.members["Sofia"]!;
+  // With a profile the page is in its normal state: only there is the pencil
+  // (#31: the empty state has «Aggiungi la scuola» and «Aggiungi le taglie»).
+  await writeProfile(
+    {
+      nest: casa,
+      admin: casa.users["Marco"]!.admin,
+      householdId: casa.householdId,
+      mia: sofia,
+      nico: casa.members["Tommaso"]!,
+      fido: casa.members["Biscotto"]!,
+    },
+    sofia,
+    FULL_MIA,
+  );
   await casa.signIn(page, baseURL, "Marco");
   await startAtCalendar(page);
   const open = async () => {
