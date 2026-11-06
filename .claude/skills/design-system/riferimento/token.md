@@ -304,11 +304,11 @@ In rem: con il testo normale valgono i px a destra, con il testo grande crescono
 
 Come le media query, non leggono le variabili: si scrivono i numeri, in rem (nella query `rem` è la radice reale, quindi con 16 px non scattano mai alle misure del mockup). Sono le sole ammesse.
 
-| Contenitore (`container-name`) | Su                                      | Query             | Cosa cambia                                    |
-| ------------------------------ | --------------------------------------- | ----------------- | ---------------------------------------------- |
-| `barra`                        | `.nav-basso`                            | `(width < 13rem)` | «Aggiungi» diventa il quadrato con il solo «+» |
-| `riga`                         | `.riga-lista`, `.riga-regalo`           | `(width < 16rem)` | valore, etichetta o azione scendono sotto      |
-| `selettore`                    | `.contenitore-selettore` (classe nuova) | `(width < 17rem)` | le voci del selettore si impilano              |
+| Contenitore (`container-name`) | Su                                                                          | Query             | Cosa cambia                                    |
+| ------------------------------ | --------------------------------------------------------------------------- | ----------------- | ---------------------------------------------- |
+| `barra`                        | `.nav-basso`                                                                | `(width < 13rem)` | «Aggiungi» diventa il quadrato con il solo «+» |
+| `riga`                         | `.riga-lista`, `.riga-regalo`                                               | `(width < 16rem)` | valore, etichetta o azione scendono sotto      |
+| `selettore`                    | `.contenitore-selettore` (classe nuova) (Casa, Aggiungi, Calendario mobile) | `(width < 17rem)` | le voci del selettore si impilano              |
 
 ### Movimento
 

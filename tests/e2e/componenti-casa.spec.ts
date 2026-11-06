@@ -683,7 +683,13 @@ test.describe("Accessibilità e regole CSS", () => {
           /--color-filo-2\)$/,
           "--color-filo-campo)",
         );
-        return !(rule.startsWith(".campo-rapido|") && copied.has(approved));
+        // Approved difference (#313, text up to 200%): .selettore has
+        // min-height instead of height, so a larger text does not overflow it.
+        const enlargedText = rule.replace(";height:", ";min-height:");
+        return !(
+          (rule.startsWith(".campo-rapido|") && copied.has(approved)) ||
+          (rule.startsWith(".selettore|") && copied.has(enlargedText))
+        );
       });
     expect(missing).toEqual([]);
   });

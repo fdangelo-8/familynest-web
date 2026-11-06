@@ -381,7 +381,7 @@ function WeekContent({ nowMs }: { nowMs: number }) {
     return (
       <main id="contenuto" tabIndex={-1} className="pagina pagina-desktop">
         {period}
-        {switcher}
+        <div className="contenitore-selettore">{switcher}</div>
         <DayStrip
           weekKey={weekKey}
           loaded={view !== null}
