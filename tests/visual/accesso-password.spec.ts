@@ -93,24 +93,24 @@ let enlargedText: CDPSession | undefined;
 async function shot(page: Page, name: string) {
   await settle(page);
   if (enlargedText) {
-    // A full-page screenshot of Playwright resets the browser font size and
-    // the picture would show the text at 100%: the whole page is captured with
-    // the protocol instead, keeping the enlarged text.
-    const { cssContentSize } = await enlargedText.send("Page.getLayoutMetrics");
-    const { data } = await enlargedText.send("Page.captureScreenshot", {
-      format: "png",
-      captureBeyondViewport: true,
-      clip: {
-        x: 0,
-        y: 0,
-        width: cssContentSize.width,
-        height: cssContentSize.height,
-        scale: 1,
-      },
-    });
-    expect(Buffer.from(data, "base64")).toMatchSnapshot(name, {
-      maxDiffPixelRatio: 0.02,
-    });
+    // A full-page screenshot resets the browser font size and the picture
+    // would show the text at 100%: the page is shot one screen at a time,
+    // scrolling, with the text still enlarged.
+    const screens = await page.evaluate(() =>
+      Math.min(
+        4,
+        Math.ceil(document.documentElement.scrollHeight / window.innerHeight),
+      ),
+    );
+    for (let index = 0; index < screens; index += 1) {
+      await page.evaluate(
+        (top) => window.scrollTo(0, top),
+        index * (await page.evaluate(() => window.innerHeight)),
+      );
+      await expect(page).toHaveScreenshot(
+        name.replace(".png", `-${index + 1}.png`),
+      );
+    }
     return;
   }
   await expect(page).toHaveScreenshot(name, { fullPage: true });
