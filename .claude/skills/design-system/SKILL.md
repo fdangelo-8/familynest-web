@@ -23,7 +23,7 @@ description: Design system di FamilyNest Web - token di colore, tipografia, spaz
   - Un elemento che contiene testo non ha `height`: `min-height` con lo stesso token. `height` resta solo su icone, avatar, interruttore, casella, puntina, `.btn-icona`, pallini.
   - Colonne di griglia `minmax(0, 1fr)`, mai `1fr`; una colonna fissa con testo `minmax(<token>, max-content)`. `body { overflow-wrap: break-word }`, niente `hyphens: auto`, niente `white-space: nowrap` su bottoni, chip, etichette, adesivi.
   - Puntini di sospensione solo dentro `.blocco-orario`.
-  - Le disposizioni per il testo grande si fanno con query di contenitore in rem, solo sui tre contenitori `barra` (`.nav-basso`), `riga` (`.riga-lista`, `.riga-regalo`) e `selettore` (`.contenitore-selettore`); mai media query per questo. Dettagli e regole per componente: `riferimento/componenti.md`, «Testo ingrandito».
+  - Le disposizioni per il testo grande si fanno con query di contenitore in rem, solo sui cinque contenitori `barra` (`.nav-basso`), `riga` (`.riga-lista`, `.riga-regalo`), `selettore` (`.contenitore-selettore`), `blocco` (`.blocco-orario`) e `avviso` (`.avviso`); mai media query per questo. Una parola più larga della colonna si spezza senza trattino, anche nei titoli: è accettato (#327). Dettagli e regole per componente: `riferimento/componenti.md`, «Testo ingrandito».
 - Se un valore manca, non si inventa: lo aggiunge il designer qui e in `docs/agenti/design/token.css`, con una issue `proposta-design` se cambia il mockup.
 - Niente Tailwind, niente librerie di componenti, niente CSS-in-JS.
 - Mobile first: si scrive prima il layout a 390 px, poi si adatta a 1280 px con media query.
