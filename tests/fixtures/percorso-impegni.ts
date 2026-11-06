@@ -54,6 +54,10 @@ export const section = (page: Page, name: string) =>
 export const inToday = (page: Page, title: string) =>
   page.getByRole("main").getByText(title);
 
+/** The same title, on screen only (rows of the layout in use). */
+export const visibleIn = (page: Page, title: string) =>
+  inToday(page, title).filter({ visible: true });
+
 // --------------------------------------------------------------------- Add
 
 const addDialog = (page: Page) =>
@@ -144,6 +148,27 @@ export async function openMonthDay(page: Page, day: string) {
 export const monthRowsOf = (page: Page, title: string) =>
   monthRows(page).filter({ hasText: title });
 
+/**
+ * Opens the detail of an event from the day view: on the phone the block is the
+ * link; on the desktop a click chooses the block and the panel «Impegno» has
+ * the link to the detail.
+ */
+export async function openDetailFromDay(page: Page, title: string) {
+  const block = eventBlocks(page, title);
+  if ((page.viewportSize()?.width ?? 0) < 1024) {
+    await block.click();
+    return;
+  }
+  const panel = page
+    .getByRole("heading", { level: 2, name: "Impegno", exact: true })
+    .locator("xpath=ancestor::section[1]");
+  await expect(async () => {
+    await block.click();
+    await expect(panel).toContainText(title, { timeout: 1000 });
+  }).toPass();
+  await panel.getByRole("link").first().click();
+}
+
 // ------------------------------------------------------------------ Search
 
 /** Opens the search (palette on desktop, page on mobile) and writes the text. */
@@ -183,6 +208,7 @@ export async function asOther(
   });
   try {
     const other = await context.newPage();
+    await useNestLens(other);
     await who.signIn(other);
     await body(other);
   } finally {

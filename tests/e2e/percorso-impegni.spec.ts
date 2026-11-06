@@ -27,6 +27,7 @@ import {
   inToday,
   monthRowsOf,
   openDay,
+  openDetailFromDay,
   openMonthDay,
   openToday,
   openWeek,
@@ -84,6 +85,11 @@ test.describe("percorso: aggiungo, ritrovo, modifico, elimino", () => {
       expect(new Date(yoga.starts_at).toISOString()).toBe(at(tomorrow, 17));
       expect(new Date(yoga.ends_at).toISOString()).toBe(at(tomorrow, 18));
       expect(yoga.visibility).toBe("household");
+      const { data: people } = await u.user.admin
+        .from("event_members")
+        .select("member_id")
+        .eq("event_id", yoga.id);
+      expect((people ?? []).map((row) => row.member_id)).toContain(u.ritaId);
 
       // 2. Aggiungi con il modulo: dopodomani alle 18, con luogo, ogni settimana.
       await addByForm(page, `${CUCINA} dopodomani alle 18`, {
@@ -123,7 +129,7 @@ test.describe("percorso: aggiungo, ritrovo, modifico, elimino", () => {
 
       // 4. Dettaglio: apro «Yoga Rita» dal giorno e ne sposto l'orario.
       await openDay(page, tomorrow);
-      await eventBlocks(page, YOGA).click();
+      await openDetailFromDay(page, YOGA);
       await expect(page).toHaveURL(new RegExp(`/impegni/${yoga.id}`));
       await expect(h1(page, YOGA)).toBeVisible();
       await waitHydrated(h1(page, YOGA));
@@ -139,7 +145,7 @@ test.describe("percorso: aggiungo, ritrovo, modifico, elimino", () => {
 
       // 5. Dettaglio: elimino tutta la serie «Corso di cucina» dalla prima volta.
       await openDay(page, dayAfter);
-      await eventBlocks(page, CUCINA).click();
+      await openDetailFromDay(page, CUCINA);
       await expect(page).toHaveURL(new RegExp(`/impegni/${cucina.id}`));
       await expect(h1(page, CUCINA)).toBeVisible();
       await waitHydrated(h1(page, CUCINA));

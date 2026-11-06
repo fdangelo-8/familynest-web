@@ -16,11 +16,11 @@ import {
   withEvents,
   withLinker,
 } from "../fixtures/calendari-collegati";
-import { eventRows } from "../fixtures/oggi";
 import {
   closeStarterList,
   eventBlocks,
   inToday,
+  visibleIn,
   monthRowsOf,
   openDay,
   openMonthDay,
@@ -29,7 +29,6 @@ import {
   searchEmpty,
   searchFor,
   searchRows,
-  section,
   useNestLens,
   weekLinks,
 } from "../fixtures/percorso-impegni";
@@ -102,9 +101,8 @@ test.describe("percorso: collego, sincronizzo, scollego", () => {
       await expect(searchRows(page, VISITA)).toHaveCount(1);
       await openToday(page);
       await expect(inToday(page, VISITA).first()).toBeAttached();
-      const domani = section(page, "Domani");
-      await expect(domani).toBeVisible();
-      await expect(eventRows(domani)).toContainText(CENA);
+      // Domani (desktop) o «Questa settimana» (telefono, con un impegno oggi).
+      await expect(visibleIn(page, CENA).first()).toBeVisible();
 
       // 5. Il fornitore cambia: la visita sparisce, la cena si sposta, arriva
       // il dentista; dopo la sincronizzazione il Nest si allinea.
@@ -141,10 +139,8 @@ test.describe("percorso: collego, sincronizzo, scollego", () => {
       await expect(eventBlocks(page, CENA)).toHaveCount(1);
       await openToday(page);
       await expect(inToday(page, VISITA)).toHaveCount(0);
-      await expect(eventRows(section(page, "Domani"))).toContainText([
-        DENTISTA,
-        CENA,
-      ]);
+      await expect(visibleIn(page, DENTISTA).first()).toBeVisible();
+      await expect(visibleIn(page, CENA).first()).toBeVisible();
       await searchFor(page, "banca");
       await expect(searchEmpty(page)).toBeVisible();
 
@@ -173,7 +169,6 @@ test.describe("percorso: collego, sincronizzo, scollego", () => {
       await openMonthDay(page, tomorrow());
       await expect(monthRowsOf(page, CENA)).toHaveCount(0);
       await openToday(page);
-      await expect(section(page, "Domani")).toHaveCount(0);
       await expect(inToday(page, CENA)).toHaveCount(0);
       await searchFor(page, "cena");
       await expect(searchEmpty(page)).toBeVisible();
