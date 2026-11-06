@@ -14,7 +14,11 @@ export type AuthFormProps = {
 /** «Torna all'accesso»: only on the split screen, where there is no arrow. */
 export function ToAccessLink({ href = "/accesso" }: { href?: string }) {
   return (
-    <Button variant="link" href={href} className={styles.desktopOnly}>
+    <Button
+      variant="link"
+      href={href}
+      className={"split-onboarding__solo-desktop"}
+    >
       Torna all&apos;accesso
     </Button>
   );
@@ -23,7 +27,7 @@ export function ToAccessLink({ href = "/accesso" }: { href?: string }) {
 /** Same link alone in its row (the row disappears with it below 1024 px). */
 export function ToAccessRow({ href }: { href?: string }) {
   return (
-    <div className={cx("gruppo-chip", styles.desktopOnly)}>
+    <div className={cx("gruppo-chip", "split-onboarding__solo-desktop")}>
       <ToAccessLink href={href} />
     </div>
   );
@@ -91,36 +95,40 @@ export function AuthLayout({
   );
   return (
     <main className={styles.root}>
-      <div className={styles.layout}>
-        <div className={cx("split-onboarding__notte", styles.panel)}>
+      <div className="split-onboarding split-onboarding--unico">
+        <div className={"split-onboarding__notte"}>
           <Brand />
           <Stickers />
           <Claim as="p" />
         </div>
-        <div className={cx("passo-onboarding", styles.step)}>
-          <div className={cx("passo-onboarding__testa", styles.head)}>
+        <div
+          className={"split-onboarding__passo split-onboarding__passo--unico"}
+        >
+          <div className={"passo-onboarding__testa"}>
             {back ? <BackLink href={back} /> : <span aria-hidden="true" />}
             <span aria-hidden="true" />
             <span className="barra__vuoto" aria-hidden="true" />
           </div>
-          <div className={styles.mid}>
+          <div className={"split-onboarding__mid"}>
             {intro}
             {form ? (
               <form
                 method="post"
                 action={form.action}
                 id={form.id}
-                className={styles.block}
+                className={"split-onboarding__blocco"}
                 noValidate
                 onSubmit={form.onSubmit}
               >
                 {inner}
               </form>
             ) : (
-              <div className={styles.block}>{inner}</div>
+              <div className={"split-onboarding__blocco"}>{inner}</div>
             )}
           </div>
-          {legal ? <div className={styles.legal}>{legal}</div> : null}
+          {legal ? (
+            <div className={"split-onboarding__legale"}>{legal}</div>
+          ) : null}
         </div>
       </div>
     </main>
