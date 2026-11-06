@@ -36,7 +36,7 @@ import {
   searchFor,
   searchRows,
   section,
-  useNestLens,
+  setNestLens,
   weekLinks,
 } from "../fixtures/percorso-impegni";
 import {
@@ -75,7 +75,7 @@ test.describe("percorso: aggiungo, ritrovo, modifico, elimino", () => {
       const nextWeek = addDays(dayAfter, 7);
 
       await closeStarterList(u);
-      await useNestLens(page);
+      await setNestLens(page);
       await u.signIn(page);
 
       // 1. Aggiungi con la frase: «domani alle 17», con Rita tra le persone.

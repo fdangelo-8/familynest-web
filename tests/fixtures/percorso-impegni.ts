@@ -19,7 +19,7 @@ const GREETING = /^(Buongiorno|Buon pomeriggio|Buonasera|Eccoti)/;
 const escapeRe = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 /** The lens «Nest» for the whole session of the page, so every page lists all. */
-export async function useNestLens(page: Page) {
+export async function setNestLens(page: Page) {
   await page.addInitScript((key) => {
     window.sessionStorage.setItem(key, "nest");
   }, LENS_KEY);
@@ -208,7 +208,7 @@ export async function asOther(
   });
   try {
     const other = await context.newPage();
-    await useNestLens(other);
+    await setNestLens(other);
     await who.signIn(other);
     await body(other);
   } finally {

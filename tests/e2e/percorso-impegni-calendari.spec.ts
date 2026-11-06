@@ -29,7 +29,7 @@ import {
   searchEmpty,
   searchFor,
   searchRows,
-  useNestLens,
+  setNestLens,
   weekLinks,
 } from "../fixtures/percorso-impegni";
 
@@ -67,7 +67,7 @@ test.describe("percorso: collego, sincronizzo, scollego", () => {
         endsAt: at(tomorrow(), 22),
       };
       await closeStarterList(u);
-      await useNestLens(page);
+      await setNestLens(page);
 
       // 1. Collego Google dalla pagina (stato vuoto -> consenso -> ritorno).
       await linkAs(u, page, withEvents(GOOGLE, { personale: [visita, cena] }));
