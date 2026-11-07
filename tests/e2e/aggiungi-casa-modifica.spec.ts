@@ -11,13 +11,16 @@ import {
   expectGone,
   expectCard,
   goneMessage,
+  assigneesOf,
   holdRequests,
+  idsOf,
   labelText,
   openCasaPage,
   openDirect,
   openEditFromRow,
   pauseClock,
   recordNetwork,
+  refuseRpc,
   refuseWrites,
   seedDeadline,
   sheet,
@@ -54,9 +57,13 @@ async function seedGita(casa: CasaNest) {
   });
 }
 
-/** CA-36: the change of CA-36 made in the edit sheet (Laura, «entro lunedì»). */
+/**
+ * CA-36: the change of CA-36 made in the edit sheet: Marco is taken off and
+ * Laura put on (#333: a tap adds or removes one person), «entro lunedì».
+ */
 async function giveToLauraMonday(page: Page) {
   const s = sheet(page, "edit");
+  await s.person("Tu").click();
   await s.person("Laura").click();
   await s.field.focus();
   await s.field.press("Control+End");
@@ -81,10 +88,76 @@ test.describe("Aggiungi · modifica · Da fare", () => {
     ).toBeVisible();
     await expect(s.types).toHaveCount(0);
     await expect(s.field).toHaveValue(GITA);
-    await expect(labelText(page, "Entro venerdì")).toBeVisible();
+    await expect(s.date).toHaveValue("2026-10-23");
     await expect(labelText(page, /Per Sofia$/)).toBeVisible();
     await expect(s.person("Tu")).toHaveAttribute("aria-pressed", "true");
+    await s.expectVoice(SHARED);
     await expect(s.button("Salva")).toBeVisible();
+  });
+
+  // #333 (R6, CA-12): the date is a field; emptying it saves a thing with no date.
+  test("CA-12: svuotare «Data» e salvare toglie la data e lascia il titolo", async ({
+    page,
+    baseURL,
+    casa,
+  }) => {
+    await seedGita(casa);
+    await openEditFromRow(page, baseURL, casa, "Marco", GITA);
+    const s = sheet(page, "edit");
+    await expect(s.date).toHaveValue("2026-10-23");
+    await s.date.fill("");
+    await s.button("Salva").click();
+
+    await expect(toastWith(page, "Modifiche salvate.")).toBeVisible();
+    await expect
+      .poll(async () => {
+        const [row] = await todosOf(casa, "Marco");
+        return [row?.due_date ?? null, row?.title];
+      })
+      .toEqual([null, GITA]);
+  });
+
+  test("CA-19: aprire in Modifica una cosa con Marco e Laura: scelti «Tu» e «Laura»; toglierla, aggiungere Sofia, salvare e «Annulla» rimette Marco e Laura", async ({
+    page,
+    baseURL,
+    casa,
+  }) => {
+    const id = await casa.todo("Marco", {
+      title: GITA,
+      forMember: "Sofia",
+      assignee: "Marco",
+      due: "2026-10-23",
+    });
+    // Laura as well (the page of the thing is read from the people table)
+    const { error } = await casa.users["Marco"]!.client.rpc("update_todo", {
+      p_todo_id: id,
+      p_title: GITA,
+      p_assignee_member_ids: [casa.members["Marco"]!, casa.members["Laura"]!],
+      p_for_member_id: casa.members["Sofia"]!,
+      p_due_date: "2026-10-23",
+      p_is_private: false,
+    });
+    expect(error).toBeNull();
+    await openEditFromRow(page, baseURL, casa, "Marco", GITA);
+    const s = sheet(page, "edit");
+    await expect(s.person("Tu")).toHaveAttribute("aria-pressed", "true");
+    await expect(s.person("Laura")).toHaveAttribute("aria-pressed", "true");
+    await expect(s.person("Sofia")).toHaveAttribute("aria-pressed", "false");
+
+    await s.person("Laura").click();
+    await s.person("Sofia").click();
+    await s.button("Salva").click();
+    const toast = toastWith(page, "Modifiche salvate.");
+    await expect(toast).toBeVisible();
+    await expect
+      .poll(() => assigneesOf(casa, "Marco", "todo", id))
+      .toEqual(idsOf(casa, ["Marco", "Sofia"]));
+
+    await pauseClock(page);
+    await toast.getByRole("button", { name: "Annulla" }).click();
+    await expect
+      .poll(() => assigneesOf(casa, "Marco", "todo", id))
+      .toEqual(idsOf(casa, ["Marco", "Laura"]));
   });
 
   test("CA-36: scegliere «Laura» e aggiungere «entro lunedì» salva, mostra «Modifiche salvate.» con «Annulla» e aggiorna la riga", async ({
@@ -108,7 +181,7 @@ test.describe("Aggiungi · modifica · Da fare", () => {
     );
   });
 
-  test("CA-37: «Togli la data» e «Togli Per Sofia» salvano la cosa senza data e senza «per chi è»", async ({
+  test("CA-37: «Data» vuota e «Togli Per Sofia» salvano la cosa senza data e senza «per chi è»", async ({
     page,
     baseURL,
     casa,
@@ -116,7 +189,7 @@ test.describe("Aggiungi · modifica · Da fare", () => {
     await seedGita(casa);
     await openEditFromRow(page, baseURL, casa, "Marco", GITA);
     const s = sheet(page, "edit");
-    await s.button("Togli la data").click();
+    await s.date.fill("");
     await s.button("Togli Per Sofia").click();
     await s.button("Salva").click();
 
@@ -180,7 +253,8 @@ test.describe("Aggiungi · modifica · Da fare", () => {
     expect(await todosOf(casa, "Marco")).toHaveLength(1);
   });
 
-  test("CA-40: il bottone della visibilità c'è solo per chi ha creato la cosa; per gli altri c'è l'etichetta fissa", async ({
+  // #333 (decision 4, CA-21): the two voices are always shown; only the author changes them.
+  test("CA-21: le due voci della visibilità si vedono sempre ma le cambia solo chi ha creato la cosa", async ({
     page,
     baseURL,
     bianchi,
@@ -195,13 +269,105 @@ test.describe("Aggiungi · modifica · Da fare", () => {
       mode: "edit",
     });
     const s = sheet(page, "edit");
-    await expect(s.visibility).toHaveCount(0);
-    await expect(labelText(page, SHARED)).toBeVisible();
+    await expect(s.voice(SHARED)).toBeVisible();
+    await expect(s.voice(PRIVATE)).toBeVisible();
+    await s.expectVoice(SHARED);
+    // Not the author: the voices do not change
+    await expect(s.voice(PRIVATE)).toBeDisabled();
+    await expect(s.voice(SHARED)).toBeDisabled();
+    // A change elsewhere saves, and the thing stays shared
+    await s.field.focus();
+    await s.field.press("Control+End");
+    await s.field.pressSequentially(" domani");
+    await s.button("Salva").click();
+    await expect(toastWith(page, "Modifiche salvate.")).toBeVisible();
+    const byId = async () =>
+      (await todosOf(bianchi, "Paolo")).find((row) => row.id === byPaolo.id);
+    await expect.poll(async () => (await byId())?.due_date).toBe("2026-10-21");
+    expect((await byId())!.is_private).toBe(false);
 
     await page.goto(editUrl(byGiulia.id));
     await waitForSheet(page, "edit");
     await expect(s.field).toHaveValue("Ritirare il pacco");
-    await expect(s.visibility).toHaveAccessibleName(SHARED);
+    await s.expectVoice(SHARED);
+    await expect(s.voice(PRIVATE)).toBeEnabled();
+    await s.voice(PRIVATE).click();
+    await s.expectVoice(PRIVATE);
+  });
+
+  // Specifica grafica §6: the locked voices say why, and the focus never leaves the sheet.
+  test("CA-21: per chi non è l'autore una frase spiega perché le voci non cambiano; «Togli Per Leo» lascia il fuoco sul campo", async ({
+    page,
+    baseURL,
+    bianchi,
+  }) => {
+    const id = await bianchi.todo("Paolo", {
+      title: PALESTRA,
+      forMember: "Leo",
+    });
+    await openDirect(page, baseURL, bianchi, "Giulia", editUrl(id), {
+      mode: "edit",
+    });
+    const s = sheet(page, "edit");
+    await expect(s.visibility).toHaveAccessibleDescription(
+      "Lo decide Paolo, che l'ha creata.",
+    );
+    await s.button("Togli Per Leo").click();
+    await expect(labelText(page, /Per Leo$/)).toHaveCount(0);
+    // No voice can take the focus (they are disabled): it goes to the field
+    await expect(s.field).toBeFocused();
+  });
+
+  test("CA-21: una scadenza condivisa di Paolo modificata da Giulia resta condivisa", async ({
+    page,
+    baseURL,
+    bianchi,
+  }) => {
+    const id = await seedDeadline(bianchi, "Paolo", {
+      title: BOLLO,
+      due: "2026-12-07",
+    });
+    await openDirect(page, baseURL, bianchi, "Giulia", editUrl(id), {
+      mode: "edit",
+    });
+    const s = sheet(page, "edit");
+    await s.expectVoice(SHARED);
+    await expect(s.voice(PRIVATE)).toBeDisabled();
+    await s.field.focus();
+    await s.field.press("Control+End");
+    await s.field.pressSequentially(" scade il 9 dicembre");
+    await s.button("Salva").click();
+    await expect(toastWith(page, "Modifiche salvate.")).toBeVisible();
+    await expect
+      .poll(
+        async () =>
+          (await deadlinesOf(bianchi, "Paolo")).find((row) => row.id === id)
+            ?.due_date,
+      )
+      .toBe("2026-12-09");
+    const row = (await deadlinesOf(bianchi, "Paolo")).find((r) => r.id === id);
+    expect(row!.is_private).toBe(false);
+  });
+
+  test("«Preso dalla frase»: compare sotto la data solo quando la frase la dice, sparisce al cambio a mano", async ({
+    page,
+    baseURL,
+    casa,
+  }) => {
+    const id = await seedGita(casa);
+    await openDirect(page, baseURL, casa, "Marco", editUrl(id), {
+      mode: "edit",
+    });
+    const s = sheet(page, "edit");
+    // In Modifica the saved values are not «from the phrase» (R6)
+    await expect(s.dialog.getByText("Preso dalla frase")).toHaveCount(0);
+    await s.field.focus();
+    await s.field.press("Control+End");
+    await s.field.pressSequentially(" entro lunedì");
+    await expect(s.date).toHaveValue("2026-10-26");
+    await expect(s.date).toHaveAccessibleDescription("Preso dalla frase");
+    await s.date.fill("2026-10-27");
+    await expect(s.dialog.getByText("Preso dalla frase")).toHaveCount(0);
   });
 
   test("CA-43: se Paolo elimina la cosa mentre Giulia ha il foglio aperto, «Salva» dà «non c'è più» e non crea niente", async ({
@@ -302,8 +468,8 @@ test.describe("Aggiungi · modifica · «Annulla» dopo «Salva»", () => {
       mode: "edit",
     });
     const s = sheet(page, "edit");
-    await s.visibility.click();
-    await expect(s.visibility).toHaveAccessibleName(PRIVATE);
+    await s.voice(PRIVATE).click();
+    await s.expectVoice(PRIVATE);
     await s.reminder("7 giorni").click();
     await s.field.fill("Bollo auto scade il 9 dicembre");
     await s.button("Salva").click();
@@ -345,9 +511,9 @@ test.describe("Aggiungi · modifica · «Annulla» dopo «Salva»", () => {
       mode: "edit",
     });
     const s = sheet(page, "edit");
-    await expect(s.visibility).toHaveAccessibleName(PRIVATE);
-    await s.visibility.click();
-    await expect(s.visibility).toHaveAccessibleName(SHARED);
+    await s.expectVoice(PRIVATE);
+    await s.voice(SHARED).click();
+    await s.expectVoice(SHARED);
     await s.button("Salva").click();
 
     const toast = toastWith(page, "Modifiche salvate.");
@@ -378,7 +544,7 @@ test.describe("Aggiungi · modifica · «Annulla» dopo «Salva»", () => {
       .toBe("2026-10-26");
 
     await pauseClock(page);
-    await refuseWrites(page, "todos", "PATCH");
+    await refuseRpc(page, "update_todo");
     await toast.getByRole("button", { name: "Annulla" }).click();
 
     const failed = toastWith(
@@ -490,7 +656,7 @@ test.describe("Aggiungi · modifica · Scadenza", () => {
     expect(await deadlinesOf(casa, "Marco")).toHaveLength(0);
   });
 
-  test("CA-67: per una scadenza condivisa di Paolo Giulia vede l'etichetta fissa; Paolo con la sua «Solo io» vede il dialogo «tue scadenze»", async ({
+  test("CA-67: per una scadenza condivisa di Paolo Giulia vede le due voci ma non le cambia; Paolo con la sua «Solo io» vede il dialogo «tue scadenze»", async ({
     page,
     baseURL,
     bianchi,
@@ -510,14 +676,14 @@ test.describe("Aggiungi · modifica · Scadenza", () => {
       mode: "edit",
     });
     const s = sheet(page, "edit");
-    await expect(s.visibility).toHaveCount(0);
-    await expect(labelText(page, SHARED)).toBeVisible();
+    await s.expectVoice(SHARED);
+    await expect(s.voice(PRIVATE)).toBeDisabled();
 
     // Same browser, Paolo's session now.
     await bianchi.signIn(page, baseURL, "Paolo");
     await page.goto(editUrl(mine));
     await waitForSheet(page, "edit");
-    await expect(s.visibility).toHaveAccessibleName(PRIVATE);
+    await s.expectVoice(PRIVATE);
     await s.button("Elimina scadenza").click();
     const confirm = confirmOf(page, "Assicurazione della casa");
     await expect(confirm).toBeVisible();
@@ -612,7 +778,7 @@ test.describe("Aggiungi · modifica · isolamento tra Nest", () => {
 // ------------------------------------------------------- Fuoco ed eliminazione
 
 test.describe("Aggiungi · modifica · fuoco ed errori", () => {
-  test("CA-68: «Togli la data» porta il fuoco su «Togli Per Sofia», che lo porta sul bottone della visibilità", async ({
+  test("CA-68: «Togli Per Sofia» porta il fuoco sulla voce scelta della visibilità", async ({
     page,
     baseURL,
     casa,
@@ -621,13 +787,9 @@ test.describe("Aggiungi · modifica · fuoco ed errori", () => {
     await openEditFromRow(page, baseURL, casa, "Marco", GITA);
     const s = sheet(page, "edit");
 
-    await s.button("Togli la data").click();
-    await expect(labelText(page, /^Entro /)).toHaveCount(0);
-    await expect(s.button("Togli Per Sofia")).toBeFocused();
-
     await s.button("Togli Per Sofia").click();
     await expect(labelText(page, /Per Sofia$/)).toHaveCount(0);
-    await expect(s.visibility).toBeFocused();
+    await expect(s.voice(SHARED)).toBeFocused();
   });
 
   test("CA-69: dopo «Salva» il fuoco torna sul titolo «Modifica: …» della riga", async ({

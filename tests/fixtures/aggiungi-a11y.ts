@@ -36,6 +36,9 @@ export function focused(page: Page) {
  * control or on something inside it. Returns the points that land elsewhere.
  */
 export async function missedPoints(control: Locator, min = 44) {
+  // The desktop modal scrolls when the fields are many (#333): the control is
+  // measured where a person would tap it, in view.
+  await control.scrollIntoViewIfNeeded();
   const box = await control.boundingBox();
   if (!box) throw new Error("the control is not visible");
   const w = Math.max(box.width, min);

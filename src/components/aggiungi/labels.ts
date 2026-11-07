@@ -22,17 +22,12 @@ export const UNDO_FAILED_TEXT =
 export const MEMBERS_FAILED_TEXT =
   "Non riusciamo a caricare le persone del Nest, quindi i nomi non vengono riconosciuti. Controlla la connessione e riprova.";
 
-const HINT = "scrivi per esempio «dentista giovedì alle 16».";
-const MISSING_TITLE = `Manca cosa c'è da fare: ${HINT}`;
-const MISSING_DAY_AND_TIME = `Mancano il giorno e l'ora: ${HINT}`;
-const MISSING_TIME = `Manca l'ora: ${HINT}`;
+const MISSING_TITLE =
+  "Manca cosa c'è da fare: scrivi per esempio «dentista giovedì alle 16».";
 
-/** The message under the field, or null when the phrase can be saved. */
+/** The message under the phrase (the title), or null when the phrase can be saved. */
 export function validatePhrase(parsed: ParsedPhrase): string | null {
   if (parsed.title === "") return MISSING_TITLE;
-  if (parsed.dayKey === null && parsed.time === null)
-    return MISSING_DAY_AND_TIME;
-  if (parsed.time === null) return MISSING_TIME;
   if ([...parsed.title].length > TITLE_MAX_LENGTH) return ERROR_TEXTS.titleLong;
   return null;
 }

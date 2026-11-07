@@ -128,17 +128,15 @@ test.describe("Aggiungi · riconoscimento della frase", () => {
     expect(slot?.startsAt.toISOString()).toBe("2026-10-20T16:00:00.000Z");
   });
 
+  // #333: under the phrase only the title is checked; «Manca il giorno.» and
+  // «Manca l'ora.» are under their fields (aggiungi-campi.spec.ts).
   test("CA-22, CA-23, CA-24: messaggi sotto il campo", () => {
     const hint = "scrivi per esempio «dentista giovedì alle 16».";
     expect(validatePhrase(read("giovedì").parsed)).toBe(
       `Manca cosa c'è da fare: ${hint}`,
     );
-    expect(validatePhrase(read("dentista giovedì").parsed)).toBe(
-      `Manca l'ora: ${hint}`,
-    );
-    expect(validatePhrase(read("dentista").parsed)).toBe(
-      `Mancano il giorno e l'ora: ${hint}`,
-    );
+    expect(validatePhrase(read("dentista giovedì").parsed)).toBe(null);
+    expect(validatePhrase(read("dentista").parsed)).toBe(null);
     const long100 = read(`${"a".repeat(100)} domani alle 10`).parsed;
     expect(validatePhrase(long100)).toBe(null);
     expect(long100.title).toMatch(/^A/);

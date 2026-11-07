@@ -1,4 +1,4 @@
-import { type Locator, type Page } from "@playwright/test";
+import { type Page } from "@playwright/test";
 import { waitForAnimationsToEnd } from "../fixtures/animations";
 import { expect, isMobileProject, test } from "../fixtures/casa";
 import {
@@ -11,7 +11,7 @@ import {
   eventsOf,
   failMembersList,
   fieldOf,
-  labelsOf,
+  impegnoFields,
   listedFor,
   noticeOf,
   openAdd,
@@ -47,11 +47,6 @@ const SAVED_TOAST = "Messo in giovedì 22: Nuoto Sofia alle 17:00.";
 const submitButton = (page: Page, name: string) =>
   dialogOf(page).getByRole("button", { name });
 
-/** Every text is among the labels (order is checked only where the criterion asks). */
-async function expectLabels(labels: Locator, texts: string[]) {
-  for (const text of texts) await expect(labels).toContainText(text);
-}
-
 /** The text of the toast with the bold part (the day) kept inside the sentence. */
 async function expectSavedToast(page: Page, text: string) {
   await expect(toastOf(page)).toContainText(text);
@@ -68,11 +63,13 @@ test.describe("Aggiungi · Impegni · salvataggio", () => {
     await openAdd(page, baseURL, casa, "Marco", { lens: "io" });
     await fieldOf(page).fill(PHRASE);
 
-    await expect(labelsOf(page).locator(".chip")).toContainText([
-      "Giovedì 22",
-      "17:00",
-      "Sofia",
-    ]);
+    // #333: the fields show what the phrase says (no chips under the field)
+    const f = impegnoFields(page);
+    await expect(f.day).toHaveValue("2026-10-22");
+    await expect(f.from).toHaveValue("17:00");
+    await expect(f.to).toHaveValue("18:00");
+    await f.expectWho(["Sofia"]);
+    await f.expectVisibility("Occupato");
     await submitButton(page, "Metti in giovedì 22").click();
 
     await expect(dialogOf(page)).toHaveCount(0);
@@ -126,7 +123,7 @@ test.describe("Aggiungi · Impegni · salvataggio", () => {
     );
   });
 
-  test("CA-14: «dentista il 7 novembre alle 16» ha la sola etichetta «Tu» e salva Marco", async ({
+  test("CA-14: «dentista il 7 novembre alle 16» ha scelto il solo «Tu» e salva Marco", async ({
     page,
     baseURL,
     casa,
@@ -135,12 +132,12 @@ test.describe("Aggiungi · Impegni · salvataggio", () => {
     const field = fieldOf(page);
     await field.fill("dentista il 7 novembre alle 16");
 
-    // The only person label is «Tu»: the other labels are the day and the hour.
-    const labels = labelsOf(page);
-    await expectLabels(labels, ["Sabato 7 novembre", "16:00", "Tu"]);
-    for (const name of ["Marco", "Laura", "Sofia", "Tommaso", "Biscotto"]) {
-      await expect(labels.getByText(name, { exact: true })).toHaveCount(0);
-    }
+    // The only person chosen is «Tu»; the day and the hour are in the fields.
+    const f = impegnoFields(page);
+    await expect(f.day).toHaveValue("2026-11-07");
+    await expect(f.from).toHaveValue("16:00");
+    await f.expectWho(["Tu"]);
+    await expect(f.person("Marco")).toHaveCount(0);
 
     await field.press("Enter");
     await expect(dialogOf(page)).toHaveCount(0);
@@ -323,10 +320,11 @@ test.describe("Aggiungi · Impegni · caricamento ed errori", () => {
     );
 
     await fieldOf(page).fill(PHRASE);
-    await expectLabels(labelsOf(page), ["Giovedì 22", "17:00"]);
-    await expect(
-      labelsOf(page).getByText("Sofia", { exact: true }),
-    ).toHaveCount(0);
+    const f = impegnoFields(page);
+    await expect(f.day).toHaveValue("2026-10-22");
+    await expect(f.from).toHaveValue("17:00");
+    // Without the list of people there is no «Chi» to show
+    await expect(f.who).toHaveCount(0);
     await submitButton(page, "Metti in giovedì 22").click();
     await expect(dialogOf(page)).toHaveCount(0);
     await expectSavedToast(page, SAVED_TOAST);
@@ -353,15 +351,17 @@ test.describe("Aggiungi · Impegni · caricamento ed errori", () => {
     await expect(alertsIn(dialog)).toHaveCount(0);
 
     await fieldOf(page).fill("Sofia");
-    // Without a time the labels only show the person.
-    await expectLabels(labelsOf(page), ["Sofia"]);
+    // Without a time the fields only show the person.
+    await impegnoFields(page).expectWho(["Sofia"]);
   });
 });
 
 // ----------------------------------------------------------------- Avviso e anteprima
 
 test.describe("Aggiungi · Impegni · «chi accompagna?» e anteprima", () => {
-  test("CA-29: l'avviso «chi accompagna Sofia?» c'è, uno solo, e su desktop l'anteprima è nell'ordine giusto", async ({
+  // #333 (answer 2 of Francesco): the preview of the day goes away together with the
+  // column of the examples; the notice stays, under the fields, on both layouts.
+  test("CA-29: l'avviso «chi accompagna Sofia?» c'è, uno solo, sotto i campi e sopra il bottone; non c'è l'anteprima della giornata", async ({
     page,
     baseURL,
     casa,
@@ -373,69 +373,26 @@ test.describe("Aggiungi · Impegni · «chi accompagna?» e anteprima", () => {
     await expect(notice).toHaveCount(1, { timeout: 15_000 });
     await expect(page.getByText(NOTICE_LAURA)).toHaveCount(1);
 
+    // Under the fields and, on mobile, above the submit button
+    const visibilityBox = await impegnoFields(page).visibility.boundingBox();
+    const noticeBox = await notice.boundingBox();
+    expect(noticeBox!.y).toBeGreaterThanOrEqual(
+      visibilityBox!.y + visibilityBox!.height - 1,
+    );
     if (isMobileProject()) {
-      // Under the labels and above the submit button, without the rest of the preview.
-      const labelsBox = await labelsOf(page).boundingBox();
-      const noticeBox = await notice.boundingBox();
       const buttonBox = await submitButton(
         page,
         "Metti in giovedì 22",
       ).boundingBox();
-      expect(noticeBox!.y).toBeGreaterThanOrEqual(
-        labelsBox!.y + labelsBox!.height - 1,
-      );
       expect(noticeBox!.y + noticeBox!.height).toBeLessThanOrEqual(
         buttonBox!.y + 1,
       );
-      await expect(dialogOf(page).getByText("Anteprima")).toHaveCount(0);
-      await expect(
-        dialogOf(page).getByText("Colloquio con la maestra"),
-      ).toHaveCount(0);
-      return;
     }
-
-    const side = sideOf(page);
-    await expect(side.getByText("Nuovo", { exact: true })).toBeVisible();
-    // Order of the column (textContent: CSS capitals do not matter).
-    const text = (await side.textContent()) ?? "";
-    let position = 0;
-    for (const piece of [
-      "Anteprima",
-      "17:00",
-      "Nuoto Sofia",
-      "Giovedì 22, fino alle 18:00",
-      "Giovedì 22",
-      "16:30",
-      "Colloquio con la maestra",
-      "17:00",
-      "Nuoto Sofia",
-      "Nuovo",
-      NOTICE_LAURA,
-    ]) {
-      const found = text.indexOf(piece, position);
-      expect(found, `«${piece}» dopo la posizione ${position}`).toBeGreaterThan(
-        -1,
-      );
-      position = found + piece.length;
-    }
-
-    // The rows of the day are not links and do not take the focus.
-    const colloquio = side
-      .locator(".riga-evento")
-      .filter({ hasText: "Colloquio con la maestra" });
-    await expect(colloquio).toHaveCount(1);
-    await expect(colloquio.getByText("16:30")).toBeVisible();
-    await expect(side.getByRole("link")).toHaveCount(0);
+    await expect(dialogOf(page).getByText("Anteprima")).toHaveCount(0);
+    await expect(sideOf(page)).toHaveCount(0);
     await expect(
-      side.locator(".riga-evento").filter({ hasText: "Nuovo" }),
-    ).toHaveCount(1);
-    for (let i = 0; i < 6; i += 1) {
-      await page.keyboard.press("Tab");
-      expect(
-        await colloquio.evaluate((el) => el.contains(document.activeElement)),
-      ).toBe(false);
-    }
-    expect(await colloquio.evaluate((el) => el.tabIndex)).toBe(-1);
+      dialogOf(page).getByText("Colloquio con la maestra"),
+    ).toHaveCount(0);
   });
 
   test("CA-30: l'avviso non c'è senza figli o senza adulti occupati, e nomina più figli", async ({
@@ -454,12 +411,15 @@ test.describe("Aggiungi · Impegni · «chi accompagna?» e anteprima", () => {
       { timeout: 15_000 },
     );
 
+    const f = impegnoFields(page);
     await field.fill("Riunione giovedì alle 17");
-    await expectLabels(labelsOf(page), ["Giovedì 22", "17:00"]);
+    await expect(f.day).toHaveValue("2026-10-22");
+    await expect(f.from).toHaveValue("17:00");
     await expect(noticeOf(page)).toHaveCount(0);
 
     await field.fill("Nuoto Sofia giovedì alle 19");
-    await expectLabels(labelsOf(page), ["Giovedì 22", "19:00", "Sofia"]);
+    await expect(f.from).toHaveValue("19:00");
+    await f.expectWho(["Sofia"]);
     await expect(noticeOf(page)).toHaveCount(0);
 
     await field.fill("Nuoto Sofia e Tommaso giovedì alle 17");
@@ -496,15 +456,6 @@ test.describe("Aggiungi · Impegni · «chi accompagna?» e anteprima", () => {
       hasText: "Paolo ha un impegno fino alle 18:00: chi accompagna Leo?",
     });
     await expect(notice).toHaveCount(1, { timeout: 15_000 });
-
-    if (!isMobileProject()) {
-      const side = sideOf(page);
-      const row = side.locator(".riga-evento").filter({ hasText: "Paolo" });
-      await expect(row).toHaveCount(1);
-      await expect(row.getByText("16:00")).toBeVisible();
-      expect(await row.evaluate((el) => el.tagName)).not.toBe("A");
-      await expect(side.getByRole("link")).toHaveCount(0);
-    }
 
     // Nothing of the title or of the «Solo io» reaches the page or the answers.
     const body = (await page.locator("body").textContent()) ?? "";
@@ -585,11 +536,14 @@ test.describe("Aggiungi · Impegni · isolamento tra Nest", () => {
     await openAdd(page, baseURL, bianchi, "Giulia");
     await fieldOf(page).fill(PHRASE);
 
-    // Giulia's Nest has no Sofia: only the day, the hour and «Tu» (CA-14).
-    // «Tu» appears once the people are read, so the absence below is real.
-    const labels = labelsOf(page);
-    await expectLabels(labels, ["Giovedì 22", "17:00", "Tu"]);
-    await expect(labels.getByText("Sofia", { exact: true })).toHaveCount(0);
+    // Giulia's Nest has no Sofia: only «Tu» is chosen (CA-14) and Sofia is not
+    // among the people. «Tu» appears once the people are read, so the absence
+    // below is real.
+    const f = impegnoFields(page);
+    await expect(f.day).toHaveValue("2026-10-22");
+    await expect(f.from).toHaveValue("17:00");
+    await f.expectWho(["Tu"]);
+    await expect(f.person("Sofia")).toHaveCount(0);
 
     await submitButton(page, "Metti in giovedì 22").click();
     await expect(dialogOf(page)).toHaveCount(0);
@@ -625,8 +579,10 @@ test.describe("Aggiungi · Impegni · isolamento tra Nest", () => {
     const network = recordNetwork(page);
     await openAdd(page, baseURL, bianchi, "Giulia");
     await fieldOf(page).fill("Nuoto Leo giovedì alle 17");
-    await expectLabels(labelsOf(page), ["Giovedì 22", "17:00", "Leo"]);
-    await dayRead(page, !isMobileProject());
+    const f = impegnoFields(page);
+    await expect(f.from).toHaveValue("17:00");
+    await f.expectWho(["Leo"]);
+    await dayRead(page);
 
     await expect(noticeOf(page)).toHaveCount(0);
     const body = (await page.locator("body").textContent()) ?? "";
@@ -666,7 +622,9 @@ test.describe("Aggiungi · Impegni · privacy della frase", () => {
     });
     const network = recordNetwork(page);
     await fieldOf(page).pressSequentially(PHRASE);
-    await expectLabels(labelsOf(page), ["Giovedì 22", "17:00", "Sofia"]);
+    const f = impegnoFields(page);
+    await expect(f.from).toHaveValue("17:00");
+    await f.expectWho(["Sofia"]);
 
     // Only the reading of the events of the day, once per day recognised.
     // Oggi, behind the sheet, reads the numbers of the house again when its
