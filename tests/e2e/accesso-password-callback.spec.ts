@@ -11,6 +11,7 @@ import {
   mailpitReachable,
   mailpitSkipReason,
   newAddress,
+  onBase,
   removeByEmail,
   submitButton,
   submitMailForm,
@@ -73,18 +74,25 @@ function defaultLink(
   html: string,
   kind: "conferma" | "password",
   baseURL: string,
-): string {
+): () => Promise<string> {
   const confirm = linksIn(html).find((href) => href.includes("token_hash="));
   expect(confirm).toBeTruthy();
   const tokenHash = new URL(confirm as string).searchParams.get("token_hash");
   const url = new URL("/auth/v1/verify", supabaseUrl);
   url.searchParams.set("token", tokenHash as string);
   url.searchParams.set("type", kind === "conferma" ? "signup" : "recovery");
-  url.searchParams.set(
-    "redirect_to",
-    `${new URL(baseURL).origin}/auth/callback?tipo=${kind}`,
-  );
-  return url.toString();
+  // Supabase accepts a `redirect_to` with a query only on the host of
+  // `site_url` (the list of exact URLs does not match a query). The browser of
+  // the tests is on localhost, so the link is followed by hand: Supabase
+  // checks the token and answers with the address of the callback, which is
+  // then opened on the host of `baseURL` (as for the other mail links).
+  url.searchParams.set("redirect_to", `${SITE_URL}/auth/callback?tipo=${kind}`);
+  return async () => {
+    const response = await fetch(url, { redirect: "manual" });
+    const location = response.headers.get("location");
+    expect(location).toBeTruthy();
+    return onBase(location as string, baseURL);
+  };
 }
 
 const hasSession = async (page: Page) =>
@@ -123,11 +131,6 @@ async function recoverAndGetLink(page: Page, address: string, base: string) {
 }
 
 test.describe("[CI-stack] /auth/callback con il link predefinito di Supabase", () => {
-  // The browser works on the host of `site_url`: Supabase accepts a
-  // `redirect_to` with a query only on that host (the list of exact URLs does
-  // not match a query), otherwise it falls back on the Site URL.
-  test.use({ baseURL: SITE_URL });
-
   test("conferma, stesso browser: entra in /onboarding; il link riaperto è «scaduto»", async ({
     page,
     baseURL,
@@ -136,14 +139,15 @@ test.describe("[CI-stack] /auth/callback con il link predefinito di Supabase", (
     const address = newAddress();
     try {
       const link = await registerAndGetLink(page, address, baseURL!);
-      await page.goto(link);
+      await page.goto(await link());
       await expect(page).toHaveURL(/\/onboarding$/);
       expect(page.url()).not.toContain("code=");
       expect(await hasSession(page)).toBe(true);
 
       // The token is used once: the same link again leads to «link scaduto».
-      await page.goto(link);
-      await expect(page).toHaveURL(/\/accesso\/link-scaduto\?tipo=conferma$/);
+      await page.goto(await link());
+      // Supabase adds the error to the address (after `#`).
+      await expect(page).toHaveURL(/\/accesso\/link-scaduto\?tipo=conferma/);
     } finally {
       await removeByEmail(address);
     }
@@ -160,7 +164,7 @@ test.describe("[CI-stack] /auth/callback con il link predefinito di Supabase", (
     try {
       const link = await registerAndGetLink(page, address, baseURL!);
       const otherPage = await other.newPage();
-      await otherPage.goto(link);
+      await otherPage.goto(await link());
       await expect(otherPage).toHaveURL(
         /\/accesso\/link-scaduto\?tipo=conferma$/,
       );
@@ -179,7 +183,7 @@ test.describe("[CI-stack] /auth/callback con il link predefinito di Supabase", (
     const user = await createPasswordUser();
     try {
       const link = await recoverAndGetLink(page, user.email, baseURL!);
-      await page.goto(link);
+      await page.goto(await link());
       await expect(page).toHaveURL(/\/accesso\/nuova-password$/);
       expect(page.url()).not.toContain("code=");
       expect(await cookieNames(page.context())).toContain(RECOVERY_COOKIE);
@@ -199,7 +203,7 @@ test.describe("[CI-stack] /auth/callback con il link predefinito di Supabase", (
     try {
       const link = await recoverAndGetLink(page, user.email, baseURL!);
       const otherPage = await other.newPage();
-      await otherPage.goto(link);
+      await otherPage.goto(await link());
       await expect(otherPage).toHaveURL(
         /\/accesso\/link-scaduto\?tipo=password$/,
       );
