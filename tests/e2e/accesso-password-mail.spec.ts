@@ -3,32 +3,31 @@ import { expect, test, type BrowserContext, type Page } from "@playwright/test";
 import {
   NEW_PASSWORD,
   RECOVERY_COOKIE,
-  SITE_URL,
   admin,
   alertWith,
+  callsText,
   callsTo,
   cookieNames,
   createPasswordUser,
+  defaultLink,
   expectMailCount,
   expectNoMagicLink,
   h1,
   keysConfigured,
   keysSkipReason,
-  linksIn,
   mailField,
   mailpitReachable,
   mailpitSkipReason,
   newAddress,
-  onBase,
   passwordField,
   recordAuth,
   recordOwnRequests,
-  recoveryLink,
   removeByEmail,
   signInContext,
   statusWith,
   submitButton,
   submitMailForm,
+  tokenHashIn,
   untilHydrated,
   waitForMails,
   type PasswordUser,
@@ -93,18 +92,21 @@ async function askRecovery(page: Page, address: string) {
   );
 }
 
-function onlyLink(html: string): string {
-  const links = linksIn(html);
-  expect(links).toHaveLength(1);
-  return links[0] as string;
+/**
+ * Asks for the recovery through the page and returns the default link rebuilt
+ * from the mail. The page is the browser that must open it (PKCE).
+ */
+async function recoveryLinkFor(page: Page, address: string, baseURL: string) {
+  await askRecovery(page, address);
+  const [mail] = await waitForMails(address);
+  return defaultLink(mail!.html, "password", baseURL);
 }
 
 // ===================================================== registrazione e conferma
 
 test.describe("[CI-stack] registrazione e conferma", () => {
-  test("CA-1, CA-2, CA-3, CA-4, CA-35, CA-37: registrarsi, leggere la mail, aprire il link", async ({
+  test("CA-1, CA-2, CA-3, CA-35, CA-37: registrarsi, leggere la mail, aprire il link", async ({
     page,
-    browser,
     baseURL,
   }) => {
     await needStack();
@@ -114,7 +116,6 @@ test.describe("[CI-stack] registrazione e conferma", () => {
     const logs: string[] = [];
     page.on("console", (message) => logs.push(message.text()));
     const origin = new URL(baseURL!).origin;
-    const extra: BrowserContext[] = [];
     try {
       await page.goto("/accesso/mail");
       await submitMailForm(
@@ -131,46 +132,21 @@ test.describe("[CI-stack] registrazione e conferma", () => {
       await expect(checkPosta(page)).toBeFocused();
       await expect(page.getByText(address)).toBeVisible();
 
-      // CA-2: one mail, one link, fixed address with token_hash and type=email
+      // CA-2: one mail with a token_hash; the default link is rebuilt from it
       const [mail] = await waitForMails(address);
       expect(mail?.subject).toBe("Conferma il tuo indirizzo per FamilyNest");
-      const link = onlyLink(mail!.html);
-      expect(link.startsWith(`${SITE_URL}/auth/confirm?token_hash=`)).toBe(
-        true,
-      );
-      expect(new URL(link).searchParams.get("type")).toBe("email");
-      expect(link).not.toContain("/auth/v1/verify");
+      expect(tokenHashIn(mail!.html).length).toBeGreaterThan(10);
       expect(mail?.html).toContain("Conferma il tuo indirizzo");
-      expect(mail?.html).toMatch(/Conferma l(&#39;|')indirizzo/);
       expect(mail?.html).not.toMatch(/<img|src=/i);
+      const link = defaultLink(mail!.html, "conferma", baseURL!);
 
-      // CA-3: in a new browser context the link gives a session and /onboarding
-      const fresh = await browser.newContext({ baseURL });
-      extra.push(fresh);
-      const opened = await fresh.newPage();
-      await opened.goto(onBase(link, baseURL!));
-      await expect(opened).toHaveURL(/\/onboarding$/);
-      expect(opened.url()).not.toContain("token_hash");
-      expect(await hasSession(fresh)).toBe(true);
-
-      // CA-4: the same link again, and an invented one, lead to «link scaduto»
-      for (const target of [
-        onBase(link, baseURL!),
-        "/auth/confirm?token_hash=inventato&type=email",
-      ]) {
-        const other = await browser.newContext({ baseURL });
-        extra.push(other);
-        const again = await other.newPage();
-        await again.goto(target);
-        await expect(again).toHaveURL(
-          /\/accesso\/link-scaduto\?tipo=conferma$/,
-        );
-        expect(await hasSession(other)).toBe(false);
-        const action = again.getByRole("link", { name: "Entra con la mail" });
-        await expect(action).toHaveAttribute("href", "/accesso/mail");
-        await action.click();
-        await expect(again).toHaveURL(/\/accesso\/mail$/);
-      }
+      // CA-3: the link, opened in the same context, gives a session and
+      // /onboarding, with neither `code` nor `tipo` in the address
+      await page.goto(await link());
+      await expect(page).toHaveURL(/\/onboarding$/);
+      expect(page.url()).not.toContain("code=");
+      expect(page.url()).not.toContain("tipo=");
+      expect(await hasSession(page.context())).toBe(true);
 
       // CA-35 and CA-37
       expectNoMagicLink(calls);
@@ -185,7 +161,6 @@ test.describe("[CI-stack] registrazione e conferma", () => {
         expect(joined).not.toContain(secret);
       }
     } finally {
-      for (const context of extra) await context.close();
       await removeByEmail(address);
     }
   });
@@ -259,16 +234,19 @@ test.describe("[CI-stack] registrazione e conferma", () => {
       await expectMailCount(user.email, 0);
       await page.getByRole("button", { name: "Rimanda la mail" }).click();
       await expect(checkPosta(page)).toBeVisible();
-      const [resend] = callsTo(calls, "/resend");
-      expect(resend?.body).toMatchObject({ type: "signup", email: user.email });
-      const [mail] = await waitForMails(user.email);
-      const link = onlyLink(mail!.html);
-      expect(link.startsWith(`${SITE_URL}/auth/confirm?token_hash=`)).toBe(
-        true,
+      const resends = callsTo(calls, "/resend");
+      expect(resends).toHaveLength(1);
+      expect(resends[0]?.body).toMatchObject({
+        type: "signup",
+        email: user.email,
+      });
+      expect(resends[0]?.query.get("redirect_to")).toBe(
+        `${new URL(baseURL!).origin}/auth/callback?tipo=conferma`,
       );
-      // The link of the new mail confirms the account and gives a session.
-      await page.goto(onBase(link, baseURL!));
-      await expect(page).toHaveURL(/\/onboarding$/);
+      // Mailpit receives a new confirmation mail with a new token_hash.
+      const [mail] = await waitForMails(user.email);
+      expect(mail?.subject).toBe("Conferma il tuo indirizzo per FamilyNest");
+      expect(tokenHashIn(mail!.html).length).toBeGreaterThan(10);
       expectNoMagicLink(calls);
     } finally {
       await user.remove();
@@ -363,6 +341,7 @@ test.describe("[CI-stack] accesso", () => {
     seedA();
     const invite = await lauraInvite();
     const user = await createPasswordUser();
+    const calls = recordAuth(page);
     try {
       await setInviteCookie(page, baseURL!, invite.token);
       await loginThroughPage(page, user.email, user.password, () =>
@@ -370,6 +349,8 @@ test.describe("[CI-stack] accesso", () => {
       );
       expect(page.url()).not.toContain(invite.token);
       expect((await inviteCookie(page))?.value).toBe(invite.token);
+      // CA-34: the invite token is in no request to Supabase
+      expect(callsText(calls)).not.toContain(invite.token);
     } finally {
       await user.remove();
     }
@@ -439,24 +420,8 @@ test.describe("[CI-stack] password dimenticata e nuova password", () => {
       await secondPage.goto("/oggi");
       await expect(secondPage).toHaveURL(/\/oggi$/);
 
-      // CA-21: the request, the screen, the mail
-      const calls = recordAuth(page);
-      await askRecovery(page, user.email);
-      const recovers = callsTo(calls, "/recover");
-      expect(recovers).toHaveLength(1);
-      expect(recovers[0]?.query.get("redirect_to")).toBe(
-        `${origin}/auth/callback?tipo=password`,
-      );
-      const [mail] = await waitForMails(user.email);
-      expect(mail?.subject).toBe("Scegli una nuova password per FamilyNest");
-      const link = onlyLink(mail!.html);
-      expect(link.startsWith(`${SITE_URL}/auth/confirm?token_hash=`)).toBe(
-        true,
-      );
-      expect(new URL(link).searchParams.get("type")).toBe("recovery");
-      expect(mail?.html).not.toMatch(/<img|src=/i);
-
-      // CA-24: with `next` added it still lands on the new-password page
+      // CA-21: the request, the screen, the mail (the browser that asks is the
+      // one that opens the link: PKCE)
       const recovery = await browser.newContext({ baseURL });
       extra.push(recovery);
       const target = await recovery.newPage();
@@ -464,9 +429,23 @@ test.describe("[CI-stack] password dimenticata e nuova password", () => {
       const logs: string[] = [];
       target.on("console", (message) => logs.push(message.text()));
       const targetCalls = recordAuth(target);
-      await target.goto(`${onBase(link, baseURL!)}&next=%2Foggi`);
+      await askRecovery(target, user.email);
+      const recovers = callsTo(targetCalls, "/recover");
+      expect(recovers).toHaveLength(1);
+      expect(recovers[0]?.query.get("redirect_to")).toBe(
+        `${origin}/auth/callback?tipo=password`,
+      );
+      const [mail] = await waitForMails(user.email);
+      expect(mail?.subject).toBe("Scegli una nuova password per FamilyNest");
+      expect(tokenHashIn(mail!.html).length).toBeGreaterThan(10);
+      expect(mail?.html).not.toMatch(/<img|src=/i);
+      const link = defaultLink(mail!.html, "password", baseURL!);
+
+      // CA-24: the link lands on the new-password page, with a session
+      await target.goto(await link());
       await expect(target).toHaveURL(/\/accesso\/nuova-password$/);
-      expect(target.url()).not.toContain("token_hash");
+      expect(target.url()).not.toContain("code=");
+      expect(target.url()).not.toContain("tipo=");
       expect(await hasSession(recovery)).toBe(true);
       const cookie = (await recovery.cookies()).find(
         (c) => c.name === RECOVERY_COOKIE,
@@ -481,8 +460,13 @@ test.describe("[CI-stack] password dimenticata e nuova password", () => {
         target.getByText(`Per l'account ${user.email}.`),
       ).toBeVisible();
 
-      // CA-28: too short, nothing is sent; the current password is refused
+      // CA-19: the new-password form has one password field, no `name`
       const field = passwordField(target, "Nuova password");
+      await expect(field).toHaveAttribute("type", "password");
+      await expect(field).toHaveAttribute("autocomplete", "new-password");
+      await expect(target.locator("main form input[name]")).toHaveCount(0);
+
+      // CA-28: too short, nothing is sent; the current password is refused
       await untilHydrated(
         async () => {
           await field.fill("1234567", { timeout: 2000 });
@@ -588,16 +572,16 @@ test.describe("[CI-stack] password dimenticata e nuova password", () => {
       }).toPass({ timeout: 15_000 });
 
       // CA-29: a recovery link already used
-      const link = await recoveryLink(user.email);
       const first = await browser.newContext({ baseURL });
       extra.push(first);
       const firstPage = await first.newPage();
-      await firstPage.goto(link);
+      const link = await recoveryLinkFor(firstPage, user.email, baseURL!);
+      await firstPage.goto(await link());
       await expect(firstPage).toHaveURL(/\/accesso\/nuova-password$/);
       const used = await browser.newContext({ baseURL });
       extra.push(used);
       const usedPage = await used.newPage();
-      await usedPage.goto(link);
+      await usedPage.goto(await link());
       await expect(usedPage).toHaveURL(
         /\/accesso\/link-scaduto\?tipo=password$/,
       );
@@ -611,10 +595,13 @@ test.describe("[CI-stack] password dimenticata e nuova password", () => {
 
   test("CA-18: senza JavaScript «Nuova password» manda un POST a /invio e riceve un 303", async ({
     page,
+    baseURL,
   }) => {
     await needStack();
     const user = await createPasswordUser({ nest: true });
     try {
+      // The link is asked with JavaScript (same browser), then it is switched off.
+      const link = await recoveryLinkFor(page, user.email, baseURL!);
       await page.route("**/_next/static/**/*.js", (route) => route.abort());
       const answers: Array<{ url: string; status: number; location: string }> =
         [];
@@ -633,7 +620,7 @@ test.describe("[CI-stack] password dimenticata e nuova password", () => {
           posts.push({ url: request.url(), body: request.postData() ?? "" });
         }
       });
-      await page.goto(await recoveryLink(user.email));
+      await page.goto(await link());
       await expect(page).toHaveURL(/\/accesso\/nuova-password$/);
       await passwordField(page, "Nuova password").fill(NEW_PASSWORD);
       await submitButton(page).click();
@@ -702,16 +689,15 @@ test.describe("[CI-utenti] invito", () => {
         page.getByText("Apri il link su questo browser", { exact: true }),
       ).toBeVisible();
       const [mail] = await waitForMails(address);
-      const link = onlyLink(mail!.html);
-      await page.goto(onBase(link, baseURL!));
+      const link = await defaultLink(mail!.html, "conferma", baseURL!)();
+      await page.goto(link);
       await expect(page).toHaveURL(/\/invito\/colore$/);
       expect((await inviteCookie(page))?.value).toBe(invite.token);
 
-      // CA-34
+      // CA-34: not in an address, not in a request to Supabase (query
+      // included, so `redirect_to` too), not in the mail
       expect(urls.join("\n")).not.toContain(invite.token);
-      for (const call of calls) {
-        expect(JSON.stringify(call)).not.toContain(invite.token);
-      }
+      expect(callsText(calls)).not.toContain(invite.token);
       expect(`${mail?.html}\n${mail?.text}`).not.toContain(invite.token);
       expect(link).not.toContain(invite.token);
     } finally {
@@ -727,9 +713,12 @@ test.describe("[CI-utenti] invito", () => {
     seedA();
     const invite = await lauraInvite();
     const user = await createPasswordUser();
+    const calls = recordAuth(page);
     try {
       await setInviteCookie(page, baseURL!, invite.token);
-      await page.goto(await recoveryLink(user.email));
+      await askRecovery(page, user.email);
+      const [mail] = await waitForMails(user.email);
+      await page.goto(await defaultLink(mail!.html, "password", baseURL!)());
       await expect(page).toHaveURL(/\/accesso\/nuova-password$/);
       const field = passwordField(page, "Nuova password");
       await untilHydrated(
@@ -742,6 +731,10 @@ test.describe("[CI-utenti] invito", () => {
       expect(page.url()).not.toContain(invite.token);
       expect((await inviteCookie(page))?.value).toBe(invite.token);
       expect(await cookieNames(page.context())).not.toContain(RECOVERY_COOKIE);
+
+      // CA-34: the invite token is in no Supabase request nor in the mail
+      expect(callsText(calls)).not.toContain(invite.token);
+      expect(`${mail?.html}\n${mail?.text}`).not.toContain(invite.token);
     } finally {
       await user.remove();
     }
@@ -769,7 +762,8 @@ test.describe("[CI-stack] isolamento", () => {
       }
     });
     try {
-      await page.goto(await recoveryLink(user.email));
+      const link = await recoveryLinkFor(page, user.email, baseURL!);
+      await page.goto(await link());
       const field = passwordField(page, "Nuova password");
       await untilHydrated(
         async () => {

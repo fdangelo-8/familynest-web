@@ -418,6 +418,55 @@ export async function cookieNames(context: BrowserContext) {
   return (await context.cookies()).map((cookie) => cookie.name);
 }
 
+// ------------------------------------------------- default links of Supabase
+
+/** The `token_hash` of the (local, custom) mail: the value of `{{ .TokenHash }}`. */
+export function tokenHashIn(html: string): string {
+  const withHash = linksIn(html).find((href) => href.includes("token_hash="));
+  expect(withHash, "link con token_hash nella mail").toBeTruthy();
+  const tokenHash = new URL(withHash as string).searchParams.get("token_hash");
+  expect(tokenHash).toBeTruthy();
+  return tokenHash as string;
+}
+
+/**
+ * The link of Supabase's DEFAULT template, rebuilt from the `token_hash` of the
+ * local mail (#327, CA-2 and CA-21): `{{ .ConfirmationURL }}` is
+ * `<API>/auth/v1/verify?token=<TokenHash>&type=signup|recovery&redirect_to=…`.
+ *
+ * Supabase accepts a `redirect_to` with a query only on the host of `site_url`,
+ * and the browser of the tests is on another host: the link is followed by
+ * hand (Supabase checks the token and answers with the address of the
+ * callback) and the callback is then opened on the host of `baseURL`. Each
+ * call follows the link again, so a second call is a second use of the token.
+ */
+export function defaultLink(
+  html: string,
+  kind: "conferma" | "password",
+  baseURL: string,
+): () => Promise<string> {
+  const url = new URL("/auth/v1/verify", supabaseUrl);
+  url.searchParams.set("token", tokenHashIn(html));
+  url.searchParams.set("type", kind === "conferma" ? "signup" : "recovery");
+  url.searchParams.set("redirect_to", `${SITE_URL}/auth/callback?tipo=${kind}`);
+  return async () => {
+    const response = await fetch(url, { redirect: "manual" });
+    const location = response.headers.get("location");
+    expect(location).toBeTruthy();
+    return onBase(location as string, baseURL);
+  };
+}
+
+/** Every Auth call as text, query string included (to look for a secret). */
+export function callsText(calls: AuthCall[]): string {
+  return calls
+    .map(
+      (call) =>
+        `${call.method} ${call.path}?${call.query.toString()}\n${JSON.stringify(call.body)}`,
+    )
+    .join("\n");
+}
+
 /** Every request of the browser that goes to our own site (not to Supabase). */
 export function recordOwnRequests(page: Page) {
   const seen: Array<{ url: string; body: string; type: string }> = [];

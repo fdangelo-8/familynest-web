@@ -693,7 +693,7 @@ test.describe("/accesso/password-dimenticata", () => {
   const sentTitle = (page: Page) =>
     page.getByRole("heading", { level: 1, name: "Ti abbiamo scritto" });
 
-  test("testi e campo: un solo modulo, mail con autocomplete username, nessun name", async ({
+  test("CA-19: testi e campo, un solo modulo, mail con autocomplete username, nessun name", async ({
     page,
   }) => {
     await page.goto("/accesso/password-dimenticata");
