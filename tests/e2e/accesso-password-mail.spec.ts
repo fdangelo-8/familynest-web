@@ -582,8 +582,9 @@ test.describe("[CI-stack] password dimenticata e nuova password", () => {
       extra.push(used);
       const usedPage = await used.newPage();
       await usedPage.goto(await link());
+      // Supabase adds the error to the address (after `#`).
       await expect(usedPage).toHaveURL(
-        /\/accesso\/link-scaduto\?tipo=password$/,
+        /\/accesso\/link-scaduto\?tipo=password(#|$)/,
       );
       expect(await hasSession(used)).toBe(false);
       expect(await cookieNames(used)).not.toContain(RECOVERY_COOKIE);
