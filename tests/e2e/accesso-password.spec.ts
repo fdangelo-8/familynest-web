@@ -272,25 +272,38 @@ test.describe("Registrati: esiti di Supabase", () => {
     await expect(checkPosta(page)).toBeFocused();
     await expect(
       page.getByText(
-        `Se è un indirizzo nuovo, ti abbiamo mandato una mail a ${MAIL}. Aprila e tocca «Conferma l'indirizzo»: entri subito in FamilyNest.`,
+        `Se è un indirizzo nuovo, ti abbiamo mandato una mail a ${MAIL}. Apri il link che contiene: entri subito in FamilyNest.`,
       ),
     ).toBeVisible();
     expectNoMagicLink(calls);
   });
 
-  test("«Controlla la posta»: righe, nessuna riga dell'invito senza il cookie", async ({
+  test("«Controlla la posta»: righe nell'ordine, la riga del browser sempre presente", async ({
     page,
   }) => {
     needSupabase();
     await mockAuth(page, "/signup", { kind: "ok" });
     await reachCheckMail(page);
-    for (const title of [
+    const titles = [
       "Vale un'ora",
+      "Apri il link su questo browser",
       "Non la trovi?",
       "Hai già un account con questa mail?",
-    ]) {
+    ];
+    for (const title of titles) {
       await expect(page.getByText(title, { exact: true })).toBeVisible();
     }
+    await expect(page.locator("li.riga-lista")).toHaveCount(titles.length);
+    await expect(
+      page.getByText(
+        "Altrove non funziona. Se la posta lo apre in un'altra app, copialo e incollalo qui.",
+      ),
+    ).toBeVisible();
+    await expect(
+      page.getByText(
+        "È in inglese e potrebbe finire nella posta indesiderata o nelle promozioni.",
+      ),
+    ).toBeVisible();
     await expect(
       page.getByText("Apri il link su questo dispositivo"),
     ).toHaveCount(0);
@@ -299,7 +312,7 @@ test.describe("Registrati: esiti di Supabase", () => {
     ).toBeVisible();
   });
 
-  test("D4: con il cookie d'invito compare la riga, e il token non è nella pagina", async ({
+  test("D7: con il cookie d'invito la riga è la stessa e il token non è nella pagina", async ({
     page,
     baseURL,
   }) => {
@@ -308,11 +321,11 @@ test.describe("Registrati: esiti di Supabase", () => {
     await mockAuth(page, "/signup", { kind: "ok" });
     await reachCheckMail(page);
     await expect(
-      page.getByText("Apri il link su questo dispositivo"),
+      page.getByText("Apri il link su questo browser", { exact: true }),
     ).toBeVisible();
     await expect(
       page.getByText("Così entri subito nel Nest che ti ha invitato."),
-    ).toBeVisible();
+    ).toHaveCount(0);
     expect(await page.content()).not.toContain(INVITE_TOKEN);
     const cookie = (await page.context().cookies()).find(
       (c) => c.name === COOKIE,
@@ -649,7 +662,7 @@ test.describe("Entra: esiti di Supabase", () => {
       expect(
         statusWith(
           page,
-          "Questa mail non è ancora confermata. Apri la mail «Conferma il tuo indirizzo» che ti abbiamo mandato, oppure fattene mandare un'altra.",
+          "Questa mail non è ancora confermata. Apri su questo browser il link della mail che ti abbiamo mandato, oppure fattene mandare un'altra.",
         ),
       ).toBeVisible({ timeout: 3000 }),
     );
@@ -744,7 +757,7 @@ test.describe("/accesso/password-dimenticata", () => {
     await expect(sentTitle(page)).toBeFocused();
     await expect(
       page.getByText(
-        `Se ${MAIL} è la mail di un account FamilyNest, ti è arrivato un link. Aprilo e tocca «Scegli una nuova password».`,
+        `Se ${MAIL} è la mail di un account FamilyNest, ti è arrivato un link per scegliere una nuova password.`,
       ),
     ).toBeVisible();
     await expect(
@@ -763,7 +776,7 @@ test.describe("/accesso/password-dimenticata", () => {
     );
     await expect(
       page.getByText(
-        `Se ${MAIL} è la mail di un account FamilyNest, ti è arrivato un link. Aprilo e tocca «Scegli una nuova password».`,
+        `Se ${MAIL} è la mail di un account FamilyNest, ti è arrivato un link per scegliere una nuova password.`,
       ),
     ).toBeVisible();
     await expect(page.getByText(/troppi|limite|429/i)).toHaveCount(0);
@@ -934,7 +947,7 @@ test.describe("/accesso/link-scaduto", () => {
       await expect(
         page.locator("p.citazione").filter({ visible: true }),
       ).toHaveText(
-        "I link nelle nostre mail valgono un'ora e si usano una volta sola. Se avevi già confermato l'indirizzo, entra con mail e password.",
+        "I link nelle nostre mail valgono un'ora, si usano una volta sola e funzionano solo nel browser in cui li hai chiesti. Entra con mail e password: se l'indirizzo non è ancora confermato, potrai farti mandare una nuova mail da aprire qui.",
       );
       await expect(
         page.getByRole("link", { name: "Entra con la mail" }),
@@ -949,7 +962,7 @@ test.describe("/accesso/link-scaduto", () => {
     await expect(
       page.locator("p.citazione").filter({ visible: true }),
     ).toHaveText(
-      "Il link per scegliere una nuova password vale un'ora e si usa una volta sola. Chiedine uno nuovo.",
+      "Il link per scegliere una nuova password vale un'ora, si usa una volta sola e funziona solo nel browser in cui l'hai chiesto. Chiedine uno nuovo e aprilo qui.",
     );
     await expect(
       page.getByRole("link", { name: "Mandami un nuovo link" }),

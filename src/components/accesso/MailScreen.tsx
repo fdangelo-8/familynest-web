@@ -66,7 +66,7 @@ const TEXT = {
   credentials:
     "La mail e la password non corrispondono. Se finora entravi con il link nella mail, la password non ce l'hai ancora: scegline una.",
   unconfirmed:
-    "Questa mail non è ancora confermata. Apri la mail «Conferma il tuo indirizzo» che ti abbiamo mandato, oppure fattene mandare un'altra.",
+    "Questa mail non è ancora confermata. Apri su questo browser il link della mail che ti abbiamo mandato, oppure fattene mandare un'altra.",
   resent: "Mail rimandata: usa quella più recente.",
 } as const;
 
@@ -78,9 +78,14 @@ const MODES = [
 const SENT_ROWS: ReadonlyArray<HintRow> = [
   { icon: "clock", title: "Vale un'ora", info: "E funziona una volta sola." },
   {
+    icon: "link",
+    title: "Apri il link su questo browser",
+    info: "Altrove non funziona. Se la posta lo apre in un'altra app, copialo e incollalo qui.",
+  },
+  {
     icon: "search",
     title: "Non la trovi?",
-    info: "Guarda nella posta indesiderata o nelle promozioni.",
+    info: "È in inglese e potrebbe finire nella posta indesiderata o nelle promozioni.",
   },
   {
     icon: "key-round",
@@ -88,12 +93,6 @@ const SENT_ROWS: ReadonlyArray<HintRow> = [
     info: "Allora non ti arriva niente: entra con la tua password.",
   },
 ];
-
-const INVITE_ROW: HintRow = {
-  icon: "users",
-  title: "Apri il link su questo dispositivo",
-  info: "Così entri subito nel Nest che ti ha invitato.",
-};
 
 /** Calls Supabase for one action and says how it went (never throws). */
 async function request(
@@ -142,10 +141,8 @@ async function request(
  * `/accesso/mail`: «Entra» and «Registrati» in one page, then «Controlla la
  * posta». Mail and password live only in this component's memory: never in the
  * URL, never stored, so a reload starts again from an empty form (#327).
- * `hasInvite` only tells that the invitation cookie is there (the token never
- * reaches the page).
  */
-export function MailScreen({ hasInvite }: { hasInvite: boolean }) {
+export function MailScreen() {
   const router = useRouter();
   const { showToast } = useToast();
   const cooldown = useCooldown();
@@ -350,7 +347,7 @@ export function MailScreen({ hasInvite }: { hasInvite: boolean }) {
 
   // ------------------------------------------------------ Controlla la posta
   if (view === "sent") {
-    const rows = hasInvite ? [...SENT_ROWS, INVITE_ROW] : SENT_ROWS;
+    const rows = SENT_ROWS;
     const noteId = "accesso-mail-attesa";
     return (
       <AuthLayout
@@ -364,8 +361,8 @@ export function MailScreen({ hasInvite }: { hasInvite: boolean }) {
             titleRef={titleRef}
           >
             Se è un indirizzo nuovo, ti abbiamo mandato una mail a{" "}
-            <b className={styles.address}>{email}</b>. Aprila e tocca «Conferma
-            l&apos;indirizzo»: entri subito in FamilyNest.
+            <b className={styles.address}>{email}</b>. Apri il link che
+            contiene: entri subito in FamilyNest.
           </Intro>
         }
         body={<HintList rows={rows} />}

@@ -215,7 +215,7 @@ test.describe("[CI-stack] registrazione e conferma", () => {
       );
       await expect(
         page.getByText(
-          `Se è un indirizzo nuovo, ti abbiamo mandato una mail a ${user.email}. Aprila e tocca «Conferma l'indirizzo»: entri subito in FamilyNest.`,
+          `Se è un indirizzo nuovo, ti abbiamo mandato una mail a ${user.email}. Apri il link che contiene: entri subito in FamilyNest.`,
         ),
       ).toBeVisible();
       await expect(
@@ -251,7 +251,7 @@ test.describe("[CI-stack] registrazione e conferma", () => {
         expect(
           statusWith(
             page,
-            "Questa mail non è ancora confermata. Apri la mail «Conferma il tuo indirizzo» che ti abbiamo mandato, oppure fattene mandare un'altra.",
+            "Questa mail non è ancora confermata. Apri su questo browser il link della mail che ti abbiamo mandato, oppure fattene mandare un'altra.",
           ),
         ).toBeVisible({ timeout: 10_000 }),
       );
@@ -411,7 +411,7 @@ test.describe("[CI-stack] password dimenticata e nuova password", () => {
       await askRecovery(page, address);
       await expect(
         page.getByText(
-          `Se ${address} è la mail di un account FamilyNest, ti è arrivato un link. Aprilo e tocca «Scegli una nuova password».`,
+          `Se ${address} è la mail di un account FamilyNest, ti è arrivato un link per scegliere una nuova password.`,
         ),
       ).toBeVisible();
       expect(callsTo(calls, "/recover")).toHaveLength(1);
@@ -699,7 +699,7 @@ test.describe("[CI-utenti] invito", () => {
         () => expect(checkPosta(page)).toBeVisible({ timeout: 10_000 }),
       );
       await expect(
-        page.getByText("Apri il link su questo dispositivo"),
+        page.getByText("Apri il link su questo browser", { exact: true }),
       ).toBeVisible();
       const [mail] = await waitForMails(address);
       const link = onlyLink(mail!.html);

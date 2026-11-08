@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
   RECOVERY_COOKIE,
+  SITE_URL,
   cookieNames,
   createPasswordUser,
   keysConfigured,
@@ -122,6 +123,11 @@ async function recoverAndGetLink(page: Page, address: string, base: string) {
 }
 
 test.describe("[CI-stack] /auth/callback con il link predefinito di Supabase", () => {
+  // The browser works on the host of `site_url`: Supabase accepts a
+  // `redirect_to` with a query only on that host (the list of exact URLs does
+  // not match a query), otherwise it falls back on the Site URL.
+  test.use({ baseURL: SITE_URL });
+
   test("conferma, stesso browser: entra in /onboarding; il link riaperto è «scaduto»", async ({
     page,
     baseURL,

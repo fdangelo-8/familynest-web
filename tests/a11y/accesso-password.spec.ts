@@ -511,7 +511,7 @@ test.describe("/accesso/mail · Controlla la posta", () => {
     await mockAuth(page, "/signup", { kind: "ok" });
     await reachCheckMail(page);
     await expect(
-      page.getByText("Apri il link su questo dispositivo"),
+      page.getByText("Apri il link su questo browser", { exact: true }),
     ).toBeVisible();
     await expectNoBlocking(page);
   });

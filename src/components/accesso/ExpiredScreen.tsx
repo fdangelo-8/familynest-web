@@ -10,13 +10,13 @@ const COPY: Record<
 > = {
   conferma: {
     citation:
-      "I link nelle nostre mail valgono un'ora e si usano una volta sola. Se avevi già confermato l'indirizzo, entra con mail e password.",
+      "I link nelle nostre mail valgono un'ora, si usano una volta sola e funzionano solo nel browser in cui li hai chiesti. Entra con mail e password: se l'indirizzo non è ancora confermato, potrai farti mandare una nuova mail da aprire qui.",
     action: "Entra con la mail",
     href: "/accesso/mail",
   },
   password: {
     citation:
-      "Il link per scegliere una nuova password vale un'ora e si usa una volta sola. Chiedine uno nuovo.",
+      "Il link per scegliere una nuova password vale un'ora, si usa una volta sola e funziona solo nel browser in cui l'hai chiesto. Chiedine uno nuovo e aprilo qui.",
     action: "Mandami un nuovo link",
     href: "/accesso/password-dimenticata",
   },

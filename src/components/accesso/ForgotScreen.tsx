@@ -22,9 +22,14 @@ const TEXT = {
 const ROWS: ReadonlyArray<HintRow> = [
   { icon: "clock", title: "Vale un'ora", info: "E funziona una volta sola." },
   {
+    icon: "link",
+    title: "Apri il link su questo browser",
+    info: "Altrove non funziona. Se la posta lo apre in un'altra app, copialo e incollalo qui.",
+  },
+  {
     icon: "search",
     title: "Non la trovi?",
-    info: "Guarda nella posta indesiderata. Se non arriva, forse l'account usa un'altra mail.",
+    info: "È in inglese e potrebbe finire nella posta indesiderata. Se non arriva, forse l'account usa un'altra mail.",
   },
 ];
 
@@ -118,8 +123,7 @@ export function ForgotScreen() {
             titleRef={titleRef}
           >
             Se <b className={styles.address}>{email}</b> è la mail di un account
-            FamilyNest, ti è arrivato un link. Aprilo e tocca «Scegli una nuova
-            password».
+            FamilyNest, ti è arrivato un link per scegliere una nuova password.
           </Intro>
         }
         body={<HintList rows={ROWS} />}
