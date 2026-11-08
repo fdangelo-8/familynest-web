@@ -138,6 +138,46 @@ export function WhoGroup({
   );
 }
 
+/** «Chi se ne occupa» of Spesa: any number of people; a second tap takes one away. */
+export function WhoManyGroup({
+  people,
+  meId,
+  chosenIds,
+  onToggle,
+}: {
+  /** «Tu» first, then the others */
+  people: readonly ChoosablePerson[];
+  meId: string | null;
+  chosenIds: readonly string[];
+  onToggle: (id: string) => void;
+}) {
+  return (
+    <div className="campo">
+      <span className="campo__etichetta">Chi se ne occupa</span>
+      <ChipGroup aria-label="Chi se ne occupa">
+        {people.map((person) => (
+          <Chip
+            key={person.id}
+            person
+            pressed={chosenIds.includes(person.id)}
+            onClick={() => onToggle(person.id)}
+            leading={
+              <Avatar
+                name={person.name}
+                color={person.color}
+                size="s"
+                nameShown
+              />
+            }
+          >
+            {person.id === meId ? "Tu" : person.name}
+          </Chip>
+        ))}
+      </ChipGroup>
+    </div>
+  );
+}
+
 /** «Lo vede tutto il Nest» / «Lo vedi solo tu»: a button whose name says its state. */
 export function VisibilityChip({
   isPrivate,

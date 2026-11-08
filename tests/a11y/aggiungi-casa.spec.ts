@@ -9,6 +9,8 @@ import {
 import {
   DEADLINE_ID,
   DEADLINE_THING,
+  SHOPPING_ID,
+  SHOPPING_THING,
   TODO_ID,
   TODO_THING,
   installCasaFakes,
@@ -118,9 +120,11 @@ async function tabOrder(page: Page, stops: number) {
         const style = getComputedStyle(el);
         const outline =
           style.outlineStyle !== "none" && parseFloat(style.outlineWidth) > 0;
-        // The field has its own ring: inset shadow, no outline (as in the mockup)
+        // The fields have their own ring: inset shadow, no outline (as in the mockup)
         return (
-          outline || (el.tagName === "TEXTAREA" && style.boxShadow !== "none")
+          outline ||
+          ((el.tagName === "TEXTAREA" || el.tagName === "INPUT") &&
+            style.boxShadow !== "none")
         );
       }),
     );
@@ -600,5 +604,113 @@ test.describe("Aggiungi · Spesa, Da fare, Scadenza: contrasto", () => {
       "Aggiunta alle scadenze",
     );
     expect(await contrastFailures(page)).toEqual([]);
+  });
+});
+
+// Edit of a thing of the shopping list (#335): name, quantity, people (several
+// at once), «Salva» and «Elimina dalla spesa».
+const EDIT_SHOPPING = `/aggiungi?tipo=spesa&modifica=${SHOPPING_ID}`;
+
+async function editShopping(page: Page, options: CasaOptions = {}) {
+  await installCasaFakes(page, { shopping: SHOPPING_THING, ...options });
+  const dialog = await open(page, EDIT_SHOPPING, "Modifica");
+  const field = dialog.getByRole("textbox", { name: "Nome", exact: true });
+  await expect(field).toBeVisible();
+  await expect(field).toBeFocused();
+  return { dialog, field };
+}
+
+test.describe("Aggiungi · modifica della Spesa", () => {
+  test("axe: foglio di modifica e conferma", async ({ page }) => {
+    const { dialog } = await editShopping(page);
+    expect(await blocking(page, '[role="dialog"]')).toEqual([]);
+    expect(await contrastFailures(page)).toEqual([]);
+    const confirm = await confirmOpen(page, dialog, "Elimina dalla spesa");
+    await expect(
+      confirm.getByText("Sparisce dalla spesa di tutto il Nest."),
+    ).toBeVisible();
+    expect(await blocking(page, '[role="alertdialog"]')).toEqual([]);
+  });
+
+  test("axe: la cosa non c'è più", async ({ page }) => {
+    await installCasaFakes(page, { shopping: SHOPPING_THING, read: "gone" });
+    const dialog = await open(page, EDIT_SHOPPING, "Modifica");
+    await expect(dialog.getByText("Questa cosa non c'è più")).toBeVisible();
+    expect(await blocking(page, '[role="dialog"]')).toEqual([]);
+  });
+
+  test("errori dei campi: nome vuoto e quantità lunga, con aria-describedby", async ({
+    page,
+  }) => {
+    const { dialog, field } = await editShopping(page);
+    await field.fill("");
+    await dialog.getByRole("button", { name: "Salva", exact: true }).click();
+    await expect(field).toHaveAttribute("aria-invalid", "true");
+    await expect(field).toHaveAccessibleDescription("Scrivi cosa manca.");
+    await expect(field).toBeFocused();
+    expect(await blocking(page, '[role="dialog"]')).toEqual([]);
+
+    await field.fill("Latte");
+    const quantity = dialog.getByRole("textbox", {
+      name: "Quantità",
+      exact: true,
+    });
+    await quantity.fill("1".repeat(21));
+    await dialog.getByRole("button", { name: "Salva", exact: true }).click();
+    await expect(quantity).toHaveAttribute("aria-invalid", "true");
+    await expect(quantity).toHaveAccessibleDescription(
+      "La quantità può avere al massimo 20 caratteri.",
+    );
+    await expect(quantity).toBeFocused();
+    expect(await blocking(page, '[role="dialog"]')).toEqual([]);
+  });
+
+  test("ordine: nome, quantità, persone, «Salva» ed «Elimina dalla spesa»", async ({
+    page,
+  }, testInfo) => {
+    const { dialog, field } = await editShopping(page);
+    await field.focus();
+    await page.keyboard.press("Shift+Tab");
+    expect(await focused(page)).toBe("Chiudi");
+    const { order, rings } = await tabOrder(page, 8);
+    const end = isDesktop(testInfo)
+      ? ["Elimina dalla spesa", "Salva"]
+      : ["Salva", "Elimina dalla spesa"];
+    expect(order).toEqual(["Nome", "Quantità", ...PEOPLE, ...end]);
+    expect(rings).toEqual(rings.map(() => true));
+    const inside = () =>
+      dialog.evaluate((el) => el.contains(document.activeElement));
+    for (let i = 0; i < 14; i += 1) {
+      await page.keyboard.press("Tab");
+      expect(await inside()).toBe(true);
+    }
+  });
+
+  test("più persone si scelgono insieme e un secondo tocco la toglie", async ({
+    page,
+  }) => {
+    const { dialog } = await editShopping(page);
+    const who = dialog.getByRole("group", { name: "Chi se ne occupa" });
+    const laura = who.getByRole("button", { name: "Laura" });
+    const sofia = who.getByRole("button", { name: "Sofia" });
+    await laura.click();
+    await sofia.click();
+    await expect(laura).toHaveAttribute("aria-pressed", "true");
+    await expect(sofia).toHaveAttribute("aria-pressed", "true");
+    await laura.click();
+    await expect(laura).toHaveAttribute("aria-pressed", "false");
+    await expect(sofia).toHaveAttribute("aria-pressed", "true");
+  });
+
+  test("aree di tocco: persone, «Salva» ed «Elimina dalla spesa»", async ({
+    page,
+  }) => {
+    const { dialog } = await editShopping(page);
+    for (const name of ["Tu", "Laura", "Salva", "Elimina dalla spesa"]) {
+      expect(
+        await missedPoints(dialog.getByRole("button", { name, exact: true })),
+        name,
+      ).toEqual([]);
+    }
   });
 });

@@ -4,7 +4,7 @@ import type { AddType } from "./detect-type";
 export type AddAddress = {
   initialType: AddType | null;
   editId: string | null;
-  editKind: "da-fare" | "scadenza" | null;
+  editKind: "da-fare" | "scadenza" | "spesa" | null;
 };
 
 type Params = Record<string, string | string[] | undefined>;
@@ -27,6 +27,8 @@ export function readAddAddress(params: Params): AddAddress {
     initialType: editId ? null : initialType,
     editId,
     editKind:
-      editId && (tipo === "da-fare" || tipo === "scadenza") ? tipo : null,
+      editId && (tipo === "da-fare" || tipo === "scadenza" || tipo === "spesa")
+        ? tipo
+        : null,
   };
 }

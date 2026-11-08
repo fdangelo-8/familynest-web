@@ -12,6 +12,8 @@ export type ShoppingItem = {
   checkedAt: string | null;
   createdAt: string;
   authorId: string | null;
+  /** Who takes care of it, in the order they were added (may be empty) */
+  assigneeIds: string[];
 };
 
 export type ShoppingMember = {

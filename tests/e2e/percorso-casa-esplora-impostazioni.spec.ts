@@ -49,7 +49,10 @@ async function waitToday(page: Page): Promise<void> {
   await expect(
     page.getByRole("heading", { level: 1, name: greeting }),
   ).toBeVisible({ timeout: 20_000 });
-  await expect(page.locator('[aria-busy="true"]')).toHaveCount(0);
+  // Only what the person sees: the router keeps the pages it left hidden
+  // (`display: none`, React Activity), and a hidden copy of Esplora can sit on
+  // its skeleton because its effects do not run while it is hidden.
+  await expect(page.locator('[aria-busy="true"]:visible')).toHaveCount(0);
 }
 
 test.describe("percorso di Esplora e delle impostazioni", () => {

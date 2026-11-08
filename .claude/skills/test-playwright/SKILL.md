@@ -32,7 +32,8 @@ Progetti Playwright già configurati: `desktop` (1280×800) e `mobile` (390×844
 
 - Screenshot dell'intera pagina per ogni stato rilevante: normale, vuoto, errore (e altri stati della specifica).
 - Nascondi o blocca ciò che cambia da solo: date correnti (orologio fissato con `page.clock`), avatar casuali, animazioni.
-- I riferimenti si generano **solo** nello stesso container usato dalla CI, altrimenti i pixel differiscono. Se non puoi, lascia che la CI fallisca sul primo confronto, scarica l'artifact e usa quelle immagini come riferimento, segnalandolo nella PR.
+- I riferimenti si generano **solo** nello stesso container usato dalla CI (workflow `visual-baseline`), altrimenti i pixel differiscono.
+- Riferimenti nuovi: scarica l'artifact `visual-baselines`. Riferimenti che cambiano: lancia `visual-baseline` con `commit=true`, che li mette su un branch `riferimenti/<branch>-<run>`; dopo averli controllati, portali nella PR con `git merge`. Mai copiare o cancellare a mano i file di `__screenshots__` (decisione di Francesco del 07/11).
 - Mai aggiornare i riferimenti di altre pagine per far passare la tua: se un'altra pagina cambia aspetto è una regressione da segnalare.
 
 ## Confronto con il mockup (tester visivo)

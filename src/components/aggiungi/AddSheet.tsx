@@ -41,6 +41,7 @@ import { Chip } from "../ui/Chip/Chip";
 import { ConfirmDialog } from "../ui/ConfirmDialog/ConfirmDialog";
 import { cx } from "../ui/cx";
 import { EmptyState } from "../ui/EmptyState/EmptyState";
+import { TextField } from "../ui/Field/Field";
 import { Icon } from "../ui/Icon/Icon";
 import { useIsDesktop } from "../ui/overlay";
 import { SegmentedControl } from "../ui/SegmentedControl/SegmentedControl";
@@ -99,12 +100,19 @@ import {
   looksLikeId,
   readDeadline,
   readTodo,
+  deleteShoppingItem,
+  findShoppingDuplicate,
+  readShoppingItem,
   readToTake,
   saveShopping,
   undoShopping,
   updateDeadline,
+  updateShoppingItem,
   updateTodo,
   type DeadlineRecord,
+  type ShoppingRecord,
+  type ShoppingValues,
+  type ShoppingWriteResult,
   type TodoRecord,
   type TodoValues,
   type WriteResult,
@@ -125,11 +133,13 @@ import {
   UNDO_TODO_FAILED_TEXT,
   deleteConsequence,
   placeholderOf,
+  shoppingDuplicateText,
   shoppingSubmitLabel,
   thingsCount,
   todoSubmitLabel,
   validateDeadline,
   validateShopping,
+  validateShoppingEdit,
   validateTodo,
 } from "./texts";
 import {
@@ -140,6 +150,7 @@ import {
   VisibilityChip,
   VisibilityLabel,
   WhoGroup,
+  WhoManyGroup,
 } from "./ThingBlocks";
 
 type PeopleState =
@@ -149,14 +160,15 @@ type PeopleState =
 
 type Client = ReturnType<typeof createClient>;
 
-type EditKind = "da-fare" | "scadenza";
+type EditKind = "da-fare" | "scadenza" | "spesa";
 
 type EditState =
   | { status: "loading" }
   | { status: "failed" }
   | { status: "gone" }
   | { status: "ready"; kind: "da-fare"; record: TodoRecord }
-  | { status: "ready"; kind: "scadenza"; record: DeadlineRecord };
+  | { status: "ready"; kind: "scadenza"; record: DeadlineRecord }
+  | { status: "ready"; kind: "spesa"; record: ShoppingRecord };
 
 /** The full form «Nuovo impegno» while it is open: what was typed and where it was opened from. */
 type FormDraft = {
@@ -221,6 +233,10 @@ function sameSet(a: readonly number[], b: readonly number[]): boolean {
   return a.length === b.length && a.every((value) => b.includes(value));
 }
 
+function sameIds(a: readonly string[], b: readonly string[]): boolean {
+  return a.length === b.length && a.every((value) => b.includes(value));
+}
+
 /**
  * Body of the Add sheet: Impegno (issue #20), Spesa, Da fare and Scadenza, and
  * the edit of a Da fare or a Scadenza (issue #22).
@@ -262,6 +278,7 @@ export function AddSheet({
   const fieldId = `${prefix}-${uid}-frase`;
   const errorId = `${prefix}-${uid}-frase-errore`;
   const examplesId = `${prefix}-${uid}-esempi`;
+  const quantityId = `${prefix}-${uid}-quantita`;
 
   // Text left by another page (the search): read once, then forgotten.
   const [handoff] = useState(() => (editId ? null : takeAddText()));
@@ -300,6 +317,11 @@ export function AddSheet({
   );
   const [editAttempt, setEditAttempt] = useState(0);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  // Edit of a thing of Spesa: the quantity, its error, and the people chosen by
+  // hand (null = the saved ones)
+  const [quantity, setQuantity] = useState("");
+  const [quantityError, setQuantityError] = useState<string | null>(null);
+  const [shoppingWho, setShoppingWho] = useState<string[] | null>(null);
   // null: the sheet shows the phrase; otherwise the full form «Nuovo impegno»
   const [draft, setDraft] = useState<FormDraft | null>(null);
   const [opener] = useState(() => (editId ? readOpener(editId) : null));
@@ -368,7 +390,17 @@ export function AddSheet({
           ? [editKind]
           : ["da-fare", "scadenza"];
         for (const kind of kinds) {
-          if (kind === "da-fare") {
+          if (kind === "spesa") {
+            const read = await readShoppingItem(supabase, editId);
+            if (read.status === "found") {
+              next = { status: "ready", kind, record: read.record };
+              break;
+            }
+            if (read.status === "failed") {
+              next = { status: "failed" };
+              break;
+            }
+          } else if (kind === "da-fare") {
             const read = await readTodo(supabase, editId);
             if (read.status === "found") {
               next = { status: "ready", kind, record: read.record };
@@ -392,7 +424,12 @@ export function AddSheet({
         }
       }
       if (!alive) return;
-      if (next.status === "ready") {
+      if (next.status === "ready" && next.kind === "spesa") {
+        phraseRef.current = next.record.name;
+        setPhrase(next.record.name);
+        setQuantity(next.record.quantity ?? "");
+        updateType("spesa");
+      } else if (next.status === "ready") {
         phraseRef.current = next.record.title;
         setPhrase(next.record.title);
         updateType(next.kind);
@@ -423,7 +460,9 @@ export function AddSheet({
   }, [type, isEdit]);
 
   const editReady = edit && edit.status === "ready" ? edit : null;
-  const record = editReady ? editReady.record : null;
+  const shoppingEdit = editReady?.kind === "spesa" ? editReady : null;
+  const thingEdit = editReady && editReady.kind !== "spesa" ? editReady : null;
+  const record = thingEdit ? thingEdit.record : null;
   const formShown =
     !isEdit || (editReady !== null && peopleState.status !== "loading");
   const empty = phrase.trim() === "";
@@ -548,6 +587,27 @@ export function AddSheet({
     const me = adults.find((p) => p.id === meId);
     return [...(me ? [me] : []), ...adults.filter((p) => p.id !== meId)];
   }, [people, meId]);
+  // Spesa, edit: the people saved (only those still in the Nest, once known)
+  // and the ones shown now.
+  const savedWho = useMemo(() => {
+    if (!shoppingEdit) return [];
+    const saved = shoppingEdit.record.assigneeIds;
+    return peopleState.status === "ready"
+      ? saved.filter((id) => whoList.some((person) => person.id === id))
+      : saved;
+  }, [shoppingEdit, peopleState.status, whoList]);
+  const whoIds = shoppingWho ?? savedWho;
+
+  function toggleShoppingWho(id: string) {
+    if (savingRef.current) return;
+    setShoppingWho((current) => {
+      const base = current ?? savedWho;
+      return base.includes(id)
+        ? base.filter((value) => value !== id)
+        : [...base, id];
+    });
+  }
+
   const personOf = (id: string | null) =>
     id ? people.find((p) => p.id === id) : undefined;
   const assignee = personOf(assigneeId);
@@ -1092,10 +1152,115 @@ export function AddSheet({
         : updateDeadline(supabase, id, { ...values, dueDate: values.dueDate });
   }
 
+  // ----- Save: edit of a thing of Spesa
+  async function submitShoppingEdit() {
+    if (!shoppingEdit) return;
+    const original = shoppingEdit.record;
+    const name = phrase.replace(/\s+/g, " ").trim();
+    const wanted = quantity.replace(/\s+/g, " ").trim();
+    const problems = validateShoppingEdit(name, wanted);
+    setQuantityError(problems.quantity);
+    if (problems.name || problems.quantity) {
+      if (problems.name) fail(problems.name);
+      else {
+        setError(null);
+        document.getElementById(quantityId)?.focus();
+      }
+      return;
+    }
+
+    const before: ShoppingValues = {
+      name: original.name,
+      quantity: original.quantity,
+      assigneeIds: savedWho,
+    };
+    const values: ShoppingValues = {
+      name,
+      quantity: wanted === "" ? null : wanted,
+      assigneeIds: whoIds,
+    };
+    if (
+      values.name === before.name &&
+      values.quantity === before.quantity &&
+      sameIds(values.assigneeIds, before.assigneeIds)
+    ) {
+      finishSaved();
+      return;
+    }
+
+    savingRef.current = true;
+    setSaving(true);
+    setSaveFailed(false);
+    setGoneAlert(false);
+    const supabase = createClient();
+    // The same name as ANOTHER thing still to buy: said before writing (the
+    // database says it too, for a thing added in the meantime).
+    const other =
+      name === original.name
+        ? null
+        : await findShoppingDuplicate(supabase, original.id, name);
+    const result: ShoppingWriteResult =
+      typeof other === "string"
+        ? { duplicate: other }
+        : await updateShoppingItem(supabase, original.id, values);
+    if (result === "gone") {
+      savingRef.current = false;
+      setSaving(false);
+      setGoneAlert(true);
+      return;
+    }
+    if (result === "failed") {
+      saveStopped();
+      return;
+    }
+    if (typeof result === "object") {
+      savingRef.current = false;
+      setSaving(false);
+      fail(shoppingDuplicateText(result.duplicate));
+      return;
+    }
+
+    notifyListsChanged("shopping");
+    const focusTargets = opener ? [opener.primary, ...opener.fallbacks] : [];
+    if (focusTargets.length > 0) {
+      focusAfterSheet(waitListsRefreshed("shopping"), focusTargets);
+    }
+    showToast({
+      text: "Modifiche salvate.",
+      onUndo: () => {
+        const hadFocus =
+          document.activeElement?.classList.contains("toast__azione");
+        void (async () => {
+          const refreshed = waitListsRefreshed("shopping");
+          const undone = await updateShoppingItem(
+            supabase,
+            original.id,
+            before,
+          );
+          if (undone === "ok") {
+            notifyListsChanged("shopping");
+            if (hadFocus && focusTargets.length > 0) {
+              focusAfterSheet(refreshed, focusTargets);
+            }
+          } else if (undone === "gone") {
+            undoFailed(UNDO_EDIT_GONE_TEXT);
+          } else {
+            undoFailed(UNDO_EDIT_FAILED_TEXT);
+          }
+        })();
+      },
+    });
+    finishSaved();
+  }
+
   async function submitEdit() {
-    if (!editReady) return;
-    const original = editReady.record;
-    const kind = editReady.kind;
+    if (shoppingEdit) {
+      await submitShoppingEdit();
+      return;
+    }
+    if (!thingEdit) return;
+    const original = thingEdit.record;
+    const kind = thingEdit.kind;
     const values = currentValues();
     const problem =
       kind === "da-fare"
@@ -1178,9 +1343,24 @@ export function AddSheet({
   }
 
   async function doDelete(): Promise<boolean | undefined> {
-    if (!editReady) return undefined;
-    const { kind, record: original } = editReady;
     const supabase = createClient();
+    if (shoppingEdit) {
+      const { record: gone } = shoppingEdit;
+      if ((await deleteShoppingItem(supabase, gone.id)) === "failed") {
+        showToast({ text: DELETE_FAILED_TEXT, icon: null });
+        return false;
+      }
+      const refreshed = waitListsRefreshed("shopping");
+      notifyListsChanged("shopping");
+      if (opener && opener.fallbacks.length > 0) {
+        focusAfterSheet(refreshed, opener.fallbacks);
+      }
+      showToast({ text: "Eliminato:", emphasis: gone.name, after: "." });
+      finishSaved();
+      return undefined;
+    }
+    if (!thingEdit) return undefined;
+    const { kind, record: original } = thingEdit;
     const result =
       kind === "da-fare"
         ? await deleteTodo(supabase, original.id)
@@ -1338,7 +1518,9 @@ export function AddSheet({
   const removeLabel =
     editReady?.kind === "scadenza"
       ? "Elimina scadenza"
-      : "Elimina cosa da fare";
+      : editReady?.kind === "spesa"
+        ? "Elimina dalla spesa"
+        : "Elimina cosa da fare";
   const removeButton = (
     <Button
       variant="pericolo"
@@ -1438,7 +1620,31 @@ export function AddSheet({
   const showBlock = isEdit ? formShown : !empty;
 
   let typeBlock: ReactNode = null;
-  if (showBlock && type === "spesa") {
+  if (showBlock && type === "spesa" && isEdit) {
+    typeBlock = (
+      <>
+        <TextField
+          id={quantityId}
+          label="Quantità"
+          value={quantity}
+          readOnly={saving}
+          error={quantityError ?? undefined}
+          onChange={(event) => {
+            setQuantity(event.target.value);
+            setQuantityError(null);
+            setSaveFailed(false);
+            setGoneAlert(false);
+          }}
+        />
+        <WhoManyGroup
+          people={whoList}
+          meId={meId}
+          chosenIds={whoIds}
+          onToggle={toggleShoppingWho}
+        />
+      </>
+    );
+  } else if (showBlock && type === "spesa") {
     typeBlock = <ShoppingPreview rows={shoppingRows} />;
   } else if (showBlock && type === "da-fare") {
     typeBlock = (
@@ -1515,7 +1721,12 @@ export function AddSheet({
     );
   }
 
-  const kindIcon = editKind === "scadenza" ? "file-clock" : "square-check";
+  const kindIcon =
+    editKind === "scadenza"
+      ? "file-clock"
+      : editKind === "spesa"
+        ? "shopping-basket"
+        : "square-check";
 
   let body: ReactNode;
   if (isEdit && !formShown) {
@@ -1564,7 +1775,11 @@ export function AddSheet({
       <form id={formId} className="modulo-foglio" onSubmit={onSubmit}>
         <div className={cx("campo", error && "campo--errore")}>
           <label className="visivamente-nascosto" htmlFor={fieldId}>
-            {isEdit ? "Titolo" : "Cosa vuoi aggiungere?"}
+            {editKind === "spesa"
+              ? "Nome"
+              : isEdit
+                ? "Titolo"
+                : "Cosa vuoi aggiungere?"}
           </label>
           <textarea
             ref={fieldRef}
@@ -1814,7 +2029,7 @@ export function AddSheet({
         open={confirmOpen && editReady !== null}
         aboveSheet
         onClose={() => setConfirmOpen(false)}
-        title={`Eliminare «${record?.title ?? ""}»?`}
+        title={`Eliminare «${shoppingEdit?.record.name ?? record?.title ?? ""}»?`}
         text={deleteConsequence(
           editReady?.kind ?? "da-fare",
           Boolean(record?.isPrivate),
