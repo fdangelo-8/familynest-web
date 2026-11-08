@@ -62,10 +62,15 @@ export async function GET(request: NextRequest) {
 
   try {
     const supabase = await createClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (error) return failure(false);
 
     if (mailKind === "password") {
+      // `tipo` is chosen by whoever opens the link: the recovery is decided by
+      // the exchange itself (the verifier saved by resetPasswordForEmail).
+      // (The SDK returns it at runtime but its types do not declare it.)
+      const { redirectType } = data as { redirectType?: string | null };
+      if (redirectType !== "recovery") return failure(false);
       // Always the new-password page: `next` is ignored. The cookie tells the
       // page that this session comes from a recovery link.
       const response = NextResponse.redirect(
