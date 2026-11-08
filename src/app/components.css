@@ -2403,7 +2403,7 @@ button.riga-lista {
 
 .avviso {
   display: grid;
-  grid-template-columns: var(--size-icona-m) 1fr auto;
+  grid-template-columns: var(--size-icona-m) minmax(0, 1fr) auto; /* #313 */
   gap: var(--space-3);
   align-items: center;
   padding: var(--space-3) var(--space-4);
@@ -2432,7 +2432,7 @@ button.riga-lista {
   font-weight: var(--weight-forte);
 }
 .avviso--senza-azione {
-  grid-template-columns: var(--size-icona-m) 1fr;
+  grid-template-columns: var(--size-icona-m) minmax(0, 1fr); /* #313 */
 }
 
 .errore-pagina {
@@ -3705,6 +3705,38 @@ button.riga-lista {
 /* Toast nelle schermate senza navigazione in basso */
 .toast--senza-nav {
   bottom: calc(var(--space-6) + env(safe-area-inset-bottom));
+}
+/* Mentre si vede un toast senza barra in basso, la pagina lascia libero il
+   suo spazio: toast di 3 righe + distanza dal bordo + respiro (#327). */
+:root:has(.toast--senza-nav) {
+  scroll-padding-block-end: calc(
+    var(--space-6) + 2 * var(--space-3) +
+      max(var(--size-tocco), 3 * var(--text-controllo-line)) + var(--space-3) +
+      env(safe-area-inset-bottom)
+  );
+}
+:root:has(.toast--senza-nav) body {
+  padding-block-end: calc(
+    var(--space-6) + 2 * var(--space-3) +
+      max(var(--size-tocco), 3 * var(--text-controllo-line)) + var(--space-3) +
+      env(safe-area-inset-bottom)
+  );
+}
+@media (min-width: 1024px) {
+  :root:has(.toast--senza-nav) {
+    scroll-padding-block-end: calc(
+      var(--space-8) + 2 * var(--space-3) +
+        max(var(--size-tocco), 3 * var(--text-controllo-line)) +
+        var(--space-3) + env(safe-area-inset-bottom)
+    );
+  }
+  :root:has(.toast--senza-nav) body {
+    padding-block-end: calc(
+      var(--space-8) + 2 * var(--space-3) +
+        max(var(--size-tocco), 3 * var(--text-controllo-line)) +
+        var(--space-3) + env(safe-area-inset-bottom)
+    );
+  }
 }
 
 /* Avviso su fondo notte (#11): nel mockup il testo eredita il latte e su bianco
@@ -5702,5 +5734,28 @@ body {
   .riga-lista__testo ~ .selettore .selettore__voce {
     white-space: normal;
     min-height: calc(var(--size-controllo) - 2 * var(--space-1));
+  }
+}
+
+.avviso {
+  container: avviso / inline-size;
+}
+
+/* Avviso: l'azione scende sotto il testo, nella colonna del testo. Testo e
+   azione prendono le colonne 2 e 3 (2 / -1): la terza resta vuota e larga 0,
+   quindi il testo non perde lo spazio della distanza. */
+@container avviso (width < 18rem) {
+  .avviso__testo,
+  .avviso__testo ~ * {
+    grid-column: 2 / -1;
+  }
+  .avviso__testo ~ * {
+    justify-self: start;
+  }
+  .avviso > .icona {
+    align-self: start;
+    margin-block-start: calc(
+      (var(--text-controllo-line) - var(--size-icona-m)) / 2
+    );
   }
 }
