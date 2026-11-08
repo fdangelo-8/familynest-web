@@ -1,9 +1,10 @@
-import { expect, isMobileProject, test } from "../fixtures/casa";
+import { expect, test } from "../fixtures/casa";
 import {
   PHRASE,
   dialogOf,
   eventsOf,
   fieldOf,
+  impegnoFields,
   openAdd,
 } from "../fixtures/aggiungi";
 import {
@@ -14,31 +15,27 @@ import {
 
 // Default visibility of a new event in the Add sheet (issue #231, tests e-g of
 // the review): with the lens «Io» it is the one chosen in the profile; with the
-// lens «Nest» it is always «Tutto il Nest». When the preferences cannot be read
+// lens «Nest» it is always «Tutti». When the preferences cannot be read
 // the page starts from «Io» and «Solo io». Every test uses its own throwaway
 // Nest; what is saved is read from the database.
 
 test.use({ locale: "it-IT", timezoneId: "Europe/Rome" });
 
+// Since #333 the sheet is the same on desktop and mobile: an Impegno has the
+// group «Chi lo vede» with three voices, the chosen one is aria-pressed.
 const LABELS: Record<DefaultVisibility, string> = {
-  household: "Tutto il Nest",
+  household: "Tutti",
   busy: "Occupato",
   private: "Solo io",
 };
 
-/** The row «Chi lo vede» of the desktop sheet (the mobile sheet has no such row). */
-const visibilityRow = (page: Parameters<typeof dialogOf>[0]) =>
-  dialogOf(page).locator(".riga-opzione").filter({ hasText: "Chi lo vede" });
-
-/** Types the phrase, checks the row on desktop and saves. */
+/** Types the phrase, checks the pressed voice of «Chi lo vede» and saves. */
 async function saveWithLabel(
   page: Parameters<typeof dialogOf>[0],
   expected: string,
 ) {
   await fieldOf(page).fill(PHRASE);
-  if (!isMobileProject()) {
-    await expect(visibilityRow(page)).toContainText(expected);
-  }
+  await impegnoFields(page).expectVisibility(expected);
   await dialogOf(page)
     .getByRole("button", { name: "Metti in giovedì 22" })
     .click();
