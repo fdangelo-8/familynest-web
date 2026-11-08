@@ -11,7 +11,7 @@ import { createClient } from "@/lib/supabase/client";
 import { AuthLayout, Intro, ToAccessLink, ToAccessRow } from "./AuthLayout";
 import {
   PASSWORD_TEXT,
-  confirmUrl,
+  callbackUrl,
   isRateLimit,
   seconds,
   validateEmail,
@@ -118,7 +118,7 @@ async function request(
         email,
         password,
         // #326: without it Supabase falls back on the Site URL.
-        options: { emailRedirectTo: confirmUrl() },
+        options: { emailRedirectTo: callbackUrl("conferma") },
       });
       if (!error) return data.session ? "entered" : "ok";
       if (error.code === "weak_password") return "weak";
@@ -129,7 +129,7 @@ async function request(
     const { error } = await supabase.auth.resend({
       type: "signup",
       email,
-      options: { emailRedirectTo: confirmUrl() },
+      options: { emailRedirectTo: callbackUrl("conferma") },
     });
     if (!error) return "ok";
     return isRateLimit(error) ? "limit" : "network";

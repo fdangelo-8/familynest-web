@@ -54,9 +54,9 @@ export function isRateLimit(error: AuthError): boolean {
   );
 }
 
-/** The address a link goes back to (#326): always `<origin>/auth/confirm`. */
-export function confirmUrl(): string {
-  return `${window.location.origin}/auth/confirm`;
+/** The address a mail link goes back to (#327, PKCE): `<origin>/auth/callback?tipo=…`. */
+export function callbackUrl(kind: "conferma" | "password"): string {
+  return `${window.location.origin}/auth/callback?tipo=${kind}`;
 }
 
 /** Plural of the wait text: «tra 1 secondo», «tra 42 secondi». */

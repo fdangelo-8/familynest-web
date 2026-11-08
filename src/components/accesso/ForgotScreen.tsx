@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/Button/Button";
 import { useToast } from "@/components/ui/Toast/ToastProvider";
 import { createClient } from "@/lib/supabase/client";
 import { AuthLayout, Intro, ToAccessLink, ToAccessRow } from "./AuthLayout";
-import { confirmUrl, isRateLimit, seconds, validateEmail } from "./fields";
+import { callbackUrl, isRateLimit, seconds, validateEmail } from "./fields";
 import { MailField } from "./MailField";
 import { HintList, NetworkNotice, type HintRow } from "./notices";
 import styles from "./accesso.module.css";
@@ -33,7 +33,7 @@ async function requestLink(email: string): Promise<"ok" | "network"> {
   try {
     const supabase = createClient();
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: confirmUrl(),
+      redirectTo: callbackUrl("password"),
     });
     if (!error || isRateLimit(error)) return "ok";
     return "network";

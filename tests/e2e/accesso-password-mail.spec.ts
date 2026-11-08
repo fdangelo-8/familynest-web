@@ -126,7 +126,7 @@ test.describe("[CI-stack] registrazione e conferma", () => {
       const signups = callsTo(calls, "/signup");
       expect(signups).toHaveLength(1);
       expect(signups[0]?.query.get("redirect_to")).toBe(
-        `${origin}/auth/confirm`,
+        `${origin}/auth/callback?tipo=conferma`,
       );
       await expect(checkPosta(page)).toBeFocused();
       await expect(page.getByText(address)).toBeVisible();
@@ -445,7 +445,7 @@ test.describe("[CI-stack] password dimenticata e nuova password", () => {
       const recovers = callsTo(calls, "/recover");
       expect(recovers).toHaveLength(1);
       expect(recovers[0]?.query.get("redirect_to")).toBe(
-        `${origin}/auth/confirm`,
+        `${origin}/auth/callback?tipo=password`,
       );
       const [mail] = await waitForMails(user.email);
       expect(mail?.subject).toBe("Scegli una nuova password per FamilyNest");

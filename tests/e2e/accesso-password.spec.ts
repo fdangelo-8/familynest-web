@@ -266,7 +266,7 @@ test.describe("Registrati: esiti di Supabase", () => {
     const signups = callsTo(calls, "/signup");
     expect(signups).toHaveLength(1);
     expect(signups[0]?.query.get("redirect_to")).toBe(
-      `${new URL(baseURL!).origin}/auth/confirm`,
+      `${new URL(baseURL!).origin}/auth/callback?tipo=conferma`,
     );
     expect(signups[0]?.body).toMatchObject({ email: MAIL });
     await expect(checkPosta(page)).toBeFocused();
@@ -425,7 +425,9 @@ test.describe("Registrati: esiti di Supabase", () => {
     await expect.poll(() => callsTo(calls, "/resend").length).toBe(1);
     const [resend] = callsTo(calls, "/resend");
     expect(resend?.body).toMatchObject({ type: "signup", email: MAIL });
-    expect(resend?.query.get("redirect_to")).toMatch(/\/auth\/confirm$/);
+    expect(resend?.query.get("redirect_to")).toMatch(
+      /\/auth\/callback\?tipo=conferma$/,
+    );
     await expect(
       page.getByText("Mail rimandata: usa quella più recente."),
     ).toBeVisible();
@@ -736,7 +738,7 @@ test.describe("/accesso/password-dimenticata", () => {
     const recovers = callsTo(calls, "/recover");
     expect(recovers).toHaveLength(1);
     expect(recovers[0]?.query.get("redirect_to")).toBe(
-      `${new URL(baseURL!).origin}/auth/confirm`,
+      `${new URL(baseURL!).origin}/auth/callback?tipo=password`,
     );
     expect(recovers[0]?.body).toMatchObject({ email: MAIL });
     await expect(sentTitle(page)).toBeFocused();
