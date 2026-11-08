@@ -1,6 +1,10 @@
 # Generates visual baseline screenshots in the same Playwright container used by CI,
 # so pixels match. Triggered manually (or by the visual tester agent) on a work branch.
-# It never commits: it uploads the screenshots as an artifact that the agent reviews and commits.
+# It uploads the screenshots as an artifact. With `commit: true` it also pushes them,
+# as one commit on top of the branch, to a new branch `riferimenti/<branch>-<run>`: the
+# visual tester reviews them and brings them into the pull request with `git merge`
+# (decision of Francesco, 07/11). The bot never writes to the work branch itself, so CI
+# runs on the agent's normal push.
 name: visual-baseline
 
 on:
@@ -18,9 +22,15 @@ on:
         options:
           - changed
           - all
+      commit:
+        description: "true = also push the updated references to a new branch riferimenti/<branch>-<run>"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
-  contents: read
+  # write only for the riferimenti/<branch>-<run> push below; nothing else is written.
+  contents: write
 
 jobs:
   baseline:
@@ -115,3 +125,31 @@ jobs:
           name: visual-baselines
           path: tests/visual/__screenshots__/
           if-no-files-found: error
+
+      - name: Push references to riferimenti/<branch>-<run>
+        if: ${{ inputs.commit && !startsWith(github.ref_name, 'riferimenti/') }}
+        env:
+          BRANCH: ${{ github.ref_name }}
+          RUN: ${{ github.run_number }}
+        run: |
+          set -euo pipefail
+          case "$BRANCH" in *[!A-Za-z0-9._/-]*) echo "::error::invalid branch name"; exit 1 ;; esac
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Only reference screenshots go into the commit.
+          git add -- tests/visual/__screenshots__/
+          if git diff --cached --quiet; then
+            echo "Nessun riferimento cambiato." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          other="$(git diff --cached --name-only | grep -v '^tests/visual/__screenshots__/' || true)"
+          if [ -n "$other" ]; then echo "::error::file fuori dai riferimenti: $other"; exit 1; fi
+          git commit -m "test(visual): update references for $BRANCH"
+          target="riferimenti/$BRANCH-$RUN"
+          git push origin "HEAD:refs/heads/$target"
+          {
+            echo "### Riferimenti pronti"
+            echo "Branch \`$target\`. Controllali, poi sul branch della PR: \`git fetch origin && git merge --no-edit origin/$target\`."
+            echo
+            git show --stat --format= HEAD
+          } >> "$GITHUB_STEP_SUMMARY"
