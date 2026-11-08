@@ -403,7 +403,6 @@ test.describe("[CI-stack] password dimenticata e nuova password", () => {
   });
 
   test("CA-21, CA-24, CA-25, CA-26, CA-28, CA-37: recupero completo", async ({
-    page,
     browser,
     baseURL,
   }) => {
