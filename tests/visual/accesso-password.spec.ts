@@ -361,7 +361,7 @@ test.describe("accesso con mail e password", () => {
     await reachCheckMail(page);
     await page.clock.pauseAt(new Date(START.getTime() + 2000));
     await expect(
-      page.getByText("Apri il link su questo dispositivo"),
+      page.getByText("Apri il link su questo browser", { exact: true }),
     ).toBeVisible();
     await shot(page, "controlla-la-posta-invito.png");
   });
