@@ -76,6 +76,8 @@ function focused(page: Page) {
  * control or on something inside it. Returns the points that land elsewhere.
  */
 async function missedPoints(control: Locator, min = 44) {
+  // The sheet scrolls when the fields are many (#333): measure the control in view
+  await control.scrollIntoViewIfNeeded();
   const box = await control.boundingBox();
   if (!box) throw new Error("the control is not visible");
   const w = Math.max(box.width, min);
@@ -175,30 +177,29 @@ test.describe("Aggiungi · Impegni: axe", () => {
   });
 });
 
-test.describe("Aggiungi · Impegni: regione live delle etichette", () => {
-  test("una sola regione, sempre nel DOM, con le etichette in ordine", async ({
+// #333: the chips of what was understood are gone (the values are in the fields);
+// the one polite region is the sentence under «Chi lo vede».
+test.describe("Aggiungi · Impegni: regione live", () => {
+  test("una sola regione, sempre nel DOM: la frase sotto «Chi lo vede»", async ({
     page,
   }) => {
     await installFakes(page);
     const { dialog, field } = await open(page);
     const live = dialog.locator("[aria-live]");
-    // The only live region of the sheet, there before the first label
     await expect(live).toHaveCount(1);
     await expect(live).toHaveAttribute("aria-live", "polite");
-    await expect(live).toBeEmpty();
+    await expect(live).not.toBeEmpty();
     const handle = await live.elementHandle();
 
     await field.pressSequentially(PHRASE);
-    await expect(live.locator(".chip")).toContainText([
-      "Giovedì 22",
-      "17:00",
-      "Sofia",
-    ]);
     // The same element before and after: the announcement is not lost by a remount
     expect(await handle!.evaluate((el) => el.isConnected)).toBe(true);
     await expect(dialog.locator("[aria-live]")).toHaveCount(1);
-    // The labels are not controls
+    // The sentence is not a control, and describes the group of the three voices
     await expect(live.getByRole("button")).toHaveCount(0);
+    await expect(
+      dialog.getByRole("group", { name: "Chi lo vede", exact: true }),
+    ).toHaveAccessibleDescription(/.+/);
   });
 
   test("l'avviso «chi accompagna?» è uno status, uno solo, e non è live per attributo", async ({
@@ -242,37 +243,51 @@ test.describe("Aggiungi · Impegni: fuoco", () => {
     });
   }
 
-  test("ordine con il campo vuoto: Chiudi, campo, i quattro tipi, i quattro esempi", async ({
+  /**
+   * The names of the stops of the Tab from «Chiudi» until the focus wraps back
+   * to it. The native date and time fields have one stop per part: same name in
+   * a row, counted once.
+   */
+  async function tabStops(page: Page): Promise<string[]> {
+    await page.keyboard.press("Shift+Tab");
+    const order = [await focused(page)];
+    for (let i = 0; i < 40; i += 1) {
+      await page.keyboard.press("Tab");
+      const name = await focused(page);
+      if (name === "Chiudi") break;
+      order.push(name);
+    }
+    return order.filter((name, i) => name !== order[i - 1]);
+  }
+
+  // #333: no examples. The fields come right after the types: «Giorno», «Dalle»,
+  // «Alle», the people of «Chi» (their names start with the initial of the avatar)
+  // and the three voices of «Chi lo vede».
+  test("ordine con il campo vuoto: Chiudi, campo, i quattro tipi, i campi dell'impegno; l'invio spento si salta", async ({
     page,
   }) => {
     await installFakes(page);
     await open(page);
-    await page.keyboard.press("Shift+Tab");
-    const order = [await focused(page)];
-    for (let i = 0; i < 9; i += 1) {
-      await page.keyboard.press("Tab");
-      order.push(await focused(page));
-    }
-    // The submit button is disabled: it is skipped. Since #22 there are four
-    // types and four examples (under the button on mobile, in the side column
-    // on desktop: the same order).
-    expect(order).toEqual([
+    const stops = await tabStops(page);
+    expect(stops.slice(0, 9)).toEqual([
       "Chiudi",
       "Cosa vuoi aggiungere?",
       "Impegno",
       "Da fare",
       "Spesa",
       "Scadenza",
-      EXAMPLE,
-      "latte e pane",
-      "Laura deve chiamare la nonna",
-      "bollo auto scade il 7 dicembre",
+      "Giorno",
+      "Dalle",
+      "Alle",
     ]);
-    await page.keyboard.press("Tab");
-    expect(await focused(page)).toBe("Chiudi");
+    expect(stops.slice(-3)).toEqual(["Solo io", "Occupato", "Tutti"]);
+    // Between the times and the voices: the chips of the people
+    expect(stops.length).toBeGreaterThanOrEqual(9 + 2 + 3);
+    expect(stops).not.toContain(EXAMPLE);
+    expect(stops).not.toContain("latte e pane");
   });
 
-  test("ordine con la frase: Chiudi, campo, i quattro tipi, invio; le righe dell'anteprima non prendono il fuoco", async ({
+  test("ordine con la frase: i campi, «Più dettagli» o «Tutti i dettagli» e l'invio; l'avviso non prende il fuoco", async ({
     page,
   }) => {
     await installFakes(page, { events: THURSDAY });
@@ -281,42 +296,25 @@ test.describe("Aggiungi · Impegni: fuoco", () => {
     await expect(
       page.getByRole("status").filter({ hasText: "chi accompagna Sofia?" }),
     ).toHaveCount(1);
-    // #171: the entries to the full form come before the button: «Più dettagli»
-    // on mobile; the four rows of the summary and «Tutti i dettagli» on desktop.
-    const desktop = (page.viewportSize()?.width ?? 0) >= 1024;
-    await page.keyboard.press("Shift+Tab");
-    const order = [await focused(page)];
-    for (let i = 0; i < (desktop ? 11 : 7); i += 1) {
-      await page.keyboard.press("Tab");
-      order.push(await focused(page));
-    }
-    const entries = desktop
-      ? [
-          "Giovedì 22 ottobre",
-          "Chi",
-          "La porta",
-          "Chi lo vede",
-          "Tutti i dettagli",
-        ]
-      : ["Più dettagli"];
-    expect(order.slice(0, 6)).toEqual([
+    const stops = await tabStops(page);
+    expect(stops.slice(0, 9)).toEqual([
       "Chiudi",
       "Cosa vuoi aggiungere?",
       "Impegno",
       "Da fare",
       "Spesa",
       "Scadenza",
+      "Giorno",
+      "Dalle",
+      "Alle",
     ]);
-    entries.forEach((name, index) => {
-      expect(order[6 + index]).toContain(name);
-    });
-    expect(order[6 + entries.length]).toBe("Metti in giovedì 22");
-    // Nothing else after the button: the next Tab goes back to the start
-    await page.keyboard.press("Tab");
-    expect(await focused(page)).toBe("Chiudi");
+    // #333: the only entry to the full form comes before the button
+    expect(stops.slice(-5, -2)).toEqual(["Solo io", "Occupato", "Tutti"]);
+    expect(stops.at(-2)).toMatch(/^(Più|Tutti i) dettagli$/);
+    expect(stops.at(-1)).toBe("Metti in giovedì 22");
   });
 
-  test("l'anello del fuoco si vede su Chiudi, Impegno, invio, esempio e campo", async ({
+  test("l'anello del fuoco si vede su Chiudi, Impegno, una voce della visibilità, invio e campo", async ({
     page,
   }) => {
     await installFakes(page);
@@ -342,27 +340,28 @@ test.describe("Aggiungi · Impegni: fuoco", () => {
     const type = dialog.getByRole("button", { name: "Impegno" });
     await expect(type).toBeFocused();
     expect((await ring(type)).outline).toBe(true);
-    // The other three types, then the first example (the submit button is disabled)
-    for (let i = 0; i < 4; i += 1) await page.keyboard.press("Tab");
-    const example = page.getByRole("button", { name: EXAMPLE });
-    await expect(example).toBeFocused();
-    expect((await ring(example)).outline).toBe(true);
-    // With a phrase: the submit button
-    await example.press("Enter");
+    // A voice of «Chi lo vede», reached with the keyboard
+    const voice = dialog.getByRole("button", { name: "Occupato", exact: true });
+    for (let i = 0; i < 40; i += 1) {
+      await page.keyboard.press("Tab");
+      if (await voice.evaluate((el) => el === document.activeElement)) break;
+    }
+    await expect(voice).toBeFocused();
+    expect((await ring(voice)).outline).toBe(true);
+    // With a phrase: the submit button, the last stop before the start
+    await field.fill("cena da Marta venerdì alle 20");
     const submit = dialog.getByRole("button", { name: "Metti in venerdì 23" });
     await expect(submit).toBeEnabled();
-    // Back to Chiudi, then field, Impegno, Da fare, Spesa, Scadenza, the entries
-    // to the full form (#171: «Più dettagli», or four rows and «Tutti i dettagli»), submit
-    const entries = (page.viewportSize()?.width ?? 0) >= 1024 ? 5 : 1;
+    await submit.focus();
     await page.keyboard.press("Shift+Tab");
-    for (let i = 0; i < 6 + entries; i += 1) await page.keyboard.press("Tab");
+    await page.keyboard.press("Tab");
     await expect(submit).toBeFocused();
     expect((await ring(submit)).outline).toBe(true);
   });
 });
 
 test.describe("Aggiungi · Impegni: aree di tocco", () => {
-  test("Chiudi, Impegno ed esempio hanno 44 px di area (campo vuoto)", async ({
+  test("Chiudi, Impegno e le voci della visibilità hanno 44 px di area (campo vuoto)", async ({
     page,
   }) => {
     await installFakes(page);
@@ -373,9 +372,12 @@ test.describe("Aggiungi · Impegni: aree di tocco", () => {
     expect(
       await missedPoints(dialog.getByRole("button", { name: "Impegno" })),
     ).toEqual([]);
-    expect(
-      await missedPoints(page.getByRole("button", { name: EXAMPLE })),
-    ).toEqual([]);
+    for (const name of ["Solo io", "Occupato", "Tutti"]) {
+      expect(
+        await missedPoints(dialog.getByRole("button", { name, exact: true })),
+        name,
+      ).toEqual([]);
+    }
   });
 
   test("il bottone d'invio ha 44 px di area e altezza", async ({ page }) => {
@@ -537,7 +539,7 @@ test.describe("Aggiungi · Impegni: contrasto", () => {
     });
   }
 
-  test("campo vuoto: testi, esempio e segnaposto", async ({ page }) => {
+  test("campo vuoto: testi dei campi e segnaposto", async ({ page }) => {
     await installFakes(page);
     await open(page);
     expect(await failing(page)).toEqual([]);

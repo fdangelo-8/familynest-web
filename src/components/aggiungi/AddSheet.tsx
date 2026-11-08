@@ -12,19 +12,17 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from "react";
-import { flushSync } from "react-dom";
 import { takeAddText } from "../../lib/add-text-handoff";
 import { notifyEventsChanged } from "../../lib/events-changed";
-import { VISIBILITY_LABELS, type EventVisibility } from "../../lib/calendar";
+import type { EventVisibility } from "../../lib/calendar";
 import {
   daysUntilDay,
-  formatDeadline,
-  formatTime,
   getCalendarDay,
   howMuch,
   isUrgent,
-  startOfDay,
+  isValidDayKey,
   toDayKey,
+  toTimeFieldValue,
 } from "../../lib/datetime";
 import {
   listHouseholdEvents,
@@ -37,27 +35,33 @@ import { useLens } from "../ui/Lens/Lens";
 import { Alert } from "../ui/Alert/Alert";
 import { Avatar } from "../ui/Avatar/Avatar";
 import { Button } from "../ui/Button/Button";
-import { Chip } from "../ui/Chip/Chip";
 import { ConfirmDialog } from "../ui/ConfirmDialog/ConfirmDialog";
+import { Chip } from "../ui/Chip/Chip";
 import { cx } from "../ui/cx";
 import { EmptyState } from "../ui/EmptyState/EmptyState";
-import { TextField } from "../ui/Field/Field";
-import { Icon } from "../ui/Icon/Icon";
+import { DateField, FieldPair, TextField, TimeField } from "../ui/Field/Field";
 import { useIsDesktop } from "../ui/overlay";
 import { SegmentedControl } from "../ui/SegmentedControl/SegmentedControl";
 import { Sheet } from "../ui/Sheet/Sheet";
 import { Skeleton, SkeletonGroup } from "../ui/Skeleton/Skeleton";
 import { useToast } from "../ui/Toast/ToastProvider";
-import { focusField } from "../evento-modulo/EventFormFields";
+import {
+  PeopleChips,
+  fieldId as eventFieldId,
+  focusField,
+} from "../evento-modulo/EventFormFields";
+import { Icon } from "../ui/Icon/Icon";
 import {
   ERROR_TEXTS,
+  endsOtherDayHint,
   firstErrorField,
+  meFirst,
   newEventRepetition,
   validateForm,
+  visibilityHelp,
   type EventFormValues,
   type FormErrors,
 } from "../evento-modulo/model";
-import { AddPreview, type DayState } from "./AddPreview";
 import {
   focusAfterSheet,
   notifyListsChanged,
@@ -65,29 +69,27 @@ import {
   waitListsRefreshed,
   type ListKind,
 } from "./coordination";
+import { DetailsButton } from "./DetailsButton";
 import { detectType, type AddType } from "./detect-type";
 import {
-  ENTRY_FOCUS,
   formSubmitLabel,
   initialFormValues,
-  type FormEntry,
+  slotOfFields,
+  type EventFields,
 } from "./new-event";
 import { NewEventForm } from "./NewEventForm";
-import { DetailsButton, OptionRow } from "./OptionRow";
 import {
   MEMBERS_FAILED_TEXT,
   SAVE_FAILED_TEXT,
   UNDO_FAILED_TEXT,
   atTime,
   dayInSentence,
-  dayLabel,
+  joinNames,
   longDayLabel,
-  rangeLabel,
-  submitLabel,
   validatePhrase,
 } from "./labels";
 import { parseShopping } from "./parse-list";
-import { parsePhrase, slotOf } from "./parse-phrase";
+import { parsePhrase, slotOf, type ParsedPhrase } from "./parse-phrase";
 import { parseDeadline, parseTodo } from "./parse-todo";
 import { escortNotice, type NestPerson } from "./preview";
 import {
@@ -120,7 +122,6 @@ import {
 import {
   DEFAULT_REMINDERS,
   DELETE_FAILED_TEXT,
-  EXAMPLES,
   GONE_ALERT_TEXT,
   GONE_TEXT,
   GONE_TITLE,
@@ -140,16 +141,16 @@ import {
   validateDeadline,
   validateShopping,
   validateShoppingEdit,
+  validateThingDate,
   validateTodo,
 } from "./texts";
 import {
   DeadlinePreview,
+  EventVisibilityGroup,
   ReminderGroup,
   RemovableLabel,
   ShoppingPreview,
-  VisibilityChip,
-  VisibilityLabel,
-  WhoGroup,
+  VisibilityGroup,
   WhoManyGroup,
 } from "./ThingBlocks";
 
@@ -159,6 +160,9 @@ type PeopleState =
   | { status: "ready"; people: NestPerson[]; meId: string | null };
 
 type Client = ReturnType<typeof createClient>;
+
+/** Under a field whose value comes from the phrase (#333, specifica grafica §3) */
+const FROM_PHRASE = "Preso dalla frase";
 
 type EditKind = "da-fare" | "scadenza" | "spesa";
 
@@ -174,8 +178,34 @@ type EditState =
 type FormDraft = {
   values: EventFormValues;
   errors: FormErrors;
-  entry: FormEntry;
 };
+
+/** The fields of an Impegno the user changed by hand (#333, R2): they win over the phrase. */
+type EventManual = Partial<{
+  day: string;
+  from: string;
+  to: string;
+  memberIds: string[];
+  visibility: EventVisibility;
+}>;
+
+/** An error under a field of the sheet (not under the phrase). */
+type FieldErrors = Partial<
+  Record<"day" | "from" | "to" | "people" | "date", string>
+>;
+
+/** What the phrase says for each field: when it changes, the field follows the phrase again (R3). */
+type Recognized = {
+  assignee: string;
+  date: string;
+  day: string;
+  from: string;
+  to: string;
+  people: string;
+};
+
+/** The values of a Da fare or a Scadenza, as the sheet holds them. */
+type ThingValues = TodoValues & { reminders: number[]; note: string | null };
 
 type ToTakeState =
   | { status: "idle" | "loading" | "failed" }
@@ -238,6 +268,62 @@ function sameIds(a: readonly string[], b: readonly string[]): boolean {
 }
 
 /**
+ * The fields of an Impegno: what the phrase says (the day, the times, the
+ * people named, otherwise whoever writes), unless the user changed the field
+ * by hand (#333, R1 and R2).
+ */
+function eventFieldsOf(args: {
+  parsed: ParsedPhrase;
+  manual: EventManual;
+  todayKey: string;
+  meId: string | null;
+  visibility: EventVisibility;
+}): EventFields {
+  const { parsed, manual, todayKey, meId, visibility } = args;
+  const slot = slotOf(parsed, todayKey);
+  const named =
+    parsed.memberIds.length > 0 ? parsed.memberIds : meId ? [meId] : [];
+  return {
+    day: manual.day ?? parsed.dayKey ?? (parsed.time ? todayKey : ""),
+    from: manual.from ?? (slot ? toTimeFieldValue(slot.startsAt) : ""),
+    to: manual.to ?? (slot ? toTimeFieldValue(slot.endsAt) : ""),
+    memberIds: manual.memberIds ?? named,
+    visibility: manual.visibility ?? visibility,
+  };
+}
+
+/** The note a Scadenza already has (a Da fare has none), to send it back unchanged. */
+function noteOf(record: TodoRecord | DeadlineRecord): string | null {
+  return "note" in record ? (record as DeadlineRecord).note : null;
+}
+
+/** The errors under the fields of an Impegno (the title is checked under the phrase). */
+function eventFieldErrors(fields: EventFields): FieldErrors {
+  const errors: FieldErrors = {};
+  // The same texts as the full form «Nuovo impegno»
+  if (!isValidDayKey(fields.day)) errors.day = ERROR_TEXTS.day;
+  if (!fields.from) errors.from = ERROR_TEXTS.from;
+  else if (!fields.to) errors.to = ERROR_TEXTS.to;
+  else if (fields.from === fields.to) errors.to = ERROR_TEXTS.sameTime;
+  if (fields.memberIds.length === 0) errors.people = ERROR_TEXTS.people;
+  return errors;
+}
+
+/** Moves the focus to a field of the sheet by its id (a group takes it on its pressed voice). */
+function focusById(id: string): void {
+  const element = document.getElementById(id);
+  if (!element) return;
+  if (element.getAttribute("role") === "group") {
+    (
+      element.querySelector<HTMLElement>('button[aria-pressed="true"]') ??
+      element.querySelector<HTMLElement>("button:not(:disabled)")
+    )?.focus();
+    return;
+  }
+  element.focus();
+}
+
+/**
  * Body of the Add sheet: Impegno (issue #20), Spesa, Da fare and Scadenza, and
  * the edit of a Da fare or a Scadenza (issue #22).
  * - Opened from inside the app (intercepted route): closing goes back to the
@@ -277,8 +363,11 @@ export function AddSheet({
   const modulePrefix = `n-${uid}`;
   const fieldId = `${prefix}-${uid}-frase`;
   const errorId = `${prefix}-${uid}-frase-errore`;
-  const examplesId = `${prefix}-${uid}-esempi`;
   const quantityId = `${prefix}-${uid}-quantita`;
+  // The fields of the sheet: «Giorno», «Dalle», «Alle», «Chi» of an Impegno ...
+  const fieldsPrefix = `${prefix}-${uid}-campo`;
+  const dateId = `${fieldsPrefix}-data`;
+  const visibilityId = `${fieldsPrefix}-vede`;
 
   // Text left by another page (the search): read once, then forgotten.
   const [handoff] = useState(() => (editId ? null : takeAddText()));
@@ -304,13 +393,16 @@ export function AddSheet({
     isEdit ? "da-fare" : (startType ?? "impegno"),
   );
   const [toTake, setToTake] = useState<ToTakeState>({ status: "idle" });
-  // undefined = follows the text; null or an id = chosen by hand
-  const [assigneeManual, setAssigneeManual] = useState<
-    string | null | undefined
-  >(undefined);
+  // undefined = follows the text; a list (even empty) = chosen by hand
+  const [assigneeManual, setAssigneeManual] = useState<string[] | undefined>(
+    undefined,
+  );
+  // undefined = follows the text; a day or "" = chosen by hand («Data»)
+  const [dateManual, setDateManual] = useState<string | undefined>(undefined);
+  const [eventManual, setEventManual] = useState<EventManual>({});
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [isPrivate, setIsPrivate] = useState(false);
   const [reminders, setReminders] = useState<number[]>([...DEFAULT_REMINDERS]);
-  const [dateRemoved, setDateRemoved] = useState(false);
   const [forRemoved, setForRemoved] = useState(false);
   const [edit, setEdit] = useState<EditState | null>(
     isEdit ? { status: "loading" } : null,
@@ -335,14 +427,14 @@ export function AddSheet({
   const manualRef = useRef(startType !== null || isEdit);
   const typeRef = useRef(type);
   const phraseRef = useRef(phrase);
-  // What the text said about «chi se ne occupa» the last time it changed
-  const writtenRef = useRef<string>("none");
   const toTakeLoad = useRef<Promise<void> | null>(null);
   const toTakeKeys = useRef<Set<string> | null>(null);
-  const pendingFocus = useRef<"for" | "visibility" | null>(null);
-  // Entry whose field takes the focus once the form is drawn, or that gets it back
-  const formFocus = useRef<FormEntry | null>(null);
-  const returnFocus = useRef<FormEntry | null>(null);
+  // After «Togli Per …» the focus moves on to the voice chosen in «Chi lo vede»
+  const pendingFocus = useRef(false);
+  // The form «Nuovo impegno» was just opened (its title takes the focus), or just closed
+  // (the button that opened it gets the focus back)
+  const formFocus = useRef(false);
+  const returnFocus = useRef(false);
 
   function updateType(next: AddType) {
     typeRef.current = next;
@@ -473,24 +565,24 @@ export function AddSheet({
     () => parsePhrase(phrase, todayKey, people),
     [phrase, todayKey, people],
   );
-  const slot = useMemo(() => slotOf(parsed, todayKey), [parsed, todayKey]);
   const hasTitle = parsed.title !== "";
-  // A title and a time: the preview and the notice can show
-  const readySlot = hasTitle ? slot : null;
+  // The fields of the sheet: the phrase, unless changed by hand
+  const eventFields = useMemo(
+    () =>
+      eventFieldsOf({
+        parsed,
+        manual: eventManual,
+        todayKey,
+        meId,
+        visibility: newEventVisibility,
+      }),
+    [parsed, eventManual, todayKey, meId, newEventVisibility],
+  );
+  const fieldsSlot = useMemo(() => slotOfFields(eventFields), [eventFields]);
+  // A title and a time: the notice can show
+  const readySlot = hasTitle ? fieldsSlot : null;
 
-  // Who takes part: the people named, otherwise whoever writes.
-  const participants = useMemo(() => {
-    const ids =
-      parsed.memberIds.length > 0 ? parsed.memberIds : meId ? [meId] : [];
-    const chosen = people.filter((p) => ids.includes(p.id));
-    // Whoever writes first («Tu»), the others in the order of the Nest.
-    return [
-      ...chosen.filter((p) => p.id === meId),
-      ...chosen.filter((p) => p.id !== meId),
-    ];
-  }, [parsed.memberIds, people, meId]);
-
-  // The events of the day: read when the phrase gets a title and a time, then
+  // The events of the day: read when the fields get a title and a time, then
   // only when the day changes. The request carries dates, never the phrase.
   const dayToRead =
     isImpegno && readySlot && peopleState.status === "ready"
@@ -505,27 +597,14 @@ export function AddSheet({
     });
   }, [dayToRead]);
 
-  let day: DayState | null = null;
-  if (isImpegno && readySlot) {
-    if (peopleState.status === "error") day = { status: "failed" };
-    else if (peopleState.status === "loading") day = { status: "loading" };
-    else {
-      const result = results[readySlot.dayKey];
-      day = !result
-        ? { status: "loading" }
-        : result.ok
-          ? { status: "ready", events: result.events }
-          : { status: "failed" };
-    }
-  }
-
+  const dayResult = readySlot ? results[readySlot.dayKey] : undefined;
   const noticeText =
-    isImpegno && readySlot && day?.status === "ready"
+    isImpegno && readySlot && dayResult?.ok
       ? escortNotice({
-          events: day.events,
+          events: dayResult.events,
           members: people,
           meId,
-          participantIds: participants.map((p) => p.id),
+          participantIds: eventFields.memberIds,
           slot: readySlot,
         })
       : null;
@@ -561,8 +640,9 @@ export function AddSheet({
   // In edit the text counts only once it has been changed
   const useParsed = !record || phrase !== record.title;
   const thingTitle = !common ? "" : useParsed ? common.title : record.title;
-  const baseDate = record && !dateRemoved ? record.dueDate : null;
-  const dueDate = (useParsed && common ? common.dueDate : null) ?? baseDate;
+  // «Data»: chosen by hand, otherwise the phrase, otherwise the saved one ("" = none)
+  const phraseDate = useParsed && common ? common.dueDate : null;
+  const dueDate = dateManual ?? phraseDate ?? record?.dueDate ?? "";
   const baseFor = record && !forRemoved ? record.forId : null;
   const aboutRaw = todoParsed
     ? todoParsed.forId
@@ -570,16 +650,19 @@ export function AddSheet({
       ? deadlineParsed.aboutId
       : null;
   const forId = (useParsed ? aboutRaw : null) ?? baseFor;
-  const assigneeAuto: string | null =
+  // «Chi se ne occupa»: chosen by hand, otherwise «<Nome> deve», otherwise the
+  // saved ones; a new Scadenza starts with «Tu»
+  const assigneeAuto: string[] =
     useParsed && common?.assigneeWritten
       ? common.assigneeId
+        ? [common.assigneeId]
+        : []
       : record
-        ? record.assigneeId
-        : type === "scadenza"
-          ? meId
-          : null;
-  const assigneeId =
-    assigneeManual !== undefined ? assigneeManual : assigneeAuto;
+        ? record.assigneeIds
+        : type === "scadenza" && meId
+          ? [meId]
+          : [];
+  const assigneeIds = assigneeManual ?? assigneeAuto;
   const isAuthor = !record || (meId !== null && record.createdById === meId);
 
   const whoList = useMemo(() => {
@@ -610,35 +693,75 @@ export function AddSheet({
 
   const personOf = (id: string | null) =>
     id ? people.find((p) => p.id === id) : undefined;
-  const assignee = personOf(assigneeId);
   const forPerson = personOf(forId);
-  const otherName = assignee && assignee.id !== meId ? assignee.name : null;
+  // The people of «Dai a …»: the others, not the author, in the order of the group
+  const otherNames = whoList
+    .filter((p) => p.id !== meId && assigneeIds.includes(p.id))
+    .map((p) => p.name);
+
+  /** What a phrase says for each field of the type shown now (#333, R3). */
+  function recognize(text: string): Recognized {
+    const lead = parseTodo(text, todayKey, people, meId);
+    const event = parsePhrase(text, todayKey, people);
+    const date =
+      typeRef.current === "scadenza"
+        ? parseDeadline(text, todayKey, people, meId).dueDate
+        : lead.dueDate;
+    return {
+      assignee: lead.assigneeWritten ? (lead.assigneeId ?? "me") : "none",
+      date: date ?? "",
+      day: event.dayKey ?? "",
+      from: event.time ? String(event.time.start) : "",
+      to: event.time ? String(event.time.end ?? "auto") : "",
+      people: event.memberIds.join(","),
+    };
+  }
+
+  /**
+   * A new type: every choice made by hand is forgotten, except «Data» between
+   * Da fare and Scadenza (#333, R5). Changing the type never saves.
+   */
+  function changeTypeTo(next: AddType) {
+    const previous = typeRef.current;
+    if (next === previous) return;
+    updateType(next);
+    setAssigneeManual(undefined);
+    setShoppingWho(null);
+    setEventManual({});
+    setIsPrivate(false);
+    setReminders([...DEFAULT_REMINDERS]);
+    setFieldErrors({});
+    const both = [previous, next].every(
+      (kind) => kind === "da-fare" || kind === "scadenza",
+    );
+    if (!both) setDateManual(undefined);
+  }
 
   function detect(value: string) {
     if (manualRef.current || isEdit) return;
     const detected = detectType(value, todayKey, people, meId);
-    if (detected && detected !== typeRef.current) {
-      updateType(detected);
-      setAssigneeManual(undefined);
-    }
+    if (detected && detected !== typeRef.current) changeTypeTo(detected);
   }
 
-  function changePhrase(value: string, byExample = false) {
+  function changePhrase(value: string) {
+    const before = phraseRef.current;
     const next = value.replace(/\r\n|\r|\n/g, " ");
     phraseRef.current = next;
     setPhrase(next);
     setError(null);
+    setFieldErrors({});
     setSaveFailed(false);
     setGoneAlert(false);
-    if (byExample) manualRef.current = false;
     detect(next);
 
-    // «Laura deve …» written anew wins over an earlier tap on a person.
-    const lead = parseTodo(next, todayKey, people, meId);
-    const written = lead.assigneeWritten ? (lead.assigneeId ?? "me") : "none";
-    if (written !== writtenRef.current) {
-      writtenRef.current = written;
+    // A field goes back to the phrase when what the phrase says for it changes:
+    // «Laura deve …» written anew wins over an earlier tap on a person, a new
+    // day over a day chosen by hand. Other words touch nothing.
+    const was = recognize(before);
+    const now = recognize(next);
+    if (was.assignee !== now.assignee) {
       setAssigneeManual(undefined);
+      const lead = parseTodo(next, todayKey, people, meId);
       if (
         isPrivate &&
         lead.assigneeWritten &&
@@ -648,31 +771,75 @@ export function AddSheet({
         setIsPrivate(false);
       }
     }
+    if (was.date !== now.date) setDateManual(undefined);
+    const forgotten = (["day", "from", "to", "people"] as const).filter(
+      (key) => was[key] !== now[key],
+    );
+    if (forgotten.length > 0) {
+      setEventManual((current) => {
+        const rest = { ...current };
+        for (const key of forgotten) {
+          if (key === "people") delete rest.memberIds;
+          else delete rest[key];
+        }
+        return rest;
+      });
+    }
   }
 
   function pickType(next: AddType) {
     if (savingRef.current) return;
     manualRef.current = true;
-    updateType(next);
-    setAssigneeManual(undefined);
+    changeTypeTo(next);
     setError(null);
   }
 
-  function chooseAssignee(id: string) {
+  function toggleAssignee(id: string) {
     if (savingRef.current) return;
-    const next = id === assigneeId ? null : id;
+    const next = assigneeIds.includes(id)
+      ? assigneeIds.filter((value) => value !== id)
+      : [...assigneeIds, id];
     setAssigneeManual(next);
-    if (next !== null && next !== meId && isPrivate) setIsPrivate(false);
+    // «Lo vedo solo io» has nobody but the author
+    if (isPrivate && next.some((value) => value !== meId)) setIsPrivate(false);
   }
 
-  function toggleVisibility() {
+  function changeVisibility(nowPrivate: boolean) {
     if (savingRef.current) return;
-    if (isPrivate) {
-      setIsPrivate(false);
-      return;
+    setIsPrivate(nowPrivate);
+    if (nowPrivate && assigneeIds.some((value) => value !== meId)) {
+      setAssigneeManual(meId ? [meId] : []);
     }
-    setIsPrivate(true);
-    if (assigneeId !== null && assigneeId !== meId) setAssigneeManual(meId);
+  }
+
+  function changeDate(value: string) {
+    if (savingRef.current) return;
+    setDateManual(value);
+    setFieldErrors((current) => ({ ...current, date: undefined }));
+    setSaveFailed(false);
+  }
+
+  function changeEventFields(patch: EventManual) {
+    if (savingRef.current) return;
+    setEventManual((current) => ({ ...current, ...patch }));
+    setFieldErrors((current) => {
+      const next = { ...current };
+      if (patch.day !== undefined) delete next.day;
+      if (patch.from !== undefined) delete next.from;
+      if (patch.to !== undefined) delete next.to;
+      if (patch.memberIds !== undefined) delete next.people;
+      return next;
+    });
+    setSaveFailed(false);
+  }
+
+  function toggleEventMember(id: string) {
+    const current = eventFields.memberIds;
+    changeEventFields({
+      memberIds: current.includes(id)
+        ? current.filter((value) => value !== id)
+        : [...current, id],
+    });
   }
 
   function toggleReminder(days: number) {
@@ -684,30 +851,21 @@ export function AddSheet({
     );
   }
 
-  function removeDate() {
-    pendingFocus.current = "for";
-    setDateRemoved(true);
-  }
-
   function removeFor() {
-    pendingFocus.current = "visibility";
+    pendingFocus.current = true;
     setForRemoved(true);
   }
 
-  // After a label is taken away the focus moves on (nothing is read aloud).
+  // After «Togli Per …» the focus moves on to the voice chosen in «Chi lo
+  // vede» (nothing is read aloud).
   useLayoutEffect(() => {
-    const wanted = pendingFocus.current;
-    if (!wanted) return;
-    pendingFocus.current = null;
+    if (!pendingFocus.current) return;
+    pendingFocus.current = false;
     const root = document.querySelector('[data-testid="aggiungi-foglio"]');
-    const order =
-      wanted === "for"
-        ? [
-            '[data-testid="aggiungi-togli-per"]',
-            '[data-testid="aggiungi-visibilita"]',
-            "textarea",
-          ]
-        : ['[data-testid="aggiungi-visibilita"]', "textarea"];
+    const order = [
+      '[data-testid="aggiungi-visibilita"] button[aria-pressed="true"]:not(:disabled)',
+      "textarea",
+    ];
     for (const selector of order) {
       const target = root?.querySelector<HTMLElement>(selector);
       if (target) {
@@ -737,17 +895,24 @@ export function AddSheet({
       ?.focus();
   }, [goneOnOpen]);
 
-  function pickExample(text: string) {
-    flushSync(() => changePhrase(text, true));
-    const field = fieldRef.current;
-    if (!field) return;
-    field.focus();
-    field.setSelectionRange(text.length, text.length);
-  }
-
   function fail(problem: string) {
     setError(problem);
     fieldRef.current?.focus();
+  }
+
+  /** Errors under the phrase and under the fields; the focus goes to the first wrong one. */
+  function failFields(title: string | null, errors: FieldErrors) {
+    setError(title);
+    setFieldErrors(errors);
+    if (title) {
+      fieldRef.current?.focus();
+      return;
+    }
+    if (errors.day) focusField(fieldsPrefix, "day");
+    else if (errors.from) focusField(fieldsPrefix, "from");
+    else if (errors.to) focusField(fieldsPrefix, "to");
+    else if (errors.people) focusField(fieldsPrefix, "people");
+    else if (errors.date) focusById(dateId);
   }
 
   function finishSaved() {
@@ -783,27 +948,21 @@ export function AddSheet({
   const canOpenForm =
     isImpegno && hasTitle && peopleState.status === "ready" && meId !== null;
 
-  function openForm(entry: FormEntry) {
+  // The form starts from the fields of the sheet, not from the phrase alone.
+  function openForm() {
     if (savingRef.current || !canOpenForm || meId === null) return;
-    formFocus.current = entry;
+    formFocus.current = true;
     setSaveFailed(false);
     setDraft({
-      values: initialFormValues({
-        parsed,
-        slot,
-        todayKey,
-        memberIds: parsed.memberIds.length > 0 ? parsed.memberIds : [meId],
-        visibility: newEventVisibility,
-      }),
+      values: initialFormValues(parsed.title, eventFields),
       errors: {},
-      entry,
     });
   }
 
   // X, Esc, the veil and the drag: back to the phrase, nothing is saved.
   function backToPhrase() {
     if (!draft) return;
-    returnFocus.current = draft.entry;
+    returnFocus.current = true;
     setSaveFailed(false);
     setDraft(null);
   }
@@ -870,8 +1029,7 @@ export function AddSheet({
   useLayoutEffect(() => {
     const root = document.querySelector('[data-testid="aggiungi-foglio"]');
     if (draft && formFocus.current) {
-      const entry = formFocus.current;
-      formFocus.current = null;
+      formFocus.current = false;
       if (root) {
         root.scrollTop = 0;
         for (const part of root.querySelectorAll(
@@ -880,62 +1038,73 @@ export function AddSheet({
           part.scrollTop = 0;
         }
       }
-      focusField(modulePrefix, ENTRY_FOCUS[entry]);
+      focusField(modulePrefix, "title");
     } else if (!draft && returnFocus.current) {
-      const entry = returnFocus.current;
-      returnFocus.current = null;
-      const target =
-        root?.querySelector<HTMLElement>(
-          `[data-testid="aggiungi-ingresso-${entry}"]`,
-        ) ??
-        root?.querySelector<HTMLElement>(
+      returnFocus.current = false;
+      root
+        ?.querySelector<HTMLElement>(
           '[data-testid="aggiungi-ingresso-details"]',
-        );
-      target?.focus();
+        )
+        ?.focus();
     }
   });
 
   // ----- Save: Impegno
   async function submitEvent() {
-    const problem = validatePhrase(parsed);
-    if (problem || !slot) {
-      fail(problem ?? "");
-      return;
-    }
-
     savingRef.current = true;
     setSaving(true);
     setSaveFailed(false);
 
     // Names recognized before the people were read would be lost: wait for them.
-    let ids = parsed.memberIds;
+    let read = parsed;
     let authorId = meId;
     if (peopleState.status === "loading" && peopleLoad.current) {
       const loaded = await peopleLoad.current;
       if (loaded.status === "ready") {
         authorId = loaded.meId;
-        ids = parsePhrase(phrase, todayKey, loaded.people).memberIds;
+        read = parsePhrase(phrase, todayKey, loaded.people);
       }
     }
-
     const supabase = createClient();
+    authorId = authorId ?? (await readMeId(supabase));
+    if (
+      authorId === null &&
+      read.memberIds.length === 0 &&
+      eventManual.memberIds === undefined
+    ) {
+      // Nobody to put in the event, and no way to know who writes
+      saveStopped();
+      return;
+    }
+    const fields = eventFieldsOf({
+      parsed: read,
+      manual: eventManual,
+      todayKey,
+      meId: authorId,
+      visibility: newEventVisibility,
+    });
+    const problem = validatePhrase(read);
+    const errors = eventFieldErrors(fields);
+    const slot = slotOfFields(fields);
+    if (problem || Object.keys(errors).length > 0 || !slot) {
+      savingRef.current = false;
+      setSaving(false);
+      failFields(problem, errors);
+      return;
+    }
+
     try {
-      if (ids.length === 0) {
-        authorId = authorId ?? (await readMeId(supabase));
-        if (authorId) ids = [authorId];
-      }
-      if (ids.length === 0) throw new Error("no participants");
       const created = await createEvent(supabase, {
-        title: parsed.title,
+        title: read.title,
         startsAt: slot.startsAt,
         endsAt: slot.endsAt,
-        visibility: newEventVisibility,
-        memberIds: ids,
+        visibility: fields.visibility,
+        memberIds: fields.memberIds,
       });
       if (created.status === "failed") throw new Error("not saved");
       announceCreated(supabase, {
         id: created.id,
-        title: parsed.title,
+        title: read.title,
         dayKey: slot.dayKey,
         startsAt: slot.startsAt,
       });
@@ -968,6 +1137,7 @@ export function AddSheet({
     const result = await saveShopping(
       supabase,
       freshEntries.map(({ name, quantity }) => ({ name, quantity })),
+      whoIds,
     );
     if (result.status === "failed") {
       void loadToTake();
@@ -997,18 +1167,18 @@ export function AddSheet({
   }
 
   /** The values the form holds now, for a Da fare or a Scadenza. */
-  function currentValues(): TodoValues & { reminders: number[] } {
-    let privateNow = isPrivate;
-    if (privateNow && assigneeId !== null && assigneeId !== meId) {
-      privateNow = false;
-    }
+  function currentValues(): ThingValues {
+    // «Lo vedo solo io» has nobody but the author
+    const privateNow =
+      isPrivate && assigneeIds.every((value) => value === meId);
     return {
       title: thingTitle,
-      dueDate,
-      assigneeId,
+      dueDate: dueDate === "" ? null : dueDate,
+      assigneeIds,
       forId,
       isPrivate: privateNow,
       reminders,
+      note: record ? noteOf(record) : null,
     };
   }
 
@@ -1016,26 +1186,29 @@ export function AddSheet({
   function newValues(
     list: readonly NestPerson[],
     me: string | null,
-  ): TodoValues & { reminders: number[] } {
+  ): ThingValues {
     const read =
       type === "da-fare"
         ? parseTodo(phrase, todayKey, list, me)
         : parseDeadline(phrase, todayKey, list, me);
     const about =
       "forId" in read ? read.forId : "aboutId" in read ? read.aboutId : null;
-    const auto = read.assigneeWritten
+    const auto: string[] = read.assigneeWritten
       ? read.assigneeId
-      : type === "scadenza"
-        ? me
-        : null;
-    const chosen = assigneeManual !== undefined ? assigneeManual : auto;
+        ? [read.assigneeId]
+        : []
+      : type === "scadenza" && me
+        ? [me]
+        : [];
+    const chosen = assigneeManual ?? auto;
     return {
       title: read.title,
-      dueDate: read.dueDate,
-      assigneeId: chosen,
+      dueDate: (dateManual ?? read.dueDate ?? "") || null,
+      assigneeIds: chosen,
       forId: about,
-      isPrivate: isPrivate && (chosen === null || chosen === me),
+      isPrivate: isPrivate && chosen.every((value) => value === me),
       reminders,
+      note: null,
     };
   }
 
@@ -1059,49 +1232,48 @@ export function AddSheet({
     const problem =
       type === "da-fare"
         ? validateTodo(values.title)
-        : validateDeadline({
-            title: values.title,
-            dueDate: values.dueDate,
-            todayKey,
-            checkPast: true,
-          });
-    if (problem) {
+        : validateDeadline(values.title);
+    const dateProblem = validateThingDate({
+      dueDate: values.dueDate,
+      todayKey,
+      required: type === "scadenza",
+      checkRange: true,
+    });
+    if (problem || dateProblem) {
       savingRef.current = false;
       setSaving(false);
-      fail(problem);
+      failFields(problem, dateProblem ? { date: dateProblem } : {});
       return;
     }
 
     savingRef.current = true;
     setSaving(true);
     setSaveFailed(false);
-    const otherPerson =
-      values.assigneeId && values.assigneeId !== authorId
-        ? list.find((person) => person.id === values.assigneeId)
-        : undefined;
+    // The people other than the author, in the order of the group
+    const others = list
+      .filter((person) => person.id !== authorId)
+      .filter((person) => values.assigneeIds.includes(person.id))
+      .map((person) => person.name);
 
     const created =
       type === "da-fare"
-        ? await createTodo(supabase, values, authorId)
-        : await createDeadline(
-            supabase,
-            { ...values, dueDate: values.dueDate! },
-            authorId,
-          );
+        ? await createTodo(supabase, values)
+        : await createDeadline(supabase, {
+            ...values,
+            dueDate: values.dueDate!,
+          });
     if (created.status === "failed") {
       saveStopped();
       return;
     }
     notifyListsChanged(kind);
+    const createdId = created.id;
     const onUndo = () => {
       void (async () => {
-        const id = await created.findId();
         const result =
-          id === null
-            ? "failed"
-            : type === "da-fare"
-              ? await deleteTodo(supabase, id)
-              : await deleteDeadline(supabase, id);
+          type === "da-fare"
+            ? await deleteTodo(supabase, createdId)
+            : await deleteDeadline(supabase, createdId);
         if (result === "ok") notifyListsChanged(kind);
         else
           undoFailed(
@@ -1113,10 +1285,10 @@ export function AddSheet({
     };
     if (type === "da-fare") {
       showToast(
-        otherPerson
+        others.length > 0
           ? {
               text: "Dato a",
-              emphasis: otherPerson.name,
+              emphasis: joinNames(others),
               after: `: ${values.title}.`,
               onUndo,
             }
@@ -1142,7 +1314,7 @@ export function AddSheet({
   async function writeThing(
     id: string,
     kind: EditKind,
-    values: TodoValues & { reminders: number[] },
+    values: ThingValues,
   ): Promise<WriteResult> {
     const supabase = createClient();
     return kind === "da-fare"
@@ -1265,29 +1437,31 @@ export function AddSheet({
     const problem =
       kind === "da-fare"
         ? validateTodo(values.title)
-        : validateDeadline({
-            title: values.title,
-            dueDate: values.dueDate,
-            todayKey,
-            checkPast: values.dueDate !== original.dueDate,
-          });
-    if (problem) {
-      fail(problem);
+        : validateDeadline(values.title);
+    const dateProblem = validateThingDate({
+      dueDate: values.dueDate,
+      todayKey,
+      required: kind === "scadenza",
+      checkRange: values.dueDate !== original.dueDate,
+    });
+    if (problem || dateProblem) {
+      failFields(problem, dateProblem ? { date: dateProblem } : {});
       return;
     }
 
-    const before: TodoValues & { reminders: number[] } = {
+    const before: ThingValues = {
       title: original.title,
       dueDate: original.dueDate,
-      assigneeId: original.assigneeId,
+      assigneeIds: original.assigneeIds,
       forId: original.forId,
       isPrivate: original.isPrivate,
       reminders: "reminders" in original ? original.reminders : reminders,
+      note: noteOf(original),
     };
     const unchanged =
       values.title === before.title &&
       values.dueDate === before.dueDate &&
-      values.assigneeId === before.assigneeId &&
+      sameIds(values.assigneeIds, before.assigneeIds) &&
       values.forId === before.forId &&
       values.isPrivate === before.isPrivate &&
       (kind === "da-fare" || sameSet(values.reminders, before.reminders));
@@ -1433,45 +1607,19 @@ export function AddSheet({
     }
   }
 
-  // Labels under the field (Impegno)
-  const dayKeyShown = parsed.dayKey ?? (parsed.time ? todayKey : null);
-  const timeText = slot
-    ? parsed.time?.end === null
-      ? formatTime(slot.startsAt)
-      : `${formatTime(slot.startsAt)} – ${formatTime(slot.endsAt)}`
-    : null;
-  const label = (person: NestPerson) =>
-    person.id === meId ? "Tu" : person.name;
-  const showPeople = hasTitle && participants.length > 0;
-
-  const everyone = people.filter((p) => p.kind !== "pet");
-  const everyoneIn = everyone.every((p) =>
-    participants.some((q) => q.id === p.id),
-  );
-  const whoText =
-    participants.length === 0
-      ? "Tu"
-      : participants.length <= 4
-        ? participants.length === 1
-          ? label(participants[0]!)
-          : `${participants
-              .slice(0, -1)
-              .map(label)
-              .join(", ")} e ${label(participants[participants.length - 1]!)}`
-        : everyoneIn
-          ? "Tutto il Nest"
-          : `${participants.length} persone`;
-
   let buttonLabel: string;
-  if (type === "impegno") buttonLabel = submitLabel(phrase, parsed, todayKey);
-  else if (type === "spesa") {
+  if (type === "impegno") {
+    buttonLabel = empty
+      ? "Aggiungi"
+      : formSubmitLabel(eventFields.day, todayKey);
+  } else if (type === "spesa") {
     buttonLabel = shoppingSubmitLabel({
       empty,
       total: shoppingRows.length,
       fresh: freshEntries.length,
     });
   } else if (type === "da-fare") {
-    buttonLabel = todoSubmitLabel({ empty, otherName });
+    buttonLabel = todoSubmitLabel({ empty, otherNames });
   } else {
     buttonLabel = empty ? "Aggiungi" : "Aggiungi alle scadenze";
   }
@@ -1531,38 +1679,6 @@ export function AddSheet({
     </Button>
   );
 
-  const examples = EXAMPLES.map((text) => (
-    <button
-      key={text}
-      type="button"
-      className="chip"
-      onClick={() => pickExample(text)}
-    >
-      {text}
-    </button>
-  ));
-
-  const side = isEdit ? undefined : isImpegno && day && readySlot ? (
-    <AddPreview
-      parsed={parsed}
-      slot={readySlot}
-      todayKey={todayKey}
-      people={people}
-      participants={participants}
-      day={day}
-      notice={notice}
-    />
-  ) : (
-    <>
-      <p className="sottotitolo-gruppo" id={examplesId}>
-        Esempi
-      </p>
-      <div className="gruppo-chip" role="group" aria-labelledby={examplesId}>
-        {examples}
-      </div>
-    </>
-  );
-
   let footer;
   if (isEdit) {
     footer = formShown ? (
@@ -1592,32 +1708,60 @@ export function AddSheet({
       submitButton
     );
   } else {
-    footer = (
-      <>
-        {submitButton}
-        {empty ? (
-          <div className="gruppo-chip" role="group" aria-label="Esempi">
-            {examples}
-          </div>
-        ) : null}
-      </>
-    );
+    footer = submitButton;
   }
 
-  // ----- The part under the selector, by type
-  const dateLabelText = dueDate
-    ? formatDeadline(startOfDay(dueDate), now)
-    : null;
+  // ----- The part under the selector, by type: the fields are there from the start
   const forAvatar = forPerson ? (
     <Avatar name={forPerson.name} color={forPerson.color} size="xs" nameShown />
   ) : undefined;
-  const visibility =
-    isAuthor || !record ? (
-      <VisibilityChip isPrivate={isPrivate} onToggle={toggleVisibility} />
-    ) : (
-      <VisibilityLabel />
-    );
-  const showBlock = isEdit ? formShown : !empty;
+  const showBlock = isEdit ? formShown : true;
+  const dateField = (
+    <DateField
+      id={dateId}
+      label={type === "scadenza" ? "Scade il" : "Entro"}
+      value={dueDate}
+      readOnly={saving}
+      help={
+        dateManual === undefined && phraseDate !== null
+          ? FROM_PHRASE
+          : undefined
+      }
+      error={fieldErrors.date}
+      onChange={(event) => changeDate(event.target.value)}
+    />
+  );
+  const whoGroup = (
+    <WhoManyGroup
+      id={`${fieldsPrefix}-occupa`}
+      people={whoList}
+      meId={meId}
+      chosenIds={assigneeIds}
+      onToggle={toggleAssignee}
+      fromPhrase={
+        assigneeManual === undefined &&
+        useParsed &&
+        common?.assigneeWritten === true
+      }
+    />
+  );
+  const authorName = record?.createdById
+    ? people.find((person) => person.id === record.createdById)?.name
+    : undefined;
+  const visibilityGroup = (
+    <VisibilityGroup
+      id={visibilityId}
+      isPrivate={isPrivate}
+      onChange={changeVisibility}
+      lockedText={
+        isAuthor
+          ? undefined
+          : authorName
+            ? `Lo decide ${authorName}, che l'ha creata.`
+            : "Chi l'ha creata non è più nel Nest: resta così."
+      }
+    />
+  );
 
   let typeBlock: ReactNode = null;
   if (showBlock && type === "spesa" && isEdit) {
@@ -1637,6 +1781,7 @@ export function AddSheet({
           }}
         />
         <WhoManyGroup
+          id={`${fieldsPrefix}-occupa`}
           people={whoList}
           meId={meId}
           chosenIds={whoIds}
@@ -1645,29 +1790,24 @@ export function AddSheet({
       </>
     );
   } else if (showBlock && type === "spesa") {
-    typeBlock = <ShoppingPreview rows={shoppingRows} />;
+    typeBlock = (
+      <>
+        <ShoppingPreview rows={shoppingRows} />
+        <WhoManyGroup
+          id={`${fieldsPrefix}-occupa`}
+          people={whoList}
+          meId={meId}
+          chosenIds={whoIds}
+          onToggle={toggleShoppingWho}
+        />
+      </>
+    );
   } else if (showBlock && type === "da-fare") {
     typeBlock = (
       <>
-        <div className="gruppo-chip" aria-live="polite">
-          {dateLabelText ? (
-            isEdit ? (
-              <RemovableLabel
-                icon="calendar"
-                removeLabel="Togli la data"
-                onRemove={removeDate}
-                testId="aggiungi-togli-data"
-              >
-                {dateLabelText}
-              </RemovableLabel>
-            ) : (
-              <Chip static icon="calendar">
-                {dateLabelText}
-              </Chip>
-            )
-          ) : null}
-          {forPerson ? (
-            isEdit ? (
+        {forPerson ? (
+          <div className="gruppo-chip" aria-live="polite">
+            {isEdit ? (
               <RemovableLabel
                 leading={forAvatar}
                 removeLabel={`Togli Per ${forPerson.name}`}
@@ -1680,43 +1820,40 @@ export function AddSheet({
               <Chip static leading={forAvatar}>
                 {`Per ${forPerson.name}`}
               </Chip>
-            )
-          ) : null}
-          {visibility}
-        </div>
-        <WhoGroup
-          people={whoList}
-          meId={meId}
-          chosenId={assigneeId}
-          onChoose={chooseAssignee}
-        />
+            )}
+          </div>
+        ) : null}
+        {dateField}
+        {whoGroup}
+        {visibilityGroup}
       </>
     );
   } else if (showBlock && type === "scadenza") {
-    const days = dueDate ? daysUntilDay(dueDate, now) : null;
+    const days =
+      isValidDayKey(dueDate) && dueDate.slice(0, 4) <= "2100"
+        ? daysUntilDay(dueDate, now)
+        : null;
     typeBlock = (
       <>
         <DeadlinePreview
           howMuch={days === null ? null : howMuch(days)}
           urgent={days !== null && isUrgent(days)}
-          dayText={dueDate ? longDayLabel(dueDate, todayKey) : "Manca la data"}
+          dayText={
+            days === null ? "Manca la data" : longDayLabel(dueDate, todayKey)
+          }
           title={thingTitle}
         />
-        <div className="gruppo-chip" aria-live="polite">
-          {forPerson ? (
+        {forPerson ? (
+          <div className="gruppo-chip" aria-live="polite">
             <Chip static leading={forAvatar}>
               {forPerson.name}
             </Chip>
-          ) : null}
-          {visibility}
-        </div>
-        <WhoGroup
-          people={whoList}
-          meId={meId}
-          chosenId={assigneeId}
-          onChoose={chooseAssignee}
-        />
+          </div>
+        ) : null}
+        {dateField}
         <ReminderGroup chosen={reminders} onToggle={toggleReminder} />
+        {whoGroup}
+        {visibilityGroup}
       </>
     );
   }
@@ -1833,106 +1970,93 @@ export function AddSheet({
         ) : null}
 
         {isImpegno ? (
-          <div className="gruppo-chip" aria-live="polite">
-            {dayKeyShown ? (
-              <Chip static icon="calendar">
-                {dayLabel(dayKeyShown, todayKey)}
-              </Chip>
+          <>
+            <DateField
+              id={eventFieldId(fieldsPrefix, "day")}
+              label="Giorno"
+              value={eventFields.day}
+              readOnly={saving}
+              help={
+                eventManual.day === undefined &&
+                (parsed.dayKey !== null || parsed.time !== null)
+                  ? FROM_PHRASE
+                  : undefined
+              }
+              error={fieldErrors.day}
+              onChange={(event) =>
+                changeEventFields({ day: event.target.value })
+              }
+            />
+            <FieldPair>
+              <TimeField
+                id={eventFieldId(fieldsPrefix, "from")}
+                label="Dalle"
+                value={eventFields.from}
+                readOnly={saving}
+                help={
+                  eventManual.from === undefined && parsed.time !== null
+                    ? FROM_PHRASE
+                    : undefined
+                }
+                error={fieldErrors.from}
+                onChange={(event) =>
+                  changeEventFields({ from: event.target.value })
+                }
+              />
+              <TimeField
+                id={eventFieldId(fieldsPrefix, "to")}
+                label="Alle"
+                value={eventFields.to}
+                readOnly={saving}
+                help={
+                  endsOtherDayHint(eventFields, 0) ??
+                  (eventManual.to === undefined &&
+                  parsed.time !== null &&
+                  parsed.time.end !== null
+                    ? FROM_PHRASE
+                    : undefined)
+                }
+                error={fieldErrors.to}
+                onChange={(event) =>
+                  changeEventFields({ to: event.target.value })
+                }
+              />
+            </FieldPair>
+            {meId !== null ? (
+              <PeopleChips
+                id={eventFieldId(fieldsPrefix, "people")}
+                label="Chi"
+                people={meFirst(people, meId)}
+                meId={meId}
+                isPressed={(member) =>
+                  eventFields.memberIds.includes(member.id)
+                }
+                onToggle={(member) => toggleEventMember(member.id)}
+                disabled={false}
+                help={
+                  eventManual.memberIds === undefined &&
+                  parsed.memberIds.length > 0
+                    ? {
+                        id: `${eventFieldId(fieldsPrefix, "people")}-aiuto`,
+                        text: FROM_PHRASE,
+                      }
+                    : undefined
+                }
+                error={fieldErrors.people}
+              />
             ) : null}
-            {timeText ? (
-              <Chip static icon="clock">
-                {timeText}
-              </Chip>
-            ) : null}
-            {showPeople
-              ? participants.map((person) => (
-                  <Chip
-                    static
-                    key={person.id}
-                    leading={
-                      <Avatar
-                        name={person.name}
-                        color={person.color}
-                        size="xs"
-                        nameShown
-                      />
-                    }
-                  >
-                    {label(person)}
-                  </Chip>
-                ))
-              : null}
-          </div>
+            <EventVisibilityGroup
+              id={visibilityId}
+              value={eventFields.visibility}
+              onChange={(value) => changeEventFields({ visibility: value })}
+              text={visibilityHelp(eventFields.visibility, true, null)}
+            />
+          </>
         ) : null}
 
         {typeBlock}
 
-        {isImpegno && desktop && hasTitle ? (
-          <div>
-            <OptionRow
-              entry="day"
-              interactive={canOpenForm}
-              inactive={saving}
-              onOpen={openForm}
-            >
-              <Icon name="calendar" />
-              <span className="riga-opzione__nome">
-                {dayKeyShown ? longDayLabel(dayKeyShown, todayKey) : "Quando"}
-              </span>{" "}
-              <span className="riga-opzione__valore">
-                {slot ? rangeLabel(slot, todayKey) : "Scegli"}
-              </span>
-            </OptionRow>
-            <OptionRow
-              entry="people"
-              interactive={canOpenForm}
-              inactive={saving}
-              onOpen={openForm}
-            >
-              <Icon name="users" />
-              <span className="riga-opzione__nome">Chi</span>{" "}
-              <span className="riga-opzione__valore">
-                {participants.length > 0 && participants.length <= 4 ? (
-                  <span className="avatar-gruppo">
-                    {participants.map((p) => (
-                      <Avatar
-                        key={p.id}
-                        name={p.name}
-                        color={p.color}
-                        nameShown
-                      />
-                    ))}
-                  </span>
-                ) : null}
-                {whoText}
-              </span>
-            </OptionRow>
-            <OptionRow
-              entry="escort"
-              interactive={canOpenForm}
-              inactive={saving}
-              onOpen={openForm}
-            >
-              <Icon name="car" />
-              <span className="riga-opzione__nome">La porta</span>{" "}
-              <span className="riga-opzione__valore">Scegli</span>
-            </OptionRow>
-            <OptionRow
-              entry="visibility"
-              interactive={canOpenForm}
-              inactive={saving}
-              onOpen={openForm}
-            >
-              <Icon name="eye" />
-              <span className="riga-opzione__nome">Chi lo vede</span>{" "}
-              <span className="riga-opzione__valore">
-                {VISIBILITY_LABELS[newEventVisibility]}
-              </span>
-            </OptionRow>
-          </div>
-        ) : null}
-
-        {desktop || !isImpegno ? null : notice}
+        {isImpegno ? notice : null}
 
         {!desktop && canOpenForm ? (
           <DetailsButton
@@ -2018,7 +2142,6 @@ export function AddSheet({
         onClose={handleClose}
         onBack={formOpen ? backToPhrase : undefined}
         className={saving ? "is-in-corso" : undefined}
-        side={formOpen ? undefined : side}
         footerEnd={formOpen || (!isEdit && !(desktop && canOpenForm))}
         footer={formOpen ? formButton : footer}
         data-testid="aggiungi-foglio"

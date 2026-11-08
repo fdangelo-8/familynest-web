@@ -203,6 +203,77 @@ export async function installCasaFakes(page: Page, options: CasaOptions = {}) {
   };
   await page.route("**/rest/v1/todos*", thingTable("todos"));
   await page.route("**/rest/v1/deadlines*", thingTable("deadlines"));
+
+  // The people of the thing to edit (#333): one row per assignee, like the real table.
+  const assigneesTable =
+    (kind: "todo" | "deadline") => async (route: Route) => {
+      if (route.request().method() !== "GET") return route.fallback();
+      if (read === "hold") return;
+      if (read === "fail") {
+        return route.fulfill({ status: 500, json: { message: "boom" } });
+      }
+      if (read === "gone" || !thing || thing.kind !== kind) {
+        return route.fulfill({ json: [] });
+      }
+      const names = await ids();
+      const member = thing.assignee ? names.get(thing.assignee) : null;
+      return route.fulfill({
+        json: member
+          ? [{ member_id: member, created_at: "2026-10-01T10:00:00Z" }]
+          : [],
+      });
+    };
+  await page.route("**/rest/v1/todo_assignees*", assigneesTable("todo"));
+  await page.route(
+    "**/rest/v1/deadline_assignees*",
+    assigneesTable("deadline"),
+  );
+
+  // The writes of #333 are calls to functions of the database.
+  const writeRpc =
+    (answer: () => unknown, status = 200) =>
+    (route: Route) => {
+      if (route.request().method() !== "POST") return route.fallback();
+      if (write === "hold") return;
+      if (write === "fail") {
+        return route.fulfill({ status: 500, json: { message: "boom" } });
+      }
+      if (write === "gone") {
+        return route.fulfill({
+          status: 404,
+          json: { code: "P0002", message: "gone" },
+        });
+      }
+      const body = answer();
+      return body === undefined
+        ? route.fulfill({ status: 204, body: "" })
+        : route.fulfill({ status, json: body });
+    };
+  await page.route(
+    "**/rest/v1/rpc/create_todo*",
+    writeRpc(() => uuid(9100)),
+  );
+  await page.route(
+    "**/rest/v1/rpc/create_deadline*",
+    writeRpc(() => uuid(9101)),
+  );
+  await page.route(
+    "**/rest/v1/rpc/update_todo*",
+    writeRpc(() => undefined),
+  );
+  await page.route(
+    "**/rest/v1/rpc/update_deadline*",
+    writeRpc(() => undefined),
+  );
+  await page.route("**/rest/v1/rpc/add_shopping_items*", (route) => {
+    // One id for every thing of the phrase, as the real function answers.
+    const items = (route.request().postDataJSON() as { p_items?: unknown[] })
+      .p_items;
+    const count = Array.isArray(items) ? items.length : 0;
+    return writeRpc(() =>
+      Array.from({ length: count }, (_, index) => uuid(9102 + index)),
+    )(route);
+  });
   await page.route("**/rest/v1/rpc/undo_added_shopping_items*", (route) =>
     route.fulfill({ json: [] }),
   );

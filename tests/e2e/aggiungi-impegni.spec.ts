@@ -83,9 +83,13 @@ test.describe("Aggiungi · Impegni", () => {
     });
     await field.pressSequentially(PHRASE);
 
-    const labels = dialog.locator('[aria-live="polite"]');
-    await expect(labels).toContainText("Domenica 3 novembre 2030");
-    await expect(labels).toContainText("17:00");
+    // #333: the fields show the day and the time (no chips under the field)
+    await expect(dialog.getByLabel("Giorno", { exact: true })).toHaveValue(
+      "2030-11-03",
+    );
+    await expect(dialog.getByLabel("Dalle", { exact: true })).toHaveValue(
+      "17:00",
+    );
     const submit = dialog.getByRole("button", {
       name: "Metti in domenica 3 novembre 2030",
     });

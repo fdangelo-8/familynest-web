@@ -1,48 +1,59 @@
 import type { EventVisibility } from "../../lib/calendar";
-import { isValidDayKey, toTimeFieldValue } from "../../lib/datetime";
-import type { EventFormValues, FocusKey } from "../evento-modulo/model";
+import { isValidDayKey, toDayKey } from "../../lib/datetime";
+import { computeTimes, type EventFormValues } from "../evento-modulo/model";
 import { dayInSentence } from "./labels";
-import type { ParsedPhrase, PhraseSlot } from "./parse-phrase";
+import type { PhraseSlot } from "./parse-phrase";
 
-/** Pure rules of the full form «Nuovo impegno» opened from Aggiungi (#171). */
+/** Pure rules of the fields of an Impegno and of the full form «Nuovo impegno» (#171, #333). */
 
-/** Where the form was opened from: the button or one of the four summary rows. */
-export type FormEntry = "details" | "day" | "people" | "escort" | "visibility";
-
-/** The field that takes the focus when the form opens from each entry. */
-export const ENTRY_FOCUS: Record<FormEntry, FocusKey> = {
-  details: "title",
-  day: "day",
-  people: "people",
-  escort: "escort",
-  visibility: "visibility",
-};
-
-/** The values of the form, read from the phrase the way the first step reads it. */
-export function initialFormValues({
-  parsed,
-  slot,
-  todayKey,
-  memberIds,
-  visibility,
-}: {
-  parsed: ParsedPhrase;
-  slot: PhraseSlot | null;
-  todayKey: string;
+/**
+ * The fields of an Impegno in the sheet, as they are now: what the phrase
+ * says, unless the user changed the field by hand (#333, R1-R3).
+ */
+export type EventFields = {
+  /** `YYYY-MM-DD`, or empty */
+  day: string;
+  /** `HH:MM`, or empty */
+  from: string;
+  /** `HH:MM`, or empty */
+  to: string;
   memberIds: string[];
   visibility: EventVisibility;
-}): EventFormValues {
+};
+
+/** The values of the full form: the fields of the sheet, with the phrase's title. */
+export function initialFormValues(
+  title: string,
+  fields: EventFields,
+): EventFormValues {
   return {
-    title: parsed.title,
-    day: parsed.dayKey ?? (parsed.time ? todayKey : ""),
-    from: slot ? toTimeFieldValue(slot.startsAt) : "",
-    to: slot ? toTimeFieldValue(slot.endsAt) : "",
+    title,
+    day: fields.day,
+    from: fields.from,
+    to: fields.to,
     repeat: "none",
     place: "",
-    memberIds,
+    memberIds: fields.memberIds,
     escortId: null,
-    visibility,
+    visibility: fields.visibility,
     notes: "",
+  };
+}
+
+/**
+ * Start, end and days of the fields (the end keeps the same day as the start,
+ * or the next one when it is not after it), or null while something is missing.
+ */
+export function slotOfFields(
+  fields: Pick<EventFields, "day" | "from" | "to">,
+): PhraseSlot | null {
+  const times = computeTimes(fields, 0);
+  if (!times) return null;
+  return {
+    dayKey: fields.day,
+    endDayKey: toDayKey(times.end),
+    startsAt: times.start,
+    endsAt: times.end,
   };
 }
 

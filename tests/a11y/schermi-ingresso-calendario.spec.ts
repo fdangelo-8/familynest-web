@@ -21,6 +21,7 @@ import {
   untilHydrated,
 } from "../fixtures/accesso-password";
 import { buildNest, type CasaNest } from "../fixtures/casa";
+import { installCasaFakes } from "../fixtures/aggiungi-casa-fake";
 import {
   THURSDAY,
   installFakes as installAddFakes,
@@ -1286,6 +1287,34 @@ const scenes: Scene[] = [
       });
     },
   },
+  // #333: the fields of Da fare and Scadenza (date, reminders, people, the
+  // two-voice visibility selector) at every width and at 200% text.
+  ...(["Da fare", "Scadenza"] as const).map((type) => ({
+    title: `Aggiungi (pannello aperto da /aggiungi, tipo ${type})`,
+    skipReason: needsUserA,
+    run: async (
+      { page, baseURL }: Parameters<Scene["run"]>[0],
+      check: Parameters<Scene["run"]>[1],
+    ) => {
+      await signInAsCached(page.context(), baseURL!, "A");
+      await page.clock.setFixedTime(DETAIL_NOW);
+      await installCasaFakes(page, {});
+      const dialog = () => page.getByRole("dialog", { name: "Aggiungi" });
+      const open = async () => {
+        await page.goto("/aggiungi");
+        await expect(dialog()).toBeVisible({ timeout: 20_000 });
+        await dialog()
+          .getByRole("group", { name: "Tipo" })
+          .getByRole("button", { name: type })
+          .click();
+        await expect(
+          dialog().getByRole("group", { name: "Chi lo vede" }),
+        ).toBeVisible();
+        await ready(page);
+      };
+      await check(open, { open: async () => dialog() });
+    },
+  })),
   {
     title: "Aggiungi (pannello aperto da Oggi)",
     skipReason: needsUserA,
