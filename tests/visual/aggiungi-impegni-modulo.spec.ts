@@ -29,10 +29,6 @@ test.beforeEach(async ({ page, context, baseURL }) => {
   await page.clock.install({ time: NOW });
 });
 
-function isDesktop(testInfo: { project: { name: string } }) {
-  return testInfo.project.name === "desktop";
-}
-
 /** Opens the sheet over Today and waits until the page took over (field focused). */
 async function open(page: Page) {
   await page.goto("/aggiungi");
@@ -92,7 +88,10 @@ test("frase con errore del campo e ingressi attivi", async ({ page }) => {
   const { dialog, field } = await open(page);
   await field.pressSequentially("dentista giovedì");
   await field.press("Enter");
-  await expect(field).toHaveAttribute("aria-invalid", "true");
+  // #333: the error sits under the field that is wrong («Dalle»), not under the phrase
+  const from = dialog.getByLabel("Dalle", { exact: true });
+  await expect(from).toHaveAttribute("aria-invalid", "true");
+  await expect(from).toHaveAccessibleDescription("Scegli l'ora d'inizio.");
   await expect(
     dialog.getByRole("button", { name: /^(Più|Tutti i) dettagli$/ }),
   ).toBeVisible();
@@ -129,7 +128,7 @@ test("modulo aperto, in fondo: Chi lo vede, Note e bottone", async ({
   await shoot(page, "modulo-aperto-in-fondo.png");
 });
 
-test("modulo compilato: luogo, ripetizione, note, chi accompagna", async ({
+test("modulo compilato: luogo, ripetizione, note, persone (senza «La porta»)", async ({
   page,
 }) => {
   await installFakes(page);
@@ -139,7 +138,7 @@ test("modulo compilato: luogo, ripetizione, note, chi accompagna", async ({
   await form.getByLabel("Dove").fill("Piscina comunale, Lissone");
   await form.getByLabel("Si ripete").selectOption("weekly");
   await form.getByLabel("Note").fill("Portare la cuffia");
-  // «La porta» comes after «Chi»: its «Tu» is the last one
+  // Only «Chi» has a «Tu» now (#333): it is not pressed, the phrase names Sofia
   await form
     .getByRole("button", { name: "Tu", exact: true, pressed: false })
     .last()
@@ -171,21 +170,20 @@ test("modulo senza ora né giorno", async ({ page }) => {
   await shoot(page, "modulo-senza-giorno.png");
 });
 
-for (const [row, shot] of [
-  ["day", "modulo-da-riga-giorno.png"],
-  ["people", "modulo-da-riga-chi.png"],
-  ["escort", "modulo-da-riga-la-porta.png"],
-  ["visibility", "modulo-da-riga-chi-lo-vede.png"],
-] as const) {
-  test(`modulo aperto dalla riga «${row}»`, async ({ page }, testInfo) => {
-    test.skip(!isDesktop(testInfo), "le righe sono bottoni solo da 1024 px");
-    await installFakes(page);
-    const { dialog } = await openWithPhrase(page);
-    await dialog.getByTestId(`aggiungi-ingresso-${row}`).click();
-    await expect(formOf(page)).toBeVisible();
-    await shoot(page, shot);
-  });
-}
+// #333: the four rows of the summary are gone; the sheet shows the fields.
+test("foglio con i campi dell'impegno compilati dalla frase", async ({
+  page,
+}) => {
+  await installFakes(page);
+  const { dialog } = await openWithPhrase(page);
+  await expect(dialog.getByLabel("Giorno", { exact: true })).toHaveValue(
+    "2026-10-22",
+  );
+  await expect(
+    dialog.getByRole("group", { name: "Chi lo vede", exact: true }),
+  ).toBeVisible();
+  await shoot(page, "foglio-campi-compilati.png");
+});
 
 test("errori dei campi nel modulo", async ({ page }) => {
   await installFakes(page);

@@ -1,4 +1,6 @@
+import { isValidDayKey } from "../../lib/datetime";
 import type { AddType } from "./detect-type";
+import { joinNames } from "./labels";
 import {
   SHOPPING_NAME_MAX,
   SHOPPING_QUANTITY_MAX,
@@ -8,13 +10,6 @@ import {
 /** Texts and small rules of Spesa, Da fare and Scadenza (issue #22, specifica §8). */
 
 export const TODO_TITLE_MAX_LENGTH = 80;
-
-export const EXAMPLES = [
-  "cena da Marta venerdì alle 20",
-  "latte e pane",
-  "Laura deve chiamare la nonna",
-  "bollo auto scade il 7 dicembre",
-] as const;
 
 /** Text of the field when it is empty, by type (proposal P1 of the #113). */
 export function placeholderOf(type: AddType): string {
@@ -105,26 +100,43 @@ export function validateTodo(title: string): string | null {
 }
 
 /** Message under the field for Scadenza, or null when it can be saved. */
-export function validateDeadline(args: {
-  title: string;
-  dueDate: string | null;
-  todayKey: string;
-  /** The «già passata» check: on a new deadline, or when the date changed */
-  checkPast: boolean;
-}): string | null {
-  const { title, dueDate, todayKey, checkPast } = args;
-  if (dueDate === null) {
-    return `Manca la data: scrivi per esempio ${DEADLINE_EXAMPLE}.`;
-  }
+export function validateDeadline(title: string): string | null {
   if (title === "") {
     return `Manca cosa scade: scrivi per esempio ${DEADLINE_EXAMPLE}.`;
-  }
-  if (checkPast && dueDate < todayKey) {
-    return "Questa data è già passata: scrivi una data da oggi in poi.";
   }
   return length(title) > TODO_TITLE_MAX_LENGTH
     ? `Il titolo può avere al massimo ${TODO_TITLE_MAX_LENGTH} caratteri.`
     : null;
+}
+
+/** The last day a date can have (`deadlines_due_date_range`). */
+const LAST_DAY = "2100-12-31";
+
+export const DATE_MISSING_TEXT =
+  "Manca la data: sceglila o scrivila nella frase.";
+export const DATE_PAST_TEXT =
+  "Questa data è già passata: scegli una data da oggi in poi.";
+export const DATE_TOO_FAR_TEXT = "Scegli una data entro il 2100.";
+
+/**
+ * Message under «Data» of Da fare and Scadenza, or null when it can be saved
+ * (#333, R7). An empty date is wrong only for a Scadenza; a date not before today
+ * and not after 31/12/2100 is checked when it is new or changed (`checkRange`).
+ */
+export function validateThingDate(args: {
+  dueDate: string | null;
+  todayKey: string;
+  required: boolean;
+  checkRange: boolean;
+}): string | null {
+  const { dueDate, todayKey, required, checkRange } = args;
+  if (dueDate === null || dueDate === "") {
+    return required ? DATE_MISSING_TEXT : null;
+  }
+  if (!checkRange) return null;
+  // A year with more than four digits is not a day key: it is too far as well.
+  if (!isValidDayKey(dueDate) || dueDate > LAST_DAY) return DATE_TOO_FAR_TEXT;
+  return dueDate < todayKey ? DATE_PAST_TEXT : null;
 }
 
 export function thingsCount(count: number): string {
@@ -143,13 +155,19 @@ export function shoppingSubmitLabel(args: {
   return `Aggiungi ${thingsCount(fresh)}`;
 }
 
-/** Text of the main button of Da fare. */
+/**
+ * Text of the main button of Da fare: «Dai a Laura e Sofia» names the people
+ * other than the author, in the order of the group; with nobody else it is
+ * «Aggiungi ai da fare».
+ */
 export function todoSubmitLabel(args: {
   empty: boolean;
-  otherName: string | null;
+  otherNames: readonly string[];
 }): string {
   if (args.empty) return "Aggiungi";
-  return args.otherName ? `Dai a ${args.otherName}` : "Aggiungi ai da fare";
+  return args.otherNames.length > 0
+    ? `Dai a ${joinNames(args.otherNames)}`
+    : "Aggiungi ai da fare";
 }
 
 export const REMINDERS = [

@@ -1,15 +1,17 @@
 import { expect, isMobileProject, test } from "../fixtures/casa";
 import {
   SAVE_FAILED_ALERT,
+  SHARED,
   deadlinesOf,
   editUrl,
   expectNames,
+  expectNobody,
   expectPreview,
-  holdRequests,
+  holdRpc,
   openAddFromNav,
   openCasaPage,
   openDirect,
-  refuseWrites,
+  refuseRpc,
   seedDeadline,
   shoppingOf,
   sheet,
@@ -37,12 +39,14 @@ const PHRASES = [
 ];
 
 test.describe("Aggiungi · parti comuni", () => {
-  test("CA-48: su desktop nessuno dei tre tipi ha «Tutti i dettagli» e gli esempi a destra non nominano il pediatra", async ({
+  // #333 (decision 1, CA-1): no column of «Esempi» and no examples on the phone;
+  // on the computer the modal is single, with no column on the right.
+  test("CA-48: su desktop nessuno dei tre tipi ha «Tutti i dettagli» e non c'è la colonna a destra", async ({
     page,
     baseURL,
     casa,
   }) => {
-    test.skip(isMobileProject(), "Caso a 1280 px: la modale con gli esempi");
+    test.skip(isMobileProject(), "Caso a 1280 px: la modale");
     await openAddFromNav(page, baseURL, casa, "Marco");
     const s = sheet(page);
     for (const phrase of PHRASES) {
@@ -51,15 +55,7 @@ test.describe("Aggiungi · parti comuni", () => {
       await expect(s.button("Tutti i dettagli")).toHaveCount(0);
       await expect(s.dialog.getByText("Tutti i dettagli")).toHaveCount(0);
     }
-    const side = sideOf(page);
-    await expect(side.getByText("Esempi", { exact: true })).toBeVisible();
-    await expect(side.getByRole("button", { name: /pediatra/i })).toHaveCount(
-      0,
-    );
-    await expect(
-      side.getByRole("button", { name: "Laura deve chiamare la nonna" }),
-    ).toBeVisible();
-    await expect(side.getByText(/pediatra/i)).toHaveCount(0);
+    await expect(sideOf(page)).toHaveCount(0);
   });
 
   test("CA-49: su mobile nessuno dei tre tipi ha «Più dettagli»", async ({
@@ -78,24 +74,47 @@ test.describe("Aggiungi · parti comuni", () => {
     }
   });
 
-  test("CA-50: toccare gli esempi «latte e pane» e «bollo auto scade il 7 dicembre» sceglie Spesa e Scadenza", async ({
+  test("CA-1: con il campo vuoto non ci sono «Esempi» né le frasi d'esempio, per ogni tipo", async ({
     page,
     baseURL,
     casa,
   }) => {
     await openAddFromNav(page, baseURL, casa, "Marco");
     const s = sheet(page);
-    const examples = s.dialog.getByRole("group", { name: "Esempi" });
+    for (const type of ["Impegno", "Da fare", "Spesa", "Scadenza"] as const) {
+      await s.type(type).click();
+      await expect(s.field).toHaveValue("");
+      await expect(s.dialog.getByText("Esempi", { exact: true })).toHaveCount(
+        0,
+      );
+      for (const text of [
+        "cena da Marta venerdì alle 20",
+        "latte e pane",
+        "Laura deve chiamare la nonna",
+        "bollo auto scade il 7 dicembre",
+      ]) {
+        await expect(s.dialog.getByText(text)).toHaveCount(0);
+      }
+      await expect(s.dialog.getByRole("group", { name: "Esempi" })).toHaveCount(
+        0,
+      );
+    }
+  });
 
-    await examples.getByRole("button", { name: "latte e pane" }).click();
+  test("CA-1: «latte e pane» scritto a mano sceglie Spesa e «bollo auto scade il 7 dicembre» sceglie Scadenza", async ({
+    page,
+    baseURL,
+    casa,
+  }) => {
+    await openAddFromNav(page, baseURL, casa, "Marco");
+    const s = sheet(page);
+
+    await s.field.fill("latte e pane");
     await expect(s.type("Spesa")).toHaveAttribute("aria-pressed", "true");
     await expectPreview(page, [{ name: "Latte" }, { name: "Pane" }]);
 
-    // On mobile the examples come back with the empty field.
     await s.field.fill("");
-    await examples
-      .getByRole("button", { name: "bollo auto scade il 7 dicembre" })
-      .click();
+    await s.field.fill("bollo auto scade il 7 dicembre");
     await expect(s.type("Scadenza")).toHaveAttribute("aria-pressed", "true");
   });
 
@@ -107,7 +126,7 @@ test.describe("Aggiungi · parti comuni", () => {
     await openAddFromNav(page, baseURL, casa, "Marco");
     const s = sheet(page);
     await s.field.fill("Laura deve chiamare la nonna");
-    const hold = await holdRequests(page, "todos", "POST");
+    const hold = await holdRpc(page, "create_todo");
 
     const submit = s.button("Dai a Laura");
     await submit.click();
@@ -134,7 +153,7 @@ test.describe("Aggiungi · parti comuni", () => {
     await openAddFromNav(page, baseURL, casa, "Marco");
     const s = sheet(page);
     await s.field.fill("latte e pane");
-    await refuseWrites(page, "shopping_items", "POST");
+    await refuseRpc(page, "add_shopping_items");
     await s.button("Aggiungi 2 cose").click();
 
     await expect(
@@ -155,7 +174,7 @@ test.describe("Aggiungi · parti comuni", () => {
     const s = sheet(page);
     await s.field.fill("Laura deve chiamare la nonna");
     await expect(s.person("Laura")).toHaveAttribute("aria-pressed", "true");
-    await refuseWrites(page, "todos", "POST");
+    await refuseRpc(page, "create_todo");
     await s.button("Dai a Laura").click();
 
     await expect(
@@ -176,7 +195,7 @@ test.describe("Aggiungi · parti comuni", () => {
     const s = sheet(page);
     await s.field.fill("bollo auto scade il 7 dicembre");
     await s.reminder("7 giorni").click();
-    await refuseWrites(page, "deadlines", "POST");
+    await refuseRpc(page, "create_deadline");
     await s.button("Aggiungi alle scadenze").click();
 
     await expect(
@@ -340,23 +359,58 @@ test.describe("Aggiungi · testo d'esempio del campo", () => {
     await expect(s.field).toHaveAttribute("placeholder", "Cosa c'è da fare?");
   });
 
-  test("CA-4: stato vuoto di ogni tipo: nessun blocco, nessuna persona né avviso, «Aggiungi» disabilitato", async ({
+  // #333 (D6, CA-26): the fields of the type are there from the opening, with
+  // the empty phrase; the main button stays disabled.
+  test("CA-26: stato vuoto di ogni tipo: i campi ci sono con i valori iniziali, «Aggiungi» è disabilitato", async ({
     page,
     baseURL,
     casa,
   }) => {
     await openAddFromNav(page, baseURL, casa, "Marco");
     const s = sheet(page);
-    for (const type of ["Da fare", "Spesa", "Scadenza"] as const) {
-      await s.type(type).click();
-      await expect(s.type(type)).toHaveAttribute("aria-pressed", "true");
-      await expect(s.button("Aggiungi")).toBeDisabled();
-      await expect(s.who).toHaveCount(0);
-      await expect(s.remind).toHaveCount(0);
-      await expect(s.list).toHaveCount(0);
-      await expect(s.card).toHaveCount(0);
-    }
-    // The persons of the Nest appear only once there is a text.
+
+    await expect(s.type("Impegno")).toHaveAttribute("aria-pressed", "true");
+    await expect(s.button("Aggiungi")).toBeDisabled();
+    await expect(s.dialog.getByLabel("Giorno", { exact: true })).toHaveValue(
+      "",
+    );
+    await expect(s.dialog.getByLabel("Dalle", { exact: true })).toHaveValue("");
+    await expect(s.dialog.getByLabel("Alle", { exact: true })).toHaveValue("");
+    const chi = s.dialog.getByRole("group", { name: "Chi", exact: true });
+    await expect(
+      chi.getByRole("button", { name: "Tu", exact: true }),
+    ).toHaveAttribute("aria-pressed", "true");
+    await expect(chi.locator('[aria-pressed="true"]')).toHaveCount(1);
+
+    await s.type("Da fare").click();
+    await expect(s.button("Aggiungi")).toBeDisabled();
+    await expect(s.date).toHaveValue("");
+    await expectNobody(s.who);
+    await s.expectVoice(SHARED);
+    await expect(s.remind).toHaveCount(0);
+
+    await s.type("Spesa").click();
+    await expect(s.button("Aggiungi")).toBeDisabled();
+    await expectNobody(s.who);
+    await expect(s.person("Biscotto")).toHaveCount(0);
+    await expect(s.visibility).toHaveCount(0);
+    await expect(s.list).toHaveCount(0);
+
+    await s.type("Scadenza").click();
+    await expect(s.button("Aggiungi")).toBeDisabled();
+    await expect(s.date).toHaveValue("");
+    await expect(s.person("Tu")).toHaveAttribute("aria-pressed", "true");
+    await s.expectVoice(SHARED);
+    await expect(s.remind).toBeVisible();
+  });
+
+  test("Dai a …: con il Da fare vuoto i nomi sono nell'ordine del gruppo, senza animali", async ({
+    page,
+    baseURL,
+    casa,
+  }) => {
+    await openAddFromNav(page, baseURL, casa, "Marco");
+    const s = sheet(page);
     await s.type("Da fare").click();
     await s.field.fill("Laura deve chiamare la nonna");
     await expectNames(s.who, ["Tu", "Laura", "Sofia", "Tommaso"]);

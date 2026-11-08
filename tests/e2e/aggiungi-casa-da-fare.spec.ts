@@ -2,8 +2,10 @@ import { expect, test } from "../fixtures/casa";
 import {
   PRIVATE,
   SHARED,
+  assigneesOf,
   expectNames,
   expectNobody,
+  idsOf,
   labelText,
   openAddFromNav,
   pauseClock,
@@ -34,8 +36,10 @@ test.describe("Aggiungi · Da fare · creazione", () => {
     const s = sheet(page);
     await s.field.fill(PHRASE);
 
-    await expect(labelText(page, "Entro venerdì")).toBeVisible();
-    await expect(s.visibility).toHaveAccessibleName(SHARED);
+    // The day is in the field «Data» (#333), not in a label
+    await expect(s.date).toHaveValue("2026-10-23");
+    await s.expectVoice(SHARED);
+    await expect(s.voice(PRIVATE)).toBeVisible();
     await expectNames(s.who, ["Tu", "Laura", "Sofia", "Tommaso"]);
     await expect(s.person("Biscotto")).toHaveCount(0);
     await expect(s.person("Laura")).toHaveAttribute("aria-pressed", "true");
@@ -92,7 +96,7 @@ test.describe("Aggiungi · Da fare · creazione", () => {
     });
   });
 
-  test("CA-17: «devo portare le scarpe dal calzolaio» sceglie «Tu»; un secondo tocco su «Tu» toglie la scelta", async ({
+  test("CA-17 (#22): «devo portare le scarpe dal calzolaio» sceglie «Tu»; un secondo tocco su «Tu» toglie la scelta", async ({
     page,
     baseURL,
     casa,
@@ -109,7 +113,8 @@ test.describe("Aggiungi · Da fare · creazione", () => {
     await expectNobody(s.who);
   });
 
-  test("CA-18: toccare «Sofia» dopo «Laura deve…» sceglie Sofia e il bottone dice «Dai a Sofia»", async ({
+  // #333 (decision 5, CA-17): a tap adds a person, it does not replace the one chosen.
+  test("CA-17: toccare «Sofia» dopo «Laura deve…» sceglie Laura e Sofia; il bottone dice «Dai a Laura e Sofia» e il toast le nomina", async ({
     page,
     baseURL,
     casa,
@@ -121,11 +126,21 @@ test.describe("Aggiungi · Da fare · creazione", () => {
 
     await s.person("Sofia").click();
     await expect(s.person("Sofia")).toHaveAttribute("aria-pressed", "true");
-    await expect(s.person("Laura")).toHaveAttribute("aria-pressed", "false");
-    await expect(s.button("Dai a Sofia")).toBeVisible();
+    await expect(s.person("Laura")).toHaveAttribute("aria-pressed", "true");
+    await expect(s.person("Tu")).toHaveAttribute("aria-pressed", "false");
+    await s.button("Dai a Laura e Sofia").click();
+
+    await expect(
+      toastWith(page, "Dato a Laura e Sofia: Chiamare la nonna."),
+    ).toBeVisible();
+    const rows = await todosOf(casa, "Marco");
+    expect(rows).toHaveLength(1);
+    expect(await assigneesOf(casa, "Marco", "todo", rows[0]!.id)).toEqual(
+      idsOf(casa, ["Laura", "Sofia"]),
+    );
   });
 
-  test("CA-19: «Solo io» porta la scelta a «Tu»; scegliere «Laura» riporta la visibilità a tutto il Nest", async ({
+  test("CA-19 (#22, CA-16): «Lo vedo solo io» lascia scelto solo «Tu»; scegliere «Laura» riporta «Lo vede tutto il Nest»", async ({
     page,
     baseURL,
     casa,
@@ -133,16 +148,19 @@ test.describe("Aggiungi · Da fare · creazione", () => {
     await openAddFromNav(page, baseURL, casa, "Marco");
     const s = sheet(page);
     await s.field.fill("Laura deve chiamare la nonna");
-    await expect(s.visibility).toHaveAccessibleName(SHARED);
+    await s.person("Sofia").click();
+    await s.expectVoice(SHARED);
 
-    await s.visibility.click();
-    await expect(s.visibility).toHaveAccessibleName(PRIVATE);
+    await s.voice(PRIVATE).click();
+    await s.expectVoice(PRIVATE);
     await expect(s.person("Tu")).toHaveAttribute("aria-pressed", "true");
     await expect(s.person("Laura")).toHaveAttribute("aria-pressed", "false");
+    await expect(s.person("Sofia")).toHaveAttribute("aria-pressed", "false");
 
     await s.person("Laura").click();
-    await expect(s.visibility).toHaveAccessibleName(SHARED);
+    await s.expectVoice(SHARED);
     await expect(s.person("Laura")).toHaveAttribute("aria-pressed", "true");
+    await expect(s.person("Tu")).toHaveAttribute("aria-pressed", "true");
   });
 
   test("CA-20: una cosa «Solo io» di Paolo è privata e Giulia non la legge", async ({
@@ -154,8 +172,8 @@ test.describe("Aggiungi · Da fare · creazione", () => {
     const s = sheet(page);
     await s.field.fill("prenotare il ristorante entro domani");
     await s.type("Da fare").click();
-    await s.visibility.click();
-    await expect(s.visibility).toHaveAccessibleName(PRIVATE);
+    await s.voice(PRIVATE).click();
+    await s.expectVoice(PRIVATE);
     await s.button("Aggiungi ai da fare").click();
 
     await expect(
@@ -171,15 +189,23 @@ test.describe("Aggiungi · Da fare · creazione", () => {
     expect(await todosOf(bianchi, "Giulia")).toHaveLength(0);
   });
 
-  test("CA-21: con la lente «Io» l'etichetta della visibilità è «Lo vede tutto il Nest»", async ({
+  test("CA-15: con la lente «Io», in Da fare e in Scadenza le due voci ci sono insieme e c'è «Lo vede tutto il Nest»; in Spesa nessuna", async ({
     page,
     baseURL,
     casa,
   }) => {
     await openAddFromNav(page, baseURL, casa, "Marco", { lens: "io" });
     const s = sheet(page);
-    await s.field.fill("Laura deve chiamare la nonna");
-    await expect(s.visibility).toHaveAccessibleName(SHARED);
+    for (const type of ["Da fare", "Scadenza"] as const) {
+      await s.type(type).click();
+      await expect(s.voice(SHARED)).toBeVisible();
+      await expect(s.voice(PRIVATE)).toBeVisible();
+      await s.expectVoice(SHARED);
+    }
+    await s.type("Spesa").click();
+    await expect(s.visibility).toHaveCount(0);
+    await expect(s.voice(SHARED)).toHaveCount(0);
+    await expect(s.voice(PRIVATE)).toHaveCount(0);
   });
 
   test("CA-22: «Laura deve entro venerdì» dà l'errore del titolo mancante e non salva nulla", async ({
@@ -237,7 +263,8 @@ test.describe("Aggiungi · Da fare · creazione", () => {
 });
 
 test.describe("Aggiungi · Da fare · date riconosciute", () => {
-  test("CA-25: le date scritte diventano le etichette «Entro …» della tabella di #23", async ({
+  // #333 (CA-10): the day written in the phrase is the value of the field «Data».
+  test("CA-10: le date scritte diventano il valore del campo «Data»", async ({
     page,
     baseURL,
     casa,
@@ -247,24 +274,24 @@ test.describe("Aggiungi · Da fare · date riconosciute", () => {
     await s.type("Da fare").click();
 
     const cases: [string, string][] = [
-      ["x entro domani", "Entro domani"],
-      ["x entro martedì", "Entro 27 ottobre"],
-      ["x entro 7 dicembre", "Entro 7 dicembre"],
-      ["x entro 15 ottobre", "Entro 15 ottobre 2027"],
-      ["x entro fine mese", "Entro fine mese"],
-      ["x entro fine novembre", "Entro fine novembre"],
-      ["x entro 7/12/2027", "Entro 7 dicembre 2027"],
-      ["x entro oggi", "Entro oggi"],
+      ["x entro domani", "2026-10-21"],
+      ["x entro martedì", "2026-10-27"],
+      ["x entro 7 dicembre", "2026-12-07"],
+      ["x entro 15 ottobre", "2027-10-15"],
+      ["x entro fine mese", "2026-10-31"],
+      ["x entro fine novembre", "2026-11-30"],
+      ["x entro 7/12/2027", "2027-12-07"],
+      ["x entro oggi", "2026-10-20"],
+      ["x entro 31/11", ""],
     ];
-    for (const [phrase, label] of cases) {
+    for (const [phrase, day] of cases) {
       await s.field.fill("");
       await s.field.fill(phrase);
-      await expect(labelText(page, label)).toBeVisible();
-      await expect(labelText(page, /^Entro /)).toHaveCount(1);
+      await expect(s.date).toHaveValue(day);
     }
   });
 
-  test("CA-26: «x entro 31/11» non ha etichetta di data e salva il titolo intero, senza scadenza", async ({
+  test("CA-26 (#22): «x entro 31/11» non ha data e salva il titolo intero, senza scadenza", async ({
     page,
     baseURL,
     casa,
@@ -274,7 +301,7 @@ test.describe("Aggiungi · Da fare · date riconosciute", () => {
     await s.type("Da fare").click();
     await s.field.fill("x entro 31/11");
     await expect(s.button("Aggiungi ai da fare")).toBeVisible();
-    await expect(labelText(page, /^Entro /)).toHaveCount(0);
+    await expect(s.date).toHaveValue("");
 
     await s.button("Aggiungi ai da fare").click();
     await expect(

@@ -19,7 +19,7 @@ import {
   eventsOf,
   failMembersList,
   fieldOf,
-  labelsOf,
+  impegnoFields,
   listedFor,
   openAdd,
   participantRowsOf,
@@ -69,21 +69,6 @@ const entryOf = (page: Page) =>
     name: isDesktopNow(page) ? "Tutti i dettagli" : "Più dettagli",
     exact: true,
   });
-
-/** The four rows of the desktop summary, as buttons. */
-const rowOf = (page: Page, row: "day" | "people" | "escort" | "visibility") => {
-  const dialog = addOf(page);
-  switch (row) {
-    case "day":
-      return dialog.getByRole("button", { name: /^Giovedì 22 ottobre/ });
-    case "people":
-      return dialog.getByRole("button", { name: /^Chi (?!lo vede)/ });
-    case "escort":
-      return dialog.getByRole("button", { name: /^La porta/ });
-    case "visibility":
-      return dialog.getByRole("button", { name: /^Chi lo vede/ });
-  }
-};
 
 /** A group of chips of the form, by its name. */
 const groupOf = (page: Page, name: string) =>
@@ -256,12 +241,9 @@ test.describe("Aggiungi · Impegni · modulo · ingressi", () => {
     const submit = dialog.getByRole("button", { name: SUBMIT, exact: true });
     await expect(submit).toBeVisible();
 
-    // Document order: label «Sofia», then «Più dettagli», then the submit button.
-    const label = await labelsOf(page)
-      .locator(".chip")
-      .filter({ hasText: "Sofia" })
-      .first()
-      .elementHandle();
+    // Document order: the fields (#333: «Chi lo vede» is the last one), then
+    // «Più dettagli», then the submit button.
+    const label = await impegnoFields(page).visibility.elementHandle();
     const entryNode = await entry.elementHandle();
     const submitNode = await submit.elementHandle();
     expect(label).not.toBeNull();
@@ -284,7 +266,7 @@ test.describe("Aggiungi · Impegni · modulo · ingressi", () => {
     await field.fill("   ");
     await expect(dialog.getByText("Più dettagli")).toHaveCount(0);
     await field.fill("giovedì alle 17");
-    await expect(labelsOf(page)).toContainText("Giovedì 22");
+    await expect(impegnoFields(page).day).toHaveValue("2026-10-22");
     await expect(dialog.getByText("Più dettagli")).toHaveCount(0);
 
     // Type «Spesa».
@@ -319,7 +301,8 @@ test.describe("Aggiungi · Impegni · modulo · ingressi", () => {
     await expect(dialog.getByText("Tutti i dettagli")).toHaveCount(0);
   });
 
-  test("CA-2: su desktop «Tutti i dettagli» sta a sinistra del bottone d'invio e le quattro righe sono bottoni", async ({
+  // #333 (decision 3, CA-2): the four rows of the summary are gone with «La porta».
+  test("CA-2: su desktop «Tutti i dettagli» sta a sinistra del bottone d'invio, senza righe del riepilogo e senza «La porta»", async ({
     page,
     baseURL,
     casa,
@@ -341,22 +324,19 @@ test.describe("Aggiungi · Impegni · modulo · ingressi", () => {
     expect(allBox!.x + allBox!.width).toBeLessThanOrEqual(submitBox!.x + 1);
     await expect(dialog.getByText("Più dettagli")).toHaveCount(0);
 
-    await expect(rowOf(page, "day")).toBeVisible();
-    await expect(rowOf(page, "people")).toBeVisible();
-    await expect(rowOf(page, "escort")).toBeVisible();
-    await expect(rowOf(page, "visibility")).toBeVisible();
-    await expect(dialog.locator("button.riga-opzione")).toHaveCount(4);
-    await expect(
-      dialog.getByRole("button", { name: "La porta Scegli", exact: true }),
-    ).toBeVisible();
-
-    // A phrase without a title: no entry and no row as a button.
-    await fieldOf(page).fill("giovedì alle 17");
-    await expect(labelsOf(page)).toContainText("Giovedì 22");
-    await expect(dialog.getByText("Tutti i dettagli")).toHaveCount(0);
     await expect(dialog.locator("button.riga-opzione")).toHaveCount(0);
-    await expect(rowOf(page, "day")).toHaveCount(0);
-    await expect(rowOf(page, "escort")).toHaveCount(0);
+    await expect(dialog.getByText("La porta")).toHaveCount(0);
+    await expect(dialog.getByRole("button", { name: /La porta/ })).toHaveCount(
+      0,
+    );
+    await expect(dialog.getByRole("group", { name: "La porta" })).toHaveCount(
+      0,
+    );
+
+    // A phrase without a title: no entry.
+    await fieldOf(page).fill("giovedì alle 17");
+    await expect(impegnoFields(page).day).toHaveValue("2026-10-22");
+    await expect(dialog.getByText("Tutti i dettagli")).toHaveCount(0);
   });
 });
 
@@ -418,6 +398,7 @@ test.describe("Aggiungi · Impegni · modulo · già compilato", () => {
       "true",
     );
 
+    // #333 (specifica grafica §4): «La porta» stays in the form, nobody chosen
     await expectChips(groupOf(page, "La porta"), ["Tu", "Laura"]);
     await expect(
       groupOf(page, "La porta").getByRole("button", { pressed: true }),
@@ -512,58 +493,22 @@ test.describe("Aggiungi · Impegni · modulo · già compilato", () => {
     ).toHaveAccessibleDescription(/Finisce domenica 25\./);
   });
 
-  test("CA-6: ogni ingresso apre il modulo con il fuoco sul campo giusto", async ({
+  // #333: one entry only («Tutti i dettagli» / «Più dettagli»), focus on the title.
+  test("CA-6: l'unico ingresso apre il modulo con il fuoco sul titolo", async ({
     page,
     baseURL,
     casa,
   }) => {
-    onlyOn("desktop");
     await openAdd(page, baseURL, casa, "Marco", { lens: "io" });
     await fieldOf(page).fill(PHRASE);
     const form = formOf(page);
 
-    const cases: {
-      name: string;
-      entry: () => Locator;
-      focus: () => Locator;
-    }[] = [
-      {
-        name: "Tutti i dettagli",
-        entry: () => entryOf(page),
-        focus: () => form.getByLabel("Titolo"),
-      },
-      {
-        name: "Giovedì 22 ottobre",
-        entry: () => rowOf(page, "day"),
-        focus: () => form.getByLabel("Giorno"),
-      },
-      {
-        name: "Chi",
-        entry: () => rowOf(page, "people"),
-        focus: () => chip(page, "Chi", "Sofia"),
-      },
-      {
-        name: "La porta",
-        entry: () => rowOf(page, "escort"),
-        focus: () => chip(page, "La porta", "Tu"),
-      },
-      {
-        name: "Chi lo vede",
-        entry: () => rowOf(page, "visibility"),
-        focus: () =>
-          groupOf(page, "Chi lo vede").getByRole("button", {
-            name: "Occupato",
-          }),
-      },
-    ];
-    for (const item of cases) {
-      await expect(item.entry(), item.name).toBeVisible();
-      await item.entry().click();
-      await expect(form, item.name).toBeVisible();
-      await expect(item.focus(), item.name).toBeFocused();
-      await form.getByRole("button", { name: "Chiudi" }).click();
-      await expect(addOf(page)).toBeVisible();
-    }
+    await expect(entryOf(page)).toBeVisible();
+    await entryOf(page).click();
+    await expect(form).toBeVisible();
+    await expect(form.getByLabel("Titolo")).toBeFocused();
+    await form.getByRole("button", { name: "Chiudi" }).click();
+    await expect(addOf(page)).toBeVisible();
   });
 
   test("CA-7: il modulo da desktop è una modale singola e il bottone segue «Giorno»", async ({
@@ -788,27 +733,30 @@ test.describe("Aggiungi · Impegni · modulo · chiusura", () => {
     await openForm(page, baseURL, casa, "Marco");
     const form = formOf(page);
     await form.getByLabel("Titolo").fill("Altro");
-    await chip(page, "La porta", "Tu").click();
+    await chip(page, "Chi", "Tommaso").click();
     await form.getByRole("button", { name: "Chiudi" }).click();
 
     await expect(page.getByRole("dialog")).toHaveCount(1);
     await expect(addOf(page)).toBeVisible();
     expect(new URL(page.url()).pathname).toBe("/aggiungi");
     await expect(fieldOf(page)).toHaveValue(PHRASE);
-    await expect(labelsOf(page)).toContainText("Giovedì 22");
-    await expect(labelsOf(page)).toContainText("17:00");
-    await expect(labelsOf(page)).toContainText("Sofia");
+    // #333 (CA-7): the sheet keeps its fields, the choices made in the form are lost
+    const f = impegnoFields(page);
+    await expect(f.day).toHaveValue("2026-10-22");
+    await expect(f.from).toHaveValue("17:00");
+    await f.expectWho(["Sofia"]);
     await expect(entryOf(page)).toBeFocused();
     expect(await savedBy(casa, "Marco")).toHaveLength(0);
 
     await entryOf(page).click();
     await expect(form.getByLabel("Titolo")).toHaveValue("Nuoto Sofia");
-    await expect(
-      groupOf(page, "La porta").getByRole("button", { pressed: true }),
-    ).toHaveCount(0);
+    await expect(chip(page, "Chi", "Tommaso")).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
   });
 
-  test("CA-14: Esc dal modulo di desktop riporta alla frase, con il fuoco sulla riga «La porta»", async ({
+  test("CA-14: Esc dal modulo di desktop riporta alla frase, con il fuoco su «Tutti i dettagli»", async ({
     page,
     baseURL,
     casa,
@@ -816,15 +764,15 @@ test.describe("Aggiungi · Impegni · modulo · chiusura", () => {
     onlyOn("desktop");
     await openAdd(page, baseURL, casa, "Marco");
     await fieldOf(page).fill(PHRASE);
-    await expect(rowOf(page, "escort")).toBeVisible();
-    await rowOf(page, "escort").click();
+    await expect(entryOf(page)).toBeVisible();
+    await entryOf(page).click();
     await expect(formOf(page)).toBeVisible();
     await waitForAnimationsToEnd(page);
 
     await page.keyboard.press("Escape");
     await expect(addOf(page)).toBeVisible();
     await expect(fieldOf(page)).toHaveValue(PHRASE);
-    await expect(rowOf(page, "escort")).toBeFocused();
+    await expect(entryOf(page)).toBeFocused();
   });
 
   test("CA-14: il tocco sul velo dal modulo di mobile riporta alla frase", async ({
@@ -1030,10 +978,9 @@ test.describe("Aggiungi · Impegni · modulo · errori e caricamento", () => {
     const dialog = addOf(page);
     await expect(alertsIn(dialog)).toContainText(MEMBERS_FAILED);
     await fieldOf(page).fill(PHRASE);
-    await expect(labelsOf(page)).toContainText("Giovedì 22");
+    await expect(impegnoFields(page).day).toHaveValue("2026-10-22");
     await expect(dialog.getByText("Più dettagli")).toHaveCount(0);
     await expect(dialog.getByText("Tutti i dettagli")).toHaveCount(0);
-    await expect(dialog.locator("button.riga-opzione")).toHaveCount(0);
 
     failing = false;
     await alertsIn(dialog).getByRole("button", { name: "Riprova" }).click();
@@ -1234,16 +1181,15 @@ test.describe("Aggiungi · Impegni · modulo · accessibilità", () => {
     await expectNoBlockingViolations(page);
   });
 
-  test("CA-25: il foglio «Aggiungi» con le quattro righe come bottoni non ha violazioni", async ({
+  test("CA-25: il foglio «Aggiungi» con i campi dell'impegno non ha violazioni", async ({
     page,
     baseURL,
     casa,
   }) => {
-    onlyOn("desktop");
     await openAdd(page, baseURL, casa, "Marco");
     await fieldOf(page).fill(PHRASE);
-    await expect(rowOf(page, "visibility")).toBeVisible();
-    await dayRead(page, true);
+    await expect(impegnoFields(page).visibility).toBeVisible();
+    await dayRead(page);
     await expectNoBlockingViolations(page);
   });
 });

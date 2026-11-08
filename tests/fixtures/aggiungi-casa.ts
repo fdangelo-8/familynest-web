@@ -48,8 +48,10 @@ export const GONE_TEXT = "Forse l'ha tolta qualcun altro.";
 export const GONE_ALERT =
   "Questa cosa non c'è più. Forse l'ha tolta qualcun altro.";
 
+// #333, decision 4: two voices always shown, one pressed (they replace the one
+// button whose name changed).
 export const SHARED = "Lo vede tutto il Nest";
-export const PRIVATE = "Lo vedi solo tu";
+export const PRIVATE = "Lo vedo solo io";
 
 // ----------------------------------------------------------------- locators
 
@@ -69,6 +71,10 @@ export function sheet(page: Page, mode: "add" | "edit" = "add") {
     exact: true,
   });
   const remind = dialog.getByRole("group", { name: "Avvisami", exact: true });
+  const visibility = dialog.getByRole("group", {
+    name: "Chi lo vede",
+    exact: true,
+  });
   return {
     dialog,
     field,
@@ -76,8 +82,10 @@ export function sheet(page: Page, mode: "add" | "edit" = "add") {
     /** A voice of the «Tipo» selector. */
     type: (name: "Impegno" | "Da fare" | "Spesa" | "Scadenza") =>
       types.getByRole("button", { name, exact: true }),
-    /** The region of the labels («Entro venerdì», «Per Sofia», visibility). */
+    /** The region of the labels («Per Sofia»). */
     labels: dialog.locator('[aria-live="polite"]'),
+    /** The field «Data» of Da fare and Scadenza (#333). */
+    date: dialog.getByLabel(/^(Entro|Scade il)$/),
     who,
     /** A chip of «Chi se ne occupa»; «Tu» is the signed-in member. */
     person: (name: string) => who.getByRole("button", { name, exact: true }),
@@ -85,10 +93,11 @@ export function sheet(page: Page, mode: "add" | "edit" = "add") {
     /** A chip of «Avvisami». */
     reminder: (name: string) =>
       remind.getByRole("button", { name, exact: true }),
-    /** The visibility button (its name says its state). */
-    visibility: dialog.getByRole("button", {
-      name: /^(Lo vede tutto il Nest|Lo vedi solo tu)$/,
-    }),
+    /** The group «Chi lo vede» (Da fare and Scadenza: two voices, #333). */
+    visibility,
+    /** A voice of «Chi lo vede»; its state is `aria-pressed`. */
+    voice: (name: string) =>
+      visibility.getByRole("button", { name, exact: true }),
     button: (name: string | RegExp) =>
       dialog.getByRole("button", {
         name,
@@ -102,6 +111,23 @@ export function sheet(page: Page, mode: "add" | "edit" = "add") {
     expectError: async (text: string) => {
       await expect(field).toHaveAttribute("aria-invalid", "true");
       await expect(field).toHaveAccessibleDescription(text);
+    },
+    /** The text of the error under «Data», and the focus on it. */
+    expectDateError: async (text: string) => {
+      const date = dialog.getByLabel(/^(Entro|Scade il)$/);
+      await expect(date).toHaveAttribute("aria-invalid", "true");
+      // The help «Preso dalla frase» may come first, then the error
+      await expect(date).toHaveAccessibleDescription(
+        new RegExp(`${text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`),
+      );
+      await expect(date).toBeFocused();
+    },
+    /** Exactly this voice of «Chi lo vede» is the pressed one. */
+    expectVoice: async (name: string) => {
+      await expect(
+        visibility.getByRole("button", { name, exact: true }),
+      ).toHaveAttribute("aria-pressed", "true");
+      await expect(visibility.locator('[aria-pressed="true"]')).toHaveCount(1);
     },
   };
 }
@@ -510,6 +536,73 @@ export async function holdRequests(
     },
   );
   return { release, calls: () => calls };
+}
+
+/**
+ * Holds the calls to a function of the database until `release()` is called
+ * (since #333 the sheet saves with `create_todo`, `create_deadline`,
+ * `add_shopping_items`). `calls()` counts the calls that reached the network.
+ */
+export async function holdRpc(
+  page: Page,
+  name: string,
+): Promise<{ release: () => void; calls: () => number }> {
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let calls = 0;
+  await page.route(
+    (url) => url.pathname.endsWith(`/rest/v1/rpc/${name}`),
+    async (route) => {
+      if (route.request().method() !== "POST") {
+        await route.continue();
+        return;
+      }
+      calls += 1;
+      await gate;
+      await route.continue();
+    },
+  );
+  return { release, calls: () => calls };
+}
+
+/** The ids of the members who take care of a thing, sorted (RLS applies). */
+export async function assigneesOf(
+  nest: CasaNest,
+  who: string,
+  table: "todo" | "deadline" | "shopping_item",
+  id: string,
+): Promise<string[]> {
+  const client = clientOf(nest, who);
+  const { data, error } =
+    table === "todo"
+      ? await client
+          .from("todo_assignees")
+          .select("member_id")
+          .eq("todo_id", id)
+      : table === "deadline"
+        ? await client
+            .from("deadline_assignees")
+            .select("member_id")
+            .eq("deadline_id", id)
+        : await client
+            .from("shopping_item_assignees")
+            .select("member_id")
+            .eq("shopping_item_id", id);
+  if (error) throw new Error("Lettura dei responsabili di prova fallita");
+  return (data ?? []).map((row) => row.member_id as string).sort();
+}
+
+/** The ids of the given members, sorted: to compare with `assigneesOf`. */
+export function idsOf(nest: CasaNest, names: string[]): string[] {
+  return names
+    .map((name) => {
+      const id = nest.members[name];
+      if (!id) throw new Error(`Membro di prova sconosciuto: ${name}`);
+      return id;
+    })
+    .sort();
 }
 
 /** Writes to the data API seen so far, with the method (to prove «no write»). */

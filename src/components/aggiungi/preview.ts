@@ -1,11 +1,9 @@
 import type { MemberColor } from "../ui/Avatar/Avatar";
-import { eventsOfDay } from "../../lib/calendar";
-import { getCalendarDay } from "../../lib/datetime";
 import type { HouseholdEvent } from "../../lib/household-events";
 import { atTime, joinNames } from "./labels";
 import type { PhraseSlot } from "./parse-phrase";
 
-/** Pure rules behind the preview column and the «chi accompagna?» notice (#20). */
+/** Pure rule behind the «chi accompagna?» notice (#20). The preview column is gone (#333). */
 
 export type NestPerson = {
   id: string;
@@ -14,30 +12,6 @@ export type NestPerson = {
   kind: "adult" | "child" | "pet";
   userId: string | null;
 };
-
-export type PreviewItem =
-  { type: "existing"; event: HouseholdEvent } | { type: "new" };
-
-/**
- * The events of the day that the reader may see, in the order of the rows,
- * with the new one among them. At the same start the existing event goes first.
- */
-export function previewItems(
-  events: readonly HouseholdEvent[],
-  slot: PhraseSlot,
-): PreviewItem[] {
-  const existing = eventsOfDay(events, getCalendarDay(slot.dayKey));
-  const newStart = slot.startsAt.getTime();
-  const index = existing.findIndex(
-    (event) => new Date(event.startsAt).getTime() > newStart,
-  );
-  const items: PreviewItem[] = existing.map((event) => ({
-    type: "existing",
-    event,
-  }));
-  items.splice(index === -1 ? items.length : index, 0, { type: "new" });
-  return items;
-}
 
 /**
  * The notice «Laura ha un impegno fino alle 17:15: chi accompagna Sofia?».
