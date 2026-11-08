@@ -51,7 +51,7 @@ test.describe("accesso e pagine pubbliche", () => {
 
   test("accesso con la mail: inserimento", async ({ page }) => {
     await page.goto("/accesso/mail");
-    await expect(page.locator("h1:visible")).toHaveText("Qual è la tua mail?");
+    await expect(page.locator("h1:visible")).toHaveText("Entra con la mail");
     await settle(page);
     await expect(page).toHaveScreenshot("mail-inserimento.png", {
       fullPage: true,
@@ -60,7 +60,7 @@ test.describe("accesso e pagine pubbliche", () => {
 
   test("accesso con la mail: controlla la posta", async ({ page }) => {
     test.skip(!supabaseUrl, "NEXT_PUBLIC_SUPABASE_URL non impostato");
-    await page.route("**/auth/v1/otp**", (route) =>
+    await page.route("**/auth/v1/signup**", (route) =>
       route.fulfill({
         status: 200,
         contentType: "application/json",
@@ -75,12 +75,15 @@ test.describe("accesso e pagine pubbliche", () => {
     // The page may not be hydrated yet: retry the submit until it goes through.
     await expect(async () => {
       await page
-        .getByLabel("La tua mail")
-        .filter({ visible: true })
-        .fill(MAIL, { timeout: 2000 });
+        .getByRole("group", { name: "Hai già un account?" })
+        .getByRole("button", { name: "Registrati", exact: true })
+        .click({ timeout: 2000 });
+      await page.getByLabel("La tua mail").fill(MAIL, { timeout: 2000 });
       await page
-        .getByRole("button", { name: "Mandami il link" })
-        .filter({ visible: true })
+        .getByLabel("Scegli una password", { exact: true })
+        .fill("una-password-di-prova", { timeout: 2000 });
+      await page
+        .locator('main form button[type="submit"]')
         .click({ timeout: 2000, noWaitAfter: true });
       await expect(heading).toBeVisible({ timeout: 2000 });
     }).toPass({ timeout: 15_000 });

@@ -27,7 +27,6 @@ const GOOGLE_ERROR =
   "Accesso con Google non riuscito. Controlla la connessione e riprova.";
 const APPLE_ERROR =
   "Accesso con Apple non riuscito. Controlla la connessione e riprova.";
-const MAIL = "marco@example.com";
 
 function needSupabase() {
   test.skip(!supabaseUrl, "NEXT_PUBLIC_SUPABASE_URL non impostato");
@@ -115,40 +114,6 @@ async function interceptAuthorize(page: Page, hold = false) {
   return { urls, release: () => held.forEach((r) => void r.abort()) };
 }
 
-type OtpMode = "ok" | "rate" | "hold" | "abort-then-ok";
-
-async function interceptOtp(page: Page, mode: OtpMode) {
-  const bodies: Array<Record<string, unknown>> = [];
-  const held: Route[] = [];
-  let calls = 0;
-  await page.route(`${supabaseUrl}/auth/v1/otp*`, async (route) => {
-    calls += 1;
-    bodies.push(JSON.parse(route.request().postData() ?? "{}"));
-    if (mode === "hold") {
-      held.push(route);
-    } else if (mode === "rate") {
-      await route.fulfill({
-        status: 429,
-        contentType: "application/json",
-        body: JSON.stringify({
-          code: 429,
-          error_code: "over_email_send_rate_limit",
-          msg: "rate limit",
-        }),
-      });
-    } else if (mode === "abort-then-ok" && calls === 1) {
-      await route.abort("failed");
-    } else {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: "{}",
-      });
-    }
-  });
-  return { bodies, release: () => held.forEach((r) => void r.abort()) };
-}
-
 /**
  * Lets a possible (unwanted) second request leave the page: waits for two
  * animation frames in the browser, with no fixed delay.
@@ -162,27 +127,6 @@ async function settle(page: Page) {
         ),
       ),
   );
-}
-
-function mailInput(page: Page) {
-  return page.getByRole("textbox", { name: "La tua mail" });
-}
-
-function sendButton(page: Page) {
-  return page.getByRole("button", { name: "Mandami il link" });
-}
-
-/** Fills the address and submits until the page is hydrated and `done` holds. */
-async function submitMail(
-  page: Page,
-  value: string,
-  done: () => Promise<void> | void,
-) {
-  await expect(async () => {
-    await mailInput(page).fill(value, { timeout: 2000 });
-    await sendButton(page).click({ timeout: 2000, noWaitAfter: true });
-    await done();
-  }).toPass({ timeout: 15_000 });
 }
 
 test.describe("pagina /accesso", () => {
@@ -206,21 +150,22 @@ test.describe("pagina /accesso", () => {
     await expectAccessControls(page);
   });
 
-  test("CA-3: nessuna password nelle tre pagine", async ({ page }) => {
-    for (const route of [
-      "/accesso",
-      "/accesso/mail",
-      "/accesso/link-scaduto",
-    ]) {
-      await page.goto(route);
-      await expect(page.locator("input[type=password]")).toHaveCount(0);
-      // The designer's intro of the mail page says "senza password" (it tells
-      // that no password is needed): it is the only allowed occurrence.
-      const text = (await page.locator("main").innerText())
-        .toLowerCase()
-        .replaceAll("senza password", "");
-      expect(text).not.toContain("password");
-    }
+  // #327 replaces the rule of #11 ("no password anywhere", true while the mail
+  // sign-in was a magic link): /accesso/mail now has the password field, and
+  // exactly one (a single form in the DOM). /accesso has none and does not
+  // speak of passwords; the expired-link screen speaks of it but has no field.
+  test("CA-3: il campo password è solo in /accesso/mail, e uno solo", async ({
+    page,
+  }) => {
+    await page.goto("/accesso");
+    await expect(page.locator("input[type=password]")).toHaveCount(0);
+    const text = (await page.locator("main").innerText()).toLowerCase();
+    expect(text).not.toContain("password");
+    await page.goto("/accesso/link-scaduto");
+    await expect(page.locator("input[type=password]")).toHaveCount(0);
+    await page.goto("/accesso/mail");
+    await expect(page.locator("input[type=password]")).toHaveCount(1);
+    await expect(page.locator("main form")).toHaveCount(1);
   });
 
   test("CA-4: nessun link «Ho un invito»", async ({ page }) => {
@@ -424,179 +369,6 @@ test.describe("Apple e Google", () => {
   });
 });
 
-test.describe("link via mail: invio", () => {
-  test("CA-14: «Usa la mail» porta al campo", async ({ page }) => {
-    await page.goto("/accesso");
-    await page.getByRole("link", { name: "Usa la mail" }).click();
-    await expect(page).toHaveURL(/\/accesso\/mail$/);
-    await expect(mailInput(page)).toBeVisible();
-    await expect(sendButton(page)).toBeVisible();
-  });
-
-  test("CA-15: mail vuota", async ({ page }) => {
-    needSupabase();
-    const otp = await interceptOtp(page, "ok");
-    await page.goto("/accesso/mail");
-    await clickUntil(sendButton(page), () =>
-      expect(
-        page
-          .getByText("Scrivi la tua mail per ricevere il link.")
-          .filter({ visible: true }),
-      ).toBeVisible({ timeout: 1000 }),
-    );
-    await expect(mailInput(page)).toHaveAttribute("aria-invalid", "true");
-    expect(otp.bodies).toHaveLength(0);
-  });
-
-  test("CA-16: mail non valida", async ({ page }) => {
-    needSupabase();
-    const otp = await interceptOtp(page, "ok");
-    await page.goto("/accesso/mail");
-    await submitMail(page, "marco@", () =>
-      expect(
-        page
-          .getByText("Controlla la mail: dovrebbe essere come nome@esempio.it.")
-          .filter({ visible: true }),
-      ).toBeVisible({ timeout: 1000 }),
-    );
-    expect(otp.bodies).toHaveLength(0);
-  });
-
-  test("CA-17: invio riuscito", async ({ page }) => {
-    needSupabase();
-    const otp = await interceptOtp(page, "ok");
-    await page.goto("/accesso/mail");
-    await submitMail(page, `  ${MAIL}  `, () =>
-      expect(
-        page.getByRole("heading", { level: 1, name: "Controlla la posta" }),
-      ).toBeVisible({ timeout: 2000 }),
-    );
-    expect(otp.bodies).toHaveLength(1);
-    expect(otp.bodies[0]).toMatchObject({ email: MAIL, create_user: true });
-    await expect(
-      page.locator("main").getByText(MAIL).filter({ visible: true }),
-    ).toBeVisible();
-    expect(new URL(page.url()).pathname + new URL(page.url()).search).toBe(
-      "/accesso/mail",
-    );
-  });
-
-  test("CA-18: troppe richieste", async ({ page }) => {
-    needSupabase();
-    await interceptOtp(page, "rate");
-    await page.goto("/accesso/mail");
-    await submitMail(page, MAIL, () =>
-      expect(
-        page
-          .getByText(
-            "Hai appena chiesto un link per questa mail. Cercalo nella posta, oppure chiedine un altro tra un minuto.",
-          )
-          .filter({ visible: true }),
-      ).toBeVisible({ timeout: 2000 }),
-    );
-    await expect(mailInput(page)).toHaveValue(MAIL);
-  });
-
-  test("CA-19: errore di rete, poi «Riprova»", async ({ page }) => {
-    needSupabase();
-    await interceptOtp(page, "abort-then-ok");
-    await page.goto("/accesso/mail");
-    await submitMail(page, MAIL, () =>
-      expect(
-        alertWith(
-          page,
-          "Non siamo riusciti a mandare il link. Controlla la connessione e riprova.",
-        ),
-      ).toBeVisible({ timeout: 2000 }),
-    );
-    await expect(mailInput(page)).toHaveValue(MAIL);
-    await page.getByRole("button", { name: "Riprova" }).click();
-    await expect(
-      page.getByRole("heading", { level: 1, name: "Controlla la posta" }),
-    ).toBeVisible();
-  });
-
-  test("CA-20: un solo invio mentre si aspetta", async ({ page }) => {
-    needSupabase();
-    const otp = await interceptOtp(page, "hold");
-    await page.goto("/accesso/mail");
-    await submitMail(page, MAIL, () =>
-      expect.poll(() => otp.bodies.length, { timeout: 2000 }).toBe(1),
-    );
-    const busy = page.getByRole("button", { name: "Invio del link in corso" });
-    await expect(busy).toHaveAttribute("aria-busy", "true");
-    // A second tap on the busy button must not send a second request.
-    await clickVisibleButton(page, "Invio del link in corso");
-    await settle(page);
-    expect(otp.bodies).toHaveLength(1);
-  });
-
-  test("CA-21: «Mandami un altro link» si riattiva dopo 60 secondi", async ({
-    page,
-  }) => {
-    needSupabase();
-    const otp = await interceptOtp(page, "ok");
-    await page.clock.install({ time: new Date("2026-10-23T10:00:00Z") });
-    await page.goto("/accesso/mail");
-    await page.clock.pauseAt(new Date("2026-10-23T10:00:05Z"));
-    await submitMail(page, MAIL, () =>
-      expect(
-        page.getByRole("heading", { level: 1, name: "Controlla la posta" }),
-      ).toBeVisible({ timeout: 2000 }),
-    );
-    const again = page.getByRole("button", { name: "Mandami un altro link" });
-    await expect(again).toBeDisabled();
-    await page.clock.runFor(59_000);
-    await expect(again).toBeDisabled();
-    await page.clock.runFor(1_000);
-    await expect(again).toBeEnabled();
-    await again.click();
-    await expect.poll(() => otp.bodies.length).toBe(2);
-    expect(otp.bodies[1]).toMatchObject({ email: MAIL });
-  });
-
-  test("CA-22: «Usa un'altra mail» riporta la mail nel campo", async ({
-    page,
-  }) => {
-    needSupabase();
-    await interceptOtp(page, "ok");
-    await page.goto("/accesso/mail");
-    await submitMail(page, MAIL, () =>
-      expect(
-        page.getByRole("heading", { level: 1, name: "Controlla la posta" }),
-      ).toBeVisible({ timeout: 2000 }),
-    );
-    await page.getByRole("button", { name: "Usa un'altra mail" }).click();
-    await expect(mailInput(page)).toHaveValue(MAIL);
-  });
-
-  test("CA-23: la mail non compare in indirizzi né richieste all'app", async ({
-    page,
-    baseURL,
-  }) => {
-    needSupabase();
-    await interceptOtp(page, "ok");
-    const origin = new URL(baseURL!).origin;
-    const seen: string[] = [];
-    page.on("framenavigated", (frame) => seen.push(frame.url()));
-    page.on("request", (request) => {
-      if (request.url().startsWith(origin)) {
-        seen.push(request.url(), request.postData() ?? "");
-      }
-    });
-    await page.goto("/accesso/mail");
-    await submitMail(page, MAIL, () =>
-      expect(
-        page.getByRole("heading", { level: 1, name: "Controlla la posta" }),
-      ).toBeVisible({ timeout: 2000 }),
-    );
-    const joined = seen.join("\n");
-    expect(joined).not.toContain(MAIL);
-    expect(joined).not.toContain(encodeURIComponent(MAIL));
-    expect(joined.toLowerCase()).not.toContain("marco%40");
-  });
-});
-
 test.describe("link via mail: ritorno", () => {
   for (const [url, tipo] of [
     ["/auth/confirm?token_hash=non-valido&type=magiclink", "conferma"],
@@ -614,14 +386,23 @@ test.describe("link via mail: ritorno", () => {
     });
   }
 
-  test("CA-28: link scaduto, le due uscite", async ({ page }) => {
-    await page.goto("/accesso/link-scaduto");
-    await page.getByRole("link", { name: "Mandami un nuovo link" }).click();
-    await expect(page).toHaveURL(/\/accesso\/mail$/);
-    await page.goto("/accesso/link-scaduto");
-    await page.getByRole("link", { name: "Torna all'accesso" }).click();
-    await expect(page).toHaveURL(/\/accesso$/);
-  });
+  // #327: the screen depends on the kind of link; the main action changes.
+  for (const [tipo, action, target] of [
+    ["conferma", "Entra con la mail", "/accesso/mail"],
+    ["password", "Mandami un nuovo link", "/accesso/password-dimenticata"],
+    ["altro", "Entra con la mail", "/accesso/mail"],
+  ] as const) {
+    test(`CA-28: link scaduto (tipo=${tipo}), le due uscite`, async ({
+      page,
+    }) => {
+      await page.goto(`/accesso/link-scaduto?tipo=${tipo}`);
+      await page.getByRole("link", { name: action }).click();
+      await expect(page).toHaveURL(new RegExp(`${target}$`));
+      await page.goto(`/accesso/link-scaduto?tipo=${tipo}`);
+      await page.getByRole("link", { name: "Torna all'accesso" }).click();
+      await expect(page).toHaveURL(/\/accesso$/);
+    });
+  }
 });
 
 test.describe("uscita e termini", () => {
@@ -656,47 +437,6 @@ test.describe("uscita e termini", () => {
       await expect(page).toHaveTitle(`FamilyNest · ${h1}`);
     });
   }
-});
-
-test.describe("invio prima dell'idratazione", () => {
-  test("un invio nativo non mette la mail nell'indirizzo", async ({ page }) => {
-    // The page is served but never hydrated (scripts blocked), as when a
-    // person taps before the scripts have loaded: the form submits natively.
-    await page.route("**/_next/static/**/*.js", (route) => route.abort());
-    await page.goto("/accesso/mail");
-    await mailInput(page).fill(MAIL);
-    await sendButton(page).click();
-    await page.waitForLoadState("load");
-    // A normal page, not a blank one: the complete mail page, empty field.
-    await expect(
-      page.getByRole("heading", { level: 1, name: "Qual è la tua mail?" }),
-    ).toBeVisible();
-    await expect(mailInput(page)).toBeVisible();
-    const url = new URL(page.url());
-    expect(url.pathname).toBe("/accesso/mail");
-    expect(url.search).toBe("");
-    expect(decodeURIComponent(page.url())).not.toContain("marco");
-    expect(page.url()).not.toContain("@");
-  });
-
-  test("POST diretto alla destinazione del form: 303 verso /accesso/mail, nessuna mail", async ({
-    page,
-    request,
-  }) => {
-    await page.goto("/accesso/mail");
-    const action =
-      (await page.locator("form").first().getAttribute("action")) ??
-      "/accesso/mail";
-    const response = await request.post(action, {
-      form: { email: MAIL },
-      maxRedirects: 0,
-    });
-    expect(response.status()).toBe(303);
-    const location = new URL(response.headers()["location"]!, page.url());
-    expect(location.pathname).toBe("/accesso/mail");
-    expect(location.search).toBe("");
-    expect(await response.text()).not.toContain(MAIL);
-  });
 });
 
 test.describe("parametro next (funzione pura)", () => {
