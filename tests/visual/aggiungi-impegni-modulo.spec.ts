@@ -88,7 +88,10 @@ test("frase con errore del campo e ingressi attivi", async ({ page }) => {
   const { dialog, field } = await open(page);
   await field.pressSequentially("dentista giovedì");
   await field.press("Enter");
-  await expect(field).toHaveAttribute("aria-invalid", "true");
+  // #333: the error sits under the field that is wrong («Dalle»), not under the phrase
+  const from = dialog.getByLabel("Dalle", { exact: true });
+  await expect(from).toHaveAttribute("aria-invalid", "true");
+  await expect(from).toHaveAccessibleDescription("Scegli l'ora d'inizio.");
   await expect(
     dialog.getByRole("button", { name: /^(Più|Tutti i) dettagli$/ }),
   ).toBeVisible();
