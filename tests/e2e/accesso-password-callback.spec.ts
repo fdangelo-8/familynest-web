@@ -133,6 +133,7 @@ async function recoverAndGetLink(page: Page, address: string, base: string) {
 test.describe("[CI-stack] /auth/callback con il link predefinito di Supabase", () => {
   test("conferma, stesso browser: entra in /onboarding; il link riaperto è «scaduto»", async ({
     page,
+    browser,
     baseURL,
   }) => {
     await needStack();
@@ -145,9 +146,18 @@ test.describe("[CI-stack] /auth/callback con il link predefinito di Supabase", (
       expect(await hasSession(page)).toBe(true);
 
       // The token is used once: the same link again leads to «link scaduto».
-      await page.goto(await link());
-      // Supabase adds the error to the address (after `#`).
-      await expect(page).toHaveURL(/\/accesso\/link-scaduto\?tipo=conferma/);
+      // (In a new browser: someone already signed in never sees the page.)
+      const again = await browser.newContext({ baseURL });
+      try {
+        const againPage = await again.newPage();
+        await againPage.goto(await link());
+        // Supabase adds the error to the address (after `#`).
+        await expect(againPage).toHaveURL(
+          /\/accesso\/link-scaduto\?tipo=conferma/,
+        );
+      } finally {
+        await again.close();
+      }
     } finally {
       await removeByEmail(address);
     }
