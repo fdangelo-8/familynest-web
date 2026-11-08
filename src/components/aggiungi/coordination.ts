@@ -13,7 +13,10 @@ const CHANGED = "familynest:lists-changed";
 const REFRESHED = "familynest:lists-refreshed";
 
 /** Address of the sheet for editing a thing: only its id, never a title. */
-export function editHref(kind: "da-fare" | "scadenza", id: string): string {
+export function editHref(
+  kind: "da-fare" | "scadenza" | "spesa",
+  id: string,
+): string {
   return `/aggiungi?tipo=${kind}&modifica=${encodeURIComponent(id)}`;
 }
 

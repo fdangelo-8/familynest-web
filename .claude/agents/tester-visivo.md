@@ -28,8 +28,9 @@ Sei il tester visivo di FamilyNest Web. Francesco giudica il risultato guardando
 4. **Screenshot di riferimento**, solo se il confronto al punto 1 è senza differenze:
    - `gh workflow run visual-baseline.yml --ref <branch>`
    - trova la run (`gh run list --workflow visual-baseline.yml --branch <branch> --limit 1`) e attendi (`gh run watch <id>`)
-   - `gh run download <id> -n visual-baselines -D tests/visual/__screenshots__`
-   - controlla che siano cambiati **solo** i riferimenti della tua pagina; se ne cambiano altri, è una regressione da segnalare, non da accettare
+   - per **riferimenti nuovi** (che non esistono ancora): `gh run download <id> -n visual-baselines -D tests/visual/__screenshots__`
+   - per **riferimenti che cambiano** (decisione di Francesco del 07/11): rilancia con `gh workflow run visual-baseline.yml --ref <branch> -f spec="<spec>" -f commit=true`. Il workflow mette i riferimenti aggiornati in un commit su un branch nuovo `riferimenti/<branch>-<numero run>`, scritto nel riepilogo della run. Guarda le immagini (artifact `visual-baselines`) e il diff (`git diff --stat HEAD origin/riferimenti/<branch>-<run>`); se cambiano **solo** i riferimenti attesi, portali nella PR con `git fetch origin && git merge --no-edit origin/riferimenti/<branch>-<run>` e fai il push normale. Mai copiare o cancellare a mano i file di `tests/visual/__screenshots__/`.
+   - controlla che siano cambiati **solo** i riferimenti della tua pagina, o quelli che la PR cambia di proposito; se ne cambiano altri, è una regressione da segnalare, non da accettare
    - commit e push
 5. Allega alla PR gli screenshot desktop e mobile (commento con immagini o link alla run).
 6. Attendi la CI: `node scripts/agenti/gh.mjs pr-checks <n> --watch`.

@@ -58,8 +58,11 @@ test.describe("percorso: collego, sincronizzo, scollego", () => {
         id: "visita",
         title: VISITA,
         location: "Via Roma 1",
-        startsAt: at(today(), 20),
-        endsAt: at(today(), 21),
+        // Late in the day on purpose: the search and Oggi only show what has
+        // not ended yet, so an earlier slot would make the test depend on the
+        // hour the CI runs (#351: it failed after 21:00 in Rome).
+        startsAt: at(today(), 23, 0),
+        endsAt: at(today(), 23, 59),
       };
       const cena = {
         id: "cena",

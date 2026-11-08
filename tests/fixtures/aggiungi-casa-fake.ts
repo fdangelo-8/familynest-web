@@ -47,9 +47,26 @@ export const DEADLINE_THING: Thing = {
   reminders: [30, 7, 1],
 };
 
+export const SHOPPING_ID = "00000000-0000-4000-8000-00000000a024";
+
+/** A thing of the shopping list the sheet can open to edit (#335). */
+export type ShoppingThing = {
+  id: string;
+  name: string;
+  quantity: string | null;
+};
+
+export const SHOPPING_THING: ShoppingThing = {
+  id: SHOPPING_ID,
+  name: "Latte",
+  quantity: "2 l",
+};
+
 export type CasaOptions = Options & {
   /** Names of the things still to take in the shopping list */
   toTake?: string[];
+  /** The thing of the shopping list the sheet opens to edit (#335) */
+  shopping?: ShoppingThing;
   /** The thing the sheet opens to edit */
   thing?: Thing;
   /** Reading of that thing: "gone" = not there (any more), "hold" = never answers */
@@ -67,6 +84,7 @@ function uuid(n: number): string {
 export async function installCasaFakes(page: Page, options: CasaOptions = {}) {
   const {
     toTake = [],
+    shopping,
     thing,
     read = "ok",
     write = "ok",
@@ -85,6 +103,15 @@ export async function installCasaFakes(page: Page, options: CasaOptions = {}) {
   await page.route("**/rest/v1/shopping_items*", async (route) => {
     const method = route.request().method();
     if (method === "GET") {
+      // The thing to edit, read by its id
+      if (new URL(route.request().url()).searchParams.get("id")) {
+        if (read === "hold") return;
+        if (read === "fail") {
+          return route.fulfill({ status: 500, json: { message: "boom" } });
+        }
+        if (read === "gone" || !shopping) return route.fulfill({ json: [] });
+        return route.fulfill({ json: [{ ...shopping, checked_at: null }] });
+      }
       return route.fulfill({
         json: toTake.map((name, index) => ({ id: uuid(9000 + index), name })),
       });
@@ -96,7 +123,29 @@ export async function installCasaFakes(page: Page, options: CasaOptions = {}) {
       }
       return route.fulfill({ status: 201, body: "" });
     }
+    if (method === "DELETE") {
+      if (remove === "fail") {
+        return route.fulfill({ status: 500, json: { message: "boom" } });
+      }
+      return route.fulfill({ status: 204, body: "" });
+    }
     return route.fallback();
+  });
+  await page.route("**/rest/v1/shopping_item_assignees*", (route) =>
+    route.fulfill({ json: [] }),
+  );
+  await page.route("**/rest/v1/rpc/update_shopping_item*", (route) => {
+    if (write === "hold") return;
+    if (write === "fail") {
+      return route.fulfill({ status: 500, json: { message: "boom" } });
+    }
+    if (write === "gone") {
+      return route.fulfill({
+        status: 404,
+        json: { code: "P0002", message: "gone" },
+      });
+    }
+    return route.fulfill({ status: 204, body: "" });
   });
 
   const thingTable = (table: "todos" | "deadlines") => async (route: Route) => {

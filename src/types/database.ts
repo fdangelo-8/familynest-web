@@ -291,6 +291,50 @@ export type Database = {
           },
         ];
       };
+      deadline_assignees: {
+        Row: {
+          created_at: string;
+          deadline_id: string;
+          household_id: string;
+          member_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          deadline_id: string;
+          household_id?: string;
+          member_id: string;
+        };
+        Update: {
+          created_at?: string;
+          deadline_id?: string;
+          household_id?: string;
+          member_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "deadline_assignees_deadline_fkey";
+            columns: ["deadline_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "deadlines";
+            referencedColumns: ["id", "household_id"];
+          },
+          {
+            foreignKeyName: "deadline_assignees_household_id_fkey";
+            columns: ["household_id"];
+            isOneToOne: false;
+            referencedRelation: "households";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "deadline_assignees_member_fkey";
+            columns: ["member_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "household_members";
+            referencedColumns: ["id", "household_id"];
+          },
+        ];
+      };
       deadlines: {
         Row: {
           assignee_member_id: string | null;
@@ -1098,6 +1142,50 @@ export type Database = {
         };
         Relationships: [];
       };
+      shopping_item_assignees: {
+        Row: {
+          created_at: string;
+          household_id: string;
+          member_id: string;
+          shopping_item_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          household_id?: string;
+          member_id: string;
+          shopping_item_id: string;
+        };
+        Update: {
+          created_at?: string;
+          household_id?: string;
+          member_id?: string;
+          shopping_item_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "shopping_item_assignees_household_id_fkey";
+            columns: ["household_id"];
+            isOneToOne: false;
+            referencedRelation: "households";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "shopping_item_assignees_item_fkey";
+            columns: ["shopping_item_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "shopping_items";
+            referencedColumns: ["id", "household_id"];
+          },
+          {
+            foreignKeyName: "shopping_item_assignees_member_fkey";
+            columns: ["member_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "household_members";
+            referencedColumns: ["id", "household_id"];
+          },
+        ];
+      };
       shopping_items: {
         Row: {
           added_by_member_id: string | null;
@@ -1183,6 +1271,50 @@ export type Database = {
             columns: ["member_id", "household_id"];
             isOneToOne: false;
             referencedRelation: "household_members";
+            referencedColumns: ["id", "household_id"];
+          },
+        ];
+      };
+      todo_assignees: {
+        Row: {
+          created_at: string;
+          household_id: string;
+          member_id: string;
+          todo_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          household_id?: string;
+          member_id: string;
+          todo_id: string;
+        };
+        Update: {
+          created_at?: string;
+          household_id?: string;
+          member_id?: string;
+          todo_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "todo_assignees_household_id_fkey";
+            columns: ["household_id"];
+            isOneToOne: false;
+            referencedRelation: "households";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "todo_assignees_member_fkey";
+            columns: ["member_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "household_members";
+            referencedColumns: ["id", "household_id"];
+          },
+          {
+            foreignKeyName: "todo_assignees_todo_fkey";
+            columns: ["todo_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "todos";
             referencedColumns: ["id", "household_id"];
           },
         ];
@@ -1532,6 +1664,10 @@ export type Database = {
         };
         Returns: string;
       };
+      add_shopping_items: {
+        Args: { p_assignee_member_ids?: string[]; p_items: Json };
+        Returns: string[];
+      };
       add_space_interest: {
         Args: { p_space: Database["public"]["Enums"]["space_key"] };
         Returns: undefined;
@@ -1591,6 +1727,18 @@ export type Database = {
         Args: Record<PropertyKey, never>;
         Returns: number;
       };
+      create_deadline: {
+        Args: {
+          p_assignee_member_ids?: string[];
+          p_due_date: string;
+          p_for_member_id?: string;
+          p_is_private?: boolean;
+          p_note?: string;
+          p_reminder_days?: number[];
+          p_title: string;
+        };
+        Returns: string;
+      };
       create_event: {
         Args: {
           p_ends_at: string;
@@ -1613,6 +1761,16 @@ export type Database = {
           household_type: Database["public"]["Enums"]["household_type"];
           member_name: string;
           name: string;
+        };
+        Returns: string;
+      };
+      create_todo: {
+        Args: {
+          p_assignee_member_ids?: string[];
+          p_due_date?: string;
+          p_for_member_id?: string;
+          p_is_private?: boolean;
+          p_title: string;
         };
         Returns: string;
       };
@@ -1873,6 +2031,7 @@ export type Database = {
         };
         Returns: {
           assignee_member_id: string;
+          assignee_member_ids: string[];
           author_member_id: string;
           due_date: string;
           ends_at: string;
@@ -1956,6 +2115,19 @@ export type Database = {
         };
         Returns: boolean;
       };
+      update_deadline: {
+        Args: {
+          p_assignee_member_ids: string[];
+          p_deadline_id: string;
+          p_due_date: string;
+          p_for_member_id: string;
+          p_is_private: boolean;
+          p_note: string;
+          p_reminder_days: number[];
+          p_title: string;
+        };
+        Returns: undefined;
+      };
       update_event: {
         Args: {
           p_day: string;
@@ -1987,6 +2159,26 @@ export type Database = {
           p_notes: string;
           p_starts_at: string;
           p_title: string;
+        };
+        Returns: undefined;
+      };
+      update_shopping_item: {
+        Args: {
+          p_assignee_member_ids: string[];
+          p_item_id: string;
+          p_name: string;
+          p_quantity: string;
+        };
+        Returns: undefined;
+      };
+      update_todo: {
+        Args: {
+          p_assignee_member_ids: string[];
+          p_due_date: string;
+          p_for_member_id: string;
+          p_is_private: boolean;
+          p_title: string;
+          p_todo_id: string;
         };
         Returns: undefined;
       };
