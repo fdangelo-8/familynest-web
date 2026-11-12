@@ -104,7 +104,7 @@ const watchAccounts = (page: Page) =>
 async function openModule(
   page: Page,
   phrase = NUOTO,
-  read?: ReturnType<typeof watchRead>,
+  read?: Promise<unknown>,
 ) {
   await page.goto("/aggiungi");
   const dialog = addDialog(page);
@@ -683,8 +683,14 @@ test.describe("invio non riuscito", () => {
     await withLinker(baseURL, async (u) => {
       await withGoogle(browser, u);
       await u.signIn(page);
+      // The clock runs by itself until the notice is up, then it is stopped and
+      // moved by hand: 6 seconds pass without a fixed wait (LEZIONI).
+      await page.clock.install();
       const { notice } = await failedSend(page, u);
-      await page.waitForTimeout(6_000);
+      const now = await page.evaluate(() => Date.now());
+      await page.clock.pauseAt(new Date(now + 1000));
+      await page.mouse.move(0, 0);
+      await page.clock.runFor(6_000);
       await expect(notice).toBeVisible();
       await expect(moduleOf(page)).toBeVisible();
     });
@@ -891,7 +897,10 @@ test.describe("rete e privacy", () => {
       await u.signIn(page);
       const urls: string[] = [];
       page.on("request", (request) => urls.push(request.url()));
-      const form = await openModule(page);
+      // The two reads of the opening (calendars and accounts) must be over
+      // before counting: only what follows is «during the filling».
+      const reads = Promise.all([watchRead(page), watchAccounts(page)]);
+      const form = await openModule(page, NUOTO, reads);
       const opened = urls.length;
       await fillTrial(form);
       await switchOf(form).click();
