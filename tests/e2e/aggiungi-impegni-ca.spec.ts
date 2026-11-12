@@ -208,6 +208,9 @@ test.describe("Aggiungi · Impegni · salvataggio", () => {
 
     await pauseClock(page);
     await expect(toastOf(page)).toBeVisible();
+    // The pointer is still over the toast after the click, and hovering
+    // pauses its countdown: move it away before letting time run.
+    await page.mouse.move(0, 0);
     await page.clock.runFor(5000);
     await expect(toastOf(page)).toHaveCount(0);
     expect(await eventsOf(casa)).toHaveLength(1);
