@@ -558,7 +558,7 @@ test.describe("tastiera e fuoco", () => {
     const calls = await page.evaluate(
       () => (window as unknown as { __focusCalls: string[] }).__focusCalls,
     );
-    expect(calls.filter((c) => c !== "spesa")).toEqual([]);
+    expect(JSON.stringify(calls)).toBe("DEBUG");
     await page.keyboard.press("Tab");
     expect(await active()).toBe(expected);
     await expect(checkbox).not.toBeFocused();
