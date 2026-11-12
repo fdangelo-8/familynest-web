@@ -1,4 +1,5 @@
-import { expect, type Locator, type Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
+import { waitHydrated } from "./esplora";
 
 // Tests of the loading shell of a page (`loading.tsx`): the real navigation to
 // the page is held, so the shell stays on screen.
@@ -9,17 +10,6 @@ import { expect, type Locator, type Page } from "@playwright/test";
 // through `?_rsc=`) finds nothing to show and the page just waits: the test
 // then looked for «Caricamento in corso» for 5 seconds and failed, and passed
 // when run again with the prefetch done (issues #253, #353).
-
-/** True once React owns the element: before that a click is not the router's. */
-async function waitHydrated(target: Locator) {
-  await expect
-    .poll(() =>
-      target.evaluate((node) =>
-        Object.keys(node).some((key) => key.startsWith("__reactFiber$")),
-      ),
-    )
-    .toBe(true);
-}
 
 export type HeldNavigation = {
   /** Lets the held navigation go on. */
@@ -60,7 +50,7 @@ export async function holdNavigation(
   return {
     release,
     clickWhenReady: async (link) => {
-      await prefetched;
+      await (await prefetched).finished();
       await waitHydrated(link);
       await link.click();
     },

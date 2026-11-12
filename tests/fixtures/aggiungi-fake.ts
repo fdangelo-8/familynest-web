@@ -81,7 +81,14 @@ export async function installFakes(page: Page, options: Options = {}) {
       // stopped: a reading of the people can still be on its way when the
       // context is closed. Its response is then disposed and nobody is left
       // to receive it. Anything else is a real failure.
-      if (page.isClosed() || /has been disposed/.test(String(error))) return;
+      const message = error instanceof Error ? error.message : "";
+      if (
+        /^(Fetch r|R)esponse has been disposed/.test(message) ||
+        (page.isClosed() &&
+          /^Target page, context or browser has been closed/.test(message))
+      ) {
+        return;
+      }
       throw error;
     }
   });
