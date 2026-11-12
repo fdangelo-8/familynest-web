@@ -270,6 +270,10 @@ test.describe("Dettaglio impegno importato e «Anche su»", () => {
     await expect(page.getByTestId("anche-su-errore")).toBeVisible();
     await expect(page.getByRole("dialog")).toHaveCount(0);
     // The toast «Modifiche salvate» goes away by itself: shoot the resting page.
+    // Its countdown stops while the pointer is over it, and on a phone the
+    // pointer is still where the «Salva» button was, which is where the toast
+    // appears: move it away first.
+    await page.mouse.move(0, 0);
     await expect(
       page.getByRole("status").filter({ hasText: "Modifiche salvate" }),
     ).toHaveCount(0, { timeout: 20_000 });

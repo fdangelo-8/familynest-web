@@ -71,10 +71,19 @@ export async function installFakes(page: Page, options: Options = {}) {
     if (people === "fail") {
       return route.fulfill({ status: 500, json: { message: "boom" } });
     }
-    const response = await route.fetch();
-    const rows = (await response.json()) as { id: string; name: string }[];
-    resolveNames(new Map(rows.map((row) => [row.name, row.id])));
-    return route.fulfill({ response });
+    try {
+      const response = await route.fetch();
+      const rows = (await response.json()) as { id: string; name: string }[];
+      resolveNames(new Map(rows.map((row) => [row.name, row.id])));
+      return await route.fulfill({ response });
+    } catch (error) {
+      // The tests of the toast end as soon as it shows, with the clock
+      // stopped: a reading of the people can still be on its way when the
+      // context is closed. Its response is then disposed and nobody is left
+      // to receive it. Anything else is a real failure.
+      if (page.isClosed() || /has been disposed/.test(String(error))) return;
+      throw error;
+    }
   });
 
   await page.route("**/rest/v1/rpc/list_household_events*", async (route) => {
