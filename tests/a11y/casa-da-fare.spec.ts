@@ -533,6 +533,10 @@ test.describe("tastiera e fuoco", () => {
     const expected = await active();
     await checkbox.focus();
 
+    const logs: string[] = [];
+    page.on("console", (m) => {
+      if (m.text().startsWith("DBG")) logs.push(m.text());
+    });
     // The Spesa read must not call focus() on anything outside its column:
     // a stale call lands on the old row when the Tab has already moved on.
     await page.evaluate(() => {
