@@ -2,7 +2,10 @@
 
 import type { FormEvent } from "react";
 import { Alert } from "../ui/Alert/Alert";
-import { EventFormFields } from "../evento-modulo/EventFormFields";
+import {
+  EventFormFields,
+  type AlsoOnRow,
+} from "../evento-modulo/EventFormFields";
 import {
   BASE_REPEAT_OPTIONS,
   endsOtherDayHint,
@@ -26,6 +29,7 @@ export function NewEventForm({
   values,
   errors,
   saveFailed,
+  alsoOn,
   onChange,
   onSubmit,
 }: {
@@ -36,6 +40,8 @@ export function NewEventForm({
   values: EventFormValues;
   errors: FormErrors;
   saveFailed: boolean;
+  /** «Anche su …»: present only with a calendar in «Dove vanno i nuovi impegni» */
+  alsoOn?: AlsoOnRow;
   onChange: (patch: Partial<EventFormValues>) => void;
   onSubmit: () => void;
 }) {
@@ -63,6 +69,7 @@ export function NewEventForm({
         locks={{ visibility: false, people: false }}
         visibilityText={visibilityHelp(values.visibility, true, null)}
         peopleLockedText={null}
+        alsoOn={alsoOn}
       />
       {saveFailed ? <Alert variant="errore">{SAVE_FAILED_TEXT}</Alert> : null}
     </form>

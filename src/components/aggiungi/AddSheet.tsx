@@ -79,6 +79,11 @@ import {
 } from "./new-event";
 import { NewEventForm } from "./NewEventForm";
 import {
+  readAlsoOnTarget,
+  setAlsoOn,
+  type AlsoOnTarget,
+} from "../impegni/also-on";
+import {
   MEMBERS_FAILED_TEXT,
   SAVE_FAILED_TEXT,
   UNDO_FAILED_TEXT,
@@ -416,6 +421,10 @@ export function AddSheet({
   const [shoppingWho, setShoppingWho] = useState<string[] | null>(null);
   // null: the sheet shows the phrase; otherwise the full form «Nuovo impegno»
   const [draft, setDraft] = useState<FormDraft | null>(null);
+  // «Anche su …» of the full form (#304): the calendar chosen in «Dove vanno i
+  // nuovi impegni», read when the form opens; no calendar = no row.
+  const [alsoOnTarget, setAlsoOnTarget] = useState<AlsoOnTarget | null>(null);
+  const [alsoOnChecked, setAlsoOnChecked] = useState(false);
   const [opener] = useState(() => (editId ? readOpener(editId) : null));
 
   const savingRef = useRef(false);
@@ -928,12 +937,17 @@ export function AddSheet({
   function announceCreated(
     supabase: Client,
     event: { id: string; title: string; dayKey: string; startsAt: Date },
+    alsoOnFailed: string | null = null,
   ) {
     notifyEventsChanged();
     showToast({
       text: "Messo in",
       emphasis: dayInSentence(event.dayKey, todayKey),
-      after: `: ${event.title} ${atTime(event.startsAt)}.`,
+      after: `: ${event.title} ${atTime(event.startsAt)}.${
+        alsoOnFailed
+          ? ` Non siamo riusciti a mandarlo a ${alsoOnFailed}. Riprova dall'impegno.`
+          : ""
+      }`,
       onUndo: () => {
         void (async () => {
           if (await deleteNewEvent(supabase, event.id)) notifyEventsChanged();
@@ -953,9 +967,14 @@ export function AddSheet({
     if (savingRef.current || !canOpenForm || meId === null) return;
     formFocus.current = true;
     setSaveFailed(false);
+    setAlsoOnTarget(null);
+    setAlsoOnChecked(false);
     setDraft({
       values: initialFormValues(parsed.title, eventFields),
       errors: {},
+    });
+    void readAlsoOnTarget(createClient()).then((target) => {
+      if (target !== "error") setAlsoOnTarget(target);
     });
   }
 
@@ -1016,12 +1035,21 @@ export function AddSheet({
       }
       return;
     }
-    announceCreated(supabase, {
-      id: created.id,
-      title,
-      dayKey: values.day,
-      startsAt: times.start,
-    });
+    // The event is saved: if «Anche su» fails, it stays saved and the toast says so.
+    const sendFailed =
+      alsoOnChecked && alsoOnTarget && !alsoOnTarget.broken
+        ? !(await setAlsoOn(supabase, created.id, true))
+        : false;
+    announceCreated(
+      supabase,
+      {
+        id: created.id,
+        title,
+        dayKey: values.day,
+        startsAt: times.start,
+      },
+      sendFailed ? (alsoOnTarget?.providerLabel ?? null) : null,
+    );
   }
 
   // The form was just drawn: scroll to the top and focus the field of the entry.
@@ -2102,6 +2130,20 @@ export function AddSheet({
         values={draft.values}
         errors={draft.errors}
         saveFailed={saveFailed}
+        alsoOn={
+          alsoOnTarget
+            ? {
+                title: `Anche su ${alsoOnTarget.providerLabel}`,
+                info: alsoOnTarget.broken
+                  ? `${alsoOnTarget.providerLabel} non si sincronizza: ricollegalo da Calendari collegati.`
+                  : `Nel calendario ${alsoOnTarget.calendarName}`,
+                checked: alsoOnChecked && !alsoOnTarget.broken,
+                disabled: alsoOnTarget.broken || saving,
+                warning: alsoOnTarget.broken,
+                onChange: setAlsoOnChecked,
+              }
+            : undefined
+        }
         onChange={changeForm}
         onSubmit={() => void submitForm()}
       />
