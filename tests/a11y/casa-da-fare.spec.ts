@@ -533,10 +533,6 @@ test.describe("tastiera e fuoco", () => {
     const expected = await active();
     await checkbox.focus();
 
-    const logs: string[] = [];
-    page.on("console", (m) => {
-      if (m.text().startsWith("DBG")) logs.push(m.text());
-    });
     // The Spesa read must not call focus() on anything outside its column:
     // a stale call lands on the old row when the Tab has already moved on.
     await page.evaluate(() => {
@@ -554,16 +550,18 @@ test.describe("tastiera e fuoco", () => {
     });
 
     // Someone adds to the Spesa: its column reads again while the focus is here.
-    await casa.shopping("Marco", ["Latte"]);
-    await expect(
-      column(page, "Spesa").getByText("Latte", { exact: true }),
-    ).toBeVisible();
+    // Three reads in a row: one alone can happen before the page is listening.
+    for (const name of ["Latte", "Uova", "Mele"]) {
+      await casa.shopping("Marco", [name]);
+      await expect(
+        column(page, "Spesa").getByText(name, { exact: true }),
+      ).toBeVisible();
+    }
     await expect(checkbox).toBeFocused();
     const calls = await page.evaluate(
       () => (window as unknown as { __focusCalls: string[] }).__focusCalls,
     );
-    const sanity = await page.evaluate(() => { (document.querySelector("[role=checkbox]") as HTMLElement).focus(); return (window as unknown as { __focusCalls: string[] }).__focusCalls.length; });
-    expect(JSON.stringify([calls, sanity, logs])).toBe("DEBUG");
+    expect(calls.filter((c) => c !== "spesa")).toEqual([]);
     await page.keyboard.press("Tab");
     expect(await active()).toBe(expected);
     await expect(checkbox).not.toBeFocused();

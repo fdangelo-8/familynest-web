@@ -157,6 +157,13 @@ export type Todos = {
   requestFocus: (selectors: string[]) => void;
 };
 
+/** The Da fare column inside the Casa page: focus is only handled in here. */
+function columnOf(root: HTMLElement | null): HTMLElement | null {
+  return (
+    root?.querySelector<HTMLElement>('[data-casa-column="da-fare"]') ?? null
+  );
+}
+
 /**
  * Reads the things to do of the Nest and sends the changes. Changes show at
  * once and wait in a queue (in memory) while the connection is down. The list
@@ -233,7 +240,7 @@ export function useTodos({
   // Moves the focus after the render that follows a change (rows change group).
   useLayoutEffect(() => {
     const selectors = focusRequest.current;
-    const root = rootRef.current;
+    const root = columnOf(rootRef.current);
     if (!selectors || !root) return;
     for (const selector of selectors) {
       const target = Array.from(
@@ -258,7 +265,8 @@ export function useTodos({
       for (const todo of todosRef.current) keys.set(todo.id, todo.key);
       // Remember what had the focus: a change by someone else can remove it.
       const active = document.activeElement;
-      const root = rootRef.current;
+      // Only this column: Spesa rows carry the same data attributes.
+      const root = columnOf(rootRef.current);
       if (root && active && root.contains(active)) {
         const row = active.closest<HTMLElement>("[data-item-key]");
         if (row?.dataset.itemKey) {
@@ -583,7 +591,9 @@ export function useTodos({
       /** The row has waited enough: it changes group and keeps the focus. */
       const settle = () => {
         settleStops.current.delete(key);
-        const checkbox = rootRef.current?.querySelector(checkboxSelector(key));
+        const checkbox = columnOf(rootRef.current)?.querySelector(
+          checkboxSelector(key),
+        );
         if (checkbox?.contains(document.activeElement)) {
           requestFocus([checkboxSelector(key)]);
         }

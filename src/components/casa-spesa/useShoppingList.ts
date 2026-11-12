@@ -193,6 +193,11 @@ export type ShoppingList = {
   requestFocus: (selectors: string[]) => void;
 };
 
+/** The Spesa column inside the Casa page: focus is only handled in here. */
+function columnOf(root: HTMLElement | null): HTMLElement | null {
+  return root?.querySelector<HTMLElement>('[data-casa-column="spesa"]') ?? null;
+}
+
 /**
  * Reads the shopping list of the Nest, keeps it up to date (realtime) and
  * sends the changes. Changes show at once and wait in a queue (in memory)
@@ -271,12 +276,10 @@ export function useShoppingList({
   // Moves the focus after the render that follows a change (rows change list).
   useLayoutEffect(() => {
     const selectors = focusRequest.current;
-    const root = rootRef.current;
-    if (selectors) console.log("DBG request", selectors.join("|"), !!root);
+    const root = columnOf(rootRef.current);
     if (!selectors || !root) return;
     for (const selector of selectors) {
       const target = root.querySelector<HTMLElement>(selector);
-      console.log("DBG effect", selector, !!target);
       if (target) {
         target.focus();
         break;
@@ -300,15 +303,8 @@ export function useShoppingList({
       for (const item of itemsRef.current) keys.set(item.id, item.key);
       // Remember what had the focus: a change by someone else can remove it.
       const active = document.activeElement;
-      const root = rootRef.current;
-      console.log(
-        "DBG",
-        active?.tagName,
-        active?.getAttribute("role"),
-        !!root,
-        root?.contains(active),
-        active?.closest("[data-item-key]")?.getAttribute("data-item-key"),
-      );
+      // Only this column: Da fare rows carry the same data attributes.
+      const root = columnOf(rootRef.current);
       if (root && active && root.contains(active)) {
         const row = active.closest<HTMLElement>("[data-item-key]");
         const chip = active.closest<HTMLElement>("[data-chip]");
@@ -738,7 +734,7 @@ export function useShoppingList({
       const item = itemsRef.current.find((i) => i.key === key);
       if (!item) return;
       const checked = item.checkedAt === null;
-      const rowHadFocus = rootRef.current
+      const rowHadFocus = columnOf(rootRef.current)
         ?.querySelector(`[data-item-key="${key}"] [role="checkbox"]`)
         ?.contains(document.activeElement);
 
