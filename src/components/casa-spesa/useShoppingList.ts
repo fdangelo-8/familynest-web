@@ -272,9 +272,11 @@ export function useShoppingList({
   useLayoutEffect(() => {
     const selectors = focusRequest.current;
     const root = rootRef.current;
+    if (selectors) console.log("DBG request", selectors.join("|"), !!root);
     if (!selectors || !root) return;
     for (const selector of selectors) {
       const target = root.querySelector<HTMLElement>(selector);
+      console.log("DBG effect", selector, !!target);
       if (target) {
         target.focus();
         break;
