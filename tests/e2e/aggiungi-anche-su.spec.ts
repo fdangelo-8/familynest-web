@@ -101,11 +101,7 @@ const watchAccounts = (page: Page) =>
  * Opens Aggiungi, writes the phrase and opens the full form «Nuovo impegno».
  * With `read` it also waits for the answer to the read of the calendars.
  */
-async function openModule(
-  page: Page,
-  phrase = NUOTO,
-  read?: Promise<unknown>,
-) {
+async function openModule(page: Page, phrase = NUOTO, read?: Promise<unknown>) {
   await page.goto("/aggiungi");
   const dialog = addDialog(page);
   const field = dialog.getByRole("textbox", { name: "Cosa vuoi aggiungere?" });
