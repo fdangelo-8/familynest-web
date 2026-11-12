@@ -240,7 +240,7 @@ export function useTodos({
   // Moves the focus after the render that follows a change (rows change group).
   useLayoutEffect(() => {
     const selectors = focusRequest.current;
-    const root = columnOf(rootRef.current);
+    const root = rootRef.current;
     if (!selectors || !root) return;
     for (const selector of selectors) {
       const target = Array.from(

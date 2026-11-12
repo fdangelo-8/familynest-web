@@ -276,7 +276,7 @@ export function useShoppingList({
   // Moves the focus after the render that follows a change (rows change list).
   useLayoutEffect(() => {
     const selectors = focusRequest.current;
-    const root = columnOf(rootRef.current);
+    const root = rootRef.current;
     if (!selectors || !root) return;
     for (const selector of selectors) {
       const target = root.querySelector<HTMLElement>(selector);
