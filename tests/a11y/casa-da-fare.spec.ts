@@ -504,4 +504,43 @@ test.describe("tastiera e fuoco", () => {
     await page.keyboard.press("Tab");
     await expect(page.getByRole("checkbox").first()).toBeFocused();
   });
+
+  test("una rilettura della Spesa non sposta il fuoco in Da fare (#207)", async ({
+    page,
+    baseURL,
+    casa,
+  }) => {
+    test.skip(isMobileProject(), "Le due colonne insieme: solo desktop");
+    await seed(casa);
+    await casa.shopping("Marco", ["Pane"]);
+    await open(page, baseURL, casa);
+    await expect(
+      column(page, "Spesa").getByText("Pane", { exact: true }),
+    ).toBeVisible();
+    const checkbox = page.getByRole("checkbox", {
+      name: `Segna come fatto: ${FIRMARE}`,
+    });
+    const active = () =>
+      page.evaluate(
+        () =>
+          document.activeElement?.getAttribute("aria-label") ??
+          document.activeElement?.textContent ??
+          "",
+      );
+    // Which element Tab reaches from this checkbox, before anything is read again.
+    await checkbox.focus();
+    await page.keyboard.press("Tab");
+    const expected = await active();
+    await checkbox.focus();
+
+    // Someone adds to the Spesa: its column reads again while the focus is here.
+    await casa.shopping("Laura", ["Latte"]);
+    await expect(
+      column(page, "Spesa").getByText("Latte", { exact: true }),
+    ).toBeVisible();
+    await expect(checkbox).toBeFocused();
+    await page.keyboard.press("Tab");
+    expect(await active()).toBe(expected);
+    await expect(checkbox).not.toBeFocused();
+  });
 });
