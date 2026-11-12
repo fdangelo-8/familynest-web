@@ -583,7 +583,8 @@ test.describe("tastiera e fuoco", () => {
     await bread.focus();
     await expect(bread).toBeFocused();
 
-    // The Da fare read must not call focus() on anything outside its column.
+    // The Da fare read must not call focus() on anything outside its column;
+    // the Spesa read may refocus its own row, so only other columns are checked.
     await page.evaluate(() => {
       const w = window as unknown as { __focusCalls: string[] };
       w.__focusCalls = [];
@@ -598,16 +599,19 @@ test.describe("tastiera e fuoco", () => {
       };
     });
 
-    // Someone adds things to do: its column reads again while the focus is in Spesa.
+    // Da fare has no live updates: it reads again when the connection comes
+    // back. Each round adds a thing, then lets the page see the network again
+    // while the focus is in Spesa.
     for (const title of ["Prima cosa", "Seconda cosa", "Terza cosa"]) {
       await casa.todo("Marco", { title, assignee: "Marco", due: d(5) });
+      await page.evaluate(() => window.dispatchEvent(new Event("online")));
       await expect(rowOf(page, title)).toBeVisible();
     }
     await expect(bread).toBeFocused();
     const calls = await page.evaluate(
       () => (window as unknown as { __focusCalls: string[] }).__focusCalls,
     );
-    expect(calls.filter((c) => c !== "da-fare")).toEqual([]);
+    expect(calls.filter((c) => c !== "spesa")).toEqual([]);
     await page.keyboard.press("Tab");
     await expect(bread).not.toBeFocused();
     await expect(
