@@ -533,12 +533,32 @@ test.describe("tastiera e fuoco", () => {
     const expected = await active();
     await checkbox.focus();
 
+    // The Spesa read must not call focus() on anything outside its column:
+    // a stale call lands on the old row when the Tab has already moved on.
+    await page.evaluate(() => {
+      const w = window as unknown as { __focusCalls: string[] };
+      w.__focusCalls = [];
+      const original = HTMLElement.prototype.focus;
+      HTMLElement.prototype.focus = function (...args) {
+        w.__focusCalls.push(
+          this.closest("[data-casa-column]")?.getAttribute(
+            "data-casa-column",
+          ) ?? "none",
+        );
+        return original.apply(this, args);
+      };
+    });
+
     // Someone adds to the Spesa: its column reads again while the focus is here.
     await casa.shopping("Marco", ["Latte"]);
     await expect(
       column(page, "Spesa").getByText("Latte", { exact: true }),
     ).toBeVisible();
     await expect(checkbox).toBeFocused();
+    const calls = await page.evaluate(
+      () => (window as unknown as { __focusCalls: string[] }).__focusCalls,
+    );
+    expect(calls.filter((c) => c !== "spesa")).toEqual([]);
     await page.keyboard.press("Tab");
     expect(await active()).toBe(expected);
     await expect(checkbox).not.toBeFocused();
