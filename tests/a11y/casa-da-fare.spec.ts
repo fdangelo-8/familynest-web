@@ -566,4 +566,52 @@ test.describe("tastiera e fuoco", () => {
     expect(await active()).toBe(expected);
     await expect(checkbox).not.toBeFocused();
   });
+
+  test("una rilettura di Da fare non sposta il fuoco nella Spesa (#207)", async ({
+    page,
+    baseURL,
+    casa,
+  }) => {
+    test.skip(isMobileProject(), "Le due colonne insieme: solo desktop");
+    await seed(casa);
+    await casa.shopping("Marco", ["Pane", "Latte"]);
+    await open(page, baseURL, casa);
+    const bread = column(page, "Spesa").getByRole("checkbox", {
+      name: "Preso: Pane",
+    });
+    await expect(bread).toBeVisible();
+    await bread.focus();
+    await expect(bread).toBeFocused();
+
+    // The Da fare read must not call focus() on anything outside its column.
+    await page.evaluate(() => {
+      const w = window as unknown as { __focusCalls: string[] };
+      w.__focusCalls = [];
+      const original = HTMLElement.prototype.focus;
+      HTMLElement.prototype.focus = function (...args) {
+        w.__focusCalls.push(
+          this.closest("[data-casa-column]")?.getAttribute(
+            "data-casa-column",
+          ) ?? "none",
+        );
+        return original.apply(this, args);
+      };
+    });
+
+    // Someone adds things to do: its column reads again while the focus is in Spesa.
+    for (const title of ["Prima cosa", "Seconda cosa", "Terza cosa"]) {
+      await casa.todo("Marco", { title, assignee: "Marco", due: d(5) });
+      await expect(rowOf(page, title)).toBeVisible();
+    }
+    await expect(bread).toBeFocused();
+    const calls = await page.evaluate(
+      () => (window as unknown as { __focusCalls: string[] }).__focusCalls,
+    );
+    expect(calls.filter((c) => c !== "da-fare")).toEqual([]);
+    await page.keyboard.press("Tab");
+    await expect(bread).not.toBeFocused();
+    await expect(
+      column(page, "Spesa").getByRole("checkbox", { name: "Preso: Latte" }),
+    ).toBeFocused();
+  });
 });
