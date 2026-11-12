@@ -17,6 +17,20 @@ export const TITLE_MAX_LENGTH = MODEL_TITLE_MAX_LENGTH;
 
 export const SAVE_FAILED_TEXT =
   "Non siamo riusciti a salvare l'impegno. Controlla la connessione e riprova.";
+/** «Anche su …»: the calendar could not be read (#304) */
+export const ALSO_ON_READ_FAILED_TEXT =
+  "Non riusciamo a caricare i tuoi calendari collegati: per ora l'impegno resta solo in FamilyNest. Controlla la connessione e riprova.";
+/** «Anche su …»: under the notice of the failed sending (#304) */
+export function alsoOnLeftText(providerLabel: string): string {
+  return `Se chiudi, l'impegno resta solo in FamilyNest. Puoi mandarlo a ${providerLabel} più tardi, da «Modifica» nel dettaglio dell'impegno.`;
+}
+export function alsoOnSendFailedText(
+  title: string,
+  when: string,
+  providerLabel: string,
+): string {
+  return `«${title}» è in calendario ${when}, ma non siamo riusciti a mandarlo a ${providerLabel}. Controlla la connessione e riprova.`;
+}
 export const UNDO_FAILED_TEXT =
   "Non siamo riusciti ad annullare. L'impegno è rimasto in calendario.";
 export const MEMBERS_FAILED_TEXT =

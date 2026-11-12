@@ -86,6 +86,8 @@ import {
 import {
   MEMBERS_FAILED_TEXT,
   SAVE_FAILED_TEXT,
+  alsoOnLeftText,
+  alsoOnSendFailedText,
   UNDO_FAILED_TEXT,
   atTime,
   dayInSentence,
@@ -337,6 +339,29 @@ function focusById(id: string): void {
  *   closing loads `/oggi` as a normal page.
  * Everything typed is read in the browser; only what is saved travels.
  */
+type CreatedEvent = {
+  id: string;
+  title: string;
+  dayKey: string;
+  startsAt: Date;
+};
+
+/** The reading of the calendar of «Anche su …»: one state, never two at once (#304) */
+type AlsoOnRead =
+  | { status: "reading" }
+  | { status: "none" }
+  | { status: "target"; target: AlsoOnTarget }
+  | { status: "error"; busy: boolean; round: number };
+
+/** The event is saved, the sending to the provider failed (#304) */
+type SendFailed = {
+  event: CreatedEvent;
+  providerLabel: string;
+  busy: boolean;
+  /** Changes at every new failure: the notice is mounted again and read again */
+  round: number;
+};
+
 export function AddSheet({
   direct = false,
   initialType = null,
@@ -422,13 +447,27 @@ export function AddSheet({
   // null: the sheet shows the phrase; otherwise the full form «Nuovo impegno»
   const [draft, setDraft] = useState<FormDraft | null>(null);
   // «Anche su …» of the full form (#304): the calendar chosen in «Dove vanno i
-  // nuovi impegni», read when the form opens; no calendar = no row.
-  const [alsoOnTarget, setAlsoOnTarget] = useState<AlsoOnTarget | null>(null);
+  // nuovi impegni», read when the sheet opens. One state: reading, none,
+  // a calendar or the error; a new reading that fails drops the old calendar.
+  const [alsoOnRead, setAlsoOnRead] = useState<AlsoOnRead>({
+    status: "reading",
+  });
+  const [alsoOnAttempt, setAlsoOnAttempt] = useState(0);
   const [alsoOnChecked, setAlsoOnChecked] = useState(false);
+  // The event is saved but the sending to Google or Outlook failed: the sheet
+  // stays open with the notice and «Riprova» (the toast waits for the closing).
+  const [sendFailed, setSendFailed] = useState<SendFailed | null>(null);
+  const alsoOnTarget =
+    alsoOnRead.status === "target" ? alsoOnRead.target : null;
   const [opener] = useState(() => (editId ? readOpener(editId) : null));
 
   const savingRef = useRef(false);
   const savedRef = useRef(false);
+  // The saved event whose toast has not been shown yet (sending failed)
+  const unsentRef = useRef<CreatedEvent | null>(null);
+  const retryingSendRef = useRef(false);
+  // Where the focus goes when the reading of the calendar ends after «Riprova»
+  const readFocusRef = useRef(false);
   const peopleLoad = useRef<Promise<PeopleState> | null>(null);
   const requestedDays = useRef(new Set<string>());
   const fieldRef = useRef<HTMLTextAreaElement>(null);
@@ -474,16 +513,56 @@ export function AddSheet({
   }, [attempt, todayKey]);
 
   // The calendar of «Anche su …», read with the people when the sheet opens:
-  // while the full form is open no request leaves (#171, CA-24).
+  // while the full form is open no request leaves (#171, CA-24), except the
+  // «Riprova» of the notice, which only the user asks for.
   useEffect(() => {
     let alive = true;
-    void readAlsoOnTarget(createClient()).then((target) => {
-      if (alive && target !== "error") setAlsoOnTarget(target);
+    void readAlsoOnTarget(createClient()).then((result) => {
+      if (!alive) return;
+      setAlsoOnRead((current) => {
+        if (result === "error") {
+          return {
+            status: "error",
+            busy: false,
+            round: current.status === "error" ? current.round + 1 : 1,
+          };
+        }
+        return result === null
+          ? { status: "none" }
+          : { status: "target", target: result };
+      });
     });
     return () => {
       alive = false;
     };
-  }, [attempt]);
+  }, [attempt, alsoOnAttempt]);
+
+  // After «Riprova» of the reading: the focus goes where the form goes on.
+  useEffect(() => {
+    if (!readFocusRef.current) return;
+    if (alsoOnRead.status === "reading") return;
+    if (alsoOnRead.status === "error" && alsoOnRead.busy) return;
+    readFocusRef.current = false;
+    const root = document.querySelector('[data-testid="aggiungi-foglio"]');
+    const next =
+      alsoOnRead.status === "target"
+        ? root?.querySelector<HTMLElement>('[role="switch"]')
+        : alsoOnRead.status === "error"
+          ? root?.querySelector<HTMLElement>(
+              '[data-testid="anche-su-lettura-riprova"]',
+            )
+          : root?.querySelector<HTMLElement>(`button[form="${moduleFormId}"]`);
+    next?.focus();
+  }, [alsoOnRead, moduleFormId]);
+
+  // The notice of the failed sending takes the focus, and takes it again at
+  // every new failure.
+  useEffect(() => {
+    if (!sendFailed || sendFailed.busy) return;
+    document
+      .querySelector<HTMLElement>('[data-testid="anche-su-riprova"]')
+      ?.focus();
+  }, [sendFailed]);
 
   const people = useMemo(
     () => (peopleState.status === "ready" ? peopleState.people : []),
@@ -946,20 +1025,12 @@ export function AddSheet({
   }
 
   /** The new event is saved, from the phrase or from the form: same toast, same «Annulla». */
-  function announceCreated(
-    supabase: Client,
-    event: { id: string; title: string; dayKey: string; startsAt: Date },
-    alsoOnFailed: string | null = null,
-  ) {
+  function showCreatedToast(supabase: Client, event: CreatedEvent) {
     notifyEventsChanged();
     showToast({
       text: "Messo in",
       emphasis: dayInSentence(event.dayKey, todayKey),
-      after: `: ${event.title} ${atTime(event.startsAt)}.${
-        alsoOnFailed
-          ? ` Non siamo riusciti a mandarlo a ${alsoOnFailed}. Riprova dall'impegno.`
-          : ""
-      }`,
+      after: `: ${event.title} ${atTime(event.startsAt)}.`,
       onUndo: () => {
         void (async () => {
           if (await deleteNewEvent(supabase, event.id)) notifyEventsChanged();
@@ -967,7 +1038,39 @@ export function AddSheet({
         })();
       },
     });
+  }
+
+  function announceCreated(supabase: Client, event: CreatedEvent) {
+    showCreatedToast(supabase, event);
     finishSaved();
+  }
+
+  /** «Riprova» of the failed sending: only `set_event_also_on`, never `create_event`. */
+  async function retrySend() {
+    const left = unsentRef.current;
+    if (!left || retryingSendRef.current) return;
+    retryingSendRef.current = true;
+    setSendFailed((current) => (current ? { ...current, busy: true } : null));
+    const supabase = createClient();
+    const sent = await setAlsoOn(supabase, left.id, true);
+    retryingSendRef.current = false;
+    if (sent) {
+      unsentRef.current = null;
+      announceCreated(supabase, left);
+      return;
+    }
+    setSendFailed((current) =>
+      current ? { ...current, busy: false, round: current.round + 1 } : null,
+    );
+  }
+
+  function retryAlsoOnRead() {
+    if (savingRef.current) return;
+    readFocusRef.current = true;
+    setAlsoOnRead((current) =>
+      current.status === "error" ? { ...current, busy: true } : current,
+    );
+    setAlsoOnAttempt((value) => value + 1);
   }
 
   // ----- Full form «Nuovo impegno» (#171)
@@ -1043,21 +1146,32 @@ export function AddSheet({
       }
       return;
     }
-    // The event is saved: if «Anche su» fails, it stays saved and the toast says so.
-    const sendFailed =
-      alsoOnChecked && alsoOnTarget && !alsoOnTarget.broken
-        ? !(await setAlsoOn(supabase, created.id, true))
-        : false;
-    announceCreated(
-      supabase,
-      {
-        id: created.id,
-        title,
-        dayKey: values.day,
-        startsAt: times.start,
-      },
-      sendFailed ? (alsoOnTarget?.providerLabel ?? null) : null,
-    );
+    const event: CreatedEvent = {
+      id: created.id,
+      title,
+      dayKey: values.day,
+      startsAt: times.start,
+    };
+    // The event is saved. Only now «Anche su» is sent, with its id.
+    if (alsoOnChecked && alsoOnTarget && !alsoOnTarget.broken) {
+      if (!(await setAlsoOn(supabase, created.id, true))) {
+        // It stays saved: the sheet stays open with the notice, and the toast
+        // «Messo in …» comes when the sheet closes.
+        savingRef.current = false;
+        setSaving(false);
+        savedRef.current = true;
+        unsentRef.current = event;
+        notifyEventsChanged();
+        setSendFailed({
+          event,
+          providerLabel: alsoOnTarget.providerLabel,
+          busy: false,
+          round: 1,
+        });
+        return;
+      }
+    }
+    announceCreated(supabase, event);
   }
 
   // The form was just drawn: scroll to the top and focus the field of the entry.
@@ -1620,6 +1734,7 @@ export function AddSheet({
   }
 
   function retryPeople() {
+    setAlsoOnRead({ status: "reading" });
     setPeopleState({ status: "loading" });
     setAttempt((value) => value + 1);
   }
@@ -1631,6 +1746,12 @@ export function AddSheet({
 
   function handleClose() {
     setOpen(false);
+    // Closed with the sending still failed: now the toast comes, with «Annulla».
+    const left = unsentRef.current;
+    if (left) {
+      unsentRef.current = null;
+      showCreatedToast(createClient(), left);
+    }
     if (savedRef.current) {
       // Saved: the toast must survive, so no page load.
       if (direct) router.replace("/oggi");
@@ -2138,6 +2259,16 @@ export function AddSheet({
         values={draft.values}
         errors={draft.errors}
         saveFailed={saveFailed}
+        saving={saving}
+        alsoOnReadError={
+          alsoOnRead.status === "error"
+            ? {
+                busy: alsoOnRead.busy,
+                round: alsoOnRead.round,
+                onRetry: retryAlsoOnRead,
+              }
+            : undefined
+        }
         alsoOn={
           alsoOnTarget
             ? {
@@ -2155,6 +2286,40 @@ export function AddSheet({
         onChange={changeForm}
         onSubmit={() => void submitForm()}
       />
+    );
+  }
+
+  // Saved, but not sent: no form any more, only the notice and what happens if
+  // the sheet is closed (#304). No footer, so it cannot be saved twice.
+  if (sendFailed) {
+    body = (
+      <div className="modulo-foglio">
+        <Alert
+          key={sendFailed.round}
+          variant="errore"
+          data-testid="anche-su-errore"
+          action={
+            <Button
+              variant="tenue"
+              small
+              loading={sendFailed.busy}
+              onClick={() => void retrySend()}
+              data-testid="anche-su-riprova"
+            >
+              Riprova
+            </Button>
+          }
+        >
+          {alsoOnSendFailedText(
+            sendFailed.event.title,
+            `${dayInSentence(sendFailed.event.dayKey, todayKey)} ${atTime(sendFailed.event.startsAt)}`,
+            sendFailed.providerLabel,
+          )}
+        </Alert>
+        <p className="t-corpo t-secondario">
+          {alsoOnLeftText(sendFailed.providerLabel)}
+        </p>
+      </div>
     );
   }
 
@@ -2187,13 +2352,13 @@ export function AddSheet({
           )
         }
         tall={formOpen}
-        locked={saving || confirmOpen}
+        locked={saving || confirmOpen || (sendFailed?.busy ?? false)}
         closeRequested={closeRequested}
         onClose={handleClose}
-        onBack={formOpen ? backToPhrase : undefined}
+        onBack={formOpen && !sendFailed ? backToPhrase : undefined}
         className={saving ? "is-in-corso" : undefined}
         footerEnd={formOpen || (!isEdit && !(desktop && canOpenForm))}
-        footer={formOpen ? formButton : footer}
+        footer={sendFailed ? undefined : formOpen ? formButton : footer}
         data-testid="aggiungi-foglio"
       >
         {body}
