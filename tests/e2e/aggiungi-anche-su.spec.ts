@@ -86,6 +86,18 @@ const watchRead = (page: Page) =>
   );
 
 /**
+ * The answer to the second read, made only when a calendar is chosen
+ * (`calendar_accounts`, after `external_calendars`). Register it before `goto`.
+ */
+const watchAccounts = (page: Page) =>
+  page.waitForResponse(
+    (response) =>
+      /\/rest\/v1\/calendar_accounts(\?|$)/.test(response.url()) &&
+      response.request().method() === "GET",
+    { timeout: 30_000 },
+  );
+
+/**
  * Opens Aggiungi, writes the phrase and opens the full form «Nuovo impegno».
  * With `read` it also waits for the answer to the read of the calendars.
  */
@@ -248,7 +260,8 @@ test.describe("la riga", () => {
     await withLinker(baseURL, async (u) => {
       await withGoogle(browser, u);
       await u.signIn(page);
-      const read = watchRead(page);
+      // «Personale» is chosen: the read makes two requests, wait for both.
+      const reads = Promise.all([watchRead(page), watchAccounts(page)]);
       await page.goto("/aggiungi");
       const dialog = addDialog(page);
       const field = dialog.getByRole("textbox", {
@@ -256,14 +269,23 @@ test.describe("la riga", () => {
       });
       await expect(field).toBeFocused({ timeout: 20_000 });
       await field.pressSequentially("Nuoto Sofia domani alle 17");
-      await expect(
-        dialog.getByRole("button", {
-          name: isDesktop(page) ? "Tutti i dettagli" : "Più dettagli",
-        }),
-      ).toBeVisible();
-      await read;
+      const details = dialog.getByRole("button", {
+        name: isDesktop(page) ? "Tutti i dettagli" : "Più dettagli",
+      });
+      await expect(details).toBeVisible();
+      await reads;
+      // Let React commit the state set by the answers before looking.
+      await page.evaluate(
+        () =>
+          new Promise<void>((resolve) =>
+            requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+          ),
+      );
       await expect(dialog.getByRole("switch")).toHaveCount(0);
       await expect(dialog.getByText("Anche su")).toHaveCount(0);
+      // Positive signal: the data did arrive, the full form shows the row.
+      await details.click();
+      await expect(switchOf(moduleOf(page))).toBeVisible();
     });
   });
 
