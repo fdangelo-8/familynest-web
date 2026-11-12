@@ -67,9 +67,7 @@ const switchOf = (form: Locator, provider = "Google") =>
   form.getByRole("switch", { name: `Anche su ${provider}`, exact: true });
 /** The row: the switch has the test id, the row is the list row that holds it. */
 const rowOf = (form: Locator) =>
-  form
-    .locator(".riga-lista")
-    .filter({ has: form.getByTestId("impegno-anche-su") });
+  form.locator('.riga-lista:has([data-testid="impegno-anche-su"])');
 const submitOf = (form: Locator) =>
   form.getByRole("button", { name: /^Metti in / });
 const isDesktop = (page: Page) => (page.viewportSize()?.width ?? 0) >= 1024;

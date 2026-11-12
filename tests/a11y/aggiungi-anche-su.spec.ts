@@ -247,11 +247,12 @@ test.describe("avviso: invio non riuscito", () => {
     const { form, notice } = await failedSend(page);
     const retry = notice.getByRole("button", { name: "Riprova" });
     await expect(retry).toBeFocused();
-    expect(await focusRing(page)).not.toBe("nessuno");
-    const close = form.getByRole("button", { name: "Chiudi" });
-    await close.focus();
+    // Reached with the keyboard (a scripted focus after a click shows no ring)
+    await page.keyboard.press("Shift+Tab");
+    await expect(form.getByRole("button", { name: "Chiudi" })).toBeFocused();
     await page.keyboard.press("Tab");
     await expect(retry).toBeFocused();
+    expect(await focusRing(page)).not.toBe("nessuno");
   });
 
   test("aree di tocco: «Riprova» e «Chiudi» da 44 px (mobile)", async ({
