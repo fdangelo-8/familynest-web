@@ -534,7 +534,7 @@ test.describe("tastiera e fuoco", () => {
     await checkbox.focus();
 
     // Someone adds to the Spesa: its column reads again while the focus is here.
-    await casa.shopping("Laura", ["Latte"]);
+    await casa.shopping("Marco", ["Latte"]);
     await expect(
       column(page, "Spesa").getByText("Latte", { exact: true }),
     ).toBeVisible();
