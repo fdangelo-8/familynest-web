@@ -473,6 +473,18 @@ export function AddSheet({
     };
   }, [attempt, todayKey]);
 
+  // The calendar of «Anche su …», read with the people when the sheet opens:
+  // while the full form is open no request leaves (#171, CA-24).
+  useEffect(() => {
+    let alive = true;
+    void readAlsoOnTarget(createClient()).then((target) => {
+      if (alive && target !== "error") setAlsoOnTarget(target);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [attempt]);
+
   const people = useMemo(
     () => (peopleState.status === "ready" ? peopleState.people : []),
     [peopleState],
@@ -967,14 +979,10 @@ export function AddSheet({
     if (savingRef.current || !canOpenForm || meId === null) return;
     formFocus.current = true;
     setSaveFailed(false);
-    setAlsoOnTarget(null);
     setAlsoOnChecked(false);
     setDraft({
       values: initialFormValues(parsed.title, eventFields),
       errors: {},
-    });
-    void readAlsoOnTarget(createClient()).then((target) => {
-      if (target !== "error") setAlsoOnTarget(target);
     });
   }
 
