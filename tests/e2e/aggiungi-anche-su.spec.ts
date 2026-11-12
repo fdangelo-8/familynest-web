@@ -72,8 +72,28 @@ const submitOf = (form: Locator) =>
   form.getByRole("button", { name: /^Metti in / });
 const isDesktop = (page: Page) => (page.viewportSize()?.width ?? 0) >= 1024;
 
-/** Opens Aggiungi, writes the phrase and opens the full form «Nuovo impegno». */
-async function openModule(page: Page, phrase = NUOTO) {
+/**
+ * The answer to the read of the linked calendars (`external_calendars`). Register
+ * it before `goto`; wait for it before checking that the row is absent, because
+ * until it arrives the row is absent in any case.
+ */
+const watchRead = (page: Page) =>
+  page.waitForResponse(
+    (response) =>
+      /\/rest\/v1\/external_calendars(\?|$)/.test(response.url()) &&
+      response.request().method() === "GET",
+    { timeout: 30_000 },
+  );
+
+/**
+ * Opens Aggiungi, writes the phrase and opens the full form «Nuovo impegno».
+ * With `read` it also waits for the answer to the read of the calendars.
+ */
+async function openModule(
+  page: Page,
+  phrase = NUOTO,
+  read?: ReturnType<typeof watchRead>,
+) {
   await page.goto("/aggiungi");
   const dialog = addDialog(page);
   const field = dialog.getByRole("textbox", { name: "Cosa vuoi aggiungere?" });
@@ -87,6 +107,7 @@ async function openModule(page: Page, phrase = NUOTO) {
   const form = moduleOf(page);
   await expect(form).toBeVisible();
   await expect(fieldOf(form, "Titolo")).toBeFocused();
+  if (read) await read;
   return form;
 }
 
@@ -227,6 +248,7 @@ test.describe("la riga", () => {
     await withLinker(baseURL, async (u) => {
       await withGoogle(browser, u);
       await u.signIn(page);
+      const read = watchRead(page);
       await page.goto("/aggiungi");
       const dialog = addDialog(page);
       const field = dialog.getByRole("textbox", {
@@ -239,6 +261,7 @@ test.describe("la riga", () => {
           name: isDesktop(page) ? "Tutti i dettagli" : "Più dettagli",
         }),
       ).toBeVisible();
+      await read;
       await expect(dialog.getByRole("switch")).toHaveCount(0);
       await expect(dialog.getByText("Anche su")).toHaveCount(0);
     });
@@ -253,7 +276,7 @@ test.describe("la riga", () => {
     await withLinker(baseURL, async (u) => {
       await withGoogle(browser, u, null);
       await u.signIn(page);
-      const form = await openModule(page);
+      const form = await openModule(page, NUOTO, watchRead(page));
       await expect(rowOf(form)).toHaveCount(0);
       await expect(form.getByRole("switch")).toHaveCount(0);
     });
@@ -266,7 +289,7 @@ test.describe("la riga", () => {
     needsFake();
     await withLinker(baseURL, async (u) => {
       await u.signIn(page);
-      const form = await openModule(page);
+      const form = await openModule(page, NUOTO, watchRead(page));
       await expect(rowOf(form)).toHaveCount(0);
       await expect(form.getByRole("switch")).toHaveCount(0);
     });
@@ -880,9 +903,17 @@ test.describe("rete e privacy", () => {
         if (!["document", "fetch", "xhr"].includes(type)) return;
         pending.push(response.text().catch(() => ""));
       });
-      const form = await openModule(page);
+      const read = watchRead(page);
+      const form = await openModule(page, NUOTO, read);
       await expect(rowOf(form)).toHaveCount(0);
       await expect(form.getByRole("switch")).toHaveCount(0);
+      // The answer that matters: what Rita receives from `external_calendars`.
+      const readText = await (await read).text();
+      const calendars: unknown = readText.trim() ? JSON.parse(readText) : null;
+      expect(
+        calendars === null ||
+          (Array.isArray(calendars) && calendars.length === 0),
+      ).toBe(true);
       expect(pending.length).toBeGreaterThan(0);
       for (const text of await Promise.all(pending)) {
         expect(text).not.toMatch(/personale|google|u\.finto@example\.test/i);
