@@ -299,6 +299,14 @@ export function useShoppingList({
       // Remember what had the focus: a change by someone else can remove it.
       const active = document.activeElement;
       const root = rootRef.current;
+      console.log(
+        "DBG",
+        active?.tagName,
+        active?.getAttribute("role"),
+        !!root,
+        root?.contains(active),
+        active?.closest("[data-item-key]")?.getAttribute("data-item-key"),
+      );
       if (root && active && root.contains(active)) {
         const row = active.closest<HTMLElement>("[data-item-key]");
         const chip = active.closest<HTMLElement>("[data-chip]");

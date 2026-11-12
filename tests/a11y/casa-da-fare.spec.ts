@@ -559,7 +559,7 @@ test.describe("tastiera e fuoco", () => {
       () => (window as unknown as { __focusCalls: string[] }).__focusCalls,
     );
     const sanity = await page.evaluate(() => { (document.querySelector("[role=checkbox]") as HTMLElement).focus(); return (window as unknown as { __focusCalls: string[] }).__focusCalls.length; });
-    expect(JSON.stringify([calls, sanity])).toBe("DEBUG");
+    expect(JSON.stringify([calls, sanity, logs])).toBe("DEBUG");
     await page.keyboard.press("Tab");
     expect(await active()).toBe(expected);
     await expect(checkbox).not.toBeFocused();
