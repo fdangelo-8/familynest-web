@@ -424,18 +424,20 @@ export async function processRevocations(
   return result;
 }
 
-const OUTBOX_BATCH = 50;
+// A few rows at a time: a claim lasts 5 minutes, so rows taken and not worked
+// before the deadline stay locked until it runs out.
+const OUTBOX_BATCH = 10;
 
 /**
  * The changes of «Anche su» (#34 §16): creates, changes or deletes the event at
  * the provider, then tells the database. The text comes from the event at the
  * moment of sending, never from the queue.
  *
- * Two runs at the same time would both take the same row and send the change
- * twice: the queue has no claim. The scheduled job never overlaps with itself;
- * `userId` (the fake service of the tests only) limits the run to the accounts
- * of one adult, so that tests running side by side do not take each other's
- * rows (#364).
+ * The rows are claimed by the database (`claim_calendar_outbox_items`, #373):
+ * two runs at the same time never take the same row, and every `complete` and
+ * `fail` carries the claim token of its row. `userId` (the fake service of the
+ * tests only) limits the run to the accounts of one adult, so that tests
+ * running side by side do not take each other's rows (#364).
  */
 export async function processOutbox(
   admin: Admin,
@@ -449,43 +451,16 @@ export async function processOutbox(
   const now = options.now ?? new Date();
   const tally = options.tally;
 
-  let accountIds: string[] | null = null;
-  if (options.userId !== undefined) {
-    const { data: members, error: membersError } = await admin
-      .from("household_members")
-      .select("id")
-      .eq("user_id", options.userId)
-      .eq("kind", "adult");
-    if (membersError) throw new Error("Outbox could not be read.");
-    const { data: accounts, error: accountsError } = await admin
-      .from("calendar_accounts")
-      .select("id")
-      .in(
-        "member_id",
-        members.map((m) => m.id),
-      );
-    if (accountsError) throw new Error("Outbox could not be read.");
-    accountIds = accounts.map((a) => a.id);
-    if (accountIds.length === 0) return { done: 0, failed: 0 };
-  }
-
-  let query = admin
-    .from("calendar_outbox")
-    .select(
-      "id, action, event_id, provider_event_id, attempts, calendar_id, external_calendars!inner(calendar_accounts!inner(is_fake))",
-    )
-    .eq(
-      "external_calendars.calendar_accounts.is_fake",
-      isFakeCalendarProviderEnabled(),
-    )
-    .lte("next_attempt_at", now.toISOString());
-  if (accountIds !== null) {
-    query = query.in("external_calendars.account_id", accountIds);
-  }
-  const { data: items, error } = await query
-    .order("next_attempt_at", { ascending: true })
-    .limit(OUTBOX_BATCH);
-  if (error) throw new Error("Outbox could not be read.");
+  const claimBatch = async () => {
+    const { data, error } = await admin.rpc("claim_calendar_outbox_items", {
+      p_limit: OUTBOX_BATCH,
+      p_is_fake: isFakeCalendarProviderEnabled(),
+      p_at: now.toISOString(),
+      ...(options.userId !== undefined ? { p_user_id: options.userId } : {}),
+    });
+    if (error) throw new Error("Outbox could not be read.");
+    return data;
+  };
 
   const sessions = new Map<string, ProviderSession | null>();
   const result = { done: 0, failed: 0 };
@@ -517,145 +492,167 @@ export async function processOutbox(
     return session;
   };
 
-  for (const item of items) {
-    if (Date.now() >= options.deadline) break;
-    const retry = async () => {
-      result.failed += 1;
-      const minutes = Math.min(5 * 2 ** item.attempts, 360);
-      noteError(
-        tally,
-        await admin.rpc("fail_calendar_outbox_item", {
-          p_id: item.id,
-          p_retry_at: new Date(now.getTime() + minutes * 60_000).toISOString(),
-        }),
-      );
-    };
+  // Claim a few rows, work them, and claim again while rows come and time
+  // lasts. A failed row is moved to the future, so it is not claimed again.
+  while (Date.now() < options.deadline) {
+    const items = await claimBatch();
+    if (items.length === 0) break;
+    for (const item of items) {
+      if (Date.now() >= options.deadline) break;
+      const retry = async () => {
+        result.failed += 1;
+        const minutes = Math.min(5 * 2 ** item.attempts, 360);
+        noteError(
+          tally,
+          await admin.rpc("fail_calendar_outbox_item", {
+            p_id: item.id,
+            p_retry_at: new Date(
+              now.getTime() + minutes * 60_000,
+            ).toISOString(),
+            p_claim_token: item.claim_token,
+          }),
+        );
+      };
 
-    const { data: calendar } = await admin
-      .from("external_calendars")
-      .select("provider_calendar_id, account_id, is_enabled, direction")
-      .eq("id", item.calendar_id)
-      .maybeSingle();
-    if (!calendar || !calendar.is_enabled || calendar.direction !== "two_way") {
-      // The database removes such rows by itself; if one is left, try later.
-      await retry();
-      continue;
-    }
-    const session = await sessionOf(calendar.account_id);
-    if (!session) {
-      await retry();
-      continue;
-    }
-    const target = { id: calendar.provider_calendar_id };
+      const { data: calendar } = await admin
+        .from("external_calendars")
+        .select("provider_calendar_id, account_id, is_enabled, direction")
+        .eq("id", item.calendar_id)
+        .maybeSingle();
+      if (
+        !calendar ||
+        !calendar.is_enabled ||
+        calendar.direction !== "two_way"
+      ) {
+        // The database removes such rows by itself; if one is left, try later.
+        await retry();
+        continue;
+      }
+      const session = await sessionOf(calendar.account_id);
+      if (!session) {
+        await retry();
+        continue;
+      }
+      const target = { id: calendar.provider_calendar_id };
 
-    try {
-      if (item.action === "delete") {
-        if (!item.provider_event_id) throw new Error("Invalid outbox item.");
-        await session.deleteEvent(target, item.provider_event_id);
-        const completed = await admin.rpc("complete_calendar_outbox_item", {
-          p_id: item.id,
-        });
-        if (!noteError(tally, completed)) throw new Error("Not completed.");
-      } else {
-        if (!item.event_id) throw new Error("Invalid outbox item.");
-        const { data: event } = await admin
-          .from("events")
-          .select(
-            "title, location, starts_at, ends_at, recurrence, recurrence_until, recurrence_weekdays",
-          )
-          .eq("id", item.event_id)
-          .maybeSingle();
-        if (!event) {
-          // The event went away: the queue row goes with it (cascade).
-          continue;
-        }
-        const outgoing = {
-          title: event.title,
-          location: event.location,
-          startsAt: event.starts_at,
-          endsAt: event.ends_at,
-          recurrence:
-            event.recurrence === "none"
-              ? null
-              : {
-                  frequency: event.recurrence,
-                  weekdays: event.recurrence_weekdays,
-                  until: event.recurrence_until,
-                },
-          isPrivate: true as const,
-        };
-        if (item.action === "create") {
-          const created = await session.createEvent(target, outgoing);
-          // The link between the copy and the event must be saved, or the next
-          // run would create a second copy. One more try if the first answer
-          // is an error; but an error may hide a call the database did
-          // register (the answer got lost), so after any error the database
-          // is asked again with a separate query before the copy is touched.
-          let kept: boolean | null = null;
-          let saved = false;
-          let uncertain = false;
-          for (let attempt = 0; attempt < 2 && !saved; attempt += 1) {
-            const completed = await admin.rpc("complete_calendar_outbox_item", {
-              p_id: item.id,
-              p_provider_event_id: created.id,
-              ...(created.version
-                ? { p_provider_version: created.version }
-                : {}),
-            });
-            saved = noteError(tally, completed);
-            if (saved) kept = completed.data;
-            else uncertain = true;
-          }
-          if (uncertain) {
-            const { data: link, error: linkError } = await admin
-              .from("event_external_links")
-              .select("id")
-              .eq("event_id", item.event_id)
-              .eq("calendar_id", item.calendar_id)
-              .eq("provider_event_id", created.id)
-              .maybeSingle();
-            noteError(tally, { error: linkError });
-            // Cannot tell: the copy stays, the retry decides.
-            if (linkError) throw new Error("Not completed.");
-            // The database did register it: the work is done, hands off.
-            if (link) kept = true;
-            else {
-              const { data: row, error: rowError } = await admin
-                .from("calendar_outbox")
-                .select("id")
-                .eq("id", item.id)
-                .maybeSingle();
-              noteError(tally, { error: rowError });
-              if (rowError) throw new Error("Not completed.");
-              await session.deleteEvent(target, created.id);
-              // Row gone and no link: the user switched «Anche su» off.
-              // Row still there: nothing was kept, the retry starts again.
-              if (row) throw new Error("Not completed.");
-              kept = true;
-            }
-          }
-          // Only a first, error-free `false` means «switched off meanwhile».
-          if (kept === false) await session.deleteEvent(target, created.id);
-        } else {
+      try {
+        if (item.action === "delete") {
           if (!item.provider_event_id) throw new Error("Invalid outbox item.");
-          const updated = await session.updateEvent(
-            target,
-            item.provider_event_id,
-            outgoing,
-          );
+          await session.deleteEvent(target, item.provider_event_id);
           const completed = await admin.rpc("complete_calendar_outbox_item", {
             p_id: item.id,
-            ...(updated.version ? { p_provider_version: updated.version } : {}),
+            p_claim_token: item.claim_token,
           });
           if (!noteError(tally, completed)) throw new Error("Not completed.");
+        } else {
+          if (!item.event_id) throw new Error("Invalid outbox item.");
+          const { data: event } = await admin
+            .from("events")
+            .select(
+              "title, location, starts_at, ends_at, recurrence, recurrence_until, recurrence_weekdays",
+            )
+            .eq("id", item.event_id)
+            .maybeSingle();
+          if (!event) {
+            // The event went away: the queue row goes with it (cascade).
+            continue;
+          }
+          const outgoing = {
+            title: event.title,
+            location: event.location,
+            startsAt: event.starts_at,
+            endsAt: event.ends_at,
+            recurrence:
+              event.recurrence === "none"
+                ? null
+                : {
+                    frequency: event.recurrence,
+                    weekdays: event.recurrence_weekdays,
+                    until: event.recurrence_until,
+                  },
+            isPrivate: true as const,
+          };
+          if (item.action === "create") {
+            const created = await session.createEvent(target, outgoing);
+            // The link between the copy and the event must be saved, or the next
+            // run would create a second copy. One more try if the first answer
+            // is an error; but an error may hide a call the database did
+            // register (the answer got lost), so after any error the database
+            // is asked again with a separate query before the copy is touched.
+            let kept: boolean | null = null;
+            let saved = false;
+            let uncertain = false;
+            for (let attempt = 0; attempt < 2 && !saved; attempt += 1) {
+              const completed = await admin.rpc(
+                "complete_calendar_outbox_item",
+                {
+                  p_id: item.id,
+                  p_provider_event_id: created.id,
+                  ...(created.version
+                    ? { p_provider_version: created.version }
+                    : {}),
+                  p_claim_token: item.claim_token,
+                },
+              );
+              saved = noteError(tally, completed);
+              if (saved) kept = completed.data;
+              else uncertain = true;
+            }
+            if (uncertain) {
+              const { data: link, error: linkError } = await admin
+                .from("event_external_links")
+                .select("id")
+                .eq("event_id", item.event_id)
+                .eq("calendar_id", item.calendar_id)
+                .eq("provider_event_id", created.id)
+                .maybeSingle();
+              noteError(tally, { error: linkError });
+              // Cannot tell: the copy stays, the retry decides.
+              if (linkError) throw new Error("Not completed.");
+              // The database did register it: the work is done, hands off.
+              if (link) kept = true;
+              else {
+                const { data: row, error: rowError } = await admin
+                  .from("calendar_outbox")
+                  .select("id")
+                  .eq("id", item.id)
+                  .maybeSingle();
+                noteError(tally, { error: rowError });
+                if (rowError) throw new Error("Not completed.");
+                await session.deleteEvent(target, created.id);
+                // Row gone and no link: the user switched «Anche su» off.
+                // Row still there: nothing was kept, the retry starts again.
+                if (row) throw new Error("Not completed.");
+                kept = true;
+              }
+            }
+            // Only a first, error-free `false` means «switched off meanwhile».
+            if (kept === false) await session.deleteEvent(target, created.id);
+          } else {
+            if (!item.provider_event_id)
+              throw new Error("Invalid outbox item.");
+            const updated = await session.updateEvent(
+              target,
+              item.provider_event_id,
+              outgoing,
+            );
+            const completed = await admin.rpc("complete_calendar_outbox_item", {
+              p_id: item.id,
+              ...(updated.version
+                ? { p_provider_version: updated.version }
+                : {}),
+              p_claim_token: item.claim_token,
+            });
+            if (!noteError(tally, completed)) throw new Error("Not completed.");
+          }
         }
+        result.done += 1;
+      } catch (caught) {
+        if (caught instanceof ProviderAuthError) {
+          await recordResult(admin, calendar.account_id, "auth_error", now);
+        }
+        await retry();
       }
-      result.done += 1;
-    } catch (caught) {
-      if (caught instanceof ProviderAuthError) {
-        await recordResult(admin, calendar.account_id, "auth_error", now);
-      }
-      await retry();
     }
   }
   return result;
