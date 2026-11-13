@@ -60,8 +60,8 @@ select columns_are(
 select columns_are(
   'public', 'calendar_outbox',
   array['id', 'household_id', 'calendar_id', 'action', 'event_id', 'provider_event_id', 'attempts',
-        'next_attempt_at', 'created_at'],
-  'the outbox holds no text of the events'
+        'next_attempt_at', 'created_at', 'claimed_until', 'claim_token', 'changed_while_claimed'],
+  'the outbox holds no text of the events (claim columns of #373 included)'
 );
 select enum_has_labels('public', 'calendar_provider', array['google', 'outlook'], 'providers: Google and Outlook (iCloud waits for #36)');
 select enum_has_labels('public', 'calendar_account_status', array['active', 'reconnect', 'temporary_error'], 'calendar_account_status labels');
@@ -189,8 +189,8 @@ select ok(
   and not has_function_privilege('authenticated', 'public.sync_external_calendar_events(uuid, jsonb, boolean, text, timestamptz)', 'execute')
   and not has_function_privilege('authenticated', 'public.record_calendar_sync_result(uuid, public.calendar_sync_outcome, timestamptz)', 'execute')
   and not has_function_privilege('authenticated', 'public.mark_external_calendar_failing(uuid, timestamptz)', 'execute')
-  and not has_function_privilege('authenticated', 'public.complete_calendar_outbox_item(uuid, text, text)', 'execute')
-  and not has_function_privilege('authenticated', 'public.fail_calendar_outbox_item(uuid, timestamptz)', 'execute')
+  and not has_function_privilege('authenticated', 'public.complete_calendar_outbox_item(uuid, text, text, uuid)', 'execute')
+  and not has_function_privilege('authenticated', 'public.fail_calendar_outbox_item(uuid, timestamptz, uuid)', 'execute')
   and not has_function_privilege('anon', 'public.save_calendar_account(uuid, public.calendar_provider, text, text, text, boolean)', 'execute')
   and not has_function_privilege('anon', 'public.sync_external_calendar_events(uuid, jsonb, boolean, text, timestamptz)', 'execute'),
   'the functions of the synchronisation service are not executable by the app nor by anon'
@@ -200,7 +200,7 @@ select ok(
   and has_function_privilege('service_role', 'public.save_external_calendars(uuid, jsonb)', 'execute')
   and has_function_privilege('service_role', 'public.sync_external_calendar_events(uuid, jsonb, boolean, text, timestamptz)', 'execute')
   and has_function_privilege('service_role', 'public.record_calendar_sync_result(uuid, public.calendar_sync_outcome, timestamptz)', 'execute')
-  and has_function_privilege('service_role', 'public.complete_calendar_outbox_item(uuid, text, text)', 'execute'),
+  and has_function_privilege('service_role', 'public.complete_calendar_outbox_item(uuid, text, text, uuid)', 'execute'),
   'the synchronisation service executes them'
 );
 select ok(

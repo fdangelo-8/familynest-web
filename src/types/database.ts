@@ -109,6 +109,9 @@ export type Database = {
           action: Database["public"]["Enums"]["calendar_outbox_action"];
           attempts: number;
           calendar_id: string;
+          changed_while_claimed: boolean;
+          claim_token: string | null;
+          claimed_until: string | null;
           created_at: string;
           event_id: string | null;
           household_id: string;
@@ -121,6 +124,9 @@ export type Database = {
           action: Database["public"]["Enums"]["calendar_outbox_action"];
           attempts?: number;
           calendar_id: string;
+          changed_while_claimed?: boolean;
+          claim_token?: string | null;
+          claimed_until?: string | null;
           created_at?: string;
           event_id?: string | null;
           household_id: string;
@@ -132,6 +138,9 @@ export type Database = {
           action?: Database["public"]["Enums"]["calendar_outbox_action"];
           attempts?: number;
           calendar_id?: string;
+          changed_while_claimed?: boolean;
+          claim_token?: string | null;
+          claimed_until?: string | null;
           created_at?: string;
           event_id?: string | null;
           household_id?: string;
@@ -1685,6 +1694,23 @@ export type Database = {
         };
         Returns: string;
       };
+      claim_calendar_outbox_items: {
+        Args: {
+          p_at?: string;
+          p_is_fake: boolean;
+          p_limit: number;
+          p_user_id?: string;
+        };
+        Returns: {
+          action: Database["public"]["Enums"]["calendar_outbox_action"];
+          attempts: number;
+          calendar_id: string;
+          claim_token: string;
+          event_id: string;
+          id: string;
+          provider_event_id: string;
+        }[];
+      };
       clear_checked_shopping_items: {
         Args: { item_ids: string[] };
         Returns: {
@@ -1706,6 +1732,7 @@ export type Database = {
       };
       complete_calendar_outbox_item: {
         Args: {
+          p_claim_token?: string;
           p_id: string;
           p_provider_event_id?: string;
           p_provider_version?: string;
@@ -1802,7 +1829,7 @@ export type Database = {
         Returns: undefined;
       };
       fail_calendar_outbox_item: {
-        Args: { p_id: string; p_retry_at: string };
+        Args: { p_claim_token?: string; p_id: string; p_retry_at: string };
         Returns: undefined;
       };
       get_account_deletion_outcome: {
