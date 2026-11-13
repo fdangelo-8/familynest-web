@@ -119,7 +119,7 @@ jobs:
             bash -c 'npx playwright test $SPEC'
 
       - uses: actions/upload-artifact@v4
-        if: failure()
+        if: always()
         with:
           name: playwright-report
           path: |
