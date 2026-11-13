@@ -190,8 +190,13 @@ export type ShoppingList = {
   tear: (fromKeyboard: boolean) => void;
   retry: () => void;
   /** After the next render, focuses the first of these selectors that exists */
-  requestFocus: (selectors: string[]) => void;
+  requestFocus: (selectors: string[], scope?: "column" | "page") => void;
 };
+
+/** The Spesa column inside the Casa page: focus is only handled in here. */
+function columnOf(root: HTMLElement | null): HTMLElement | null {
+  return root?.querySelector<HTMLElement>('[data-casa-column="spesa"]') ?? null;
+}
 
 /**
  * Reads the shopping list of the Nest, keeps it up to date (realtime) and
@@ -238,6 +243,7 @@ export function useShoppingList({
   const tempCounter = useRef(0);
   const tearToken = useRef(0);
   const focusRequest = useRef<string[] | null>(null);
+  const focusPage = useRef(false);
   const onAddRejectedRef = useRef(onAddRejected);
 
   useEffect(() => {
@@ -264,14 +270,21 @@ export function useShoppingList({
     setSettlingState(next);
   }, []);
 
-  const requestFocus = useCallback((selectors: string[]) => {
-    focusRequest.current = selectors;
-  }, []);
+  // Default scope is this column: Spesa and Da fare share temporary keys.
+  // "page" is for controls outside the columns (the filter chips).
+  const requestFocus = useCallback(
+    (selectors: string[], scope: "column" | "page" = "column") => {
+      focusRequest.current = selectors;
+      focusPage.current = scope === "page";
+    },
+    [],
+  );
 
   // Moves the focus after the render that follows a change (rows change list).
   useLayoutEffect(() => {
     const selectors = focusRequest.current;
-    const root = rootRef.current;
+    const page = rootRef.current;
+    const root = focusPage.current ? page : columnOf(page);
     if (!selectors || !root) return;
     for (const selector of selectors) {
       const target = root.querySelector<HTMLElement>(selector);
@@ -281,6 +294,7 @@ export function useShoppingList({
       }
     }
     focusRequest.current = null;
+    focusPage.current = false;
   });
 
   const toastRejected = useCallback(() => {
@@ -298,7 +312,8 @@ export function useShoppingList({
       for (const item of itemsRef.current) keys.set(item.id, item.key);
       // Remember what had the focus: a change by someone else can remove it.
       const active = document.activeElement;
-      const root = rootRef.current;
+      // Only this column: Da fare rows carry the same data attributes.
+      const root = columnOf(rootRef.current);
       if (root && active && root.contains(active)) {
         const row = active.closest<HTMLElement>("[data-item-key]");
         const chip = active.closest<HTMLElement>("[data-chip]");
@@ -728,7 +743,7 @@ export function useShoppingList({
       const item = itemsRef.current.find((i) => i.key === key);
       if (!item) return;
       const checked = item.checkedAt === null;
-      const rowHadFocus = rootRef.current
+      const rowHadFocus = columnOf(rootRef.current)
         ?.querySelector(`[data-item-key="${key}"] [role="checkbox"]`)
         ?.contains(document.activeElement);
 
