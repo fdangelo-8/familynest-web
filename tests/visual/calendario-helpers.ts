@@ -82,10 +82,14 @@ export async function openStep(
   await expect(page.locator("h1:visible")).toHaveText(
     "Porta qui il tuo calendario",
   );
-  // The title streams in after the shell: axe's «document-title» saw the page
-  // without it once (mobile, run 42098914945), so wait for it.
-  await expect(page).toHaveTitle("FamilyNest · Porta qui il tuo calendario");
+  // The title streams in after the shell, and while React takes the page over
+  // it leaves the <head> for a few hundred milliseconds and comes back (seen
+  // in the trace of run 42270773505: present at the first check, absent right
+  // after the hydration, back after axe). Axe's «document-title» ran in that
+  // gap. So first the hydration, then the title: the check that follows is the
+  // one that counts.
   await hydrated(page);
+  await expect(page).toHaveTitle("FamilyNest · Porta qui il tuo calendario");
 }
 
 /** The answer cookie the route leaves when the user comes back. */

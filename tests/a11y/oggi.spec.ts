@@ -91,6 +91,10 @@ test.describe("axe", () => {
 
   test("errore: offline", async ({ page, context }) => {
     await open(page, { scenario: "normale" });
+    // «No loading container» is also true before the page has started to read:
+    // go offline only once the content is on screen, or the first reading
+    // fails and the page keeps its skeleton through the retries (1, 2, 4 s).
+    await expect(shown(page, "Call con Acme")).toBeVisible();
     await context.setOffline(true);
     await expect(shown(page, /^Sei offline\./)).toBeVisible();
     expect(await seriousViolations(page)).toEqual([]);

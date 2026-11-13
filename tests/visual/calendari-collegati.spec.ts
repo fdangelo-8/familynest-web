@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { holdNavigation } from "../fixtures/held-navigation";
 import {
   FIXED_NOW,
   GOOGLE,
@@ -96,27 +97,22 @@ test.describe("non collegato", () => {
 
   test("#34: caricamento della pagina", async ({ page }) => {
     await withUser(page, async () => {
+      // Only the real navigation is held, not the prefetch of the loading
+      // shell; the click waits for that prefetch (fixtures/held-navigation.ts).
+      const { release, clickWhenReady } = await holdNavigation(
+        page,
+        /\/calendari-collegati\?_rsc=/,
+      );
       await page.goto("/nest");
       await expect(
         page.getByRole("heading", { level: 1, name: "Casa D'Angelo" }),
       ).toBeVisible();
       await page.evaluate(() => document.fonts.ready);
-      let release: () => void = () => {};
-      const gate = new Promise<void>((resolve) => (release = resolve));
-      await page.route(/\/calendari-collegati\?_rsc=/, async (route) => {
-        // Hold only the real navigation, not the prefetch of the loading shell:
-        // without the shell the loading state is never shown.
-        if (route.request().headers()["next-router-prefetch"]) {
-          await route.continue();
-          return;
-        }
-        await gate;
-        await route.continue();
-      });
-      await page
-        .getByRole("main")
-        .getByRole("link", { name: /^Calendari collegati/ })
-        .click();
+      await clickWhenReady(
+        page.getByRole("main").getByRole("link", {
+          name: /^Calendari collegati/,
+        }),
+      );
       await expect(page.getByText("Caricamento in corso")).toBeAttached();
       await shoot(page, "calendari-collegati-caricamento.png", false);
       release();

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { holdNavigation } from "../fixtures/held-navigation";
 import { hasTestUser, signInAs } from "../fixtures/visual-login";
 import {
   createThrowawayUser,
@@ -342,23 +343,18 @@ test.describe("con un utente usa e getta", () => {
 
   test("#17: caricamento", async ({ page }) => {
     user = await userWithNest(page);
+    // Only the real navigation is held, not the prefetch of the loading
+    // shell; the click waits for that prefetch (fixtures/held-navigation.ts).
+    const { release, clickWhenReady } = await holdNavigation(
+      page,
+      /\/nest\?_rsc=/,
+    );
     await page.goto("/oggi");
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await page.evaluate(() => document.fonts.ready);
-    let release: () => void = () => {};
-    const gate = new Promise<void>((resolve) => (release = resolve));
-    await page.route(/\/nest\?_rsc=/, async (route) => {
-      // Next also prefetches the page (loading shell) while the link is
-      // clicked: hold only the real navigation, or the shell never arrives
-      // and the loading state is not shown.
-      if (route.request().headers()["next-router-prefetch"]) {
-        await route.continue();
-        return;
-      }
-      await gate;
-      await route.continue();
-    });
-    await page.getByRole("link", { name: /^Apri Casa De Santis/ }).click();
+    await clickWhenReady(
+      page.getByRole("link", { name: /^Apri Casa De Santis/ }),
+    );
     await expect(page.getByText("Caricamento in corso")).toBeAttached();
     await shoot(page, "nest-caricamento.png", false);
     release();
