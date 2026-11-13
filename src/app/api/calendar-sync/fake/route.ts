@@ -68,8 +68,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: true, ...result }, { headers: NO_STORE });
     }
     if (action === "outbox") {
+      // With a user, only the queue of its accounts (tests side by side).
+      const userId = (body as { userId?: unknown }).userId;
       const result = await processOutbox(createAdminClient(), {
         deadline: Date.now() + 50_000,
+        ...(typeof userId === "string" ? { userId } : {}),
       });
       return NextResponse.json({ ok: true, ...result }, { headers: NO_STORE });
     }

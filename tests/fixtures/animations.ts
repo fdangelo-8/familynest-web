@@ -11,7 +11,8 @@ export async function waitForAnimationsToEnd(page: Page) {
       document
         .getAnimations()
         .filter((a) => a.effect?.getComputedTiming().endTime !== Infinity)
-        .map((a) => a.finished),
+        // An animation cut short (its element left the page) is over too.
+        .map((a) => a.finished.catch(() => undefined)),
     ),
   );
 }

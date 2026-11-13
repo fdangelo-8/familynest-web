@@ -105,7 +105,13 @@ async function call<T>(
   return (await response.json()) as T;
 }
 
-export function fakeCalendar(baseURL: string) {
+/**
+ * `ownerId` is the user of the test: the queue of «Anche su» is then run only
+ * for its accounts. Without it every test running at the same time would take
+ * the rows of the others, and two of them could send the same change twice
+ * (#364).
+ */
+export function fakeCalendar(baseURL: string, ownerId?: string) {
   return {
     /** Prepares an account of the user, with its calendars and events. */
     setup(params: {
@@ -157,10 +163,11 @@ export function fakeCalendar(baseURL: string) {
         action: "revocations",
       });
     },
-    /** Runs the queue of «Anche su» now. */
-    outbox() {
+    /** Runs the queue of «Anche su» now (of the owner's accounts, if known). */
+    outbox(userId: string | undefined = ownerId) {
       return call<{ ok: boolean; done: number; failed: number }>(baseURL, {
         action: "outbox",
+        userId,
       });
     },
     /** What FamilyNest did at the provider, with the tokens the fake issued. */

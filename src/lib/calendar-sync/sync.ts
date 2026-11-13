@@ -430,14 +430,46 @@ const OUTBOX_BATCH = 50;
  * The changes of «Anche su» (#34 §16): creates, changes or deletes the event at
  * the provider, then tells the database. The text comes from the event at the
  * moment of sending, never from the queue.
+ *
+ * Two runs at the same time would both take the same row and send the change
+ * twice: the queue has no claim. The scheduled job never overlaps with itself;
+ * `userId` (the fake service of the tests only) limits the run to the accounts
+ * of one adult, so that tests running side by side do not take each other's
+ * rows (#364).
  */
 export async function processOutbox(
   admin: Admin,
-  options: { now?: Date; deadline: number; tally?: Tally },
+  options: {
+    now?: Date;
+    deadline: number;
+    tally?: Tally;
+    userId?: string;
+  },
 ): Promise<{ done: number; failed: number }> {
   const now = options.now ?? new Date();
   const tally = options.tally;
-  const { data: items, error } = await admin
+
+  let accountIds: string[] | null = null;
+  if (options.userId !== undefined) {
+    const { data: members, error: membersError } = await admin
+      .from("household_members")
+      .select("id")
+      .eq("user_id", options.userId)
+      .eq("kind", "adult");
+    if (membersError) throw new Error("Outbox could not be read.");
+    const { data: accounts, error: accountsError } = await admin
+      .from("calendar_accounts")
+      .select("id")
+      .in(
+        "member_id",
+        members.map((m) => m.id),
+      );
+    if (accountsError) throw new Error("Outbox could not be read.");
+    accountIds = accounts.map((a) => a.id);
+    if (accountIds.length === 0) return { done: 0, failed: 0 };
+  }
+
+  let query = admin
     .from("calendar_outbox")
     .select(
       "id, action, event_id, provider_event_id, attempts, calendar_id, external_calendars!inner(calendar_accounts!inner(is_fake))",
@@ -446,7 +478,11 @@ export async function processOutbox(
       "external_calendars.calendar_accounts.is_fake",
       isFakeCalendarProviderEnabled(),
     )
-    .lte("next_attempt_at", now.toISOString())
+    .lte("next_attempt_at", now.toISOString());
+  if (accountIds !== null) {
+    query = query.in("external_calendars.account_id", accountIds);
+  }
+  const { data: items, error } = await query
     .order("next_attempt_at", { ascending: true })
     .limit(OUTBOX_BATCH);
   if (error) throw new Error("Outbox could not be read.");

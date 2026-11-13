@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import { waitForAnimationsToEnd } from "../fixtures/animations";
 import { signInAs, skipReason, usersConfigured } from "../fixtures/auth";
 import {
   throwawayConfigured,
@@ -12,6 +13,9 @@ import { userWithNest } from "../fixtures/impostazioni";
 // at 390 px, keyboard order, visible focus, no keyboard trap in the dialog.
 
 async function seriousViolations(page: Page) {
+  // The dialog fades in and the pointer, still where the click was, makes the
+  // button under it change colour: axe read the contrast halfway (#364).
+  await waitForAnimationsToEnd(page);
   const results = await new AxeBuilder({ page }).analyze();
   return results.violations.filter((v) =>
     ["serious", "critical"].includes(v.impact ?? ""),

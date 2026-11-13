@@ -136,6 +136,10 @@ export async function linkAccount(
   await page.getByRole("link", { name: "Consenti", exact: true }).click();
   await expect(page).toHaveURL(/\/onboarding\/calendario$/);
   await expect(page.getByText("Collegato").filter(visible)).toBeVisible();
+  // A new page load: the title leaves the <head> again while React takes the
+  // page over (see openStep). Axe's «document-title» must not run in that gap.
+  await hydrated(page);
+  await expect(page).toHaveTitle("FamilyNest · Porta qui il tuo calendario");
 }
 
 /** Forgets what the fake knows about the user. Call it in the `finally`. */

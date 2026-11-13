@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import type { Locator, Page } from "@playwright/test";
+import { waitForAnimationsToEnd } from "./animations";
 import {
   addDays,
   at1552,
@@ -352,6 +353,9 @@ export async function tabNeverEnters(page: Page, row: Locator): Promise<void> {
 export async function axeProblems(page: Page): Promise<string[]> {
   // axe waits on timers that a stopped clock never fires.
   await page.clock.resume().catch(() => {});
+  // The colours of the lens and of the buttons change in a short transition:
+  // read halfway, the contrast fails (#364).
+  await waitForAnimationsToEnd(page);
   const results = await new AxeBuilder({ page }).analyze();
   return results.violations
     .filter((v) => ["serious", "critical"].includes(v.impact ?? ""))
