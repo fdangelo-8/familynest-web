@@ -1,7 +1,9 @@
 -- The claim of the rows of calendar_outbox (issue #373): two runs of the synchronisation
 -- service never take the same row; a claim that expires (the run died) makes the row free
 -- again; a failure frees it; the filters by provider (fake or real) and by adult; a change of
--- the event while its row is being sent is never lost; no access for authenticated and anon.
+-- the event while its row is being sent is never lost, also when the claim expires and
+-- another run takes the row; the claim token makes the late calls of a run change nothing;
+-- no access for authenticated and anon.
 -- Seed ids: A = Marco (Casa D'Angelo, member a1…01), B = Giulia (Casa Bianchi, b1…01),
 -- B2 = Paolo (Casa Bianchi, b1…02, fake account e1…01 with «Personale» e2…01), C = Chiara (no
 -- household).
@@ -17,7 +19,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(54);
+select plan(87);
 
 -- ---------------------------------------------------------------------------
 -- Schema and privileges
@@ -39,18 +41,28 @@ select ok(
 select ok(
   not has_function_privilege('anon', 'public.claim_calendar_outbox_items(integer, boolean, uuid, timestamptz)', 'execute')
   and not has_function_privilege('authenticated', 'public.claim_calendar_outbox_items(integer, boolean, uuid, timestamptz)', 'execute')
-  and not has_function_privilege('anon', 'public.complete_calendar_outbox_item(uuid, text, text)', 'execute')
-  and not has_function_privilege('authenticated', 'public.complete_calendar_outbox_item(uuid, text, text)', 'execute')
-  and not has_function_privilege('anon', 'public.fail_calendar_outbox_item(uuid, timestamptz)', 'execute')
-  and not has_function_privilege('authenticated', 'public.fail_calendar_outbox_item(uuid, timestamptz)', 'execute')
+  and not has_function_privilege('anon', 'public.complete_calendar_outbox_item(uuid, text, text, uuid)', 'execute')
+  and not has_function_privilege('authenticated', 'public.complete_calendar_outbox_item(uuid, text, text, uuid)', 'execute')
+  and not has_function_privilege('anon', 'public.fail_calendar_outbox_item(uuid, timestamptz, uuid)', 'execute')
+  and not has_function_privilege('authenticated', 'public.fail_calendar_outbox_item(uuid, timestamptz, uuid)', 'execute')
   and not has_function_privilege('authenticated', 'private.queue_sent_event_update(uuid)', 'execute'),
   'neither the app nor anon can claim, complete or fail a row'
 );
 select ok(
   has_function_privilege('service_role', 'public.claim_calendar_outbox_items(integer, boolean, uuid, timestamptz)', 'execute')
-  and has_function_privilege('service_role', 'public.complete_calendar_outbox_item(uuid, text, text)', 'execute')
-  and has_function_privilege('service_role', 'public.fail_calendar_outbox_item(uuid, timestamptz)', 'execute'),
+  and has_function_privilege('service_role', 'public.complete_calendar_outbox_item(uuid, text, text, uuid)', 'execute')
+  and has_function_privilege('service_role', 'public.fail_calendar_outbox_item(uuid, timestamptz, uuid)', 'execute'),
   'the synchronisation service (service_role) claims, completes and fails'
+);
+select ok(
+  (select count(*) from pg_proc p where p.oid in (
+     'public.complete_calendar_outbox_item(uuid, text, text, uuid)'::regprocedure,
+     'public.fail_calendar_outbox_item(uuid, timestamptz, uuid)'::regprocedure)
+     and p.prosecdef and p.proconfig @> array['search_path=""']) = 2
+  and (select count(*) from pg_proc p
+       where p.proname in ('complete_calendar_outbox_item', 'fail_calendar_outbox_item')
+         and p.pronamespace = 'public'::regnamespace) = 2,
+  'complete and fail take the claim token (optional), security definer, empty search_path, no old overload left'
 );
 select ok(
   not has_table_privilege('anon', 'public.calendar_outbox', 'select, insert, update, delete')
@@ -98,6 +110,16 @@ values
    '9b000000-0000-4000-8000-000000000001', 'delete', 'g-marco-1', '2026-11-09 08:02+01'),
   ('9c000000-0000-4000-8000-000000000005', '22222222-2222-4222-8222-222222222222',
    '9b000000-0000-4000-8000-000000000002', 'delete', 'o-giulia-1', '2026-11-09 07:00+01');
+select throws_ok(
+  $$ update public.calendar_outbox set changed_while_claimed = true where id = '9c000000-0000-4000-8000-000000000001' $$,
+  '23514', null,
+  'a free row cannot be marked: its next run reads the latest values'
+);
+select throws_ok(
+  $$ update public.calendar_outbox set claim_token = gen_random_uuid() where id = '9c000000-0000-4000-8000-000000000001' $$,
+  '23514', null,
+  'a claim token goes only with a claim'
+);
 
 -- ---------------------------------------------------------------------------
 -- No access for the app (both households) and anon
@@ -191,6 +213,13 @@ select ok(
   and (select o.claimed_until is null from public.calendar_outbox o where o.id = '9c000000-0000-4000-8000-000000000003'),
   'every claimed row is held for 5 minutes from now; the row not due is still free'
 );
+select ok(
+  (select count(distinct o.claim_token) = 4 and count(o.claim_token) = 4
+   from public.calendar_outbox o
+   where o.id <> '9c000000-0000-4000-8000-000000000003')
+  and (select o.claim_token is null from public.calendar_outbox o where o.id = '9c000000-0000-4000-8000-000000000003'),
+  'every run holds its rows with its own claim token; the free row has none'
+);
 
 -- ---------------------------------------------------------------------------
 -- A run that dies: the claim expires and the row is free again
@@ -239,7 +268,7 @@ select results_eq(
 -- The fake service of the tests: only the rows of one adult (#364)
 -- ---------------------------------------------------------------------------
 reset role;
-update public.calendar_outbox set claimed_until = null;
+update public.calendar_outbox set claimed_until = null, claim_token = null;
 set local role service_role;
 select results_eq(
   $$ select c.id from public.claim_calendar_outbox_items(50, true, 'aaaaaaaa-0000-4000-8000-000000000001', '2026-11-09 09:00+01') c $$,
@@ -340,6 +369,20 @@ select results_eq(
   'the event is linked to its copy'
 );
 set local role service_role;
+select is(
+  public.complete_calendar_outbox_item((select o.id from public.calendar_outbox o), 'g-corsa', 'etag-1'),
+  false,
+  'the same completion of the «create» again (its first answer got lost, or a second run created a copy): refused'
+);
+reset role;
+select results_eq(
+  $$ select o.action, o.provider_event_id, o.attempts, o.claimed_until, o.changed_while_claimed,
+            (select count(*)::integer from public.event_external_links l where l.event_id = o.event_id)
+     from public.calendar_outbox o $$,
+  $$ values ('update'::public.calendar_outbox_action, 'g-corsa'::text, 0, null::timestamptz, false, 1) $$,
+  'the «update» still waits with «g-corsa» and the link is untouched: the new title is not lost'
+);
+set local role service_role;
 select results_eq(
   $$ select c.action, c.provider_event_id from public.claim_calendar_outbox_items(50, true, null, now()) c $$,
   $$ values ('update'::public.calendar_outbox_action, 'g-corsa'::text) $$,
@@ -368,7 +411,7 @@ select results_eq(
 );
 set local role service_role;
 select lives_ok(
-  $$ select public.complete_calendar_outbox_item(c.id, null, 'etag-3')
+  $$ select public.complete_calendar_outbox_item(c.id, null, 'etag-3', c.claim_token)
      from public.claim_calendar_outbox_items(50, true, null, now()) c $$,
   'a run takes the «update» again and sends it, with nothing changed meanwhile'
 );
@@ -390,8 +433,218 @@ reset role;
 select results_eq(
   $$ select o.action, o.changed_while_claimed from public.calendar_outbox o $$,
   $$ values ('update'::public.calendar_outbox_action, false) $$,
-  'one «update» waits, not marked (as before #373)'
+  'one «update» waits, free and not marked'
 );
+-- A change of the event always locks its rows, also the free ones: until the change is
+-- committed, a run skips the row (skip locked) instead of sending the old values. A single
+-- session cannot hold the lock against a second one: the update of the row is recorded by
+-- a trigger of this test (rolled back with everything else).
+create table public.test_outbox_touched (outbox_id uuid not null);
+create function public.test_note_outbox_touched()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  insert into public.test_outbox_touched (outbox_id) values (new.id);
+  return null;
+end;
+$$;
+create trigger test_note_outbox_touched
+  after update on public.calendar_outbox
+  for each row execute function public.test_note_outbox_touched();
+set local role authenticated;
+set local request.jwt.claims to '{"sub":"bbbbbbbb-0000-4000-8000-000000000002","role":"authenticated"}';
+select lives_ok(
+  $$ update public.events set location = 'Parco Nord' where title = 'Corsa del mattino' $$,
+  'Paolo changes the place too, while the «update» is free'
+);
+reset role;
+select results_eq(
+  $$ select distinct t.outbox_id from public.test_outbox_touched t $$,
+  $$ select o.id from public.calendar_outbox o $$,
+  'the free row of the event was updated, so locked until the change of Paolo is committed'
+);
+select results_eq(
+  $$ select o.action, o.claimed_until, o.changed_while_claimed from public.calendar_outbox o $$,
+  $$ values ('update'::public.calendar_outbox_action, null::timestamptz, false) $$,
+  'still one «update», free and not marked: its next run reads the latest values'
+);
+drop trigger test_note_outbox_touched on public.calendar_outbox;
+
+-- ---------------------------------------------------------------------------
+-- A claim that expired while the event changed: the mark is kept for the late run
+-- ---------------------------------------------------------------------------
+-- Run A takes the «create» of «Yoga», Paolo changes the event, the claim of A expires, run B
+-- takes the row again. Both create a copy. Without claim tokens (the code before #373) the
+-- completion of A keeps an «update» and the one of B is refused (B deletes its copy).
+delete from public.calendar_outbox;
+set local role authenticated;
+set local request.jwt.claims to '{"sub":"bbbbbbbb-0000-4000-8000-000000000002","role":"authenticated"}';
+select lives_ok(
+  $$ select public.create_event('Yoga', '2027-03-18 07:00+01', '2027-03-18 08:00+01', 'busy', array[]::uuid[]) $$,
+  'Paolo creates «Yoga»'
+);
+select lives_ok(
+  $$ select public.set_event_also_on((select e.id from public.events e where e.title = 'Yoga'), true) $$,
+  'and sends it «Anche su Google»'
+);
+reset role;
+set local role service_role;
+set local request.jwt.claims to '{"role":"service_role"}';
+select is(
+  (select c.action::text || ':' || (set_config('test.token_a', c.claim_token::text, true) is not null)::text
+   from public.claim_calendar_outbox_items(50, true, 'bbbbbbbb-0000-4000-8000-000000000002', now()) c),
+  'create:true',
+  'run A takes the «create» of «Yoga», with its claim token'
+);
+reset role;
+set local role authenticated;
+set local request.jwt.claims to '{"sub":"bbbbbbbb-0000-4000-8000-000000000002","role":"authenticated"}';
+select lives_ok(
+  $$ update public.events set title = 'Yoga al mattino' where title = 'Yoga' $$,
+  'meanwhile Paolo changes the title'
+);
+reset role;
+select is(
+  (select o.changed_while_claimed from public.calendar_outbox o),
+  true,
+  'the row held by A is marked'
+);
+update public.calendar_outbox set claimed_until = now() - interval '1 second';
+set local role service_role;
+select is(
+  (select c.action::text || ':' || (set_config('test.token_b', c.claim_token::text, true) is not null)::text
+   from public.claim_calendar_outbox_items(50, true, null, now()) c),
+  'create:true',
+  'the claim of A has expired: run B takes the «create» again'
+);
+reset role;
+select results_eq(
+  $$ select o.changed_while_claimed, o.claim_token = current_setting('test.token_b')::uuid,
+            o.claim_token <> current_setting('test.token_a')::uuid
+     from public.calendar_outbox o $$,
+  $$ values (true, true, true) $$,
+  'the mark of the claim of A is kept, and the row is held with the token of B'
+);
+set local role service_role;
+select is(
+  public.complete_calendar_outbox_item((select o.id from public.calendar_outbox o), 'g-yoga-a', null),
+  true,
+  'A completes late, without token, with its copy made with the old title'
+);
+reset role;
+select results_eq(
+  $$ select o.action, o.provider_event_id, o.claimed_until, o.claim_token, o.changed_while_claimed
+     from public.calendar_outbox o $$,
+  $$ values ('update'::public.calendar_outbox_action, 'g-yoga-a'::text, null::timestamptz, null::uuid, false) $$,
+  'an «update» of the copy of A waits: the new title is not lost'
+);
+set local role service_role;
+select is(
+  public.complete_calendar_outbox_item((select o.id from public.calendar_outbox o), 'g-yoga-b', null),
+  false,
+  'B completes its «create» on a row that is no longer a «create»: refused, B deletes its copy'
+);
+reset role;
+select results_eq(
+  $$ select o.action, o.provider_event_id,
+            (select array_agg(l.provider_event_id) from public.event_external_links l where l.event_id = o.event_id)
+     from public.calendar_outbox o $$,
+  $$ values ('update'::public.calendar_outbox_action, 'g-yoga-a'::text, array['g-yoga-a']::text[]) $$,
+  'still the «update» of the copy of A, the only one linked: no double at the provider'
+);
+
+-- ---------------------------------------------------------------------------
+-- The same with claim tokens: the late run changes nothing
+-- ---------------------------------------------------------------------------
+delete from public.calendar_outbox;
+set local role authenticated;
+set local request.jwt.claims to '{"sub":"bbbbbbbb-0000-4000-8000-000000000002","role":"authenticated"}';
+select lives_ok(
+  $$ select public.create_event('Pilates', '2027-03-19 07:00+01', '2027-03-19 08:00+01', 'busy', array[]::uuid[]) $$,
+  'Paolo creates «Pilates»'
+);
+select lives_ok(
+  $$ select public.set_event_also_on((select e.id from public.events e where e.title = 'Pilates'), true) $$,
+  'and sends it «Anche su Google»'
+);
+reset role;
+set local role service_role;
+set local request.jwt.claims to '{"role":"service_role"}';
+select is(
+  (select c.action::text || ':' || (set_config('test.token_a', c.claim_token::text, true) is not null)::text
+   from public.claim_calendar_outbox_items(50, true, null, now()) c),
+  'create:true',
+  'run A takes the «create» of «Pilates»'
+);
+reset role;
+set local role authenticated;
+set local request.jwt.claims to '{"sub":"bbbbbbbb-0000-4000-8000-000000000002","role":"authenticated"}';
+select lives_ok(
+  $$ update public.events set title = 'Pilates in palestra' where title = 'Pilates' $$,
+  'meanwhile Paolo changes the title'
+);
+reset role;
+update public.calendar_outbox set claimed_until = now() - interval '1 second';
+set local role service_role;
+select is(
+  (select c.action::text || ':' || (set_config('test.token_b', c.claim_token::text, true) is not null)::text
+   from public.claim_calendar_outbox_items(50, true, null, now()) c),
+  'create:true',
+  'the claim of A has expired: run B takes the row'
+);
+select lives_ok(
+  $$ select public.fail_calendar_outbox_item((select o.id from public.calendar_outbox o), now() + interval '1 hour',
+       current_setting('test.token_a')::uuid) $$,
+  'A fails late, with its token'
+);
+select is(
+  public.complete_calendar_outbox_item((select o.id from public.calendar_outbox o), 'g-pilates-a', null,
+    current_setting('test.token_a')::uuid),
+  false,
+  'A completes late, with its token: refused, A deletes its copy'
+);
+reset role;
+select results_eq(
+  $$ select o.action, o.attempts, o.next_attempt_at <= now(), o.claimed_until > now(),
+            o.claim_token = current_setting('test.token_b')::uuid, o.changed_while_claimed,
+            (select count(*)::integer from public.event_external_links l where l.event_id = o.event_id)
+     from public.calendar_outbox o $$,
+  $$ values ('create'::public.calendar_outbox_action, 0, true, true, true, true, 0) $$,
+  'the late calls of A changed nothing: B still holds the «create», marked, no link'
+);
+set local role service_role;
+select is(
+  public.complete_calendar_outbox_item((select o.id from public.calendar_outbox o), 'g-pilates-b', 'etag-1',
+    current_setting('test.token_b')::uuid),
+  true,
+  'B completes with its token'
+);
+reset role;
+select results_eq(
+  $$ select o.action, o.provider_event_id, o.claim_token,
+            (select array_agg(l.provider_event_id) from public.event_external_links l where l.event_id = o.event_id)
+     from public.calendar_outbox o $$,
+  $$ values ('update'::public.calendar_outbox_action, 'g-pilates-b'::text, null::uuid, array['g-pilates-b']::text[]) $$,
+  'the copy of B is linked and an «update» waits with the new title'
+);
+set local role service_role;
+select is(
+  public.complete_calendar_outbox_item((select o.id from public.calendar_outbox o), 'g-pilates-b', 'etag-1',
+    current_setting('test.token_b')::uuid),
+  false,
+  'the same completion of B again (its answer got lost): refused, the link is found and the copy kept'
+);
+select is(
+  (select public.complete_calendar_outbox_item(c.id, null, 'etag-2', c.claim_token)
+   from public.claim_calendar_outbox_items(50, true, null, now()) c),
+  true,
+  'a run takes the «update» and completes it with its token'
+);
+reset role;
+select is_empty($$ select 1 from public.calendar_outbox $$, 'then the outbox is empty');
 
 select * from finish();
 rollback;
