@@ -45,7 +45,7 @@ test.describe("titolo della pagina", () => {
   }) => {
     await watchTitle(page);
     await page.goto("/accesso/mail");
-    await expect(page).toHaveTitle("FamilyNest");
+    await expect(page).toHaveTitle("FamilyNest · Accesso");
     await hydrated(page, "main form");
     // Two frames after the hydration, still no gap.
     await page.evaluate(
@@ -54,7 +54,7 @@ test.describe("titolo della pagina", () => {
           requestAnimationFrame(() => requestAnimationFrame(() => done())),
         ),
     );
-    await expect(page).toHaveTitle("FamilyNest");
+    await expect(page).toHaveTitle("FamilyNest · Accesso");
     expect(await titleGaps(page)).toBe(0);
   });
 
