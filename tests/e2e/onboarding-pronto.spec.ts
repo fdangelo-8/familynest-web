@@ -7,6 +7,12 @@ import {
   usersConfigured,
   type TestUserKey,
 } from "../fixtures/auth";
+import {
+  STANDARD_FAKE_ACCOUNT,
+  fakeCalendar,
+  fakeCalendarConfigured,
+  fakeCalendarSkipReason,
+} from "../fixtures/calendar-fake";
 import { SEED_HOME_A } from "../fixtures/invito";
 import {
   createThrowawayUser,
@@ -392,6 +398,111 @@ test.describe("dati preparati dal test", () => {
     });
   });
 
+  test("CA-6 (#159): «Solo io» con 12 impegni da Google: due righe, impegni e consiglio", async ({
+    page,
+    baseURL,
+  }) => {
+    test.skip(!fakeCalendarConfigured(), fakeCalendarSkipReason);
+    const fake = fakeCalendar(baseURL as string);
+    await withNest(async ({ user }) => {
+      try {
+        await fake.setup({
+          userId: user.id,
+          ...STANDARD_FAKE_ACCOUNT,
+          nextConsent: true,
+        });
+        await user.signInContext(page.context(), baseURL as string);
+        await page.goto("/onboarding/calendario");
+        await page
+          .getByRole("button", { name: "Collega Google", exact: true })
+          .filter({ visible: true })
+          .click();
+        await page.getByRole("link", { name: "Consenti", exact: true }).click();
+        await expect(
+          page.getByText("Collegato").filter({ visible: true }),
+        ).toBeVisible();
+        await fake.setEvents({
+          userId: user.id,
+          email: STANDARD_FAKE_ACCOUNT.email,
+          calendarId: "personale",
+          events: Array.from({ length: 12 }, (_, i) => {
+            const start = new Date(Date.now() + (i + 1) * 86_400_000);
+            return {
+              id: `evento-${i}`,
+              title: `Impegno ${i}`,
+              startsAt: start.toISOString(),
+              endsAt: new Date(start.getTime() + 3_600_000).toISOString(),
+            };
+          }),
+        });
+        await fake.sync(user.id);
+        await openPage(page);
+        await expect(summary(page)).toHaveCount(2);
+        await expect(summary(page).nth(0)).toHaveText(
+          "12 impegni arrivati da Google",
+        );
+        await expect(summary(page).nth(1)).toHaveText(TIP);
+      } finally {
+        await fake.reset(user.id);
+      }
+    });
+  });
+
+  test("CA-7 (#159): mentre la pagina carica, lo scheletro non mostra il consiglio", async ({
+    page,
+    baseURL,
+  }) => {
+    await withNest(async ({ user }) => {
+      await user.signInContext(page.context(), baseURL as string);
+      // The skeleton stays on screen only until the content streams in: the
+      // scripts are cut from the answer so it is still there to be checked.
+      await page.route("**/onboarding/pronto", async (route) => {
+        const response = await route.fetch();
+        const body = (await response.text()).replace(
+          /<script[\s\S]*?<\/script>/g,
+          "",
+        );
+        await route.fulfill({ response, body });
+      });
+      await page.goto(PATH);
+      await expect(
+        page.getByText("Stiamo preparando la casa").first(),
+      ).toBeVisible();
+      await expect(
+        page.getByText(/Prova a scrivere/).filter({ visible: true }),
+      ).toHaveCount(0);
+      expect(await page.locator("body").innerText()).not.toContain(
+        "Prova a scrivere",
+      );
+    });
+  });
+
+  test("CA-8 (#159): con 10 membri e un invito il consiglio è l'ultima riga, senza scorrimento laterale", async ({
+    page,
+    baseURL,
+  }) => {
+    test.skip(test.info().project.name !== "mobile", "Vale solo su mobile");
+    await withNest(async ({ user, addAdult, invite }) => {
+      await invite(await addAdult("Laura"));
+      for (let i = 3; i <= 10; i++) await addAdult(`M${i}`);
+      await user.signInContext(page.context(), baseURL as string);
+      await openPage(page);
+      await expect(page.getByRole("list")).toHaveCount(1);
+      await expect(summary(page)).toHaveCount(2);
+      await expect(summary(page).last()).toHaveText(TIP);
+      const width = await page.evaluate(
+        () => document.documentElement.scrollWidth,
+      );
+      expect(width).toBeLessThanOrEqual(390);
+      await expect(goLink(page)).toBeVisible();
+      const list = await page.getByRole("list").boundingBox();
+      const link = await goLink(page).boundingBox();
+      expect(list).not.toBeNull();
+      expect(link).not.toBeNull();
+      expect(link!.y).toBeGreaterThanOrEqual(list!.y + list!.height);
+    });
+  });
+
   test("CA-7: due inviti validi danno una sola riga «Inviti condivisi con Laura e Carla»", async ({
     page,
     baseURL,
@@ -615,6 +726,21 @@ test.describe("isolamento e minimizzazione", () => {
       "Biscotto",
     ]);
     await check("A", [NEST_B, "Giulia", "Paolo", "Leo", "Anna"]);
+  });
+
+  test("CA-10 (#159): B vede il consiglio e nessun dato del Nest di A", async ({
+    page,
+    baseURL,
+  }) => {
+    needsUsers("B");
+    await openAs(page, baseURL, "B");
+    await expect(summary(page).last()).toHaveText(TIP);
+    const text = await page.locator("body").innerText();
+    const html = await (await page.request.get(PATH)).text();
+    for (const word of [NEST_A, "Marco", "Laura"]) {
+      expect(text, `testo: ${word}`).not.toContain(word);
+      expect(html, `HTML: ${word}`).not.toContain(word);
+    }
   });
 
   test("CA-17: l'HTML di A non contiene date di nascita, token, codice breve né id dei membri", async ({
