@@ -562,6 +562,59 @@ test.describe("«Anche su» nel modulo dell'impegno", () => {
     });
   });
 
+  test("due invii della coda partiti insieme prenotano righe diverse e la copia è una sola (#373)", async ({
+    page,
+    browser,
+    baseURL,
+  }) => {
+    needsFake();
+    await withLinker(baseURL, async (u) => {
+      await u.prepare(GOOGLE);
+      await linkInBackground(browser, u, "google");
+      await chooseTarget(u, "Personale");
+      const id = await createWithNotes(u, NUOTO);
+      await u.signIn(page);
+      await page.goto(detailPath(id));
+      await waitHydrated(page.getByRole("heading", { level: 1 }));
+      const dialog = await openForm(page);
+      await dialog
+        .getByRole("switch", { name: "Anche su Google", exact: true })
+        .click();
+
+      const provider = {
+        userId: u.user.id,
+        email: GOOGLE.email,
+        provider: GOOGLE.provider,
+      };
+      // Held back while unreachable, then both runs start at the same time.
+      await u.fake.fail({ ...provider, unreachable: true });
+      await pressSave(page);
+      await expect(toastOf(page, "Modifiche salvate")).toBeVisible();
+      await u.fake.outbox();
+      expect(await logOf(u, "create")).toHaveLength(0);
+      // Slow provider: the second run starts while the first still waits.
+      await u.fake.fail({ ...provider, unreachable: false, slowMs: 3000 });
+      const due = await u.user.admin
+        .from("calendar_outbox")
+        .update(
+          { next_attempt_at: new Date(Date.now() - 60_000).toISOString() },
+          { count: "exact" },
+        )
+        .eq("event_id", id);
+      expect(due.error).toBeNull();
+      expect(due.count).toBe(1);
+
+      const runs = await Promise.all([u.fake.outbox(), u.fake.outbox()]);
+      expect(runs.map((run) => run.done).sort()).toEqual([0, 1]);
+      expect(runs.every((run) => run.failed === 0)).toBe(true);
+      const created = await logOf(u, "create");
+      expect(created).toHaveLength(1);
+      expect(created[0]?.title).toBe(NUOTO);
+      await u.fake.outbox();
+      expect(await logOf(u, "create")).toHaveLength(1);
+    });
+  });
+
   /** A weekly event of U that starts today, sent to Google and created there. */
   async function weeklySent(u: Linker, title: string): Promise<string> {
     const weekday = new Date(`${today()}T12:00:00Z`).getUTCDay() || 7;
