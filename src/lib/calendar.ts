@@ -1,6 +1,10 @@
 import {
+  addDaysToDayKey,
   formatTime,
+  formatWeekday,
   fromFieldValues,
+  startOfDay,
+  toDayKey,
   type CalendarDay,
   type Instant,
 } from "@/lib/datetime";
@@ -280,6 +284,37 @@ export function computeFreeEvenings(
     if (evening) result.set(day.key, evening);
   }
   return result;
+}
+
+/**
+ * The window «Liberi insieme» of tonight, only while it is still open (it
+ * ends after `now`). Same rules as `computeFreeEvenings`; null if none.
+ */
+export function openTonightWindow(
+  adultIds: readonly string[],
+  events: readonly HouseholdEvent[],
+  now: Instant,
+): FreeEvening | null {
+  const todayKey = toDayKey(now);
+  const tonight = computeFreeEvenings(
+    [{ key: todayKey }],
+    adultIds,
+    events,
+  ).get(todayKey);
+  return tonight && tonight.end.getTime() > new Date(now).getTime()
+    ? tonight
+    : null;
+}
+
+/**
+ * The day of an evening in a sentence: `Stasera`, `Domani sera`, `Venerdì
+ * sera` (the weekday also for days in the past, as the reader sees them).
+ */
+export function formatEveningDay(dayKey: string, now: Instant): string {
+  const todayKey = toDayKey(now);
+  if (dayKey === todayKey) return "Stasera";
+  if (dayKey === addDaysToDayKey(todayKey, 1)) return "Domani sera";
+  return `${formatWeekday(startOfDay(dayKey))} sera`;
 }
 
 /** Panel text: `Tutta la sera, dalle 18:00`, `Dalle 21:30 a fine serata`, ... */

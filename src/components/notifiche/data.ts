@@ -2,7 +2,13 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { toDayKey, toTimeFieldValue } from "@/lib/datetime";
 import { listHouseholdEvents } from "@/lib/household-events";
 import type { Database } from "@/types/database";
-import { buildDigest, digestPeriod, type DigestView } from "./digest";
+import {
+  buildDigest,
+  digestPeriod,
+  toDigestTime,
+  type DigestView,
+} from "@/lib/digest";
+import { failureOf } from "@/lib/notifications";
 import type { Member } from "./model";
 import type { Failure } from "./texts";
 
@@ -19,19 +25,6 @@ export type PageContext = {
 /** Morning summary: not there, there, or its own reading failed. */
 export type DigestState =
   { kind: "none" } | { kind: "ready"; view: DigestView } | { kind: "error" };
-
-const DEFAULT_MORNING_TIME = "07:30";
-
-/**
- * Why a write failed. A request that got no answer (offline, cut) has status
- * 0 in the answer of the client; every answer of the server has its own.
- */
-export function failureOf(status: number | undefined): Failure {
-  if (typeof navigator !== "undefined" && navigator.onLine === false) {
-    return "network";
-  }
-  return status === undefined || status === 0 ? "network" : "server";
-}
 
 /** The Nest members and the one of the reader. Null when it cannot be read. */
 export async function readContext(client: Client): Promise<PageContext | null> {
@@ -81,9 +74,7 @@ export async function readDigest(
     ]);
     if (profile.error || preferences.error) return { kind: "error" };
 
-    const morningTime = (
-      profile.data?.morning_digest_time ?? DEFAULT_MORNING_TIME
-    ).slice(0, 5);
+    const morningTime = toDigestTime(profile.data?.morning_digest_time);
     const lens = profile.data?.start_lens ?? "io";
     const switchedOn = preferences.data?.[0]?.morning_digest ?? true;
     if (
@@ -179,32 +170,6 @@ export async function reopenTodo(
       .update({ done_at: null })
       .eq("id", todoId);
     return error ? failureOf(status) : null;
-  } catch {
-    return "network";
-  }
-}
-
-/** The database accepts at most this many ids in one call. */
-const MARK_READ_MAX = 200;
-
-/**
- * «Segna tutte come lette»: marks these notifications read (only ids travel;
- * the database marks only the reader's own). Null = done, else why it failed.
- * The same call as `markNotificationsRead` in `src/lib/notifications.ts`, but
- * it tells network from server by the status of the answer.
- */
-export async function markAllRead(
-  client: Client,
-  ids: readonly string[],
-): Promise<Failure | null> {
-  try {
-    for (let start = 0; start < ids.length; start += MARK_READ_MAX) {
-      const { error, status } = await client.rpc("mark_notifications_read", {
-        p_ids: ids.slice(start, start + MARK_READ_MAX),
-      });
-      if (error) return failureOf(status);
-    }
-    return null;
   } catch {
     return "network";
   }

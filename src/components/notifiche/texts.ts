@@ -14,8 +14,6 @@ export const EMPTY_TEXT =
 
 export const DIGEST_ERROR =
   "Non riusciamo a caricare la sintesi di oggi. Controlla la connessione e riprova.";
-export const DIGEST_NOTHING =
-  "Per il resto della giornata non hai niente in programma.";
 
 export const TODO_GONE =
   "Questa cosa da fare non c'è più. Forse l'ha eliminata chi l'aveva creata.";
