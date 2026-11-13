@@ -10,6 +10,7 @@ skills:
   - apple-design
   - design-critique
   - better-icons
+  - testi-naturali
   - privacy-e-dati-minori
 ---
 

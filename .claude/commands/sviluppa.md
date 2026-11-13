@@ -101,6 +101,8 @@ Mappa compito → agente:
 | Documentazione                               | documentalista    | `docs/aggiornamento-<data>`           |
 | Mercato, posizionamento, marketing           | stratega          | `docs/strategia-<argomento>`          |
 
+Quando modifichi tu file di agenti, skill, comandi o `CLAUDE.md` (branch `admin/*`), segui la skill `writing-for-agents`: istruzioni brevi, una sola fonte per ogni regola, niente righe che l'agente farebbe comunque.
+
 ## 5. Regole di passaggio
 
 - **in-specifica → da-sviluppare:** requisito con CA numerati, specifica grafica completa, nessuna domanda `BLOCCANTE`. Se servono modifiche al database o a file condivisi, apri prima le issue `richiesta-db` / `richiesta-condivisa` collegate: la pagina passa a `da-sviluppare` solo quando quelle PR sono unite.
