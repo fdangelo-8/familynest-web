@@ -427,6 +427,9 @@ export async function processRevocations(
 // A few rows at a time: a claim lasts 5 minutes, so rows taken and not worked
 // before the deadline stay locked until it runs out.
 const OUTBOX_BATCH = 10;
+// At most this many rows per run (as before the claims): a backlog must not
+// use the whole time of the scheduled job and starve the import after it.
+const OUTBOX_RUN_LIMIT = 50;
 
 /**
  * The changes of «Anche su» (#34 §16): creates, changes or deletes the event at
@@ -451,14 +454,23 @@ export async function processOutbox(
   const now = options.now ?? new Date();
   const tally = options.tally;
 
+  let claimed = 0;
   const claimBatch = async () => {
     const { data, error } = await admin.rpc("claim_calendar_outbox_items", {
-      p_limit: OUTBOX_BATCH,
+      p_limit: Math.min(OUTBOX_BATCH, OUTBOX_RUN_LIMIT - claimed),
       p_is_fake: isFakeCalendarProviderEnabled(),
       p_at: now.toISOString(),
       ...(options.userId !== undefined ? { p_user_id: options.userId } : {}),
     });
-    if (error) throw new Error("Outbox could not be read.");
+    if (error) {
+      // After the first group, keep what was done and let the import run.
+      if (claimed > 0) {
+        noteError(tally, { error });
+        return [];
+      }
+      throw new Error("Outbox could not be read.");
+    }
+    claimed += data.length;
     return data;
   };
 
@@ -494,7 +506,7 @@ export async function processOutbox(
 
   // Claim a few rows, work them, and claim again while rows come and time
   // lasts. A failed row is moved to the future, so it is not claimed again.
-  while (Date.now() < options.deadline) {
+  while (Date.now() < options.deadline && claimed < OUTBOX_RUN_LIMIT) {
     const items = await claimBatch();
     if (items.length === 0) break;
     for (const item of items) {
@@ -546,13 +558,14 @@ export async function processOutbox(
           if (!noteError(tally, completed)) throw new Error("Not completed.");
         } else {
           if (!item.event_id) throw new Error("Invalid outbox item.");
-          const { data: event } = await admin
+          const { data: event, error: eventError } = await admin
             .from("events")
             .select(
               "title, location, starts_at, ends_at, recurrence, recurrence_until, recurrence_weekdays",
             )
             .eq("id", item.event_id)
             .maybeSingle();
+          if (eventError) throw new Error("Event could not be read.");
           if (!event) {
             // The event went away: the queue row goes with it (cascade).
             continue;

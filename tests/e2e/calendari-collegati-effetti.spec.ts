@@ -548,7 +548,8 @@ test.describe("«Anche su» nel modulo dell'impegno", () => {
       expect(await logOf(u, "create")).toHaveLength(0);
 
       // The provider is back and the retry is due: the copy is created.
-      await u.fake.fail({ ...provider, unreachable: false });
+      // Slow provider: the second run starts while the first still waits.
+      await u.fake.fail({ ...provider, unreachable: false, slowMs: 3000 });
       const due = await u.user.admin
         .from("calendar_outbox")
         .update(
@@ -562,7 +563,7 @@ test.describe("«Anche su» nel modulo dell'impegno", () => {
     });
   });
 
-  test("CA-52: due invii della coda partiti insieme prenotano righe diverse e la copia è una sola (#373)", async ({
+  test("due invii della coda partiti insieme prenotano righe diverse e la copia è una sola (#373)", async ({
     page,
     browser,
     baseURL,
@@ -604,8 +605,11 @@ test.describe("«Anche su» nel modulo dell'impegno", () => {
       expect(due.count).toBe(1);
 
       const runs = await Promise.all([u.fake.outbox(), u.fake.outbox()]);
-      expect(runs[0].done + runs[1].done).toBeLessThanOrEqual(1);
-      await waitForLog(u, "create", (entry) => entry.title === NUOTO);
+      expect(runs.map((run) => run.done).sort()).toEqual([0, 1]);
+      expect(runs.every((run) => run.failed === 0)).toBe(true);
+      const created = await logOf(u, "create");
+      expect(created).toHaveLength(1);
+      expect(created[0]?.title).toBe(NUOTO);
       await u.fake.outbox();
       expect(await logOf(u, "create")).toHaveLength(1);
     });
