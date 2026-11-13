@@ -35,6 +35,18 @@ Le lezioni unite in una regola di `LEZIONI.md` durante la compattazione sono nel
   > Imposta da: `.claude/hooks/guard-bash.mjs` (blocca anche l'opzione git che salta i controlli) e la sezione «Controlli automatici» di tutti gli agenti.
 - Suite divisa in più parti con controlli chiamati `test (1)`, `test (2)`, `test (3)`: la protezione di `main` chiede un controllo `test` → un job riassuntivo `test` sopra le parti, verde se sono verdi o saltate, rosso se una parte fallisce o viene annullata.
   > Imposta da: `.github/workflows/ci.yml` (job «Esito delle tre parti»).
+- Protezione di `main` non applicata sul piano gratuito → nessun agente conta su GitHub per bloccare un merge; una PR è pronta solo con `pr-checks <n>` verde.
+  > Imposta da: ARCHITETTURA §8 (ruleset `protezione-main` configurato ma non applicato).
+- `.claude/worktrees/` non tracciati → non si committano né si «sistemano».
+  > Imposta da: `.gitignore` (`.claude/worktrees/`).
+- Push con `check` o `build` rotti dopo un push di soli test → prima di ogni push `npm run check` e `npm run build`.
+  > Imposta da: skill `flusso-git` («Prima del push: anche npm run build») e hook a fine turno.
+- Suite Playwright completa a ogni push, con i minuti esauriti → gira su `main` e sulle PR con `in-test` o `pronta-per-francesco`; un solo push per lavoro, dopo i controlli locali.
+  > Imposta da: ARCHITETTURA §9 e i workflow CI (`ci.yml`, `test-mirato.yml`).
+- `npm run check` nella copia principale con migliaia di errori dai worktree → `.claude/worktrees/**` è escluso da ESLint.
+  > Imposta da: `eslint.config.mjs` (`.claude/worktrees/**`).
+- Script o file condivisi (`scripts/`, `.env.example`, `package.json`) affidati all'architetto dati → solo su `shared/*`.
+  > Imposta da: `.claude/hooks/guard-files.mjs` (file condivisi e configurazione solo su `shared/*`).
 
 ## Test
 
