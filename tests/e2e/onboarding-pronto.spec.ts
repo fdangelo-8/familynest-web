@@ -24,7 +24,7 @@ import {
 test.use({ locale: "it-IT", timezoneId: "Europe/Rome" });
 
 const PATH = "/onboarding/pronto";
-const TIP_PREFIX = "Prova a scrivere";
+const TIP = "Prova a scrivere «spesa: latte e pane»";
 const NEST_A = "Casa D'Angelo";
 const NEST_B = "Casa Bianchi";
 const A_NAMES = "Marco, Laura, Sofia, Tommaso, Biscotto";
@@ -188,9 +188,15 @@ test.describe("contenuto", () => {
     await openAs(page, baseURL, "A");
     await expectHeading(page, NEST_A);
     await expectAvatars(page, A_NAMES, A_INITIALS, A_COLORS);
-    await expect(summary(page)).toHaveCount(1);
+    await expect(summary(page)).toHaveCount(2);
     await expect(summary(page).nth(0)).toHaveText("Invito condiviso con Laura");
-    await expect(page.getByText(TIP_PREFIX)).toHaveCount(0);
+    await expect(summary(page).nth(1)).toHaveText(TIP);
+    const tip = summary(page).nth(1);
+    await expect(tip.locator('svg[aria-hidden="true"] use')).toHaveAttribute(
+      "href",
+      "#i-sparkles",
+    );
+    await expect(tip.locator("a, button")).toHaveCount(0);
     await expect(goLink(page)).toHaveAttribute("href", "/oggi");
     await expect(page.getByRole("progressbar")).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Indietro" })).toHaveCount(0);
@@ -261,7 +267,7 @@ test.describe("contenuto", () => {
     await expect(page).toHaveURL(/\/oggi$/);
   });
 
-  test("CA-5: B, con invito scaduto, non ha la lista né «Invit» né il consiglio", async ({
+  test("CA-4 (#159): B, con invito scaduto, ha solo il consiglio e nessun «Invit»", async ({
     page,
     baseURL,
   }) => {
@@ -269,9 +275,9 @@ test.describe("contenuto", () => {
     await openAs(page, baseURL, "B");
     await expectHeading(page, NEST_B);
     await expectAvatars(page, "Giulia, Paolo, Leo, Anna", ["G", "P", "L", "A"]);
-    await expect(page.getByRole("list")).toHaveCount(0);
+    await expect(summary(page)).toHaveCount(1);
+    await expect(summary(page).nth(0)).toHaveText(TIP);
     await expect(page.getByText(/Invit/)).toHaveCount(0);
-    await expect(page.getByText(TIP_PREFIX)).toHaveCount(0);
   });
 
   test("CA-11: A non vede la riga del calendario (provvisorio, #37)", async ({
@@ -305,7 +311,7 @@ test.describe("contenuto", () => {
 test.describe("dati preparati dal test", () => {
   test.beforeEach(() => needsThrowaway());
 
-  test("CA-6 (stato vuoto): Nest «Solo io» con un avatar e nessuna lista", async ({
+  test("CA-5 (#159, stato vuoto): Nest «Solo io» con un avatar e la sola riga del consiglio", async ({
     page,
     baseURL,
   }) => {
@@ -314,22 +320,23 @@ test.describe("dati preparati dal test", () => {
       await openPage(page);
       await expectHeading(page, nest);
       await expectAvatars(page, "Ilaria", ["I"]);
-      await expect(page.getByRole("list")).toHaveCount(0);
-      await expect(page.getByText(TIP_PREFIX)).toHaveCount(0);
+      await expect(page.getByRole("list")).toHaveCount(1);
+      await expect(summary(page)).toHaveCount(1);
+      await expect(summary(page).nth(0)).toHaveText(TIP);
       await expect(goLink(page)).toBeVisible();
     });
   });
 
-  test("CA-6 (stato vuoto): Nest «Solo io» senza nessun ul nel DOM e «Vai a Oggi» sotto il titolo", async ({
+  test("CA-5 (#159, stato vuoto): Nest «Solo io» con una sola lista, senza «Invit», e «Vai a Oggi» sotto il titolo", async ({
     page,
     baseURL,
   }) => {
     await withNest(async ({ user }) => {
       await user.signInContext(page.context(), baseURL as string);
       await openPage(page);
-      // No empty list and no thread, in either of the two layouts.
-      await expect(page.locator("ul")).toHaveCount(0);
-      await expect(page.locator(".lista--notte")).toHaveCount(0);
+      // One list per layout (only one visible), never empty.
+      await expect(page.locator(".lista--notte")).toHaveCount(2);
+      await expect(page.locator(".lista--notte:visible li")).toHaveCount(1);
       await expect(page.getByText(/Invit/)).toHaveCount(0);
       const heading = await page
         .getByRole("heading", { level: 1 })
@@ -346,7 +353,7 @@ test.describe("dati preparati dal test", () => {
     });
   });
 
-  test("CA-1 e CA-2: Nest con un invito ancora valido ha una sola lista con una sola riga", async ({
+  test("CA-1 (#159): Nest con un invito ancora valido ha una sola lista con due righe", async ({
     page,
     baseURL,
   }) => {
@@ -355,16 +362,16 @@ test.describe("dati preparati dal test", () => {
       await user.signInContext(page.context(), baseURL as string);
       await openPage(page);
       await expect(page.getByRole("list")).toHaveCount(1);
-      await expect(summary(page)).toHaveCount(1);
+      await expect(summary(page)).toHaveCount(2);
       await expect(summary(page).nth(0)).toHaveText(
         "Invito condiviso con Laura",
       );
-      await expect(page.getByText(TIP_PREFIX)).toHaveCount(0);
+      await expect(summary(page).nth(1)).toHaveText(TIP);
       await expect(goLink(page)).toHaveAttribute("href", "/oggi");
     });
   });
 
-  test("CA-5: invito scaduto in un Nest preparato dal test: nessuna lista, nessun «Invit», nessun consiglio", async ({
+  test("CA-4 (#159): invito scaduto in un Nest preparato dal test: solo il consiglio, nessun «Invit»", async ({
     page,
     baseURL,
   }) => {
@@ -378,10 +385,9 @@ test.describe("dati preparati dal test", () => {
       expect(error).toBeNull();
       await user.signInContext(page.context(), baseURL as string);
       await openPage(page);
-      await expect(page.getByRole("list")).toHaveCount(0);
-      await expect(page.locator("ul")).toHaveCount(0);
+      await expect(summary(page)).toHaveCount(1);
+      await expect(summary(page).nth(0)).toHaveText(TIP);
       await expect(page.getByText(/Invit/)).toHaveCount(0);
-      await expect(page.getByText(TIP_PREFIX)).toHaveCount(0);
       await expect(goLink(page)).toBeVisible();
     });
   });
@@ -395,7 +401,7 @@ test.describe("dati preparati dal test", () => {
       await invite(await addAdult("Carla"));
       await user.signInContext(page.context(), baseURL as string);
       await openPage(page);
-      await expect(summary(page)).toHaveCount(1);
+      await expect(summary(page)).toHaveCount(2);
       await expect(summary(page).nth(0)).toHaveText(
         "Inviti condivisi con Laura e Carla",
       );
@@ -412,7 +418,7 @@ test.describe("dati preparati dal test", () => {
       }
       await user.signInContext(page.context(), baseURL as string);
       await openPage(page);
-      await expect(summary(page)).toHaveCount(1);
+      await expect(summary(page)).toHaveCount(2);
       await expect(summary(page).nth(0)).toHaveText(
         "Inviti condivisi con 3 persone",
       );
@@ -428,7 +434,7 @@ test.describe("dati preparati dal test", () => {
       await invite(await addAdult("Carla"));
       await user.signInContext(page.context(), baseURL as string);
       await openPage(page);
-      await expect(summary(page)).toHaveCount(1);
+      await expect(summary(page)).toHaveCount(2);
       await expect(summary(page).nth(0)).toHaveText(
         "Invito condiviso con Carla",
       );
@@ -454,7 +460,9 @@ test.describe("dati preparati dal test", () => {
       expect(error).toBeNull();
       await page.reload();
       await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-      await expect(page.getByRole("list")).toHaveCount(0);
+      await expect(summary(page)).toHaveCount(1);
+      await expect(summary(page).nth(0)).toHaveText(TIP);
+      await expect(page.getByText(/Invit/)).toHaveCount(0);
     });
   });
 
