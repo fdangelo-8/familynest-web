@@ -60,8 +60,8 @@ select columns_are(
 select columns_are(
   'public', 'calendar_outbox',
   array['id', 'household_id', 'calendar_id', 'action', 'event_id', 'provider_event_id', 'attempts',
-        'next_attempt_at', 'created_at'],
-  'the outbox holds no text of the events'
+        'next_attempt_at', 'created_at', 'claimed_until', 'changed_while_claimed'],
+  'the outbox holds no text of the events (claim columns of #373 included)'
 );
 select enum_has_labels('public', 'calendar_provider', array['google', 'outlook'], 'providers: Google and Outlook (iCloud waits for #36)');
 select enum_has_labels('public', 'calendar_account_status', array['active', 'reconnect', 'temporary_error'], 'calendar_account_status labels');
