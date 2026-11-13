@@ -80,12 +80,16 @@ export async function installFakes(page: Page, options: Options = {}) {
       // The tests of the toast end as soon as it shows, with the clock
       // stopped: a reading of the people can still be on its way when the
       // context is closed. Its response is then disposed and nobody is left
-      // to receive it. Anything else is a real failure.
+      // to receive it. Anything else is a real failure. The message starts
+      // with the name of the call that failed ("apiResponse.json: Response
+      // has been disposed", "route.fulfill: Fetch response has been
+      // disposed"): it is not anchored (the first version of this check was,
+      // and the error got through).
       const message = error instanceof Error ? error.message : "";
       if (
-        /^(Fetch r|R)esponse has been disposed/.test(message) ||
+        /(Fetch r|R)esponse has been disposed/.test(message) ||
         (page.isClosed() &&
-          /^Target page, context or browser has been closed/.test(message))
+          /Target page, context or browser has been closed/.test(message))
       ) {
         return;
       }

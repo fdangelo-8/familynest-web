@@ -214,7 +214,7 @@ function linker(
   baseURL: string | undefined,
 ): Linker {
   if (!baseURL) throw new Error("baseURL non impostato");
-  const fake = fakeCalendar(baseURL);
+  const fake = fakeCalendar(baseURL, user.id);
   const self: Linker = {
     user,
     householdId: nest.householdId,
