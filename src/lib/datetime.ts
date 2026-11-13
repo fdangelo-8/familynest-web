@@ -102,6 +102,14 @@ export function formatLongDay(
   return capitalized ? capitalize(text) : text;
 }
 
+/** `venerdì` (or `Venerdì`): the weekday alone, in full. */
+export function formatWeekday(
+  value: Instant,
+  options: { capitalized?: boolean } = {},
+): string {
+  return formatLongDay(value, options).split(" ")[0] ?? "";
+}
+
 /** `Lun`: three letters, capital initial. */
 export function formatShortWeekday(value: Instant): string {
   const weekday = textPart(value, { weekday: "short" }, "weekday");

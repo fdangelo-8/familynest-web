@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert } from "@/components/ui/Alert/Alert";
 import { Button } from "@/components/ui/Button/Button";
 import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
-import { Icon } from "@/components/ui/Icon/Icon";
 import { PageError } from "@/components/ui/PageError/PageError";
 import { useToast } from "@/components/ui/Toast/ToastProvider";
 import { formatTime } from "@/lib/datetime";
@@ -63,6 +62,7 @@ export function NotificationsPage() {
   } = useNotifications();
   const { showToast } = useToast();
   const mainRef = useRef<HTMLElement>(null);
+  const noticeRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   // Things to do marked done / found gone since the page opened.
   const [doneTodos, setDoneTodos] = useState<ReadonlySet<string>>(new Set());
@@ -92,11 +92,9 @@ export function NotificationsPage() {
     const root = mainRef.current;
     let element: HTMLElement | null = null;
     if (focusRequest.target === "notice") {
-      element = root.querySelector<HTMLElement>(
-        `[data-sezione="${CSS.escape(focusRequest.sectionKey)}"] .avviso`,
-      );
-      // The notice is the shared `Alert`: it takes the focus without being a tab stop.
-      element?.setAttribute("tabindex", "-1");
+      // The notice is the shared `Alert` with `tabIndex={-1}`: it takes the
+      // focus without being a tab stop.
+      element = noticeRefs.current[focusRequest.sectionKey] ?? null;
     } else {
       const row = root.querySelector(`[data-riga="${focusRequest.index}"]`);
       element =
@@ -244,19 +242,19 @@ export function NotificationsPage() {
     <main id="contenuto" tabIndex={-1} className={mainClass} ref={mainRef}>
       <PageHeader>{markAllButton}</PageHeader>
       {!online ? (
-        <div
-          className="avviso avviso--errore"
+        <Alert
+          variant="errore"
+          icon="wifi-off"
           role="status"
           data-testid="avviso-offline"
+          action={
+            <Button variant="link" loading={retrying} onClick={retry}>
+              Riprova
+            </Button>
+          }
         >
-          <Icon name="wifi-off" />
-          <span className="avviso__testo">
-            {offlineText(formatTime(loaded.now))}
-          </span>
-          <Button variant="link" loading={retrying} onClick={retry}>
-            Riprova
-          </Button>
-        </div>
+          {offlineText(formatTime(loaded.now))}
+        </Alert>
       ) : null}
       {markFailure ? (
         <Alert variant="errore" icon={failureIcon(markFailure)}>
@@ -301,7 +299,14 @@ export function NotificationsPage() {
               ))}
             </ul>
             {notice ? (
-              <Alert variant="errore" icon={notice.icon}>
+              <Alert
+                variant="errore"
+                icon={notice.icon}
+                tabIndex={-1}
+                alertRef={(element) => {
+                  noticeRefs.current[section.key] = element;
+                }}
+              >
                 {notice.text}
               </Alert>
             ) : null}

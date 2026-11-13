@@ -11,8 +11,10 @@ import { todoInfo, type TodoMember } from "@/components/casa-da-fare/model";
 import {
   computeFreeEvenings,
   filterByLens,
+  formatEveningDay,
   formatWithYou,
   isInvolved,
+  openTonightWindow,
   touchesDay,
   type FreeEvening,
 } from "@/lib/calendar";
@@ -22,7 +24,6 @@ import {
   daysUntilDay,
   formatDayRange,
   formatFirstDeadline,
-  formatLongDay,
   formatShortWeekday,
   formatTime,
   getCalendarDay,
@@ -153,10 +154,7 @@ export function buildEventsView(input: {
   const lensEvents = filterByLens(events, lens, meId);
   const todayEvents = lensEvents.filter((event) => touchesDay(event, today));
 
-  const eveningToday =
-    computeFreeEvenings([today], adultIds, events).get(todayKey) ?? null;
-  const eveningOpen =
-    eveningToday && eveningToday.end.getTime() > nowMs ? eveningToday : null;
+  const eveningOpen = openTonightWindow(adultIds, events, nowMs);
 
   const prossimo =
     todayEvents
@@ -715,15 +713,7 @@ export function buildSummary(input: {
   const evening = days
     .map((day) => evenings.get(day.key))
     .find((item) => item !== undefined && item.end.getTime() > nowMs);
-  let free: string | null = null;
-  if (evening) {
-    if (evening.dayKey === todayKey) free = "Stasera";
-    else if (evening.dayKey === tomorrowKey) free = "Domani sera";
-    else {
-      const weekday = formatLongDay(startOfDay(evening.dayKey)).split(" ")[0];
-      free = `${weekday} sera`;
-    }
-  }
+  const free = evening ? formatEveningDay(evening.dayKey, nowMs) : null;
 
   return {
     event: chosen

@@ -1,3 +1,4 @@
+import type { DigestTime } from "@/lib/digest";
 import { joinNames } from "@/lib/spaces";
 
 /*
@@ -10,21 +11,15 @@ export type Failure = "network" | "server";
 export type StartLens = "io" | "nest";
 export type DefaultVisibility = "private" | "busy" | "household";
 
-/** The nine times of the morning summary: every half hour from 6:00 to 10:00. */
-export const DIGEST_TIMES = [
-  "06:00",
-  "06:30",
-  "07:00",
-  "07:30",
-  "08:00",
-  "08:30",
-  "09:00",
-  "09:30",
-  "10:00",
-] as const;
-export type DigestTime = (typeof DIGEST_TIMES)[number];
-
-export const DEFAULT_DIGEST_TIME: DigestTime = "07:30";
+// The times of the morning summary live in `src/lib/digest.ts` (Notifiche
+// uses them too); the profile keeps importing them from here.
+export {
+  DEFAULT_DIGEST_TIME,
+  DIGEST_TIMES,
+  digestTimeLabel,
+  toDigestTime,
+  type DigestTime,
+} from "@/lib/digest";
 
 export const LENS_OPTIONS: ReadonlyArray<{
   value: StartLens;
@@ -59,18 +54,6 @@ export function lensLabel(value: StartLens): string {
 
 export function visibilityLabel(value: DefaultVisibility): string {
   return VISIBILITY_OPTIONS.find((o) => o.value === value)?.label ?? "Occupato";
-}
-
-/** `07:30:00` (the database) or `07:30` to the DIGEST_TIMES value; the default if unknown. */
-export function toDigestTime(value: string | null | undefined): DigestTime {
-  const short = (value ?? "").slice(0, 5);
-  return DIGEST_TIMES.find((time) => time === short) ?? DEFAULT_DIGEST_TIME;
-}
-
-/** `07:30` to «7:30» (hour without leading zero, as `formatTime`). */
-export function digestTimeLabel(value: DigestTime): string {
-  const [hour = "", minutes = ""] = value.split(":");
-  return `${Number(hour)}:${minutes}`;
 }
 
 /**

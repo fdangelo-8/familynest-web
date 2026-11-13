@@ -129,6 +129,7 @@ export function ChildPage({
         <BarAction
           icon="pencil"
           label={`Modifica il profilo di ${name}`}
+          aria-haspopup="dialog"
           inactive={!ready}
           onClick={() => openSheet("name")}
         />

@@ -1,13 +1,13 @@
 import {
   FREE_EVENING_FROM,
   compareEvents,
-  computeFreeEvenings,
   isInvolved,
+  openTonightWindow,
   type LensChoice,
 } from "@/lib/calendar";
 import {
-  formatLongDay,
   formatTime,
+  formatWeekday,
   getWeekDays,
   startOfDay,
   toDayKey,
@@ -19,17 +19,46 @@ import {
   type FullEvent,
   type HouseholdEvent,
 } from "@/lib/household-events";
-import type { Member } from "./model";
-import { DIGEST_NOTHING } from "./texts";
 
-/**
- * The sentence of the morning summary (#39 §3): up to four parts, only what
- * is left of today. It is composed every time the page opens, from what the
- * reader sees in full: «Occupato» and «Solo io» of others are never here.
- *
- * Parts 1-3 are the same as the summary of Oggi (#30) will need: when that
- * page arrives they move to `src/lib/` and both pages use them.
+/*
+ * The morning summary (#39 §3) and the times the profile offers for it (#38).
+ * Plain module: used by the profile, by Notifiche and by the server pages.
  */
+
+/* ---------- Time of the summary ---------- */
+
+/** The nine times of the morning summary: every half hour from 6:00 to 10:00. */
+export const DIGEST_TIMES = [
+  "06:00",
+  "06:30",
+  "07:00",
+  "07:30",
+  "08:00",
+  "08:30",
+  "09:00",
+  "09:30",
+  "10:00",
+] as const;
+export type DigestTime = (typeof DIGEST_TIMES)[number];
+
+export const DEFAULT_DIGEST_TIME: DigestTime = "07:30";
+
+/** `07:30:00` (the database) or `07:30` to the DIGEST_TIMES value; the default if unknown. */
+export function toDigestTime(value: string | null | undefined): DigestTime {
+  const short = (value ?? "").slice(0, 5);
+  return DIGEST_TIMES.find((time) => time === short) ?? DEFAULT_DIGEST_TIME;
+}
+
+/** `07:30` to «7:30» (hour without leading zero, as `formatTime`). */
+export function digestTimeLabel(value: DigestTime): string {
+  const [hour = "", minutes = ""] = value.split(":");
+  return `${Number(hour)}:${minutes}`;
+}
+
+/* ---------- Sentence ---------- */
+
+export const DIGEST_NOTHING =
+  "Per il resto della giornata non hai niente in programma.";
 
 /** A piece of the sentence: plain text, or a word that opens the thing. */
 export type DigestToken =
@@ -46,6 +75,13 @@ export type DigestView = {
 
 export type DigestTodo = { title: string };
 
+/** A member of the Nest as the summary needs it. */
+export type DigestMember = {
+  id: string;
+  name: string;
+  kind: "adult" | "child" | "pet";
+};
+
 const text = (value: string): DigestToken => ({ kind: "text", text: value });
 const word = (value: string, href: string, together = false): DigestToken => ({
   kind: "word",
@@ -53,12 +89,6 @@ const word = (value: string, href: string, together = false): DigestToken => ({
   href,
   together,
 });
-
-/** `07:30:00` -> `7:30`. */
-export function formatDigestTime(value: string): string {
-  const [hour, minute] = value.split(":");
-  return `${Number(hour)}:${minute ?? "00"}`;
-}
 
 /** The week of `todayKey`: from Monday to Sunday, where «Liberi insieme» is looked for. */
 export function digestPeriod(todayKey: string): { from: Date; to: Date } {
@@ -71,13 +101,17 @@ export function digestPeriod(todayKey: string): { from: Date; to: Date } {
   };
 }
 
+/**
+ * The sentence of the morning summary: up to four parts, only what is left of
+ * today. It is composed every time the page opens, from what the reader sees
+ * in full: «Occupato» and «Solo io» of others are never here.
+ */
 export function buildDigest(args: {
   now: Date;
-  /** `07:30` */
-  morningTime: string;
+  morningTime: DigestTime;
   lens: LensChoice;
   meId: string;
-  members: readonly Member[];
+  members: readonly DigestMember[];
   /** Events of the week of today, as the calendar reads them */
   events: readonly HouseholdEvent[];
   /** Things to do assigned to the reader and not done, in order */
@@ -116,14 +150,13 @@ export function buildDigest(args: {
 
   // Part 3: the window «Liberi insieme» of tonight, as the calendar shows it.
   const adults = members.filter((m) => m.kind === "adult");
-  const tonight = adults.some((m) => m.id === meId)
-    ? computeFreeEvenings(
-        getWeekDays(todayKey),
+  const freeNow = adults.some((m) => m.id === meId)
+    ? openTonightWindow(
         adults.map((m) => m.id),
         events,
-      ).get(todayKey)
-    : undefined;
-  const freeNow = tonight && tonight.end.getTime() > nowMs ? tonight : null;
+        now,
+      )
+    : null;
   const together = freeNow
     ? joinNames([
         "tu",
@@ -191,13 +224,12 @@ export function buildDigest(args: {
 
   if (tokens.length === 0) tokens.push(text(DIGEST_NOTHING));
 
-  const weekday =
-    formatLongDay(now, { capitalized: false }).split(" ")[0] ?? "";
+  const weekday = formatWeekday(now, { capitalized: false });
   const name =
     weekday === "domenica" ? `La tua ${weekday}` : `Il tuo ${weekday}`;
   return {
     name,
-    top: `${name} · ${formatDigestTime(args.morningTime)}`,
+    top: `${name} · ${digestTimeLabel(args.morningTime)}`,
     tokens,
   };
 }

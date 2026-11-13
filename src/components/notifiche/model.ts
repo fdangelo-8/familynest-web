@@ -7,10 +7,12 @@ import {
   formatDeadline,
   formatLongDay,
   formatTime,
+  formatWeekday,
   isUrgent,
   startOfDay,
   toDayKey,
 } from "@/lib/datetime";
+import { formatEveningDay } from "@/lib/calendar";
 import { formatDayInSentence, joinNames } from "@/lib/event-texts";
 import { giftTakenParts } from "@/lib/notifications";
 import type { NotificationItem } from "@/lib/notifications";
@@ -60,16 +62,9 @@ export type SectionView = {
 const text = (value: string): Part => ({ kind: "text", text: value });
 const bold = (value: string): Part => ({ kind: "bold", text: value });
 
-function capitalize(value: string): string {
-  return value.charAt(0).toLocaleUpperCase("it-IT") + value.slice(1);
-}
-
 /** `venerdì` from a day key. */
 function weekdayOf(dayKey: string): string {
-  return (
-    formatLongDay(startOfDay(dayKey), { capitalized: false }).split(" ")[0] ??
-    ""
-  );
+  return formatWeekday(startOfDay(dayKey), { capitalized: false });
 }
 
 /** `oggi`, `domani`, the weekday in the next 6 days, else `giovedì 29 ottobre`. */
@@ -170,13 +165,7 @@ function toRow(
         .filter((m) => m.kind === "adult" && m.id !== context.meId)
         .map((m) => m.name);
       if (others.length === 0) return null;
-      const days = daysUntilDay(item.eveningDate, now);
-      const day =
-        days === 0
-          ? "Stasera"
-          : days === 1
-            ? "Domani sera"
-            : `${capitalize(weekdayOf(item.eveningDate))} sera`;
+      const day = formatEveningDay(item.eveningDate, now);
       return {
         ...base,
         lead: { type: "icon", icon: "heart", together: true },

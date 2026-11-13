@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { cx } from "@/components/ui/cx";
-import type { DigestView } from "./digest";
+import type { DigestView } from "@/lib/digest";
 
 /** A word longer than this goes to a new line inside the sentence. */
 const LONG_WORD = 24;
