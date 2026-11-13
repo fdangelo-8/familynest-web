@@ -508,4 +508,127 @@ test.describe("tastiera e fuoco", () => {
     await page.keyboard.press("Tab");
     await expect(page.getByRole("checkbox").first()).toBeFocused();
   });
+
+  test("una rilettura della Spesa non sposta il fuoco in Da fare (#207)", async ({
+    page,
+    baseURL,
+    casa,
+  }) => {
+    test.skip(isMobileProject(), "Le due colonne insieme: solo desktop");
+    await seed(casa);
+    await casa.shopping("Marco", ["Pane"]);
+    await open(page, baseURL, casa);
+    await expect(
+      column(page, "Spesa").getByText("Pane", { exact: true }),
+    ).toBeVisible();
+    const checkbox = page.getByRole("checkbox", {
+      name: `Segna come fatto: ${FIRMARE}`,
+    });
+    const active = () =>
+      page.evaluate(
+        () =>
+          document.activeElement?.getAttribute("aria-label") ??
+          document.activeElement?.textContent ??
+          "",
+      );
+    // Which element Tab reaches from this checkbox, before anything is read again.
+    await checkbox.focus();
+    await page.keyboard.press("Tab");
+    const expected = await active();
+    await checkbox.focus();
+
+    // The Spesa read must not call focus() on anything outside its column:
+    // a stale call lands on the old row when the Tab has already moved on.
+    await page.evaluate(() => {
+      const w = window as unknown as { __focusCalls: string[] };
+      w.__focusCalls = [];
+      const original = HTMLElement.prototype.focus;
+      HTMLElement.prototype.focus = function (...args) {
+        w.__focusCalls.push(
+          this.closest("[data-casa-column]")?.getAttribute(
+            "data-casa-column",
+          ) ?? "none",
+        );
+        return original.apply(this, args);
+      };
+    });
+
+    // Someone adds to the Spesa: its column reads again while the focus is here.
+    // Three reads in a row: one alone can happen before the page is listening.
+    for (const name of ["Latte", "Uova", "Mele"]) {
+      await casa.shopping("Marco", [name]);
+      await expect(
+        column(page, "Spesa").getByText(name, { exact: true }),
+      ).toBeVisible();
+    }
+    await expect(checkbox).toBeFocused();
+    const calls = await page.evaluate(
+      () => (window as unknown as { __focusCalls: string[] }).__focusCalls,
+    );
+    expect(calls.filter((c) => c !== "spesa")).toEqual([]);
+    await page.keyboard.press("Tab");
+    expect(await active()).toBe(expected);
+    await expect(checkbox).not.toBeFocused();
+  });
+
+  test("una rilettura di Da fare non sposta il fuoco nella Spesa (#207)", async ({
+    page,
+    baseURL,
+    casa,
+  }) => {
+    test.skip(isMobileProject(), "Le due colonne insieme: solo desktop");
+    await seed(casa);
+    await casa.shopping("Marco", ["Pane", "Latte"]);
+    await open(page, baseURL, casa);
+    const bread = column(page, "Spesa").getByRole("checkbox", {
+      name: "Preso: Pane",
+    });
+    await expect(bread).toBeVisible();
+    const active = () =>
+      page.evaluate(
+        () =>
+          document.activeElement?.getAttribute("aria-label") ??
+          document.activeElement?.textContent ??
+          "",
+      );
+    // Which element Tab reaches from this checkbox, before anything is read again.
+    await bread.focus();
+    await page.keyboard.press("Tab");
+    const expected = await active();
+    await bread.focus();
+    await expect(bread).toBeFocused();
+
+    // The Da fare read must not call focus() on anything outside its column;
+    // the Spesa read may refocus its own row, so only other columns are checked.
+    await page.evaluate(() => {
+      const w = window as unknown as { __focusCalls: string[] };
+      w.__focusCalls = [];
+      const original = HTMLElement.prototype.focus;
+      HTMLElement.prototype.focus = function (...args) {
+        w.__focusCalls.push(
+          this.closest("[data-casa-column]")?.getAttribute(
+            "data-casa-column",
+          ) ?? "none",
+        );
+        return original.apply(this, args);
+      };
+    });
+
+    // Da fare has no live updates: it reads again when the connection comes
+    // back. Each round adds a thing, then lets the page see the network again
+    // while the focus is in Spesa.
+    for (const title of ["Prima cosa", "Seconda cosa", "Terza cosa"]) {
+      await casa.todo("Marco", { title, assignee: "Marco", due: d(5) });
+      await page.evaluate(() => window.dispatchEvent(new Event("online")));
+      await expect(rowOf(page, title)).toBeVisible();
+    }
+    await expect(bread).toBeFocused();
+    const calls = await page.evaluate(
+      () => (window as unknown as { __focusCalls: string[] }).__focusCalls,
+    );
+    expect(calls.filter((c) => c !== "spesa")).toEqual([]);
+    await page.keyboard.press("Tab");
+    expect(await active()).toBe(expected);
+    await expect(bread).not.toBeFocused();
+  });
 });

@@ -219,10 +219,13 @@ export function TodoColumn({
           <Button
             variant="link"
             onClick={() => {
-              list.requestFocus([
-                '[data-testid="filtro-persona-mobile"] .chip',
-                '[data-testid="filtro-persona-desktop"] .chip',
-              ]);
+              list.requestFocus(
+                [
+                  '[data-testid="filtro-persona-mobile"] .chip',
+                  '[data-testid="filtro-persona-desktop"] .chip',
+                ],
+                "page",
+              );
               list.setFilter("all");
             }}
           >

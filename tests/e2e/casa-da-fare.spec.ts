@@ -1036,6 +1036,47 @@ test.describe("campo rapido (desktop)", () => {
     expect((await casa.todoRows()).length).toBe(1);
   });
 
+  // Spesa and Da fare both name a row they just added "tmp-1": the focus must
+  // go back only to the column where the key was pressed.
+  for (const side of ["Da fare", "Spesa"] as const) {
+    test(`Fuoco: con chiavi temporanee uguali nelle due colonne, Spazio in «${side}» tiene il fuoco in «${side}»`, async ({
+      page,
+      baseURL,
+      casa,
+    }) => {
+      test.skip(isMobileProject(), "Il campo rapido c'è solo su desktop");
+      await open(page, baseURL, casa);
+      const todoColumn = column(page, "Da fare");
+      const shoppingColumn = column(page, "Spesa");
+      await quickField(page).fill("Cosa nuova da fare");
+      await quickField(page).press("Enter");
+      await expect(rowOf(page, "Cosa nuova da fare")).toHaveCount(1);
+      const shoppingField = shoppingColumn.getByRole("textbox", {
+        name: /^(Aggiungi alla spesa…|Cosa manca in casa\?)$/,
+      });
+      await shoppingField.fill("Cosa nuova da comprare");
+      await shoppingField.press("Enter");
+      const bought = shoppingColumn.getByRole("checkbox", {
+        name: "Preso: Cosa nuova da comprare",
+      });
+      await expect(bought).toHaveCount(1);
+      const target =
+        side === "Da fare" ? tick(page, "Cosa nuova da fare") : bought;
+      const own = side === "Da fare" ? todoColumn : shoppingColumn;
+      await target.focus();
+      await page.keyboard.press("Space");
+      await page.clock.runFor(TOAST_MS);
+      const focused = own.locator(":focus");
+      await expect(focused).toHaveCount(1);
+      await expect(focused).toHaveAttribute("role", "checkbox");
+      await expect(focused).toHaveAccessibleName(
+        side === "Da fare"
+          ? "Rimetti da fare: Cosa nuova da fare"
+          : "Rimetti in lista: Cosa nuova da comprare",
+      );
+    });
+  }
+
   test("CA-37: su mobile non c'è il campo rapido", async ({
     page,
     baseURL,
