@@ -63,5 +63,3 @@ npm run test          # suite completa prima di dare l'esito
 ```
 
 Contro la preview Vercel: `PLAYWRIGHT_BASE_URL=<url-preview> npm run test:e2e`.
-
-Per tecniche avanzate di interazione con il browser consulta `webapp-testing`; in caso di conflitto valgono queste regole.
