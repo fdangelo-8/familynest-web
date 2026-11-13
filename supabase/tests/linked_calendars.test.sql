@@ -731,7 +731,7 @@ select is_empty(
   'CA-29: Marco (other household) sees nothing of Paolo'
 );
 select is_empty(
-  $$ select 1 from public.search_household('Visita', null, null, null, null) $$,
+  $$ select 1 from public.search_household('Visita', null, '2026-11-09', '2026-11-30', null) $$,
   'CA-29: the search of Marco finds nothing of Paolo'
 );
 
@@ -759,7 +759,10 @@ select results_eq(
   'CA-26, CA-27: Giulia sees «Visita in banca» with its place but never the label «Google»; «Colloquio» only as «Occupato»'
 );
 select results_eq(
-  $$ select r.title, r.source_provider from public.search_household('Visita', null, null, null, array['event']::public.search_result_kind[]) r $$,
+  -- Fixed period, as the events of the synchronisation above: without it the search looks
+  -- from now() on, and the test failed once 11 November 2026 was past (PR #360).
+  $$ select r.title, r.source_provider
+     from public.search_household('Visita', null, '2026-11-09', '2026-11-30', array['event']::public.search_result_kind[]) r $$,
   $$ values ('Visita in banca'::text, null::public.calendar_provider) $$,
   'the search of Giulia finds it, without the label'
 );
