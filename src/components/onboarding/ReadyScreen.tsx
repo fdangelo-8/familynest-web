@@ -12,6 +12,9 @@ export type ReadyMember = { name: string; color: MemberColor };
 /** Most avatars in one row of the mobile layout (350 px). */
 const PER_ROW = 5;
 
+/** Always the last line of the summary; plain text, not a link (mockup 06). */
+const TIP = "Prova a scrivere «spesa: latte e pane»";
+
 function chunk<T>(items: T[], size: number): T[][] {
   const rows: T[][] = [];
   for (let i = 0; i < items.length; i += size) {
@@ -108,6 +111,7 @@ function Body({
   const rows: { icon: IconName; text: string }[] = [];
   if (imported) rows.push({ icon: "calendar-check", text: imported });
   if (invites) rows.push({ icon: "send", text: invites });
+  rows.push({ icon: "sparkles", text: TIP });
   return (
     <div className="sezione">
       <Avatars members={members} layout={layout} />
@@ -115,7 +119,7 @@ function Body({
         {nest}
         <br /> <b>è pronta.</b>
       </h1>
-      {rows.length > 0 ? <Summary rows={rows} /> : null}
+      <Summary rows={rows} />
     </div>
   );
 }
