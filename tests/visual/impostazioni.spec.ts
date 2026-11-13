@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { holdNavigation } from "../fixtures/held-navigation";
 import { hasTestUser, signInAs } from "../fixtures/visual-login";
 import {
   throwawayConfigured,
@@ -227,24 +228,20 @@ test.describe("con un utente usa e getta", () => {
 
   test("#41: caricamento", async ({ page }) => {
     user = await userWithNest(page);
+    // Only the real navigation is held, not the prefetch of the loading
+    // shell; the click waits for that prefetch (fixtures/held-navigation.ts).
+    const { release, clickWhenReady } = await holdNavigation(
+      page,
+      /\/impostazioni\?_rsc=/,
+    );
     await page.goto("/nest");
     await expect(
       page.getByRole("heading", { level: 1, name: "Casa De Santis" }),
     ).toBeVisible();
     await page.evaluate(() => document.fonts.ready);
-    let release: () => void = () => {};
-    const gate = new Promise<void>((resolve) => (release = resolve));
-    await page.route(/\/impostazioni\?_rsc=/, async (route) => {
-      // Hold only the real navigation, not the prefetch of the loading shell:
-      // without the shell the loading state is never shown.
-      if (route.request().headers()["next-router-prefetch"]) {
-        await route.continue();
-        return;
-      }
-      await gate;
-      await route.continue();
-    });
-    await page.getByRole("link", { name: /Impostazioni della casa/ }).click();
+    await clickWhenReady(
+      page.getByRole("link", { name: /Impostazioni della casa/ }),
+    );
     await expect(page.getByText("Caricamento in corso")).toBeAttached();
     await shoot(page, "impostazioni-caricamento.png", false);
     release();
