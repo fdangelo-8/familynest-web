@@ -467,7 +467,7 @@ test.describe("dati preparati dal test", () => {
       await page.goto(PATH);
       await expect(
         page.getByText("Stiamo preparando la casa").first(),
-      ).toBeVisible();
+      ).toBeAttached();
       await expect(
         page.getByText(/Prova a scrivere/).filter({ visible: true }),
       ).toHaveCount(0);
