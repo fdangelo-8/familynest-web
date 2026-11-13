@@ -548,8 +548,7 @@ test.describe("«Anche su» nel modulo dell'impegno", () => {
       expect(await logOf(u, "create")).toHaveLength(0);
 
       // The provider is back and the retry is due: the copy is created.
-      // Slow provider: the second run starts while the first still waits.
-      await u.fake.fail({ ...provider, unreachable: false, slowMs: 3000 });
+      await u.fake.fail({ ...provider, unreachable: false });
       const due = await u.user.admin
         .from("calendar_outbox")
         .update(
@@ -593,7 +592,8 @@ test.describe("«Anche su» nel modulo dell'impegno", () => {
       await expect(toastOf(page, "Modifiche salvate")).toBeVisible();
       await u.fake.outbox();
       expect(await logOf(u, "create")).toHaveLength(0);
-      await u.fake.fail({ ...provider, unreachable: false });
+      // Slow provider: the second run starts while the first still waits.
+      await u.fake.fail({ ...provider, unreachable: false, slowMs: 3000 });
       const due = await u.user.admin
         .from("calendar_outbox")
         .update(
