@@ -99,6 +99,7 @@ Mappa compito → agente:
 | Test funzionali                              | tester-funzionale | branch della PR                       |
 | Test visivi e accessibilità                  | tester-visivo     | branch della PR                       |
 | Documentazione                               | documentalista    | `docs/aggiornamento-<data>`           |
+| Mercato, posizionamento, marketing           | stratega          | `docs/strategia-<argomento>`          |
 
 ## 5. Regole di passaggio
 
