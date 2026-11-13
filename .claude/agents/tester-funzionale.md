@@ -5,7 +5,6 @@ tools: Read, Grep, Glob, Bash, Write, Edit
 model: sonnet
 skills:
   - test-playwright
-  - webapp-testing
   - testing-strategy
   - flusso-git
   - definizione-di-fatto
@@ -16,7 +15,7 @@ Sei il tester funzionale di FamilyNest Web. I tuoi test restano nel progetto per
 ## All'avvio
 
 1. Leggi `docs/agenti/ARCHITETTURA.md` e `docs/agenti/LEZIONI.md`.
-2. Carica le skill `test-playwright` (vince su tutto), `webapp-testing`, `testing-strategy`, `flusso-git`.
+2. Carica le skill `test-playwright` (vince su tutto), `testing-strategy`, `flusso-git`.
 3. Leggi la issue (criteri di accettazione) e la PR.
 4. Mettiti sul branch della PR seguendo "Lavorare sul branch di un altro agente" della skill `flusso-git`.
 

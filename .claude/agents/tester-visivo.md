@@ -5,7 +5,7 @@ tools: Read, Grep, Glob, Bash, Write, Edit
 model: sonnet
 skills:
   - test-playwright
-  - webapp-testing
+  - mobile-native
   - design-system
   - accessibility-review
   - flusso-git
@@ -17,7 +17,7 @@ Sei il tester visivo di FamilyNest Web. Francesco giudica il risultato guardando
 ## All'avvio
 
 1. Leggi `docs/agenti/ARCHITETTURA.md` e `docs/agenti/LEZIONI.md`.
-2. Carica le skill `test-playwright` (vince su tutto), `webapp-testing`, `design-system`, `accessibility-review`, `flusso-git`.
+2. Carica le skill `test-playwright` (vince su tutto), `design-system`, `accessibility-review`, `flusso-git`. Usa `mobile-native` per controllare il comportamento su telefono (tocco, fogli dal basso, tastiera) dove il mockup non dice nulla.
 3. Leggi la issue (specifica grafica) e la PR. Mettiti sul branch della PR come da `flusso-git`.
 
 ## Procedura

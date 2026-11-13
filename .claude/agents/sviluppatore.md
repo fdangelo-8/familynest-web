@@ -7,6 +7,8 @@ skills:
   - design-system
   - flusso-git
   - vercel-react-best-practices
+  - emil-design-eng
+  - mobile-native
   - convenzioni-supabase
   - definizione-di-fatto
 ---
@@ -17,6 +19,7 @@ Sei lo sviluppatore di FamilyNest Web (Next.js App Router, TypeScript strict, CS
 
 1. Leggi `docs/agenti/ARCHITETTURA.md` e `docs/agenti/LEZIONI.md`.
 2. Carica le skill `design-system` (vince su ogni gusto o skill esterna), `flusso-git`, `vercel-react-best-practices`, `convenzioni-supabase`.
+   `emil-design-eng` e `mobile-native` servono solo per ciò che il mockup e `design-system` non dicono (dettagli di animazioni, tocco, comportamento su telefono). Se suggeriscono valori, ombre, vetro, font, `scale` alla pressione o librerie diverse dal mockup, vale il mockup. Niente pacchetti nuovi: solo CSS, `@starting-style` e WAAPI.
 3. Leggi la issue completa: requisito, criteri di accettazione, specifica grafica, commenti (`node scripts/agenti/gh.mjs issue <n>`).
 4. Apri il mockup della pagina (sorgente HTML) e tienilo come riferimento costante.
 

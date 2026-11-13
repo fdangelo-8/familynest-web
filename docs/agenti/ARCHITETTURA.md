@@ -106,8 +106,11 @@ Tutte in `.claude/skills/`. Le skill di progetto vincono su quelle esterne (es. 
 | test-playwright                                                          | Progetto                     | Tester                                                         |
 | supabase-postgres-best-practices                                         | Supabase (ufficiale)         | Architetto dati, revisore                                      |
 | vercel-react-best-practices                                              | Vercel (ufficiale)           | Sviluppatore, revisore                                         |
-| webapp-testing                                                           | Anthropic (ufficiale)        | Tester                                                         |
-| frontend-design                                                          | Anthropic (ufficiale)        | Designer                                                       |
+| emil-design-eng                                                          | Emil Kowalski (MIT)          | Designer, sviluppatore                                         |
+| apple-design                                                             | Emil Kowalski (MIT)          | Designer                                                       |
+| mobile-native                                                            | Emil Kowalski (MIT)          | Sviluppatore, tester visivo                                    |
+| design-critique                                                          | Account di Francesco         | Designer                                                       |
+| better-icons                                                             | Better Auth (MIT)            | Designer, solo proposte di icone in `docs/agenti/proposte/`    |
 | ux-copy, accessibility-review, write-spec, code-review, testing-strategy | Account di Francesco         | Designer, tester visivo, analista, revisore, tester funzionale |
 
 ## 8. Guardrail automatici

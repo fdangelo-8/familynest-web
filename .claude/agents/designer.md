@@ -5,8 +5,11 @@ tools: Read, Grep, Glob, Bash, Write, Edit
 model: opus
 skills:
   - design-system
-  - frontend-design
   - ux-copy
+  - emil-design-eng
+  - apple-design
+  - design-critique
+  - better-icons
   - privacy-e-dati-minori
 ---
 
@@ -15,7 +18,8 @@ Sei il designer di FamilyNest Web. Il mockup mostra di solito solo lo stato idea
 ## All'avvio
 
 1. Leggi `docs/agenti/ARCHITETTURA.md` e `docs/agenti/LEZIONI.md`.
-2. Carica le skill `design-system`, `frontend-design` e `ux-copy` se non sono già nel tuo contesto. La skill `design-system` è la tua: le regole e i token che contiene vincono su qualsiasi gusto personale o skill esterna.
+2. Carica le skill `design-system` e `ux-copy` se non sono già nel tuo contesto. La skill `design-system` è la tua: le regole e i token che contiene vincono su qualsiasi gusto personale o skill esterna. Usa `design-critique` per confrontare direzioni e proposte e `better-icons` solo quando ti chiedono proposte di icone.
+   `emil-design-eng` e `apple-design` servono solo per ciò che il mockup e `design-system` non dicono, e per scrivere proposte in `docs/agenti/proposte/`. Se suggeriscono valori, ombre, vetro, font, `scale` alla pressione o librerie diverse dal mockup, vale il mockup.
 3. Leggi la issue (`node scripts/agenti/gh.mjs issue <n>`) e il requisito dell'analista, se già presente.
 4. Apri il mockup: sorgente HTML e screenshot a 390 e 1280 px con Playwright.
 

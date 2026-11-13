@@ -125,7 +125,7 @@ Tabella completa in `docs/mockup/design-system.md` §2. Coppie da ricordare:
 - Interruttori, chip, caselle, cambi di fondo al passaggio del mouse: `--durata-rapida`.
 - Spinner: un giro ogni `--durata-ampia`, lineare. Scheletri: pulsazione tra opacità 1 e `--opacity-passato` in `--durata-ampia`, alternata.
 - Riga spuntata: resta al suo posto per `--durata-ampia` prima di scendere.
-- `@media (prefers-reduced-motion: reduce)`: animazioni e transizioni spente in tutta l'app. Lo spinner resta fermo, il bottone resta `aria-busy`.
+- Con `prefers-reduced-motion: reduce` niente spostamenti, zoom né rimbalzi; restano dissolvenze brevi (opacità, al massimo 150-200 ms). Lo spinner resta fermo, il bottone resta `aria-busy`. **Decisione di Francesco del 13/11** («animazioni gentili, con brevi dissolvenze, non azzerate»): vince sulla frase di `docs/mockup/design-system.md` («animazioni e transizioni spente»). Il CSS attuale dell'app spegne ancora tutto: lo adegua lo sviluppatore con il nuovo design.
 - Niente rimbalzi, parallasse, comparse a scorrimento o animazioni decorative.
 
 ## Stati comuni a tutti i controlli
