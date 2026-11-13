@@ -17,7 +17,6 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import type { Database } from "@/types/database";
 import {
-  markAllRead,
   readContext,
   readDigest,
   type DigestState,
@@ -151,10 +150,13 @@ export function useNotifications() {
     if (marking || !online || allMarked || newIdsRef.current.size === 0) return;
     setMarking(true);
     setMarkFailure(null);
-    const failure = await markAllRead(getClient(), [...newIdsRef.current]);
+    const result = await markNotificationsRead(
+      [...newIdsRef.current],
+      getClient(),
+    );
     setMarking(false);
-    if (failure) {
-      setMarkFailure(failure);
+    if (!result.ok) {
+      setMarkFailure(result.reason);
       return;
     }
     newIdsRef.current = new Set();
