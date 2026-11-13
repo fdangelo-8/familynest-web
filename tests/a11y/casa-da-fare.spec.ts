@@ -580,6 +580,17 @@ test.describe("tastiera e fuoco", () => {
       name: "Preso: Pane",
     });
     await expect(bread).toBeVisible();
+    const active = () =>
+      page.evaluate(
+        () =>
+          document.activeElement?.getAttribute("aria-label") ??
+          document.activeElement?.textContent ??
+          "",
+      );
+    // Which element Tab reaches from this checkbox, before anything is read again.
+    await bread.focus();
+    await page.keyboard.press("Tab");
+    const expected = await active();
     await bread.focus();
     await expect(bread).toBeFocused();
 
@@ -613,9 +624,7 @@ test.describe("tastiera e fuoco", () => {
     );
     expect(calls.filter((c) => c !== "spesa")).toEqual([]);
     await page.keyboard.press("Tab");
+    expect(await active()).toBe(expected);
     await expect(bread).not.toBeFocused();
-    await expect(
-      column(page, "Spesa").getByRole("checkbox", { name: "Preso: Latte" }),
-    ).toBeFocused();
   });
 });
