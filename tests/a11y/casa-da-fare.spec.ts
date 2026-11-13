@@ -17,6 +17,7 @@ import {
   test,
   type CasaNest,
 } from "../fixtures/casa";
+import { waitHydrated } from "../fixtures/esplora";
 
 // Casa · Da fare (#23): axe in every state, one h1 and the order of the
 // headings, names read by screen readers, touch areas (mobile), keyboard
@@ -422,6 +423,9 @@ test.describe("tastiera e fuoco", () => {
     const checkbox = page.getByRole("checkbox", {
       name: `Segna come fatto: ${FIRMARE}`,
     });
+    // Keys pressed while the page is still being taken over by React land on
+    // the server's HTML and the focus order can change under them (LEZIONI).
+    await waitHydrated(checkbox);
     await page.keyboard.press("Tab"); // makes :focus-visible apply
     await checkbox.focus();
     await page.keyboard.press("Shift+Tab");

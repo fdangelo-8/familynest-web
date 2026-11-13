@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { holdNavigation } from "../fixtures/held-navigation";
 import {
   FIXED_NOW,
   GOOGLE,
@@ -163,25 +164,20 @@ test.describe("non collegato", () => {
 
   test("caricamento: axe sullo scheletro", async ({ page }) => {
     await withUser(page, async () => {
+      const { release, clickWhenReady } = await holdNavigation(
+        page,
+        /\/calendari-collegati\?_rsc=/,
+      );
       await page.goto("/nest");
       await expect(
         page.getByRole("heading", { level: 1, name: "Casa D'Angelo" }),
       ).toBeVisible();
       await page.evaluate(() => document.fonts.ready);
-      let release: () => void = () => {};
-      const gate = new Promise<void>((resolve) => (release = resolve));
-      await page.route(/\/calendari-collegati\?_rsc=/, async (route) => {
-        if (route.request().headers()["next-router-prefetch"]) {
-          await route.continue();
-          return;
-        }
-        await gate;
-        await route.continue();
-      });
-      await page
-        .getByRole("main")
-        .getByRole("link", { name: /^Calendari collegati/ })
-        .click();
+      await clickWhenReady(
+        page.getByRole("main").getByRole("link", {
+          name: /^Calendari collegati/,
+        }),
+      );
       await expect(page.getByText("Caricamento in corso")).toBeAttached();
       // The loading shell has no title of its own while the page is held: the
       // title of the page arrives with the page. Everything else is checked.
