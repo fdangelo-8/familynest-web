@@ -123,8 +123,12 @@ async function onboarding(page: Page): Promise<string> {
   // 5. Pronto, then Oggi.
   await expect(page).toHaveURL(/\/onboarding\/pronto$/);
   await expect(h1(page)).toHaveText(`${NEST} è pronta.`);
-  await expect(page.getByRole("list").getByRole("listitem")).toHaveText(
-    "Invito condiviso con Marco",
+  // The summary lists the shared invitation, then the shopping tip last.
+  const summary = page.getByRole("list").getByRole("listitem");
+  await expect(summary).toHaveCount(2);
+  await expect(summary.nth(0)).toHaveText("Invito condiviso con Marco");
+  await expect(summary.last()).toHaveText(
+    "Prova a scrivere «spesa: latte e pane»",
   );
   await page.getByRole("link", { name: "Vai a Oggi" }).click();
   await expect(page).toHaveURL(/\/oggi$/);
