@@ -126,13 +126,13 @@ set local role authenticated;
 set local request.jwt.claims to '{"sub":"aaaaaaaa-0000-4000-8000-000000000001","role":"authenticated"}';
 
 select lives_ok(
-  $$ insert into public.todos (id, title, assignee_member_id)
-     values ('c9000000-0000-4000-8000-000000000002', '  Ritirare   le  foto ', 'a1000000-0000-4000-8000-000000000003') $$,
+  $$ insert into public.todos (title, assignee_member_id)
+     values ('  Ritirare   le  foto ', 'a1000000-0000-4000-8000-000000000003') $$,
   'A inserts a thing to do with a person who takes care of it'
 );
 select results_eq(
   $$ select t.title, t.created_by_member_id, t.household_id, t.assignee_member_id
-     from public.todos t where t.id = 'c9000000-0000-4000-8000-000000000002' $$,
+     from public.todos t where t.title = 'Ritirare le foto' $$,
   $$ values ('Ritirare le foto'::text, 'a1000000-0000-4000-8000-000000000001'::uuid,
              '11111111-1111-4111-8111-111111111111'::uuid, 'a1000000-0000-4000-8000-000000000003'::uuid) $$,
   'the thing of A is normalised, with A as author, in the household of A'
@@ -163,7 +163,8 @@ select throws_ok(
 
 set local request.jwt.claims to '{"sub":"bbbbbbbb-0000-4000-8000-000000000001","role":"authenticated"}';
 select is_empty(
-  $$ select 1 from public.todos t where t.id in ('c9000000-0000-4000-8000-000000000001', 'c9000000-0000-4000-8000-000000000002') $$,
+  $$ select 1 from public.todos t
+     where t.id = 'c9000000-0000-4000-8000-000000000001' or t.title = 'Ritirare le foto' $$,
   'B does not see the things to do of A'
 );
 select throws_ok(
@@ -210,7 +211,8 @@ select results_eq(
   'the thing of A survived every attempt of B'
 );
 select is(
-  (select count(*)::integer from public.todos t where t.id = 'c9000000-0000-4000-8000-000000000002'),
+  (select count(*)::integer from public.todos t
+   where t.title = 'Ritirare le foto' and t.household_id = '11111111-1111-4111-8111-111111111111'),
   1,
   'the thing inserted by A is there'
 );
