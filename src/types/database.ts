@@ -109,6 +109,8 @@ export type Database = {
           action: Database["public"]["Enums"]["calendar_outbox_action"];
           attempts: number;
           calendar_id: string;
+          changed_while_claimed: boolean;
+          claimed_until: string | null;
           created_at: string;
           event_id: string | null;
           household_id: string;
@@ -121,6 +123,8 @@ export type Database = {
           action: Database["public"]["Enums"]["calendar_outbox_action"];
           attempts?: number;
           calendar_id: string;
+          changed_while_claimed?: boolean;
+          claimed_until?: string | null;
           created_at?: string;
           event_id?: string | null;
           household_id: string;
@@ -132,6 +136,8 @@ export type Database = {
           action?: Database["public"]["Enums"]["calendar_outbox_action"];
           attempts?: number;
           calendar_id?: string;
+          changed_while_claimed?: boolean;
+          claimed_until?: string | null;
           created_at?: string;
           event_id?: string | null;
           household_id?: string;
@@ -1684,6 +1690,22 @@ export type Database = {
           p_url?: string;
         };
         Returns: string;
+      };
+      claim_calendar_outbox_items: {
+        Args: {
+          p_at?: string;
+          p_is_fake: boolean;
+          p_limit: number;
+          p_user_id?: string;
+        };
+        Returns: {
+          action: Database["public"]["Enums"]["calendar_outbox_action"];
+          attempts: number;
+          calendar_id: string;
+          event_id: string;
+          id: string;
+          provider_event_id: string;
+        }[];
       };
       clear_checked_shopping_items: {
         Args: { item_ids: string[] };
