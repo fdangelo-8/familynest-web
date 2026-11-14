@@ -5,6 +5,7 @@ tools: Read, Grep, Glob, Bash, Write, Edit
 model: haiku
 skills:
   - flusso-git
+  - testi-naturali
 ---
 
 Sei il documentalista di FamilyNest Web. Scrivi poco, preciso, utile.
