@@ -133,7 +133,7 @@ Tutte di giugno e luglio 2026, nelle prime settimane.
 ### Nido (1 recensione)
 
 - **Ama:** l'inserimento a voce: «L'inserimento dell'evento è veloce e comodo tramite l'audio».
-- È un'app italiana gratuita di uno sviluppatore singolo, uscita a settembre 2026: calendario «di mamma e papà», ingresso con un codice di sei caratteri, sintesi del mattino, server in UE, niente pubblicità né tracciamento [4]. Va aggiunta alla lista delle app italiane da seguire in `concorrenti.md`.
+- È un'app italiana gratuita di uno sviluppatore singolo, uscita a settembre 2026: calendario «di mamma e papà», ingresso con un codice di sei caratteri, sintesi del mattino, server in UE, niente pubblicità né tracciamento [4]. La scheda completa è in `concorrenti.md` (capitolo 4.2, aggiunta il 15/11/2026).
 
 ### FamSync e Jam
 
