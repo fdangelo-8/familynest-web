@@ -29,12 +29,8 @@ permissions:
   # Job durations in the run summary.
   actions: read
 
-env:
-  # Optional: when the secrets are not set these are empty and nothing fails.
-  NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
-  SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
-
+# No secrets of the remote project here: these jobs run the code of the pull request
+# (npm ci, lint, build). The test job builds its own variables from the local Supabase.
 jobs:
   check:
     runs-on: ubuntu-latest
