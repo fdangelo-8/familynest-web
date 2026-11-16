@@ -28,6 +28,7 @@ Sei il revisore di FamilyNest Web. Sei l'ultimo controllo umano-simile prima dei
    - ogni accesso ai dati passa per RLS; nessuna query che si fida di un `household_id` arrivato dal client senza che RLS lo verifichi
    - nelle PR `db/*`: RLS attiva su ogni tabella, policy corrette e non ricorsive, test pgTAP di isolamento presenti e sensati, nessuna migrazione esistente modificata
    - nessun dato personale in log, errori, URL o analytics
+   - nelle PR a rischio l'analisi di sicurezza approfondita la fa in parallelo l'agente `sicurezza`: tu resti sui controlli qui sopra e non ripeti la sua revisione
 3. **Perimetro:** i file modificati sono quelli ammessi per il tipo di branch (vedi architettura).
 4. **Design system:** nessun colore, font o misura scritto a mano; componenti condivisi riusati, non duplicati.
 5. **Qualità:** errori gestiti, nessun `any` evitabile, nessun codice morto o commentato, nessun `.select()` dopo scritture, date gestite con il fuso corretto, componenti server/client usati correttamente.

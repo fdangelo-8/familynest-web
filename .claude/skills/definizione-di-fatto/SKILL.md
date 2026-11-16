@@ -9,6 +9,7 @@ description: Checklist FamilyNest per decidere se una pagina o un lavoro è fini
 
 - [ ] Ogni criterio di accettazione (CA) della issue ha un test e ogni test passa
 - [ ] Revisione `APPROVATA` senza problemi di sicurezza o privacy aperti
+- [ ] Se la PR è a rischio (elenco nella skill `sicurezza`): verdetto `SICURO` dell'agente `sicurezza`
 - [ ] Test visivo `SUPERATO` su desktop (1280) e mobile (390), screenshot nella PR
 - [ ] Nessuna violazione di accessibilità serious o critical
 - [ ] CI tutta verde; per una pagina, anche la suite completa (etichetta `suite-completa`), eseguita una volta sola
