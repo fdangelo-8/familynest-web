@@ -50,8 +50,8 @@ Esegui in quest'ordine, poi ricomincia da capo finché resta lavoro eseguibile:
 1. **Merge avvenuti** dall'ultimo giro: un branch attivo si riallinea solo se ha un conflitto o se gli servono file condivisi o database appena uniti (sviluppatore, compito "riallinea", oppure aggiornamento del branch da GitHub). Dopo ogni merge guarda la run CI di `main`: se la suite è rossa, la correzione viene prima di ogni altro lavoro. Raccogli le PR unite per il documentalista.
 2. **Risposte di Francesco:** su una `bloccata` con risposta → applica la decisione nella issue, togli `bloccata`, rimetti lo stato giusto. Su una `proposta-design` approvata → il designer aggiorna la specifica e si apre una issue per l'implementazione; rifiutata → chiudi la proposta.
 3. **Correzioni chieste da Francesco** su una PR `pronta-per-francesco` → torna a `in-sviluppo` con quei punti.
-4. **PR da far avanzare:** `in-revisione` → revisore; `in-test` → tester funzionale e tester visivo **in parallelo**. I tester partono solo dopo `APPROVATA`: in 2 PR su 3 il revisore chiede correzioni.
-5. **Issue avviate:** `in-specifica` → analista e designer **in parallelo**; `da-sviluppare` → sviluppatore (se le dipendenze sono unite su main) e, nello stesso momento, il tester funzionale che scrive i test dai CA in anticipo (decisione di Francesco del 29/10): commit locale nel suo worktree, nessun push; quando la PR va in test lo richiami, fa merge del branch della PR, esegue, sistema i dettagli e fa un solo push.
+4. **PR da far avanzare:** `in-revisione` → revisore, e **in parallelo l'agente `sicurezza` se la PR è a rischio** (elenco nella skill `sicurezza`; controlla i file con `git diff --name-only origin/main...<branch>`); `in-test` → tester funzionale e tester visivo **in parallelo**. I tester partono solo dopo `APPROVATA`: in 2 PR su 3 il revisore chiede correzioni.
+5. **Issue avviate:** `in-specifica` → analista e designer **in parallelo** (più l'agente `sicurezza` se la funzione tocca dati dei minori, condivisione, file, pagamenti o terze parti: i suoi requisiti diventano CA); `da-sviluppare` → sviluppatore (se le dipendenze sono unite su main) e, nello stesso momento, il tester funzionale che scrive i test dai CA in anticipo (decisione di Francesco del 29/10): commit locale nel suo worktree, nessun push; quando la PR va in test lo richiami, fa merge del branch della PR, esegue, sistema i dettagli e fa un solo push.
 6. **Nuovo lavoro** (sezione 3), rispettando i limiti di parallelismo.
 7. **Documentalista** se ci sono PR unite non ancora documentate.
 
@@ -100,6 +100,9 @@ Mappa compito → agente:
 | Test visivi e accessibilità                  | tester-visivo     | branch della PR                       |
 | Documentazione                               | documentalista    | `docs/aggiornamento-<data>`           |
 | Mercato, posizionamento, marketing           | stratega          | `docs/strategia-<argomento>`          |
+| Sicurezza: PR a rischio, specifiche, audit   | sicurezza         | — (solo lettura)                      |
+
+**Sicurezza e repository pubblico:** l'agente `sicurezza` ti consegna i dettagli dei problemi solo nella sua risposta. Non copiarli in issue, PR o commenti: apri issue di correzione con titolo generico e passa il dettaglio nel prompt dello sviluppatore o dell'architetto-dati. Un problema Critico lo segnali subito a Francesco in chat. Lancia un audit completo ogni mese e prima di ogni lancio importante.
 
 Quando modifichi tu file di agenti, skill, comandi o `CLAUDE.md` (branch `admin/*`), segui la skill `writing-for-agents`: istruzioni brevi, una sola fonte per ogni regola, niente righe che l'agente farebbe comunque.
 
@@ -109,7 +112,7 @@ Quando modifichi tu file di agenti, skill, comandi o `CLAUDE.md` (branch `admin/
 - **Domande non bloccanti** dell'analista: adotta il default proposto, scrivilo nella issue come "Decisione presa (modificabile da Francesco)".
 - **in-sviluppo → in-revisione:** PR aperta, `check` e `build` verdi.
 - **Test scritti in anticipo:** quando una pagina passa a `in-sviluppo`, lancia insieme allo sviluppatore il tester funzionale con il compito di scrivere i test di tutti i CA su un branch locale `test/<pagina>` (commit locale, niente push e niente esecuzione), e passa allo sviluppatore i selettori che il tester si aspetta. Alla fine il tester porta i test sul branch della PR e li esegue.
-- **in-revisione → in-test:** commento `APPROVATA`. Con `DA CORREGGERE` → sviluppatore, poi di nuovo revisore.
+- **in-revisione → in-test:** commento `APPROVATA` e, se la PR è a rischio, verdetto `SICURO` dell'agente `sicurezza`. Con `DA CORREGGERE` → sviluppatore, poi di nuovo chi l'ha chiesto.
 - **in-test → pronta-per-francesco:** `SUPERATO` da entrambi i tester, con i loro test eseguiti con `test-mirato`, controlli CI verdi (`node scripts/agenti/gh.mjs pr-checks <n>`, exit 0) e checklist della skill `definizione-di-fatto` soddisfatta. Verificala tu, punto per punto.
 - **Fase di build (decisione di Francesco del 04/11, vale finché l'app non va in produzione):** la suite completa gira **una volta sola** per pagina. Quando entrambi i tester hanno dato `SUPERATO`, aggiungi l'etichetta `suite-completa` alla PR della pagina e rilancia l'ultima run CI (`gh run rerun <id>`). La PR passa quando `test` è eseguito e passato. Non la rifai dopo riallineamenti o merge di altre PR, né dopo correzioni piccole: per quelle bastano i test mirati. Le PR `shared/*`, `db/*` e quelle di soli test non hanno la suite completa: bastano `check`, `build`, `db` e i test mirati. Il riallineamento a main serve solo se c'è un conflitto. I ricontrolli dopo una correzione li fa un solo agente, con i soli test mirati sulle parti cambiate. Prima della produzione si torna alla regola piena: suite completa su ogni PR, branch allineato.
 - **Limite rientri:** conta sulla PR i commenti che iniziano con `DA CORREGGERE` o `NON SUPERATO`. Al quarto, etichetta `bloccata` ed escalation.
