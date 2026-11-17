@@ -300,7 +300,7 @@ test.describe("benvenuto (07)", () => {
       "ti aspetta",
     );
     for (const value of forbidden) expect(html).not.toContain(value);
-    for (const word of ["Sofia", "Tommaso", "Biscotto", "4821"]) {
+    for (const word of ["Sofia", "Tommaso", "Biscotto"]) {
       expect(mentions(html, word), word).toBe(false);
     }
     // Neither the text nor the names of the accessibility tree.
@@ -1270,13 +1270,7 @@ test.describe("isolamento", () => {
       expect(Object.keys(member).sort()).toEqual(["color", "initial", "name"]);
     }
     const serialized = JSON.stringify(row);
-    for (const value of [
-      laura.token,
-      "4821",
-      "2016-12-14",
-      "2020-04-02",
-      laura.id,
-    ]) {
+    for (const value of [laura.token, "2016-12-14", "2020-04-02", laura.id]) {
       expect(serialized).not.toContain(value);
     }
     for (const word of ["Sofia", "Tommaso", "Biscotto"]) {

@@ -73,7 +73,24 @@ export async function addWishlistIdea(input: {
     let priceCents: number | null = null;
     let photo: { contentType: "image/webp"; base64: string } | null = null;
     if (link !== "") {
-      const read = await readShopLink(link);
+      // Before the address is opened: the child is a member of the Nest of the
+      // user (the session, never the administrative client), and the reading is
+      // within the usage limit. Any error means no: the link stays closed.
+      const { data: child, error: childError } = await supabase
+        .from("household_members")
+        .select("id")
+        .eq("id", input.childId)
+        .eq("household_id", householdId)
+        .eq("kind", "child")
+        .maybeSingle();
+      if (childError || !child) return { ok: false, reason: "server" };
+      const { data: allowed, error: claimError } = await supabase.rpc(
+        "claim_shop_link_read",
+      );
+      const read =
+        !claimError && allowed === true
+          ? await readShopLink(link)
+          : ({ ok: false } as const);
       if (read.ok) {
         // The name written by the parent wins; the page only gives the rest.
         if (title === "") title = read.title ?? "";

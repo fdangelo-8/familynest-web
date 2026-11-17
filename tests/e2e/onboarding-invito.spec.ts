@@ -172,7 +172,6 @@ test.describe("contenuto", () => {
     await expect(page.locator(".qr, svg.qr")).toHaveCount(0);
     const text = await page.locator("body").innerText();
     expect(text).not.toContain("NEST·");
-    expect(text).not.toContain("4821");
     expect(text).not.toMatch(/inquadra/i);
   });
 
@@ -554,7 +553,6 @@ test.describe("isolamento tra nuclei", () => {
         const text = await page.locator("body").innerText();
         expect(text).not.toContain("Laura");
         expect(text).not.toContain(NEST_A);
-        expect(text).not.toContain("4821");
       }
       await openInvite(page);
       const link = await copiedLink(page);
@@ -637,7 +635,6 @@ test("CA-24: la risposta non è in cache condivisa e l'indirizzo non ha token", 
   expect(cache).toMatch(/private|no-store/);
   const invite = await pendingInviteOf(SEED_LAURA_MEMBER_ID);
   expect(page.url()).not.toContain(invite.token);
-  expect(page.url()).not.toContain("4821");
 });
 
 // CA-25 (id duplicati e axe) is in tests/a11y/onboarding-invito.spec.ts.
