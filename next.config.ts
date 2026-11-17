@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { buildSecurityHeaders } from "./src/lib/security-headers";
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -28,6 +29,13 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
+      // Standard protection headers. First on purpose: when several rules
+      // give the same key the last one wins, so the specific rules below
+      // keep their own values.
+      {
+        source: "/:path*",
+        headers: buildSecurityHeaders(process.env.VERCEL_ENV),
+      },
       // The public page of a wish list (#33): the address carries the code, so it
       // must never be indexed, never be sent to other sites as a referrer and
       // never be kept in a cache.
