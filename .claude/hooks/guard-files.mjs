@@ -80,6 +80,14 @@ const roleRules = {
     /^docs\//,
     "l'agente legale-privacy scrive solo in docs/ (i documenti in docs/legale/).",
   ],
+  "contenuti-seo": [
+    /^docs\//,
+    "l'agente contenuti-seo scrive solo in docs/ (piano e bozze in docs/marketing/).",
+  ],
+  social: [
+    /^docs\//,
+    "l'agente social scrive solo in docs/ (piano e lotti in docs/marketing/social/).",
+  ],
   infrastruttura: [
     /^docs\//,
     "l'agente infrastruttura scrive solo in docs/ (le procedure in docs/infrastruttura/).",
