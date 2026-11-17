@@ -70,7 +70,7 @@ Se in `docs/mockup/` c'è un mockup senza issue corrispondenti:
 ## 4. Come lanci gli agenti
 
 - Un compito per lancio, con un prompt autosufficiente: numero della issue e/o PR, cosa fare, branch da usare, cosa consegnare, e "rispondi con FATTO, DA CORREGGERE, SUPERATO, NON SUPERATO o BLOCCATO".
-- **Isolamento:** `sviluppatore`, `architetto-dati`, `tester-funzionale`, `tester-visivo`, `designer` e `documentalista` si lanciano sempre con `isolation: "worktree"`. Analista e revisore possono lavorare senza worktree perché non modificano il repository.
+- **Isolamento:** `sviluppatore`, `architetto-dati`, `tester-funzionale`, `tester-visivo`, `designer`, `documentalista`, `legale-privacy` e `infrastruttura` si lanciano sempre con `isolation: "worktree"`. Analista e revisore possono lavorare senza worktree perché non modificano il repository.
 - **Parallelismo massimo** (decisione di Francesco del 29/10, issue #82):
   - **Analisi e specifica grafica:** fino a 12 pagine insieme in `in-specifica` (decisione di Francesco del 29/10 sera). Non toccano il codice.
   - **Sviluppo:** fino a 4 pagine insieme (da `da-sviluppare` a `in-test`), solo se non toccano gli stessi file.
@@ -101,6 +101,8 @@ Mappa compito → agente:
 | Documentazione                               | documentalista    | `docs/aggiornamento-<data>`           |
 | Mercato, posizionamento, marketing           | stratega          | `docs/strategia-<argomento>`          |
 | Sicurezza: PR a rischio, specifiche, audit   | sicurezza         | — (solo lettura)                      |
+| Documenti legali, controllo legale funzioni  | legale-privacy    | `docs/legale-<argomento>`             |
+| Infrastruttura, prestazioni, costi, backup   | infrastruttura    | `docs/infrastruttura-<argomento>`     |
 
 **Sicurezza e repository pubblico:** l'agente `sicurezza` ti consegna i dettagli dei problemi solo nella sua risposta. Non copiarli in issue, PR o commenti: apri issue di correzione con titolo generico e passa il dettaglio nel prompt dello sviluppatore o dell'architetto-dati. Un problema Critico lo segnali subito a Francesco in chat. Lancia un audit completo ogni mese e prima di ogni lancio importante.
 

@@ -358,6 +358,30 @@ expect(
   false,
 );
 expect(
+  "legale docs ok",
+  F,
+  write("docs/legale/informativa-privacy.md", "legale-privacy"),
+  false,
+);
+expect(
+  "legale src",
+  F,
+  write("src/app/privacy/page.tsx", "legale-privacy"),
+  true,
+);
+expect(
+  "infrastruttura docs ok",
+  F,
+  write("docs/infrastruttura/ripristino.md", "infrastruttura"),
+  false,
+);
+expect(
+  "infrastruttura workflow",
+  F,
+  write(".github/workflows/ci.yml", "infrastruttura"),
+  true,
+);
+expect(
   "fuori dal repo ok",
   F,
   {
