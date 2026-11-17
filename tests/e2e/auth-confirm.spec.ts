@@ -14,6 +14,7 @@ import {
   throwawaySkipReason,
 } from "../fixtures/throwaway-user";
 import { COOKIE } from "../fixtures/invito-ingresso";
+import { confirmWithButton, continueControl } from "../fixtures/conferma-link";
 
 // Route /auth/confirm and helpers of the password access (#327, #326).
 // The [CI-utenti] tests create their own throwaway user and generate the link
@@ -62,8 +63,8 @@ test.describe("/auth/confirm: link non validi", () => {
     ],
     ["/auth/confirm?token_hash=qualunque", /\?tipo=conferma$/],
     ["/auth/confirm?type=email", /\?tipo=conferma$/],
-    ["/auth/confirm?type=email&token_hash=inventato", /\?tipo=conferma$/],
-    ["/auth/confirm?type=signup&token_hash=inventato", /\?tipo=conferma$/],
+    // With type=email|signup and a token the GET shows the page «Conferma»
+    // (#419): the invented token fails only at the POST (conferma-link.spec.ts).
     ["/auth/confirm?type=otro&token_hash=inventato", /\?tipo=conferma$/],
     ["/auth/confirm?type=recovery&token_hash=inventato", /\?tipo=password$/],
   ];
@@ -116,15 +117,16 @@ async function linkFor(
 }
 
 test.describe("[CI-utenti] /auth/confirm: link validi", () => {
-  test("type=email: sessione e /onboarding, senza token nell'indirizzo", async ({
+  test("type=email: il bottone della pagina dà la sessione e «Mail confermata», senza token nell'indirizzo", async ({
     page,
   }) => {
     needKeys();
     const user = await createThrowawayUser("Carla");
     try {
-      await page.goto(await linkFor(user.email, "email"));
-      await expect(page).toHaveURL(/\/onboarding$/);
+      await confirmWithButton(page, await linkFor(user.email, "email"));
       expect(page.url()).not.toContain("token_hash");
+      await continueControl(page).click();
+      await expect(page).toHaveURL(/\/onboarding$/);
       const names = (await page.context().cookies()).map((c) => c.name);
       expect(names).not.toContain(RECOVERY_COOKIE);
     } finally {
@@ -149,13 +151,22 @@ test.describe("[CI-utenti] /auth/confirm: link validi", () => {
           sameSite: "Lax",
         },
       ]);
-      // The route alone: /invito/colore would check the invitation itself.
-      const response = await page
-        .context()
-        .request.get(await linkFor(user.email, "email"), { maxRedirects: 0 });
+      // The route alone (the POST of the page «Conferma»): /invito/colore
+      // would check the invitation itself.
+      const link = new URL(await linkFor(user.email, "email"), baseURL!);
+      const response = await page.context().request.post("/auth/confirm", {
+        form: {
+          token_hash: link.searchParams.get("token_hash")!,
+          type: "email",
+        },
+        headers: { Origin: new URL(baseURL!).origin },
+        maxRedirects: 0,
+      });
       expect(response.status()).toBe(303);
       const location = response.headers()["location"] ?? "";
-      expect(new URL(location, baseURL!).pathname).toBe("/invito/colore");
+      expect(new URL(location, baseURL!).pathname).toBe(
+        "/accesso/mail-confermata",
+      );
       expect(location).not.toContain(token);
       expect(location).not.toContain("token_hash");
       const cookie = (await page.context().cookies()).find(

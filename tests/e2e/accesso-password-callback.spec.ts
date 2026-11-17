@@ -141,6 +141,12 @@ test.describe("[CI-stack] /auth/callback con il link predefinito di Supabase", (
     try {
       const link = await registerAndGetLink(page, address, baseURL!);
       await page.goto(await link());
+      // #419 (D3): the confirmation ends on «Mail confermata»; «Continua» goes on.
+      await expect(page).toHaveURL(/\/accesso\/mail-confermata$/);
+      await page
+        .getByRole("button", { name: "Continua", exact: true })
+        .or(page.getByRole("link", { name: "Continua", exact: true }))
+        .click();
       await expect(page).toHaveURL(/\/onboarding$/);
       expect(page.url()).not.toContain("code=");
       expect(page.url()).not.toContain("tipo=");
