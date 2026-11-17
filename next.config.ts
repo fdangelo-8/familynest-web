@@ -16,7 +16,7 @@ const nextConfig: NextConfig = {
           source: "/auth/confirm",
           has: [
             { type: "query", key: "token_hash", value: ".+" },
-            { type: "query", key: "type", value: "email|signup" },
+            { type: "query", key: "type", value: "(email|signup)" },
           ],
           missing: [{ type: "header", key: "content-type" }],
           destination: "/accesso/conferma-mail",
@@ -42,14 +42,15 @@ const nextConfig: NextConfig = {
       // The confirmation link (#419): the address carries the token. `same-origin`
       // (not `no-referrer`) so the browser still sends a correct `Origin` with
       // the POST of the form.
-      {
-        source: "/auth/confirm",
+      // `/accesso/conferma-mail` is the page that answers the link.
+      ...["/auth/confirm", "/accesso/conferma-mail"].map((source) => ({
+        source,
         headers: [
           { key: "X-Robots-Tag", value: "noindex, nofollow" },
           { key: "Referrer-Policy", value: "same-origin" },
           { key: "Cache-Control", value: "no-store" },
         ],
-      },
+      })),
     ];
   },
 };
