@@ -336,11 +336,12 @@ body {
   outline-offset: var(--space-half);
 }
 
-/* Without scripts the streamed parts of a page (React's hidden boxes, which a
-   script moves into place) would stay hidden: the sign-in forms must work
-   without JavaScript (#419). */
+/* Without scripts the streamed part of a page (React's hidden box, which a
+   script moves into place) stays hidden. The page «Conferma l'indirizzo»
+   (#419) must work without JavaScript, so only the box that holds its form is
+   shown; the boxes of the loading skeletons stay hidden. */
 @media (scripting: none) {
-  div[hidden][id^="S:"] {
+  div[hidden][id^="S:"]:has(form[action="/auth/confirm"]) {
     display: contents;
   }
 }
