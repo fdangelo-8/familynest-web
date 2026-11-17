@@ -73,6 +73,8 @@ select throws_ok(
 );
 
 reset role;
+-- No user any more: auth.uid() is null again, as for the seed.
+set local request.jwt.claims to '';
 
 -- ---------------------------------------------------------------------------
 -- More than 10,000 pending invitations at the same time.

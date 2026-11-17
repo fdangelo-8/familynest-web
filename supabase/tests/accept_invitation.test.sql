@@ -22,7 +22,7 @@ select is_empty(
 -- md5 of the bodies as written in 20261030015510 (accept_invitation_with_color) and
 -- 20261030133343 (invitation_preview): any change of the code changes the hash.
 select results_eq(
-  $$ select p.proname::text collate "default", md5(p.prosrc)
+  $$ select p.proname::text collate "default", md5(p.prosrc) collate "default"
      from pg_proc p
      where p.oid in ('public.invitation_preview(text)'::regprocedure,
                      'public.accept_invitation_with_color(text, public.member_color)'::regprocedure)
@@ -32,14 +32,14 @@ select results_eq(
   '#438: the code of accept_invitation_with_color and invitation_preview is unchanged'
 );
 select results_eq(
-  $$ select p.proargnames, p.prorettype::regtype::text collate "default", p.proretset
+  $$ select p.proargnames::text[] collate "default", p.prorettype::regtype::text collate "default", p.proretset
      from pg_proc p
      where p.oid = 'public.accept_invitation_with_color(text, public.member_color)'::regprocedure $$,
   $$ values (array['p_token', 'p_color']::text[], 'uuid', false) $$,
   '#438: accept_invitation_with_color keeps its arguments and returns one uuid'
 );
 select results_eq(
-  $$ select p.proargnames, p.proallargtypes::regtype[]::text[], p.proretset
+  $$ select p.proargnames::text[] collate "default", p.proallargtypes::regtype[]::text[] collate "default", p.proretset
      from pg_proc p
      where p.oid = 'public.invitation_preview(text)'::regprocedure $$,
   $$ values (
