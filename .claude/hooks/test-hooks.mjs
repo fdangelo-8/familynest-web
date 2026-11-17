@@ -370,6 +370,25 @@ expect(
   true,
 );
 expect(
+  "contenuti-seo docs ok",
+  F,
+  write("docs/marketing/articoli/menu-settimanale.md", "contenuti-seo"),
+  false,
+);
+expect(
+  "contenuti-seo src",
+  F,
+  write("src/app/page.tsx", "contenuti-seo"),
+  true,
+);
+expect(
+  "social docs ok",
+  F,
+  write("docs/marketing/social/settimana-1.md", "social"),
+  false,
+);
+expect("social claude", F, write(".claude/agents/social.md", "social"), true);
+expect(
   "infrastruttura docs ok",
   F,
   write("docs/infrastruttura/ripristino.md", "infrastruttura"),

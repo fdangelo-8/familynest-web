@@ -48,6 +48,8 @@ Il coordinatore è la sessione principale avviata con `/sviluppa`: solo la sessi
 | Stratega          | `stratega`                     | Mercato, concorrenti, posizionamento, marketing                            | Toccare il codice dell'app                      | Opus                |
 | Sicurezza         | `sicurezza`                    | PR a rischio, audit, minacce nelle specifiche                              | Modificare file                                 | Opus                |
 | Legale e privacy  | `legale-privacy`               | Documenti legali, GDPR e minori, controllo legale delle funzioni           | Scrivere fuori da `docs/`                       | Opus                |
+| Contenuti SEO     | `contenuti-seo`                | Traffico organico: piano editoriale, articoli, GEO, blog di familynest.me  | Scrivere fuori da `docs/`, pubblicare           | Opus                |
+| Social            | `social`                       | Post, caroselli, video brevi con voce, campagne dei rilasci, ascolto       | Scrivere fuori da `docs/`, pubblicare           | Opus                |
 | Infrastruttura    | `infrastruttura`               | Carichi, database, backup, monitoraggio, email, costi, sicurezza infra     | Scrivere fuori da `docs/`, cambiare i pannelli  | Opus                |
 
 **Regole comuni:** leggere questo file e `LEZIONI.md` all'avvio; lavorare solo sulla issue ricevuta; chiudere sempre con un esito scritto (`FATTO`, `DA CORREGGERE`, `BLOCCATO`); domanda nella issue invece di supposizioni.
