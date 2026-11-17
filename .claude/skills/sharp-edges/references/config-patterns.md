@@ -113,7 +113,6 @@ max_retries: -1 # Infinite? Error? Use default?
 cache_ttl: -1 # Never expire? Disabled?
 timeout_seconds: -1 # Wait forever? Use system default?
 
-
 # Real vulnerability: connection pool with max_connections: -1
 # meant "unlimited" - enabled DoS via connection exhaustion
 ```

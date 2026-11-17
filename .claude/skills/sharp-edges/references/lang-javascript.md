@@ -47,11 +47,11 @@ user.isAdmin; // true - authentication bypassed!
 
 ```javascript
 // Check for dangerous keys
-const dangerous = ['__proto__', 'constructor', 'prototype'];
+const dangerous = ["__proto__", "constructor", "prototype"];
 if (dangerous.includes(key)) continue;
 
 // Or use Object.create(null) for dictionary objects
-const dict = Object.create(null);  // No prototype chain
+const dict = Object.create(null); // No prototype chain
 
 // Or use Map instead of objects
 const map = new Map();
