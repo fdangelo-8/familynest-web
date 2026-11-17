@@ -335,7 +335,7 @@ test("ordine del focus nello stato vuoto: «Aggiungi una scadenza» prima della 
   }
 });
 
-test("anello di focus visibile: selettore, «Aggiungi una scadenza», «Riprova»", async ({
+for (let n = 0; n < 40; n++) test(`anello di focus visibile #${n}`, async ({
   page,
 }, testInfo) => {
   const ring = (el: Element) => {

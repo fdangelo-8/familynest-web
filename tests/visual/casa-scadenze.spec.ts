@@ -104,7 +104,7 @@ test("vuoto", async ({ page }) => {
   await shoot(page, "vuoto.png");
 });
 
-test("caricamento", async ({ page }) => {
+for (let n = 0; n < 40; n++) test(`caricamento #${n}`, async ({ page }) => {
   await open(page, { deadlines: NORMAL_DEADLINES, reads: "slow" }, false);
   await expect(
     page.locator('[aria-busy="true"][aria-live="polite"]'),
