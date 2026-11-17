@@ -99,7 +99,17 @@ async function accept(
 ): Promise<ThrowawayUser> {
   const user = await createThrowawayUser(memberName);
   try {
-    const { error } = await user.client.rpc("accept_invitation", { token });
+    // The invited member keeps the colour it already has in the Nest.
+    const { data: member, error: memberError } = await ctx.owner.admin
+      .from("household_members")
+      .select("color")
+      .eq("id", ctx.nest.members[memberName]!)
+      .single();
+    if (memberError || !member) throw new Error("Colore del membro non letto");
+    const { error } = await user.client.rpc("accept_invitation_with_color", {
+      p_token: token,
+      p_color: member.color,
+    });
     if (error) throw new Error("Invito di prova non accettato");
   } catch (error) {
     await user.remove();
