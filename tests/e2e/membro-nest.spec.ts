@@ -1069,13 +1069,9 @@ test.describe("sicurezza e privacy", () => {
     for (const { url, text } of bodies.filter(
       (b) => new URL(b.url).origin === new URL(page.url()).origin,
     )) {
-      for (const value of [
-        emailA,
-        accountId!,
-        "2016-12-14",
-        "2020-04-02",
-        invite!.token,
-      ]) {
+      // The invite token is not in this list: the page and the send action
+      // return it on purpose, to the browser of the administrator who copies it.
+      for (const value of [emailA, accountId!, "2016-12-14", "2020-04-02"]) {
         expect(
           text,
           `La risposta ${new URL(url).pathname} contiene un dato personale`,
