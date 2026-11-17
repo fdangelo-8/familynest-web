@@ -427,12 +427,44 @@ test.describe("conferma (POST /auth/confirm)", () => {
         await openConfirm(page, path);
         await waitConfirmHydrated(page);
         const button = confirmForm(page).locator('button[type="submit"]');
+        // While the POST is held the page is in a pending navigation, and
+        // Playwright waits for it before it reads or acts on the page. So the
+        // button is observed from inside the page: after the submit it reports
+        // its state, presses itself a second time and reports again.
+        const reports: string[] = [];
+        page.on("console", (message) => {
+          if (message.text().startsWith("conferma:")) {
+            reports.push(message.text());
+          }
+        });
+        await page.evaluate(() => {
+          const state = () => {
+            const node = document.querySelector<HTMLButtonElement>(
+              'form[action="/auth/confirm"] button[type="submit"]',
+            );
+            return `${node?.getAttribute("aria-busy")}|${node?.textContent}`;
+          };
+          window.addEventListener(
+            "submit",
+            () => {
+              setTimeout(() => {
+                console.log(`conferma:uno:${state()}`);
+                document
+                  .querySelector<HTMLButtonElement>(
+                    'form[action="/auth/confirm"] button[type="submit"]',
+                  )
+                  ?.click();
+                setTimeout(() => console.log(`conferma:due:${state()}`), 300);
+              }, 300);
+            },
+            { once: true },
+          );
+        });
         // The POST is held: the click must not wait for the navigation.
         await button.click({ noWaitAfter: true });
-        await expect(button).toHaveAttribute("aria-busy", "true");
-        await expect(button).toHaveText(TEXT.confirmBusy);
-        // The second press of the same button, while the first is held.
-        await button.dispatchEvent("click");
+        await expect.poll(() => reports.length, { timeout: 10_000 }).toBe(2);
+        expect(reports[0]).toBe(`conferma:uno:true|${TEXT.confirmBusy}`);
+        expect(reports[1]).toBe(`conferma:due:true|${TEXT.confirmBusy}`);
         release();
         await expect(page).toHaveURL(CONFIRMED);
         expect(posts).toBe(1);
