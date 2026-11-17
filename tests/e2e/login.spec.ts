@@ -518,8 +518,19 @@ async function magicLink(address: string, next?: string) {
   }`;
 }
 
+// The link opens a page with a button (#419): the button confirms, then
+// «Mail confermata» has «Continua», which goes where the sign-in goes.
 async function enter(page: Page, address: string, next?: string) {
   await page.goto(await magicLink(address, next));
+  await pressConfirm(page);
+  await expect(page).toHaveURL(/\/accesso\/mail-confermata/);
+  await page.getByRole("link", { name: "Continua", exact: true }).click();
+}
+
+async function pressConfirm(page: Page) {
+  await page
+    .getByRole("button", { name: "Conferma l'indirizzo", exact: true })
+    .click();
 }
 
 async function cookieNames(context: BrowserContext) {
@@ -568,9 +579,11 @@ test.describe("[CI-utenti] ritorno e sessione", () => {
     try {
       const link = await magicLink(marco.email);
       await page.goto(link);
-      await expect(page).toHaveURL(/\/oggi$/);
+      await pressConfirm(page);
+      await expect(page).toHaveURL(/\/accesso\/mail-confermata$/);
       const second = await other.newPage();
       await second.goto(new URL(link, page.url()).toString());
+      await pressConfirm(second);
       await expect(second).toHaveURL(/\/accesso\/link-scaduto\?tipo=conferma$/);
       await second.goto(new URL("/oggi", page.url()).toString());
       await expect(second).toHaveURL(/\/accesso$/);

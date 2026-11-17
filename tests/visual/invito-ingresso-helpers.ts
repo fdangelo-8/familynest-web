@@ -254,9 +254,29 @@ export async function openColor(
   await expect(shown(page, "radiogroup", "Il tuo colore")).toBeVisible();
 }
 
+/** Mail written in the shots instead of the throwaway one (random each run). */
+export const SHOT_MAIL = "laura@esempio.it";
+
+/**
+ * «Per l'account <mail>.» and the notice «In questo browser sei dentro con
+ * <mail>» show the address of the throwaway user, different at every run: the
+ * shot would change with it. The text is replaced by a fixed one (the layout
+ * rules stay those of the page).
+ */
+export async function fixAccountMail(page: Page, mail: string = SHOT_MAIL) {
+  await page.evaluate((text) => {
+    for (const el of document.querySelectorAll(
+      '[data-testid="account-attivo"] strong, .avviso b[class*="address"]',
+    )) {
+      el.textContent = text;
+    }
+  }, mail);
+}
+
 /** Fonts loaded, pointer away from any control (no hover state). */
 export async function settle(page: Page) {
   await page.evaluate(() => document.fonts.ready);
+  await fixAccountMail(page);
   await page.mouse.move(0, 0);
 }
 

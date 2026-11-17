@@ -335,3 +335,17 @@ body {
   outline: var(--border-medio) solid var(--color-info);
   outline-offset: var(--space-half);
 }
+
+/* Without scripts the streamed part of a page (React's hidden box, which a
+   script moves into place) stays hidden. The page «Conferma l'indirizzo»
+   (#419) and the one after it («Mail confermata») must work without
+   JavaScript, so only the boxes that hold them are shown; the boxes of the
+   loading skeletons stay hidden. */
+@media (scripting: none) {
+  div[hidden][id^="S:"]:has(
+      form[action="/auth/confirm"],
+      [data-testid="mail-confermata-continua"]
+    ) {
+    display: contents;
+  }
+}
