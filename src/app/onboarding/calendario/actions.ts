@@ -2,7 +2,7 @@
 
 import { cookies } from "next/headers";
 import { getRequestOrigin } from "@/lib/request-origin";
-import { clearLinkResultOptions } from "@/lib/calendar-sync/link-response";
+import { clearLinkResultOptions } from "@/lib/calendar-sync/link-cookie";
 import { LINK_RESULT_COOKIE } from "@/lib/calendar-sync/oauth";
 
 /**

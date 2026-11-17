@@ -9,6 +9,7 @@ import {
   type LinkDestination,
   type LinkResult,
 } from "./oauth";
+import { linkCookieBaseOptions } from "./link-cookie";
 
 /*
  * Answers of the two routes of the link (`collega` and `ritorno`): always a
@@ -19,13 +20,7 @@ import {
 
 const OAUTH_COOKIE_PATH = "/calendari-collegati";
 
-function baseOptions(origin: string) {
-  return {
-    httpOnly: true,
-    secure: origin.startsWith("https:"),
-    sameSite: "lax" as const,
-  };
-}
+const baseOptions = linkCookieBaseOptions;
 
 function hardened(response: NextResponse): NextResponse {
   response.headers.set("Cache-Control", "no-store");
@@ -76,14 +71,4 @@ export function redirectToDestination(
     expires: new Date(0),
   });
   return response;
-}
-
-/** Deletion of the result cookie (for the page that has read it). */
-export function clearLinkResultOptions(origin: string) {
-  return {
-    ...baseOptions(origin),
-    path: "/",
-    maxAge: 0,
-    expires: new Date(0),
-  };
 }

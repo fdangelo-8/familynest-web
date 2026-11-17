@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { expect, test } from "@playwright/test";
-import { clearLinkResultOptions } from "../../src/lib/calendar-sync/link-response";
+import { clearLinkResultOptions } from "../../src/lib/calendar-sync/link-cookie";
 import {
   clearRecoveryCookieOptions,
   recoveryCookieOptions,
