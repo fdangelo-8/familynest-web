@@ -40,7 +40,7 @@ const nextConfig: NextConfig = {
       // closing route and the calendar link): a header of the config wins over
       // one set by a route handler, so the value is repeated here.
       ...[
-        "/invito/:token",
+        "/invito/:token((?!colore$)[^/]+)",
         "/calendari-collegati/collega/:provider",
         "/calendari-collegati/ritorno/:provider",
       ].map((source) => ({
