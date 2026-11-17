@@ -1,5 +1,7 @@
 # Weekly checks for vulnerable or outdated dependencies (npm and GitHub Actions).
-# Updates arrive as pull requests: they follow the normal flow (CI, review, merge by Francesco).
+# Updates arrive as pull requests. The guard check rejects `dependabot/*` branches, so the
+# team redoes each accepted update on a `shared/*` branch (npm) or an `admin/*` branch
+# (actions); the Dependabot pull request is then closed.
 version: 2
 updates:
   - package-ecosystem: npm
@@ -7,13 +9,39 @@ updates:
     schedule:
       interval: weekly
       day: monday
+      timezone: Europe/Rome
     open-pull-requests-limit: 5
+    ignore:
+      # Types follow the Node version in .nvmrc (22): raise this together with .nvmrc.
+      - dependency-name: "@types/node"
+        versions: [">=23"]
+      # Development tools whose major versions we adopt by hand, once Next.js,
+      # eslint-config-next and typescript-eslint support them.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "supabase"
+        update-types: ["version-update:semver-major"]
     groups:
-      minor-and-patch:
+      # next and eslint-config-next always move together.
+      next:
+        applies-to: version-updates
+        patterns: ["next", "eslint-config-next"]
         update-types: [minor, patch]
+      # Each Playwright update also needs the image in ci.yml and new visual references.
+      playwright:
+        applies-to: version-updates
+        patterns: ["@playwright/test"]
+      minor-and-patch:
+        applies-to: version-updates
+        update-types: [minor, patch]
+        exclude-patterns: ["next", "eslint-config-next", "@playwright/test"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
-      day: monday
-    open-pull-requests-limit: 3
+      interval: monthly
+    open-pull-requests-limit: 1
+    groups:
+      actions:
+        patterns: ["*"]

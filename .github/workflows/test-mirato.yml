@@ -31,7 +31,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: npm
@@ -118,7 +118,7 @@ jobs:
             "mcr.microsoft.com/playwright:v${{ steps.pw.outputs.version }}-noble" \
             bash -c 'npx playwright test $SPEC'
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: playwright-report
