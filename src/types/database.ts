@@ -1711,6 +1711,10 @@ export type Database = {
           provider_event_id: string;
         }[];
       };
+      claim_shop_link_read: {
+        Args: Record<PropertyKey, never>;
+        Returns: boolean;
+      };
       clear_checked_shopping_items: {
         Args: { item_ids: string[] };
         Returns: {
