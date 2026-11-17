@@ -97,10 +97,11 @@ test.describe("conferma del link · «Conferma il tuo indirizzo»", () => {
   });
 
   test("conferma in corso", async ({ page }) => {
-    // The POST never answers: the page keeps the loading state.
+    // The POST is cancelled: the browser stays on the page, which keeps the
+    // loading state (a held request would keep a navigation pending).
     await page.route("**/auth/confirm", (route) =>
       route.request().method() === "POST"
-        ? new Promise<void>(() => undefined)
+        ? route.abort("aborted")
         : route.continue(),
     );
     await openConfirm(page);
@@ -119,7 +120,7 @@ test.describe("conferma del link · «Conferma il tuo indirizzo»", () => {
     await signIn(page, baseURL, await caseVisitor("mockup"));
     await page.route("**/auth/confirm", (route) =>
       route.request().method() === "POST"
-        ? new Promise<void>(() => undefined)
+        ? route.abort("aborted")
         : route.continue(),
     );
     await openConfirm(page);
@@ -149,7 +150,7 @@ test.describe("conferma del link · «Mail confermata»", () => {
   test("uscita in corso", async ({ page, baseURL }) => {
     await page.route("**/auth/signout", (route) =>
       route.request().method() === "POST"
-        ? new Promise<void>(() => undefined)
+        ? route.abort("aborted")
         : route.continue(),
     );
     await openConfirmed(page, baseURL);

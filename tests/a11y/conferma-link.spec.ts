@@ -212,9 +212,10 @@ test.describe("conferma del link · «Conferma il tuo indirizzo» · accessibili
     baseURL,
   }) => {
     await signIn(page, baseURL, await caseVisitor("mockup"));
+    // The POST is cancelled: the page stays and keeps the loading state.
     await page.route("**/auth/confirm", (route) =>
       route.request().method() === "POST"
-        ? new Promise<void>(() => undefined)
+        ? route.abort("aborted")
         : route.continue(),
     );
     await openConfirm(page);
@@ -275,7 +276,7 @@ test.describe("conferma del link · «Mail confermata» · accessibilità", () =
   }) => {
     await page.route("**/auth/signout", (route) =>
       route.request().method() === "POST"
-        ? new Promise<void>(() => undefined)
+        ? route.abort("aborted")
         : route.continue(),
     );
     await openConfirmed(page, baseURL);
