@@ -129,9 +129,19 @@ export async function withRita(page: Page) {
     .eq("member_id", ritaId)
     .eq("status", "pending")
     .single();
+  const { data: rita, error: ritaError } = await user.admin
+    .from("household_members")
+    .select("color")
+    .eq("id", ritaId)
+    .single();
+  if (ritaError || !rita) {
+    await user.remove();
+    throw new Error("Colore di Rita non letto");
+  }
   const user2 = await createThrowawayUser("Rita Verdi");
-  const { error } = await user2.client.rpc("accept_invitation", {
-    token: invite!.token,
+  const { error } = await user2.client.rpc("accept_invitation_with_color", {
+    p_token: invite!.token,
+    p_color: rita.color,
   });
   if (error) {
     await user2.remove();

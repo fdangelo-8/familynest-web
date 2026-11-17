@@ -286,8 +286,9 @@ export async function expectPinned(
 
 /**
  * A second member with account who joins the Nest of `ctx` through an
- * invitation (`accept_invitation`), as in the real flow. Returns the new user
- * and its member id; the caller removes the user.
+ * invitation (`accept_invitation_with_color`, with the colour of the invited
+ * member), as in the real flow. Returns the new user and its member id; the
+ * caller removes the user.
  */
 export async function joinWithInvitation(
   ctx: EsploraNest,
@@ -317,8 +318,9 @@ export async function joinWithInvitation(
   if (inviteError || !invitation) throw new Error("Invito di prova non creato");
   const user = await createThrowawayUser(name);
   try {
-    const { error } = await user.client.rpc("accept_invitation", {
-      token: invitation.token,
+    const { error } = await user.client.rpc("accept_invitation_with_color", {
+      p_token: invitation.token,
+      p_color: color,
     });
     if (error) throw new Error("Invito di prova non accettato");
   } catch (error) {

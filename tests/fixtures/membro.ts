@@ -242,8 +242,9 @@ export async function withRita(body: (ctx: RitaNest) => Promise<void>) {
     const invitation = await ctx.invite(ritaId);
     const u2 = await createThrowawayUser("Rita Verdi");
     try {
-      const { error } = await u2.client.rpc("accept_invitation", {
-        token: invitation.token,
+      const { error } = await u2.client.rpc("accept_invitation_with_color", {
+        p_token: invitation.token,
+        p_color: "glicine",
       });
       if (error) throw new Error("Invito di Rita non accettato");
       await body({ ...ctx, ritaId, u2 });
