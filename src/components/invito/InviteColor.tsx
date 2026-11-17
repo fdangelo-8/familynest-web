@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { acceptInvitation } from "@/app/invito/actions";
+import { AccountSentence, SignOutLink } from "@/components/accesso/AccountLine";
 import { Brand, Claim, Stickers } from "@/components/accesso/parts";
 import { Steps } from "@/components/onboarding/Steps";
 import onboardingStyles from "@/components/onboarding/onboarding.module.css";
@@ -26,6 +27,8 @@ export type InviteColorProps = {
   inviteeColor: ChoosableColor;
   /** `null` when whoever invited has left the Nest */
   inviterName: string | null;
+  /** Mail of the signed-in account (theirs only); `null` hides «Per l'account» */
+  email: string | null;
   /** Colours of the other members, with their names (only after signing in) */
   taken: TakenColor[];
 };
@@ -56,6 +59,7 @@ export function InviteColor({
   inviteeName,
   inviteeColor,
   inviterName,
+  email,
   taken: initialTaken,
 }: InviteColorProps) {
   const router = useRouter();
@@ -68,6 +72,8 @@ export function InviteColor({
   const [groupError, setGroupError] = useState(false);
   const [notice, setNotice] = useState<Notice | null>(null);
   const [sending, setSending] = useState(false);
+  // «Non sei tu? Esci» is working: everything else on the page waits.
+  const [leaving, setLeaving] = useState(false);
   const [focusTarget, setFocusTarget] = useState<{
     ids: string[];
     n: number;
@@ -197,7 +203,7 @@ export function InviteColor({
           onChange={choose}
           taken={taken}
           order={order}
-          disabled={sending || full}
+          disabled={sending || leaving || full}
           invalid={groupError}
           describedBy={groupError ? `${errorId} ${helpId}` : helpId}
           idPrefix={`${prefix}-colore`}
@@ -232,6 +238,14 @@ export function InviteColor({
       <h1 className="intestazione__titolo t-titolo-pagina">
         Scegli il tuo colore
       </h1>
+      {email ? (
+        <>
+          <p className="intestazione__sotto">
+            <AccountSentence email={email} />
+          </p>
+          <SignOutLink disabled={sending} onPendingChange={setLeaving} />
+        </>
+      ) : null}
     </div>
   );
 
@@ -244,9 +258,9 @@ export function InviteColor({
             prefetch={false}
             className="btn-icona"
             aria-label="Indietro"
-            aria-disabled={sending || undefined}
+            aria-disabled={sending || leaving || undefined}
             onClick={(event) => {
-              if (sending) event.preventDefault();
+              if (sending || leaving) event.preventDefault();
             }}
           >
             <Icon name="arrow-left" />
@@ -262,7 +276,7 @@ export function InviteColor({
         <div className="dialogo__azioni">
           <Button
             full
-            disabled={full}
+            disabled={full || leaving}
             loading={sending}
             onClick={() => void submit()}
           >
@@ -289,15 +303,15 @@ export function InviteColor({
               href="/invito"
               prefetch={false}
               className="btn-link btn-link--secondario"
-              aria-disabled={sending || undefined}
+              aria-disabled={sending || leaving || undefined}
               onClick={(event) => {
-                if (sending) event.preventDefault();
+                if (sending || leaving) event.preventDefault();
               }}
             >
               Indietro
             </Link>
             <Button
-              disabled={full}
+              disabled={full || leaving}
               loading={sending}
               onClick={() => void submit()}
             >

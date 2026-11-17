@@ -11,12 +11,13 @@ import type { Database } from "@/types/database";
 export type InviteSession =
   | { kind: "error" }
   | { kind: "anonymous" }
-  | { kind: "user"; householdId: string | null };
+  | { kind: "user"; householdId: string | null; email: string | null };
 
 /**
  * Who is asking. A missing session is `anonymous`; an unreachable Auth server
- * or database is `error` (never read as «no session»). Nothing of the person
- * is returned: only whether they already have a Nest.
+ * or database is `error` (never read as «no session»). Of the person it
+ * returns whether they already have a Nest and their own mail address (shown
+ * only to them: «Per l'account …»).
  */
 export async function readInviteSession(
   supabase: SupabaseClient<Database>,
@@ -27,7 +28,11 @@ export async function readInviteSession(
     if (error || !data.user) return { kind: "anonymous" };
     const household = await supabase.rpc("current_household_id");
     if (household.error) return { kind: "error" };
-    return { kind: "user", householdId: household.data || null };
+    return {
+      kind: "user",
+      householdId: household.data || null,
+      email: data.user.email ?? null,
+    };
   } catch {
     return { kind: "error" };
   }

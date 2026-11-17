@@ -62,8 +62,6 @@ test.describe("/auth/confirm: link non validi", () => {
     ],
     ["/auth/confirm?token_hash=qualunque", /\?tipo=conferma$/],
     ["/auth/confirm?type=email", /\?tipo=conferma$/],
-    ["/auth/confirm?type=email&token_hash=inventato", /\?tipo=conferma$/],
-    ["/auth/confirm?type=signup&token_hash=inventato", /\?tipo=conferma$/],
     ["/auth/confirm?type=otro&token_hash=inventato", /\?tipo=conferma$/],
     ["/auth/confirm?type=recovery&token_hash=inventato", /\?tipo=password$/],
   ];
@@ -73,6 +71,29 @@ test.describe("/auth/confirm: link non validi", () => {
     }) => {
       await page.goto(url);
       await expect(page).toHaveURL(expected);
+      expect(page.url()).not.toContain("token_hash");
+      const names = (await page.context().cookies()).map((c) => c.name);
+      expect(names.filter((n) => n.startsWith("sb-"))).toEqual([]);
+      expect(names).not.toContain(RECOVERY_COOKIE);
+    });
+  }
+
+  for (const type of ["email", "signup"]) {
+    test(`type=${type} con un token inventato: pagina «Conferma l'indirizzo», poi il bottone porta a /accesso/link-scaduto`, async ({
+      page,
+    }) => {
+      await page.goto(`/auth/confirm?type=${type}&token_hash=inventato`);
+      await expect(
+        page.getByRole("heading", {
+          level: 1,
+          name: "Conferma il tuo indirizzo",
+          exact: true,
+        }),
+      ).toBeVisible();
+      await page
+        .getByRole("button", { name: "Conferma l'indirizzo", exact: true })
+        .click();
+      await expect(page).toHaveURL(/\/accesso\/link-scaduto\?tipo=conferma$/);
       expect(page.url()).not.toContain("token_hash");
       const names = (await page.context().cookies()).map((c) => c.name);
       expect(names.filter((n) => n.startsWith("sb-"))).toEqual([]);
@@ -92,6 +113,81 @@ test.describe("/auth/confirm: link non validi", () => {
     expect(location).toContain("/accesso/link-scaduto?tipo=password");
     expect(location).not.toContain("inventato");
   });
+});
+
+// POST /auth/confirm accepts only a request that comes from the page of the
+// app: `Origin` present and equal to the address of the app.
+test.describe("POST /auth/confirm: origine", () => {
+  // With `Sec-Fetch-Site` under test the `Origin` is the right one, so that
+  // only that header is wrong.
+  const cases: Array<[string, (own: string) => Record<string, string>]> = [
+    ["Origin assente", () => ({})],
+    ["Origin «null»", () => ({ Origin: "null" })],
+    ["Origin di un altro sito", () => ({ Origin: "https://altro.example" })],
+    [
+      "Sec-Fetch-Site cross-site",
+      (own) => ({ Origin: own, "Sec-Fetch-Site": "cross-site" }),
+    ],
+    [
+      "Sec-Fetch-Site same-site",
+      (own) => ({ Origin: own, "Sec-Fetch-Site": "same-site" }),
+    ],
+    [
+      "Sec-Fetch-Site none",
+      (own) => ({ Origin: own, "Sec-Fetch-Site": "none" }),
+    ],
+  ];
+  for (const [name, headersFor] of cases) {
+    test(`${name}: 403 e nessuna sessione`, async ({ request, baseURL }) => {
+      const response = await request.post("/auth/confirm", {
+        form: { token_hash: "inventato", type: "email" },
+        headers: headersFor(new URL(baseURL!).origin),
+        maxRedirects: 0,
+      });
+      expect(response.status()).toBe(403);
+      expect(response.headers()["set-cookie"] ?? "").not.toContain("sb-");
+    });
+  }
+
+  test("dalla nostra origine con un token inventato: 303 a /accesso/link-scaduto", async ({
+    request,
+    baseURL,
+  }) => {
+    const response = await request.post("/auth/confirm", {
+      form: { token_hash: "inventato", type: "email" },
+      headers: { Origin: new URL(baseURL!).origin },
+      maxRedirects: 0,
+    });
+    expect(response.status()).toBe(303);
+    const location = response.headers()["location"] ?? "";
+    expect(location).toContain("/accesso/link-scaduto?tipo=conferma");
+    expect(location).not.toContain("inventato");
+  });
+
+  const badForms: Array<Record<string, string>> = [
+    { token_hash: "inventato", type: "recovery" },
+    { token_hash: "inventato", type: "magiclink" },
+    { type: "email" },
+  ];
+  for (const form of badForms) {
+    test(`dalla nostra origine con ${JSON.stringify(form)}: 303 a /accesso/link-scaduto?tipo=conferma`, async ({
+      request,
+      baseURL,
+    }) => {
+      const response = await request.post("/auth/confirm", {
+        form,
+        headers: { Origin: new URL(baseURL!).origin },
+        maxRedirects: 0,
+      });
+      expect(response.status()).toBe(303);
+      expect(response.headers()["location"] ?? "").toContain(
+        "/accesso/link-scaduto?tipo=conferma",
+      );
+      expect(response.headers()["set-cookie"] ?? "").not.toContain(
+        RECOVERY_COOKIE,
+      );
+    });
+  }
 });
 
 function needKeys() {
@@ -116,15 +212,29 @@ async function linkFor(
 }
 
 test.describe("[CI-utenti] /auth/confirm: link validi", () => {
-  test("type=email: sessione e /onboarding, senza token nell'indirizzo", async ({
+  test("type=email: aprire il link non lo usa; il bottone conferma e «Continua» porta a /onboarding", async ({
     page,
   }) => {
     needKeys();
     const user = await createThrowawayUser("Carla");
     try {
-      await page.goto(await linkFor(user.email, "email"));
-      await expect(page).toHaveURL(/\/onboarding$/);
+      const link = await linkFor(user.email, "email");
+      // Opening the link (even more than once) does not use it.
+      await page.context().request.get(link);
+      await page.context().request.head(link);
+      await page.goto(link);
+      expect(
+        (await page.context().cookies())
+          .map((c) => c.name)
+          .filter((n) => n.startsWith("sb-")),
+      ).toEqual([]);
+      await page
+        .getByRole("button", { name: "Conferma l'indirizzo", exact: true })
+        .click();
+      await expect(page).toHaveURL(/\/accesso\/mail-confermata$/);
       expect(page.url()).not.toContain("token_hash");
+      await page.getByRole("link", { name: "Continua", exact: true }).click();
+      await expect(page).toHaveURL(/\/onboarding$/);
       const names = (await page.context().cookies()).map((c) => c.name);
       expect(names).not.toContain(RECOVERY_COOKIE);
     } finally {
@@ -132,7 +242,41 @@ test.describe("[CI-utenti] /auth/confirm: link validi", () => {
     }
   });
 
-  test("type=email con il cookie d'invito: /invito/colore e il cookie resta", async ({
+  test("un POST con una origine sbagliata non usa il token: poi il bottone conferma ancora", async ({
+    page,
+    request,
+  }) => {
+    needKeys();
+    const user = await createThrowawayUser("Carla");
+    try {
+      const link = await linkFor(user.email, "email");
+      const tokenHash = new URL(link, "http://app.invalid").searchParams.get(
+        "token_hash",
+      );
+      const wrong: Array<Record<string, string>> = [
+        {},
+        { Origin: "null" },
+        { Origin: "https://altro.example" },
+      ];
+      for (const headers of wrong) {
+        const refused = await request.post("/auth/confirm", {
+          form: { token_hash: tokenHash!, type: "email" },
+          headers,
+          maxRedirects: 0,
+        });
+        expect(refused.status()).toBe(403);
+      }
+      await page.goto(link);
+      await page
+        .getByRole("button", { name: "Conferma l'indirizzo", exact: true })
+        .click();
+      await expect(page).toHaveURL(/\/accesso\/mail-confermata$/);
+    } finally {
+      await user.remove();
+    }
+  });
+
+  test("type=email con il cookie d'invito: /accesso/mail-confermata e il cookie resta", async ({
     page,
     baseURL,
   }) => {
@@ -150,12 +294,20 @@ test.describe("[CI-utenti] /auth/confirm: link validi", () => {
         },
       ]);
       // The route alone: /invito/colore would check the invitation itself.
-      const response = await page
-        .context()
-        .request.get(await linkFor(user.email, "email"), { maxRedirects: 0 });
+      const tokenHash = new URL(
+        await linkFor(user.email, "email"),
+        baseURL!,
+      ).searchParams.get("token_hash");
+      const response = await page.context().request.post("/auth/confirm", {
+        form: { token_hash: tokenHash!, type: "email" },
+        headers: { Origin: new URL(baseURL!).origin },
+        maxRedirects: 0,
+      });
       expect(response.status()).toBe(303);
       const location = response.headers()["location"] ?? "";
-      expect(new URL(location, baseURL!).pathname).toBe("/invito/colore");
+      expect(new URL(location, baseURL!).pathname).toBe(
+        "/accesso/mail-confermata",
+      );
       expect(location).not.toContain(token);
       expect(location).not.toContain("token_hash");
       const cookie = (await page.context().cookies()).find(

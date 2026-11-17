@@ -518,8 +518,15 @@ async function magicLink(address: string, next?: string) {
   }`;
 }
 
+// The link opens a page with a button (#419): the button confirms, then
+// «Mail confermata» has «Continua», which goes where the sign-in goes.
 async function enter(page: Page, address: string, next?: string) {
   await page.goto(await magicLink(address, next));
+  await page
+    .getByRole("button", { name: "Conferma l'indirizzo", exact: true })
+    .click();
+  await expect(page).toHaveURL(/\/accesso\/mail-confermata/);
+  await page.getByRole("link", { name: "Continua", exact: true }).click();
 }
 
 async function cookieNames(context: BrowserContext) {
