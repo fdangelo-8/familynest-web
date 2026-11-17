@@ -7,7 +7,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(30);
+select plan(31);
 
 insert into public.household_members (id, household_id, kind, name, color)
 values ('b1000000-0000-4000-8000-000000000016', '22222222-2222-4222-8222-222222222222', 'adult', 'Franca', 'lampone');
@@ -78,11 +78,17 @@ select is(pg_temp.member_flag(current_setting('test.laura')), 'valid:false', 'an
 select is(pg_temp.member_flag(current_setting('test.franca')), 'valid:false', 'anon: Franca''s invitation, not a member');
 select is(pg_temp.member_flag(current_setting('test.anna_expired')), 'invalid:null', 'anon: expired invitation, null');
 select is(pg_temp.member_flag(repeat('0123456789abcdef', 4)), 'invalid:null', 'anon: unknown token, null');
+-- Issue #414: anon has no select privilege on invitations at all.
+select throws_ok(
+  $$ select 1 from public.invitations $$,
+  '42501',
+  null,
+  'anon still cannot read invitations'
+);
 select is_empty(
-  $$ select 1 from public.invitations
-     union all select 1 from public.household_members
+  $$ select 1 from public.household_members
      union all select 1 from public.households $$,
-  'anon still reads 0 rows of invitations, household_members and households'
+  'anon still reads 0 rows of household_members and households'
 );
 
 -- ---------------------------------------------------------------------------
