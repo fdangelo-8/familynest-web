@@ -26,7 +26,7 @@ Una riga per lezione: `errore → regola`. Le lezioni già imposte da hook, CI, 
 - Regole di visibilità copiate in due funzioni → una sola fonte in `private`, o test di equivalenza.
 - PR `db/*` che tocca trigger o funzioni unita con la sola `check` verde → prima del merge, etichetta `suite-completa`.
 - Ruolo e chiamata a `private` in una sola espressione `security invoker` → `service_role` bloccata: il ruolo in un'istruzione a sé; pgTAP con la chiave amministrativa.
-- PR `db/*` con test e2e o file fuori da `supabase/`, `src/types/database.ts` e `docs/` → guard rosso; il test va nel branch della pagina (#360: aggiunto e annullato con `git revert`).
+- PR `db/*` con file fuori da `supabase/`, `src/types/database.ts` e `docs/` → guard rosso; i test e2e vanno nel branch della pagina.
 
 ## Sviluppo
 
@@ -72,11 +72,12 @@ Una riga per lezione: `errore → regola`. Le lezioni già imposte da hook, CI, 
 - Requisito di un'issue perso nel riepilogo del coordinatore → il revisore confronta la PR con l'issue originale; ogni elemento perso si decide per iscritto prima del test.
 - Scostamento dal criterio deciso in PR → il coordinatore aggiorna il criterio nell'issue prima del test.
 - Criterio con valori oltre i limiti del database → l'analista controlla lunghezze e vincoli.
-- Sviluppo senza criteri di accettazione numerati (#304) → l'analista li scrive prima; senza, la PR fa più giri di correzioni (#361: tre).
-- Controllo `db` obbligatorio rosso per un test con data passata, mentre la correzione aspetta un'altra PR → PR minima di sblocco, unita per prima (#366).
-- Tester visivo che sovrascrive un file del funzionale con una copia vecchia (#361) → `git pull --no-rebase` e `git diff --cached --stat` prima di ogni commit; pathspec propri.
-- Edit bloccato da un hook, aggirato con `sed -i`, script Python o Node o copia (#365, #361) → mai, nemmeno per annullare: si usano Edit o Write, altrimenti `BLOCCATO`.
+- Sviluppo senza criteri di accettazione numerati → l'analista li scrive prima; senza, la PR fa più giri di correzioni.
+- Controllo `db` obbligatorio rosso per un test con data passata, mentre la correzione aspetta un'altra PR → PR minima di sblocco, unita per prima.
+- Tester visivo sovrascrive il file del funzionale con una copia vecchia → `git pull --no-rebase` e `git diff --cached --stat` prima del commit; pathspec propri.
+- Edit bloccato da un hook, aggirato con `sed -i`, script Python o Node o copia → mai, nemmeno per annullare: si usano Edit o Write, altrimenti `BLOCCATO`.
 - Proposta di design approvata in ritardo, o stato «da decidere» → un'issue per ogni punto approvato, subito; prima dello stato rileggi i commenti di Francesco.
+- Skill esterne → copia fissa, letta tutta, senza script né login; licenza in `LICENZE-TERZE-PARTI.md`.
 
 ## Test
 
@@ -92,7 +93,7 @@ Una riga per lezione: `errore → regola`. Le lezioni già imposte da hook, CI, 
 - Test con utente autenticato saltati in CI → verifica in locale e dillo nell'esito; con le credenziali, i riferimenti visivi si generano subito.
 - Due tester sullo stesso Supabase locale con seed diversi → un solo seed per sessione.
 - Test che leggono il branch o il diff con `origin/main` in checkout superficiale → `git fetch --deepen=N`; se il diff non si calcola il test fallisce, mai con un `return`.
-- Puntatore sopra un toast o un elemento (`onMouseEnter` ferma il conto) → `page.mouse.move(0, 0)` prima dello screenshot o di `clock.runFor` (#363, CA-19).
+- Puntatore sopra un toast o un elemento (`onMouseEnter` ferma il conto) → `page.mouse.move(0, 0)` prima dello screenshot o di `clock.runFor`.
 - Area di tocco misurata con `boundingBox` → verifica con `elementFromPoint` nei punti dell'area.
 - Fuoco su un campo con `outline: none` → controlla il contenitore `:focus-within`, se documentato.
 - Due `<main>` in streaming → aspetta l'h1, poi `getByRole("main")`.
@@ -112,6 +113,7 @@ Una riga per lezione: `errore → regola`. Le lezioni già imposte da hook, CI, 
 - Testo cercato in tutta la pagina con una palette aperta sopra → controlla solo la superficie in cui il test è aperto.
 - `boundingBox` letto una volta su un elemento che React sostituisce → `expect.poll` finché stabile.
 - Commenti CSS con «#numero» letti come colori → togli i commenti `/* … */` prima di cercare i colori.
+- Tracce con `if: failure()` → perse se il retry passa → `if: always()`.
 
 ## Design
 
