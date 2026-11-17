@@ -87,12 +87,8 @@ test.describe("conferma del link · «Conferma il tuo indirizzo»", () => {
     await signIn(page, baseURL, await caseVisitor("mockup"));
     await openConfirm(page);
     await expect(page.getByRole("status")).toBeVisible();
-    await page.evaluate((text) => {
-      for (const el of document.querySelectorAll(".avviso b")) {
-        el.textContent = text;
-      }
-    }, LONG_MAIL);
     await settle(page);
+    await fixAccountMail(page, LONG_MAIL);
     await shot(page, "conferma-sessione-aperta-mail-lunga.png");
   });
 

@@ -7,6 +7,7 @@ import {
   answerContinue,
   caseNest,
   caseVisitor,
+  fixAccountMail,
   giuliaInOtherNest,
   holdProviderSignIn,
   openColor,
@@ -283,6 +284,7 @@ test.describe("invito · il tuo colore (08)", () => {
         page.getByText("Caricamento in corso").first(),
       ).toBeAttached();
       await page.mouse.move(0, 0);
+      await fixAccountMail(page);
       await shot(page, "08-scheletro.png");
     });
   });
