@@ -47,13 +47,29 @@ test.describe("Intestazioni di protezione", () => {
   for (const path of [
     "/invito/chiudi",
     "/invito/token-di-prova",
-    "/calendari-collegati/collega/google",
+    "/calendari-collegati/ritorno/google",
   ]) {
     test(`${path} mantiene no-referrer`, async ({ request }) => {
       const response = await request.get(path, { maxRedirects: 0 });
       expect(response.headers()["referrer-policy"]).toBe("no-referrer");
     });
   }
+
+  test("POST su /calendari-collegati/collega/google senza sessione mantiene no-referrer", async ({
+    request,
+  }) => {
+    const response = await request.post("/calendari-collegati/collega/google", {
+      maxRedirects: 0,
+    });
+    expect(response.headers()["referrer-policy"]).toBe("no-referrer");
+  });
+
+  test("/invito/colore resta con la politica standard", async ({ request }) => {
+    const response = await request.get("/invito/colore", { maxRedirects: 0 });
+    expect(response.headers()["referrer-policy"]).toBe(
+      "strict-origin-when-cross-origin",
+    );
+  });
 
   for (const path of ["/auth/confirm", "/accesso/conferma-mail"]) {
     test(`${path} mantiene same-origin e no-store`, async ({ request }) => {
@@ -74,14 +90,15 @@ test.describe("Intestazioni di protezione", () => {
       }),
     );
     await page.goto("https://esterna.test/");
-    await page.waitForLoadState("load");
-    await page.waitForTimeout(1000);
-    const framed = page.frames().filter((frame) => frame !== page.mainFrame());
-    for (const frame of framed) {
-      expect(frame.url()).not.toContain("/oggi");
-      expect(frame.url()).not.toContain("/accesso");
-      await expect(frame.locator("main, h1")).toHaveCount(0);
-    }
+    const iframe = page.locator("#f");
+    await expect(iframe).toBeAttached();
+    const handle = await iframe.elementHandle();
+    const frame = await handle?.contentFrame();
+    expect(frame, "il frame deve esistere").toBeTruthy();
+    await expect
+      .poll(() => frame!.url())
+      .toMatch(/^(chrome-error:|about:blank)/);
+    await expect(frame!.locator("main, h1")).toHaveCount(0);
   });
 
   test("il noindex delle anteprime c'è solo con VERCEL_ENV=preview", () => {
