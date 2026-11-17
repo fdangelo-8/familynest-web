@@ -41,7 +41,7 @@
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.10.1",
     "supabase": "^2.121.0",
-    "typescript": "^5"
+    "typescript": "^7"
   },
   "description": "FamilyNest — organizer familiare web",
   "engines": {
