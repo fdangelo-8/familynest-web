@@ -36,6 +36,17 @@ const nextConfig: NextConfig = {
         source: "/:path*",
         headers: buildSecurityHeaders(process.env.VERCEL_ENV),
       },
+      // Routes that already answer with `no-referrer` (the invitation link, its
+      // closing route and the calendar link): a header of the config wins over
+      // one set by a route handler, so the value is repeated here.
+      ...[
+        "/invito/:token",
+        "/calendari-collegati/collega/:provider",
+        "/calendari-collegati/ritorno/:provider",
+      ].map((source) => ({
+        source,
+        headers: [{ key: "Referrer-Policy", value: "no-referrer" }],
+      })),
       // The public page of a wish list (#33): the address carries the code, so it
       // must never be indexed, never be sent to other sites as a referrer and
       // never be kept in a cache.

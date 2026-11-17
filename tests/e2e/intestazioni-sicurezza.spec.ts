@@ -44,7 +44,11 @@ test.describe("Intestazioni di protezione", () => {
     expect(headers["cache-control"]).toContain("no-store");
   });
 
-  for (const path of ["/invito/chiudi", "/invito/token-di-prova"]) {
+  for (const path of [
+    "/invito/chiudi",
+    "/invito/token-di-prova",
+    "/calendari-collegati/collega/google",
+  ]) {
     test(`${path} mantiene no-referrer`, async ({ request }) => {
       const response = await request.get(path, { maxRedirects: 0 });
       expect(response.headers()["referrer-policy"]).toBe("no-referrer");
