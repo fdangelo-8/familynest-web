@@ -80,7 +80,7 @@ test.describe("limite di lettura dei link dei negozi", () => {
             await submitIdea(dialog).click();
             await expect(
               dialog.getByText(
-                "Non siamo riusciti a salvare. Controlla la connessione e riprova.",
+                "Non siamo riusciti a salvare per un problema nostro. Riprova tra qualche minuto.",
               ),
             ).toBeVisible({ timeout: 30_000 });
             expect(shopRequests()).toHaveLength(before);
