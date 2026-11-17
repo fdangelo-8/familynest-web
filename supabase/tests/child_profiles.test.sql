@@ -12,10 +12,13 @@
 -- Tommaso a1…04 (children), Biscotto a1…05 (pet); Casa Bianchi Leo b1…03 (child).
 -- Seed: Sofia has a profile (scuola Manzoni, 4ª B, 8:15–16:15 Monday–Friday, «mensa
 -- compresa», sizes 33, 9–10, 140) and one teacher (Maestra Bianchi); nobody else has any.
+-- Isolation is tested in both directions (issue #421): B and B2 towards Sofia and Tommaso,
+-- A (administrator) towards Leo, with reads, direct update/delete (0 rows) and inserts
+-- (42501); afterwards the data of Sofia, Tommaso and Leo are compared as database owner.
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(140);
+select plan(159);
 
 -- ---------------------------------------------------------------------------
 -- Schema
@@ -821,6 +824,85 @@ select throws_ok(
 );
 
 -- ---------------------------------------------------------------------------
+-- Paolo (B2, Casa Bianchi, not administrator): reads nothing of Sofia and Tommaso, writes nothing
+-- ---------------------------------------------------------------------------
+set local request.jwt.claims to '{"sub":"bbbbbbbb-0000-4000-8000-000000000002","role":"authenticated"}';
+
+select is_empty(
+  $$ select 1 from public.child_profiles p
+     where p.member_id in ('a1000000-0000-4000-8000-000000000003', 'a1000000-0000-4000-8000-000000000004') $$,
+  'B2 reads no school or sizes of Sofia and Tommaso'
+);
+select is_empty(
+  $$ select 1 from public.child_teachers t
+     where t.member_id in ('a1000000-0000-4000-8000-000000000003', 'a1000000-0000-4000-8000-000000000004') $$,
+  'B2 reads no teacher of Sofia and Tommaso'
+);
+select results_eq(
+  $$ with u as (
+       update public.child_profiles set school_class = '1ª A', shoe_size = '20'
+       where member_id in ('a1000000-0000-4000-8000-000000000003', 'a1000000-0000-4000-8000-000000000004')
+       returning 1
+     ) select count(*)::integer from u $$,
+  $$ values (0) $$,
+  'B2 changes no school or sizes of Sofia and Tommaso'
+);
+select results_eq(
+  $$ with u as (
+       update public.child_teachers set name = 'Maestra Rubata', phone = '000 000 000'
+       where member_id in ('a1000000-0000-4000-8000-000000000003', 'a1000000-0000-4000-8000-000000000004')
+       returning 1
+     ) select count(*)::integer from u $$,
+  $$ values (0) $$,
+  'B2 changes no teacher of Sofia and Tommaso'
+);
+select results_eq(
+  $$ with d as (
+       delete from public.child_profiles
+       where member_id in ('a1000000-0000-4000-8000-000000000003', 'a1000000-0000-4000-8000-000000000004')
+       returning 1
+     ) select count(*)::integer from d $$,
+  $$ values (0) $$,
+  'B2 deletes no school or sizes of Sofia and Tommaso'
+);
+select results_eq(
+  $$ with d as (
+       delete from public.child_teachers
+       where member_id in ('a1000000-0000-4000-8000-000000000003', 'a1000000-0000-4000-8000-000000000004')
+       returning 1
+     ) select count(*)::integer from d $$,
+  $$ values (0) $$,
+  'B2 deletes no teacher of Sofia and Tommaso'
+);
+select throws_ok(
+  $$ insert into public.child_profiles (member_id, shoe_size) values ('a1000000-0000-4000-8000-000000000003', '20') $$,
+  '42501', null,
+  'B2 cannot add a profile to Sofia (same answer although she has one)'
+);
+select throws_ok(
+  $$ insert into public.child_profiles (member_id, shoe_size) values ('a1000000-0000-4000-8000-000000000004', '20') $$,
+  '42501', null,
+  'B2 cannot add a profile to Tommaso'
+);
+select throws_ok(
+  $$ insert into public.child_teachers (member_id, sort_order, name)
+     values ('a1000000-0000-4000-8000-000000000003', 3, 'Maestra Intrusa') $$,
+  '42501', null,
+  'B2 cannot add a teacher to Sofia'
+);
+select throws_ok(
+  $$ insert into public.child_teachers (member_id, sort_order, name)
+     values ('a1000000-0000-4000-8000-000000000004', 5, 'Maestra Intrusa') $$,
+  '42501', null,
+  'B2 cannot add a teacher to Tommaso (42501 before the limit of five: nothing leaks)'
+);
+select throws_ok(
+  $$ select public.save_child_profile('a1000000-0000-4000-8000-000000000003', 'Sofia', 'salvia', '[]') $$,
+  '42501', null,
+  'B2 cannot save the profile of Sofia'
+);
+
+-- ---------------------------------------------------------------------------
 -- Paolo (B2, not administrator) saves Leo's profile; Giulia reads it; A does not
 -- ---------------------------------------------------------------------------
 set local request.jwt.claims to '{"sub":"bbbbbbbb-0000-4000-8000-000000000002","role":"authenticated"}';
@@ -861,6 +943,49 @@ select throws_ok(
   $$ select public.save_child_profile('b1000000-0000-4000-8000-000000000003', 'Leo', 'zafferano', '[]') $$,
   '42501', null,
   'A cannot save the profile of Leo'
+);
+select results_eq(
+  $$ with u as (
+       update public.child_profiles set school_class = '1ª A', shoe_size = '20'
+       where member_id = 'b1000000-0000-4000-8000-000000000003'
+       returning 1
+     ) select count(*)::integer from u $$,
+  $$ values (0) $$,
+  'A (administrator of another household) changes no school or sizes of Leo'
+);
+select results_eq(
+  $$ with u as (
+       update public.child_teachers set name = 'Maestra Rubata', phone = '000 000 000'
+       where member_id = 'b1000000-0000-4000-8000-000000000003'
+       returning 1
+     ) select count(*)::integer from u $$,
+  $$ values (0) $$,
+  'A changes no teacher of Leo'
+);
+select results_eq(
+  $$ with d as (
+       delete from public.child_profiles where member_id = 'b1000000-0000-4000-8000-000000000003' returning 1
+     ) select count(*)::integer from d $$,
+  $$ values (0) $$,
+  'A deletes no school or sizes of Leo'
+);
+select results_eq(
+  $$ with d as (
+       delete from public.child_teachers where member_id = 'b1000000-0000-4000-8000-000000000003' returning 1
+     ) select count(*)::integer from d $$,
+  $$ values (0) $$,
+  'A deletes no teacher of Leo'
+);
+select throws_ok(
+  $$ insert into public.child_profiles (member_id, shoe_size) values ('b1000000-0000-4000-8000-000000000003', '20') $$,
+  '42501', null,
+  'A cannot add a profile to Leo (same answer although he has one)'
+);
+select throws_ok(
+  $$ insert into public.child_teachers (member_id, sort_order, name)
+     values ('b1000000-0000-4000-8000-000000000003', 2, 'Maestra Intrusa') $$,
+  '42501', null,
+  'A cannot add a teacher to Leo'
 );
 
 -- ---------------------------------------------------------------------------
@@ -913,14 +1038,43 @@ select throws_ok(
 reset role;
 
 select results_eq(
-  $$ select m.name, p.school_class, p.shoe_size,
-            (select string_agg(t.name || ':' || coalesce(t.phone, '-'), ',' order by t.sort_order)
+  $$ select m.name, m.color::text, m.birth_date, p.household_id, p.school_name, p.school_class,
+            p.school_starts_at::text, p.school_ends_at::text, p.school_days::text, p.school_note,
+            p.shoe_size, p.clothing_size, p.pajama_size, p.sizes_updated_at = now(),
+            (select string_agg(t.name || ':' || coalesce(t.subject, '-') || ':' || coalesce(t.phone, '-'), ','
+                               order by t.sort_order)
              from public.child_teachers t where t.member_id = m.id)
      from public.household_members m
      join public.child_profiles p on p.member_id = m.id
      where m.id = 'a1000000-0000-4000-8000-000000000003' $$,
-  $$ values ('Sofia', '4ª B', '33', 'Maestra Bianchi:039 000 0000,Maestro Rossi:-') $$,
-  'the profile of Sofia is exactly what A saved'
+  $$ values ('Sofia', 'salvia', '2016-12-14'::date, '11111111-1111-4111-8111-111111111111'::uuid, 'scuola Manzoni',
+             '4ª B', '08:15:00', '16:15:00', '{1,2,3,4,5}', 'mensa compresa', '33', '9–10', '140', true,
+             'Maestra Bianchi:Italiano e storia:039 000 0000,Maestro Rossi:-:-') $$,
+  'the profile of Sofia is exactly what A saved (nothing changed by B, B2, C or anon)'
+);
+select results_eq(
+  $$ select string_agg(t.name || ':' || coalesce(t.subject, '-') || ':' || coalesce(t.phone, '-'), ','
+                       order by t.sort_order)
+     from public.child_teachers t
+     where t.member_id = 'a1000000-0000-4000-8000-000000000004'
+       and t.household_id = '11111111-1111-4111-8111-111111111111' $$,
+  $$ values ('M1:-:-,M2:-:-,M3:-:-,M4:-:-,M5:-:-') $$,
+  'the teachers of Tommaso are exactly what A saved (nothing changed by B or B2)'
+);
+select results_eq(
+  $$ select m.name, m.color::text, m.birth_date, p.household_id, p.school_name, p.school_class,
+            p.school_starts_at::text, p.school_ends_at::text, p.school_days::text, p.school_note,
+            p.shoe_size, p.clothing_size, p.pajama_size, p.sizes_updated_at = now(),
+            (select string_agg(t.name || ':' || coalesce(t.subject, '-') || ':' || coalesce(t.phone, '-'), ','
+                               order by t.sort_order)
+             from public.child_teachers t where t.member_id = m.id)
+     from public.household_members m
+     join public.child_profiles p on p.member_id = m.id
+     where m.id = 'b1000000-0000-4000-8000-000000000003' $$,
+  $$ values ('Leo', 'zafferano', '2019-09-05'::date, '22222222-2222-4222-8222-222222222222'::uuid,
+             'scuola dell''infanzia Rodari', 'Sezione blu', '08:30:00', '16:00:00', '{1,2,3,4,5,6}',
+             'mensa e doposcuola', null::text, '5–6', null::text, true, 'Maestra Gialli:-:+39 02 000 0000') $$,
+  'the profile of Leo is exactly what B2 saved (nothing changed by A, C or anon)'
 );
 select results_eq(
   $$ select p.household_id, count(*)::integer from public.child_profiles p group by p.household_id order by 1 $$,
