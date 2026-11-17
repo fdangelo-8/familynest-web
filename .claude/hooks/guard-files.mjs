@@ -76,6 +76,14 @@ const roleRules = {
     "il designer scrive solo in docs/ e nella skill design-system.",
   ],
   documentalista: [/^docs\//, "il documentalista scrive solo in docs/."],
+  "legale-privacy": [
+    /^docs\//,
+    "l'agente legale-privacy scrive solo in docs/ (i documenti in docs/legale/).",
+  ],
+  infrastruttura: [
+    /^docs\//,
+    "l'agente infrastruttura scrive solo in docs/ (le procedure in docs/infrastruttura/).",
+  ],
   "tester-funzionale": [
     /^tests\/(?!visual\/__screenshots__\/)/,
     "il tester funzionale scrive solo test in tests/ (non gli screenshot di riferimento).",
