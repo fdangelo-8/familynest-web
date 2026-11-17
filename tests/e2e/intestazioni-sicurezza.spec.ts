@@ -95,10 +95,12 @@ test.describe("Intestazioni di protezione", () => {
     const handle = await iframe.elementHandle();
     const frame = await handle?.contentFrame();
     expect(frame, "il frame deve esistere").toBeTruthy();
-    await expect
-      .poll(() => frame!.url())
-      .toMatch(/^(chrome-error:|about:blank)/);
-    await expect(frame!.locator("main, h1")).toHaveCount(0);
+    // Chromium shows its error page (chrome-error:) for a frame refused by
+    // frame-ancestors / X-Frame-Options. about:blank is the state before the
+    // load, so it must not count as "blocked".
+    await expect.poll(() => frame!.url()).toMatch(/^chrome-error:/);
+    // Chrome's own error page has an h1, so only <main> tells app content apart.
+    await expect(frame!.locator("main")).toHaveCount(0);
   });
 
   test("il noindex delle anteprime c'è solo con VERCEL_ENV=preview", () => {
