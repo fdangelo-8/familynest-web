@@ -1,6 +1,9 @@
 # Keeps the GitHub Project board in sync with the issue status labels.
 # The coordinator only changes labels; this workflow moves the card to the matching column.
-# Needs: secret PROJECT_TOKEN (classic token, scopes: project, repo) and variable PROJECT_NUMBER.
+# Needs: secret PROJECT_TOKEN and variable PROJECT_NUMBER. The token is a classic one because
+# fine-grained tokens cannot manage user-owned projects. Scopes: project, read:org,
+# read:discussion (the last two are required by `gh project`). Never `repo`: the repository is
+# public, and `repo` would grant write access to every repository of the owner.
 # Issue events always run the workflow file from `main`, so pull requests cannot change it.
 name: project-board
 
