@@ -39,6 +39,7 @@ export function ConfirmedScreen({
               href={destination}
               full
               inactive={leaving}
+              data-testid="mail-confermata-continua"
             >
               Continua
             </Button>
