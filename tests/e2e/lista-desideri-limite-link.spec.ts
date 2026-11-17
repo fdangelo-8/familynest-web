@@ -27,6 +27,9 @@ test.use({ locale: "it-IT", timezoneId: "Europe/Rome" });
 
 const UNREADABLE_ERROR =
   "Non riusciamo a leggere la pagina del negozio. Scrivi qui il nome dell'idea: la aggiungiamo con il link.";
+// Il limite (20 letture in 10 minuti, più 24 ore) è in
+// supabase/migrations/20261117215127_shop_link_reads_functions.sql, costanti
+// c_short_max e c_short_window. Se cambia lì, cambia anche questo valore.
 const LIMIT_IN_TEN_MINUTES = 20;
 
 const shopRequests = () => shopHits.filter((hit) => hit.startsWith("/diario"));
@@ -90,10 +93,10 @@ test.describe("limite di lettura dei link dei negozi", () => {
             await expect(dialog).toBeHidden();
           }
           expect(await ideasOfNest(ctx)).toEqual([]);
-          await page.unrouteAll({ behavior: "ignoreErrors" });
         });
       });
     } finally {
+      await page.unrouteAll({ behavior: "ignoreErrors" });
       shop.close();
     }
   });
