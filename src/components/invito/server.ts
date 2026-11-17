@@ -1,5 +1,6 @@
 import "server-only";
-import { cookies, headers } from "next/headers";
+import { cookies } from "next/headers";
+import { getRequestOrigin } from "@/lib/request-origin";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   clearInviteCookieOptions,
@@ -32,21 +33,12 @@ export async function readInviteSession(
   }
 }
 
-/** Origin of the request, to know whether the cookie is `Secure`. */
-export async function requestOrigin(): Promise<string> {
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost";
-  const forwarded = h.get("x-forwarded-proto")?.split(",")[0]?.trim();
-  const proto = forwarded ?? (host.startsWith("localhost") ? "http" : "https");
-  return `${proto}://${host}`;
-}
-
 /** Deletes the invitation cookie from a server action (past expiry, same path). */
 export async function clearInviteCookie(): Promise<void> {
   const store = await cookies();
   store.set(
     INVITE_COOKIE_NAME,
     "",
-    clearInviteCookieOptions(await requestOrigin()),
+    clearInviteCookieOptions(await getRequestOrigin()),
   );
 }
