@@ -1,6 +1,7 @@
 "use server";
 
-import { cookies, headers } from "next/headers";
+import { cookies } from "next/headers";
+import { getRequestOrigin } from "@/lib/request-origin";
 import { clearLinkResultOptions } from "@/lib/calendar-sync/link-response";
 import { LINK_RESULT_COOKIE } from "@/lib/calendar-sync/oauth";
 
@@ -11,10 +12,7 @@ import { LINK_RESULT_COOKIE } from "@/lib/calendar-sync/oauth";
  */
 export async function clearLinkResult(): Promise<void> {
   try {
-    const list = await headers();
-    const proto = list.get("x-forwarded-proto") ?? "http";
-    const origin =
-      list.get("origin") ?? `${proto}://${list.get("host") ?? "localhost"}`;
+    const origin = await getRequestOrigin();
     (await cookies()).set(
       LINK_RESULT_COOKIE,
       "",

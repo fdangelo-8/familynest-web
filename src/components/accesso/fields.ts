@@ -1,5 +1,6 @@
 import type { AuthError } from "@supabase/supabase-js";
 import { checkPassword } from "@/lib/auth/password";
+import { buildAuthCallbackLink } from "@/lib/origin";
 
 // Texts and checks shared by the mail and password screens (#327). Texts are
 // the ones of the graphic specification, word for word.
@@ -56,7 +57,7 @@ export function isRateLimit(error: AuthError): boolean {
 
 /** The address a mail link goes back to (#327, PKCE): `<origin>/auth/callback?tipo=…`. */
 export function callbackUrl(kind: "conferma" | "password"): string {
-  return `${window.location.origin}/auth/callback?tipo=${kind}`;
+  return buildAuthCallbackLink(window.location.origin, kind);
 }
 
 /** Plural of the wait text: «tra 1 secondo», «tra 42 secondi». */

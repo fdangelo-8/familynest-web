@@ -1,8 +1,9 @@
 "use server";
 
-import { cookies, headers } from "next/headers";
+import { cookies } from "next/headers";
 import { clearLinkResultOptions } from "@/lib/calendar-sync/link-response";
 import { LINK_RESULT_COOKIE } from "@/lib/calendar-sync/oauth";
+import { getRequestOrigin } from "@/lib/request-origin";
 
 /**
  * The page has shown the result of a link (the short cookie of the way back
@@ -10,17 +11,7 @@ import { LINK_RESULT_COOKIE } from "@/lib/calendar-sync/oauth";
  * the provider and one word, nothing else.
  */
 export async function clearLinkResult(): Promise<void> {
-  const requestHeaders = await headers();
-  const host = requestHeaders.get("host") ?? "";
-  const protocol =
-    requestHeaders.get("x-forwarded-proto") ??
-    (host.startsWith("localhost") || host.startsWith("127.0.0.1")
-      ? "http"
-      : "https");
+  const origin = await getRequestOrigin();
   const store = await cookies();
-  store.set(
-    LINK_RESULT_COOKIE,
-    "",
-    clearLinkResultOptions(`${protocol}://${host}`),
-  );
+  store.set(LINK_RESULT_COOKIE, "", clearLinkResultOptions(origin));
 }

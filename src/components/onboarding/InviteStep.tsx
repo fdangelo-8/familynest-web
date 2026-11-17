@@ -10,6 +10,7 @@ import {
   useTransition,
 } from "react";
 import { Brand, Claim, Stickers } from "@/components/accesso/parts";
+import { buildInviteLink } from "@/lib/invitations";
 import { Alert } from "@/components/ui/Alert/Alert";
 import { Button } from "@/components/ui/Button/Button";
 import { Icon } from "@/components/ui/Icon/Icon";
@@ -103,7 +104,7 @@ export function InviteStep({
   }, [position, failure]);
 
   function link(): string {
-    return `${window.location.origin}/invito/${token}`;
+    return buildInviteLink(window.location.origin, token ?? "");
   }
 
   async function copy(): Promise<void> {

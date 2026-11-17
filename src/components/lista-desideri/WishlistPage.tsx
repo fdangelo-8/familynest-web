@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog/ConfirmDialog";
 import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
 import { Icon } from "@/components/ui/Icon/Icon";
+import { buildWishlistLink } from "@/lib/origin";
 import { PageError } from "@/components/ui/PageError/PageError";
 import { useToast } from "@/components/ui/Toast/ToastProvider";
 import { VisuallyHidden } from "@/components/ui/VisuallyHidden/VisuallyHidden";
@@ -117,7 +118,7 @@ export function WishlistPage({ childId }: { childId: string }) {
         icon: null,
       });
     } else {
-      const url = `${window.location.origin}/desideri/${result.code}`;
+      const url = buildWishlistLink(window.location.origin, result.code);
       const copied = await copyToClipboard(url);
       if (copied) {
         showToast({ text: "Link copiato. Mandalo a nonni e parenti." });

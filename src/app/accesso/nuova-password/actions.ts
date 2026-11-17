@@ -1,8 +1,8 @@
 "use server";
 
-import { headers } from "next/headers";
 import { resolveDestination } from "@/lib/auth/destination";
 import { clearRecoveryCookie } from "@/lib/auth/recovery";
+import { getRequestOrigin } from "@/lib/request-origin";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -12,10 +12,7 @@ import { createClient } from "@/lib/supabase/server";
  * person goes. It receives nothing and returns only a path.
  */
 export async function finishRecovery(): Promise<{ destination: string }> {
-  const requestHeaders = await headers();
-  const host = requestHeaders.get("host") ?? "";
-  const proto = requestHeaders.get("x-forwarded-proto") ?? "http";
-  await clearRecoveryCookie(`${proto}://${host}`);
+  await clearRecoveryCookie(await getRequestOrigin());
 
   try {
     const supabase = await createClient();
