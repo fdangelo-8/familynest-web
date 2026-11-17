@@ -154,7 +154,8 @@ test.describe("conferma del link · «Conferma il tuo indirizzo» · accessibili
     await expectStructure(page);
     await expect(page).toHaveTitle("FamilyNest · Conferma dell'indirizzo");
     await expect(page.getByRole("status")).toHaveCount(0);
-    await expect(page.getByRole("alert")).toHaveCount(0);
+    // (Next's own route announcer is an `alert` too: only the notices count.)
+    await expect(page.locator(".avviso")).toHaveCount(0);
     await expect(page.getByRole("button")).toHaveCount(1);
     await expect(page.getByRole("link", { name: "Indietro" })).toHaveCount(0);
     // The form is a real form that posts to the route (works without scripts).
@@ -187,7 +188,7 @@ test.describe("conferma del link · «Conferma il tuo indirizzo» · accessibili
     await expect(notice).toHaveCount(1);
     await expect(notice).toContainText("In questo browser sei dentro con");
     await expect(notice.locator("b")).toHaveText(visitor.email);
-    await expect(page.getByRole("alert")).toHaveCount(0);
+    await expect(page.locator('.avviso[role="alert"]')).toHaveCount(0);
   });
 
   test("sessione già aperta, tastiera: ordine del fuoco, anello, nessuna trappola, aree di tocco", async ({
