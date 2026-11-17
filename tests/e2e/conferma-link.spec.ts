@@ -427,7 +427,8 @@ test.describe("conferma (POST /auth/confirm)", () => {
         await openConfirm(page, path);
         await waitConfirmHydrated(page);
         const button = confirmForm(page).locator('button[type="submit"]');
-        await button.click();
+        // The POST is held: the click must not wait for the navigation.
+        await button.click({ noWaitAfter: true });
         await expect(button).toHaveAttribute("aria-busy", "true");
         await expect(button).toHaveText(TEXT.confirmBusy);
         // The second press of the same button, while the first is held.
