@@ -10,12 +10,13 @@ Si appoggia a `contesto-prodotto.md` (voce del marchio, parole da usare) e a `ma
 
 ## Riassunto per Francesco
 
-1. **Filiera consigliata: ibrida.** Circa due video su tre li produce Claude quasi da solo: registrazione dello schermo di un Nest di prova con dati inventati, animazioni fatte con i nostri colori, voce fuori campo e sottotitoli. Il terzo video lo gira una persona vera col telefono (Francesco o un adulto di casa, mai bambini), seguendo un copione scritto da Claude. Il video generato con l'AI serve solo per qualche scena di riempimento senza persone.
+1. **Filiera consigliata: ibrida.** Circa due video su tre li produce Claude quasi da solo: registrazione dello schermo di un Nest di prova con dati inventati, animazioni fatte con i nostri colori, voce fuori campo e sottotitoli. Il terzo video lo gira una persona vera col telefono (Francesco o un adulto di casa, mai bambini), seguendo un copione scritto da Claude. Il video generato con l'AI serve solo per qualche scena di riempimento senza persone. Con il modello Soldoni (punto 6) la parte automatica sale a un video al giorno.
 2. **Strumenti:** ElevenLabs per la voce (piano Creator, 22 $/mese, con la clonazione della voce di Francesco), Remotion per animazioni e montaggio scritti in codice (gratis per un'azienda fino a 3 persone), Canva (già collegata) per caroselli e copertine, Postiz per programmare i post (29 $/mese, 5 canali, con API e MCP). Opzionali: Submagic per i sottotitoli dei video girati (19 $/mese) e Veo per le scene generate (circa 0,10–0,12 $ al secondo, prezzo da fonte secondaria).
 3. **Costo degli strumenti:** circa 51 $/mese con il minimo indispensabile, uguale a 3, 5 o 10 video a settimana; da circa 76 a 111 $/mese con gli strumenti opzionali. Il costo vero è il tempo di Francesco: circa 1,5 ore a settimana con 3 video, 4,5 ore con 10 (stima, capitolo 6.4).
 4. **Formati da provare per primi:** «Il gruppo WhatsApp di famiglia» (ironia), «POV: sei l'unico che si ricorda tutto» (carico mentale, alla pari tra adulti), «Domenica sera, 5 minuti» (prima e dopo), «Un trucco in 20 secondi» (consiglio rapido con lo schermo dell'app).
 5. **Regole fisse:** nessun bambino vero riconoscibile, nei nostri video e in quelli dei creator; dati di prova inventati e senza dati sanitari; etichetta «contenuto AI» quando la voce o la scena sono generate; solo musica con licenza commerciale; #adv in apertura per ogni collaborazione pagata.
-6. **Primo passo concreto:** un'ora con Claude per preparare il Nest di prova «famiglia Esposito» e i primi 10 copioni; poi Francesco registra 30–60 minuti di lettura per la clonazione della voce e apre gli account aziendali su TikTok, Instagram e YouTube. Il piano dei primi 30 giorni è al capitolo 7.
+6. **Il modello Soldoni (capitolo 10).** Soldoni, app di finanza per iPhone fatta da una sola persona e uscita a inizio novembre 2026, pubblica un video al giorno su TikTok dall'8 novembre. I video e il profilo Instagram non si leggono in automatico: formati, voce e musica sono da annotare con la scheda del capitolo 10.3. Su TikTok i numeri sono quelli di un account appena nato (3 follower, 244–920 visualizzazioni a video). Da copiare è il metodo: un video automatico al giorno con schermo dell'app, voce sintetica e modello fisso. Per noi diventa la base della filiera, con gli stessi strumenti e gli stessi 51 $ al mese, più l'approvazione di Francesco e le nostre regole su bambini, etichetta AI e musica.
+7. **Primo passo concreto:** un'ora con Claude per preparare il Nest di prova «famiglia Esposito» e i primi 10 copioni; poi Francesco registra 30–60 minuti di lettura per la clonazione della voce e apre gli account aziendali su TikTok, Instagram e YouTube. Il piano dei primi 30 giorni è al capitolo 7.
 
 ---
 
@@ -240,6 +241,8 @@ Prezzi letti sulle pagine ufficiali il 17/11/2026, mensili, in dollari, IVA escl
 
 È una mia proposta di partenza: il test di 30 giorni (capitolo 7) sposta le quote verso quello che funziona.
 
+**Variante «modello Soldoni»** (capitolo 10): le prime due righe diventano un binario automatico con un video al giorno, 7 a settimana, e i video con persona restano 1–2 a settimana. Il costo degli strumenti non cambia (51 $ al mese); il tempo di Francesco sale a circa 30 minuti di approvazioni a settimana più le riprese. La consiglio come punto di partenza, perché ci dà presto abbastanza video per capire quali formati funzionano.
+
 ### 4.2 Da «idea» a «video pubblicato»
 
 | Passo | Chi                | Cosa                                                                                                                                                                                                                              | Tempo (stima)              |
@@ -457,6 +460,168 @@ Funzioni di FamilyNest che si legano alle feste (da `mappa-funzionalita.md`): Co
 
 ---
 
+## 10. Il modello Soldoni
+
+Francesco ha indicato come riferimento i video del profilo Instagram di Soldoni (instagram.com/soldoni.app), che descrive come generati in automatico. Questo capitolo raccoglie quello che si può leggere, come probabilmente li producono e come rifare lo stesso metodo per FamilyNest. Non contiene copioni.
+
+### 10.1 Cosa si è potuto leggere e cosa no
+
+| Fonte                                     | Esito (17/11/2026)                                                                                                                                            |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Profilo Instagram, pagina e sezione Reels | **non leggibile**: risposta «troppe richieste» (429) o pagina di accesso; anche la versione da incorporare non mostra follower, post o didascalie [53]        |
+| Visualizzatori esterni di Instagram       | bloccati (403) o senza dati sul profilo                                                                                                                       |
+| Profilo TikTok @soldoni.app               | **leggibile** tramite la versione da incorporare: follower, like, elenco dei 10 video con le visualizzazioni [54]. Didascalie, musica e durata non si leggono |
+| Singoli video TikTok                      | non leggibili in automatico (la pagina mostra solo il titolo «TikTok»)                                                                                        |
+| YouTube e Facebook                        | nessun canale YouTube trovato a nome soldoni.app; la pagina Facebook chiede l'accesso                                                                         |
+| Sito soldoni.app e App Store              | leggibili [51][52][55]; il sito non ha link ai social                                                                                                         |
+| Articoli o interviste sui video           | nessuno trovato                                                                                                                                               |
+| Ubersuggest, dominio soldoni.app, Italia  | nessun dato (dominio troppo nuovo) [56]                                                                                                                       |
+| Libreria inserzioni di Meta               | non leggibile in automatico (403)                                                                                                                             |
+
+**Non ho potuto guardare nessun video.** Formati, durata, struttura, voce, musica e stile visivo **non sono leggibili** con gli strumenti a mia disposizione, e non li descrivo per non inventare. Al punto 10.3 c'è una scheda di 20 minuti con cui Francesco, guardando i video dal telefono, raccoglie questi dati; con la scheda compilata il capitolo si completa.
+
+### 10.2 I fatti
+
+**Il prodotto** [51][52][55]
+
+| Voce            | Dato                                                                                                                          |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Cosa fa         | app di finanza personale: conti, carte, investimenti e contanti in un solo numero, il patrimonio; spese per categoria, avvisi |
+| Messaggio       | «Tutto quello che hai, in un'app sola.»                                                                                       |
+| Piattaforma     | solo iPhone (App Store, categoria Finanza); il sito non cita Android né il browser                                            |
+| Prezzo          | gratis; Premium 5,99 € al mese o 59,99 € all'anno, prova di 7 o 14 giorni                                                     |
+| Lingue          | italiano, più inglese, spagnolo, francese e tedesco                                                                           |
+| Chi la fa       | uno sviluppatore indipendente (ditta individuale con sede a Benevento)                                                        |
+| Età             | versione 0.3.0 del 3 novembre, 0.5.1 di metà novembre 2026: l'app ha circa due settimane                                      |
+| Valutazioni     | 5,0 su 5 con 5 valutazioni sull'App Store italiano                                                                            |
+| Funzione per AI | un collegamento in sola lettura per Claude, ChatGPT, Grok e Le Chat (pagina /ai)                                              |
+
+Il sito personale dello sviluppatore (in inglese) descrive Soldoni come un'app di finanza personale per i giovani italiani, costruita con React Native, Expo e Supabase, e tra le sue competenze elenca Claude Code, Codex, Playwright, Selenium, scraping e automazione [57].
+
+**Il profilo TikTok** [54], letto la sera del 17/11/2026
+
+- 3 follower, 44 like in totale; presentazione: «Gestisci tutti i tuoi soldi in un'app sola. Scarica gratis Soldoni sullo store» (nell'originale c'è anche un'emoji).
+- 10 video, uno al giorno dall'8 al 17 novembre 2026. La data viene dal numero del video: le prime cifre del codice di un video TikTok contengono il momento della pubblicazione (metodo usato da chi studia TikTok, non documentato da TikTok).
+
+| Data (ora italiana) | Visualizzazioni |
+| ------------------- | --------------- |
+| 8/11, 23:20         | 5               |
+| 9/11, 14:56         | 4               |
+| 10/11, 19:20        | 920             |
+| 11/11, 19:30        | 896             |
+| 12/11, 20:18        | 257             |
+| 13/11, 18:43        | 288             |
+| 14/11, 20:41        | 264             |
+| 15/11, 19:58        | 264             |
+| 16/11, 19:36        | 251             |
+| 17/11, 19:01        | 244             |
+
+Totale: 3.393 visualizzazioni in 10 giorni, 44 like (circa 1,3 like ogni 100 visualizzazioni), 3 follower.
+
+**Su Instagram:** numero di follower, di post e visualizzazioni non disponibili. Si leggono aprendo il profilo da un account qualsiasi; per seguirli nel tempo servirebbe uno strumento di analisi dei concorrenti a pagamento (per esempio quelli di Metricool o di Socialinsider), che non uso.
+
+### 10.3 La lettura dei numeri e cosa manca
+
+**La mia lettura** (deduzioni, non fatti):
+
+- **Il loro vantaggio è la costanza; i risultati non ci sono ancora.** Un video al giorno, ogni giorno, dalla prima settimana di vita dell'app, quasi sempre tra le 19 e le 21. Per uno sviluppatore da solo vuol dire che il costo di un video in più è vicino a zero.
+- **Su TikTok non è ancora esploso nulla.** Dopo i primi due video quasi invisibili (pubblicati a orari diversi, forse con l'account appena aperto), due video arrivano a circa 900 visualizzazioni e gli altri sei si fermano tra 244 e 288. Un valore così stabile fa pensare alla distribuzione minima che TikTok dà a ogni video di un account nuovo, senza che nessuno abbia «sfondato». 3 follower su 3.393 visualizzazioni dicono che chi guarda non ha motivo di tornare.
+- **Quali video funzionano meglio:** su TikTok i video del 10 e dell'11 novembre, con più del triplo delle visualizzazioni degli altri. Il perché non si può dire senza guardarli: può essere il formato, il gancio, l'argomento o il fatto che fossero i primi distribuiti. È la prima domanda della scheda qui sotto.
+- **Instagram può andare meglio di TikTok**, ed è possibile che Francesco abbia scelto Soldoni per questo. Non lo posso verificare.
+
+Il modello da copiare oggi è quindi il **metodo di produzione**, non un risultato provato. Dopo 10 video i numeri di TikTok sono quelli di un account che parte da zero.
+
+**Scheda di osservazione per Francesco** (circa 20 minuti dal telefono, sui 10 video più recenti di Instagram e sui due video TikTok del 10 e 11 novembre). Una riga per video:
+
+| Cosa annotare      | Opzioni                                                                                           | Perché serve                 |
+| ------------------ | ------------------------------------------------------------------------------------------------- | ---------------------------- |
+| Durata             | secondi                                                                                           | durata dei nostri modelli    |
+| Primi 2 secondi    | testo scritto a schermo, parola per parola; cosa si vede                                          | il tipo di gancio            |
+| Immagini           | schermate dell'app / grafica animata / video di repertorio / avatar che parla / immagini generate | quale filiera usano (10.4)   |
+| Voce               | nessuna / sintetica / umana; maschile o femminile; sempre la stessa?                              | se usano una sintesi vocale  |
+| Musica             | nome del suono in basso; «suono originale» o brano noto                                           | licenza e tipo di audio      |
+| Testo a schermo    | sottotitoli parola per parola o frasi intere; stesso carattere e stessi colori in tutti i video?  | se usano un modello fisso    |
+| Chiusura           | invito («scarica», «commenta», «salva») o nessuno                                                 | il funnel                    |
+| Etichette visibili | «Contenuto generato con l'AI», «Informazioni sull'AI», link «CapCut · Prova questo modello»       | indizi certi sugli strumenti |
+| Numeri             | visualizzazioni, like, commenti, condivisioni; follower del profilo e numero di post              | quali formati funzionano     |
+| Didascalia         | lunghezza, hashtag, domanda al pubblico                                                           | come scrivono il post        |
+
+Con la scheda compilata (anche una foto degli appunti) aggiorno questo capitolo e chiudo i punti «non leggibile».
+
+### 10.4 Come probabilmente li producono
+
+**Indizi certi**
+
+| Indizio                                                                                                       | Fonte     |
+| ------------------------------------------------------------------------------------------------------------- | --------- |
+| Francesco li descrive come generati in automatico                                                             | Francesco |
+| Un video al giorno per 10 giorni, dalla prima settimana dell'app                                              | [54]      |
+| Una sola persona dietro il prodotto                                                                           | [51]      |
+| Lo sviluppatore usa Claude Code e Codex, sa automatizzare il browser (Playwright, Selenium) e scrive in React | [57]      |
+| L'app è fatta con React Native ed Expo, quindi gira anche nel simulatore iPhone sul computer                  | [57]      |
+| Orari di pubblicazione variabili di circa due ore (18:43–20:41)                                               | [54]      |
+
+**Deduzioni** (da verificare con la scheda del punto 10.3)
+
+| Passo                 | Ipotesi più probabile                                                                                                                                                                                                   | Perché                                                                                            | Alternativa                                             |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| Idee e copione        | un modello linguistico (Claude o ChatGPT) che scrive gancio, testo e didascalia da un elenco di temi                                                                                                                    | usa già questi strumenti; è il passo più facile da automatizzare                                  | idee scritte a mano, il resto automatico                |
+| Immagini              | schermate o registrazioni dell'app dal simulatore, con dati inventati, oppure grafica generata da un modello                                                                                                            | un'app di numeri si mostra bene con schermate e cifre; lo sviluppatore automatizza già il browser | video di repertorio o immagini generate                 |
+| Voce                  | sintesi vocale (ElevenLabs, OpenAI o simili) oppure nessuna voce, solo testo e musica                                                                                                                                   | un solo autore che pubblica ogni giorno difficilmente registra la voce ogni volta                 | voce registrata una volta e riusata                     |
+| Montaggio             | un modello fisso riempito in automatico: Remotion (scritto in React, come la sua app), ffmpeg, Creatomate, oppure un modello CapCut                                                                                     | stesso orario e stessa cadenza fanno pensare a un processo ripetuto, non a un montaggio a mano    | montaggio rapido a mano su CapCut                       |
+| Pubblicazione         | video preparati in blocco e caricati ogni sera, a mano o con un programmatore che varia l'orario                                                                                                                        | un programmatore senza variazione pubblica allo stesso minuto; qui l'orario cambia fino a due ore | programmatore con orario casuale (alcuni lo permettono) |
+| Archetipo del formato | uno di questi tre, comuni tra le app che pubblicano video automatici: (1) testo grande su sfondo e musica, a slide; (2) gancio di 2–3 secondi poi demo dell'app; (3) voce che racconta un numero o un caso, con grafica | sono i formati che si producono in serie senza persone (cap. 1.1, fonte [45])                     | una persona generata (avatar) che presenta l'app        |
+
+Un indizio certo che Francesco può trovare in un minuto: su TikTok, i video fatti con un modello CapCut mostrano in basso il link «CapCut · Prova questo modello»; i video con l'etichetta «Contenuto generato con l'AI» messa da TikTok sono stati fatti con strumenti che scrivono i metadati C2PA nel file [22].
+
+### 10.5 Come replicarlo per FamilyNest
+
+Il livello di automazione di Soldoni si raggiunge con la filiera (b) + (d) del capitolo 2, cioè schermo dell'app più animazioni, che è già nella filiera consigliata. Cambia il ritmo: un video automatico **ogni giorno**, come Soldoni, invece di due su tre.
+
+**La filiera**
+
+| Passo                | Soldoni (deduzione)         | FamilyNest                                                                                                                    | Strumento e costo                     |
+| -------------------- | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| Temi                 | elenco di temi sui soldi    | elenco di temi di casa preparato una volta al mese: calendario scolastico, scadenze (bollo, revisione), spesa, chi accompagna | Claude, 0 $                           |
+| Copione e didascalia | modello linguistico         | Claude, 7 copioni a settimana in un colpo; passano da `testi-naturali`                                                        | Claude, 0 $ in più                    |
+| Immagini             | schermate dal simulatore    | registrazione del Nest di prova «famiglia Esposito» con Playwright in formato telefono (script da chiedere al team, cap. 8)   | Playwright, 0 $                       |
+| Voce                 | sintesi vocale o nessuna    | voce clonata di Francesco o voce pronta della libreria                                                                        | ElevenLabs Creator, 22 $              |
+| Montaggio            | modello fisso               | 3–4 modelli Remotion con i colori del design system, a rotazione; sottotitoli dai tempi della voce                            | Remotion, 0 $ (fino a 3 persone [16]) |
+| Musica               | non leggibile               | musica di ElevenLabs già nel file, oppure nessuna musica (cap. 3.4)                                                           | inclusa in ElevenLabs                 |
+| Pubblicazione        | ogni sera tra le 19 e le 21 | Postiz in bozza; Francesco approva il blocco della settimana in una volta sola                                                | Postiz Standard, 29 $                 |
+| Misura               | non leggibile               | registro del capitolo 7.3, letto a 48 ore e a 7 giorni                                                                        | Claude, 0 $                           |
+
+**Costo mensile** (stima, 30 video automatici al mese, prezzi del capitolo 3):
+
+| Voce                                                                    | Costo      | Calcolo                                                            |
+| ----------------------------------------------------------------------- | ---------- | ------------------------------------------------------------------ |
+| ElevenLabs Creator                                                      | 22 $       | 30 video × 30 secondi × 3 tentativi = circa 45 minuti, entro i 121 |
+| Postiz Standard                                                         | 29 $       | prezzo fisso                                                       |
+| Remotion, Playwright, Canva                                             | 0 $        | gratis o già in uso                                                |
+| **Totale**                                                              | **51 $**   | **circa 41 $ con pagamento annuale** [1][18]                       |
+| Veo, solo per qualche scena senza persone (opzionale)                   | circa 15 $ | stima: 15 clip da 8 secondi a 0,12 $ al secondo                    |
+| Submagic, solo se si aggiungono video girati da una persona (opzionale) | 19 $       | capitolo 3.3                                                       |
+
+Il tempo di Francesco: 10 minuti a settimana per scegliere i temi e circa 3 minuti a video per approvare, cioè circa 30 minuti a settimana (stima). Prima della partenza servono il Nest di prova, la clonazione della voce e lo script di registrazione (capitolo 7.1 e 8).
+
+**Cosa adattiamo rispetto a Soldoni**
+
+| Tema              | Soldoni                       | FamilyNest                                                                                                                                                                    |
+| ----------------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Pubblico          | giovani italiani [57], TikTok | genitori e coppie tra 30 e 45 anni: Instagram e Facebook prima di TikTok (cap. 4.3)                                                                                           |
+| Orario            | 19–21                         | ipotesi da provare: pausa pranzo (13) e dopo che i figli sono a letto (21:30). Nessun dato per ora                                                                            |
+| Approvazione      | non nota, forse nessuna       | Francesco approva ogni video prima della pubblicazione: per un'app di famiglia un errore (un dato vero, un bambino in un'immagine generata) costa più di un giorno senza post |
+| Bambini           | non pertinente                | mai bambini veri o generati che sembrino veri; i figli esistono solo come nomi inventati nel Nest di prova (cap. 5.1)                                                         |
+| Etichetta AI      | non leggibile                 | ogni video con voce sintetica porta l'etichetta su Instagram e Facebook e una riga nella descrizione; su YouTube la propria voce clonata è esente (cap. 5.2)                  |
+| Musica            | non leggibile                 | con la pubblicazione automatica non si scelgono i suoni dentro le app: la musica va nel file con licenza commerciale (ElevenLabs) oppure il video esce senza musica           |
+| Varietà           | non leggibile                 | almeno 3 modelli a rotazione: Instagram dichiara di premiare i contenuti originali [35] e un modello sempre uguale rischia di sembrare ripetitivo (deduzione)                 |
+| Insistenza        | un video al giorno            | il ritmo vale per i nostri post, non per le notifiche dell'app: nessuna serie di giorni o promemoria insistenti per chi guarda (skill `privacy-e-dati-minori`)                |
+| Prodotto mostrato | un numero (il patrimonio)     | una funzione vera per video, mostrata su una scena di casa riconoscibile, con l'invito a mandare il video all'altro adulto (cap. 1.3)                                         |
+
+**Il test** (si aggiunge al capitolo 7): per 14 giorni un video automatico al giorno, più i video con persona già previsti. Il riferimento è Soldoni: se i video automatici restano sotto le 300 visualizzazioni a 48 ore per due settimane, come i suoi su TikTok, si cambia modello o gancio prima di aumentare il volume.
+
+---
+
 ## Fonti
 
 Tutte consultate il 17/11/2026. Le fonti segnate «secondaria» non sono la pagina ufficiale dello strumento o dell'ente.
@@ -511,3 +676,10 @@ Tutte consultate il 17/11/2026. Le fonti segnate «secondaria» non sono la pagi
 48. Ubersuggest (account di Francesco), Italia, lingua italiana, 17/11/2026: suggerimenti per «carico mentale», «menu settimanale», «lista della spesa»
 49. PartyNest: https://partynest.it
 50. Agenda Digitale, deepfake e articolo 50 dell'AI Act: https://www.agendadigitale.eu/sicurezza/deepfake-lue-chiude-i-giochi-dichiarare-lai-o-sparire/
+51. Soldoni, sito: https://soldoni.app
+52. Soldoni su App Store Italia (valutazioni, prezzi, cronologia delle versioni): https://apps.apple.com/it/app/id6822234055
+53. Instagram, profilo soldoni.app (risposta 429 e pagina di accesso; versione da incorporare senza dati): https://www.instagram.com/soldoni.app
+54. TikTok, profilo @soldoni.app nella versione da incorporare (follower, like, visualizzazioni dei 10 video), letto la sera del 17/11/2026: https://www.tiktok.com/embed/@soldoni.app ; profilo: https://www.tiktok.com/@soldoni.app
+55. Soldoni, pagina del collegamento con gli assistenti AI: https://soldoni.app/ai
+56. Ubersuggest (account di Francesco), panoramica del dominio soldoni.app, Italia, lingua italiana, 17/11/2026: nessun dato
+57. Sito personale dello sviluppatore di Soldoni (progetti e competenze): https://www.stefanozarro.com/en
