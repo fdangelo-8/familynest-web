@@ -361,7 +361,7 @@ set local role authenticated;
 set local request.jwt.claims to '{"sub":"eeeeeeee-0000-4000-8000-000000000001","role":"authenticated"}';
 
 select lives_ok(
-  $$ select public.accept_invitation(current_setting('test.ugo_token')) $$,
+  $$ select public.accept_invitation_with_color(current_setting('test.ugo_token'), 'basilico') $$,
   'E accepts the invitation of Ugo'
 );
 select throws_ok(
@@ -610,7 +610,7 @@ set local role authenticated;
 set local request.jwt.claims to '{"sub":"dddddddd-0000-4000-8000-000000000001","role":"authenticated"}';
 
 select lives_ok(
-  $$ select public.accept_invitation(current_setting('test.laura_token')) $$,
+  $$ select public.accept_invitation_with_color(current_setting('test.laura_token'), 'glicine') $$,
   'D accepts the invitation of Laura'
 );
 select results_eq(

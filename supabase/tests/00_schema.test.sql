@@ -50,7 +50,7 @@ select columns_are(
 );
 select columns_are(
   'public', 'invitations',
-  array['id', 'household_id', 'member_id', 'invited_by_member_id', 'token', 'short_code', 'message', 'status', 'expires_at', 'accepted_at', 'created_at', 'updated_at'],
+  array['id', 'household_id', 'member_id', 'invited_by_member_id', 'token', 'message', 'status', 'expires_at', 'accepted_at', 'created_at', 'updated_at'],
   'invitations has exactly the planned columns'
 );
 select columns_are(
@@ -81,7 +81,8 @@ select enum_has_labels('public', 'invitation_status', array['pending', 'accepted
 
 -- CA-2: functions offered to the pages.
 select has_function('public', 'create_household', array['text', 'household_type', 'text', 'member_color'], 'CA-2: create_household exists');
-select has_function('public', 'accept_invitation', array['text'], 'CA-2: accept_invitation exists');
+-- #438: accept_invitation(text) is dropped; joining goes through accept_invitation_with_color.
+select has_function('public', 'accept_invitation_with_color', array['text', 'member_color'], 'CA-2: accept_invitation_with_color exists');
 select has_function('public', 'current_household_id', 'CA-2: current_household_id exists');
 
 -- Every security definer function has an empty search_path.
@@ -119,8 +120,8 @@ select ok(
   'anon cannot execute create_household'
 );
 select ok(
-  not has_function_privilege('anon', 'public.accept_invitation(text)', 'execute'),
-  'anon cannot execute accept_invitation'
+  not has_function_privilege('anon', 'public.accept_invitation_with_color(text, public.member_color)', 'execute'),
+  'anon cannot execute accept_invitation_with_color'
 );
 
 -- CA-32: seed state.
@@ -163,12 +164,12 @@ select results_eq(
   'CA-32: exactly the two test households'
 );
 select ok(
-  (select i.status = 'pending' and i.expires_at > now() and i.short_code = '4821'
+  (select i.status = 'pending' and i.expires_at > now() and i.id = 'a2000000-0000-4000-8000-000000000001'
    from public.invitations i where i.member_id = 'a1000000-0000-4000-8000-000000000002'),
   'CA-32: Laura has a valid pending invitation'
 );
 select ok(
-  (select i.status = 'pending' and i.expires_at < now() and i.short_code = '7305'
+  (select i.status = 'pending' and i.expires_at < now() and i.id = 'b2000000-0000-4000-8000-000000000001'
    from public.invitations i where i.member_id = 'b1000000-0000-4000-8000-000000000004'),
   'CA-32: Anna has a pending invitation already expired'
 );
