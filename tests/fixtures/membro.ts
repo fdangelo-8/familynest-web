@@ -169,13 +169,11 @@ export async function memberById(id: string): Promise<MemberRow | null> {
   return data as MemberRow | null;
 }
 
-/** The pending invitations of a member, with dates and short code. */
+/** The pending invitations of a member, with dates. */
 export async function pendingDetails(memberId: string) {
   const { data, error } = await adminClient()
     .from("invitations")
-    .select(
-      "id, token, status, created_at, expires_at, short_code, invited_by_member_id",
-    )
+    .select("id, token, status, created_at, expires_at, invited_by_member_id")
     .eq("member_id", memberId)
     .eq("status", "pending");
   if (error) throw new Error("Lettura dell'invito di prova fallita");
@@ -185,7 +183,6 @@ export async function pendingDetails(memberId: string) {
     status: string;
     created_at: string;
     expires_at: string;
-    short_code: string;
     invited_by_member_id: string | null;
   }[];
 }

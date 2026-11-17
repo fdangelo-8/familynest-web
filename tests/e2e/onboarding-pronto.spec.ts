@@ -743,7 +743,7 @@ test.describe("isolamento e minimizzazione", () => {
     }
   });
 
-  test("CA-17: l'HTML di A non contiene date di nascita, token, codice breve né id dei membri", async ({
+  test("CA-17: l'HTML di A non contiene date di nascita, token né id dei membri", async ({
     page,
     baseURL,
   }) => {
@@ -763,7 +763,7 @@ test.describe("isolamento e minimizzazione", () => {
       .eq("household_id", nest!.id);
     const { data: invitations } = await admin
       .from("invitations")
-      .select("token, short_code")
+      .select("token")
       .eq("household_id", nest!.id);
     expect(members).toHaveLength(5);
     const secrets = [
@@ -771,9 +771,7 @@ test.describe("isolamento e minimizzazione", () => {
       "2020-04-02",
       ...members!.map((m) => m.id as string),
       ...invitations!.map((i) => i.token as string),
-      ...invitations!.map((i) => i.short_code as string),
     ];
-    expect(secrets).toContain("4821");
     for (const secret of secrets) expect(html).not.toContain(secret);
   });
 });

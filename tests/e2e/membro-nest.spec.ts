@@ -567,7 +567,6 @@ test.describe("manda l'invito", () => {
       const text = await pageText(page);
       expect(text).not.toMatch(/Mostra il codice/);
       expect(text).not.toContain("NEST·");
-      expect(text).not.toContain(invite.short_code);
       await expect(sendAgain(page)).toBeFocused();
       const url = new URL(page.url());
       expect(url.pathname).toBe(`/membri/${laura}`);
