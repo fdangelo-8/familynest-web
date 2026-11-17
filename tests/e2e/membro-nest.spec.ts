@@ -1040,7 +1040,14 @@ test.describe("sicurezza e privacy", () => {
 
     await removeShare(page);
     const requests: string[] = [];
+    const bodies: { url: string; text: string }[] = [];
     page.on("request", (request) => requests.push(request.url()));
+    page.on("response", (response) => {
+      void response
+        .text()
+        .then((text) => bodies.push({ url: response.url(), text }))
+        .catch(() => undefined);
+    });
     await signIn(page, baseURL, "A");
     const response = await page.goto(memberPath(IDS.laura));
     await expect(h1(page)).toHaveText("Laura");
@@ -1058,6 +1065,23 @@ test.describe("sicurezza e privacy", () => {
       toast(page, "Link copiato. Mandalo a Laura dove preferisci."),
     ).toBeVisible();
 
+    // The answers of the page that the browser has received.
+    for (const { url, text } of bodies.filter(
+      (b) => new URL(b.url).origin === new URL(page.url()).origin,
+    )) {
+      for (const value of [
+        emailA,
+        accountId!,
+        "2016-12-14",
+        "2020-04-02",
+        invite!.token,
+      ]) {
+        expect(
+          text,
+          `La risposta ${new URL(url).pathname} contiene un dato personale`,
+        ).not.toContain(value);
+      }
+    }
     const allowed = new Set([
       new URL(page.url()).origin,
       new URL(supabaseUrl!).origin,

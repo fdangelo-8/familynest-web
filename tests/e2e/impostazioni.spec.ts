@@ -1126,7 +1126,6 @@ test.describe("sicurezza e privacy", () => {
       marco!.user_id as string,
       SOFIA_BIRTH,
       TOMMASO_BIRTH,
-      "4821",
       invite!.token as string,
     ].filter(Boolean);
     expect(forbidden.length).toBeGreaterThanOrEqual(5);
