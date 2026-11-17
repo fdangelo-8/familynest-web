@@ -143,16 +143,13 @@ test.describe("[CI-stack] registrazione e conferma", () => {
       // CA-3: the link, opened in the same context, gives a session and
       // /onboarding, with neither `code` nor `tipo` in the address
       await page.goto(await link());
-      // #419 (D3): the confirmation ends on «Mail confermata»; «Continua» goes on.
+      // #419: «Mail confermata» comes first, «Continua» goes to /onboarding.
       await expect(page).toHaveURL(/\/accesso\/mail-confermata$/);
-      await page
-        .getByRole("button", { name: "Continua", exact: true })
-        .or(page.getByRole("link", { name: "Continua", exact: true }))
-        .click();
-      await expect(page).toHaveURL(/\/onboarding$/);
       expect(page.url()).not.toContain("code=");
       expect(page.url()).not.toContain("tipo=");
       expect(await hasSession(page.context())).toBe(true);
+      await page.getByRole("link", { name: "Continua", exact: true }).click();
+      await expect(page).toHaveURL(/\/onboarding$/);
 
       // CA-35 and CA-37
       expectNoMagicLink(calls);
@@ -697,12 +694,9 @@ test.describe("[CI-utenti] invito", () => {
       const [mail] = await waitForMails(address);
       const link = await defaultLink(mail!.html, "conferma", baseURL!)();
       await page.goto(link);
-      // #419 (D3): the confirmation ends on «Mail confermata»; «Continua» goes on.
+      // #419: «Mail confermata» comes first, «Continua» goes to the colour.
       await expect(page).toHaveURL(/\/accesso\/mail-confermata$/);
-      await page
-        .getByRole("button", { name: "Continua", exact: true })
-        .or(page.getByRole("link", { name: "Continua", exact: true }))
-        .click();
+      await page.getByRole("link", { name: "Continua", exact: true }).click();
       await expect(page).toHaveURL(/\/invito\/colore$/);
       expect((await inviteCookie(page))?.value).toBe(invite.token);
 

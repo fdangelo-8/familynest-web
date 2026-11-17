@@ -141,16 +141,13 @@ test.describe("[CI-stack] /auth/callback con il link predefinito di Supabase", (
     try {
       const link = await registerAndGetLink(page, address, baseURL!);
       await page.goto(await link());
-      // #419 (D3): the confirmation ends on «Mail confermata»; «Continua» goes on.
+      // #419: «Mail confermata» comes first, «Continua» goes to /onboarding.
       await expect(page).toHaveURL(/\/accesso\/mail-confermata$/);
-      await page
-        .getByRole("button", { name: "Continua", exact: true })
-        .or(page.getByRole("link", { name: "Continua", exact: true }))
-        .click();
-      await expect(page).toHaveURL(/\/onboarding$/);
       expect(page.url()).not.toContain("code=");
       expect(page.url()).not.toContain("tipo=");
       expect(await hasSession(page)).toBe(true);
+      await page.getByRole("link", { name: "Continua", exact: true }).click();
+      await expect(page).toHaveURL(/\/onboarding$/);
 
       // The token is used once: the same link again leads to «link scaduto».
       // (In a new browser: someone already signed in never sees the page.)

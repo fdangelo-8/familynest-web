@@ -7,12 +7,14 @@ import {
   newRecoveryCookieValue,
   recoveryCookieOptions,
 } from "@/lib/auth/recovery-cookie";
+import { safeNextPath } from "@/lib/auth/safe-next";
 import { INVITE_WELCOME_PATH, readInviteToken } from "@/lib/invitations";
 import { createClient } from "@/lib/supabase/server";
 
 // Return from Apple and Google, and from the mail links of Supabase's default
 // templates (#327, PKCE: the link comes back with `?code=`). Server only, no
 // interface. Never log `code` or any token.
+const CONFIRMED_PATH = "/accesso/mail-confermata";
 const CANCELLED_ERRORS = ["access_denied", "user_cancelled_authorize"];
 
 /** `?tipo=` of the mail links: confirmation of the address or recovery. */
@@ -85,10 +87,21 @@ export async function GET(request: NextRequest) {
       return response;
     }
 
-    const destination = await resolveDestination(
-      supabase,
-      searchParams.get("next"),
-    );
+    // The default mail link of a confirmation (#419): «Mail confermata» says
+    // with which account the person is in, and «Continua» goes on. Neither
+    // `code` nor `tipo` stay in the address.
+    let destination: string;
+    if (mailKind === "conferma") {
+      const confirmed = new URL(CONFIRMED_PATH, origin);
+      const safeNext = safeNextPath(searchParams.get("next"));
+      if (safeNext) confirmed.searchParams.set("next", safeNext);
+      destination = `${confirmed.pathname}${confirmed.search}`;
+    } else {
+      destination = await resolveDestination(
+        supabase,
+        searchParams.get("next"),
+      );
+    }
     const response = NextResponse.redirect(new URL(destination, origin), 303);
     // A confirmation must not leave an open recovery behind.
     if (mailKind === "conferma" && request.cookies.has(RECOVERY_COOKIE_NAME)) {

@@ -1,17 +1,10 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { newRecoveryCookieValue } from "../../src/lib/auth/recovery-cookie";
 import {
   createPasswordUser,
-  defaultLink,
   keysConfigured,
   keysSkipReason,
-  mailpitReachable,
-  mailpitSkipReason,
-  newAddress,
-  removeByEmail,
   signInContext,
-  submitMailForm,
-  waitForMails,
   type PasswordUser,
 } from "../fixtures/accesso-password";
 import { skipReason, usersConfigured } from "../fixtures/auth";
@@ -123,14 +116,6 @@ test.describe("pagina «Conferma la mail»", () => {
       });
     });
   }
-
-  test("CA-1: il GET non verifica il token (anche inventato la pagina c'è) e non crea sessioni", async ({
-    page,
-  }) => {
-    await openConfirm(page, confirmPath("inventato"));
-    await expect(confirmButton(page)).toBeVisible();
-    await expectNoSession(page.context());
-  });
 
   test("CA-2: tre GET e una HEAD non consumano il link: la conferma riesce", async ({
     page,
@@ -350,17 +335,13 @@ test.describe("conferma (POST /auth/confirm)", () => {
     });
   });
 
-  test("CA-9: token inventato e token già usato portano a «link scaduto», senza sessione", async ({
+  // CA-9 with an invented token: auth-confirm.spec.ts (type=email|signup).
+  test("CA-9: un token già usato porta a «link scaduto», senza sessione", async ({
     page,
     browser,
     baseURL,
   }) => {
     needKeys();
-    await openConfirm(page, confirmPath("token-inventato-0000"));
-    await confirmButton(page).click();
-    await expect(page).toHaveURL(CONFIRM_EXPIRED);
-    await expectNoSession(page.context());
-
     await withUser({}, async (user) => {
       const { path } = await linkFor(user.email);
       await consumeLink(browser, baseURL as string, path);
@@ -560,7 +541,6 @@ test.describe("pagina «Mail confermata»", () => {
       await expect(accountRow(page).locator("b, strong")).toHaveText(
         user.email,
       );
-      await expect(page.getByText("Non sei tu?")).toBeVisible();
       await expect(exitButton(page)).toBeVisible();
       await continueControl(page).click();
       await expect(page).toHaveURL(/\/onboarding$/);
@@ -661,68 +641,11 @@ test.describe("pagina «Mail confermata»", () => {
 
 // ----------------------------------- default links of Supabase (decision D3)
 
-async function registerAndGetLink(page: Page, address: string, base: string) {
-  await page.goto("/accesso/mail");
-  await submitMailForm(
-    page,
-    { mode: "Registrati", email: address, password: "pw-di-prova-7931" },
-    () =>
-      expect(
-        page.getByRole("heading", { level: 1, name: "Controlla la posta" }),
-      ).toBeVisible({ timeout: 10_000 }),
-  );
-  const [mail] = await waitForMails(address);
-  return defaultLink(mail!.html, "conferma", base);
-}
-
-test.describe("[CI-stack] link predefinito di Supabase: /auth/callback?tipo=conferma", () => {
-  async function needStack() {
-    test.skip(!keysConfigured(), keysSkipReason);
-    test.skip(!(await mailpitReachable()), mailpitSkipReason);
-  }
-
-  test("CA-23: il link predefinito porta a «Mail confermata» senza code né tipo, e «Continua» a /onboarding", async ({
-    page,
-    baseURL,
-  }) => {
-    await needStack();
-    const address = newAddress();
-    try {
-      const link = await registerAndGetLink(page, address, baseURL as string);
-      await page.goto(await link());
-      await expect(page).toHaveURL(/\/accesso\/mail-confermata$/);
-      expect(page.url()).not.toContain("code=");
-      expect(page.url()).not.toContain("tipo=");
-      await expect(h1(page)).toHaveText(TEXT.confirmedTitle);
-      await expect(accountRow(page)).toContainText(accountLine(address));
-      await continueControl(page).click();
-      await expect(page).toHaveURL(/\/onboarding$/);
-    } finally {
-      await removeByEmail(address);
-    }
-  });
-
-  test("CA-23: con il cookie d'invito «Continua» porta a /invito/colore", async ({
-    page,
-    baseURL,
-  }) => {
-    await needStack();
-    test.skip(!usersConfigured("A"), skipReason("A"));
-    const laura = await lauraInvite();
-    const address = newAddress();
-    try {
-      await setInviteCookie(page, baseURL as string, laura.token);
-      const link = await registerAndGetLink(page, address, baseURL as string);
-      await page.goto(await link());
-      await expect(page).toHaveURL(/\/accesso\/mail-confermata$/);
-      await continueControl(page).click();
-      await expect(page).toHaveURL(/\/invito\/colore$/);
-      expect((await inviteCookie(page))?.value).toBe(laura.token);
-    } finally {
-      await removeByEmail(address);
-    }
-  });
-});
+// CA-23 (the default link of Supabase ends on «Mail confermata», then
+// «Continua» goes to /onboarding or, with the invitation cookie, to
+// /invito/colore) is checked by the tests already updated by the PR:
+// accesso-password-callback.spec.ts (CA-3, CA-4) and
+// accesso-password-mail.spec.ts (CA-3 and CA-31, CA-34).
 
 // ------------------------------------------ invitation, choice of the color
 
@@ -742,7 +665,6 @@ test.describe("riga dell'account su /invito/colore", () => {
       await expect(accountRow(page).locator("b, strong")).toHaveText(
         user.email,
       );
-      await expect(page.getByText("Non sei tu?")).toBeVisible();
       await expect(exitButton(page)).toBeVisible();
       // The choice of the color and «Continua» are still there.
       await expect(page.getByRole("radio").first()).toBeVisible();

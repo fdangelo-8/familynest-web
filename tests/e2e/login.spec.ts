@@ -518,16 +518,18 @@ async function magicLink(address: string, next?: string) {
   }`;
 }
 
-/** Opens the link and presses the button of the page «Conferma» (#419). */
+// The link opens a page with a button (#419): the button confirms, then
+// «Mail confermata» has «Continua», which goes where the sign-in goes.
 async function enter(page: Page, address: string, next?: string) {
   await page.goto(await magicLink(address, next));
+  await pressConfirm(page);
+  await expect(page).toHaveURL(/\/accesso\/mail-confermata/);
+  await page.getByRole("link", { name: "Continua", exact: true }).click();
+}
+
+async function pressConfirm(page: Page) {
   await page
     .getByRole("button", { name: "Conferma l'indirizzo", exact: true })
-    .click();
-  await expect(page).toHaveURL(/\/accesso\/mail-confermata/);
-  await page
-    .getByRole("button", { name: "Continua", exact: true })
-    .or(page.getByRole("link", { name: "Continua", exact: true }))
     .click();
 }
 
@@ -577,16 +579,11 @@ test.describe("[CI-utenti] ritorno e sessione", () => {
     try {
       const link = await magicLink(marco.email);
       await page.goto(link);
-      await page
-        .getByRole("button", { name: "Conferma l'indirizzo", exact: true })
-        .click();
-      await expect(page).toHaveURL(/\/accesso\/mail-confermata/);
+      await pressConfirm(page);
+      await expect(page).toHaveURL(/\/accesso\/mail-confermata$/);
       const second = await other.newPage();
-      // #419: the link is only used by the button of the page «Conferma».
       await second.goto(new URL(link, page.url()).toString());
-      await second
-        .getByRole("button", { name: "Conferma l'indirizzo", exact: true })
-        .click();
+      await pressConfirm(second);
       await expect(second).toHaveURL(/\/accesso\/link-scaduto\?tipo=conferma$/);
       await second.goto(new URL("/oggi", page.url()).toString());
       await expect(second).toHaveURL(/\/accesso$/);

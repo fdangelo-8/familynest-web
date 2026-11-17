@@ -46,6 +46,7 @@ async function ColorPage() {
       inviteeName={preview.inviteeName}
       inviteeColor={preview.inviteeColor}
       inviterName={preview.inviterName}
+      email={session.email}
       taken={taken}
     />
   );
