@@ -978,7 +978,6 @@ test.describe("isolamento e privacy", () => {
       ["Casa Bianchi", "Casa Bianchi"],
       ["la mail di A", emailA],
       ["l'id dell'account di A", accountId!],
-      ["il codice dell'invito", "4821"],
       ["il token dell'invito", token],
       ["la data di Sofia", "2016-12-14"],
       ["la data di Tommaso", "2020-04-02"],
