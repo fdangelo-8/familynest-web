@@ -315,9 +315,11 @@ test.describe("invito · il tuo colore (08) · accessibilità", () => {
     const nest = await caseNest("mockup");
     const laura = await caseVisitor("mockup");
     await openColor(page, baseURL, laura, nest.token);
+    // «Non sei tu? Esci» (#419) sits in the heading, before the colours:
+    // specification of the designer, §4 of the #419.
     const expected = isMobile()
-      ? ["Indietro", "Glicine", "Continua"]
-      : ["Glicine", "Indietro", "Continua"];
+      ? ["Indietro", "Non sei tu? Esci", "Glicine", "Continua"]
+      : ["Non sei tu? Esci", "Glicine", "Indietro", "Continua"];
     await page.evaluate(() =>
       (document.activeElement as HTMLElement | null)?.blur(),
     );
@@ -361,7 +363,7 @@ test.describe("invito · il tuo colore (08) · accessibilità", () => {
     );
 
     if (isMobile()) {
-      for (const name of ["Indietro", "Continua"]) {
+      for (const name of ["Indietro", "Non sei tu? Esci", "Continua"]) {
         await expectTouchArea(
           shown(page, name === "Indietro" ? "link" : "button", name),
           name,
