@@ -9,7 +9,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(75);
+select plan(76);
 
 insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, created_at, updated_at)
 values ('00000000-0000-0000-0000-000000000000', 'dddddddd-0000-4000-8000-000000000001', 'authenticated',
@@ -189,11 +189,17 @@ select is_empty(
   ),
   'anon: no child or pet name, short code, token, id, birth date, kind or invitation status'
 );
+-- Issue #414: anon has no select privilege on invitations at all.
+select throws_ok(
+  $$ select 1 from public.invitations $$,
+  '42501',
+  null,
+  'anon still cannot read invitations'
+);
 select is_empty(
-  $$ select 1 from public.invitations
-     union all select 1 from public.household_members
+  $$ select 1 from public.household_members
      union all select 1 from public.households $$,
-  'anon still reads 0 rows of invitations, household_members and households'
+  'anon still reads 0 rows of household_members and households'
 );
 
 -- Every unusable invitation gives the same answer.

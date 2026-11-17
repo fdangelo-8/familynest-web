@@ -137,7 +137,13 @@ select is_empty($$ select 1 from public.invitations $$, 'CA-13: C reads 0 invita
 set local role anon;
 set local request.jwt.claims to '{"role":"anon"}';
 
-select is_empty($$ select 1 from public.invitations $$, 'CA-12: anon reads 0 invitations');
+-- Issue #414: anon has no select privilege on invitations at all.
+select throws_ok(
+  $$ select 1 from public.invitations $$,
+  '42501',
+  null,
+  'CA-12: anon cannot read invitations'
+);
 select throws_ok(
   $$ insert into public.invitations (household_id, member_id)
      values ('11111111-1111-4111-8111-111111111111', 'a1000000-0000-4000-8000-000000000002') $$,
