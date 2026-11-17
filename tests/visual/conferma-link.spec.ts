@@ -3,6 +3,7 @@ import {
   throwawayConfigured,
   throwawaySkipReason,
 } from "../fixtures/throwaway-user";
+import { waitHydrated } from "../fixtures/invito-ingresso";
 import {
   caseNest,
   caseVisitor,
@@ -50,16 +51,19 @@ const heading = (page: Page, name: string) =>
 async function openConfirm(page: Page) {
   await page.goto(LINK);
   await expect(heading(page, "Conferma il tuo indirizzo")).toBeVisible();
-  // Scripts loaded: the button works the same way, with its loading state.
-  await expect(
+  // Scripts loaded: before that a click is a native submit, with no loading state.
+  await waitHydrated(
     page.getByRole("button", { name: "Conferma l'indirizzo", exact: true }),
-  ).toBeVisible();
+  );
 }
 
 async function openConfirmed(page: Page, baseURL: string | undefined) {
   await signIn(page, baseURL, await caseVisitor("mockup"));
   await page.goto("/accesso/mail-confermata");
   await expect(heading(page, "Mail confermata")).toBeVisible();
+  await waitHydrated(
+    page.getByRole("button", { name: "Non sei tu? Esci", exact: true }),
+  );
 }
 
 test.describe("conferma del link · «Conferma il tuo indirizzo»", () => {

@@ -4,6 +4,7 @@ import {
   throwawayConfigured,
   throwawaySkipReason,
 } from "../fixtures/throwaway-user";
+import { waitHydrated } from "../fixtures/invito-ingresso";
 import {
   caseVisitor,
   removeShared,
@@ -133,13 +134,15 @@ const leaveButton = (page: Page) =>
 async function openConfirm(page: Page) {
   await page.goto(LINK);
   await expect(heading(page, "Conferma il tuo indirizzo")).toBeVisible();
-  await expect(confirmButton(page)).toBeVisible();
+  // Scripts loaded: before that a click is a native submit, with no loading state.
+  await waitHydrated(confirmButton(page));
 }
 
 async function openConfirmed(page: Page, baseURL: string | undefined) {
   await signIn(page, baseURL, await caseVisitor("mockup"));
   await page.goto("/accesso/mail-confermata");
   await expect(heading(page, "Mail confermata")).toBeVisible();
+  await waitHydrated(leaveButton(page));
 }
 
 test.describe("conferma del link · «Conferma il tuo indirizzo» · accessibilità", () => {
