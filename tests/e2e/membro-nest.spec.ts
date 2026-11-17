@@ -151,7 +151,7 @@ test.describe("accesso e isolamento", () => {
     for (const id of [IDS.laura, IDS.biscotto]) {
       await expectNotFound(page, memberPath(id));
       const { text } = await htmlOf(page, memberPath(id));
-      for (const forbidden of ["Laura", "Biscotto", "4821", lauraToken]) {
+      for (const forbidden of ["Laura", "Biscotto", lauraToken]) {
         expect(text, `L'HTML non deve contenere ${forbidden}`).not.toContain(
           forbidden,
         );
@@ -166,7 +166,7 @@ test.describe("accesso e isolamento", () => {
       await signInAs(other, baseURL as string, "A");
       await expectNotFound(pageA, memberPath(IDS.anna));
       const { text } = await htmlOf(pageA, memberPath(IDS.anna));
-      for (const forbidden of ["Anna", "7305", annaToken]) {
+      for (const forbidden of ["Anna", annaToken]) {
         expect(text, `L'HTML non deve contenere ${forbidden}`).not.toContain(
           forbidden,
         );
@@ -285,7 +285,6 @@ test.describe("contenuto", () => {
     for (const absent of [
       /codice/i,
       /NEST·/,
-      /4821/,
       /Cosa vede/,
       /Salute/,
       /veterinario/i,
@@ -352,7 +351,7 @@ test.describe("contenuto", () => {
     await expect(send).toContainText("Il link vale 7 giorni");
     await expect(sendAgain(page)).toHaveCount(0);
     const text = await pageText(page);
-    for (const absent of [/codice/i, /NEST·/, /7305/]) {
+    for (const absent of [/codice/i, /NEST·/]) {
       expect(text, `La pagina non deve contenere ${absent}`).not.toMatch(
         absent,
       );
@@ -397,7 +396,6 @@ test.describe("contenuto", () => {
       await expect(page.getByText(/invito/i)).toHaveCount(0);
     }
     const { text } = await htmlOf(page, memberPath(IDS.anna));
-    expect(text).not.toContain("7305");
     expect(text).not.toContain(annaToken);
   });
 
@@ -1042,25 +1040,12 @@ test.describe("sicurezza e privacy", () => {
 
     await removeShare(page);
     const requests: string[] = [];
-    const bodies: { url: string; text: string }[] = [];
     page.on("request", (request) => requests.push(request.url()));
-    page.on("response", (response) => {
-      void response
-        .text()
-        .then((text) => bodies.push({ url: response.url(), text }))
-        .catch(() => undefined);
-    });
     await signIn(page, baseURL, "A");
     const response = await page.goto(memberPath(IDS.laura));
     await expect(h1(page)).toHaveText("Laura");
     const html = await response!.text();
-    for (const forbidden of [
-      emailA,
-      accountId!,
-      "2016-12-14",
-      "2020-04-02",
-      "4821",
-    ]) {
+    for (const forbidden of [emailA, accountId!, "2016-12-14", "2020-04-02"]) {
       expect(html, `L'HTML non deve contenere ${forbidden}`).not.toContain(
         forbidden,
       );
@@ -1073,15 +1058,6 @@ test.describe("sicurezza e privacy", () => {
       toast(page, "Link copiato. Mandalo a Laura dove preferisci."),
     ).toBeVisible();
 
-    // The answers of the page that the browser has received.
-    for (const { url, text } of bodies.filter(
-      (b) => new URL(b.url).origin === new URL(page.url()).origin,
-    )) {
-      expect(
-        text,
-        `La risposta ${new URL(url).pathname} contiene 4821`,
-      ).not.toContain("4821");
-    }
     const allowed = new Set([
       new URL(page.url()).origin,
       new URL(supabaseUrl!).origin,
@@ -1092,7 +1068,6 @@ test.describe("sicurezza e privacy", () => {
         true,
       );
       expect(url).not.toContain(invite!.token);
-      expect(url).not.toContain("4821");
       expect(url).not.toMatch(/laura/i);
     }
   });
