@@ -63,8 +63,8 @@ select throws_ok(
 );
 select results_eq(
   $$ update public.invitations set status = 'revoked'
-     where member_id = 'b1000000-0000-4000-8000-000000000004' and status = 'pending' returning short_code $$,
-  $$ values ('7305') $$,
+     where member_id = 'b1000000-0000-4000-8000-000000000004' and status = 'pending' returning id $$,
+  $$ values ('b2000000-0000-4000-8000-000000000001'::uuid) $$,
   'CA-17: B revokes the expired invitation of Anna'
 );
 select lives_ok(

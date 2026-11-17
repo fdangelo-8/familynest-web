@@ -853,7 +853,6 @@ export type Database = {
           invited_by_member_id: string | null;
           member_id: string;
           message: string | null;
-          short_code: string;
           status: Database["public"]["Enums"]["invitation_status"];
           token: string;
           updated_at: string;
@@ -868,7 +867,6 @@ export type Database = {
           invited_by_member_id?: string | null;
           member_id: string;
           message?: string | null;
-          short_code?: string;
           status?: Database["public"]["Enums"]["invitation_status"];
           token?: string;
           updated_at?: string;
@@ -882,7 +880,6 @@ export type Database = {
           invited_by_member_id?: string | null;
           member_id?: string;
           message?: string | null;
-          short_code?: string;
           status?: Database["public"]["Enums"]["invitation_status"];
           token?: string;
           updated_at?: string;
@@ -1665,7 +1662,6 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      accept_invitation: { Args: { token: string }; Returns: string };
       accept_invitation_with_color: {
         Args: {
           p_color: Database["public"]["Enums"]["member_color"];

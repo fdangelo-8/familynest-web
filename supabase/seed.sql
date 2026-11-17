@@ -72,14 +72,14 @@ values
 -- Anna's is pending but expired (created 10 days ago, expired 3 days ago).
 -- Tokens are generated randomly by the column default.
 insert into public.invitations (
-  id, household_id, member_id, invited_by_member_id, short_code, status, created_at, expires_at
+  id, household_id, member_id, invited_by_member_id, status, created_at, expires_at
 )
 values
   ('a2000000-0000-4000-8000-000000000001', '11111111-1111-4111-8111-111111111111',
-   'a1000000-0000-4000-8000-000000000002', 'a1000000-0000-4000-8000-000000000001', '4821', 'pending',
+   'a1000000-0000-4000-8000-000000000002', 'a1000000-0000-4000-8000-000000000001', 'pending',
    now() - interval '1 day', now() - interval '1 day' + interval '7 days'),
   ('b2000000-0000-4000-8000-000000000001', '22222222-2222-4222-8222-222222222222',
-   'b1000000-0000-4000-8000-000000000004', 'b1000000-0000-4000-8000-000000000001', '7305', 'pending',
+   'b1000000-0000-4000-8000-000000000004', 'b1000000-0000-4000-8000-000000000001', 'pending',
    now() - interval '10 days', now() - interval '10 days' + interval '7 days');
 
 -- Shopping list (issue #62): a few example items per household. Invented items, no

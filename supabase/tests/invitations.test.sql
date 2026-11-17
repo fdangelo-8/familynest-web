@@ -13,8 +13,8 @@ set local role authenticated;
 set local request.jwt.claims to '{"sub":"aaaaaaaa-0000-4000-8000-000000000001","role":"authenticated"}';
 
 select results_eq(
-  $$ select i.short_code, i.status::text from public.invitations i $$,
-  $$ values ('4821', 'pending') $$,
+  $$ select i.id, i.status::text from public.invitations i $$,
+  $$ values ('a2000000-0000-4000-8000-000000000001'::uuid, 'pending') $$,
   'A (admin) reads the pending invitation of Laura'
 );
 
@@ -48,11 +48,11 @@ select throws_ok(
   'a member of another household cannot be invited'
 );
 select throws_ok(
-  $$ insert into public.invitations (household_id, member_id, token, short_code)
-     values ('11111111-1111-4111-8111-111111111111', 'a1000000-0000-4000-8000-000000000002', 'weak', '0000') $$,
+  $$ insert into public.invitations (household_id, member_id, token)
+     values ('11111111-1111-4111-8111-111111111111', 'a1000000-0000-4000-8000-000000000002', 'weak') $$,
   '42501',
   null,
-  'token and short code cannot be chosen by the app'
+  'the token cannot be chosen by the app'
 );
 select throws_ok(
   $$ insert into public.invitations (household_id, member_id, message)
@@ -103,18 +103,15 @@ select lives_ok(
 select lives_ok(
   $$ insert into public.invitations (household_id, member_id)
      values ('22222222-2222-4222-8222-222222222222', 'b1000000-0000-4000-8000-000000000004') $$,
-  'CA-23 (#49 CA-1): B creates an invitation for Anna without short_code, token or expiry'
+  'CA-23 (#49 CA-1): B creates an invitation for Anna without token or expiry'
 );
 select ok(
   (select i.token ~ '^[0-9a-f]{64}$' from public.invitations i
    where i.member_id = 'b1000000-0000-4000-8000-000000000004' and i.status = 'pending'),
   'CA-23: the link secret has 256 random bits (64 hex characters)'
 );
-select ok(
-  (select i.short_code ~ '^[0-9]{4}$' and i.short_code <> '4821' from public.invitations i
-   where i.member_id = 'b1000000-0000-4000-8000-000000000004' and i.status = 'pending'),
-  'CA-23: the short code has 4 digits and differs from the valid code 4821'
-);
+-- #438: the invitation has no short code any more, only the link token.
+select hasnt_column('public', 'invitations', 'short_code', 'CA-23 (#438): an invitation has no short code');
 select ok(
   (select i.expires_at = i.created_at + interval '7 days' from public.invitations i
    where i.member_id = 'b1000000-0000-4000-8000-000000000004' and i.status = 'pending'),
@@ -158,9 +155,9 @@ select throws_ok(
 reset role;
 
 select results_eq(
-  $$ select i.short_code, i.status::text, i.expires_at > now() from public.invitations i
+  $$ select i.id, i.status::text, i.expires_at > now() from public.invitations i
      where i.household_id = '11111111-1111-4111-8111-111111111111' $$,
-  $$ values ('4821', 'pending', true) $$,
+  $$ values ('a2000000-0000-4000-8000-000000000001'::uuid, 'pending', true) $$,
   'CA-11: the invitation of Laura is unchanged'
 );
 select is(
@@ -170,9 +167,9 @@ select is(
 );
 select is(
   (select count(*)::integer from public.invitations i
-   where i.short_code = '7305' and i.status = 'revoked'),
+   where i.id = 'b2000000-0000-4000-8000-000000000001' and i.status = 'revoked'),
   1,
-  'the expired short code 7305 stays on the revoked invitation'
+  'the expired invitation of Anna stays, revoked'
 );
 select ok(
   (select i.invited_by_member_id = 'b1000000-0000-4000-8000-000000000001' from public.invitations i
@@ -180,21 +177,23 @@ select ok(
   'the inviter is recorded automatically'
 );
 
--- Issue #49 CA-1: the short code has a server default, so the app never sends it
--- (optional in the generated Insert types). A code already used by a valid
--- invitation is redrawn.
-select col_has_default('public', 'invitations', 'short_code', 'short_code has a server default');
+-- Issue #438: the token has a server default (the app never sends it) and, even for the
+-- database owner, exactly 64 lowercase hexadecimal characters.
+select col_has_default('public', 'invitations', 'token', 'token has a server default');
 update public.invitations set status = 'revoked'
 where member_id = 'b1000000-0000-4000-8000-000000000004' and status = 'pending';
-select lives_ok(
-  $$ insert into public.invitations (household_id, member_id, short_code)
-     values ('22222222-2222-4222-8222-222222222222', 'b1000000-0000-4000-8000-000000000004', '4821') $$,
-  'an invitation with a code already in use is still created'
+select throws_ok(
+  $$ insert into public.invitations (household_id, member_id, token)
+     values ('22222222-2222-4222-8222-222222222222', 'b1000000-0000-4000-8000-000000000004', repeat('A', 64)) $$,
+  '23514',
+  'new row for relation "invitations" violates check constraint "invitations_token_format"',
+  '#438: a token that is not 64 lowercase hexadecimal characters is refused'
 );
-select ok(
-  (select i.short_code ~ '^[0-9]{4}$' and i.short_code <> '4821' from public.invitations i
-   where i.member_id = 'b1000000-0000-4000-8000-000000000004' and i.status = 'pending'),
-  'the code in use (4821, Laura) is replaced by another 4 digit code'
+select lives_ok(
+  $$ insert into public.invitations (household_id, member_id, token)
+     values ('22222222-2222-4222-8222-222222222222', 'b1000000-0000-4000-8000-000000000004',
+             encode(extensions.digest('issue-438', 'sha256'), 'hex')) $$,
+  '#438: a token of 64 lowercase hexadecimal characters is accepted'
 );
 
 select * from finish();
