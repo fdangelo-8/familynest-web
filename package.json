@@ -40,7 +40,7 @@
     "eslint-config-next": "16.4.6",
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.10.1",
-    "supabase": "^2.121.0",
+    "supabase": "^3.1.0",
     "typescript": "^5"
   },
   "description": "FamilyNest — organizer familiare web",
