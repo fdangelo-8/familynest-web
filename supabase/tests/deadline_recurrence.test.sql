@@ -34,7 +34,7 @@ select enum_has_labels(
   'deadline_recurrence: Mai, Ogni mese, Ogni 3 mesi, Ogni 6 mesi, Ogni anno, Ogni … giorni'
 );
 select results_eq(
-  $$ select a.attname::text, a.atttypid::regtype::text from pg_attribute a
+  $$ select a.attname::text collate "default", a.atttypid::regtype::text collate "default" from pg_attribute a
      where a.attrelid = 'public.deadlines'::regclass and a.attname in ('recurrence', 'recurrence_interval_days')
      order by a.attname $$,
   $$ values ('recurrence'::text, 'deadline_recurrence'::text), ('recurrence_interval_days', 'smallint') $$,
@@ -131,7 +131,7 @@ select ok(
 -- One rule «Solo io»: the policies and «Fatta» use private.deadline_open_to_member()
 -- ---------------------------------------------------------------------------
 select results_eq(
-  $$ select p.policyname::text,
+  $$ select p.policyname::text collate "default",
             coalesce(p.qual, '') ~ 'deadline_open_to_member',
             coalesce(p.with_check, '') ~ 'deadline_open_to_member'
      from pg_policies p
