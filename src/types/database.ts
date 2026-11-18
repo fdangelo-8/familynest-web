@@ -355,6 +355,8 @@ export type Database = {
           id: string;
           is_private: boolean;
           note: string | null;
+          recurrence: Database["public"]["Enums"]["deadline_recurrence"];
+          recurrence_interval_days: number | null;
           reminder_days: number[];
           title: string;
           updated_at: string;
@@ -370,6 +372,8 @@ export type Database = {
           id?: string;
           is_private?: boolean;
           note?: string | null;
+          recurrence?: Database["public"]["Enums"]["deadline_recurrence"];
+          recurrence_interval_days?: number | null;
           reminder_days?: number[];
           title: string;
           updated_at?: string;
@@ -384,6 +388,8 @@ export type Database = {
           id?: string;
           is_private?: boolean;
           note?: string | null;
+          recurrence?: Database["public"]["Enums"]["deadline_recurrence"];
+          recurrence_interval_days?: number | null;
           reminder_days?: number[];
           title?: string;
           updated_at?: string;
@@ -1739,6 +1745,10 @@ export type Database = {
         };
         Returns: boolean;
       };
+      complete_deadline: {
+        Args: { p_deadline_id: string; p_due_date?: string };
+        Returns: string;
+      };
       complete_starter_list: {
         Args: Record<PropertyKey, never>;
         Returns: boolean;
@@ -1761,6 +1771,8 @@ export type Database = {
           p_for_member_id?: string;
           p_is_private?: boolean;
           p_note?: string;
+          p_recurrence?: Database["public"]["Enums"]["deadline_recurrence"];
+          p_recurrence_interval_days?: number;
           p_reminder_days?: number[];
           p_title: string;
         };
@@ -2130,6 +2142,10 @@ export type Database = {
         Args: { item_ids: string[] };
         Returns: string[];
       };
+      undo_complete_deadline: {
+        Args: { p_deadline_id: string; p_due_date: string };
+        Returns: undefined;
+      };
       unpin_space: {
         Args: { p_space: Database["public"]["Enums"]["space_key"] };
         Returns: undefined;
@@ -2150,6 +2166,8 @@ export type Database = {
           p_for_member_id: string;
           p_is_private: boolean;
           p_note: string;
+          p_recurrence?: Database["public"]["Enums"]["deadline_recurrence"];
+          p_recurrence_interval_days?: number;
           p_reminder_days: number[];
           p_title: string;
         };
@@ -2220,6 +2238,13 @@ export type Database = {
       calendar_outbox_action: "create" | "update" | "delete";
       calendar_provider: "google" | "outlook";
       calendar_sync_outcome: "ok" | "auth_error" | "temporary_error";
+      deadline_recurrence:
+        | "none"
+        | "monthly"
+        | "every_3_months"
+        | "every_6_months"
+        | "yearly"
+        | "every_n_days";
       event_change_scope: "this" | "following";
       event_recurrence: "none" | "weekly" | "monthly";
       event_visibility: "private" | "busy" | "household";
@@ -2424,6 +2449,14 @@ export const Constants = {
       calendar_outbox_action: ["create", "update", "delete"],
       calendar_provider: ["google", "outlook"],
       calendar_sync_outcome: ["ok", "auth_error", "temporary_error"],
+      deadline_recurrence: [
+        "none",
+        "monthly",
+        "every_3_months",
+        "every_6_months",
+        "yearly",
+        "every_n_days",
+      ],
       event_change_scope: ["this", "following"],
       event_recurrence: ["none", "weekly", "monthly"],
       event_visibility: ["private", "busy", "household"],
