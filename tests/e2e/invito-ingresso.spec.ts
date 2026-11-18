@@ -48,6 +48,7 @@ import {
   throwawayConfigured,
   throwawaySkipReason,
 } from "../fixtures/throwaway-user";
+import { isValidInviteToken } from "../../src/lib/invitations";
 
 // Ingresso con invito (#16): pages /invito, /invito/colore and the technical
 // routes /invito/<token> and /invito/chiudi, one test per acceptance criterion
@@ -170,6 +171,69 @@ async function expectLauraWelcome(page: Page, expiresAt: string) {
 }
 
 // ================================================================ contenuto
+
+test.describe("formato del codice di invito (#417)", () => {
+  test("CA-1: un codice è valido solo con 64 caratteri esadecimali minuscoli", () => {
+    expect(isValidInviteToken("a".repeat(64))).toBe(true);
+    expect(isValidInviteToken(randomBytes(32).toString("hex"))).toBe(true);
+    expect(isValidInviteToken("0123456789abcdef".repeat(4))).toBe(true);
+
+    const refused: unknown[] = [
+      "",
+      "a".repeat(32),
+      "a".repeat(63),
+      "a".repeat(65),
+      "a".repeat(128),
+      "A".repeat(64),
+      "0123456789ABCDEF".repeat(4),
+      "g".repeat(64),
+      "z".repeat(64),
+      `${"a".repeat(63)} `,
+      `${"a".repeat(63)}\n`,
+      null,
+      undefined,
+      42,
+    ];
+    for (const value of refused) {
+      expect(isValidInviteToken(value), JSON.stringify(value)).toBe(false);
+    }
+  });
+
+  test("CA-2: /invito/<63 o 65 caratteri> cancella il cookie e manda a /invito", async ({
+    page,
+    baseURL,
+  }) => {
+    const origin = originOf(baseURL);
+    // A cookie with a valid-looking token: it must be gone after the link.
+    await setInviteCookie(page, baseURL as string, "b".repeat(64));
+    expect(await inviteCookie(page)).toBeDefined();
+
+    // Requests the browser sends to Supabase. The route runs on the server,
+    // so its database call is not visible here: the proof that a malformed
+    // token never reaches the database is in `src/lib/invitations.ts`, which
+    // returns before `getInvitationPreview`.
+    const supabaseOrigin = new URL(
+      process.env.NEXT_PUBLIC_SUPABASE_URL ?? "https://supabase.invalid",
+    ).origin;
+    const toSupabase: string[] = [];
+    page.on("request", (request) => {
+      if (new URL(request.url()).origin === supabaseOrigin) {
+        toSupabase.push(request.url());
+      }
+    });
+
+    for (const token of ["c".repeat(63), "d".repeat(65)]) {
+      await setInviteCookie(page, baseURL as string, "b".repeat(64));
+      await page.goto(linkOf(origin, token));
+      await expect(page).toHaveURL(`${origin}/invito`);
+      expect(
+        await inviteCookie(page),
+        `cookie per ${token.length} caratteri`,
+      ).toBeUndefined();
+    }
+    expect(toSupabase).toEqual([]);
+  });
+});
 
 test.describe("benvenuto (07)", () => {
   test("CA-1: il link salva il token in un cookie HttpOnly e manda a /invito", async ({

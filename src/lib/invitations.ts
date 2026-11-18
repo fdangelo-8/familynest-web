@@ -19,9 +19,9 @@ export const AFTER_INVITE_PATH = "/onboarding/calendario";
 export const INVITE_WELCOME_PATH = "/invito";
 export const INVITE_COLOR_PATH = "/invito/colore";
 
-const TOKEN_FORMAT = /^[0-9a-f]{32,128}$/;
+const TOKEN_FORMAT = /^[0-9a-f]{64}$/;
 
-/** A token is 32-128 lowercase hexadecimal characters. Anything else is never sent to the database. */
+/** A token is 64 lowercase hexadecimal characters, the format the database accepts (#417). Anything else is never sent to the database. */
 export function isValidInviteToken(value: unknown): value is string {
   return typeof value === "string" && TOKEN_FORMAT.test(value);
 }

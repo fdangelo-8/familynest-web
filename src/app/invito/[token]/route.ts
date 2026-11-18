@@ -33,7 +33,7 @@ export async function GET(
       clearInviteCookieOptions(origin),
     );
 
-  // A token that is not 32-128 hex characters never reaches the database.
+  // A token that is not 64 lowercase hex characters never reaches the database.
   if (!isValidInviteToken(token)) {
     clear();
     return response;
