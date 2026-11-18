@@ -2,7 +2,7 @@
 -- Issue #438: public.accept_invitation(text) is dropped; the same cases now go through
 -- public.accept_invitation_with_color(text, member_color), the only way in, with the
 -- colour the invitee already has. That function and public.invitation_preview(text) are
--- unchanged by #438.
+-- unchanged by #438; #458 changes only their token filter.
 -- Laura (Casa D'Angelo) has a valid invitation; Anna (Casa Bianchi) an expired one.
 -- B2 = Paolo (has a household), C = Chiara (no household), D = new user created here.
 begin;
@@ -19,17 +19,20 @@ select is_empty(
      where p.proname = 'accept_invitation' $$,
   '#438: no function accept_invitation in any schema, with any arguments'
 );
--- md5 of the bodies as written in 20261030015510 (accept_invitation_with_color) and
--- 20261030133343 (invitation_preview): any change of the code changes the hash.
+-- md5 of the bodies as written in 20261118002243 (accept_invitation_with_color) and
+-- 20261118002241 (invitation_preview): any change of the code changes the hash.
+-- #458 changed both on purpose, only in the token filter (64 lowercase hexadecimal
+-- characters instead of 32-128 characters); before #458 they were
+-- f383434f35d7827ddbf8ca36a7805321 and cd02ff85ab53f2198e3c0d6dc44eb114.
 select results_eq(
   $$ select p.proname::text collate "default", md5(p.prosrc) collate "default"
      from pg_proc p
      where p.oid in ('public.invitation_preview(text)'::regprocedure,
                      'public.accept_invitation_with_color(text, public.member_color)'::regprocedure)
      order by p.proname $$,
-  $$ values ('accept_invitation_with_color', 'f383434f35d7827ddbf8ca36a7805321'),
-            ('invitation_preview', 'cd02ff85ab53f2198e3c0d6dc44eb114') $$,
-  '#438: the code of accept_invitation_with_color and invitation_preview is unchanged'
+  $$ values ('accept_invitation_with_color', 'da43d8025e0fd2379f3000c75f1f9882'),
+            ('invitation_preview', 'a0de9ea8dfc88f373f56cb21338a0789') $$,
+  '#458: the code of accept_invitation_with_color and invitation_preview is the one of #458'
 );
 select results_eq(
   $$ select p.proargnames::text[] collate "default", p.prorettype::regtype::text collate "default", p.proretset
