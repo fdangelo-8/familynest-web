@@ -40,7 +40,7 @@ const forgotMail = (page: Page) => page.getByLabel("La tua mail");
 
 /** Registers (with the answer of Supabase already simulated) and waits for «Controlla la posta». */
 async function reachCheckMail(page: Page, address = MAIL) {
-  await page.goto("/accesso/mail");
+  await page.goto("/accesso");
   await submitMailForm(
     page,
     { mode: "Registrati", email: address, password: PASSWORD_OK },
@@ -48,14 +48,16 @@ async function reachCheckMail(page: Page, address = MAIL) {
   );
 }
 
-test.describe("/accesso/mail: Entra e Registrati", () => {
-  test("«Usa la mail» porta al modulo, «Entra» è la voce predefinita", async ({
+test.describe("/accesso: Entra e Registrati", () => {
+  test("il modulo è già nella pagina, «Entra» è la voce predefinita", async ({
     page,
   }) => {
     await page.goto("/accesso");
-    await page.getByRole("link", { name: "Usa la mail" }).click();
-    await expect(page).toHaveURL(/\/accesso\/mail$/);
-    await expect(h1(page)).toHaveText("Entra con la mail");
+    await expect(page.getByRole("link", { name: "Usa la mail" })).toHaveCount(
+      0,
+    );
+    await expect(page).toHaveURL(/\/accesso$/);
+    await expect(h1(page)).toHaveText("Entra in FamilyNest");
     await expect(modeVoice(page, "Entra")).toHaveAttribute(
       "aria-pressed",
       "true",
@@ -65,7 +67,9 @@ test.describe("/accesso/mail: Entra e Registrati", () => {
       "false",
     );
     await expect(
-      page.getByText("Scrivi la mail e la password del tuo account."),
+      page.getByText(
+        "Il calendario, la spesa e le cose da fare di chi vive con te, in un posto solo.",
+      ),
     ).toBeVisible();
     await expect(submitButton(page)).toHaveText("Entra");
   });
@@ -73,7 +77,7 @@ test.describe("/accesso/mail: Entra e Registrati", () => {
   test("CA-19: un solo modulo, un solo campo per tipo, attributi dei campi", async ({
     page,
   }) => {
-    await page.goto("/accesso/mail");
+    await page.goto("/accesso");
     await expect(page.locator("form")).toHaveCount(1);
     await expect(page.locator("input[type=password]")).toHaveCount(1);
     await expect(page.locator("input[type=email]")).toHaveCount(1);
@@ -108,7 +112,7 @@ test.describe("/accesso/mail: Entra e Registrati", () => {
   test("passare a «Registrati»: la mail resta, la password si svuota e torna nascosta", async ({
     page,
   }) => {
-    await page.goto("/accesso/mail");
+    await page.goto("/accesso");
     // Hydrated when the voice answers; then back to «Entra».
     await untilHydrated(
       () => modeVoice(page, "Registrati").click({ timeout: 2000 }),
@@ -151,7 +155,7 @@ test.describe("/accesso/mail: Entra e Registrati", () => {
   test("CA-20: «Password dimenticata?» porta a /accesso/password-dimenticata", async ({
     page,
   }) => {
-    await page.goto("/accesso/mail");
+    await page.goto("/accesso");
     await page.getByRole("link", { name: "Password dimenticata?" }).click();
     await expect(page).toHaveURL(/\/accesso\/password-dimenticata$/);
     await expect(h1(page)).toHaveText("Hai dimenticato la password?");
@@ -177,7 +181,7 @@ test.describe("Registrati: controlli prima dell'invio", () => {
   }) => {
     needSupabase();
     const calls = recordAuth(page);
-    await page.goto("/accesso/mail");
+    await page.goto("/accesso");
     await untilHydrated(
       async () => {
         await modeVoice(page, "Registrati").click({ timeout: 2000 });
@@ -209,7 +213,7 @@ test.describe("Registrati: controlli prima dell'invio", () => {
     }) => {
       needSupabase();
       const calls = recordAuth(page);
-      await page.goto("/accesso/mail");
+      await page.goto("/accesso");
       await submitRegister(page, MAIL, "a".repeat(length), () =>
         expect(page.getByText(text)).toBeVisible({ timeout: 1000 }),
       );
@@ -226,7 +230,7 @@ test.describe("Registrati: controlli prima dell'invio", () => {
     test(`CA-7: «${address}», nessuna richiesta`, async ({ page }) => {
       needSupabase();
       const calls = recordAuth(page);
-      await page.goto("/accesso/mail");
+      await page.goto("/accesso");
       await submitRegister(page, address, PASSWORD_OK, () =>
         expect(
           page.getByText(
@@ -245,7 +249,7 @@ test.describe("Registrati: controlli prima dell'invio", () => {
     needSupabase();
     await mockAuth(page, "/signup", { kind: "ok" });
     const calls = recordAuth(page);
-    await page.goto("/accesso/mail");
+    await page.goto("/accesso");
     await submitRegister(page, `  ${MAIL}  `, "        ", () =>
       expect(checkPosta(page)).toBeVisible({ timeout: 3000 }),
     );
@@ -338,7 +342,7 @@ test.describe("Registrati: esiti di Supabase", () => {
   }) => {
     needSupabase();
     await mockAuth(page, "/signup", RATE_LIMIT);
-    await page.goto("/accesso/mail");
+    await page.goto("/accesso");
     await submitMailForm(
       page,
       { mode: "Registrati", email: MAIL, password: PASSWORD_OK },
@@ -361,7 +365,7 @@ test.describe("Registrati: esiti di Supabase", () => {
     needSupabase();
     await mockAuth(page, "/signup", { kind: "abort-once" });
     const calls = recordAuth(page);
-    await page.goto("/accesso/mail");
+    await page.goto("/accesso");
     await submitMailForm(
       page,
       { mode: "Registrati", email: MAIL, password: PASSWORD_OK },
@@ -392,7 +396,7 @@ test.describe("Registrati: esiti di Supabase", () => {
       status: 422,
       body: { code: 422, error_code: "weak_password", msg: "weak" },
     });
-    await page.goto("/accesso/mail");
+    await page.goto("/accesso");
     await submitMailForm(
       page,
       { mode: "Registrati", email: MAIL, password: PASSWORD_OK },
@@ -416,7 +420,7 @@ test.describe("Registrati: esiti di Supabase", () => {
     await mockAuth(page, "/resend", { kind: "ok" });
     const calls = recordAuth(page);
     await page.clock.install({ time: new Date("2026-11-06T10:00:00Z") });
-    await page.goto("/accesso/mail");
+    await page.goto("/accesso");
     await page.clock.pauseAt(new Date("2026-11-06T10:00:05Z"));
     await submitMailForm(
       page,
@@ -457,7 +461,7 @@ test.describe("Registrati: esiti di Supabase", () => {
     await mockAuth(page, "/signup", { kind: "ok" });
     await mockAuth(page, "/resend", RATE_LIMIT);
     await page.clock.install({ time: new Date("2026-11-06T10:00:00Z") });
-    await page.goto("/accesso/mail");
+    await page.goto("/accesso");
     await page.clock.pauseAt(new Date("2026-11-06T10:00:05Z"));
     await submitMailForm(
       page,
@@ -482,7 +486,7 @@ test.describe("Registrati: esiti di Supabase", () => {
     await mockAuth(page, "/signup", { kind: "ok" });
     await mockAuth(page, "/resend", { kind: "abort-once" });
     await page.clock.install({ time: new Date("2026-11-06T10:00:00Z") });
-    await page.goto("/accesso/mail");
+    await page.goto("/accesso");
     await page.clock.pauseAt(new Date("2026-11-06T10:00:05Z"));
     await submitMailForm(
       page,
@@ -511,7 +515,7 @@ test.describe("Registrati: esiti di Supabase", () => {
     await reachCheckMail(page);
     expect(page.url()).not.toContain("marco");
     await page.reload();
-    await expect(h1(page)).toHaveText("Entra con la mail");
+    await expect(h1(page)).toHaveText("Entra in FamilyNest");
     await expect(mailField(page)).toHaveValue("");
     await expect(passwordField(page)).toHaveValue("");
     const stored = await page.evaluate(() =>
@@ -543,14 +547,14 @@ test.describe("Registrati: esiti di Supabase", () => {
     await submitButton(page).click();
     await expect(checkPosta(page)).toBeVisible();
     await page.getByRole("button", { name: "Entra con la password" }).click();
-    await expect(h1(page)).toHaveText("Entra con la mail");
+    await expect(h1(page)).toHaveText("Entra in FamilyNest");
     await expect(mailField(page)).toHaveValue(MAIL);
   });
 });
 
 test.describe("Entra: esiti di Supabase", () => {
   async function submitLogin(page: Page, done: () => Promise<void>) {
-    await page.goto("/accesso/mail");
+    await page.goto("/accesso");
     await submitMailForm(
       page,
       { mode: "Entra", email: MAIL, password: "una-password" },
@@ -563,7 +567,7 @@ test.describe("Entra: esiti di Supabase", () => {
   }) => {
     needSupabase();
     const calls = recordAuth(page);
-    await page.goto("/accesso/mail");
+    await page.goto("/accesso");
     await untilHydrated(
       () => submitButton(page).click({ timeout: 2000, noWaitAfter: true }),
       () =>
@@ -849,7 +853,7 @@ test.describe("/accesso/password-dimenticata", () => {
 test.describe("CA-18: senza JavaScript i moduli non mandano nulla al sito", () => {
   const forms = [
     {
-      page: "/accesso/mail",
+      page: "/accesso",
       action: "/accesso/mail/invio",
       fill: async (page: Page) => {
         await mailField(page).fill(MAIL);
@@ -950,8 +954,12 @@ test.describe("/accesso/link-scaduto", () => {
         "I link nelle nostre mail valgono un'ora, si usano una volta sola e funzionano solo nel browser in cui li hai chiesti. Entra con mail e password: se l'indirizzo non è ancora confermato, potrai farti mandare una nuova mail da aprire qui.",
       );
       await expect(
-        page.getByRole("link", { name: "Entra con la mail" }),
-      ).toHaveAttribute("href", "/accesso/mail");
+        page.getByRole("link", { name: "Entra con la password" }),
+      ).toHaveAttribute("href", "/accesso");
+      // The main action already goes there: no second link (#461).
+      await expect(
+        page.getByRole("link", { name: "Torna all'accesso" }),
+      ).toHaveCount(0);
     }
   });
 

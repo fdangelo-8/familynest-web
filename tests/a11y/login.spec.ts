@@ -76,17 +76,37 @@ async function until(step: () => Promise<void>) {
 }
 
 test.describe("/accesso", () => {
-  test("stato normale: axe, un solo h1, ordine del focus", async ({ page }) => {
+  test("stato normale: axe, un solo h1, ordine del focus", async ({
+    page,
+  }, info) => {
     await page.goto("/accesso");
     await expectOneH1(page);
     await expectNoBlocking(page);
-    expect(await tabOrder(page)).toEqual([
-      "Continua con Apple",
-      "Continua con Google",
-      "Usa la mail",
-      "Termini d'uso",
-      "Informativa sulla privacy",
-    ]);
+    const order = await tabOrder(page);
+    if (info.project.name === "mobile") {
+      // Nothing has the focus on arrival below 1024 px (#461). The walk ends
+      // at the second «Entra» (the submit button, same name as the voice).
+      expect(order).toEqual([
+        "Entra",
+        "Registrati",
+        "La tua mail",
+        "Password",
+        "Mostra la password",
+        "Password dimenticata?",
+      ]);
+    } else {
+      // From 1024 px the mail field has the focus on arrival.
+      expect(order).toEqual([
+        "Password",
+        "Mostra la password",
+        "Password dimenticata?",
+        "Entra",
+        "Continua con Apple",
+        "Continua con Google",
+        "Termini d'uso",
+        "Informativa sulla privacy",
+      ]);
+    }
   });
 
   test("stato di errore: axe, avviso annunciato, Riprova per primo", async ({
@@ -108,7 +128,6 @@ test.describe("/accesso", () => {
       "Riprova",
       "Continua con Apple",
       "Continua con Google",
-      "Usa la mail",
       "Termini d'uso",
       "Informativa sulla privacy",
     ]);

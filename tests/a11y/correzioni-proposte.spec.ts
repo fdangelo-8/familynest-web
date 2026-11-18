@@ -154,7 +154,9 @@ test.describe("senza accesso", () => {
 
   test("accesso: quattro adesivi decorativi, nascosti al lettore di schermo", async ({
     page,
-  }) => {
+  }, info) => {
+    // Below 1024 px there is no night cover and no stickers (#461).
+    test.skip(info.project.name !== "desktop", "solo desktop");
     await page.goto("/accesso");
     const stickers = page.locator(".adesivi:visible");
     await expect(stickers).toHaveAttribute("aria-hidden", "true");
@@ -166,12 +168,7 @@ test.describe("senza accesso", () => {
     await expectNoBlocking(page);
   });
 
-  for (const route of [
-    "/accesso",
-    "/accesso/mail",
-    "/accesso/link-scaduto",
-    "/termini",
-  ]) {
+  for (const route of ["/accesso", "/accesso/link-scaduto", "/termini"]) {
     test(`${route}: nessun «Vai al contenuto» e aree di tocco di 44 px`, async ({
       page,
     }) => {

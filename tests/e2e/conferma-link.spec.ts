@@ -740,15 +740,16 @@ test.describe("riga dell'account su /invito/colore", () => {
 // --------------------------------------------------------------- recovery
 
 test.describe("recupero della password invariato", () => {
-  test("CA-26: type=recovery verifica subito, senza pagina intermedia: /accesso/nuova-password e cookie HttpOnly di 900 secondi", async ({
+  test("CA-26 (#461): type=recovery mostra il bottone «Continua»; il bottone porta a /accesso/nuova-password con il cookie HttpOnly di 900 secondi", async ({
     page,
   }) => {
     needKeys();
     await withUser({}, async (user) => {
       const token = await tokenFor(user.email, "recovery");
       await page.goto(confirmPath(token, { type: "recovery", next: "/oggi" }));
-      await expect(page).toHaveURL(/\/accesso\/nuova-password$/);
       await expect(confirmButton(page)).toHaveCount(0);
+      await page.getByRole("button", { name: "Continua", exact: true }).click();
+      await expect(page).toHaveURL(/\/accesso\/nuova-password$/);
       expect(await hasSession(page.context())).toBe(true);
       const cookie = (await page.context().cookies()).find(
         (c) => c.name === RECOVERY_COOKIE,

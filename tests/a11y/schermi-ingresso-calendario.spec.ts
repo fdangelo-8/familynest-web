@@ -695,7 +695,7 @@ const scenes: Scene[] = [
     title: "accesso con la mail",
     run: async ({ page }, check) => {
       await check(async () => {
-        await page.goto("/accesso/mail");
+        await page.goto("/accesso");
         await expect(page.locator("h1:visible")).toHaveCount(1);
         await ready(page);
       });
@@ -707,7 +707,7 @@ const scenes: Scene[] = [
     title: "accesso con la mail: Registrati",
     run: async ({ page }, check) => {
       await check(async () => {
-        await page.goto("/accesso/mail");
+        await page.goto("/accesso");
         await untilHydrated(
           () => modeVoice(page, "Registrati").click({ timeout: 2000 }),
           () =>
@@ -732,7 +732,7 @@ const scenes: Scene[] = [
     title: "accesso con la mail: errori dei campi",
     run: async ({ page }, check) => {
       await check(async () => {
-        await page.goto("/accesso/mail");
+        await page.goto("/accesso");
         await untilHydrated(
           () => submitButton(page).click({ timeout: 2000, noWaitAfter: true }),
           () =>
@@ -754,7 +754,7 @@ const scenes: Scene[] = [
         body: { code: 400, error_code: "invalid_credentials", msg: "no" },
       });
       await check(async () => {
-        await page.goto("/accesso/mail");
+        await page.goto("/accesso");
         await submitMailForm(
           page,
           { mode: "Entra", email: "marco@esempio.test", password: "x-y-z-123" },
@@ -779,7 +779,7 @@ const scenes: Scene[] = [
         body: { code: 400, error_code: "email_not_confirmed", msg: "no" },
       });
       await check(async () => {
-        await page.goto("/accesso/mail");
+        await page.goto("/accesso");
         await submitMailForm(
           page,
           { mode: "Entra", email: "marco@esempio.test", password: "x-y-z-123" },
@@ -800,7 +800,7 @@ const scenes: Scene[] = [
     run: async ({ page }, check) => {
       await mockAuth(page, "/token", RATE_LIMIT);
       await check(async () => {
-        await page.goto("/accesso/mail");
+        await page.goto("/accesso");
         await submitMailForm(
           page,
           { mode: "Entra", email: "marco@esempio.test", password: "x-y-z-123" },
@@ -821,7 +821,7 @@ const scenes: Scene[] = [
     run: async ({ page }, check) => {
       await mockAuth(page, "/token", { kind: "abort" });
       await check(async () => {
-        await page.goto("/accesso/mail");
+        await page.goto("/accesso");
         await submitMailForm(
           page,
           { mode: "Entra", email: "marco@esempio.test", password: "x-y-z-123" },
@@ -842,7 +842,7 @@ const scenes: Scene[] = [
     run: async ({ page }, check) => {
       await mockAuth(page, "/signup", { kind: "ok" });
       await check(async () => {
-        await page.goto("/accesso/mail");
+        await page.goto("/accesso");
         await submitMailForm(
           page,
           {

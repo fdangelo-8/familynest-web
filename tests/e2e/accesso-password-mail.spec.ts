@@ -76,7 +76,7 @@ async function loginThroughPage(
   password: string,
   done: () => Promise<void>,
 ) {
-  await page.goto("/accesso/mail");
+  await page.goto("/accesso");
   await submitMailForm(page, { mode: "Entra", email, password }, done);
 }
 
@@ -117,7 +117,7 @@ test.describe("[CI-stack] registrazione e conferma", () => {
     page.on("console", (message) => logs.push(message.text()));
     const origin = new URL(baseURL!).origin;
     try {
-      await page.goto("/accesso/mail");
+      await page.goto("/accesso");
       await submitMailForm(
         page,
         { mode: "Registrati", email: address, password: PASSWORD_OK },
@@ -181,7 +181,7 @@ test.describe("[CI-stack] registrazione e conferma", () => {
       },
     );
     try {
-      await page.goto("/accesso/mail");
+      await page.goto("/accesso");
       await submitMailForm(
         page,
         {
@@ -682,7 +682,7 @@ test.describe("[CI-utenti] invito", () => {
       page.on("request", (request) => urls.push(request.url()));
       page.on("framenavigated", (frame) => urls.push(frame.url()));
       await page.getByRole("link", { name: "Usa la mail" }).click();
-      await expect(page).toHaveURL(/\/accesso\/mail$/);
+      await expect(page).toHaveURL(/\/accesso$/);
       await submitMailForm(
         page,
         { mode: "Registrati", email: address, password: PASSWORD_OK },

@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { expect, test } from "@playwright/test";
+import { expect, test, type BrowserContext } from "@playwright/test";
 import {
   RECOVERY_COOKIE_MAX_AGE_SECONDS,
   clearRecoveryCookieOptions,
@@ -63,7 +63,8 @@ test.describe("/auth/confirm: link non validi", () => {
     ["/auth/confirm?token_hash=qualunque", /\?tipo=conferma$/],
     ["/auth/confirm?type=email", /\?tipo=conferma$/],
     ["/auth/confirm?type=otro&token_hash=inventato", /\?tipo=conferma$/],
-    ["/auth/confirm?type=recovery&token_hash=inventato", /\?tipo=password$/],
+    // With a token the link is answered by the button page (#461).
+    ["/auth/confirm?type=recovery", /\?tipo=password$/],
   ];
   for (const [url, expected] of cases) {
     test(`${url} porta a /accesso/link-scaduto senza sessione`, async ({
@@ -105,7 +106,7 @@ test.describe("/auth/confirm: link non validi", () => {
     request,
   }) => {
     const response = await request.get(
-      "/auth/confirm?type=recovery&token_hash=inventato&next=/oggi",
+      "/auth/confirm?type=recovery&next=/oggi",
       { maxRedirects: 0 },
     );
     expect(response.status()).toBe(303);
@@ -207,6 +208,20 @@ async function linkFor(
   return `/auth/confirm?token_hash=${data.properties!.hashed_token}&type=${kind}`;
 }
 
+/** The button of the new-password page (#461): POST /auth/recupero from our origin. */
+async function postRecovery(
+  context: BrowserContext,
+  baseURL: string,
+  link: string,
+) {
+  const token = new URL(link, baseURL).searchParams.get("token_hash") ?? "";
+  return context.request.post("/auth/recupero", {
+    form: { token_hash: token, type: "recovery" },
+    headers: { Origin: new URL(baseURL).origin },
+    maxRedirects: 0,
+  });
+}
+
 test.describe("[CI-utenti] /auth/confirm: link validi", () => {
   // type=email with a valid link, GET/HEAD not using it, the button and
   // «Continua»: CA-2 and CA-17 of conferma-link.spec.ts.
@@ -264,11 +279,12 @@ test.describe("[CI-utenti] /auth/confirm: link validi", () => {
     const user = await createThrowawayUser("Carla");
     try {
       // The route alone: the page of the new password is another PR.
-      const response = await page
-        .context()
-        .request.get(`${await linkFor(user.email, "recovery")}&next=/oggi`, {
-          maxRedirects: 0,
-        });
+      // #461: the GET only shows the button page; the POST uses the token.
+      const response = await postRecovery(
+        page.context(),
+        baseURL!,
+        await linkFor(user.email, "recovery"),
+      );
       expect(response.status()).toBe(303);
       const location = response.headers()["location"] ?? "";
       expect(new URL(location, baseURL!).pathname).toBe(
@@ -299,9 +315,9 @@ test.describe("[CI-utenti] /auth/confirm: link validi", () => {
     const other = await browser.newContext({ baseURL });
     try {
       const link = await linkFor(user.email, "recovery");
-      const first = await page.context().request.get(link, { maxRedirects: 0 });
+      const first = await postRecovery(page.context(), baseURL!, link);
       expect(first.headers()["location"]).toContain("/accesso/nuova-password");
-      const second = await other.request.get(link, { maxRedirects: 0 });
+      const second = await postRecovery(other, baseURL!, link);
       expect(second.status()).toBe(303);
       expect(second.headers()["location"]).toContain(
         "/accesso/link-scaduto?tipo=password",

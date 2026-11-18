@@ -64,14 +64,14 @@ async function enter(
     password: PASSWORD,
   },
 ) {
-  await page.goto("/accesso/mail");
+  await page.goto("/accesso");
   await submitMailForm(page, { mode: "Entra", ...fields }, done);
 }
 
 /** Registers with a good password until «Controlla la posta» is on screen. */
 async function reachCheckMail(page: Page) {
   await mockAuth(page, "/signup", { kind: "ok" });
-  await page.goto("/accesso/mail");
+  await page.goto("/accesso");
   await submitMailForm(
     page,
     { mode: "Registrati", email: MAIL, password: PASSWORD },
@@ -124,7 +124,7 @@ test.describe("accesso con mail e password", () => {
   // ------------------------------------------------------------------ Entra
 
   test("entra: campi vuoti", async ({ page }) => {
-    await page.goto("/accesso/mail");
+    await page.goto("/accesso");
     await untilHydrated(
       () => submitButton(page).click({ timeout: 2000, noWaitAfter: true }),
       () =>
@@ -137,7 +137,7 @@ test.describe("accesso con mail e password", () => {
   });
 
   test("entra: mail non valida", async ({ page }) => {
-    await page.goto("/accesso/mail");
+    await page.goto("/accesso");
     await untilHydrated(
       async () => {
         await mailField(page).fill("marco@", { timeout: 2000 });
@@ -154,7 +154,7 @@ test.describe("accesso con mail e password", () => {
   });
 
   test("entra: password mostrata", async ({ page }) => {
-    await page.goto("/accesso/mail");
+    await page.goto("/accesso");
     await untilHydrated(
       async () => {
         await passwordField(page).fill(PASSWORD, { timeout: 2000 });
@@ -227,7 +227,7 @@ test.describe("accesso con mail e password", () => {
   // ------------------------------------------------------------- Registrati
 
   test("registrati: stato normale", async ({ page }) => {
-    await page.goto("/accesso/mail");
+    await page.goto("/accesso");
     await untilHydrated(
       () => modeVoice(page, "Registrati").click({ timeout: 2000 }),
       () =>
@@ -241,7 +241,7 @@ test.describe("accesso con mail e password", () => {
   test("registrati: regola rispettata e password mostrata", async ({
     page,
   }) => {
-    await page.goto("/accesso/mail");
+    await page.goto("/accesso");
     await untilHydrated(
       async () => {
         await modeVoice(page, "Registrati").click({ timeout: 2000 });
@@ -266,7 +266,7 @@ test.describe("accesso con mail e password", () => {
   });
 
   test("registrati: campi vuoti", async ({ page }) => {
-    await page.goto("/accesso/mail");
+    await page.goto("/accesso");
     await untilHydrated(
       async () => {
         await modeVoice(page, "Registrati").click({ timeout: 2000 });
@@ -281,7 +281,7 @@ test.describe("accesso con mail e password", () => {
   });
 
   test("registrati: password troppo corta", async ({ page }) => {
-    await page.goto("/accesso/mail");
+    await page.goto("/accesso");
     await untilHydrated(
       async () => {
         await modeVoice(page, "Registrati").click({ timeout: 2000 });
@@ -308,7 +308,7 @@ test.describe("accesso con mail e password", () => {
       status: 422,
       body: { code: 422, error_code: "weak_password", msg: "weak" },
     });
-    await page.goto("/accesso/mail");
+    await page.goto("/accesso");
     await submitMailForm(
       page,
       { mode: "Registrati", email: MAIL, password: "password1234" },
@@ -323,7 +323,7 @@ test.describe("accesso con mail e password", () => {
   test("registrati: troppe richieste", async ({ page }) => {
     needSupabase();
     await mockAuth(page, "/signup", RATE_LIMIT);
-    await page.goto("/accesso/mail");
+    await page.goto("/accesso");
     await submitMailForm(
       page,
       { mode: "Registrati", email: MAIL, password: PASSWORD },
@@ -338,7 +338,7 @@ test.describe("accesso con mail e password", () => {
   test("registrati: senza connessione", async ({ page }) => {
     needSupabase();
     await mockAuth(page, "/signup", { kind: "abort" });
-    await page.goto("/accesso/mail");
+    await page.goto("/accesso");
     await submitMailForm(
       page,
       { mode: "Registrati", email: MAIL, password: PASSWORD },
@@ -514,7 +514,7 @@ test.describe("accesso con mail e password: testo al 200%", () => {
   });
 
   test("entra con il testo al 200%", async ({ page }) => {
-    await page.goto("/accesso/mail");
+    await page.goto("/accesso");
     await untilHydrated(
       () => submitButton(page).click({ timeout: 2000, noWaitAfter: true }),
       () =>
@@ -526,7 +526,7 @@ test.describe("accesso con mail e password: testo al 200%", () => {
   });
 
   test("registrati con il testo al 200%", async ({ page }) => {
-    await page.goto("/accesso/mail");
+    await page.goto("/accesso");
     await untilHydrated(
       async () => {
         await modeVoice(page, "Registrati").click({ timeout: 2000 });

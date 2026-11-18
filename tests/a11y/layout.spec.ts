@@ -35,7 +35,6 @@ async function focusRingVisible(page: Page) {
 test.describe("pagine pubbliche", () => {
   for (const route of [
     "/accesso",
-    "/accesso/mail",
     "/accesso/link-scaduto",
     "/termini",
     "/privacy",
