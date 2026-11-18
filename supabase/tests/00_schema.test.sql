@@ -58,14 +58,20 @@ select columns_are(
   array['id', 'display_name', 'created_at', 'updated_at', 'start_lens', 'morning_digest_time', 'default_event_visibility'],
   'profiles has exactly the planned columns (no email; three preferences of #218)'
 );
+-- Only exception: the vet of a pet (name, practice, phone) in pet_profiles, allowed by
+-- Francesco's answer 3 of #460 (18/11/2026, with the legal opinion of the same issue): data
+-- about an animal, never about a person. No other table may have a vet column.
 select is_empty(
   $$
     select c.table_name || '.' || c.column_name
     from information_schema.columns c
     where c.table_schema = 'public'
       and c.column_name ~* '(health|medical|pediatric|allerg|vet|fiscal)'
+      and (c.table_name, c.column_name) not in (
+        ('pet_profiles', 'vet_name'), ('pet_profiles', 'vet_clinic'), ('pet_profiles', 'vet_phone')
+      )
   $$,
-  'CA-3: no column about health, medical, pediatric, allergies, vet or fiscal data'
+  'CA-3: no column about health, medical, pediatric, allergies, vet (except the vet of a pet) or fiscal data'
 );
 
 -- Enumerated types.
