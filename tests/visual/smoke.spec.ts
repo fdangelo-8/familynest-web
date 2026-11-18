@@ -14,16 +14,14 @@ test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-20T15:00:00+02:00"));
 });
 
+// Since #461 `/accesso` is the page of mail and password: the same h1 at 390
+// and 1280 px (under 1024 px the light column, without the night cover).
 test("screenshot della pagina di accesso (arrivando da /)", async ({
   page,
-}, info) => {
+}) => {
   await page.goto("/");
   await expect(page).toHaveURL(/\/accesso$/);
-  await expect(page.locator("h1:visible")).toHaveText(
-    info.project.name === "mobile"
-      ? /La casa,\s*in un posto solo\./
-      : "Entra in FamilyNest",
-  );
+  await expect(page.locator("h1:visible")).toHaveText("Entra in FamilyNest");
   await page.evaluate(() => document.fonts.ready);
   await expect(page).toHaveScreenshot("accesso.png");
 });
@@ -31,14 +29,10 @@ test("screenshot della pagina di accesso (arrivando da /)", async ({
 // Without a session /onboarding sends to /accesso (#11).
 test("screenshot di /onboarding senza accesso (porta ad /accesso)", async ({
   page,
-}, info) => {
+}) => {
   await page.goto("/onboarding");
   await expect(page).toHaveURL(/\/accesso$/);
-  await expect(page.locator("h1:visible")).toHaveText(
-    info.project.name === "mobile"
-      ? /La casa,\s*in un posto solo\./
-      : "Entra in FamilyNest",
-  );
+  await expect(page.locator("h1:visible")).toHaveText("Entra in FamilyNest");
   await page.evaluate(() => document.fonts.ready);
   await expect(page).toHaveScreenshot("onboarding.png");
 });
