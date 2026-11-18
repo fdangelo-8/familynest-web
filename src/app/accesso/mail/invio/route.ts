@@ -1,12 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-// Target of the native submit of the mail form. The scripts normally
+// Target of the native submit of the sign-in form. The scripts normally
 // intercept the submit; this answers when a person taps before they have
 // loaded. It reads nothing and sends nothing: neither the address nor the
 // password reach the URL or the server. POST only.
 export function POST(request: NextRequest) {
   return NextResponse.redirect(
-    new URL("/accesso/mail", request.nextUrl.origin),
+    new URL("/accesso", request.nextUrl.origin),
     303,
   );
 }

@@ -230,7 +230,7 @@ export function InviteWelcome({
 
   const mailLink = (
     <div className="gruppo-chip">
-      <Button variant="link" href="/accesso/mail" disabled={loading !== null}>
+      <Button variant="link" href="/accesso" disabled={loading !== null}>
         Usa la mail
       </Button>
     </div>

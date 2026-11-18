@@ -22,6 +22,18 @@ const nextConfig: NextConfig = {
           missing: [{ type: "header", key: "content-type" }],
           destination: "/accesso/conferma-mail",
         },
+        // The link of «Password dimenticata» (#461): same idea, its own page
+        // and its own POST (/auth/recupero), because /auth/confirm refuses
+        // `recovery`.
+        {
+          source: "/auth/confirm",
+          has: [
+            { type: "query", key: "token_hash", value: ".+" },
+            { type: "query", key: "type", value: "recovery" },
+          ],
+          missing: [{ type: "header", key: "content-type" }],
+          destination: "/accesso/conferma-recupero",
+        },
       ],
       afterFiles: [],
       fallback: [],
@@ -61,8 +73,13 @@ const nextConfig: NextConfig = {
       // The confirmation link (#419): the address carries the token. `same-origin`
       // (not `no-referrer`) so the browser still sends a correct `Origin` with
       // the POST of the form.
-      // `/accesso/conferma-mail` is the page that answers the link.
-      ...["/auth/confirm", "/accesso/conferma-mail"].map((source) => ({
+      // `/accesso/conferma-mail` and `/accesso/conferma-recupero` (#461) are
+      // the pages that answer the links.
+      ...[
+        "/auth/confirm",
+        "/accesso/conferma-mail",
+        "/accesso/conferma-recupero",
+      ].map((source) => ({
         source,
         headers: [
           { key: "X-Robots-Tag", value: "noindex, nofollow" },

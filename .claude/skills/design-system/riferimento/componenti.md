@@ -210,6 +210,21 @@ Non sono nel mockup (decisione di Francesco del 06/11: mail e password al posto 
 - **Riempimento automatico del browser** (vale per ogni `.campo__input`): `:-webkit-autofill` tiene il fondo `--color-superficie` e il testo `--color-inchiostro` con un'ombra interna larga `--size-azione` sotto il bordo; bordo a riposo, focus ed errore come i campi normali. Nessun colore nuovo.
 - **Moduli con password:** un solo `<form>` e un solo campo per tipo nel DOM per schermata (la disposizione nascosta non contiene campi); mail con `type="email"` e `autocomplete="username"`; niente campo «Ripeti la password».
 
+### Pagina di accesso con mail e password (#461)
+
+Decisione di Francesco del 18/11/2026: `/accesso` apre con il modulo (selettore «Entra» · «Registrati», mail, password) e sotto Apple e Google. Cornice `split-onboarding--unico` della #327, un solo `<form>`. Tre classi nuove, subito dopo le regole di `split-onboarding--unico`, solo token. Arrivano con una `richiesta-condivisa`.
+
+| Classe                              | Dove                                                                                                                           | Cosa fa                                                                                                                                                                 |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.passo-onboarding__testa--marchio` | `div.passo-onboarding__testa` con dentro `p.marchio` (stesso `Brand` del pannello notte)                                       | una sola colonna, altezza minima `--size-controllo`; sotto 1024 px il marchio sta dove di solito c'è la freccia, da 1024 px la testa sparisce (regola della #327)       |
+| `.split-onboarding__passo--accesso` | `div.split-onboarding__passo.split-onboarding__passo--unico` della sola pagina di accesso                                      | righe `auto auto auto auto 1fr`: i blocchi uno sotto l'altro con il passo della colonna, solo la frase legale (`align-self: end`) in fondo; il blocco non ha riga `1fr` |
+| `.accesso-altri`                    | `div` dentro `.split-onboarding__mid`, dopo il `<form>`: `p.t-nota.t-secondario` «Oppure», avviso del fornitore, Apple, Google | griglia a una colonna con `--space-2`; da 1024 px `margin-top: var(--space-4)` per staccarlo dal bottone del modulo                                                     |
+
+- **Gerarchia:** «Entra» / «Crea l'account» è l'unico bottone `.btn-primary.btn--pieno`; «Continua con Apple» e «Continua con Google» sono `.btn-secondary.btn--pieno` (icona `apple` solo per Apple), **fuori dal `<form>`**.
+- **Un solo avviso alla volta** in tutta la pagina. L'errore di un fornitore sta in `.accesso-altri`, tra «Oppure» e Apple, con «Riprova»; gli avvisi del modulo stanno sotto il selettore.
+- **Sotto 1024 px** niente copertina notte: campi e messaggi d'errore non esistono sul fondo notte (`--color-allerta` su `--color-notte` fa 3,28:1).
+- Esempio nella galleria con `?pezzi-pagine=1` (`#pezzi-accesso`), con la stessa struttura e gli stessi testi della pagina.
+
 ### Testo ingrandito (#313, WCAG 1.4.4)
 
 Obiettivo: testo fino al 200% (carattere di sistema, del browser o zoom) senza perdere contenuto né funzioni: il testo va a capo, niente si sovrappone, la pagina non scorre in orizzontale. **Al 100% non cambia nessun pixel** rispetto al mockup. Specifica completa, simulazione nei test e criteri nella [#313](https://github.com/fdangelo-8/familynest-web/issues/313). Regole pronte per contenitori e classi nuove in `docs/agenti/design/token.css` (in fondo).

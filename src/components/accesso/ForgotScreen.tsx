@@ -115,7 +115,7 @@ export function ForgotScreen() {
     const noteId = "accesso-password-attesa";
     return (
       <AuthLayout
-        back="/accesso/mail"
+        back="/accesso"
         intro={
           <Intro
             eyebrow="Password dimenticata"
@@ -156,7 +156,7 @@ export function ForgotScreen() {
               >
                 Usa un&apos;altra mail
               </Button>
-              <ToAccessLink href="/accesso/mail" />
+              <ToAccessLink href="/accesso" />
             </div>
           </>
         }
@@ -166,7 +166,7 @@ export function ForgotScreen() {
 
   return (
     <AuthLayout
-      back="/accesso/mail"
+      back="/accesso"
       intro={
         <Intro
           eyebrow="Accesso con la mail"
@@ -199,7 +199,7 @@ export function ForgotScreen() {
           <Button variant="primary" type="submit" full loading={pending}>
             {pending ? TEXT.sending : "Mandami il link"}
           </Button>
-          <ToAccessRow href="/accesso/mail" />
+          <ToAccessRow href="/accesso" />
         </>
       }
     />

@@ -112,7 +112,86 @@ export function Gallery() {
       {pageParts ? <PageParts /> : null}
       {pageParts ? <WishlistParts /> : null}
       {pageParts ? <LinkedCalendarParts /> : null}
+      {pageParts ? <AccessParts /> : null}
     </main>
+  );
+}
+
+// #461: the sign-in page, with the same structure and texts as the page: the
+// brand mark in the head, the form, «Oppure» and the two providers in
+// `.accesso-altri`. Shown only with ?pezzi-pagine=1, in a section of its own.
+function AccessParts() {
+  return (
+    <Section id="pezzi-accesso" title="Accesso (#461)">
+      <Example caption="split-onboarding__passo--accesso · passo-onboarding__testa--marchio · accesso-altri">
+        <div
+          className="split-onboarding split-onboarding--unico"
+          data-testid="accesso-pezzi"
+        >
+          <div className="split-onboarding__notte">
+            <p className="t-frase">La casa, in un posto solo.</p>
+          </div>
+          <div className="split-onboarding__passo split-onboarding__passo--unico split-onboarding__passo--accesso">
+            <div className="passo-onboarding__testa passo-onboarding__testa--marchio">
+              <p className="marchio">FamilyNest</p>
+            </div>
+            <div className="split-onboarding__mid">
+              <div className="intestazione">
+                <p className="intestazione__sopra">Benvenuto</p>
+                <h3 className="intestazione__titolo t-titolo-pagina">
+                  Entra in FamilyNest
+                </h3>
+                <p className="intestazione__sotto">
+                  Il calendario, la spesa e le cose da fare di chi vive con te,
+                  in un posto solo.
+                </p>
+              </div>
+              <div className="split-onboarding__blocco">
+                <div className="sezione">
+                  <TextField
+                    label="La tua mail"
+                    type="email"
+                    autoComplete="username"
+                    defaultValue=""
+                  />
+                  <PasswordField
+                    label="Password"
+                    autoComplete="current-password"
+                    value=""
+                    onChange={() => {}}
+                  />
+                  <div className="gruppo-chip">
+                    <Button variant="link" href="/design-system">
+                      Password dimenticata?
+                    </Button>
+                  </div>
+                </div>
+                <div className="dialogo__azioni">
+                  <Button variant="primary" full>
+                    Entra
+                  </Button>
+                </div>
+              </div>
+              <div className="accesso-altri">
+                <p className="t-nota t-secondario">Oppure</p>
+                <Button variant="secondary" full icon="apple">
+                  Continua con Apple
+                </Button>
+                <Button variant="secondary" full>
+                  Continua con Google
+                </Button>
+              </div>
+            </div>
+            <div className="split-onboarding__legale">
+              <p className="t-nota t-secondario">
+                Continuando accetti i Termini d&apos;uso e l&apos;Informativa
+                sulla privacy.
+              </p>
+            </div>
+          </div>
+        </div>
+      </Example>
+    </Section>
   );
 }
 

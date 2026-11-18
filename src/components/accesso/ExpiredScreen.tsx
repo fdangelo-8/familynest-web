@@ -6,19 +6,22 @@ export type ExpiredKind = "conferma" | "password";
 
 const COPY: Record<
   ExpiredKind,
-  { citation: string; action: string; href: string }
+  { citation: string; action: string; href: string; toAccess: boolean }
 > = {
   conferma: {
     citation:
       "I link nelle nostre mail valgono un'ora, si usano una volta sola e funzionano solo nel browser in cui li hai chiesti. Entra con mail e password: se l'indirizzo non è ancora confermato, potrai farti mandare una nuova mail da aprire qui.",
-    action: "Entra con la mail",
-    href: "/accesso/mail",
+    // The main action already goes to /accesso: no second link there (#461).
+    action: "Entra con la password",
+    href: "/accesso",
+    toAccess: false,
   },
   password: {
     citation:
       "Il link per scegliere una nuova password vale un'ora, si usa una volta sola e funziona solo nel browser in cui l'hai chiesto. Chiedine uno nuovo e aprilo qui.",
     action: "Mandami un nuovo link",
     href: "/accesso/password-dimenticata",
+    toAccess: true,
   },
 };
 
@@ -38,7 +41,14 @@ function ExpiredClaim({ as: Tag }: { as: "h1" | "p" }) {
  * on which link it was: the confirmation of the address or the new password.
  */
 export function ExpiredScreen({ kind }: { kind: ExpiredKind }) {
-  const { citation, action, href } = COPY[kind];
+  const { citation, action, href, toAccess } = COPY[kind];
+  const toAccessRow = toAccess ? (
+    <div className="gruppo-chip">
+      <Link href="/accesso" className="btn-link">
+        <span className="btn__testo">Torna all&apos;accesso</span>
+      </Link>
+    </div>
+  ) : null;
   return (
     <main className={styles.root}>
       <div className={`${styles.mobile} schermo-notte tema-notte`}>
@@ -51,11 +61,7 @@ export function ExpiredScreen({ kind }: { kind: ExpiredKind }) {
           <Link href={href} className="btn-chiaro btn--pieno">
             <span className="btn__testo">{action}</span>
           </Link>
-          <div className="gruppo-chip">
-            <Link href="/accesso" className="btn-link">
-              <span className="btn__testo">Torna all&apos;accesso</span>
-            </Link>
-          </div>
+          {toAccessRow}
         </div>
       </div>
 
@@ -81,11 +87,7 @@ export function ExpiredScreen({ kind }: { kind: ExpiredKind }) {
               <Link href={href} className="btn-secondary">
                 <span className="btn__testo">{action}</span>
               </Link>
-              <div className="gruppo-chip">
-                <Link href="/accesso" className="btn-link">
-                  <span className="btn__testo">Torna all&apos;accesso</span>
-                </Link>
-              </div>
+              {toAccessRow}
             </div>
           </div>
           <span />
