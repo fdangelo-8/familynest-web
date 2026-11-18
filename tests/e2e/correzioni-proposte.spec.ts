@@ -304,12 +304,7 @@ test.describe("punto 7: aree di tocco", () => {
     });
   }
 
-  for (const route of [
-    "/accesso",
-    "/accesso/mail",
-    "/accesso/link-scaduto",
-    "/termini",
-  ]) {
+  for (const route of ["/accesso", "/accesso/link-scaduto", "/termini"]) {
     test(`CA-7: senza sessione, ${route} ha aree di tocco 44`, async ({
       page,
     }, info) => {
@@ -1067,36 +1062,31 @@ async function expectFourStickers(container: Locator) {
 }
 
 test.describe("punto 12: adesivo Calcetto", () => {
-  test("CA-25: /accesso a 390 px ha quattro adesivi, il quarto e' Calcetto", async ({
+  // #461: below 1024 px the sign-in page is the light column, with no night
+  // cover and no stickers.
+  test("CA-25: /accesso a 390 px non ha gli adesivi (colonna chiara)", async ({
     page,
   }, info) => {
     onlyMobile(info);
+    await page.goto("/accesso");
+    await expect(page.locator("h1:visible")).toHaveCount(1);
+    await expect(page.locator(".adesivi:visible")).toHaveCount(0);
+  });
+
+  test("CA-26: /accesso a 1280 px ha i quattro adesivi", async ({
+    page,
+  }, info) => {
+    onlyDesktop(info);
     await page.goto("/accesso");
     const container = page.locator(".adesivi:visible");
     await expect(container).toHaveCount(1);
     await expectFourStickers(container);
   });
 
-  for (const route of ["/accesso", "/accesso/mail"]) {
-    test(`CA-26: ${route} a 1280 px ha gli stessi quattro adesivi`, async ({
-      page,
-    }, info) => {
-      onlyDesktop(info);
-      await page.goto(route);
-      const container = page.locator(".adesivi:visible");
-      await expect(container).toHaveCount(1);
-      await expectFourStickers(container);
-    });
-  }
-
   test("CA-26: nessuna pagina pubblica contiene la parola Pediatra", async ({
     page,
   }) => {
-    for (const route of [
-      "/accesso",
-      "/accesso/mail",
-      "/accesso/link-scaduto",
-    ]) {
+    for (const route of ["/accesso", "/accesso/link-scaduto"]) {
       const response = await page.request.get(route);
       expect(await response.text(), route).not.toContain("Pediatra");
       await page.goto(route);

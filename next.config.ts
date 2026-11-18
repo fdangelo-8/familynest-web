@@ -7,9 +7,10 @@ const nextConfig: NextConfig = {
   partialPrefetching: true,
   // The link to confirm an address (#419) keeps its address `/auth/confirm`,
   // but a GET with `type=email|signup` is answered by a page that does not
-  // use the token: the button of that page does (POST). The route handler
-  // keeps the POST and the recovery link. A POST has a body, so it never
-  // matches (no `Content-Type` on a GET).
+  // use the token: the button of that page does (POST /auth/confirm). The same
+  // goes for `type=recovery` (#461), answered by its own page whose button
+  // posts to /auth/recupero: /auth/confirm refuses `recovery`. A POST has a
+  // body, so it never matches (no `Content-Type` on a GET).
   async rewrites() {
     return {
       beforeFiles: [
@@ -21,6 +22,18 @@ const nextConfig: NextConfig = {
           ],
           missing: [{ type: "header", key: "content-type" }],
           destination: "/accesso/conferma-mail",
+        },
+        // The link of «Password dimenticata» (#461): same idea, its own page
+        // and its own POST (/auth/recupero), because /auth/confirm refuses
+        // `recovery`.
+        {
+          source: "/auth/confirm",
+          has: [
+            { type: "query", key: "token_hash", value: ".+" },
+            { type: "query", key: "type", value: "recovery" },
+          ],
+          missing: [{ type: "header", key: "content-type" }],
+          destination: "/accesso/conferma-recupero",
         },
       ],
       afterFiles: [],
@@ -61,8 +74,13 @@ const nextConfig: NextConfig = {
       // The confirmation link (#419): the address carries the token. `same-origin`
       // (not `no-referrer`) so the browser still sends a correct `Origin` with
       // the POST of the form.
-      // `/accesso/conferma-mail` is the page that answers the link.
-      ...["/auth/confirm", "/accesso/conferma-mail"].map((source) => ({
+      // `/accesso/conferma-mail` and `/accesso/conferma-recupero` (#461) are
+      // the pages that answer the links.
+      ...[
+        "/auth/confirm",
+        "/accesso/conferma-mail",
+        "/accesso/conferma-recupero",
+      ].map((source) => ({
         source,
         headers: [
           { key: "X-Robots-Tag", value: "noindex, nofollow" },

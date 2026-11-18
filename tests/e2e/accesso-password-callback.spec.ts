@@ -100,7 +100,7 @@ const hasSession = async (page: Page) =>
 
 /** Registers through the page and returns the default link of the mail. */
 async function registerAndGetLink(page: Page, address: string, base: string) {
-  await page.goto("/accesso/mail");
+  await page.goto("/accesso");
   await submitMailForm(
     page,
     { mode: "Registrati", email: address, password: PASSWORD_OK },
@@ -168,7 +168,7 @@ test.describe("[CI-stack] /auth/callback con il link predefinito di Supabase", (
     }
   });
 
-  test("CA-4: conferma aperta per la prima volta in un altro browser, «link scaduto» senza sessione e «Entra con la mail» porta a /accesso/mail", async ({
+  test("CA-4: conferma aperta per la prima volta in un altro browser, «link scaduto» senza sessione e «Entra con la password» porta a /accesso", async ({
     page,
     browser,
     baseURL,
@@ -184,10 +184,12 @@ test.describe("[CI-stack] /auth/callback con il link predefinito di Supabase", (
         /\/accesso\/link-scaduto\?tipo=conferma$/,
       );
       expect(await hasSession(otherPage)).toBe(false);
-      const action = otherPage.getByRole("link", { name: "Entra con la mail" });
-      await expect(action).toHaveAttribute("href", "/accesso/mail");
+      const action = otherPage.getByRole("link", {
+        name: "Entra con la password",
+      });
+      await expect(action).toHaveAttribute("href", "/accesso");
       await action.click();
-      await expect(otherPage).toHaveURL(/\/accesso\/mail$/);
+      await expect(otherPage).toHaveURL(/\/accesso$/);
     } finally {
       await other.close();
       await removeByEmail(address);
@@ -209,8 +211,10 @@ test.describe("[CI-stack] /auth/callback con il link predefinito di Supabase", (
       await expect(otherPage).toHaveURL(
         /\/accesso\/link-scaduto\?tipo=conferma$/,
       );
-      await otherPage.getByRole("link", { name: "Entra con la mail" }).click();
-      await expect(otherPage).toHaveURL(/\/accesso\/mail$/);
+      await otherPage
+        .getByRole("link", { name: "Entra con la password" })
+        .click();
+      await expect(otherPage).toHaveURL(/\/accesso$/);
       await submitMailForm(
         otherPage,
         { mode: "Entra", email: address, password: PASSWORD_OK },
