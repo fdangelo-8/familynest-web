@@ -15,7 +15,7 @@ import {
   mockAuth,
   modeVoice,
   passwordField,
-  recoveryLink,
+  openRecoveryLink,
   submitButton,
   submitMailForm,
   untilHydrated,
@@ -923,8 +923,7 @@ const scenes: Scene[] = [
       try {
         await check(async () => {
           // A recovery link works once: a new one for every opening.
-          await page.goto(await recoveryLink(user.email));
-          await expect(page).toHaveURL(/\/accesso\/nuova-password$/);
+          await openRecoveryLink(page, user.email);
           await expect(page.locator("h1:visible")).toHaveCount(1);
           await ready(page);
         });

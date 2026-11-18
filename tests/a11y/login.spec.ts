@@ -222,6 +222,9 @@ test.describe("aree di tocco su mobile", () => {
           })
           // «Indietro» is 40 px as in the mockup (widening is proposal 7 of #43).
           .filter((e) => e.name !== "Indietro")
+          // The voices of the selector are 32 px high with a 44 px touch area
+          // (measured with elementFromPoint in accesso-password.spec.ts).
+          .filter((e) => !["Entra", "Registrati"].includes(e.name))
           .filter((e) => e.w < 44 || e.h < 44),
       );
       expect(small).toEqual([]);

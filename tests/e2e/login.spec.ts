@@ -195,9 +195,9 @@ async function expectAccessControls(page: Page) {
     page.getByRole("button", { name: "Continua con Google" }),
   ).toBeVisible();
   await expect(page.getByRole("link", { name: "Usa la mail" })).toHaveCount(0);
-  await expect(
-    page.getByRole("button", { name: "Entra", exact: true }),
-  ).toBeVisible();
+  await expect(page.locator('main form button[type="submit"]')).toHaveText(
+    "Entra",
+  );
   await expect(
     page
       .getByText(

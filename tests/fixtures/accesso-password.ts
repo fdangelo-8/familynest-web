@@ -413,6 +413,16 @@ export async function recoveryLink(address: string): Promise<string> {
   return `/auth/confirm?token_hash=${data.properties.hashed_token}&type=recovery`;
 }
 
+/**
+ * Opens a recovery link the way a person does (#461): the page shows a button,
+ * the button uses the link and goes to /accesso/nuova-password.
+ */
+export async function openRecoveryLink(page: Page, address: string) {
+  await page.goto(await recoveryLink(address));
+  await page.getByRole("button", { name: "Continua", exact: true }).click();
+  await expect(page).toHaveURL(/\/accesso\/nuova-password$/);
+}
+
 /** Names of the cookies of a context. */
 export async function cookieNames(context: BrowserContext) {
   return (await context.cookies()).map((cookie) => cookie.name);

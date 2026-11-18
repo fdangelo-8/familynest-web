@@ -9,7 +9,7 @@ import {
   mockAuth,
   modeVoice,
   passwordField,
-  recoveryLink,
+  openRecoveryLink,
   statusWith,
   submitButton,
   submitMailForm,
@@ -466,8 +466,7 @@ test.describe("accesso con mail e password: nuova password", () => {
     test.skip(!keysConfigured(), keysSkipReason);
     const user = await createPasswordUser({ nest: true });
     try {
-      await page.goto(await recoveryLink(user.email));
-      await expect(page).toHaveURL(/\/accesso\/nuova-password$/);
+      await openRecoveryLink(page, user.email);
       await expect(heading(page, "Scegli una nuova password")).toBeVisible();
       // The test user has a random address: show a fixed one, so the picture
       // (and the wrapping of the line) is always the same.

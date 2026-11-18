@@ -13,7 +13,7 @@ import {
   mockAuth,
   modeVoice,
   passwordField,
-  recoveryLink,
+  openRecoveryLink,
   statusWith,
   submitButton,
   submitMailForm,
@@ -665,8 +665,7 @@ test.describe("[CI-stack] /accesso/nuova-password", () => {
     await needStack();
     const user = await createPasswordUser({ nest: true });
     try {
-      await page.goto(await recoveryLink(user.email));
-      await expect(page).toHaveURL(/\/accesso\/nuova-password$/);
+      await openRecoveryLink(page, user.email);
       await expectOneH1(page);
       await expectNoBlocking(page);
       // The copy of the address for the password manager is not focusable.

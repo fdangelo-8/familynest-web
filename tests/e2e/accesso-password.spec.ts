@@ -924,8 +924,11 @@ test.describe("CA-18: senza JavaScript i moduli non mandano nulla al sito", () =
       });
       expect(response.status()).toBe(303);
       const location = response.headers()["location"] ?? "";
+      // The sign-in form lives in /accesso since #461.
       expect(new URL(location, "http://localhost").pathname).toBe(
-        route.replace("/invio", ""),
+        route === "/accesso/mail/invio"
+          ? "/accesso"
+          : route.replace("/invio", ""),
       );
       expect(location).not.toContain("marco");
       expect(location).not.toContain(PASSWORD_OK);
