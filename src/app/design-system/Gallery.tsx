@@ -159,6 +159,15 @@ function AccessParts() {
               </div>
               <div className="split-onboarding__blocco">
                 <div className="sezione">
+                  <SegmentedControl
+                    aria-label="Hai già un account?"
+                    options={[
+                      { value: "login", label: "Entra" },
+                      { value: "register", label: "Registrati" },
+                    ]}
+                    value="login"
+                    onChange={() => {}}
+                  />
                   <TextField
                     label="La tua mail"
                     type="email"
