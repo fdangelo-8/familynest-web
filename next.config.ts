@@ -7,9 +7,10 @@ const nextConfig: NextConfig = {
   partialPrefetching: true,
   // The link to confirm an address (#419) keeps its address `/auth/confirm`,
   // but a GET with `type=email|signup` is answered by a page that does not
-  // use the token: the button of that page does (POST). The route handler
-  // keeps the POST and the recovery link. A POST has a body, so it never
-  // matches (no `Content-Type` on a GET).
+  // use the token: the button of that page does (POST /auth/confirm). The same
+  // goes for `type=recovery` (#461), answered by its own page whose button
+  // posts to /auth/recupero: /auth/confirm refuses `recovery`. A POST has a
+  // body, so it never matches (no `Content-Type` on a GET).
   async rewrites() {
     return {
       beforeFiles: [

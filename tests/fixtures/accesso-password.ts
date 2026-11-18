@@ -419,7 +419,9 @@ export async function recoveryLink(address: string): Promise<string> {
  */
 export async function openRecoveryLink(page: Page, address: string) {
   await page.goto(await recoveryLink(address));
-  await page.getByRole("button", { name: "Continua", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Scegli una nuova password", exact: true })
+    .click();
   await expect(page).toHaveURL(/\/accesso\/nuova-password$/);
 }
 

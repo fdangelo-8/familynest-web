@@ -55,12 +55,12 @@ function focusRingVisible(page: Page) {
  * Presses Tab until focus leaves the page content or comes back to a stop
  * already seen (no trap). Every stop must show a focus ring.
  */
-async function tabOrder(page: Page, max = 12) {
+async function tabOrder(page: Page, max = 12, allowRepeats = false) {
   const stops: string[] = [];
   for (let i = 0; i < max; i += 1) {
     await page.keyboard.press("Tab");
     const name = await focusedName(page);
-    if (!name || stops.includes(name)) break;
+    if (!name || (!allowRepeats && stops.includes(name))) break;
     stops.push(name);
     expect(await focusRingVisible(page), `anello di focus su «${name}»`).toBe(
       true,
@@ -82,19 +82,23 @@ test.describe("/accesso", () => {
     await page.goto("/accesso");
     await expectOneH1(page);
     await expectNoBlocking(page);
-    const order = await tabOrder(page);
     if (info.project.name === "mobile") {
-      // Nothing has the focus on arrival below 1024 px (#461). The walk ends
-      // at the second «Entra» (the submit button, same name as the voice).
-      expect(order).toEqual([
+      // Nothing has the focus on arrival below 1024 px (#461). «Entra» comes
+      // twice (the voice and the submit button): repeats are allowed, and the
+      // walk goes on to Apple and Google.
+      expect(await tabOrder(page, 9, true)).toEqual([
         "Entra",
         "Registrati",
         "La tua mail",
         "Password",
         "Mostra la password",
         "Password dimenticata?",
+        "Entra",
+        "Continua con Apple",
+        "Continua con Google",
       ]);
     } else {
+      const order = await tabOrder(page);
       // From 1024 px the mail field has the focus on arrival.
       expect(order).toEqual([
         "Password",

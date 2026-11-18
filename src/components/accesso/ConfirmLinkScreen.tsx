@@ -16,8 +16,8 @@ export type ConfirmLinkProps = {
   current?: { email: string; destination: string };
 };
 
-// Texts of the two pages. The recovery ones (#461) are the proposals of the
-// issue («Continua»): the designer confirms them.
+// Texts of the two pages. The recovery ones (#461) are those of the designer's
+// comment in the issue.
 const COPY = {
   confirm: {
     id: "accesso-conferma-modulo",
@@ -35,9 +35,9 @@ const COPY = {
     id: "accesso-recupero-modulo",
     action: "/auth/recupero",
     eyebrow: "Password dimenticata",
-    title: "Scegli una nuova password",
-    lead: "Tocca il bottone per continuare: la nuova password la scrivi nel passo dopo.",
-    button: "Continua",
+    title: "Hai chiesto una nuova password",
+    lead: "Tocca il bottone per sceglierla.",
+    button: "Scegli una nuova password",
     busy: "Apertura in corso",
     other:
       "Se continui, esci da questo account e scegli la password di quello della mail.",

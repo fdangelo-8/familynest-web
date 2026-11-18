@@ -747,6 +747,55 @@ test.describe("[CI-utenti] invito", () => {
   });
 });
 
+test.describe("[CI-stack] nuova password: chiusura delle altre sessioni", () => {
+  test("CA-38: con /auth/v1/logout che risponde 500 si resta sulla pagina con «Riprova», che ripete solo la chiusura", async ({
+    page,
+    baseURL,
+  }) => {
+    await needStack();
+    const user: PasswordUser = await createPasswordUser({ nest: true });
+    try {
+      const link = await recoveryLinkFor(page, user.email, baseURL!);
+      await page.route("**/auth/v1/logout*", (route) =>
+        route.fulfill({
+          status: 500,
+          contentType: "application/json",
+          body: "{}",
+        }),
+      );
+      await page.goto(await link());
+      await expect(page).toHaveURL(/\/accesso\/nuova-password$/);
+      const calls = recordAuth(page);
+      await untilHydrated(
+        async () => {
+          await passwordField(page, "Nuova password").fill(NEW_PASSWORD, {
+            timeout: 2000,
+          });
+          await submitButton(page).click({ timeout: 2000, noWaitAfter: true });
+        },
+        () =>
+          expect(
+            alertWith(page, /Non siamo riusciti a salvare la password/),
+          ).toBeVisible({ timeout: 5000 }),
+      );
+      await expect(page).toHaveURL(/\/accesso\/nuova-password$/);
+      await expect(page.getByText("Nuova password salvata.")).toHaveCount(0);
+      expect(callsTo(calls, "/user")).toHaveLength(1);
+
+      // The closing works now: «Riprova» repeats only that step.
+      await page.unroute("**/auth/v1/logout*");
+      const userCallsBefore = callsTo(calls, "/user").length;
+      const logoutBefore = callsTo(calls, "/logout").length;
+      await page.getByRole("button", { name: "Riprova" }).click();
+      await expect(page).toHaveURL(/\/oggi$/, { timeout: 15_000 });
+      expect(callsTo(calls, "/user")).toHaveLength(userCallsBefore);
+      expect(callsTo(calls, "/logout")).toHaveLength(logoutBefore + 1);
+    } finally {
+      await user.remove();
+    }
+  });
+});
+
 // ================================================================== isolamento
 
 test.describe("[CI-stack] isolamento", () => {

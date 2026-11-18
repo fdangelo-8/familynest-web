@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState, useSyncExternalStore, type ReactNode } from "react";
+import { Brand, Claim, Stickers } from "@/components/accesso/parts";
 import { Alert } from "@/components/ui/Alert/Alert";
 import { Avatar, MEMBER_COLORS } from "@/components/ui/Avatar/Avatar";
 import { Button } from "@/components/ui/Button/Button";
@@ -129,11 +130,13 @@ function AccessParts() {
           data-testid="accesso-pezzi"
         >
           <div className="split-onboarding__notte">
-            <p className="t-frase">La casa, in un posto solo.</p>
+            <Brand />
+            <Stickers />
+            <Claim as="p" />
           </div>
           <div className="split-onboarding__passo split-onboarding__passo--unico split-onboarding__passo--accesso">
             <div className="passo-onboarding__testa passo-onboarding__testa--marchio">
-              <p className="marchio">FamilyNest</p>
+              <Brand />
             </div>
             <div className="split-onboarding__mid">
               <div className="intestazione">
