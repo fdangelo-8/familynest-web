@@ -318,10 +318,11 @@ test.describe("messaggi neutri", () => {
           );
           await expect(statusWith(page, TEXT.unconfirmed)).toBeVisible();
           await resendButton(page).click();
-          await expect(page.getByText(TEXT.resent)).toBeVisible();
+          // From the notice the resend opens «Controlla la posta» (no toast).
+          await expect(checkPosta(page)).toBeVisible();
           fromNotice.push({
             name: item.name,
-            outcome: await outcomeOf(page, item.address, TEXT.resent),
+            outcome: await outcomeOf(page, item.address),
           });
         } finally {
           await context.close();
@@ -373,8 +374,11 @@ test.describe("messaggi neutri", () => {
       await expect(statusWith(page, TEXT.unconfirmed)).toBeVisible();
       await resendButton(page).click();
       // CA-33 wins over CA-34 here (decision in #461): the 429 of /resend
-      // shows the same toast as a sent mail, with no notice.
-      await expect(page.getByText(TEXT.resent)).toBeVisible();
+      // looks like a sent mail («Controlla la posta»), with no notice.
+      await expect(checkPosta(page)).toBeVisible();
+      await expect(
+        statusWith(page, /La mail di prima è appena partita/),
+      ).toHaveCount(0);
       await noTechnical();
       await page.unrouteAll({ behavior: "ignoreErrors" });
 
