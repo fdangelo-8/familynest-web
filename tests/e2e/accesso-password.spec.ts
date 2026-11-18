@@ -454,7 +454,7 @@ test.describe("Registrati: esiti di Supabase", () => {
     ).toBeVisible();
   });
 
-  test("«Rimanda la mail» con 429: avviso informativo e l'attesa riparte", async ({
+  test("«Rimanda la mail» con 429: lo stesso toast del successo (CA-33 della #461), senza avviso, e l'attesa riparte", async ({
     page,
   }) => {
     needSupabase();
@@ -471,11 +471,11 @@ test.describe("Registrati: esiti di Supabase", () => {
     await page.clock.runFor(60_000);
     await resendButton(page).click();
     await expect(
-      statusWith(
-        page,
-        "La mail di prima è appena partita. Puoi rimandarla tra un minuto.",
-      ),
+      page.getByText("Mail rimandata: usa quella più recente."),
     ).toBeVisible();
+    await expect(
+      statusWith(page, "La mail di prima è appena partita."),
+    ).toHaveCount(0);
     await expect(resendButton(page)).toBeDisabled();
   });
 
