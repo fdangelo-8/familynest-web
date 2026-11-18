@@ -597,9 +597,7 @@ test.describe("/accesso: accesso", () => {
     await forgotLink(page).click();
     await expect(page).toHaveURL(/\/accesso\/password-dimenticata$/);
     // The page left stays in the DOM, hidden: only the visible field counts.
-    await mailField(page)
-      .filter({ visible: true })
-      .fill("marco@esempio.test");
+    await mailField(page).filter({ visible: true }).fill("marco@esempio.test");
     await submitButton(page).filter({ visible: true }).click();
     await expect(
       page.getByRole("heading", { level: 1, name: "Ti abbiamo scritto" }),
