@@ -596,10 +596,11 @@ test.describe("/accesso: accesso", () => {
     await openAccess(page);
     await forgotLink(page).click();
     await expect(page).toHaveURL(/\/accesso\/password-dimenticata$/);
-    // The page of the form is gone only when its field is the only one.
-    await expect(page.locator("input[type=email]")).toHaveCount(1);
-    await mailField(page).fill("marco@esempio.test");
-    await submitButton(page).click();
+    // The page left stays in the DOM, hidden: only the visible field counts.
+    await mailField(page)
+      .filter({ visible: true })
+      .fill("marco@esempio.test");
+    await submitButton(page).filter({ visible: true }).click();
     await expect(
       page.getByRole("heading", { level: 1, name: "Ti abbiamo scritto" }),
     ).toBeVisible();

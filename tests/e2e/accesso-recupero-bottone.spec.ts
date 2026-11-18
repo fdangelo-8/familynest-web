@@ -165,7 +165,10 @@ test.describe("pagina del bottone (GET /auth/confirm?type=recovery)", () => {
           (await recoveryPath(user.email, { next: "/calendario" })).path,
         );
         expect(await hasSession(context)).toBe(true);
-        await expectAccountLine(page, user.email);
+        // The account line is in the page sent by the server (without
+        // JavaScript the document is read from its HTML, not from the screen).
+        expect(await page.content()).toContain(`Per l'account`);
+        expect(await page.content()).toContain(user.email);
         const cookie = await recoveryCookie(page);
         expect(cookie?.httpOnly).toBe(true);
         const remaining = (cookie?.expires ?? 0) - Date.now() / 1000;

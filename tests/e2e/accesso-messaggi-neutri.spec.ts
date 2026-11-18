@@ -311,7 +311,11 @@ test.describe("messaggi neutri", () => {
           if (!item.real) await mockAuth(page, "/token", NOT_CONFIRMED);
           await mockAuth(page, "/resend", { kind: "ok" });
           await openAccess(page);
-          await submitLogin(page, item.address, PASSWORD_OK);
+          await submitLogin(
+            page,
+            item.address,
+            item.real ? unconfirmed.password : PASSWORD_OK,
+          );
           await expect(statusWith(page, TEXT.unconfirmed)).toBeVisible();
           await resendButton(page).click();
           await expect(page.getByText(TEXT.resent)).toBeVisible();
@@ -368,9 +372,9 @@ test.describe("messaggi neutri", () => {
       await submitLogin(page, "marco@esempio.test", PASSWORD_OK);
       await expect(statusWith(page, TEXT.unconfirmed)).toBeVisible();
       await resendButton(page).click();
-      await expect(
-        statusWith(page, /La mail di prima è appena partita/),
-      ).toBeVisible();
+      // CA-33 wins over CA-34 here (decision in #461): the 429 of /resend
+      // shows the same toast as a sent mail, with no notice.
+      await expect(page.getByText(TEXT.resent)).toBeVisible();
       await noTechnical();
       await page.unrouteAll({ behavior: "ignoreErrors" });
 
