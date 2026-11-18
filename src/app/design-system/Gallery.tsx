@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useSyncExternalStore, type ReactNode } from "react";
-import { Brand, Claim, Stickers } from "@/components/accesso/parts";
+import { Brand, Claim, LegalLine, Stickers } from "@/components/accesso/parts";
 import { Alert } from "@/components/ui/Alert/Alert";
 import { Avatar, MEMBER_COLORS } from "@/components/ui/Avatar/Avatar";
 import { Button } from "@/components/ui/Button/Button";
@@ -60,12 +60,17 @@ function Section({
 function Example({
   caption,
   children,
+  wide = false,
 }: {
   caption: string;
   children: ReactNode;
+  /** Takes the whole width of the gallery, not one of the two columns */
+  wide?: boolean;
 }) {
   return (
-    <figure className={styles.esempio}>
+    <figure
+      className={wide ? `${styles.esempio} ${styles.ampio}` : styles.esempio}
+    >
       <figcaption className={styles.didascalia}>{caption}</figcaption>
       <div>{children}</div>
     </figure>
@@ -124,7 +129,10 @@ export function Gallery() {
 function AccessParts() {
   return (
     <Section id="pezzi-accesso" title="Accesso (#461)">
-      <Example caption="split-onboarding__passo--accesso · passo-onboarding__testa--marchio · accesso-altri">
+      <Example
+        wide
+        caption="split-onboarding__passo--accesso · passo-onboarding__testa--marchio · accesso-altri"
+      >
         <div
           className="split-onboarding split-onboarding--unico"
           data-testid="accesso-pezzi"
@@ -155,6 +163,7 @@ function AccessParts() {
                     label="La tua mail"
                     type="email"
                     autoComplete="username"
+                    placeholder="nome@esempio.it"
                     defaultValue=""
                   />
                   <PasswordField
@@ -186,10 +195,7 @@ function AccessParts() {
               </div>
             </div>
             <div className="split-onboarding__legale">
-              <p className="t-nota t-secondario">
-                Continuando accetti i Termini d&apos;uso e l&apos;Informativa
-                sulla privacy.
-              </p>
+              <LegalLine className="t-nota t-secondario" />
             </div>
           </div>
         </div>
