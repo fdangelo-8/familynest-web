@@ -596,6 +596,8 @@ test.describe("/accesso: accesso", () => {
     await openAccess(page);
     await forgotLink(page).click();
     await expect(page).toHaveURL(/\/accesso\/password-dimenticata$/);
+    // The page of the form is gone only when its field is the only one.
+    await expect(page.locator("input[type=email]")).toHaveCount(1);
     await mailField(page).fill("marco@esempio.test");
     await submitButton(page).click();
     await expect(

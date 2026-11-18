@@ -58,7 +58,10 @@ async function withUser(
 
 /** «Per l'account <b>mail</b>.», and no `code` or `token_hash` in the address. */
 async function expectAccountLine(page: Page, email: string) {
-  const line = page.getByText(`Per l'account ${email}.`);
+  // The page has two layouts, one hidden.
+  const line = page
+    .getByText(`Per l'account ${email}.`)
+    .filter({ visible: true });
   await expect(line).toBeVisible();
   await expect(line.locator("b, strong")).toHaveText(email);
   expect(page.url()).not.toContain("code=");
