@@ -141,8 +141,10 @@ async function request(
       email,
       options: { emailRedirectTo: callbackUrl("conferma") },
     });
-    if (!error) return "ok";
-    return isRateLimit(error) ? "limit" : "network";
+    // 429 looks like success (CA-33, as «Password dimenticata»): the screen
+    // must not tell which mails have an account.
+    if (!error || isRateLimit(error)) return "ok";
+    return "network";
   } catch {
     return "network";
   }
