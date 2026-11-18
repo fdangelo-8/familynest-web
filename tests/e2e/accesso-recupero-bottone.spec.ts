@@ -2,10 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import {
   NEW_PASSWORD,
   RECOVERY_COOKIE,
-  alertWith,
-  callsTo,
   createPasswordUser,
-  recordAuth,
   signInContext,
   type PasswordUser,
 } from "../fixtures/accesso-password";
@@ -22,7 +19,6 @@ import {
   recoveryForm,
   recoveryMailLink,
   recoveryPath,
-  retryButton,
   saveNewPassword,
   stayLink,
 } from "../fixtures/accesso-principale";
@@ -38,7 +34,7 @@ import {
 import { waitHydrated } from "../fixtures/esplora";
 
 // The link of the new password asks for a button before it is used (#461,
-// CA-22 ... CA-29, CA-38, CA-39; it absorbs #442). Same shape as
+// CA-22 ... CA-29, CA-39; it absorbs #442). Same shape as
 // tests/e2e/conferma-link.spec.ts (#419). Links come from `generateLink` of
 // type `recovery` made with the administrative key: no mail is sent, except in
 // CA-29 where the browser that asked for the link opens it (PKCE).
@@ -47,7 +43,6 @@ import { waitHydrated } from "../fixtures/esplora";
 
 const PASSWORD_EXPIRED = /\/accesso\/link-scaduto\?tipo=password$/;
 const NEW_PASSWORD_URL = /\/accesso\/nuova-password$/;
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
 async function withUser(
   options: { nest?: boolean },
@@ -339,46 +334,8 @@ test.describe("nuova password", () => {
     });
   });
 
-  test("CA-38: con /auth/v1/logout che risponde 500 si resta su «Nuova password» con l'avviso di rete; «Riprova» ripete solo la chiusura e poi si arriva a destinazione", async ({
-    page,
-  }) => {
-    needKeys();
-    await withUser({ nest: true }, async (user) => {
-      const logout = `${supabaseUrl}/auth/v1/logout*`;
-      await page.route(logout, (route) =>
-        route.fulfill({
-          status: 500,
-          contentType: "application/json",
-          body: JSON.stringify({ code: 500, msg: "boom" }),
-        }),
-      );
-      try {
-        await pressRecovery(page, (await recoveryPath(user.email)).path);
-        const calls = recordAuth(page);
-        await saveNewPassword(page, NEW_PASSWORD);
-        await expect(alertWith(page, TEXT.newPasswordNetwork)).toBeVisible();
-        await expect(page).toHaveURL(NEW_PASSWORD_URL);
-        await expect(page.getByText(TEXT.newPasswordSaved)).toHaveCount(0);
-
-        const logoutsBefore = callsTo(calls, "/logout").length;
-        const putsBefore = callsTo(calls, "/user").filter(
-          (call) => call.method === "PUT",
-        ).length;
-        expect(logoutsBefore).toBeGreaterThanOrEqual(1);
-        expect(putsBefore).toBe(1);
-
-        await page.unroute(logout);
-        await retryButton(page).click();
-        await expect(page).toHaveURL(/\/oggi$/, { timeout: 15_000 });
-        expect(callsTo(calls, "/logout").length).toBe(logoutsBefore + 1);
-        expect(
-          callsTo(calls, "/user").filter((call) => call.method === "PUT"),
-        ).toHaveLength(putsBefore);
-      } finally {
-        await page.unrouteAll({ behavior: "ignoreErrors" });
-      }
-    });
-  });
+  // CA-38 (logout that answers 500, «Riprova» repeats only the closing) is the
+  // test already in accesso-password-mail.spec.ts: one test per case.
 
   test("CA-39: arrivando dal bottone si vede «Per l'account <mail>.»; dopo il salvataggio una seconda sessione dello stesso account non si rinnova", async ({
     page,

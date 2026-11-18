@@ -35,7 +35,8 @@ import { waitHydrated } from "./esplora";
 
 export const TEXT = {
   // [D] proposals of the issue (section 5 and CA-22/CA-27)
-  recoveryButton: "Continua",
+  recoveryTitle: "Hai chiesto una nuova password",
+  recoveryButton: "Scegli una nuova password",
   stay: "Resta con questo account",
   // texts of #327 (unchanged by #461)
   credentials: /^La mail e la password non corrispondono\./,
@@ -269,6 +270,9 @@ export async function recoveryPath(
 export async function openRecovery(page: Page, path: string) {
   const response = await page.goto(path);
   expect(response?.status()).toBe(200);
+  await expect(
+    page.getByRole("heading", { level: 1, name: TEXT.recoveryTitle }),
+  ).toBeVisible();
   await expect(recoveryButton(page)).toBeVisible();
   return response!;
 }
