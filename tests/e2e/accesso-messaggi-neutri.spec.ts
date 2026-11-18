@@ -147,7 +147,12 @@ test.describe("messaggi neutri", () => {
           await openAccess(page);
           await submitRegister(page, address, OTHER_PASSWORD);
           await expect(checkPosta(page)).toBeVisible({ timeout: 10_000 });
-          expect(await sessionCookieNames(context)).toEqual([]);
+          // The code verifier of the PKCE flow is not a session.
+          expect(
+            (await sessionCookieNames(context)).filter(
+              (name) => !name.includes("code-verifier"),
+            ),
+          ).toEqual([]);
           outcomes.push({ name, outcome: await outcomeOf(page, address) });
         } finally {
           await context.close();
@@ -256,6 +261,10 @@ test.describe("messaggi neutri", () => {
         try {
           const page = await context.newPage();
           if (item.mockSignup) await mockAuth(page, "/signup", { kind: "ok" });
+          // The local limiter answers 429 to a second mail within a minute only
+          // for an address that really got one: the answer is fixed so that the
+          // cases differ only by the mail (the 429 of resend is CA-34).
+          await mockAuth(page, "/resend", { kind: "ok" });
           await page.clock.install({ time: new Date("2026-11-18T10:00:00Z") });
           await page.goto("/accesso");
           await page.clock.pauseAt(new Date("2026-11-18T10:00:05Z"));
@@ -300,6 +309,7 @@ test.describe("messaggi neutri", () => {
           // Only the unconfirmed account really gets to the notice; for the
           // others the answer of /token is simulated to reach the same button.
           if (!item.real) await mockAuth(page, "/token", NOT_CONFIRMED);
+          await mockAuth(page, "/resend", { kind: "ok" });
           await openAccess(page);
           await submitLogin(page, item.address, PASSWORD_OK);
           await expect(statusWith(page, TEXT.unconfirmed)).toBeVisible();

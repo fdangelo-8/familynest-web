@@ -30,6 +30,7 @@ test.describe("collegamenti verso /accesso", () => {
       await mailField(page).fill("marco@esempio.test");
       await forgotLink(page).click();
       await expect(page).toHaveURL(/\/accesso\/password-dimenticata$/);
+      await expect(page.locator("input[type=email]")).toHaveCount(1);
       await expect(mailField(page)).toHaveValue("");
       await page.getByRole("link", { name, exact: true }).click();
       await expect(page).toHaveURL(/\/accesso$/);
