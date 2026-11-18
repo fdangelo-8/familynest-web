@@ -27,7 +27,9 @@ select columns_are(
   'public', 'deadlines',
   array[
     'id', 'household_id', 'title', 'due_date', 'note', 'created_by_member_id', 'assignee_member_id',
-    'for_member_id', 'is_private', 'reminder_days', 'created_at', 'updated_at'
+    'for_member_id', 'is_private', 'reminder_days', 'created_at', 'updated_at',
+    -- #481: «Si ripete»
+    'recurrence', 'recurrence_interval_days'
   ],
   'deadlines has exactly the planned columns (no health data)'
 );

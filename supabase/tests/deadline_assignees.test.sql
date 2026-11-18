@@ -52,10 +52,11 @@ select ok(
   'anon nothing; the app reads, adds (never the time) and removes people'
 );
 select ok(
-  not has_function_privilege('anon', 'public.create_deadline(text, date, uuid[], text, uuid, boolean, smallint[])', 'execute')
-  and not has_function_privilege('anon', 'public.update_deadline(uuid, text, date, uuid[], text, uuid, boolean, smallint[])', 'execute')
-  and has_function_privilege('authenticated', 'public.create_deadline(text, date, uuid[], text, uuid, boolean, smallint[])', 'execute')
-  and has_function_privilege('authenticated', 'public.update_deadline(uuid, text, date, uuid[], text, uuid, boolean, smallint[])', 'execute')
+  -- Signatures with the repetition of #481 (last two arguments).
+  not has_function_privilege('anon', 'public.create_deadline(text, date, uuid[], text, uuid, boolean, smallint[], public.deadline_recurrence, smallint)', 'execute')
+  and not has_function_privilege('anon', 'public.update_deadline(uuid, text, date, uuid[], text, uuid, boolean, smallint[], public.deadline_recurrence, smallint)', 'execute')
+  and has_function_privilege('authenticated', 'public.create_deadline(text, date, uuid[], text, uuid, boolean, smallint[], public.deadline_recurrence, smallint)', 'execute')
+  and has_function_privilege('authenticated', 'public.update_deadline(uuid, text, date, uuid[], text, uuid, boolean, smallint[], public.deadline_recurrence, smallint)', 'execute')
   and not has_function_privilege('authenticated', 'private.deadline_first_assignee(uuid)', 'execute')
   and not has_function_privilege('authenticated', 'private.deadlines_sync_assignees()', 'execute'),
   'only signed-in users call the write functions; helpers and triggers are never callable'
