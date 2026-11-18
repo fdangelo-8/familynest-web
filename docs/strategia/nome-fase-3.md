@@ -1,5 +1,7 @@
 18/11/2026
 
+> Superato dalla fase 4, `nome-fase-4.md`: il 18/11/2026 Francesco ha scartato il top 4 di questo documento (Nenilu, Nenuvi, Nenuma, Nunelu).
+
 Documento vivo: si aggiorna dopo la scelta di Francesco, dopo le prove sulle persone e dopo la verifica del legale-privacy.
 
 # Il nuovo nome, fase 3: nomi inventati e corti, nati dal logo 5A
