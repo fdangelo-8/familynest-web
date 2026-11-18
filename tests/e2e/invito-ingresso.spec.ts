@@ -587,15 +587,12 @@ test.describe("benvenuto (07)", () => {
     await expectLauraWelcome(page, laura.expires_at);
   });
 
-  test("CA-12: «Usa la mail» porta a /accesso/mail", async ({
-    page,
-    baseURL,
-  }) => {
+  test("CA-12: «Usa la mail» porta a /accesso", async ({ page, baseURL }) => {
     needsUsers("A");
     const laura = await lauraInvite();
     await page.goto(linkOf(originOf(baseURL), laura.token));
     await page.getByRole("link", { name: "Usa la mail" }).click();
-    await expect(page).toHaveURL(`${originOf(baseURL)}/accesso/mail`);
+    await expect(page).toHaveURL(`${originOf(baseURL)}/accesso`);
   });
 });
 

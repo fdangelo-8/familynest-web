@@ -13,7 +13,7 @@ import {
   mockAuth,
   modeVoice,
   passwordField,
-  recoveryLink,
+  openRecoveryLink,
   statusWith,
   submitButton,
   submitMailForm,
@@ -129,7 +129,7 @@ async function smallTouchAreas(page: Page) {
 }
 
 async function reachCheckMail(page: Page) {
-  await page.goto("/accesso/mail");
+  await page.goto("/accesso");
   await submitMailForm(
     page,
     { mode: "Registrati", email: MAIL, password: PASSWORD_OK },
@@ -156,11 +156,11 @@ async function reachSent(page: Page) {
 
 // ======================================================================= Entra
 
-test.describe("/accesso/mail · Entra", () => {
+test.describe("/accesso · Entra", () => {
   test("stato normale: axe, un solo h1, ordine del focus, aree di tocco", async ({
     page,
   }, info) => {
-    await page.goto("/accesso/mail");
+    await page.goto("/accesso");
     await expectOneH1(page);
     await expectNoBlocking(page);
     const group = page.getByRole("group", { name: "Hai già un account?" });
@@ -176,13 +176,12 @@ test.describe("/accesso/mail · Entra", () => {
         "Mostra la password",
         "Password dimenticata?",
         "Entra",
-        "Torna all'accesso",
-        "Termini d'uso",
+        "Continua con Apple",
+        "Continua con Google",
       ]);
     } else {
       await expect(mailField(page)).not.toBeFocused();
       expect(await tabStops(page, 9)).toEqual([
-        "Indietro",
         "Entra",
         "Registrati",
         "La tua mail",
@@ -190,7 +189,8 @@ test.describe("/accesso/mail · Entra", () => {
         "Mostra la password",
         "Password dimenticata?",
         "Entra",
-        "Termini d'uso",
+        "Continua con Apple",
+        "Continua con Google",
       ]);
       expect(await smallTouchAreas(page)).toEqual([]);
     }
@@ -199,7 +199,7 @@ test.describe("/accesso/mail · Entra", () => {
   test("«Mostra la password»: nome fisso e aria-pressed, il focus resta sul bottone", async ({
     page,
   }) => {
-    await page.goto("/accesso/mail");
+    await page.goto("/accesso");
     const toggle = page.getByRole("button", { name: "Mostra la password" });
     await untilHydrated(
       () => toggle.click({ timeout: 2000 }),
@@ -214,7 +214,7 @@ test.describe("/accesso/mail · Entra", () => {
   test("campi vuoti: axe, aria-invalid e aria-describedby, il focus va sulla mail", async ({
     page,
   }) => {
-    await page.goto("/accesso/mail");
+    await page.goto("/accesso");
     await untilHydrated(
       () => submitButton(page).click({ timeout: 2000, noWaitAfter: true }),
       () =>
@@ -244,7 +244,7 @@ test.describe("/accesso/mail · Entra", () => {
     status: 400,
   };
   const submit = async (page: Page, done: () => Promise<void>) => {
-    await page.goto("/accesso/mail");
+    await page.goto("/accesso");
     await submitMailForm(
       page,
       { mode: "Entra", email: MAIL, password: "una-password" },
@@ -386,11 +386,11 @@ test.describe("/accesso/mail · Entra", () => {
 
 // ================================================================== Registrati
 
-test.describe("/accesso/mail · Registrati", () => {
+test.describe("/accesso · Registrati", () => {
   test("stato normale: axe, ordine del focus, aree di tocco", async ({
     page,
   }, info) => {
-    await page.goto("/accesso/mail");
+    await page.goto("/accesso");
     await untilHydrated(
       () => modeVoice(page, "Registrati").click({ timeout: 2000 }),
       () =>
@@ -412,7 +412,7 @@ test.describe("/accesso/mail · Registrati", () => {
   test("la regola «Da 8 a 72 caratteri»: a riposo e rispettata, senza regioni live", async ({
     page,
   }) => {
-    await page.goto("/accesso/mail");
+    await page.goto("/accesso");
     await untilHydrated(
       () => modeVoice(page, "Registrati").click({ timeout: 2000 }),
       () =>
@@ -443,7 +443,7 @@ test.describe("/accesso/mail · Registrati", () => {
       status: 422,
       body: { code: 422, error_code: "weak_password", msg: "weak" },
     });
-    await page.goto("/accesso/mail");
+    await page.goto("/accesso");
     await submitMailForm(
       page,
       { mode: "Registrati", email: MAIL, password: "1234567" },
@@ -472,7 +472,7 @@ test.describe("/accesso/mail · Registrati", () => {
 
 // ========================================================== Controlla la posta
 
-test.describe("/accesso/mail · Controlla la posta", () => {
+test.describe("/accesso · Controlla la posta", () => {
   test("axe, h1 con il focus, ordine del focus, attesa collegata al bottone", async ({
     page,
   }, info) => {
@@ -494,11 +494,11 @@ test.describe("/accesso/mail · Controlla la posta", () => {
     // No live region for the countdown.
     await expect(page.locator(`[id="${noteId}"][aria-live]`)).toHaveCount(0);
     // The disabled button is skipped.
-    expect(await tabStops(page, isDesktop(info) ? 3 : 2)).toEqual(
-      isDesktop(info)
-        ? ["Usa un'altra mail", "Entra con la password", "Torna all'accesso"]
-        : ["Usa un'altra mail", "Entra con la password"],
-    );
+    // «Torna all'accesso» is gone (#461): this already is the sign-in page.
+    expect(await tabStops(page, 2)).toEqual([
+      "Usa un'altra mail",
+      "Entra con la password",
+    ]);
     if (!isDesktop(info)) expect(await smallTouchAreas(page)).toEqual([]);
   });
 
@@ -523,7 +523,7 @@ test.describe("/accesso/mail · Controlla la posta", () => {
     await mockAuth(page, "/signup", { kind: "ok" });
     await mockAuth(page, "/resend", RATE_LIMIT);
     await page.clock.install({ time: new Date("2026-11-06T10:00:00Z") });
-    await page.goto("/accesso/mail");
+    await page.goto("/accesso");
     await page.clock.pauseAt(new Date("2026-11-06T10:00:05Z"));
     await submitMailForm(
       page,
@@ -636,7 +636,7 @@ test.describe("/accesso/password-dimenticata", () => {
 
 test.describe("/accesso/link-scaduto", () => {
   for (const [query, order] of [
-    ["?tipo=conferma", ["Entra con la mail", "Torna all'accesso"]],
+    ["?tipo=conferma", ["Entra con la password"]],
     ["?tipo=password", ["Mandami un nuovo link", "Torna all'accesso"]],
   ] as const) {
     test(`${query}: axe, un solo h1, ordine del focus, aree di tocco`, async ({
@@ -645,7 +645,7 @@ test.describe("/accesso/link-scaduto", () => {
       await page.goto(`/accesso/link-scaduto${query}`);
       await expectOneH1(page);
       await expectNoBlocking(page);
-      expect(await tabStops(page, 2)).toEqual(order);
+      expect(await tabStops(page, order.length)).toEqual(order);
       if (!isDesktop(info)) expect(await smallTouchAreas(page)).toEqual([]);
     });
   }
@@ -665,8 +665,7 @@ test.describe("[CI-stack] /accesso/nuova-password", () => {
     await needStack();
     const user = await createPasswordUser({ nest: true });
     try {
-      await page.goto(await recoveryLink(user.email));
-      await expect(page).toHaveURL(/\/accesso\/nuova-password$/);
+      await openRecoveryLink(page, user.email);
       await expectOneH1(page);
       await expectNoBlocking(page);
       // The copy of the address for the password manager is not focusable.

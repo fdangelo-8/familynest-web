@@ -50,8 +50,8 @@ test.describe("accesso e pagine pubbliche", () => {
   });
 
   test("accesso con la mail: inserimento", async ({ page }) => {
-    await page.goto("/accesso/mail");
-    await expect(page.locator("h1:visible")).toHaveText("Entra con la mail");
+    await page.goto("/accesso");
+    await expect(page.locator("h1:visible")).toHaveText("Entra in FamilyNest");
     // From 1024 px the page puts the focus on the mail field once it is
     // hydrated: wait for it, or the shot may be taken before the ring.
     if ((page.viewportSize()?.width ?? 0) >= 1024) {
@@ -72,7 +72,7 @@ test.describe("accesso e pagine pubbliche", () => {
         body: "{}",
       }),
     );
-    await page.goto("/accesso/mail");
+    await page.goto("/accesso");
     const heading = page.getByRole("heading", {
       level: 1,
       name: "Controlla la posta",

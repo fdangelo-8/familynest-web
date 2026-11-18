@@ -338,12 +338,15 @@ body {
 
 /* Without scripts the streamed part of a page (React's hidden box, which a
    script moves into place) stays hidden. The page «Conferma l'indirizzo»
-   (#419) and the one after it («Mail confermata») must work without
-   JavaScript, so only the boxes that hold them are shown; the boxes of the
-   loading skeletons stay hidden. */
+   (#419), the one after it («Mail confermata»), the page of the new-password
+   link and the sign-in form (#461) must work without JavaScript, so only the
+   boxes that hold them are shown; the boxes of the loading skeletons stay
+   hidden. */
 @media (scripting: none) {
   div[hidden][id^="S:"]:has(
       form[action="/auth/confirm"],
+      form[action="/auth/recupero"],
+      form[action="/accesso/mail/invio"],
       [data-testid="mail-confermata-continua"]
     ) {
     display: contents;

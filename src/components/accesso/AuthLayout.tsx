@@ -1,6 +1,7 @@
 import type { FormEventHandler, ReactNode, Ref } from "react";
 import { Button } from "@/components/ui/Button/Button";
 import { cx } from "@/components/ui/cx";
+import { IconButton } from "@/components/ui/IconButton/IconButton";
 import styles from "./accesso.module.css";
 import { BackLink, Brand, Claim, Stickers } from "./parts";
 
@@ -69,19 +70,28 @@ export function Intro({
  */
 export function AuthLayout({
   back,
+  onBack,
+  brand = false,
   intro,
   body,
   actions,
+  others,
   legal,
   form,
 }: {
   /** Target of the mobile arrow; `null` = no way back (the person is in) */
   back: string | null;
+  /** The arrow is a button that does this instead of a link (#461) */
+  onBack?: () => void;
+  /** Sign-in page (#461): the brand mark replaces the arrow below 1024 px */
+  brand?: boolean;
   intro: ReactNode;
   /** Above the buttons: notices, fields, lists */
   body: ReactNode;
   /** Buttons and links at the bottom */
   actions: ReactNode;
+  /** Under the form, outside it: Apple and Google (#461) */
+  others?: ReactNode;
   /** Legal sentence (`<p>`), under the buttons */
   legal?: ReactNode;
   /** With it the block is a real `<form>`, without it a plain block */
@@ -102,13 +112,37 @@ export function AuthLayout({
           <Claim as="p" />
         </div>
         <div
-          className={"split-onboarding__passo split-onboarding__passo--unico"}
+          className={cx(
+            "split-onboarding__passo split-onboarding__passo--unico",
+            brand && "split-onboarding__passo--accesso",
+          )}
         >
-          <div className={"passo-onboarding__testa"}>
-            {back ? <BackLink href={back} /> : <span aria-hidden="true" />}
-            <span aria-hidden="true" />
-            <span className="barra__vuoto" aria-hidden="true" />
-          </div>
+          {brand ? (
+            <div
+              className={cx(
+                "passo-onboarding__testa",
+                "passo-onboarding__testa--marchio",
+              )}
+            >
+              <Brand />
+            </div>
+          ) : (
+            <div className={"passo-onboarding__testa"}>
+              {onBack ? (
+                <IconButton
+                  icon="arrow-left"
+                  aria-label="Indietro"
+                  onClick={onBack}
+                />
+              ) : back ? (
+                <BackLink href={back} />
+              ) : (
+                <span aria-hidden="true" />
+              )}
+              <span aria-hidden="true" />
+              <span className="barra__vuoto" aria-hidden="true" />
+            </div>
+          )}
           <div className={"split-onboarding__mid"}>
             {intro}
             {form ? (
@@ -125,6 +159,7 @@ export function AuthLayout({
             ) : (
               <div className={"split-onboarding__blocco"}>{inner}</div>
             )}
+            {others}
           </div>
           {legal ? (
             <div className={"split-onboarding__legale"}>{legal}</div>

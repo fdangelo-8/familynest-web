@@ -4550,6 +4550,36 @@ button.riga-lista {
   }
 }
 
+/* #461 · Accesso: il marchio al posto della freccia (sotto 1024 px; da 1024
+   lo nasconde la regola della #327 sui figli della testa) */
+.passo-onboarding__testa--marchio {
+  grid-template-columns: minmax(0, 1fr);
+  min-height: var(--size-controllo);
+}
+
+/* #461 · Accesso: righe una sotto l'altra, la frase legale in fondo */
+.split-onboarding__passo--accesso {
+  grid-template-rows: auto auto auto auto 1fr;
+}
+.split-onboarding__passo--accesso .split-onboarding__blocco {
+  grid-template-rows: none;
+}
+.split-onboarding__passo--accesso .split-onboarding__legale {
+  align-self: end;
+}
+
+/* #461 · Accesso: gli altri modi di entrare, sotto il modulo */
+.accesso-altri {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-2);
+}
+@media (min-width: 1024px) {
+  .accesso-altri {
+    margin-top: var(--space-4);
+  }
+}
+
 /* Movimento ridotto: niente animazioni né transizioni, ovunque */
 @media (prefers-reduced-motion: reduce) {
   *,
