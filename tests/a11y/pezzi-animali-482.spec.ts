@@ -248,12 +248,13 @@ test("a11y: aree di tocco di 44 px sui controlli degli animali (mobile)", async 
       const cx = r.left + r.width / 2;
       const cy = r.top + r.height / 2;
       let miss = 0;
-      for (const [dx, dy] of [
+      const corners: Array<[number, number]> = [
         [-21, -21],
         [21, -21],
         [-21, 21],
         [21, 21],
-      ]) {
+      ];
+      for (const [dx, dy] of corners) {
         const hit = document.elementFromPoint(cx + dx, cy + dy);
         const ok =
           hit &&
