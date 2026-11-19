@@ -22,8 +22,8 @@ export type ChipProps = {
   /** Not a button, just a label with chip shape (`.chip--statico`) */
   static?: boolean;
   /**
-   * Full accessible name, when the visible text is short («Lun» → «lunedì»).
-   * It must start with the visible text.
+   * Full accessible name, when the visible text is short («Lun» → «Lun,
+   * lunedì»). It must start with the whole visible text.
    */
   "aria-label"?: string;
   /** Ref of the `<button>` (not used with `static`), to move the focus to it */

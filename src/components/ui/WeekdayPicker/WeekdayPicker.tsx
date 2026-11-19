@@ -31,7 +31,8 @@ export type WeekdayPickerProps = {
 
 /**
  * «Giorni»: seven chips from Monday (`.scelta-giorni`). Each chip is a toggle
- * with the full name («lunedì») as accessible name. The grid goes to four
+ * with the visible word first and the full name after it («Lun, lunedì»: axe
+ * wants the visible word whole in the name, «lunedì» alone fails). The grid goes to four
  * columns when the container is narrow (large text).
  */
 export function WeekdayPicker({
@@ -72,7 +73,7 @@ export function WeekdayPicker({
           {WEEKDAYS.map(({ day, short, full }) => (
             <Chip
               key={day}
-              aria-label={full}
+              aria-label={`${short}, ${full}`}
               pressed={value.includes(day)}
               disabled={disabled}
               onClick={() => toggle(day)}
