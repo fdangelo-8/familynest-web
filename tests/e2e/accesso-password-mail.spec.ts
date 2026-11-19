@@ -565,7 +565,15 @@ test.describe("[CI-stack] password dimenticata e nuova password", () => {
       await signInContext(signedIn, baseURL!, user);
       const normal = await signedIn.newPage();
       await normal.goto("/accesso/nuova-password");
-      await expect(normal).toHaveURL(/\/accesso\/link-scaduto\?tipo=password$/);
+      // «Link scaduto» sends a signed-in person on to the destination, so the
+      // address of the expired link is only there for an instant (a race that
+      // made this check pass only at the second attempt): the stable result
+      // is that the new-password page is never shown and the person ends on
+      // /oggi.
+      await expect(normal).toHaveURL(/\/oggi$/);
+      await expect(
+        normal.getByRole("heading", { name: "Scegli una nuova password" }),
+      ).toHaveCount(0);
       // …and the session is untouched
       // (the page that redirected may still be finishing: retry the visit)
       await expect(async () => {

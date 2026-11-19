@@ -386,9 +386,14 @@ test.describe("accesso con mail e password", () => {
     await page.clock.pauseAt(new Date(START.getTime() + 2000));
     await page.clock.runFor(60_000);
     await page.getByRole("button", { name: "Rimanda la mail" }).click();
+    // #461, CA-33 above CA-34: the limit looks like a success (the same toast
+    // as «mail rimandata»), so nobody can tell if the address has an account.
+    await expect(
+      page.getByText("Mail rimandata: usa quella più recente."),
+    ).toBeVisible();
     await expect(
       statusWith(page, "La mail di prima è appena partita."),
-    ).toBeVisible();
+    ).toHaveCount(0);
     await shot(page, "controlla-la-posta-limite.png");
   });
 

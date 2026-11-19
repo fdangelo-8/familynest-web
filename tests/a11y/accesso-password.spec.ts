@@ -516,7 +516,7 @@ test.describe("/accesso · Controlla la posta", () => {
     await expectNoBlocking(page);
   });
 
-  test("«Rimanda la mail» con troppe richieste: axe con l'avviso informativo (status)", async ({
+  test("«Rimanda la mail» con troppe richieste: axe con il toast di «mail rimandata», senza avviso (CA-33)", async ({
     page,
   }) => {
     needSupabase();
@@ -535,9 +535,13 @@ test.describe("/accesso · Controlla la posta", () => {
     );
     await page.clock.runFor(60_000);
     await page.getByRole("button", { name: "Rimanda la mail" }).click();
+    // CA-33 above CA-34 (#461): the limit looks like a success, the same toast.
+    await expect(
+      page.getByText("Mail rimandata: usa quella più recente."),
+    ).toBeVisible();
     await expect(
       statusWith(page, "La mail di prima è appena partita."),
-    ).toBeVisible();
+    ).toHaveCount(0);
     // axe uses timers: the frozen clock has to run again.
     await page.clock.resume();
     await expectNoBlocking(page);
