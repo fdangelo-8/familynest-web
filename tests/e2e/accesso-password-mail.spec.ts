@@ -564,16 +564,24 @@ test.describe("[CI-stack] password dimenticata e nuova password", () => {
       extra.push(signedIn);
       await signInContext(signedIn, baseURL!, user);
       const normal = await signedIn.newPage();
+      // The addresses the page goes through are recorded from the start:
+      // «Link scaduto» sends a signed-in person on to the destination, so its
+      // address is only there for an instant and a poll on the URL can miss it.
+      const visited: string[] = [];
+      normal.on("framenavigated", (frame) => {
+        if (frame === normal.mainFrame()) visited.push(frame.url());
+      });
       await normal.goto("/accesso/nuova-password");
-      // «Link scaduto» sends a signed-in person on to the destination, so the
-      // address of the expired link is only there for an instant (a race that
-      // made this check pass only at the second attempt): the stable result
-      // is that the new-password page is never shown and the person ends on
-      // /oggi.
       await expect(normal).toHaveURL(/\/oggi$/);
-      await expect(
-        normal.getByRole("heading", { name: "Scegli una nuova password" }),
-      ).toHaveCount(0);
+      // CA-27: through «link scaduto», never on the new-password page.
+      expect(
+        visited.some((url) =>
+          /\/accesso\/link-scaduto\?tipo=password/.test(url),
+        ),
+      ).toBe(true);
+      expect(visited.some((url) => /\/accesso\/nuova-password/.test(url))).toBe(
+        false,
+      );
       // …and the session is untouched
       // (the page that redirected may still be finishing: retry the visit)
       await expect(async () => {
