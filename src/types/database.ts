@@ -1083,6 +1083,125 @@ export type Database = {
           },
         ];
       };
+      pet_photos: {
+        Row: {
+          content_type: string;
+          created_at: string;
+          data: string;
+          household_id: string;
+          member_id: string;
+          member_kind: Database["public"]["Enums"]["member_kind"];
+        };
+        ComputedFields: never;
+        Insert: {
+          content_type: string;
+          created_at?: string;
+          data: string;
+          household_id: string;
+          member_id: string;
+          member_kind?: Database["public"]["Enums"]["member_kind"];
+        };
+        Update: {
+          content_type?: string;
+          created_at?: string;
+          data?: string;
+          household_id?: string;
+          member_id?: string;
+          member_kind?: Database["public"]["Enums"]["member_kind"];
+        };
+        Relationships: [
+          {
+            foreignKeyName: "pet_photos_household_id_fkey";
+            columns: ["household_id"];
+            isOneToOne: false;
+            referencedRelation: "households";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "pet_photos_member_fkey";
+            columns: ["member_id", "household_id", "member_kind"];
+            isOneToOne: false;
+            referencedRelation: "household_members";
+            referencedColumns: ["id", "household_id", "kind"];
+          },
+        ];
+      };
+      pet_profiles: {
+        Row: {
+          adoption_date: string | null;
+          created_at: string;
+          date_kind: Database["public"]["Enums"]["pet_date_kind"] | null;
+          date_precision:
+            Database["public"]["Enums"]["pet_date_precision"] | null;
+          date_year: number | null;
+          food: string | null;
+          household_id: string;
+          id: string;
+          member_id: string;
+          member_kind: Database["public"]["Enums"]["member_kind"];
+          note: string | null;
+          species: Database["public"]["Enums"]["pet_species"] | null;
+          updated_at: string;
+          vet_clinic: string | null;
+          vet_name: string | null;
+          vet_phone: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          adoption_date?: string | null;
+          created_at?: string;
+          date_kind?: Database["public"]["Enums"]["pet_date_kind"] | null;
+          date_precision?:
+            Database["public"]["Enums"]["pet_date_precision"] | null;
+          date_year?: number | null;
+          food?: string | null;
+          household_id: string;
+          id?: string;
+          member_id: string;
+          member_kind?: Database["public"]["Enums"]["member_kind"];
+          note?: string | null;
+          species?: Database["public"]["Enums"]["pet_species"] | null;
+          updated_at?: string;
+          vet_clinic?: string | null;
+          vet_name?: string | null;
+          vet_phone?: string | null;
+        };
+        Update: {
+          adoption_date?: string | null;
+          created_at?: string;
+          date_kind?: Database["public"]["Enums"]["pet_date_kind"] | null;
+          date_precision?:
+            Database["public"]["Enums"]["pet_date_precision"] | null;
+          date_year?: number | null;
+          food?: string | null;
+          household_id?: string;
+          id?: string;
+          member_id?: string;
+          member_kind?: Database["public"]["Enums"]["member_kind"];
+          note?: string | null;
+          species?: Database["public"]["Enums"]["pet_species"] | null;
+          updated_at?: string;
+          vet_clinic?: string | null;
+          vet_name?: string | null;
+          vet_phone?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "pet_profiles_household_id_fkey";
+            columns: ["household_id"];
+            isOneToOne: false;
+            referencedRelation: "households";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "pet_profiles_member_fkey";
+            columns: ["member_id", "household_id", "member_kind"];
+            isOneToOne: false;
+            referencedRelation: "household_members";
+            referencedColumns: ["id", "household_id", "kind"];
+          },
+        ];
+      };
       pinned_spaces: {
         Row: {
           household_id: string;
@@ -2060,6 +2179,27 @@ export type Database = {
         Args: { p_account_id: string; p_calendars: Json };
         Returns: number;
       };
+      save_pet_profile: {
+        Args: {
+          p_color: Database["public"]["Enums"]["member_color"];
+          p_date?: string;
+          p_date_kind?: Database["public"]["Enums"]["pet_date_kind"];
+          p_date_precision?: Database["public"]["Enums"]["pet_date_precision"];
+          p_date_year?: number;
+          p_food?: string;
+          p_member_id: string;
+          p_name: string;
+          p_note?: string;
+          p_photo_base64?: string;
+          p_photo_content_type?: string;
+          p_remove_photo?: boolean;
+          p_species?: Database["public"]["Enums"]["pet_species"];
+          p_vet_clinic?: string;
+          p_vet_name?: string;
+          p_vet_phone?: string;
+        };
+        Returns: undefined;
+      };
       search_household: {
         Args: {
           p_from?: string;
@@ -2281,6 +2421,9 @@ export type Database = {
         | "shopping"
         | "free_together"
         | "morning_digest";
+      pet_date_kind: "birth" | "adoption";
+      pet_date_precision: "day" | "year";
+      pet_species: "dog" | "cat" | "other";
       search_result_kind: "event" | "deadline" | "todo" | "shopping_item";
       space_key:
         | "meals"
@@ -2499,6 +2642,9 @@ export const Constants = {
         "free_together",
         "morning_digest",
       ],
+      pet_date_kind: ["birth", "adoption"],
+      pet_date_precision: ["day", "year"],
+      pet_species: ["dog", "cat", "other"],
       search_result_kind: ["event", "deadline", "todo", "shopping_item"],
       space_key: [
         "meals",
