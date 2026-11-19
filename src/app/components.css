@@ -5499,6 +5499,13 @@ a.riga-regalo__titolo::before {
   padding-inline: var(--space-0);
 }
 
+/* #460 · Animali: l'elenco del turno è un ol, senza rientro né numeri del browser */
+ol.lista {
+  margin: var(--space-0);
+  padding: var(--space-0);
+  list-style: none;
+}
+
 /* #460 · Animali: azioni di una riga del turno (su, giù, togli) */
 .riga-lista__azioni {
   display: inline-flex;
