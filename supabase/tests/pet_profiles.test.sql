@@ -10,13 +10,14 @@
 -- Seed ids: A = Marco (Casa D'Angelo, admin), B = Giulia (Casa Bianchi, admin), B2 = Paolo
 -- (Casa Bianchi, not admin), C = Chiara (no household).
 -- Members: Casa D'Angelo Marco a1…01 (pomodoro), Sofia a1…03 (child), Biscotto a1…05 (pet,
--- zafferano). Casa Bianchi has no pet in the seed: Pallina b1…09 (pet, glicine) is added here.
+-- zafferano). Casa Bianchi has no pet in the seed: Pallina b1…09 (pet, glicine) is added here,
+-- and so is Micio a1…a5 (pet of Casa D'Angelo, lampone, birth date of 45 years ago).
 -- The vet data are invented (the vet data of a pet are allowed in tests, answer 3 of #460);
 -- no health data of any person.
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(143);
+select plan(147);
 
 -- ---------------------------------------------------------------------------
 -- Schema
@@ -178,11 +179,37 @@ select ok(
 insert into public.household_members (id, household_id, kind, name, color)
 values ('b1000000-0000-4000-8000-000000000009', '22222222-2222-4222-8222-222222222222', 'pet', 'Pallina', 'glicine');
 
+-- Micio a1…a5 (pet of Casa D'Angelo, lampone) with a birth date 45 years ago, as if it had
+-- been saved before the limit of 40 years existed. Prepared as database owner with the
+-- trigger of the limit switched off for this insert only (inside this transaction): no role
+-- of the app can write such a date any more.
+alter table public.household_members disable trigger household_members_pet_birth_date_range;
+insert into public.household_members (id, household_id, kind, name, color, birth_date)
+values ('a1000000-0000-4000-8000-0000000000a5', '11111111-1111-4111-8111-111111111111', 'pet', 'Micio', 'lampone',
+        ((now() at time zone 'Europe/Rome')::date - interval '45 years')::date);
+alter table public.household_members enable trigger household_members_pet_birth_date_range;
+
 -- ---------------------------------------------------------------------------
 -- Marco (A, administrator): saves the profile of Biscotto
 -- ---------------------------------------------------------------------------
 set local role authenticated;
 set local request.jwt.claims to '{"sub":"aaaaaaaa-0000-4000-8000-000000000001","role":"authenticated"}';
+
+-- A date saved earlier never blocks the other changes: Micio keeps his old birth date and
+-- changes name and colour.
+select lives_ok(
+  $$ select public.save_pet_profile(
+       p_member_id => 'a1000000-0000-4000-8000-0000000000a5', p_name => 'Micione', p_color => 'ceruleo',
+       p_date_kind => 'birth', p_date_precision => 'day',
+       p_date => ((now() at time zone 'Europe/Rome')::date - interval '45 years')::date
+     ) $$,
+  'a pet with a birth date of more than 40 years ago (saved earlier) changes name and colour'
+);
+select results_eq(
+  $$ select name, color::text, birth_date from public.household_members where id = 'a1000000-0000-4000-8000-0000000000a5' $$,
+  $$ values ('Micione', 'ceruleo', ((now() at time zone 'Europe/Rome')::date - interval '45 years')::date) $$,
+  'Micio has the new name and colour, and the same birth date'
+);
 
 select is_empty(
   $$ select 1 from public.pet_profiles where member_id = 'a1000000-0000-4000-8000-000000000005'
@@ -817,6 +844,24 @@ select results_eq(
      select member_id from public.pet_photos $$,
   $$ values ('b1000000-0000-4000-8000-000000000009'::uuid), ('b1000000-0000-4000-8000-000000000009'::uuid) $$,
   'Paolo (not administrator) reads the data of Pallina and nothing of Biscotto'
+);
+-- Same food and vet as Giulia's save, a new note: the checks of the database owner below
+-- still find the data of Pallina as Casa Bianchi saved them.
+select lives_ok(
+  $$ select public.save_pet_profile(
+       p_member_id => 'b1000000-0000-4000-8000-000000000009', p_name => 'Pallina', p_color => 'glicine',
+       p_species => 'cat', p_food => 'Scatolette al tonno', p_vet_name => 'Dott. Luca Neri', p_vet_phone => '011 765 4321',
+       p_note => 'Dorme sul divano.'
+     ) $$,
+  'Paolo (not administrator) saves the profile of Pallina, a pet of his household'
+);
+select results_eq(
+  $$ select p.note, p.food, ph.content_type
+     from public.pet_profiles p
+     join public.pet_photos ph on ph.member_id = p.member_id
+     where p.member_id = 'b1000000-0000-4000-8000-000000000009' $$,
+  $$ values ('Dorme sul divano.', 'Scatolette al tonno', 'image/webp') $$,
+  'the save of Paolo is stored, and the photo is kept'
 );
 select throws_ok(
   $$ select public.save_pet_profile(p_member_id => 'a1000000-0000-4000-8000-000000000005', p_name => 'Rubato', p_color => 'cannella') $$,
