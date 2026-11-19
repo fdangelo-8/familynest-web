@@ -15,6 +15,8 @@ description: Design system di FamilyNest Web - token di colore, tipografia, spaz
 4. Comportamento e accessibilità di ogni componente: `docs/mockup/design-system.md` §7–§11.
 5. Questa skill: regole d'uso, stati che il mockup non disegna, componenti React, tono di voce. Dove il mockup e questa skill sembrano in contrasto, vale il mockup e si apre una domanda nella issue.
 
+Mail di servizio: `docs/mockup/mail/` (nove modelli HTML e solo testo con le anteprime, approvati da Francesco il 19/11/2026, #472; istruzioni in `LEGGIMI.md`). Hanno stili scritti dentro gli elementi e caratteri propri, come richiedono i programmi di posta: si usano così come sono, senza token né classi dell'app e senza riformattarli.
+
 ## Regole sempre valide
 
 - Solo CSS proprio. I valori vivono come variabili in `:root` dentro `src/app/globals.css`; i componenti usano **solo variabili**, mai colori, font o misure scritti a mano. Eccezioni ammesse: `0`, `1`, `100%`, `50%`, `auto`, `env(safe-area-inset-*)`, le larghezze delle media query e delle query di contenitore (le variabili non funzionano lì).

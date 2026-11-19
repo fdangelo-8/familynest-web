@@ -1,0 +1,27 @@
+Oggetto: {{chi_invita}} ti invita in {{nome_casa}}
+
+{{chi_invita}} ti invita in {{nome_casa}}
+
+Ciao {{nome}}, {{chi_invita}} usa {{nome_prodotto}} per tenere insieme
+calendario, spesa e cose da fare di casa. Ti ha tenuto un posto.
+
+Entra in {{nome_casa}}:
+{{link}}
+
+Il link vale {{scadenza_link}} e funziona per una persona sola. Non
+serve avere già l'app.
+
+Il link è scaduto?
+
+Dalla pagina che si apre puoi chiederne uno nuovo a {{chi_invita}} con
+un tocco.
+
+Non conosci {{chi_invita}}?
+
+Ignora questa mail: senza il tuo tocco non succede niente e non ti
+scriveremo più.
+
+--
+Ricevi questa mail perché {{chi_invita_nome_completo}} ha scritto il tuo
+indirizzo per invitarti. Non l'abbiamo salvato per altro.
+{{nome_prodotto}} · {{ragione_sociale}}, {{indirizzo_societa}}

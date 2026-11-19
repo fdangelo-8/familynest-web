@@ -1,0 +1,22 @@
+Oggetto: {{nome_casa}} è pronta
+
+{{nome_casa}} è pronta
+
+Ciao {{nome}}, da adesso calendario, spesa e cose da fare stanno in un
+posto solo. Tre cose per partire bene:
+
+1. Porta qui il tuo calendario. Gli impegni che hai già compaiono da
+   soli.
+2. Invita chi vive con te. Basta un link.
+3. Scrivi la prima cosa nella spesa. Prova con «latte e pane».
+
+Apri {{nome_prodotto}}:
+{{link}}
+
+Il pulsante non scade: apre l'app, oppure il browser se sul telefono
+l'app non c'è.
+
+--
+Ricevi questa mail una volta sola, perché hai appena creato il tuo
+account.
+{{nome_prodotto}} · {{ragione_sociale}}, {{indirizzo_societa}}

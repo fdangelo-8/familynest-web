@@ -1,0 +1,23 @@
+Oggetto: Conferma il tuo indirizzo
+
+Conferma il tuo indirizzo
+
+Ciao {{nome}}, manca un passo: dicci che questo indirizzo è tuo.
+
+Conferma l'indirizzo:
+{{link}}
+
+Oppure scrivi questo codice nell'app:
+
+Codice: {{codice}}
+
+Link e codice valgono {{scadenza_link}}.
+
+Non hai creato tu un account?
+
+Ignora questa mail: senza conferma l'account viene cancellato da solo.
+
+--
+Ricevi questa mail perché questo indirizzo è stato usato per creare un
+account.
+{{nome_prodotto}} · {{ragione_sociale}}, {{indirizzo_societa}}
