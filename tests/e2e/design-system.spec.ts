@@ -292,13 +292,13 @@ test.describe("token e base", () => {
 });
 
 test.describe("icone", () => {
-  test("CA-12: uno sprite con 79 simboli, senza stethoscope", async ({
+  test("CA-12: uno sprite con 80 simboli, senza stethoscope", async ({
     page,
   }) => {
     await expect(
       page.locator('svg.sprite-icone[aria-hidden="true"]'),
     ).toHaveCount(1);
-    await expect(page.locator("svg.sprite-icone symbol")).toHaveCount(79);
+    await expect(page.locator("svg.sprite-icone symbol")).toHaveCount(80);
     await expect(page.locator("#i-stethoscope")).toHaveCount(0);
     await expect(page.locator("#i-calendar")).toHaveCount(1);
   });

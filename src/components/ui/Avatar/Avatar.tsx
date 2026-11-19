@@ -75,7 +75,7 @@ export function Avatar({
       data-testid={testId}
     >
       {showPhoto && photoSrc ? (
-        <AvatarPhoto src={photoSrc} initial={initial} />
+        <AvatarPhoto key={photoSrc} src={photoSrc} initial={initial} />
       ) : (
         initial
       )}

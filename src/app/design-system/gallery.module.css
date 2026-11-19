@@ -103,5 +103,5 @@
 
 /* Contenitore stretto, per vedere «Giorni» a quattro colonne (#482) */
 .stretta {
-  max-width: 14rem;
+  max-width: calc(var(--size-modulo-min) + var(--size-contatore-min));
 }

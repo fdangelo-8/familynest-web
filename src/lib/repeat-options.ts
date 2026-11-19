@@ -13,6 +13,8 @@ export const REPEAT_LABEL = "Si ripete";
 export const REPEAT_DAYS_LABEL = "Quanti giorni";
 export const REPEAT_DAYS_HELP = "Da 1 a 365.";
 
+export const REPEAT_DAYS_ERROR = "Scrivi un numero di giorni da 1 a 365.";
+
 export const REPEAT_NEVER = "never";
 
 /** Choice of a deadline that comes back every N days (needs the number). */

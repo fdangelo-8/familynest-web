@@ -112,19 +112,22 @@ export function TurnPeople({
     pending.current = taker
       ? { kind: "row", id: taker, button: "remove" }
       : { kind: "firstChip" };
-    setAnnouncement(`${byId.get(personId)?.name ?? ""} tolta dal turno.`);
+    setAnnouncement(`${byId.get(personId)?.name ?? ""} esce dal turno.`);
     onChange(next);
   }
 
   function add(personId: string) {
     if (full) return;
     const index = available.findIndex((person) => person.id === personId);
-    const neighbour = available[index + 1] ?? available[index - 1];
+    const neighbour =
+      value.length + 1 >= TURN_MAX_PEOPLE
+        ? undefined
+        : (available[index + 1] ?? available[index - 1]);
     pending.current = neighbour
       ? { kind: "chip", id: neighbour.id }
       : { kind: "row", id: personId, button: "remove" };
     setAnnouncement(
-      `${byId.get(personId)?.name ?? ""} aggiunta al turno, al posto ${value.length + 1}.`,
+      `${byId.get(personId)?.name ?? ""} entra nel turno al posto ${value.length + 1}.`,
     );
     onChange([...value, personId]);
   }
@@ -148,6 +151,12 @@ export function TurnPeople({
       <span className="campo__etichetta" id={labelId}>
         {label}
       </span>
+      {error ? (
+        <p className="campo__errore" id={errorId}>
+          <Icon name="circle-alert" size="s" />
+          {error}
+        </p>
+      ) : null}
       {chosen.length > 0 ? (
         <div className="scheda">
           <ol className="lista" aria-labelledby={labelId}>
@@ -230,12 +239,6 @@ export function TurnPeople({
       {help ? (
         <p className="campo__aiuto" id={helpId}>
           {help}
-        </p>
-      ) : null}
-      {error ? (
-        <p className="campo__errore" id={errorId}>
-          <Icon name="circle-alert" size="s" />
-          {error}
         </p>
       ) : null}
       <div role="status" aria-live="polite">

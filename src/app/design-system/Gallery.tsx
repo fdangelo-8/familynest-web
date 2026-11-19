@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/TurnPeople/TurnPeople";
 import { WeekdayPicker } from "@/components/ui/WeekdayPicker/WeekdayPicker";
 import { PHOTO_REDUCE_ERROR } from "@/lib/photo-field-texts";
+import { REPEAT_DAYS_ERROR } from "@/lib/repeat-options";
 import { PageError } from "@/components/ui/PageError/PageError";
 import { QuickAddField } from "@/components/ui/QuickAddField/QuickAddField";
 import { SectionSwitcher } from "@/components/ui/SegmentedControl/SectionSwitcher";
@@ -120,6 +121,7 @@ const BROKEN_PHOTO = "data:image/png;base64,AAAA";
 
 function AnimalParts() {
   const [photoPicked, setPhotoPicked] = useState("nessuna foto");
+  const [photoError, setPhotoError] = useState<string | undefined>(undefined);
   const [days, setDays] = useState<number[]>([1, 3, 5]);
   const [turn, setTurn] = useState<string[]>(["laura", "sofia", "marco"]);
   const [emptyTurn, setEmptyTurn] = useState<string[]>([]);
@@ -177,6 +179,20 @@ function AnimalParts() {
             photoSrc={WISHLIST_SAMPLE_PHOTO}
             onPick={() => {}}
             onRemove={() => {}}
+          />
+        </div>
+      </Example>
+      <Example caption="PhotoField · foto che la pagina non riesce a ridurre: l'errore arriva e l'anteprima torna com'era">
+        <div className="colonna" data-testid="campo-foto-errore">
+          <PhotoField
+            name="Biscotto"
+            color="zafferano"
+            error={photoError}
+            onPick={() => {
+              setPhotoError(undefined);
+              window.setTimeout(() => setPhotoError(PHOTO_REDUCE_ERROR), 600);
+            }}
+            onRemove={() => setPhotoError(undefined)}
           />
         </div>
       </Example>
@@ -269,7 +285,7 @@ function AnimalParts() {
           />
         </div>
       </Example>
-      <Example caption="RepeatField kind=deadline · Ogni … giorni con errore del numero (daysError), error, disabilitato">
+      <Example caption="RepeatField kind=deadline · Ogni … giorni con errore del numero (daysError), disabilitato">
         <div className="colonna" data-testid="si-ripete-giorni">
           <RepeatField
             kind="deadline"
@@ -280,13 +296,7 @@ function AnimalParts() {
             }}
             days={everyNDays}
             onDaysChange={setEveryNDays}
-            daysError="Scrivi un numero da 1 a 365."
-          />
-          <RepeatField
-            kind="deadline"
-            value="never"
-            onChange={() => {}}
-            error="Scegli ogni quanto si ripete."
+            daysError={REPEAT_DAYS_ERROR}
           />
           <RepeatField
             kind="deadline"

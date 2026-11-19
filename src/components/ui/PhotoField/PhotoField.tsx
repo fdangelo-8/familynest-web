@@ -32,7 +32,11 @@ export type PhotoFieldProps = {
   onRemove: () => void;
   /** The page is reducing the chosen photo: skeleton and button in loading */
   reducing?: boolean;
-  /** Error text from the page (for example the photo could not be reduced) */
+  /**
+   * Error text from the page (for example the photo could not be reduced).
+   * When it arrives the preview of the chosen file is dropped: the saved photo
+   * or the initial is shown again. The page clears it on the next `onPick`.
+   */
   error?: string;
   disabled?: boolean;
   className?: string;
@@ -65,6 +69,14 @@ export function PhotoField({
   // `undefined`: nothing chosen here; `null`: the photo was removed here.
   const [preview, setPreview] = useState<string | null | undefined>(undefined);
   const [typeError, setTypeError] = useState(false);
+
+  // The page could not use the chosen photo (`error` arrives): the preview
+  // goes back to what it was, the saved photo or the initial.
+  const [seenError, setSeenError] = useState(error);
+  if (error !== seenError) {
+    setSeenError(error);
+    if (error && typeof preview === "string") setPreview(undefined);
+  }
 
   const shown = preview === null ? undefined : (preview ?? photoSrc);
   const message = error ?? (typeError ? PHOTO_TYPE_ERROR : undefined);
