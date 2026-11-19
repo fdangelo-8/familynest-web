@@ -356,7 +356,7 @@ Esempio di calcolo, Funwa: 3×15 + 4×10 + 5×10 + 5×15 + 4×15 + 4×15 + 4×5 
 
 ### 12.3 Yado (70)
 
-**Rischi.** (1) In Italia «Yado» è il film del 1985: la SERP è sua. (2) yado.com è di un'azienda di monitoraggio di impianti elettrici: probabile marchio in classe 9 fuori dagli USA, non verificato. (3) .app, .family, .it ed .eu presi; .it ed .eu in vendita. (4) In polacco «jad» è il veleno. (5) La O finale e il film rendono l'assistente maschile, contro la regola della sezione 1.1.
+**Rischi.** (1) In Italia «Yado» è il film del 1985: la SERP è sua. (2) yado.com è di un'azienda di monitoraggio di impianti elettrici: un suo marchio in classe 9 nell'Unione è possibile, non verificato. (3) .app, .family, .it ed .eu presi; .it ed .eu in vendita. (4) In polacco «jad» è il veleno. (5) La O finale e il film fanno sentire l'assistente maschile, mentre la griglia chiede un assistente senza genere e senza identità umana.
 
 **Domini, se lo scegli comunque:** yado.me, yado.casa, heyyado.com, askyado.com, yadoapp.com; da trattare yado.it ed yado.eu.
 
