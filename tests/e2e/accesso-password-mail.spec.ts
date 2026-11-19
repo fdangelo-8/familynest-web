@@ -578,11 +578,13 @@ test.describe("[CI-stack] password dimenticata e nuova password", () => {
       // document is opened before the guard redirects, as the page is
       // streamed); after «link scaduto» only /oggi follows.
       // (the same address can be reported more than once: repeats are one)
-      const steps = visited.filter(
-        (url, index) =>
-          index === 0 ||
-          new URL(url).pathname !== new URL(visited[index - 1]).pathname,
-      );
+      const steps: string[] = [];
+      for (const url of visited) {
+        const last = steps.at(-1);
+        if (!last || new URL(last).pathname !== new URL(url).pathname) {
+          steps.push(url);
+        }
+      }
       const paths = steps.map((url) => new URL(url).pathname);
       const expired = paths.indexOf("/accesso/link-scaduto");
       expect(
