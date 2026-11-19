@@ -564,8 +564,55 @@ test.describe("[CI-stack] password dimenticata e nuova password", () => {
       extra.push(signedIn);
       await signInContext(signedIn, baseURL!, user);
       const normal = await signedIn.newPage();
+      // The addresses the page goes through are recorded from the start:
+      // «Link scaduto» sends a signed-in person on to the destination, so its
+      // address is only there for an instant and a poll on the URL can miss it.
+      const visited: string[] = [];
+      normal.on("framenavigated", (frame) => {
+        if (frame === normal.mainFrame()) visited.push(frame.url());
+      });
+      // The bodies of the documents answered for the new-password address are
+      // read too: the page may be opened, but its heading never sent.
+      const bodies: Array<Promise<string>> = [];
+      normal.on("response", (response) => {
+        if (
+          response.request().resourceType() === "document" &&
+          new URL(response.url()).pathname === "/accesso/nuova-password" &&
+          response.status() < 300
+        ) {
+          bodies.push(response.text().catch(() => ""));
+        }
+      });
       await normal.goto("/accesso/nuova-password");
-      await expect(normal).toHaveURL(/\/accesso\/link-scaduto\?tipo=password$/);
+      await expect(normal).toHaveURL(/\/oggi$/);
+      for (const body of await Promise.all(bodies)) {
+        expect(body).not.toContain("Scegli una nuova password");
+      }
+      // CA-27: the route goes through «link scaduto» and ends on /oggi. The
+      // address of the new-password page can be first in the list (the
+      // document is opened before the guard redirects, as the page is
+      // streamed); after «link scaduto» only /oggi follows.
+      // (the same address can be reported more than once: repeats are one)
+      const steps: string[] = [];
+      for (const url of visited) {
+        const last = steps.at(-1);
+        if (!last || new URL(last).pathname !== new URL(url).pathname) {
+          steps.push(url);
+        }
+      }
+      const paths = steps.map((url) => new URL(url).pathname);
+      const expired = paths.indexOf("/accesso/link-scaduto");
+      expect(
+        expired,
+        `indirizzi visitati: ${visited.join(" > ")}`,
+      ).toBeGreaterThan(-1);
+      expect(paths.slice(expired + 1)).toEqual(["/oggi"]);
+      expect(steps[expired]).toContain("tipo=password");
+      expect(
+        paths
+          .slice(0, expired)
+          .every((path) => path === "/accesso/nuova-password"),
+      ).toBe(true);
       // …and the session is untouched
       // (the page that redirected may still be finishing: retry the visit)
       await expect(async () => {
