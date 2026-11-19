@@ -166,6 +166,22 @@ function AnimalParts() {
           />
         </div>
       </Example>
+      <Example caption="Avatar photoSrc con un indirizzo non ammesso (javascript:, //sito): resta l'iniziale">
+        <div className={styles.riga} data-testid="avatar-foto-rifiutata">
+          <Avatar
+            name="Biscotto"
+            color="zafferano"
+            size="xl"
+            photoSrc="javascript:void(0)"
+          />
+          <Avatar
+            name="Miele"
+            color="cannella"
+            size="xl"
+            photoSrc="//esempio.test/foto.webp"
+          />
+        </div>
+      </Example>
       <Example caption="PhotoField · senza foto, con foto (photoSrc) e scelta qui sotto">
         <div className="colonna" data-testid="campo-foto">
           <PhotoField

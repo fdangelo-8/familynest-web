@@ -37,4 +37,14 @@ test.describe("safeImageSrc (#482)", () => {
   test("refuses a missing value", () => {
     expect(safeImageSrc(undefined)).toBeUndefined();
   });
+
+  test("avatar: javascript: and //host show the initial, no image", async ({
+    page,
+  }) => {
+    await page.goto("/design-system?pezzi-pagine=1");
+    const row = page.getByTestId("avatar-foto-rifiutata");
+    await expect(row.locator("img")).toHaveCount(0);
+    await expect(row.getByRole("img", { name: "Biscotto" })).toHaveText("B");
+    await expect(row.getByRole("img", { name: "Miele" })).toHaveText("M");
+  });
 });
