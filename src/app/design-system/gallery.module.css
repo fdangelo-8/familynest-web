@@ -38,6 +38,11 @@
   min-width: var(--space-0);
 }
 
+/* Esempio a tutta larghezza: occupa le due colonne della galleria */
+.ampio {
+  grid-column: 1 / -1;
+}
+
 .didascalia {
   font-family: var(--font-codice);
   font-size: var(--text-etichetta-size);

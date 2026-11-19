@@ -97,7 +97,7 @@ test("bottone rosso pieno al passaggio: bianco su rosso scuro >= 4,5:1", async (
 test("axe senza violazioni serious/critical su /accesso/mail con campo a riposo", async ({
   page,
 }) => {
-  await page.goto("/accesso/mail");
+  await page.goto("/accesso");
   const results = await new AxeBuilder({ page }).analyze();
   expect(
     results.violations.filter((v) =>

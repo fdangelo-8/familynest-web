@@ -76,7 +76,7 @@ async function loginThroughPage(
   password: string,
   done: () => Promise<void>,
 ) {
-  await page.goto("/accesso/mail");
+  await page.goto("/accesso");
   await submitMailForm(page, { mode: "Entra", email, password }, done);
 }
 
@@ -117,7 +117,7 @@ test.describe("[CI-stack] registrazione e conferma", () => {
     page.on("console", (message) => logs.push(message.text()));
     const origin = new URL(baseURL!).origin;
     try {
-      await page.goto("/accesso/mail");
+      await page.goto("/accesso");
       await submitMailForm(
         page,
         { mode: "Registrati", email: address, password: PASSWORD_OK },
@@ -181,7 +181,7 @@ test.describe("[CI-stack] registrazione e conferma", () => {
       },
     );
     try {
-      await page.goto("/accesso/mail");
+      await page.goto("/accesso");
       await submitMailForm(
         page,
         {
@@ -564,8 +564,55 @@ test.describe("[CI-stack] password dimenticata e nuova password", () => {
       extra.push(signedIn);
       await signInContext(signedIn, baseURL!, user);
       const normal = await signedIn.newPage();
+      // The addresses the page goes through are recorded from the start:
+      // «Link scaduto» sends a signed-in person on to the destination, so its
+      // address is only there for an instant and a poll on the URL can miss it.
+      const visited: string[] = [];
+      normal.on("framenavigated", (frame) => {
+        if (frame === normal.mainFrame()) visited.push(frame.url());
+      });
+      // The bodies of the documents answered for the new-password address are
+      // read too: the page may be opened, but its heading never sent.
+      const bodies: Array<Promise<string>> = [];
+      normal.on("response", (response) => {
+        if (
+          response.request().resourceType() === "document" &&
+          new URL(response.url()).pathname === "/accesso/nuova-password" &&
+          response.status() < 300
+        ) {
+          bodies.push(response.text().catch(() => ""));
+        }
+      });
       await normal.goto("/accesso/nuova-password");
-      await expect(normal).toHaveURL(/\/accesso\/link-scaduto\?tipo=password$/);
+      await expect(normal).toHaveURL(/\/oggi$/);
+      for (const body of await Promise.all(bodies)) {
+        expect(body).not.toContain("Scegli una nuova password");
+      }
+      // CA-27: the route goes through «link scaduto» and ends on /oggi. The
+      // address of the new-password page can be first in the list (the
+      // document is opened before the guard redirects, as the page is
+      // streamed); after «link scaduto» only /oggi follows.
+      // (the same address can be reported more than once: repeats are one)
+      const steps: string[] = [];
+      for (const url of visited) {
+        const last = steps.at(-1);
+        if (!last || new URL(last).pathname !== new URL(url).pathname) {
+          steps.push(url);
+        }
+      }
+      const paths = steps.map((url) => new URL(url).pathname);
+      const expired = paths.indexOf("/accesso/link-scaduto");
+      expect(
+        expired,
+        `indirizzi visitati: ${visited.join(" > ")}`,
+      ).toBeGreaterThan(-1);
+      expect(paths.slice(expired + 1)).toEqual(["/oggi"]);
+      expect(steps[expired]).toContain("tipo=password");
+      expect(
+        paths
+          .slice(0, expired)
+          .every((path) => path === "/accesso/nuova-password"),
+      ).toBe(true);
       // …and the session is untouched
       // (the page that redirected may still be finishing: retry the visit)
       await expect(async () => {
@@ -682,7 +729,7 @@ test.describe("[CI-utenti] invito", () => {
       page.on("request", (request) => urls.push(request.url()));
       page.on("framenavigated", (frame) => urls.push(frame.url()));
       await page.getByRole("link", { name: "Usa la mail" }).click();
-      await expect(page).toHaveURL(/\/accesso\/mail$/);
+      await expect(page).toHaveURL(/\/accesso$/);
       await submitMailForm(
         page,
         { mode: "Registrati", email: address, password: PASSWORD_OK },
@@ -741,6 +788,55 @@ test.describe("[CI-utenti] invito", () => {
       // CA-34: the invite token is in no Supabase request nor in the mail
       expect(callsText(calls)).not.toContain(invite.token);
       expect(`${mail?.html}\n${mail?.text}`).not.toContain(invite.token);
+    } finally {
+      await user.remove();
+    }
+  });
+});
+
+test.describe("[CI-stack] nuova password: chiusura delle altre sessioni", () => {
+  test("CA-38: con /auth/v1/logout che risponde 500 si resta sulla pagina con «Riprova», che ripete solo la chiusura", async ({
+    page,
+    baseURL,
+  }) => {
+    await needStack();
+    const user: PasswordUser = await createPasswordUser({ nest: true });
+    try {
+      const link = await recoveryLinkFor(page, user.email, baseURL!);
+      await page.route("**/auth/v1/logout*", (route) =>
+        route.fulfill({
+          status: 500,
+          contentType: "application/json",
+          body: "{}",
+        }),
+      );
+      await page.goto(await link());
+      await expect(page).toHaveURL(/\/accesso\/nuova-password$/);
+      const calls = recordAuth(page);
+      await untilHydrated(
+        async () => {
+          await passwordField(page, "Nuova password").fill(NEW_PASSWORD, {
+            timeout: 2000,
+          });
+          await submitButton(page).click({ timeout: 2000, noWaitAfter: true });
+        },
+        () =>
+          expect(
+            alertWith(page, /Non siamo riusciti a salvare la password/),
+          ).toBeVisible({ timeout: 5000 }),
+      );
+      await expect(page).toHaveURL(/\/accesso\/nuova-password$/);
+      await expect(page.getByText("Nuova password salvata.")).toHaveCount(0);
+      expect(callsTo(calls, "/user")).toHaveLength(1);
+
+      // The closing works now: «Riprova» repeats only that step.
+      await page.unroute("**/auth/v1/logout*");
+      const userCallsBefore = callsTo(calls, "/user").length;
+      const logoutBefore = callsTo(calls, "/logout").length;
+      await page.getByRole("button", { name: "Riprova" }).click();
+      await expect(page).toHaveURL(/\/oggi$/, { timeout: 15_000 });
+      expect(callsTo(calls, "/user")).toHaveLength(userCallsBefore);
+      expect(callsTo(calls, "/logout")).toHaveLength(logoutBefore + 1);
     } finally {
       await user.remove();
     }

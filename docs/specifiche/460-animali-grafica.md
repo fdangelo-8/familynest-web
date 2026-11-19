@@ -106,7 +106,7 @@ In modifica di una cosa salvata, se cambiano persone, ordine, giorni o modo, sop
 - Sotto l'elenco, «Aggiungi al turno»: `.gruppo-chip` di `.chip--persona` con gli adulti e i figli non ancora scelti, nell'ordine del Nest. Il tocco aggiunge in fondo. Mai animali.
 - Vuoto: niente elenco; sotto i chip l'aiuto «Tocca chi fa il turno, nell'ordine.»
 - A 6 persone: i chip restano visibili e disabilitati, aiuto «Al massimo 6 persone.»
-- Fuoco: dopo «Sposta su/giù» resta sullo stesso bottone nella nuova riga (al bordo passa all'altro bottone della riga); dopo «Togli» va al «Togli» della riga che prende il posto, altrimenti al primo chip. Un `VisuallyHidden` con `aria-live="polite"` dice «Laura ora è al posto 2.» o «Laura tolta dal turno.»
+- Fuoco: dopo «Sposta su/giù» resta sullo stesso bottone nella nuova riga (al bordo passa all'altro bottone della riga); dopo «Togli» va al «Togli» della riga che prende il posto, altrimenti al primo chip. Un `VisuallyHidden` con `aria-live="polite"` dice, con testi neutri (#482): «Laura entra nel turno al posto 3.», «Laura esce dal turno.», «Laura ora è al posto 2.»
 - Niente trascinamento in questa uscita: i bottoni bastano a tastiera, al tocco e con lo screen reader.
 
 ### B.3 Errori del foglio
@@ -216,7 +216,7 @@ Ogni sezione con un'azione di creazione ha in fondo un `Button` `.btn-tratteggia
 
 `Sheet` `tall`, piede come `ChildSheet` (computer: «Annulla» link a sinistra, «Salva le modifiche» a destra). Campi, in ordine:
 
-1. **Foto** (`PhotoField`): avatar `xl` o foto; a destra etichetta «Foto», aiuto sempre visibile «Solo l'animale, senza persone.», bottone `.btn-secondary.btn--piccolo` «Scegli una foto» (con foto: «Cambia la foto») e `btn-link btn-link--secondario` «Togli la foto». Il file si sceglie con un `input type="file"` nascosto, `accept="image/jpeg,image/png,image/webp"`.
+1. **Foto** (`PhotoField`), con l'ordine di ogni `.campo` (#482): sopra l'etichetta «Foto»; poi una riga con avatar `xl` o foto e, a destra, i bottoni; sotto, a tutta larghezza, l'aiuto sempre visibile «Solo l'animale, senza persone.» e l'eventuale errore. Bottoni: `.btn-secondary.btn--piccolo` «Scegli una foto» (con foto: «Cambia la foto») e `btn-link btn-link--secondario` «Togli la foto». Il file si sceglie con un `input type="file"` nascosto, `accept="image/jpeg,image/png,image/webp"`.
 2. **Nome**: testi di oggi (`MEMBER_NAME_*`).
 3. **Specie**: `SelectField` «Specie», voci «Non indicata», «Cane», «Gatto», «Altro».
 4. **Data**: `.campo` con etichetta «Data» e `SegmentedControl` `paper` «Nascita» · «Adozione» (dentro `.contenitore-selettore`); poi `SegmentedControl` `paper` «Il giorno» · «Solo l'anno» (`aria-label` «Quanto la sapete»); poi il campo: `DateField` «Giorno di nascita» / «Giorno di adozione» (`max` oggi), oppure `TextField` `inputMode="numeric"` «Anno di nascita» / «Anno di adozione». Aiuto sotto il campo: «Lasciala vuota se non la sapete.»

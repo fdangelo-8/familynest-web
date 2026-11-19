@@ -1,8 +1,7 @@
-import { MailScreen } from "@/components/accesso/MailScreen";
-import { redirectIfSignedIn } from "@/lib/auth/destination";
+import { redirect } from "next/navigation";
 
-export default async function AccessoMailPage() {
-  // Someone who is already signed in never sees the sign-in pages.
-  await redirectIfSignedIn();
-  return <MailScreen />;
+// The mail and password form lives in /accesso since #461: the old address
+// only sends there (a signed-in person is then sent on by that page).
+export default function AccessoMailPage() {
+  redirect("/accesso");
 }

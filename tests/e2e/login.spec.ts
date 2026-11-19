@@ -135,7 +135,7 @@ test.describe("pagina /accesso", () => {
     await page.goto("/accesso");
     await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-      /La casa,\s*in un posto solo\./,
+      "Entra in FamilyNest",
     );
     await expectAccessControls(page);
   });
@@ -150,20 +150,16 @@ test.describe("pagina /accesso", () => {
     await expectAccessControls(page);
   });
 
-  // #327 replaces the rule of #11 ("no password anywhere", true while the mail
-  // sign-in was a magic link): /accesso/mail now has the password field, and
-  // exactly one (a single form in the DOM). /accesso has none and does not
-  // speak of passwords; the expired-link screen speaks of it but has no field.
-  test("CA-3: il campo password è solo in /accesso/mail, e uno solo", async ({
+  // #461: the password field is on /accesso, exactly one (a single form in the
+  // DOM); the expired-link screen speaks of passwords but has no field.
+  test("CA-3: il campo password è solo in /accesso, e uno solo", async ({
     page,
   }) => {
     await page.goto("/accesso");
-    await expect(page.locator("input[type=password]")).toHaveCount(0);
-    const text = (await page.locator("main").innerText()).toLowerCase();
-    expect(text).not.toContain("password");
+    await expect(page.locator("input[type=password]")).toHaveCount(1);
     await page.goto("/accesso/link-scaduto");
     await expect(page.locator("input[type=password]")).toHaveCount(0);
-    await page.goto("/accesso/mail");
+    await page.goto("/accesso");
     await expect(page.locator("input[type=password]")).toHaveCount(1);
     await expect(page.locator("main form")).toHaveCount(1);
   });
@@ -198,7 +194,10 @@ async function expectAccessControls(page: Page) {
   await expect(
     page.getByRole("button", { name: "Continua con Google" }),
   ).toBeVisible();
-  await expect(page.getByRole("link", { name: "Usa la mail" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Usa la mail" })).toHaveCount(0);
+  await expect(page.locator('main form button[type="submit"]')).toHaveText(
+    "Entra",
+  );
   await expect(
     page
       .getByText(
@@ -373,7 +372,9 @@ test.describe("link via mail: ritorno", () => {
   for (const [url, tipo] of [
     ["/auth/confirm?token_hash=non-valido&type=magiclink", "conferma"],
     ["/auth/confirm", "conferma"],
-    ["/auth/confirm?token_hash=non-valido&type=recovery", "password"],
+    // The recovery link (#461) is answered by a page with a button: only the
+    // button (POST /auth/recupero) finds out that the token is not valid.
+    ["/auth/confirm?type=recovery", "password"],
   ] as const) {
     test(`CA-27: ${url} porta a /accesso/link-scaduto`, async ({ page }) => {
       await page.goto(url);
@@ -388,9 +389,9 @@ test.describe("link via mail: ritorno", () => {
 
   // #327: the screen depends on the kind of link; the main action changes.
   for (const [tipo, action, target] of [
-    ["conferma", "Entra con la mail", "/accesso/mail"],
+    ["conferma", "Entra con la password", "/accesso"],
     ["password", "Mandami un nuovo link", "/accesso/password-dimenticata"],
-    ["altro", "Entra con la mail", "/accesso/mail"],
+    ["altro", "Entra con la password", "/accesso"],
   ] as const) {
     test(`CA-28: link scaduto (tipo=${tipo}), le due uscite`, async ({
       page,
@@ -398,9 +399,17 @@ test.describe("link via mail: ritorno", () => {
       await page.goto(`/accesso/link-scaduto?tipo=${tipo}`);
       await page.getByRole("link", { name: action }).click();
       await expect(page).toHaveURL(new RegExp(`${target}$`));
+      // With the confirmation link the main action already goes to /accesso:
+      // there is no second link (#461).
       await page.goto(`/accesso/link-scaduto?tipo=${tipo}`);
-      await page.getByRole("link", { name: "Torna all'accesso" }).click();
-      await expect(page).toHaveURL(/\/accesso$/);
+      if (tipo === "password") {
+        await page.getByRole("link", { name: "Torna all'accesso" }).click();
+        await expect(page).toHaveURL(/\/accesso$/);
+      } else {
+        await expect(
+          page.getByRole("link", { name: "Torna all'accesso" }),
+        ).toHaveCount(0);
+      }
     });
   }
 });

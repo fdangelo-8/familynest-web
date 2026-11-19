@@ -44,7 +44,7 @@ test.describe("titolo della pagina", () => {
     page,
   }) => {
     await watchTitle(page);
-    await page.goto("/accesso/mail");
+    await page.goto("/accesso");
     await expect(page).toHaveTitle("FamilyNest · Accesso");
     await hydrated(page, "main form");
     // Two frames after the hydration, still no gap.
