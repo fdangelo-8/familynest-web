@@ -1,0 +1,38 @@
+Oggetto: Ricevuta: piano {{piano}}, {{mese_anno}}
+
+Ricevuta del pagamento
+
+Ciao {{nome}}, grazie. Questa è la ricevuta del piano {{piano}} per
+{{nome_casa}}.
+
+Piano: {{piano}}, {{frequenza}}
+Periodo: {{periodo}}
+Pagato il: {{data_pagamento}}
+Con: Carta che finisce con {{ultime_cifre}}
+Ricevuta numero: {{numero_ricevuta}}
+Di cui IVA: {{iva}}
+Totale: {{importo}}
+
+Scarica la ricevuta:
+{{link}}
+
+È un PDF. Il link vale {{scadenza_link}}; dopo, la ricevuta resta
+nell'app, alla voce Piano e pagamenti.
+
+Ti serve la fattura?
+
+Puoi chiederla da Piano e pagamenti, inserendo i tuoi dati: la ricevi
+per mail al posto di questa ricevuta.
+
+Il prossimo rinnovo
+
+{{data_rinnovo}}, {{importo}}. Puoi cambiare o annullare il piano quando
+vuoi: resta attivo fino alla fine del periodo pagato.
+
+Non riconosci questo pagamento?
+
+Rispondi a questa mail: controlliamo subito.
+
+--
+Ricevi questa mail a ogni pagamento. Partita IVA {{partita_iva}}.
+{{nome_prodotto}} · {{ragione_sociale}}, {{indirizzo_societa}}

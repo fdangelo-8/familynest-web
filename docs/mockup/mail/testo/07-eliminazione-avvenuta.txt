@@ -1,0 +1,24 @@
+Oggetto: Il tuo account è stato eliminato
+
+Il tuo account è stato eliminato
+
+Ciao {{nome}}, come avevi chiesto il {{data_richiesta}}, oggi abbiamo
+eliminato il tuo account.
+
+Che cosa abbiamo cancellato
+
+- Il tuo profilo, la mail, l'accesso, i tuoi impegni privati e i
+  calendari che avevi collegato.
+- {{che_cosa_resta_della_casa}}
+- Nelle cose che avevi fatto resta «un ex componente», senza il tuo
+  nome.
+
+Non l'avevi chiesto tu?
+
+I dati cancellati non si possono recuperare. Se pensi a un errore,
+rispondi a questa mail entro {{giorni_segnalazione}} giorni.
+
+--
+È l'ultima mail che ricevi da noi: questo indirizzo non è più nei nostri
+archivi, tranne quanto la legge ci chiede di conservare.
+{{nome_prodotto}} · {{ragione_sociale}}, {{indirizzo_societa}}
