@@ -1,4 +1,4 @@
-17/11/2026 · aggiornato il 19/11/2026 con i capitoli 10 (Nidly), 11 (Famnest), 12 (altri family organizer su Android) e 13 (FamBox)
+17/11/2026 · aggiornato il 19/11/2026 con i capitoli 10 (Nidly), 11 (Famnest), 12 (altri family organizer su Android) e 13 (FamBox), e con la regola di monitoraggio dei concorrenti piccoli decisa da Francesco
 
 Documento vivo: si aggiorna quando cambiano i concorrenti, i siti di Francesco o il calendario dei rilasci.
 
@@ -17,9 +17,62 @@ Preparato dallo stratega per Francesco. È la base del piano editoriale. Riparte
 7. **Siti e cross-selling:** familynest.me resta il sito con blog e pagine delle funzioni; l'app va su `app.familynest.me`. Le feste restano a PartyNest, l'organizzazione di casa a FamilyNest. Il ponte è il compleanno: l'avviso a 30 giorni di FamilyNest porta a PartyNest, la conferma del preventivo di PartyNest porta la festa nel calendario di casa. I dati passano solo con un tocco esplicito della famiglia.
 8. **Social:** prima Instagram e TikTok con micro creator di casa e organizzazione, poi Pinterest per liste e menu da stampare, Facebook per i nonni. I follower dei concorrenti non si leggono in automatico: un'ora di lavoro a mano (capitolo 5.4).
 9. **Nidly (aggiunto il 19/11/2026):** app americana per iPhone uscita il 09/03/2026, solo in inglese, con calendario, cose da fare, pasti, ricette e spesa. Rilascia una versione ogni 6 giorni circa e costa 2,99 € al mese o 22,99 € all'anno. In Italia ha 0 voti e non compare nelle ricerche dell'App Store. Oggi non è una minaccia per noi; lo diventa se la traducono o escono su Android. **Decisione di Francesco (19/11/2026): nessuna azione, solo monitoraggio ogni 3 mesi (prossimo controllo il 19/02/2027)** (capitolo 10).
-10. **Famnest (aggiunto il 19/11/2026):** app svedese e australiana con finanziatori, su Android e iPhone dal 2025, già in italiano. Ha calendario, faccende, liste, pasti, documenti, conti e AI; 15.849 installazioni Android, 1 solo voto in Italia. Costa 3,99 € al mese, 39,99 € all'anno o 99,99 € a vita. Dichiara un marchio FAMNEST registrato nel Regno Unito: è la ragione più forte per cambiare il nome FamilyNest (#472). Minaccia media. **Proposta, da decidere:** monitoraggio ogni 3 mesi come Nidly, con soglie di allerta più basse (capitolo 11).
-11. **Altri family organizer su Android (19/11/2026):** nessuna app nuova sopra le 100.000 installazioni fa il nostro mestiere. Da seguire: Homsy (Lettonia, 26.937 installazioni, 4,5, citata da ChatGPT), Flatastic (faccende e conti per coppie e coinquilini, 731.117), Family Tools (una web app pubblicata su Google Play) e Clantastic, un'app italiana uscita l'08/11/2026 con assistente vocale (capitolo 12).
+10. **Famnest (aggiunto il 19/11/2026):** app svedese e australiana con finanziatori, su Android e iPhone dal 2025, già in italiano. Ha calendario, faccende, liste, pasti, documenti, conti e AI; 15.849 installazioni Android, 1 solo voto in Italia. Costa 3,99 € al mese, 39,99 € all'anno o 99,99 € a vita. Dichiara un marchio FAMNEST registrato nel Regno Unito: è la ragione più forte per cambiare il nome FamilyNest (#472). Minaccia media. **Vale la regola di monitoraggio dei concorrenti piccoli (decisione di Francesco del 19/11/2026):** nessuna azione, controllo ogni 3 mesi; il dato sul marchio va all'agente legale-privacy (capitolo 11).
+11. **Altri family organizer su Android (19/11/2026):** nessuna app nuova sopra le 100.000 installazioni fa il nostro mestiere. Da seguire: Homsy (Lettonia, 26.937 installazioni, 4,5, citata da ChatGPT), Flatastic (faccende e conti per coppie e coinquilini, 731.117), Family Tools (una web app pubblicata su Google Play) e Clantastic, un'app italiana uscita l'08/11/2026 con assistente vocale (capitolo 12). Family Tools, Clantastic e le altre piccole vanno sotto la regola di monitoraggio; Homsy e Flatastic no (sezione seguente).
 12. **FamBox (aggiunto il 19/11/2026):** web app estone in inglese con un assistente su Telegram, da 19 € al mese, senza app negli store. Rischio basso; utile il modello di consenso per persona per la nostra idea dell'assistente su WhatsApp (capitolo 13).
+
+---
+
+## Regola di monitoraggio dei concorrenti piccoli
+
+**Decisione di Francesco (19/11/2026):** «Per tutti i concorrenti nati da poco o con poco traffico e pochi utenti: nessuna azione di prodotto o marketing in risposta, solo monitoraggio con un controllo ogni 3 mesi (prossimo il 19/02/2027). Si avvisa Francesco prima solo se scatta una soglia.»
+
+**Chi rientra.** Le soglie sono una mia proposta, scelta guardando i numeri di questo documento al 19/11/2026. Un concorrente rientra se vale almeno una delle prime due condizioni e anche la terza:
+
+1. **Nato da poco:** uscito negli store o sul web da meno di 18 mesi e con meno di 100.000 installazioni Android.
+2. **Piccolo:** meno di 50.000 installazioni Android e meno di 500 voti nel mondo. Per chi non è su Android, meno di 200 voti sull'App Store; per chi è solo sul web, nessun dato pubblico sugli utenti e nessuna recensione trovata.
+3. **Assente in Italia:** meno di 20 voti in Italia su ciascuno store, nessuna pubblicità in Italia nelle librerie pubbliche degli annunci e nessuna citazione nelle risposte delle AI del progetto familynest.me di Ubersuggest.
+
+**Quando si avvisa Francesco prima del controllo.** Basta uno di questi segnali, visto da chiunque nel team:
+
+| Segnale                       | Soglia                                                                                                                                    |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Voti in Italia                | più di 20 su uno dei due store                                                                                                            |
+| Voti in Europa                | più di 100 sommando i paesi europei                                                                                                       |
+| Pubblicità                    | almeno un annuncio rivolto all'Italia nella Meta Ad Library o nel Google Ads Transparency Center                                          |
+| Nuova piattaforma             | una versione web, Android o iPhone che prima non c'era                                                                                    |
+| Lingua                        | scheda o app tradotta in italiano, per chi oggi non lo è                                                                                  |
+| Ricerche negli store italiani | tra i primi 5 risultati per «calendario condiviso» o «calendario famiglia»; il 19/11/2026 nessuno dei monitorati era tra i primi 3 (11.4) |
+| AI                            | citato nelle risposte delle AI del progetto familynest.me                                                                                 |
+| Marchio                       | un marchio registrato o depositato nella UE o in Italia con il nome del concorrente o vicino al nostro nome nuovo (#472)                  |
+| Soldi                         | una raccolta fondi annunciata di almeno 1 milione di euro (soglia mia, da confermare con Francesco)                                       |
+| Crescita                      | installazioni Android raddoppiate tra due controlli, oppure oltre 50.000 per chi oggi è sotto                                             |
+
+**Chi fa il controllo e come.** Lo stratega, ogni 3 mesi, con il prossimo controllo il 19/02/2027. Circa 30 minuti per ciascun concorrente principale della tabella e circa 10 minuti per gli altri, leggendo solo scheda dello store, voti in Italia e librerie degli annunci (stime mie): in tutto circa 4 ore. L'esito va in questo documento, aggiornando le date della tabella. Chi supera una soglia esce dalla regola e torna a Francesco con un'analisi; chi chiude o resta fermo per più di un anno si toglie dalla tabella.
+
+**Concorrenti sotto monitoraggio** (dati del 19/11/2026, capitoli 10–13)
+
+| Concorrente                                                     | Perché rientra                                                        | Controllo             | Ultimo controllo | Prossimo controllo |
+| --------------------------------------------------------------- | --------------------------------------------------------------------- | --------------------- | ---------------- | ------------------ |
+| Nidly (capitolo 10)                                             | uscita il 09/03/2026; solo iPhone, 10 voti, 0 in Italia               | principale (30 min)   | 19/11/2026       | 19/02/2027         |
+| Famnest (capitolo 11)                                           | sull'App Store dal 29/09/2025; 15.849 installazioni, 1 voto in Italia | principale (30 min)   | 19/11/2026       | 19/02/2027         |
+| Clantastic (12.4)                                               | uscita l'08/11/2026; 23 installazioni, nessun voto                    | principale (30 min)   | 19/11/2026       | 19/02/2027         |
+| Family Tools (12.3)                                             | 30.748 installazioni, 170 voti                                        | principale (30 min)   | 19/11/2026       | 19/02/2027         |
+| FamBox (capitolo 13)                                            | beta da ottobre 2026; solo web, nessun utente o recensione pubblica   | principale (30 min)   | 19/11/2026       | 19/02/2027         |
+| FamilyLog                                                       | 27.832 installazioni, voti non mostrati                               | rapido (10 min)       | 19/11/2026       | 19/02/2027         |
+| Our Days                                                        | 21.918 installazioni, 204 voti                                        | rapido (10 min)       | 19/11/2026       | 19/02/2027         |
+| Monetoni                                                        | 20.547 installazioni, 196 voti                                        | rapido (10 min)       | 19/11/2026       | 19/02/2027         |
+| Octave                                                          | 17.713 installazioni, voti non mostrati                               | rapido (10 min)       | 19/11/2026       | 19/02/2027         |
+| If Then There (Wenn Dann Da)                                    | uscita il 31/05/2026; 9.422 installazioni                             | rapido (10 min)       | 19/11/2026       | 19/02/2027         |
+| Family Cockpit                                                  | 6.207 installazioni                                                   | rapido (10 min)       | 19/11/2026       | 19/02/2027         |
+| MomPlan                                                         | uscita il 19/04/2026; 4.823 installazioni                             | rapido (10 min)       | 19/11/2026       | 19/02/2027         |
+| Le 23 app minori del capitolo 12 (sotto le 5.000 installazioni) | tutte sotto le 5.000 installazioni; la più votata ne ha 66 (Fam+)     | un solo giro (30 min) | 19/11/2026       | 19/02/2027         |
+
+**Chi resta fuori, e perché.**
+
+- **Homsy:** è uscita il 02/01/2026 e ha 26.937 installazioni, ma ha già 935 voti ed è citata da ChatGPT nel progetto familynest.me [53]. Supera due soglie oggi, quindi non la metto sotto la regola: la segnalo a Francesco come concorrente da seguire con un'analisi completa (capitolo 12.1). Decide lui.
+- **Flatastic:** su Google Play dal 2015, 731.117 installazioni e 9.242 voti. Non è né nuova né piccola; resta tra i concorrenti già noti, con rischio medio solo su faccende e conti divisi (12.2).
+- **PlanPop, FamiLami, Family Organizer di Sunflowr, Myfamiliz, Family Planner & Organizer, Cubbily:** tra 52.000 e 145.000 installazioni, quindi sopra la soglia dei piccoli. Il rischio è basso e non serve un'azione; si ricontrollano quando si aggiorna `concorrenti.md`.
 
 ---
 
@@ -455,7 +508,7 @@ Analisi chiesta da Francesco il 19/11/2026. Dati raccolti il 19/11/2026 dalla sc
 - **Cosa fa:** un'app per iPhone e iPad con agenda del giorno, calendario condiviso, cose da fare con punti, pasti della settimana, ricette e spesa per reparto, più un assistente AI. In tutto è molto simile alla nostra mappa dopo il lancio.
 - **Quanto pesa oggi:** 10 voti negli USA (media 5,0), 0 in Italia e negli altri 8 paesi controllati. In Italia non compare nelle prime 170–190 app per nessuna delle ricerche provate.
 - **Per noi:** minaccia bassa oggi, media se esce in italiano o su Android. È il segnale che piccoli team con l'AI costruiscono «calendario + pasti + spesa» in pochi mesi: la funzione da sola non ci distingue, l'italiano, il browser e la privacy sì.
-- **Decisione di Francesco (19/11/2026): nessuna azione, solo monitoraggio ogni 3 mesi (prossimo controllo il 19/02/2027).** Nidly non è un concorrente da rincorrere: nessuna modifica di prodotto o di marketing in risposta.
+- **Decisione di Francesco (19/11/2026): nessuna azione, solo monitoraggio ogni 3 mesi (prossimo controllo il 19/02/2027).** Nidly non è un concorrente da rincorrere: nessuna modifica di prodotto o di marketing in risposta. Vale la regola di monitoraggio dei concorrenti piccoli (in testa al documento).
 
 ### 10.2 Chi è
 
@@ -598,7 +651,7 @@ Nessun video, nessuna schermata dell'assistente AI, nessuna in italiano.
 2. Nessuno dei nomi oggi in gara somiglia a Nidly per suono o scrittura. Ci sarebbero andati vicino Nolia (fase 1: N iniziale, «-lia» simile a «-ly») e Nivu (fase 5, già scartato). Per la scelta attuale l'impatto è nullo.
 3. Rischio di marchio per noi: nessuno, perché non useremo «Nid-», «Nest» o «Nido».
 
-Nessuna azione decisa (vedi 10.7); lo spunto sui nomi è nella riga «Spunti, non decisi».
+Nessuna azione: vale la regola di monitoraggio (decisione di Francesco del 19/11/2026, vedi 10.7). Lo spunto sui nomi è nella riga «Spunti, non decisi».
 
 ### 10.6 Minacce e opportunità
 
@@ -617,7 +670,7 @@ Nessuna azione decisa (vedi 10.7); lo spunto sui nomi è nella riga «Spunti, no
 - Scadenze della casa, profili dei figli e lista desideri con la pagina pubblica per i nonni.
 - Fiducia: un responsabile identificabile nell'UE, informativa privacy vera (#147), assistenza in italiano.
 
-**Cosa imparare**
+**Cosa imparare** (spunti, non decisi: vale la regola di monitoraggio)
 
 - L'Agenda mette nello stesso schermo impegni, cose da fare e pasti: è la forma più chiara della promessa «tutto in un posto». La nostra Oggi la avrà quando arriva «Stasera si mangia…» (K5).
 - La spesa divisa per reparto è la funzione che gli utenti citano nelle recensioni [49].
@@ -634,7 +687,7 @@ Nessuna azione decisa (vedi 10.7); lo spunto sui nomi è nella riga «Spunti, no
 
 **Decisione di Francesco (19/11/2026): nessuna azione, solo monitoraggio ogni 3 mesi (prossimo controllo il 19/02/2027).** Nidly non è considerato un concorrente da rincorrere: nessuna modifica di prodotto, prezzo o marketing in risposta.
 
-**Monitoraggio.** Il controllo dura circa 30 minuti (stima) e lo fa lo stratega. I segnali che riportano Nidly all'attenzione di Francesco sono: scheda in italiano, app su Google Play, più di 100 voti in Europa, prime pubblicità nella Meta Ad Library.
+**Monitoraggio.** Vale la regola di monitoraggio dei concorrenti piccoli (decisione di Francesco del 19/11/2026, sezione in testa al documento): controllo dello stratega di circa 30 minuti (stima). Le soglie sono quelle della regola; per Nidly le più probabili sono la scheda in italiano, l'app su Google Play, più di 100 voti in Europa e le prime pubblicità in Italia.
 
 **Spunti, non decisi:** spesa per reparto (C8) con categorie in italiano; prezzo di Plus non legato a quello di Nidly; frase di confronto con le app straniere sulla pagina «FamilyNest in italiano»; parole italiane e una promessa per schermata nella scheda degli store (#397); «Nidly» e «Nellio» tra i nomi da evitare nella griglia del nome.
 
@@ -650,7 +703,7 @@ Analisi chiesta da Francesco il 19/11/2026. Dati raccolti il 19/11/2026 dalle sc
 - **Cosa fa:** calendario condiviso, cose da fare, faccende, liste, pasti e ricette, abbonamenti e spese, documenti, note sulla salute, animali, riepilogo del giorno e della settimana, widget, AI. È un «tutto in uno» come il nostro.
 - **Quanto pesa oggi:** 15.849 installazioni su Android (dato di Google nella pagina), 79 voti su Google Play (media 4,5) e 99 sull'App Store nei 9 paesi controllati. In Italia 1 voto sull'App Store e nessuno visibile su Google Play.
 - **Per noi:** è il concorrente straniero più vicino visto finora: è già in italiano su iPhone e Android, ha un nome quasi uguale al nostro di oggi e un marchio registrato nel Regno Unito. Minaccia media; sul nome conferma che FamilyNest va cambiato (#472).
-- **Proposta (da decidere da Francesco):** come per Nidly, nessuna azione di prodotto o di marketing in risposta, monitoraggio ogni 3 mesi, ma con soglie di allerta più basse (capitolo 11.7).
+- **Decisione di Francesco (19/11/2026):** vale la regola di monitoraggio dei concorrenti piccoli. Nessuna azione di prodotto o di marketing in risposta, controllo ogni 3 mesi (prossimo il 19/02/2027). Il dato sul marchio FAMNEST nel Regno Unito va all'agente legale-privacy (capitolo 11.7).
 
 ### 11.2 Chi è
 
@@ -828,7 +881,7 @@ Temi delle recensioni lette (3 su Google Play, 9 sull'App Store USA) [55], [60]:
 - Calendari collegati con anche Outlook.
 - Il mercato italiano: loro hanno 1 voto in Italia, titolo e sottotitolo italiani deboli e nessun contenuto in italiano fuori dagli store.
 
-**Cosa imparare**
+**Cosa imparare** (spunti, non decisi: vale la regola di monitoraggio)
 
 - **Un abbonamento per famiglia e un'offerta a vita.** Confermano la nostra scelta per Nest (`prezzo-per-nest.md`). Il «a vita» a 99,99 € è un'idea da valutare quando ci sarà Plus, non prima.
 - **Il riepilogo della settimana:** base gratis, versione scritta dall'AI a pagamento. È la divisione che la mappa consiglia per G18 e A5.
@@ -843,14 +896,15 @@ Temi delle recensioni lette (3 su Google Play, 9 sull'App Store USA) [55], [60]:
 - Note sulla salute, allergie e farmaci: dati sanitari, esclusi per decisione (D1).
 - Mettere i calendari collegati solo a pagamento senza dirlo prima: per noi la decisione su G13 resta aperta e va presa prima del lancio.
 
-### 11.7 Proposta di monitoraggio (da decidere da Francesco)
+### 11.7 Decisione
 
-Per Nidly Francesco ha deciso «nessuna azione, solo monitoraggio ogni 3 mesi». Per Famnest propongo la stessa regola, con due differenze, perché la minaccia è più alta:
+**Decisione di Francesco (19/11/2026): vale la regola di monitoraggio dei concorrenti piccoli** (sezione in testa al documento). Famnest rientra perché è sull'App Store da 14 mesi, ha 15.849 installazioni Android e 1 voto in Italia. Nessuna modifica di prodotto, prezzo o marketing in risposta.
 
-1. **Stesso controllo, stessa data:** ogni 3 mesi, prossimo il 19/02/2027 insieme a Nidly; circa 30 minuti in più (stima).
-2. **Soglie più basse per avvisare Francesco prima del controllo:** più di 20 voti in Italia su uno dei due store; pubblicità in Italia nella Meta Ad Library; una versione web; un sottotitolo o titolo italiano con «calendario» o «agenda»; citazioni nelle risposte delle AI del progetto familynest.me; un marchio FAMNEST nella UE.
+**Monitoraggio.** Controllo dello stratega ogni 3 mesi, prossimo il 19/02/2027 insieme a Nidly, circa 30 minuti (stima). Le soglie sono quelle della regola. Per Famnest le più probabili sono: più di 20 voti in Italia, pubblicità in Italia, una versione web, un marchio FAMNEST nella UE, una nuova raccolta fondi. A queste aggiungo un segnale solo suo: un titolo o sottotitolo italiano con «calendario» o «agenda».
 
-Nessuna modifica di prodotto o di marketing in risposta. L'unica cosa che suggerisco di fare subito è informativa: portare il marchio britannico dichiarato da Famnest al legale, come dato in più per #472. La decisione resta a Francesco.
+**Marchio.** Il dato sul marchio FAMNEST registrato nel Regno Unito (UK00004259820, dichiarato da Famnest e non verificato, 11.5) va passato all'agente legale-privacy, come elemento per il nome nuovo (#472) e per i marchi «Nest» (`docs/legale/marchio.md`). È un passaggio di informazione, non una risposta a Famnest.
+
+**Spunti, non decisi:** offerta «a vita» da valutare quando ci sarà Plus; riepilogo della settimana con base gratis e versione AI a pagamento (G18, A5); risposta a tutte le recensioni entro uno o due giorni; il caregiver dell'anziano come pubblico (P8, #392, con la skill `privacy-e-dati-minori`); «Fam-» tra i prefissi da evitare nella griglia del nome.
 
 ---
 
@@ -889,6 +943,8 @@ Richiesta di Francesco del 19/11/2026: partendo da Famnest, le altre app di orga
 3. Tutte le schede si leggono in italiano, ma nessuna delle app nuove con più di 1.000 installazioni è italiana. L'unica italiana trovata, Clantastic, è uscita l'08/11/2026.
 4. Le app con il voto basso (2,4 e 2,8) hanno titoli generici («Family Planner & Organizer», «Family Organizer»): prendono le ricerche, poi deludono.
 
+**Decisione.** Per le app piccole o nate da poco di questo capitolo vale la regola di monitoraggio dei concorrenti piccoli (decisione di Francesco del 19/11/2026, in testa al documento): nessuna azione, controllo ogni 3 mesi. Sono sotto monitoraggio Family Tools, Clantastic, FamilyLog, Our Days, Monetoni, Octave, If Then There, Family Cockpit, MomPlan e le 23 app minori. Homsy e Flatastic non rientrano (motivo nella sezione in testa). Quello che le mini-schede dicono in «Cosa ci insegna» sono spunti, non decisi.
+
 ### 12.1 Homsy
 
 | Voce            | Dato                                                                                                                                                                                                                                                                                                                                                                                                                                       |
@@ -923,15 +979,15 @@ Fonti: [70].
 
 ### 12.3 Family Tools
 
-| Voce            | Dato                                                                                                                                                                                                                        |
-| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Chi             | Zerin Technologies LLC, Utah (USA); su Google Play dal 10/06/2020, ultimo aggiornamento 18/11/2025                                                                                                                          |
-| Installazioni   | 30.748; 4,1 con 170 voti                                                                                                                                                                                                    |
-| Piattaforma     | il pacchetto si chiama `app.familytools.twa`: è una web app «impacchettata» per Google Play (Trusted Web Activity). Lettura: dal nome; non verificato dentro l'app                                                          |
-| Prezzo          | gratis e Premium; acquisti nell'app da 2,49 a 24,99 $; sul sito un piano da 2,50 $ (periodo non indicato) [71]                                                                                                              |
-| Funzioni        | faccende, compiti e cose da fare; calendario con Google; liste con sezioni (anche per reparto); piani per feste e viaggi; pasti e ricette con spesa; premi per i figli; account dei figli senza email sullo stesso telefono |
-| Cosa ci insegna | una web app può stare su Google Play e raccogliere voti come un'app nativa. È la strada più corta per X5 (#397) partendo dall'app installabile dal browser (X3, #148). Da verificare con il team tecnico                    |
-| Rischio per noi | **basso**: solo inglese dentro l'app (non verificato), fermo da un anno                                                                                                                                                     |
+| Voce            | Dato                                                                                                                                                                                                                         |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Chi             | Zerin Technologies LLC, Utah (USA); su Google Play dal 10/06/2020, ultimo aggiornamento 18/11/2025                                                                                                                           |
+| Installazioni   | 30.748; 4,1 con 170 voti                                                                                                                                                                                                     |
+| Piattaforma     | il pacchetto si chiama `app.familytools.twa`: è una web app «impacchettata» per Google Play (Trusted Web Activity). Lettura: dal nome; non verificato dentro l'app                                                           |
+| Prezzo          | gratis e Premium; acquisti nell'app da 2,49 a 24,99 $; sul sito un piano da 2,50 $ (periodo non indicato) [71]                                                                                                               |
+| Funzioni        | faccende, compiti e cose da fare; calendario con Google; liste con sezioni (anche per reparto); piani per feste e viaggi; pasti e ricette con spesa; premi per i figli; account dei figli senza email sullo stesso telefono  |
+| Cosa ci insegna | una web app può stare su Google Play e raccogliere voti come un'app nativa. È la strada più corta per X5 (#397) partendo dall'app installabile dal browser (X3, #148). Spunto, non deciso: da verificare con il team tecnico |
+| Rischio per noi | **basso**: solo inglese dentro l'app (non verificato), fermo da un anno                                                                                                                                                      |
 
 Fonti: [70], [71].
 
@@ -946,7 +1002,7 @@ Fonti: [70], [71].
 | Funzioni        | calendario con ricorrenze ed eccezioni, import da file .ics; assistente vocale («nuoto ogni sabato alle 9»), che prepara bozze da confermare (3 prove gratis); spesa in tempo reale; faccende a turno con stelle della settimana per ognuno, figli compresi; pasti, ricettario e spesa dalla settimana; spese, budget, «chi deve a chi», bollette; profili dei figli senza email con un codice; nel Premium documenti (anche carte d'identità) con 5 GB, «famiglie collegate» con i nonni, fino a 30 membri; dati in Europa |
 | Posizionamento  | «l'app che tiene insieme la tua famiglia»; l'assistente vocale in prima riga                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | Cosa ci insegna | la nostra «frase che diventa impegno» (G2) la sta facendo anche un italiano, a voce e con conferma. Anche lui mette le stelline dei figli una accanto all'altra (da noi scartato, F8) e conserva carte d'identità (da noi bloccante, D1)                                                                                                                                                                                                                                                                                    |
-| Rischio per noi | **basso oggi**: 23 installazioni e pubblicità nel gratuito. Da seguire perché parla italiano e ha la nostra stessa lista di funzioni                                                                                                                                                                                                                                                                                                                                                                                        |
+| Rischio per noi | **basso oggi**: 23 installazioni e pubblicità nel gratuito. Sotto la regola di monitoraggio, perché parla italiano e ha la nostra stessa lista di funzioni                                                                                                                                                                                                                                                                                                                                                                  |
 
 Fonti: [70].
 
@@ -978,6 +1034,8 @@ Segnalato da Francesco il 19/11/2026. Non era nel documento. Dati letti il 19/11
 - I punti delle faccende verso un obiettivo del bambino sono una meccanica da verificare con la skill `privacy-e-dati-minori` (F7, #389).
 
 **Rischio per noi: basso.** Costa 19 € al mese, quasi cinque volte il nostro Plus proposto (3,99 €); è solo in inglese; non ha app negli store e non si vede pubblico. Il nome «FamBox» conferma che «Fam-» è affollato (capitolo 11.5).
+
+**Decisione.** Vale la regola di monitoraggio dei concorrenti piccoli (decisione di Francesco del 19/11/2026, in testa al documento): nessuna azione di prodotto o di marketing, controllo ogni 3 mesi (prossimo il 19/02/2027). Per FamBox le soglie più probabili sono un'app negli store, la versione in italiano e le prime pubblicità in Italia. I punti di «Cosa ci insegna» sono spunti, non decisi.
 
 ---
 
