@@ -115,7 +115,7 @@ Tabella completa in `docs/mockup/design-system.md` §2. Coppie da ricordare:
 
 - Lucide `lucide-static` 0.460.0, a tratto: `stroke: currentColor`, `fill: none`, `stroke-width: var(--border-medio)`, estremità e giunzioni arrotondate.
 - Taglie: 16 px `--size-icona-s` (`.icona--s`), 20 px `--size-icona-m` (`.icona`, predefinita), 24 px `--size-icona-l` (`.icona--l`).
-- Nell'app: un unico sprite `<svg class="sprite-icone" aria-hidden="true">` nel layout radice, con i `<symbol id="i-nome" viewBox="0 0 24 24">` copiati **identici** dagli sprite dei mockup: 79 icone (elenco in `design-system.md` §6, senza `stethoscope`). Nessun pacchetto nuovo. Il componente `Icon` scrive `<svg class="icona" aria-hidden="true"><use href="#i-nome"/></svg>`.
+- Nell'app: un unico sprite `<svg class="sprite-icone" aria-hidden="true">` nel layout radice, con i `<symbol id="i-nome" viewBox="0 0 24 24">` copiati **identici** dagli sprite dei mockup: 80 icone (elenco in `design-system.md` §6, senza `stethoscope`). Nessun pacchetto nuovo. Il componente `Icon` scrive `<svg class="icona" aria-hidden="true"><use href="#i-nome"/></svg>`.
 - Icona decorativa: sempre `aria-hidden="true"`. Bottone con sola icona: `aria-label` scritto come azione.
 - I calendari esterni non usano loghi originali: `.logo-marchio` (iniziale sul colore del marchio).
 

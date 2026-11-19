@@ -23,6 +23,15 @@ import { ColorChoice } from "@/components/ui/ColorChoice/ColorChoice";
 import { IconButton } from "@/components/ui/IconButton/IconButton";
 import { List, ListRow } from "@/components/ui/List/List";
 import { PasswordField } from "@/components/ui/PasswordField/PasswordField";
+import { PhotoField } from "@/components/ui/PhotoField/PhotoField";
+import { RepeatField } from "@/components/ui/RepeatField/RepeatField";
+import {
+  TurnPeople,
+  type TurnPerson,
+} from "@/components/ui/TurnPeople/TurnPeople";
+import { WeekdayPicker } from "@/components/ui/WeekdayPicker/WeekdayPicker";
+import { PHOTO_REDUCE_ERROR } from "@/lib/photo-field-texts";
+import { REPEAT_DAYS_ERROR } from "@/lib/repeat-options";
 import { PageError } from "@/components/ui/PageError/PageError";
 import { QuickAddField } from "@/components/ui/QuickAddField/QuickAddField";
 import { SectionSwitcher } from "@/components/ui/SegmentedControl/SectionSwitcher";
@@ -94,6 +103,243 @@ function useQueryFlag(name: string): boolean {
   );
 }
 
+// #482 (for #460): the pieces of the animals. A person can take a turn, a pet
+// cannot, so the turn list below is made of people only. Shown only with
+// ?pezzi-pagine=1, in a section of its own.
+const TURN_SAMPLE_PEOPLE: readonly TurnPerson[] = [
+  { id: "marco", name: "Marco", color: "cobalto" },
+  { id: "laura", name: "Laura", color: "glicine" },
+  { id: "sofia", name: "Sofia", color: "salvia" },
+  { id: "tommaso", name: "Tommaso", color: "pomodoro" },
+  { id: "rita", name: "Rita", color: "lampone" },
+  { id: "paolo", name: "Paolo", color: "ceruleo" },
+  { id: "giulia", name: "Giulia", color: "peonia" },
+];
+
+// A picture that cannot be opened, as a data address: no request is made.
+const BROKEN_PHOTO = "data:image/webp;base64,AAAA";
+
+// A small WebP picture (2:1) as a data address, like the copy of the server.
+const ANIMAL_SAMPLE_PHOTO =
+  "data:image/webp;base64,UklGRkIAAABXRUJQVlA4IDYAAAAQAwCdASooABQAPtFmrFEoJaQipWgBABoJZwAAKa1mnwAA/u69n/qqnr8bv90n6nuMeQEiAAA=";
+
+function AnimalParts() {
+  const [photoPicked, setPhotoPicked] = useState("nessuna foto");
+  const [photoError, setPhotoError] = useState<string | undefined>(undefined);
+  const [days, setDays] = useState<number[]>([1, 3, 5]);
+  const [turn, setTurn] = useState<string[]>(["laura", "sofia", "marco"]);
+  const [emptyTurn, setEmptyTurn] = useState<string[]>([]);
+  const [repeat, setRepeat] = useState("monthly");
+  const [repeatDays, setRepeatDays] = useState("");
+  const [everyN, setEveryN] = useState("every-n-days");
+  const [everyNDays, setEveryNDays] = useState("400");
+  const [todoRepeat, setTodoRepeat] = useState("chosen-days");
+  return (
+    <Section id="pezzi-animali" title="Animali (#460)">
+      <Example caption="Avatar photoSrc e photoAlt (xl) · foto che non si carica · photoSrc a 24 px">
+        <div className={styles.riga} data-testid="avatar-foto">
+          <Avatar
+            name="Biscotto"
+            color="zafferano"
+            size="xl"
+            photoSrc={ANIMAL_SAMPLE_PHOTO}
+            photoAlt="Foto di Biscotto"
+          />
+          <Avatar
+            name="Biscotto"
+            color="zafferano"
+            size="xl"
+            photoSrc={ANIMAL_SAMPLE_PHOTO}
+            nameShown
+          />
+          <Avatar
+            name="Miele"
+            color="cannella"
+            size="xl"
+            photoSrc={BROKEN_PHOTO}
+          />
+          <Avatar
+            name="Biscotto"
+            color="zafferano"
+            size="s"
+            photoSrc={ANIMAL_SAMPLE_PHOTO}
+          />
+        </div>
+      </Example>
+      <Example caption="Avatar photoSrc con un indirizzo non ammesso (javascript:, //sito): resta l'iniziale">
+        <div className={styles.riga} data-testid="avatar-foto-rifiutata">
+          <Avatar
+            name="Biscotto"
+            color="zafferano"
+            size="xl"
+            photoSrc="javascript:void(0)"
+          />
+          <Avatar
+            name="Miele"
+            color="cannella"
+            size="xl"
+            photoSrc="//esempio.test/foto.webp"
+          />
+        </div>
+      </Example>
+      <Example caption="PhotoField · senza foto, con foto (photoSrc) e scelta qui sotto">
+        <div className="colonna" data-testid="campo-foto">
+          <PhotoField
+            name="Biscotto"
+            color="zafferano"
+            onPick={(file) => setPhotoPicked(file.name)}
+            onRemove={() => setPhotoPicked("nessuna foto")}
+          />
+          <p className="t-nota t-secondario" role="status">
+            Scelta: {photoPicked}
+          </p>
+          <PhotoField
+            name="Biscotto"
+            color="zafferano"
+            photoSrc={ANIMAL_SAMPLE_PHOTO}
+            onPick={() => {}}
+            onRemove={() => {}}
+          />
+        </div>
+      </Example>
+      <Example caption="PhotoField · foto che la pagina non riesce a ridurre: l'errore arriva e l'anteprima torna com'era">
+        <div className="colonna" data-testid="campo-foto-errore">
+          <PhotoField
+            name="Biscotto"
+            color="zafferano"
+            error={photoError}
+            onPick={() => {
+              setPhotoError(undefined);
+              window.setTimeout(() => setPhotoError(PHOTO_REDUCE_ERROR), 600);
+            }}
+            onRemove={() => setPhotoError(undefined)}
+          />
+        </div>
+      </Example>
+      <Example caption="PhotoField · in riduzione (reducing), errore (error), disabilitato (disabled)">
+        <div className="colonna" data-testid="campo-foto-stati">
+          <PhotoField
+            name="Biscotto"
+            color="zafferano"
+            reducing
+            onPick={() => {}}
+            onRemove={() => {}}
+          />
+          <PhotoField
+            name="Biscotto"
+            color="zafferano"
+            error={PHOTO_REDUCE_ERROR}
+            onPick={() => {}}
+            onRemove={() => {}}
+          />
+          <PhotoField
+            name="Biscotto"
+            color="zafferano"
+            photoSrc={ANIMAL_SAMPLE_PHOTO}
+            disabled
+            onPick={() => {}}
+            onRemove={() => {}}
+          />
+        </div>
+      </Example>
+      <Example caption="WeekdayPicker · scelti, errore (error), disabilitato (disabled)">
+        <div className="colonna" data-testid="scelta-giorni">
+          <WeekdayPicker value={days} onChange={setDays} />
+          <WeekdayPicker
+            value={[]}
+            onChange={() => {}}
+            error="Scegli almeno un giorno."
+          />
+          <WeekdayPicker value={[2, 4]} onChange={() => {}} disabled />
+        </div>
+      </Example>
+      <Example caption="WeekdayPicker nel contenitore stretto (quattro colonne, testo grande)">
+        <div className="colonna" data-testid="scelta-giorni-stretta">
+          <div className={styles.stretta}>
+            <WeekdayPicker value={[1, 6, 7]} onChange={() => {}} />
+          </div>
+        </div>
+      </Example>
+      <Example caption="TurnPeople · con tre persone (su, giù, togli) e chip di chi manca">
+        <div className="colonna" data-testid="turno-persone">
+          <TurnPeople
+            people={TURN_SAMPLE_PEOPLE}
+            value={turn}
+            onChange={setTurn}
+          />
+        </div>
+      </Example>
+      <Example caption="TurnPeople · vuoto con errore (error), al massimo 6 persone, disabilitato">
+        <div className="colonna" data-testid="turno-persone-stati">
+          <TurnPeople
+            people={TURN_SAMPLE_PEOPLE}
+            value={emptyTurn}
+            onChange={setEmptyTurn}
+            error="Scegli chi fa il turno."
+          />
+          <TurnPeople
+            people={TURN_SAMPLE_PEOPLE}
+            value={["marco", "laura", "sofia", "tommaso", "rita", "paolo"]}
+            onChange={() => {}}
+          />
+          <TurnPeople
+            people={TURN_SAMPLE_PEOPLE}
+            value={["laura", "sofia"]}
+            onChange={() => {}}
+            disabled
+          />
+        </div>
+      </Example>
+      <Example caption="RepeatField kind=deadline · Ogni mese, con aiuto (help)">
+        <div className="colonna" data-testid="si-ripete-scadenza">
+          <RepeatField
+            kind="deadline"
+            value={repeat}
+            onChange={(next) => {
+              setRepeat(next);
+              setRepeatDays("");
+            }}
+            days={repeatDays}
+            onDaysChange={setRepeatDays}
+            help="L'intervallo lo decide il vostro veterinario."
+          />
+        </div>
+      </Example>
+      <Example caption="RepeatField kind=deadline · Ogni … giorni con errore del numero (daysError), disabilitato">
+        <div className="colonna" data-testid="si-ripete-giorni">
+          <RepeatField
+            kind="deadline"
+            value={everyN}
+            onChange={(next) => {
+              setEveryN(next);
+              setEveryNDays("");
+            }}
+            days={everyNDays}
+            onDaysChange={setEveryNDays}
+            daysError={REPEAT_DAYS_ERROR}
+          />
+          <RepeatField
+            kind="deadline"
+            value="yearly"
+            onChange={() => {}}
+            disabled
+          />
+        </div>
+      </Example>
+      <Example caption="RepeatField kind=todo · Mai, Ogni giorno, Giorni scelti">
+        <div className="colonna" data-testid="si-ripete-cosa">
+          <RepeatField
+            kind="todo"
+            value={todoRepeat}
+            onChange={setTodoRepeat}
+            help="Le cose di ogni giorno le vede tutto il Nest."
+          />
+        </div>
+      </Example>
+    </Section>
+  );
+}
+
 export function Gallery() {
   const rowCards = useQueryFlag("righe-scheda");
   const pageParts = useQueryFlag("pezzi-pagine");
@@ -119,6 +365,7 @@ export function Gallery() {
       {pageParts ? <WishlistParts /> : null}
       {pageParts ? <LinkedCalendarParts /> : null}
       {pageParts ? <AccessParts /> : null}
+      {pageParts ? <AnimalParts /> : null}
     </main>
   );
 }
