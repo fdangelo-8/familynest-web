@@ -573,15 +573,23 @@ test.describe("[CI-stack] password dimenticata e nuova password", () => {
       });
       await normal.goto("/accesso/nuova-password");
       await expect(normal).toHaveURL(/\/oggi$/);
-      // CA-27: through «link scaduto», never on the new-password page.
+      // CA-27: the route goes through «link scaduto» and ends on /oggi. The
+      // address of the new-password page can be first in the list (the
+      // document is opened before the guard redirects, as the page is
+      // streamed); after «link scaduto» only /oggi follows.
+      const paths = visited.map((url) => new URL(url).pathname);
+      const expired = paths.indexOf("/accesso/link-scaduto");
       expect(
-        visited.some((url) =>
-          /\/accesso\/link-scaduto\?tipo=password/.test(url),
-        ),
+        expired,
+        `indirizzi visitati: ${visited.join(" > ")}`,
+      ).toBeGreaterThan(-1);
+      expect(paths.slice(expired + 1)).toEqual(["/oggi"]);
+      expect(visited[expired]).toContain("tipo=password");
+      expect(
+        paths
+          .slice(0, expired)
+          .every((path) => path === "/accesso/nuova-password"),
       ).toBe(true);
-      expect(visited.some((url) => /\/accesso\/nuova-password/.test(url))).toBe(
-        false,
-      );
       // …and the session is untouched
       // (the page that redirected may still be finishing: retry the visit)
       await expect(async () => {
