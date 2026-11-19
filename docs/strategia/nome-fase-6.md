@@ -617,3 +617,117 @@ Nella prima stesura c'erano 19 nomi già comparsi nelle fasi 3 e 5. Li ho tolti,
 | Nami, Nemu, Nalu, Nali, Nuvu, Nubi, Nubu, Nunu, Nevu, Ninu, Nanu, Nuna, Nupu, Nulu, Zunu, Zeni, Mimu | fase 3, tolti per i domini o per il suono                       | onda, dormire, onda, nuvola, neve, ninna, la terra, i soldi (in giapponese «zeni»), coccola | restano fuori                                                                                                              |
 
 Fonte: confronto con [3] e [5].
+
+---
+
+## 5. Il filtro rapido
+
+### 5.1 Come ho filtrato
+
+In cinque passi, il 19/11/2026, dal più economico al più costoso:
+
+1. **distanza da Cozi, Mazi e Mozi** per tutti i 341 nomi, con il metodo della fase 5 [5], sezione 5.2: lettere da cambiare, sulla scrittura e sul suono (5.2);
+2. **significati, nomi di persona, marchi noti e suono**: lettura mia nelle otto lingue, più quello che è noto (5.3);
+3. **domini** per tutti i 341: .com, getX.com, heyX.com e Xapp.com con il servizio RDAP di Verisign, .app con quello di Google Registry [11] (5.4);
+4. **Google Play** in Italia e negli USA per i 125 nomi rimasti (prima pagina di risultati, titoli che cominciano con il nome) [13] (5.5);
+5. **App Store**, pagina pubblica di ricerca, in Italia e negli USA per i 50 nomi senza app su Google Play e per 12 nomi con app lontane [14] (5.6). L'API di ricerca di Apple ha risposto con un errore 403, come in fase 5.
+
+### 5.2 La distanza da Cozi, Mazi e Mozi (6 nomi tolti)
+
+| Nome  | Distanza minima | Da chi     | Motivo                                   |
+| ----- | --------------- | ---------- | ---------------------------------------- |
+| Rozi  | 1               | Cozi, Mozi | una lettera diversa; stessa rima «-ozi»  |
+| Mahi  | 1               | Mazi       | una lettera diversa                      |
+| Mushi | 1 sul suono     | Mazi, Mozi | «sh» si legge quasi come la z: «mu-si»   |
+| Mysi  | 1 sul suono     | Mazi, Mozi | la y si legge i: «mi-si»                 |
+| Fosi  | 1 sul suono     | Cozi, Mozi | la s si legge z in molte lingue: «fo-zi» |
+| Kosu  | 1 sul suono     | Cozi       | k = c, s = z: «ko-zu»                    |
+
+Ho misurato anche la distanza da Ruzi e Zivu, per non proporre le riserve con una lettera cambiata: Rupi, Ruhi e Rozi sono a una lettera da Ruzi, Zinu, Zitu e Ziu da Zivu. Rupi, Ruhi, Rozi e Zitu cadono anche per altri motivi (5.3); Zinu resta, con la nota.
+
+Fonte: calcolo mio sui 341 nomi. 62 nomi sono a distanza 2 da uno dei tre: li tengo, come in fase 5, e per i finalisti lo scrivo.
+
+### 5.3 Significati, nomi di persona, marchi noti e suono (210 nomi tolti)
+
+Lettura mia, salvo dove scritto «noto» (fatto pubblico non riletto oggi) o dove c'è una fonte.
+
+| Motivo                                                             | Nomi e dettaglio                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| parole comuni: tutto il traffico va al significato vero            | Caldi, Giorni, Cuori, Cari, Dolci, Mieli, Soli, Braci, Lampi, Lazo, Moto, Tipi, Tendi, Sorgi, Foci (italiano); Kota (in indonesiano «città»), Toko (in indonesiano «negozio»), Fogo (in portoghese «fuoco»; un'isola di Capo Verde), Poka (si sente «poca»), Vasu (si sente «vaso»), Ziu (si sente «zio»), Amoru (si sente «amore»)                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| nomi di persona: l'assistente non deve avere un'identità umana [1] | Luci, Cami, Kaya, Kaia, Beti, Bayu, Hina, Nuri, Sina, Samu, Minna, Ruhi, Tulia, Neema, Sulo, Kalin, Calin, Seva, Tetsu, Kazu, Hari, Haru, Dina, Dinu, Paivi, Tuomi, Basu                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| significati negativi o imbarazzanti                                | Curi e Curu (in rumeno «cur» è il sedere), Cocu (in francese il marito tradito), Falo (in spagnolo e portoghese il fallo), Culli (richiama «culo»), Cuntu (contiene «cunt», volgare in inglese), Kotu (in turco «kötü» vuol dire «cattivo»), Kutu (in indonesiano i pidocchi), Dolu (richiama «dolore» e «dolo»), Rifu e Rifi (richiamano «rifiuti»), Hodi (in italiano si sente «odi»), Duci (si sente «Duce»), Bahu (in hindi la nuora), Hapu (in maori anche «incinta»), Noivo (in portoghese lo sposo), Paci (in inglese il ciuccio), Puso (in spagnolo «mise»), Talpi («talpa»), Sonni («sonni»), Noisa («noisy»), Sunoi («sono i»), Lempo (in finlandese un demone), Rahu (un demone dell'astrologia indiana), Raha (in finlandese i soldi), Fara (in rumeno «senza») |
+| religione, politica, popoli                                        | Ruku (l'inchino della preghiera islamica), Bahi (ricorda la fede bahá'í), Kali (la dea), Diu (Dio in sardo e siciliano), Sveti («santo» nelle lingue slave), Mahu (in hawaiano una persona di terzo genere: parola identitaria), Spolu (una coalizione politica ceca, noto), Gezi (il parco di Istanbul delle proteste del 2013, noto), Gondi (un popolo dell'India), Zomi (un popolo del Myanmar), Mauri (si confonde con «Māori»), Sila (l'altopiano calabrese; nome turco), Dari (una lingua dell'Afghanistan)                                                                                                                                                                                                                                                           |
+| marchi o personaggi noti                                           | Nuan e Nuanu (Nuance, riconoscimento vocale, classe 9, noto), Jira (Atlassian, software, classe 9 e 42), Meraki (Cisco Meraki, reti, classe 9), Pendo (Pendo.io, software, classe 42), Ubuntu (il sistema operativo), Pono (il lettore musicale di Neil Young), Hoka (scarpe), Curio (hotel di Hilton), Calmu (Calm, app di meditazione), Gemi (si sente «Gemini», l'AI di Google), Rafiki (il Re Leone), Cafu (il calciatore), Nyota (Uhura in Star Trek), Bondi (la spiaggia di Sydney), Cali (la città colombiana), Nago (una città di Okinawa), Ziti (la pasta), Kalbi (la carne alla griglia coreana), Rupi (la rupia)                                                                                                                                                 |
+| iniziale vocale: «Chiedi ad Argi», iato                            | Affi, Albu, Insi, Ognu, Argi, Inti, Ondo, Asu, Egu, Adun                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| H, J, GH, SH, NY in testa o al centro: si leggono in modi diversi  | Hogi, Hejmu, Hemu, Nohu, Ghari, Hika, Hiku, Hida, Hamki, Hamu, Hoiva, Hulpi, Huzu, Hui, Hibi, Hiru, Hugu, Hugi, Hati, Hertu, Zuhu, Zuha (la H è muta in italiano: «Ogi», «Emu», «Ugo»); Joto, Jotu, Jorni, Juntu, Jua, Ojak, Gaju (la J si legge g, i, h o j); Musha, Kesho (sh); Nyumi; Foghi                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| gruppi di consonanti, dittonghi e finali consonantici              | Tiepi, Lieti, Mielu, Zieme, Cielu, Beiti, Cuidi, Briu, Caliu, Taliu, Lauli (dittonghi che cambiano da lingua a lingua); Tbili, Storgi, Sukha, Guyub, Kapwa, Nsemu, Serdu, Srcu, Leblu, Solnoi (gruppi difficili); Baham, Saman, Danran, Tahan, Rukun, Sanuk (finale consonantico); Abbri, Zemmu (doppie da dettare); Goxo (G e X); Mysu (la y)                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| doppioni di nomi già scartati o troppo vicini a Cozi               | Tepa (Tepu con la -a, femminile), Siemu (Siemi, fase 4), Dimi (Dimmi, fase 4), Ritmu (Ritmo, fase 1), Covu (Covo, fase 4, e «Co-» come Cozi), Coru e Coccu («Co-» come Cozi), Komo («Ko-»), Kokoro (contiene Koko, fase 5), Zitu (a una lettera da Zivu, riserva), Zeru («zero»)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| parole senza aggancio vero o poco riuscite                         | Ciau (troppo vicino a «ciao»), Gioi, Gaiu (in inglese si sente «gay»), Lietu (ricorda «Lietuva», la Lituania), Tene (dialettale per «tieni»), Boma (si sente «bomba»), Musha (in giapponese il guerriero), Sema (si sente «semantica»), Ciatu («cia» si legge male fuori dall'Italia), Zawa (la W), Zoki, Zabu, Belu, Goto (il «goto» della programmazione), Gemu (in giapponese il videogioco), Lamma (si sente «lama»), Talo (in finlandese «casa»: descrittivo in una lingua dell'Unione, come Namai), Nidu (contiene «Nid-», regola del nido)                                                                                                                                                                                                                           |
+
+Restano 125 nomi.
+
+### 5.4 I domini per tutti i 341
+
+Fatti, controllo del 19/11/2026 [11]:
+
+| Dominio  | Liberi su 341 | Nota                                       |
+| -------- | ------------- | ------------------------------------------ |
+| .com     | 2             | Teponi e Hejmu; tutti gli altri registrati |
+| .app     | 80            | soprattutto nomi di cinque o sei lettere   |
+| getX.com | 190           |                                            |
+| heyX.com | 267           |                                            |
+| Xapp.com | 160           |                                            |
+
+**Lettura mia.** Per la seconda volta in sei fasi c'è un nome con il .com libero: **Teponi** (la prima era Quinoi in fase 4, che si sentiva «quinoa»). Le fusioni di parole italiane (Teponi, Noilu, Lunoi, Tunoi) hanno quasi tutti i domini liberi, perché nessuno le ha mai scritte. I domini, ancora una volta, non fanno da filtro: lo fanno le app.
+
+### 5.5 Google Play: 75 nomi con app omonime
+
+**Fatti** [13]: dei 125 nomi rimasti, 75 hanno almeno un'app su Google Play Italia o USA con un titolo che comincia con il nome; 50 non ne hanno.
+
+**Rischio alto: app nel nostro settore (26 nomi).**
+
+| Settore                              | Nomi e app trovate                                                                                                                                                                                                                                                                                                                                     |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| famiglia, calendario, casa           | **Tomoni** («Tomoni – Attività Famiglia», «Family Task Tracker»: un concorrente diretto), **Musubi** («Musubi - Shared Calendar»), **Lapa** («Lapa Tarefas», attività), **Zuru** («Zuru: Control Residencial», condominio), **Kinu** («Kinu - Remember Your People», relazioni)                                                                        |
+| bambini, scuola, pasti               | **Luni** («Luni: Audio Bedtime Stories»), **Vatra** («Vatra: Bedtime Story Prompts», «Vatra — Daily Recovery»; Vatri e Vatru non hanno app, ma sono a una lettera: vedi 7.2), **Malu** («Malu na Escola», «Malu: Your Story Tonight»), **Namu** («Namu Chef: Pappe e Famiglia»), **Tedu** («TEDU \| Teacher»), **Tunza** («Tunza Mwili: Meal Planner») |
+| animali                              | **Zumi** («Zumi: cuidado de mascotas»)                                                                                                                                                                                                                                                                                                                 |
+| budget e spese                       | **Tunu** («Tunu Nexus – Budget e spese»), **Ruka** («Ruka: Expense & Income Tracker»), **Koru** («Koru - Gestione Spese Budget», «Koru - Habit Tracker»), **Zamu** («Zamu: Savings Circles»)                                                                                                                                                           |
+| assistenti AI e produttività         | **Wabi** («Wabi: assistente IA»), **Nagomi** («Nagomi Worlds: AI Companion»), **Sabai** («Sabai AI»), **Yuru** («Yuru: AI Self-Discovery»), **Ligu** («Ligu - Parla inglese con IA»), **Noku** («Noku: AI Reader & Flashcards»), **Bero** («Bero AI»), **Zenu** («Zenu CRM»), **Pomo** («Pomo - Timer Pomodoro Focus»)                                 |
+| amici ed eventi (vicino a PartyNest) | **Lamu** («LAMU: Matchmaking & Events»)                                                                                                                                                                                                                                                                                                                |
+
+**Rischio basso o non classificato: app in settori lontani (49 nomi).** Li tolgo comunque, come in fase 5: a parità di senso vince il nome senza app. Esempi: Kefi (caffè e street food greco), Sopu (corso di negoziazione), Kalo (contapassi e calorie con l'AI), Valo (incontri), Zuri (assistenza sanitaria), Moyo (salute), Seru (esami per autisti nel Regno Unito), Kumu (dirette video), Caru, Pamo, Vinku, Mainu, Lunu, Zoru, Zusa (app con lo stesso nome, settore non letto).
+
+Elenco completo: Bayani, Calu, Caru, Dafi, Fale, Fali, Falu, Gonu, Kalo, Kamu, Karu, Kefi, Kini, Kumu, Kuni, Kunu, Kwetu, Lunu, Mainu, Manaki, Milu, Mitu, Moyo, Musu, Nusu, Pamo, Pamu, Poku, Ruma, Sathi, Seru, Sopu, Sote, Suku, Teru, Tiaki, Topli, Toplo, Tuni, Valo, Vinku, Zadi, Zama, Zorgo, Zoru, Zuno, Zuri, Zusa, Zuva.
+
+### 5.6 App Store e scelta della shortlist
+
+Per i 50 nomi senza app su Google Play ho guardato l'App Store in Italia e negli USA [14]. La pagina di ricerca ha rifiutato 17 richieste per troppe richieste (codice 429): le ho ripetute una volta, più lentamente, solo per i nomi della shortlist (7.2).
+
+| Esito                                                | Nomi                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| app nel nostro settore sull'App Store                | **Tepi** («Tepi: Termostato e Termosifoni», riscaldamento di casa: alto), **Sopu** («Sopu – Minimalist Declutter», riordino della casa: alto, già tolto in 5.5)                                                                                                                                                                                                                                                                |
+| app lontane sull'App Store                           | Beru (taxi in Russia), Lambi (giochi), Lazu, Nostu, Nosu («Nosu Travel Checklist»), Samai (sushi), Tagu («TagU»), Tasu (calcolo del tempo), Lapu (sfondi), Fiami                                                                                                                                                                                                                                                               |
+| tolti per suono o senso più deboli di un nome simile | Tepi (vince Tepu), Lusi e Lusu (Lusi si legge «Lucy», un nome; Lusu si sente «lusso»), Vatri (vince Vatru), Lapu (Lapu-Lapu, eroe e città filippina), Kayu (in indonesiano «legno», nessun calore), Seremi, Tuvoi, Ninoi, Miotu (fusioni meno chiare di Tunoi, Noilu, Lunoi, Teponi), Svetu, Teplu, Zonni, Zonu, Zorgu, Yutu, Dugu, Birli, Gunu, Tagi, Tagu, Samai, Vakti, Tempu, Sopi, Zinu, Dilu (suoni duri o senso debole) |
+| in shortlist                                         | Teponi, Lucu, Vatru, Noilu, Lunoi, Tunoi, Brazi, Zesti, Toplu, Kenu, Kokua, Tepu                                                                                                                                                                                                                                                                                                                                               |
+
+Come in fase 5 ho tenuto in shortlist anche nomi che già sapevo deboli su un punto (Kenu, Kokua, Tepu, Toplu), perché hanno un senso forte e volevo mostrare dove cadono.
+
+---
+
+## 6. Cosa dicono i numeri
+
+**Fatti (19/11/2026).**
+
+| Passo                                 | Nomi rimasti |
+| ------------------------------------- | ------------ |
+| generati                              | 341          |
+| dopo la distanza da Cozi, Mazi e Mozi | 335          |
+| dopo significati, marchi noti e suono | 125          |
+| senza app su Google Play Italia e USA | 50           |
+| shortlist                             | 12           |
+
+**Lettura mia.**
+
+- **Il senso costa.** In fase 5 il filtro dei significati aveva tolto 91 nomi su 339; qui ne ha tolti 210 su 341. Partire da parole vere vuol dire trovare più spesso nomi di persona, parole comuni e sensi sgradevoli in un'altra lingua.
+- **Le parole belle sono già app.** Le parole «casa» e «insieme» in lingue lontane sono state prese proprio da app come la nostra: Tomoni («insieme» in giapponese) è un'app per le attività di famiglia, Musubi («legame») un calendario condiviso, Malu e Luni app per i bambini, Tunza un'app per i pasti. È la stessa corsa ai nomi caldi vista in fase 4 con Yuva e Lontra [4].
+- **Le fusioni italiane sono libere.** Teponi, Noilu, Lunoi e Tunoi non hanno app, marchi o ricerche, e Teponi ha anche il .com libero. Il prezzo è che si capiscono soprattutto in italiano.
