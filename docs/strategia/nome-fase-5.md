@@ -1,5 +1,7 @@
 19/11/2026
 
+> Francesco il 19/11/2026 tiene Ruzi e Zivu come riserve, scarta Zunni, Zetu e Nivu: si veda la fase 6, `nome-fase-6.md`.
+
 Documento vivo: si aggiorna dopo la scelta di Francesco, dopo le prove sulle persone e dopo la verifica del legale-privacy.
 
 # Il nuovo nome, fase 5: nomi leggeri come Cozi e Mazi
