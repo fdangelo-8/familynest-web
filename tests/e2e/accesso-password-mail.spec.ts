@@ -571,8 +571,23 @@ test.describe("[CI-stack] password dimenticata e nuova password", () => {
       normal.on("framenavigated", (frame) => {
         if (frame === normal.mainFrame()) visited.push(frame.url());
       });
+      // The bodies of the documents answered for the new-password address are
+      // read too: the page may be opened, but its heading never sent.
+      const bodies: Array<Promise<string>> = [];
+      normal.on("response", (response) => {
+        if (
+          response.request().resourceType() === "document" &&
+          new URL(response.url()).pathname === "/accesso/nuova-password" &&
+          response.status() < 300
+        ) {
+          bodies.push(response.text().catch(() => ""));
+        }
+      });
       await normal.goto("/accesso/nuova-password");
       await expect(normal).toHaveURL(/\/oggi$/);
+      for (const body of await Promise.all(bodies)) {
+        expect(body).not.toContain("Scegli una nuova password");
+      }
       // CA-27: the route goes through «link scaduto» and ends on /oggi. The
       // address of the new-password page can be first in the list (the
       // document is opened before the guard redirects, as the page is
