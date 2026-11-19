@@ -209,4 +209,118 @@ Lettura mia, da verificare sui dizionari per i nomi della shortlist (sezione 7.6
 
 ## 5. Il filtro rapido
 
-_In compilazione._
+### 5.1 Come ho filtrato
+
+In quattro passi, il 19/11/2026, dal più economico al più costoso:
+
+1. **distanza da Cozi, Mazi e Mozi** per tutti i 339 nomi (5.2);
+2. **significati e nomi di persona**: lettura mia nelle otto lingue, più quello che è noto (5.3); 91 nomi tolti in questi primi due passi;
+3. **domini** per tutti i 339: .com, getX.com, heyX.com e Xapp.com con il servizio RDAP di Verisign, .app con quello di Google Registry, .family con quello di Identity Digital [11]. Il registro di .family ha rifiutato 87 richieste per troppe richieste (codice 429): le ho ripetute una volta, più lentamente, solo per la shortlist;
+4. **Google Play** in Italia e negli USA per i 248 nomi rimasti (prima pagina di risultati, titoli che cominciano con il nome) [13]. Ogni app trovata ha l'etichetta **alto** (nel nostro settore: famiglia, coppia, casa, bambini, scuola, animali, budget, calendario, assistenti AI, produttività) o **basso** (settore lontano).
+
+**L'App Store.** L'API di ricerca di Apple ha risposto con un errore 403 dalla prima richiesta: dopo una pausa e un secondo tentativo ha continuato a rifiutare. Ho usato al suo posto la pagina pubblica di ricerca dell'App Store [14], per 40 nomi scelti dopo Google Play (Italia e USA) e per la shortlist (altri sei paesi). Per gli altri nomi l'App Store è **non verificato**.
+
+### 5.2 La distanza da Cozi, Mazi e Mozi
+
+**Come la misuro.** Conto quante lettere bisogna cambiare, togliere o aggiungere per passare da un nome all'altro (la «distanza di Levenshtein»). La misuro due volte: sulla scrittura e sul suono, dopo aver trattato come uguali le lettere che si pronunciano allo stesso modo in qualche lingua (c, k, q; s e z; x e «ks»; y e i; w e v; le doppie come lettere singole). Esempio: Cosi e Cozi sulla scrittura sono a distanza 1, sul suono a distanza 0.
+
+**Regola.** Un nome a distanza 1 o meno da Cozi, Mazi o Mozi è fuori. Per i finalisti scrivo anche la distanza e se il nome ha la stessa rima (-ozi, -azi, -zi).
+
+| Esito                      | Nomi                                                                                                                                                | Motivo                                                                                                         |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| tolti                      | Ozi, Sosi, Komi                                                                                                                                     | Ozi è Cozi senza la C; Sosi suona come Cozi in spagnolo; Komi è a una lettera da Cozi (e una repubblica russa) |
+| esclusi prima di scriverli | Kozi, Cosi, Cozy, Lozi, Tozi, Bazi, Razi, Covi, Koxi, Mavi, Maxi, Muzi, Kuzi e tutti gli altri «-ozi», «-azi», «Co-», «Ko-», «Ma-» + consonante + i | non li ho messi nei 339: sono a distanza 1 per costruzione (sezione 3.3, regola R9)                            |
+| rimasti a distanza 2       | 70 nomi, fra cui Luzi, Ruzi, Sezi, Tuzi                                                                                                             | stessa rima «-zi» di Cozi e Mazi, ma due lettere diverse; li tengo, e per i finalisti lo segnalo               |
+
+Fonte: calcolo mio sui 339 nomi.
+
+**Un caso che la distanza non vede.** Zami è a distanza 2 da Mazi, ma ne è l'anagramma: le stesse quattro lettere con M e Z scambiate. Per un concorrente europeo diretto è troppo vicino, anche se il numero dice il contrario (lettura mia). L'ho verificato comunque e l'ho tolto (5.6).
+
+### 5.3 Significati, nomi di persona e marchi noti (88 nomi)
+
+Lettura mia, salvo dove scritto «noto» (fatto pubblico non riletto oggi).
+
+| Motivo                                   | Nomi                                                                                                                                              | Dettaglio                                                                                                                                                                                                                                                                                                                                                          |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **a una lettera da «Nazi»**              | Nezi, Nizi, Nuzi, Nazu                                                                                                                            | è la scoperta più importante della famiglia B: la forma «N + vocale + z + i», cioè Cozi con la N del logo, finisce quasi sempre a una lettera da «Nazi». La N con la z al centro va evitata                                                                                                                                                                        |
+| nomi di persona                          | Lizi, Lexi, Roxi, Ravi, Davi, Levi, Riki, Viki, Niki, Linzi, Kenzi, Zuzi, Vinni, Ronni, Penni, Annu, Suzi, Xavi, Evi, Ivi, Lili, Bibi, Abbi, Riri | l'assistente non deve avere un'identità umana [1]                                                                                                                                                                                                                                                                                                                  |
+| parole o suoni sgradevoli                | Vizi, Buzi, Laxi, Vaxi, Vexi, Vixi, Leki, Tinni, Sixi, Suxi, Suxu, Siki, Kuli, Noizi, Fugi, Kizu, Xixi                                            | «vizi»; in ungherese «buzi» è un insulto omofobo; «lassativo»; «no-vax»; «vex» (irritare); in latino «vixi», «ho vissuto», è la formula delle lapidi; in polacco «leki» sono le medicine; «tinnitus»; «sexy»; «sucks»; parola volgare in turco; «coolie», offensivo in inglese; «noisy»; «fuggi»; in giapponese «kizu» è la ferita; in portoghese «xixi» è la pipì |
+| parole comuni o nomi di cose             | Dizi, Lenzi, Benzi, Nunzi, Venni, Renni, Sali, Sisi, Ivi, Tutu, Dodo, Koko, Junti, Kita, Tayo, Tezo                                               | in turco «dizi» è la serie TV; Lenzi è un cognome comune; «benzina»; «nunzio»; «venni»; Rennie è un farmaco; «sali»; Sissi; il tutù; il dodo; il gorilla Koko; «junta» militare; in tedesco «Kita» è l'asilo nido; Tayo è un cartone per bambini; Tezos è una criptovaluta                                                                                         |
+| marchi noti nelle nostre classi o vicini | Voxi, Divi, Rovi, Nexi, Nuki, Nixu, Tivu, Suki, Pixi, Tenzi, Zola, Izi, Didi                                                                      | VOXI, operatore mobile di Vodafone (classe 38); Divi, tema di WordPress; Rovi, guide TV; Nexi, pagamenti; Nuki, serrature per la casa (classe 9); Nixu, sicurezza informatica; Tivù, TV digitale italiana; Suki, assistente AI per medici; Pixi, libretti per bambini; Tenzi, gioco di dadi per famiglie; Zola, pagamenti per la casa; izi; Didi Chuxing (noto)    |
+| altri marchi noti                        | Loki, Zuma, Vix, Lux, Tux, Uzi, Uuzi                                                                                                              | il dio e il personaggio Marvel, il gioco Zuma, Vicks, il sapone Lux, il pinguino di Linux, il mitra Uzi (noto)                                                                                                                                                                                                                                                     |
+| sillabe ripetute: infantili              | Zuzu, Zeze, Lolo, Bebi, Kiki, Fifi, Zaza, Lala                                                                                                    | la seconda strada della famiglia G non funziona: una sillaba ripetuta suona come una parola dei bambini, e un'app per adulti che parla anche di figli non può permetterselo                                                                                                                                                                                        |
+
+Con i tre della distanza, 91 nomi tolti. Ne restano 248.
+
+### 5.4 I domini per tutti i 339
+
+Fatti, controllo del 19/11/2026 [11]:
+
+| Dominio  | Liberi su 339 | Nota                                                        |
+| -------- | ------------- | ----------------------------------------------------------- |
+| .com     | 0             | tutti registrati, quasi tutti dal 1995-2005                 |
+| .app     | 57            | uno non verificato (Vuz, rifiuto del registro)              |
+| getX.com | 180           |                                                             |
+| heyX.com | 239           |                                                             |
+| Xapp.com | 142           |                                                             |
+| .family  | 226           | 26 registrati, 87 non verificati al primo giro (codice 429) |
+
+**Lettura mia.** Come in fase 4, il .com non esiste più per i nomi di quattro lettere: zero su 339. I domini non fanno da filtro, perché quasi ogni nome ha .family e un .com con prefisso liberi. Il filtro vero sono le app.
+
+### 5.5 Google Play: 157 nomi con app omonime
+
+**Fatti** [13]: dei 248 nomi rimasti, 157 hanno almeno un'app su Google Play Italia o USA con un titolo che comincia con il nome; 91 non ne hanno.
+
+**Rischio alto: app nel nostro settore (37 nomi).**
+
+| Settore                              | Nomi e app trovate                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| famiglia, coppia, casa               | **Tuki** («Tuki Family», «Tuki - Live Friends Locator»), **Luvu** («Luvu Family: Baby Tracker»), **Duvi** («Duvi: domande per coppie»), **Homi** («Homi® Roommates & Rentals»), **Zev** («Zev Home»), **Ezi** («Ezi Home Services»), **Bizi** («Bizi: Local Help, Made Easy», «Bizi for Educators»), **Sezi** («Sezi: Tracking and Security», vedi 7.2)                                                                                          |
+| bambini e scuola                     | **Teki** («Teki – giochi per bambini 4–7»), **Taki** («Taki Kids»), **Tizi** («Tizi Town», giochi per bambini), **Lunni** («Lunni Dress Up», «Lunni Memory»), **Luuki** («Luuki: Mathe 1. Klasse»), **Zuku** («Zuku Learning»), **Saki** («Saki kids app»), **Tovi** («Tovi International Preschool»), **Sisu** («Sisu Logs - Baby Memory Diary»)                                                                                                |
+| animali                              | **Raku** («Raku - Pet Care Tracker»), **Zelu** («Zelu Animal: Vacinas e Saúde»)                                                                                                                                                                                                                                                                                                                                                                  |
+| budget e spese                       | **Laki** («Laki Money: AI Expense Tracker»), **Saku** («Saku: Smart money manager», «SAKU: Dompet Kolaboratif»), **Sivo** («Sivo: Expense & Budget Tracker», «Sivo CRM»), **Solu** («Solu Money: expense tracker»), **Zelu** («Zelu: Expense Tracker»), **Tunzi** («Tunzi: Save, Invest & Grow»)                                                                                                                                                 |
+| assistenti AI e organizzazione       | **Toki** («Toki: AI Executive Assistant»), **Tuzi** («Tuzi – Trợ lý thông minh», assistente intelligente), **Tuzu** («Tuzu: compagno e assistente IA»), **Vani** («Vani: Answer Calls by Voice»), **Vitu** («VITU - Korean AI Chat»), **Sovi** («Sovi: Your Life, Organized»), **Kuu** («KUU: Overthinking Brain Dump»), **Yetu** («Yetu Planner»), **Sevi** («Sevi: Guida Viaggio IA»), **Neki** («Neki Time», abitudini), **Luvi** («Luvi AI») |
+| amici ed eventi (vicino a PartyNest) | **Vennu** («Vennu: Events, Friends, Places»), **Doki** («Doki - Your Friend Circle»)                                                                                                                                                                                                                                                                                                                                                             |
+
+**Rischio basso: app in settori lontani (120 nomi).** Li tolgo comunque quando un altro nome con lo stesso suono non ha app: a parità di suono vince il nome pulito. Esempi: Fizi (IPTV, fitness), Daxi e Tuxi (taxi), Lixi (incontri), Rezi (cercare lavoro), Doza (promemoria dei farmaci), Mizu (acqua), Brezi (rumore bianco), Zova (fitness), Vizo (lettori video), Revu (ripasso). Due li porto in shortlist perché l'app è una sola e lontana: Zuvi («Zuvi ColorBox», tinture per capelli) e Zetu («ZETU MART», un negozio).
+
+Elenco completo: Bezi, Binni, Bizo, Bizu, Brezi, Davu, Daxi, Doku, Dovi, Doza, Duxi, Enzi, Fizi, Fuzi, Fuzu, Inzi, Ixi, Kazo, Kelu, Kemu, Kevi, Kilu, Kimu, Kinzi, Kiru, Kiv, Kivu, Kuvi, Laku, Lavi, Linni, Livu, Lixi, Loxi, Luki, Lumi, Luxi, Luza, Luzu, Mizu, Naki, Naku, Naxi, Nexu, Nezu, Niku, Nixi, Nixo, Nizu, Noki, Nozu, Nuku, Nuzo, Nuzu, Ravu, Revi, Revu, Rexi, Rezi, Rivi, Ruki, Ruvi, Rux, Ruxi, Sanu, Seku, Selu, Semu, Senu, Sevu, Siku, Silu, Simu, Sivi, Sivu, Sizi, Soki, Suli, Sunu, Susu, Suvi, Suvo, Suzu, Taku, Tanu, Teku, Tenni, Texi, Tezi, Tuxi, Uuki, Valu, Veki, Vemi, Vexu, Vezi, Vezo, Vilu, Vimu, Vizo, Vizu, Volu, Vumi, Vuu, Vuzi, Zalu, Zavu, Zeki, Zeli, Zelo, Zemi, Zetu, Zilu, Zimu, Ziv, Ziva, Zova, Zuu, Zuvi, Zuvo.
+
+### 5.6 Dai 91 nomi senza app alla shortlist
+
+Dei 91 nomi senza app su Google Play ho scelto per suono quelli che seguono meglio le regole R1-R8, e ho tolto gli altri con questi motivi (lettura mia):
+
+| Motivo                                                                       | Nomi                                                                                                                                                                                                                                                                                                                                    |
+| ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| iniziale vocale: «Chiedi ad Onnu», iato                                      | Unzi, Ennu, Onnu, Uuvi, Ezzi                                                                                                                                                                                                                                                                                                            |
+| finale «-nnu»: suona dialettale («nannu» è il nonno in sardo e in siciliano) | Vinnu, Zennu, Tinnu, Lunnu, Zunnu, Rennu, Tennu, Zinnu, Vonnu, Linnu, Finnu                                                                                                                                                                                                                                                             |
+| doppia U: al telefono va spiegata, in francese diventa «ü»                   | Zuuvi, Vuuzi, Ruuki, Tuuvi                                                                                                                                                                                                                                                                                                              |
+| x al centro: si legge «ks», «sh» o «gs» a seconda della lingua               | Raxi, Rixi, Dexi, Nuxi, Saxi, Soxi, Lixu, Rixu, Vixu, Dexu, Ruxu, Tuxu, Zixu, Sixu                                                                                                                                                                                                                                                      |
+| iniziale X: «ks», «sh» o «z»                                                 | Xelu, Xilu                                                                                                                                                                                                                                                                                                                              |
+| suono pesante o vicino a parole                                              | Puzu («puzza»), Rezu (in spagnolo «rezo», prego), Lezi (in inglese «lezzie» è un insulto), Dezi («desi»), Duzi (in polacco «grandi»), Divu («divo»), Huzi, Lezu, Tezu, Vuzu, Ruzu, Suvu, Sovu, Suzo, Sinu (ricorda «sinus», il seno nasale), Zuvu, Vunni, Nenzi, Tuzo, Zunzi (uno scioglilingua)                                        |
+| cognomi e nomi                                                               | Zinni, Zenni (Zenni Optical, occhiali), Danzi, Lonni, Rinni, Dinni, Vonni, Fenni, Vinzi (diminutivo bavarese di Vinzenz), Lempi (nome femminile finlandese, «amore»)                                                                                                                                                                    |
+| solo in una lingua o con un marchio noto                                     | Kiezi (gergo tedesco), Kavu (borse KAVU, noto), Lavu (casse per ristoranti, noto), Liku, Leku, Zibu, Vuz (in russo è l'università)                                                                                                                                                                                                      |
+| App Store con app nel nostro settore o vicino                                | Rizi («Rizi Event Organizer», eventi), Venzi («Venzi - Miami Private Parties», feste), Zevi («Zevi Alef Beis», alfabeto per bambini), Vuli («Vuli – School App»); con app lontane e un suono meno forte: Lovi (scanner per la pelle), Neku (adesivi), Nivi [14]                                                                         |
+| verificati e tolti prima della shortlist                                     | **Zami**: anagramma di Mazi; «Zami: IA para atender clientes» sull'App Store spagnolo (assistente AI, alto); zami.app in vendita; in inglese giamaicano è un termine gergale per «lesbica» [14] [19]. **Seki**: 5.400 ricerche al mese in Italia, con un picco di 12.100 a dicembre; in inglese è un termine del gioco del Go [18] [19] |
+
+Restano 9 nomi senza app (Luzi, Ruzi, Zivu, Vuki, Nivu, Lunzi, Zunni, Sizu, Zemu). Aggiungo Zuvi e Zetu (una sola app, lontana) e Sezi, che su Google Play Italia non ha app e negli USA ne ha una dal titolo generico («Sezi: Tracking and Security»): solo la scheda dell'App Store ha mostrato che è un'app per famiglie (7.2). Sono 12 nomi, scelti anche per coprire tutte le famiglie chieste da Francesco: U e Z (Luzi, Ruzi, Zuvi, Zivu, Vuki), N (Nivu, Lunzi), doppia N (Zunni), S (Sezi, Sizu), parole nascoste (Zetu, Zemu).
+
+---
+
+## 6. Cosa dicono i numeri
+
+**Fatti (19/11/2026).**
+
+| Passo                                 | Nomi rimasti |
+| ------------------------------------- | ------------ |
+| generati                              | 339          |
+| dopo la distanza da Cozi, Mazi e Mozi | 336          |
+| dopo significati e marchi noti        | 248          |
+| senza app su Google Play Italia e USA | 91           |
+| shortlist                             | 12           |
+
+**Lettura mia.**
+
+- **Lo spazio di Cozi è pieno.** Le forme di quattro lettere con la z, la x, la v o la k sono quasi tutte usate da qualche app: 157 su 248. Il 2025-2026 ha aggiunto molte app con l'AI e nomi di questo tipo (Toki, Tuzu, Tuzi, Vani, Vitu sono assistenti AI).
+- **Le idee di Francesco sul logo danno risultati diversi.** La U funziona: tre dei cinque finalisti hanno la u (sezione 8). La N in testa funziona solo con la v (Nivu): con la z va a una lettera da «Nazi». La doppia N regge in un caso (Zunni). La S cade tutta alle verifiche: Sezi è un'app turca di localizzazione per famiglie, Sizu ha 40.500 ricerche al mese, Seki 5.400.
+- **La z in testa è la sorpresa.** La forma rovesciata di Cozi (Zivu, Zuvi, Zetu, Zemu, Zunni) è la più libera: suona viva come Cozi e Mazi e non ne ripete la rima. Ed è la N del logo girata di 90° (sezione 3.4).
