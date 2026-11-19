@@ -16,7 +16,7 @@ Preparato dallo stratega per Francesco. È la base del piano editoriale. Riparte
 6. **I nostri asset partono da zero:** familynest.me ha 3 articoli, nessuna parola posizionata e una pagina che promette app su iOS e Android che non esistono (da correggere subito). PartyNest ha 71 guide e circa 135 visite al mese (stima Ubersuggest, da confermare con Search Console), in crescita, ma con doppioni, città senza locali veri e 0 citazioni nelle AI.
 7. **Siti e cross-selling:** familynest.me resta il sito con blog e pagine delle funzioni; l'app va su `app.familynest.me`. Le feste restano a PartyNest, l'organizzazione di casa a FamilyNest. Il ponte è il compleanno: l'avviso a 30 giorni di FamilyNest porta a PartyNest, la conferma del preventivo di PartyNest porta la festa nel calendario di casa. I dati passano solo con un tocco esplicito della famiglia.
 8. **Social:** prima Instagram e TikTok con micro creator di casa e organizzazione, poi Pinterest per liste e menu da stampare, Facebook per i nonni. I follower dei concorrenti non si leggono in automatico: un'ora di lavoro a mano (capitolo 5.4).
-9. **Nidly (aggiunto il 19/11/2026):** app americana per iPhone uscita il 09/03/2026, solo in inglese, con calendario, cose da fare, pasti, ricette e spesa. Rilascia una versione ogni 6 giorni circa e costa 2,99 € al mese o 22,99 € all'anno. In Italia ha 0 voti e non compare nelle ricerche dell'App Store. Oggi non è una minaccia per noi; lo diventa se la traducono o escono su Android. Conferma che il nostro vantaggio è l'italiano, il browser e la privacy, e che il nome nuovo deve stare lontano da «nido» (capitolo 10).
+9. **Nidly (aggiunto il 19/11/2026):** app americana per iPhone uscita il 09/03/2026, solo in inglese, con calendario, cose da fare, pasti, ricette e spesa. Rilascia una versione ogni 6 giorni circa e costa 2,99 € al mese o 22,99 € all'anno. In Italia ha 0 voti e non compare nelle ricerche dell'App Store. Oggi non è una minaccia per noi; lo diventa se la traducono o escono su Android. **Decisione di Francesco (19/11/2026): nessuna azione, solo monitoraggio ogni 3 mesi (prossimo controllo il 19/02/2027)** (capitolo 10).
 
 ---
 
@@ -452,6 +452,7 @@ Analisi chiesta da Francesco il 19/11/2026. Dati raccolti il 19/11/2026 dalla sc
 - **Cosa fa:** un'app per iPhone e iPad con agenda del giorno, calendario condiviso, cose da fare con punti, pasti della settimana, ricette e spesa per reparto, più un assistente AI. In tutto è molto simile alla nostra mappa dopo il lancio.
 - **Quanto pesa oggi:** 10 voti negli USA (media 5,0), 0 in Italia e negli altri 8 paesi controllati. In Italia non compare nelle prime 170–190 app per nessuna delle ricerche provate.
 - **Per noi:** minaccia bassa oggi, media se esce in italiano o su Android. È il segnale che piccoli team con l'AI costruiscono «calendario + pasti + spesa» in pochi mesi: la funzione da sola non ci distingue, l'italiano, il browser e la privacy sì.
+- **Decisione di Francesco (19/11/2026): nessuna azione, solo monitoraggio ogni 3 mesi (prossimo controllo il 19/02/2027).** Nidly non è un concorrente da rincorrere: nessuna modifica di prodotto o di marketing in risposta.
 
 ### 10.2 Chi è
 
@@ -594,7 +595,7 @@ Nessun video, nessuna schermata dell'assistente AI, nessuna in italiano.
 2. Nessuno dei nomi oggi in gara somiglia a Nidly per suono o scrittura. Ci sarebbero andati vicino Nolia (fase 1: N iniziale, «-lia» simile a «-ly») e Nivu (fase 5, già scartato). Per la scelta attuale l'impatto è nullo.
 3. Rischio di marchio per noi: nessuno, perché non useremo «Nid-», «Nest» o «Nido».
 
-**Consiglio.** Aggiungere «Nidly» e «Nellio» alla lista dei nomi da evitare nella griglia del nome, e tenere la regola «niente Nest, Nido, Nid- nel nome» anche per i nomi delle funzioni (per esempio «Chiedi a …»).
+Nessuna azione decisa (vedi 10.7); lo spunto sui nomi è nella riga «Spunti, non decisi».
 
 ### 10.6 Minacce e opportunità
 
@@ -626,17 +627,13 @@ Nessun video, nessuna schermata dell'assistente AI, nessuna in italiano.
 - La fiducia trascurata: privacy su Notion, nessun sito, nessun dato su chi c'è dietro.
 - Il prezzo senza dire cosa è gratis: le recensioni dei concorrenti puniscono le funzioni tolte o nascoste (`recensioni-concorrenti.md` 3.4).
 
-### 10.7 Azioni consigliate
+### 10.7 Decisione
 
-| #   | Azione                                                                                                                                                                                                                                     | Tipo              | Costo (stima)           | Decide    |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------- | ----------------------- | --------- |
-| 1   | **Spesa per reparto** (C8) da «più avanti» a piccola novità dei primi mesi, con le categorie in italiano. È la funzione che i loro utenti lodano e non richiede tabelle nuove complesse (da verificare con l'architetto dei dati)          | prodotto          | una novità di 15 giorni | Francesco |
-| 2   | **Non abbassare il prezzo di Plus per inseguire Nidly.** 22,99 € è il prezzo di un'app in inglese, senza assistenza nell'UE. Tenere 34,99 € come ipotesi e scrivere nella pagina Plus (X2) cosa resta gratis, in chiaro                    | prodotto e prezzo | nessuno                 | Francesco |
-| 3   | **Messaggio di confronto con le app straniere** sulla pagina «FamilyNest in italiano» (capitolo 4.3): «In italiano, dal browser di qualsiasi telefono, e decidi tu chi vede ogni impegno». Nidly non va nominato finché resta così piccolo | marketing         | mezza giornata          | stratega  |
-| 4   | **Nella scheda per gli store (#397)**: titolo e sottotitolo con parole italiane («calendario famiglia», «agenda», «spesa») e una schermata per promessa concreta, con la famiglia D'Angelo e non con frasi generiche                       | marketing (ASO)   | dentro #397             | Francesco |
-| 5   | **Controllo ogni 3 mesi** di Nidly (prossimo: 19/02/2027). Segnali che cambiano il giudizio: scheda in italiano, app su Google Play, più di 100 voti in Europa, prime pubblicità nella Meta Ad Library                                     | marketing         | 30 minuti               | stratega  |
+**Decisione di Francesco (19/11/2026): nessuna azione, solo monitoraggio ogni 3 mesi (prossimo controllo il 19/02/2027).** Nidly non è considerato un concorrente da rincorrere: nessuna modifica di prodotto, prezzo o marketing in risposta.
 
-Le azioni 1, 2 e 4 toccano il prodotto e vanno decise da Francesco; nessuna modifica fatta all'app.
+**Monitoraggio.** Il controllo dura circa 30 minuti (stima) e lo fa lo stratega. I segnali che riportano Nidly all'attenzione di Francesco sono: scheda in italiano, app su Google Play, più di 100 voti in Europa, prime pubblicità nella Meta Ad Library.
+
+**Spunti, non decisi:** spesa per reparto (C8) con categorie in italiano; prezzo di Plus non legato a quello di Nidly; frase di confronto con le app straniere sulla pagina «FamilyNest in italiano»; parole italiane e una promessa per schermata nella scheda degli store (#397); «Nidly» e «Nellio» tra i nomi da evitare nella griglia del nome.
 
 ---
 
