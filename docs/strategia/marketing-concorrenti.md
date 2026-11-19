@@ -1,4 +1,4 @@
-17/11/2026
+17/11/2026 · aggiornato il 19/11/2026 con il capitolo 10 (Nidly)
 
 Documento vivo: si aggiorna quando cambiano i concorrenti, i siti di Francesco o il calendario dei rilasci.
 
@@ -16,6 +16,7 @@ Preparato dallo stratega per Francesco. È la base del piano editoriale. Riparte
 6. **I nostri asset partono da zero:** familynest.me ha 3 articoli, nessuna parola posizionata e una pagina che promette app su iOS e Android che non esistono (da correggere subito). PartyNest ha 71 guide e circa 135 visite al mese (stima Ubersuggest, da confermare con Search Console), in crescita, ma con doppioni, città senza locali veri e 0 citazioni nelle AI.
 7. **Siti e cross-selling:** familynest.me resta il sito con blog e pagine delle funzioni; l'app va su `app.familynest.me`. Le feste restano a PartyNest, l'organizzazione di casa a FamilyNest. Il ponte è il compleanno: l'avviso a 30 giorni di FamilyNest porta a PartyNest, la conferma del preventivo di PartyNest porta la festa nel calendario di casa. I dati passano solo con un tocco esplicito della famiglia.
 8. **Social:** prima Instagram e TikTok con micro creator di casa e organizzazione, poi Pinterest per liste e menu da stampare, Facebook per i nonni. I follower dei concorrenti non si leggono in automatico: un'ora di lavoro a mano (capitolo 5.4).
+9. **Nidly (aggiunto il 19/11/2026):** app americana per iPhone uscita il 09/03/2026, solo in inglese, con calendario, cose da fare, pasti, ricette e spesa. Rilascia una versione ogni 6 giorni circa e costa 2,99 € al mese o 22,99 € all'anno. In Italia ha 0 voti e non compare nelle ricerche dell'App Store. Oggi non è una minaccia per noi; lo diventa se la traducono o escono su Android. **Decisione di Francesco (19/11/2026): nessuna azione, solo monitoraggio ogni 3 mesi (prossimo controllo il 19/02/2027)** (capitolo 10).
 
 ---
 
@@ -441,6 +442,201 @@ Non le ho fatte: toccano il sito, l'app o l'account.
 
 ---
 
+## 10. Nidly: Family Organizer
+
+Analisi chiesta da Francesco il 19/11/2026. Dati raccolti il 19/11/2026 dalla scheda dell'App Store, dall'interfaccia pubblica di ricerca di Apple (iTunes Search e Lookup), dalle schermate dello store e dalla ricerca web. Ubersuggest: il limite giornaliero di 100 report era già esaurito alla prima richiesta [45], quindi volumi di ricerca e traffico web sono **non verificati**; ho letto solo la visibilità nelle AI del progetto familynest.me, che non consuma report.
+
+### 10.1 In breve
+
+- **Chi è:** Nidly Studios LLC, piccolo sviluppatore con due app per famiglie (Nidly e Nellio). Lettura: americano, per la forma societaria (LLC) e per i negozi collegati (Walmart e Kroger, solo USA).
+- **Cosa fa:** un'app per iPhone e iPad con agenda del giorno, calendario condiviso, cose da fare con punti, pasti della settimana, ricette e spesa per reparto, più un assistente AI. In tutto è molto simile alla nostra mappa dopo il lancio.
+- **Quanto pesa oggi:** 10 voti negli USA (media 5,0), 0 in Italia e negli altri 8 paesi controllati. In Italia non compare nelle prime 170–190 app per nessuna delle ricerche provate.
+- **Per noi:** minaccia bassa oggi, media se esce in italiano o su Android. È il segnale che piccoli team con l'AI costruiscono «calendario + pasti + spesa» in pochi mesi: la funzione da sola non ci distingue, l'italiano, il browser e la privacy sì.
+- **Decisione di Francesco (19/11/2026): nessuna azione, solo monitoraggio ogni 3 mesi (prossimo controllo il 19/02/2027).** Nidly non è un concorrente da rincorrere: nessuna modifica di prodotto o di marketing in risposta.
+
+### 10.2 Chi è
+
+| Voce                       | Dato                                                                                                                                                                                                                      | Fonte      |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| Sviluppatore               | Nidly Studios LLC. L'altra app dello sviluppatore, Nellio, ha il copyright intestato a una persona fisica                                                                                                                 | [46], [47] |
+| Paese                      | **non verificato.** Lettura: USA (LLC, integrazioni con Walmart e Kroger, gradi Fahrenheit e once nelle schermate)                                                                                                        | [46], [49] |
+| Uscita                     | 09/03/2026 sull'App Store                                                                                                                                                                                                 | [48]       |
+| Versione attuale           | 6.0.2 del 16/11/2026. Dalla 4.1 (21/06/2026) alla 6.0.2 la scheda elenca 25 versioni in 148 giorni, circa una ogni 6 giorni (stima: 148 / 24 intervalli). Le versioni prima della 4.1 non sono visibili                   | [46], [48] |
+| Lingue                     | solo inglese                                                                                                                                                                                                              | [46], [48] |
+| Piattaforme                | iPhone e iPad (iOS 16.4 o successivo), Mac con chip M1 (non verificata da Apple per macOS), Apple Vision. **Android: nessuna scheda trovata su Google Play. Web: nessuna versione trovata**                               | [46], [51] |
+| Categoria ed età           | Produttività e Stili di vita; 4+; 104,4 MB                                                                                                                                                                                | [46], [48] |
+| Sito                       | nessun sito proprio trovato. Supporto e privacy su una pagina Carrd (nidlystudios.carrd.co) e su una pagina Notion, che il 19/11 non mostrava il testo. nidly.com rimanda a nidly.fr, un'agenzia immobiliare in Normandia | [47], [50] |
+| Social                     | nessun profilo trovato con la ricerca web; Instagram e TikTok non verificati a mano                                                                                                                                       | [51]       |
+| Download                   | **non disponibile**: Apple non li pubblica; servirebbe Sensor Tower o Appfigures (a pagamento). Lettura: pochi, visto che in 8 mesi ha raccolto 10 voti                                                                   | [48]       |
+| Pubblicità                 | **non verificato** (Meta Ad Library e Google Ads Transparency Center vanno aperti a mano)                                                                                                                                 | —          |
+| Stato di commerciante (UE) | sulla scheda italiana lo sviluppatore «non si è identificato come commerciante»: nell'UE i diritti dei consumatori non si applicano ai contratti con lui                                                                  | [46]       |
+| Paesi                      | la scheda risponde in Italia, Germania, Francia, Spagna, Regno Unito, Paesi Bassi, Irlanda, Canada, Australia, Giappone, Brasile e Cina (elenco completo non verificato)                                                  | [48]       |
+
+**Prezzo e piani**
+
+| Paese  | Mensile | Annuale                                     | Cosa include                                                   |
+| ------ | ------- | ------------------------------------------- | -------------------------------------------------------------- |
+| Italia | 2,99 €  | 22,99 € (stima: sconto del 36% sul mensile) | **non verificato**: la scheda non dice cosa è gratis e cosa no |
+| USA    | 2,99 $  | 19,99 $                                     | come sopra                                                     |
+
+Il download è gratuito. Alcuni acquisti si possono condividere in «In famiglia» di Apple [46].
+
+**Voti e recensioni (19/11/2026)**
+
+| Dove                                                                                              | Voti                   | Media | Fonte |
+| ------------------------------------------------------------------------------------------------- | ---------------------- | ----- | ----- |
+| App Store USA                                                                                     | 10                     | 5,0   | [48]  |
+| App Store Italia, Regno Unito, Germania, Francia, Spagna, Paesi Bassi, Irlanda, Canada, Australia | 0                      | —     | [48]  |
+| Google Play, Trustpilot                                                                           | nessuna scheda trovata | —     | [51]  |
+
+Le tre recensioni visibili negli USA parlano tutte di pasti e spesa: «It cuts the time at the grocery store by organizing by category» (03/04), «which has saved us a lot of money!» (31/03), e una terza del 10/11 su pasti e spesa [49]. Nessuna parla del calendario. Con 10 voti non si possono ricavare temi ricorrenti affidabili.
+
+### 10.3 Cosa fa
+
+**Le schermate dello store (7, in quest'ordine)** [49]:
+
+1. «Organize Your Life»: l'**Agenda** del giorno, con meteo in alto, Eventi con luogo e avatar di chi partecipa, To-dos con orario del promemoria e chi se ne occupa, Pasti (pranzo e cena).
+2. «Easy Meal Planning»: **Pasti** della settimana, con foto del piatto per pranzo e cena e il collegamento alla ricetta.
+3. «Get Things Done»: **To-dos** divisi in Oggi, Questa settimana, In qualsiasi momento; in alto ogni membro con le sue stelline (Mom 18, Dad 12, Sally 35, Johnny 22), figli compresi.
+4. «Shared Calendar»: **Calendario** a vista mese con gli impegni colorati.
+5. «Shop Smarter»: **Spesa** divisa per reparto (frutta e verdura, latticini, dispensa), con le emoji degli alimenti e il bottone «Shop this list».
+6. «Save Your Favorites»: **Ricette** con foto, tempi, ricerca e preferiti.
+7. «Follow Along»: una **ricetta** (una carbonara con il bacon, in once) con ingredienti, condivisione e modifica.
+
+Nessun video, nessuna schermata dell'assistente AI, nessuna in italiano.
+
+**Le funzioni dalle note di versione** [46]: Agenda con vista mese (5.0.7); calendario Google (5.0.7), calendario Apple e Siri (4.2); collegamento con altre famiglie per condividere eventi e ricette (5.0.7); liste multiple per cose da fare e spesa (4.2); foto di un invito da cui l'AI ricava titolo, data, ora e luogo dell'evento (4.4); assistente AI e nuova interfaccia (5.0, 09/08); meteo nell'Agenda (5.0.3); ricette in una scheda propria (5.0.9); invio della spesa a Walmart (5.0.5) e Kroger (4.3) e disponibilità dei prodotti nel singolo negozio Walmart (5.1.5); notifiche push (4.1).
+
+**Confronto con la nostra mappa delle funzionalità** (`mappa-funzionalita.md`, sezione 1)
+
+| Funzione                                                       | Noi                                                                           | Nidly                                               | Differenza                                                                                                    |
+| -------------------------------------------------------------- | ----------------------------------------------------------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Pagina del giorno con tutto insieme                            | sì, Oggi (G1)                                                                 | sì, Agenda, con meteo e pasti                       | da loro i pasti sono nella pagina del giorno; da noi arrivano con «Stasera si mangia…» (K5, #382)             |
+| Calendario mese                                                | sì (G5)                                                                       | sì                                                  | pari                                                                                                          |
+| Calendario settimana e «chi è dove» per persona                | sì (G4, G6)                                                                   | non risulta                                         | **più forti noi**                                                                                             |
+| Chi vede ogni impegno («Tutto il Nest», «Occupato», «Solo io») | sì (G7)                                                                       | non risulta                                         | **più forti noi**                                                                                             |
+| Chi accompagna, «Liberi insieme», sintesi del mattino          | sì (G8, G9, G10)                                                              | non risulta                                         | **più forti noi**                                                                                             |
+| Aggiungi con una frase                                         | sì (G2)                                                                       | assistente AI (5.0), funzioni non descritte         | non confrontabile senza provarla                                                                              |
+| Impegni da una foto                                            | idea (A2, #386, Plus)                                                         | sì, dalla foto di un invito (4.4)                   | **più forti loro, oggi**                                                                                      |
+| Calendari collegati                                            | Google e Outlook (G13); iCloud fermo (G14)                                    | Google e Apple (4.2, 5.0.7); Outlook non dichiarato | loro hanno Apple, noi Outlook                                                                                 |
+| Siri, widget, notifiche push                                   | no; push e widget sono idee (X4, X6)                                          | Siri e push sì; widget non verificato               | **più forti loro**: sono un'app nativa                                                                        |
+| Cose da fare con chi se ne occupa                              | sì (C2)                                                                       | sì, con promemoria all'ora                          | pari                                                                                                          |
+| Punti o stelline per persona                                   | no; classifiche scartate (F8), routine con stelline spegnibili in idea (#389) | sì, stelline per ogni membro, figli compresi        | scelta diversa: da noi niente punteggi a confronto tra fratelli                                               |
+| Spesa condivisa                                                | sì, in tempo reale (C1)                                                       | sì                                                  | pari                                                                                                          |
+| Spesa per reparto                                              | no (C8, «più avanti»)                                                         | sì, automatica con emoji                            | **più forti loro**; è la cosa che la recensione loda                                                          |
+| Liste multiple                                                 | idea (#378)                                                                   | sì (4.2)                                            | **più forti loro, oggi**                                                                                      |
+| Spesa mandata al supermercato                                  | no                                                                            | Walmart e Kroger, solo USA                          | in Italia non serve a loro; per noi da valutare solo se un supermercato italiano lo permette (non verificato) |
+| Pasti della settimana                                          | idea (#382, mese 8)                                                           | sì                                                  | **più forti loro, oggi**                                                                                      |
+| Ricette con foto, preferiti, porzioni                          | idea (#381, mese 7)                                                           | sì, con link alla fonte                             | **più forti loro, oggi**; le loro sono ricette americane                                                      |
+| Collegare due famiglie                                         | no (P10, «non ora»)                                                           | sì, eventi e ricette (5.0.7)                        | loro ci sono arrivati; da noi richiede una decisione di Francesco e la skill privacy                          |
+| Scadenze della casa con avvisi a 30, 7 e 1 giorno              | sì (C3)                                                                       | non risulta                                         | **più forti noi**                                                                                             |
+| Profilo dei figli, lista desideri e pagina pubblica            | sì (F1, F3, F4)                                                               | non risulta                                         | **più forti noi**                                                                                             |
+| Profilo dell'animale                                           | sì (F2)                                                                       | no (solo un «Walk dog» tra le cose da fare)         | più forti noi                                                                                                 |
+| Documenti, conti                                               | idee (#380, #379)                                                             | non risulta                                         | pari                                                                                                          |
+| Meteo                                                          | no                                                                            | sì                                                  | piccolo; non è nella nostra mappa                                                                             |
+| Lingua e piattaforme                                           | italiano; browser su telefono e computer, quindi anche Android e Windows      | inglese; solo Apple                                 | **più forti noi** in Italia                                                                                   |
+
+**Lettura.** Nidly ha già quasi tutto quello che noi abbiamo messo tra i mesi 2 e 8 dopo il lancio (Liste, Agente con foto, Ricette, Pasti). Noi siamo avanti su tutto ciò che riguarda chi vede cosa, chi accompagna, le scadenze, i figli e la lingua. Le due app vanno nella stessa direzione: la loro parte forte è la cucina, la nostra è il coordinamento tra adulti.
+
+### 10.4 Posizionamento e messaggi
+
+| Voce                                                           | Nidly                                                                                                               |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Titolo                                                         | «Nidly: Family Organizer» (23 caratteri su 30)                                                                      |
+| Sottotitolo                                                    | «Planner: Events, Meals & Tasks» (30 su 30) nella scheda USA; nella scheda italiana non compare [46], [48]          |
+| Promessa                                                       | «un'app al posto di tante»: «reducing the need for multiple apps and helping families save time» (descrizione) [48] |
+| A chi parla                                                    | famiglie americane con figli: Mom, Dad, Sally e Johnny, Walmart e Kroger, gradi Fahrenheit                          |
+| Tono                                                           | generico e positivo, frasi da due o tre parole («Organize Your Life», «Get Things Done», «Shop Smarter»)            |
+| Testo promozionale, video, eventi in-app                       | nessuno [46]                                                                                                        |
+| Parole chiave indicizzate (stima dal titolo e dal sottotitolo) | family, organizer, planner, events, meals, tasks. Il campo nascosto delle parole chiave non si vede                 |
+
+**Ricerche nell'App Store** (interfaccia iTunes Search di Apple, 19/11/2026 [52]; è un'approssimazione della ricerca dentro lo store, non la classifica ufficiale):
+
+| Ricerca                | Paese  | Posizione di Nidly                                   | Primi tre risultati                             |
+| ---------------------- | ------ | ---------------------------------------------------- | ----------------------------------------------- |
+| family organizer       | USA    | 30ª su 185                                           | Cozi, FamilyWall, Family Organizer - Calendar   |
+| family calendar        | USA    | 140ª su 188                                          | FamCal, Cozi, TimeTree                          |
+| family planner         | USA    | assente nei primi 187                                | Cozi, FamilyWall, Skylight                      |
+| family organizer       | Italia | assente nei primi 192                                | FamilyWall, Shared, Cozi                        |
+| family planner         | Italia | assente nei primi 183                                | FamilyWall, Cozi, Calendars                     |
+| family calendar        | Italia | assente nei primi 188                                | FamilyWall, FamCal, Calendario Famiglia Planner |
+| calendario condiviso   | Italia | assente nei primi 171                                | TimeTree, Howbout, Calendars                    |
+| organizzatore famiglia | Italia | assente nei primi 184                                | Tripsy, Mimko, Howbout                          |
+| agenda famiglia        | Italia | assente nei primi 188                                | Famigliario, Howbout, Weekly Planner            |
+| meal planner           | Italia | assente nei primi 185                                | mise, Mealbird, Menu Settimanale Pianificato    |
+| calendario famiglia    | Italia | **non verificato** (risposta vuota dell'interfaccia) | —                                               |
+
+**Traffico web e ricerche del nome:** non verificati (Ubersuggest esaurito il 19/11; Nidly non ha un sito proprio da misurare).
+
+**Visibilità nelle AI:** nel progetto familynest.me di Ubersuggest (10 domande, 5 risposte di ChatGPT negli ultimi 30 giorni al 19/11/2026) le AI nominano 15 marchi, tra cui Cozi, TimeTree, FamilyWall, FamCal, Bring! e AnyList. Nidly non compare, FamilyNest nemmeno [53].
+
+**ASO, lettura con la skill `aso`** (app «sfidante», giudicata con le regole piene):
+
+| Aspetto              | Giudizio                                                                                                         |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Titolo e sottotitolo | buoni per gli USA: «family organizer» nel titolo, tre funzioni nel sottotitolo. Nessuna versione italiana        |
+| Schermate            | 7, ordinate e leggibili, una promessa per schermata; parole generiche che potrebbero stare in qualsiasi app      |
+| Voti                 | troppo pochi per convincere (10 negli USA, 0 altrove)                                                            |
+| Aggiornamenti        | molto frequenti; note di versione brevi ma concrete                                                              |
+| Fiducia              | debole: niente sito, privacy su Notion, non commerciante nell'UE, prezzo senza spiegazione di cosa è a pagamento |
+
+### 10.5 Il nome «Nidly» e la nostra scelta (#472)
+
+**Fatti.**
+
+- «Nidly» contiene «nid», nido in francese, come «Nest» e «Nido». Nello stesso spazio di nomi ci sono già Nido (app italiana, 09/2026), Nestify, NIDDO (app per genitori separati), «FamilyNest - Family Organizer» di Heyou Co. e Google Nest (`marchio-nest.md`, `nome-candidati.md`, [51]).
+- **Marchi:** la ricerca web su archivi non ufficiali (Markinton, Justia, Trademarkdir) non trova nessun marchio NIDLY; trova nomi vicini come NIDY (USA, classe 9), IDLY (USA, classi 9 e 42, domanda del 2026) e NIDDO (USA, ristorazione) [54]. Le banche dati ufficiali (USPTO, EUIPO, UIBM, WIPO) **non sono state consultate**: il dato resta non verificato.
+- **Domini:** nidly.com appartiene all'agenzia immobiliare francese [50]; gli altri (nidly.app, nidly.io, nidly.it, getnidly.com) non hanno risposto dalla nostra rete, quindi se siano registrati è non verificato.
+- **Nomi in gara oggi** (PR #486, fase 7): Funwa, Yanu, Fuva, Yado, Yobi; restano possibili Teponi, Lunoi, Tunoi, Ruzi e Zivu.
+
+**Lettura.**
+
+1. Nidly conferma la decisione del 18/11 di lasciare FamilyNest: anche un'app nata a marzo 2026 ha scelto l'idea del nido, segno che è lo spazio più affollato del settore. Restarci vorrebbe dire confondersi.
+2. Nessuno dei nomi oggi in gara somiglia a Nidly per suono o scrittura. Ci sarebbero andati vicino Nolia (fase 1: N iniziale, «-lia» simile a «-ly») e Nivu (fase 5, già scartato). Per la scelta attuale l'impatto è nullo.
+3. Rischio di marchio per noi: nessuno, perché non useremo «Nid-», «Nest» o «Nido».
+
+Nessuna azione decisa (vedi 10.7); lo spunto sui nomi è nella riga «Spunti, non decisi».
+
+### 10.6 Minacce e opportunità
+
+**Dove sono più forti**
+
+- Velocità: circa una versione ogni 6 giorni e un'AI con foto dell'invito già uscita ad agosto.
+- App nativa per Apple: Siri, notifiche push, calendario Apple.
+- Cucina completa: pasti, ricette, spesa per reparto. È la parte che i loro utenti lodano.
+- Prezzo basso: 22,99 € all'anno, sotto Famigliario (24,99 €) e sotto la nostra proposta di Plus (34,99 €, `prezzo-per-nest.md`).
+
+**Dove siamo più forti**
+
+- Italiano, e dal browser: funziona anche su Android e sui computer Windows, dove Nidly non c'è.
+- Privacy tra adulti: chi vede ogni impegno, «Occupato», «Solo io».
+- Coordinamento: chi accompagna, «Liberi insieme», la giornata «chi è dove».
+- Scadenze della casa, profili dei figli e lista desideri con la pagina pubblica per i nonni.
+- Fiducia: un responsabile identificabile nell'UE, informativa privacy vera (#147), assistenza in italiano.
+
+**Cosa imparare**
+
+- L'Agenda mette nello stesso schermo impegni, cose da fare e pasti: è la forma più chiara della promessa «tutto in un posto». La nostra Oggi la avrà quando arriva «Stasera si mangia…» (K5).
+- La spesa divisa per reparto è la funzione che gli utenti citano nelle recensioni [49].
+- Una promessa breve su ogni schermata dello store, e un aggiornamento con note precise: utile per le nostre schede (#397) e per la pagina Novità (X10).
+
+**Cosa evitare**
+
+- Le stelline per ogni membro mostrate una accanto all'altra, figli compresi: diventano una classifica tra fratelli, che abbiamo scartato (F8). Le nostre stelline (#389) restano spegnibili e senza confronto, come prevede la skill `privacy-e-dati-minori`.
+- Promesse generiche come «Organize Your Life»: non dicono niente di diverso dagli altri.
+- La fiducia trascurata: privacy su Notion, nessun sito, nessun dato su chi c'è dietro.
+- Il prezzo senza dire cosa è gratis: le recensioni dei concorrenti puniscono le funzioni tolte o nascoste (`recensioni-concorrenti.md` 3.4).
+
+### 10.7 Decisione
+
+**Decisione di Francesco (19/11/2026): nessuna azione, solo monitoraggio ogni 3 mesi (prossimo controllo il 19/02/2027).** Nidly non è considerato un concorrente da rincorrere: nessuna modifica di prodotto, prezzo o marketing in risposta.
+
+**Monitoraggio.** Il controllo dura circa 30 minuti (stima) e lo fa lo stratega. I segnali che riportano Nidly all'attenzione di Francesco sono: scheda in italiano, app su Google Play, più di 100 voti in Europa, prime pubblicità nella Meta Ad Library.
+
+**Spunti, non decisi:** spesa per reparto (C8) con categorie in italiano; prezzo di Plus non legato a quello di Nidly; frase di confronto con le app straniere sulla pagina «FamilyNest in italiano»; parole italiane e una promessa per schermata nella scheda degli store (#397); «Nidly» e «Nellio» tra i nomi da evitare nella griglia del nome.
+
+---
+
 ## Fonti
 
 Ubersuggest: account di Francesco, località Italia (2380) e lingua italiana salvo dove indicato, consultato il 17/11/2026; traffico dei domini di ottobre 2026. Nessun progetto creato, nessuna modifica all'account.
@@ -489,6 +685,16 @@ Ubersuggest: account di Francesco, località Italia (2380) e lingua italiana sal
 42. partynest.it, «Location feste bambini a Roma» (17/11/2026): https://www.partynest.it/guida-alle-feste/location-feste-compleanno-bambini-roma
 43. partynest.it, «Checklist definitiva per la festa di compleanno dei bambini» (17/11/2026): https://www.partynest.it/guida-alle-feste/checklist-definitiva-festa-compleanno-bambini
 44. Google Search Central, Norme relative allo spam, «Abuso di contenuti su larga scala»: https://developers.google.com/search/docs/essentials/spam-policies#scaled-content
+45. Ubersuggest, `user_limits`, 19/11/2026: report del giorno 100 su 100 già usati.
+46. App Store Italia, «Nidly: Family Organizer», scheda e cronologia delle versioni, 19/11/2026: https://apps.apple.com/it/app/nidly-family-organizer/id6759537722
+47. App Store, pagina dello sviluppatore Nidly Studios LLC e scheda di Nellio, 19/11/2026: https://apps.apple.com/us/developer/nidly-studios-llc/id1871629581 ; https://apps.apple.com/us/app/id6760240117 ; pagina di supporto: https://nidlystudios.carrd.co
+48. Apple, interfaccia iTunes Lookup per l'app 6759537722 (data di uscita, versione, voti, lingue, prezzo) in Italia, USA, Regno Unito, Germania, Francia, Spagna, Paesi Bassi, Irlanda, Canada e Australia, 19/11/2026: https://itunes.apple.com/lookup?id=6759537722&country=it
+49. App Store USA, scheda con sottotitolo, recensioni e 7 schermate, 19/11/2026: https://apps.apple.com/us/app/nidly-family-organizer/id6759537722
+50. nidly.fr (a cui rimanda nidly.com), 19/11/2026: https://nidly.fr/
+51. Ricerca web «Nidly family organizer app», «"Nidly" Google Play family», «Nidly family app instagram OR tiktok OR reddit», «"Nidly Studios" OR "Jake Nord" app», 19/11/2026: nessuna scheda Google Play, sito o profilo social trovati. NIDDO: https://apps.apple.com/us/app/niddo-co-parenting-app/id6748092035
+52. Apple, interfaccia iTunes Search (`entity=software`, fino a 200 risultati) per le ricerche della tabella 10.4, Italia e USA, 19/11/2026.
+53. Ubersuggest, `brand_visibility_overview` del progetto familynest.me, ultimi 30 giorni al 19/11/2026: 10 domande, 5 risposte di ChatGPT, 15 marchi trovati.
+54. Ricerca web «NIDLY trademark EUIPO OR USPTO» e «"NIDLY" trademark serial number», 19/11/2026: https://markinton.com/trademark/nidy-90325905 ; https://markinton.com/trademark/idly-99666204 ; https://markinton.com/trademark/niddo-99209767
 
 **Dati non disponibili e come ottenerli**
 
@@ -497,3 +703,4 @@ Ubersuggest: account di Francesco, località Italia (2380) e lingua italiana sal
 - Follower, frequenza e post migliori dei concorrenti e dei creator: a mano, Social Blade o Modash (capitolo 5.4).
 - Impressioni e clic veri di familynest.me e partynest.it: Search Console di Francesco.
 - Elenco dei siti che rimandano a familynest.me: Search Console, sezione Link.
+- Nidly: ricerche del nome e traffico (Ubersuggest, quando il limite giornaliero è libero); marchi nelle banche dati ufficiali (USPTO, EUIPO, UIBM, WIPO); cosa include l'abbonamento (installare l'app su un iPhone); pubblicità (Meta Ad Library e Google Ads Transparency Center, a mano); download (Sensor Tower o Appfigures, a pagamento).
