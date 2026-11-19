@@ -15,6 +15,7 @@ export function AvatarPhoto({
   initial: string;
 }) {
   const [failed, setFailed] = useState(false);
+  // Written here so that static analysis sees the check; the full rule is `safeImageSrc`.
   const isSafe =
     src.startsWith("blob:") ||
     src.startsWith("data:image/webp") ||

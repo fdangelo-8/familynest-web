@@ -21,8 +21,6 @@ export type RepeatFieldProps = {
   daysError?: string;
   /** Hint under «Si ripete», for example «L'intervallo lo decide il vostro veterinario.» */
   help?: string;
-  /** Error under «Si ripete» */
-  error?: string;
   label?: string;
   disabled?: boolean;
   /** `id` of the select (the page moves the focus to it) */
@@ -45,7 +43,6 @@ export function RepeatField({
   onDaysChange,
   daysError,
   help,
-  error,
   label = REPEAT_LABEL,
   disabled,
   id,
@@ -59,7 +56,6 @@ export function RepeatField({
         id={id}
         label={label}
         help={help}
-        error={error}
         className={className}
         value={value}
         disabled={disabled}
