@@ -1,5 +1,7 @@
 18/11/2026
 
+> Il top 4 di questo documento (Vivu, Komfi, Kiota, Tuti) è stato scartato da Francesco il 18/11/2026: si veda la fase 5, `nome-fase-5.md`.
+
 Documento vivo: si aggiorna dopo la scelta di Francesco, dopo le prove sulle persone e dopo la verifica del legale-privacy.
 
 # Il nuovo nome, fase 4: nomi corti, da qualunque parte arrivino
