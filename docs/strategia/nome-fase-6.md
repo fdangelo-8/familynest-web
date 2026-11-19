@@ -4,7 +4,7 @@ Documento vivo: si aggiorna dopo la scelta di Francesco, dopo le prove sulle per
 
 # Il nuovo nome, fase 6: nomi leggeri che dicono qualcosa
 
-Preparato dallo stratega per Francesco (issue #472). Riparte dalle fasi 1-5: `nome-candidati.md` [1], `nome-fase-2.md` [2], `nome-fase-3.md` [3], `nome-fase-4.md` [4], `nome-fase-5.md` [5], e dal parere legale `docs/legale/marchio.md` [6]. Segue le indicazioni di Francesco del 19/11/2026 [7]: Ruzi e Zivu restano in riserva ma non gli piacciono abbastanza; Zunni, Zetu e Nivu sono scartati; servono nomi corti e leggeri come Cozi e Mazi che abbiano anche un'eco di calore o di senso.
+Preparato dallo stratega per Francesco (issue #472). Riparte dalle fasi 1-5: `nome-candidati.md` [1], `nome-fase-2.md` [2], `nome-fase-3.md` [3], `nome-fase-4.md` [4], `nome-fase-5.md` [5], e dal parere legale `docs/legale/marchio.md` [6]. Segue le indicazioni di Francesco del 19/11/2026 [7]: Ruzi e Zivu restano in riserva ma non gli piacciono abbastanza; Zunni, Zetu e Nivu sono scartati; servono nomi corti e leggeri, con un suono piacevole e un «Chiedi a …» che funziona, possibilmente con un'eco di calore o di senso. Con una correzione dello stesso giorno Francesco ha chiarito che Ruzi e Zivu non sono un riferimento né un metro di paragone: restano solo nella tabella delle riserve, e i nomi nuovi si valutano solo sulla griglia e sulle sue indicazioni.
 
 Il documento serve anche per il PDF finale: racconta tutto il ragionamento, compresi i nomi scartati e il perché.
 
@@ -54,12 +54,12 @@ Fonti: [1]-[5], [7]. Il motivo aggiunto a Zunni, Zetu e Nivu riprende i rischi s
 
 ### 1.2 Riserve
 
-Nomi che Francesco tiene da parte: non sono scartati, ma non lo convincono abbastanza. Sono l'asticella della fase 6 (sezione 2.3).
+Nomi che Francesco tiene da parte: non sono scartati, ma non lo convincono abbastanza. Restano in questa tabella e basta: non sono un riferimento per la fase 6 e non li uso come metro di paragone [7].
 
-| Nome | Fase | Punti (griglia della fase 4) | Domini liberi al 19/11/2026               | Perché è in riserva                                                                                | Perché non basta                                                                             | Data       |
-| ---- | ---- | ---------------------------- | ----------------------------------------- | -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ---------- |
-| Zivu | 5    | 91                           | zivu.app, zivu.family, zivu.casa, zivu.me | il nome più pulito di cinque fasi: nessuna app in otto paesi, nessuna impresa, 10 ricerche al mese | in italiano non dice niente; il senso («io vivo» in russo) è nascosto; a una lettera da Vivu | 19/11/2026 |
-| Ruzi | 5    | 86                           | ruzi.app, ruzi.family, ruzi.casa, ruzi.me | la forma più vicina a Cozi e Mazi; .app libero; marchi USA vivi solo per pneumatici e tè freddo    | in italiano non dice niente; a due lettere da Cozi con la stessa rima                        | 19/11/2026 |
+| Nome | Fase | Punti in fase 5 (griglia della fase 4) | Domini liberi al 19/11/2026               | Punti forti                                                             | Punti deboli                                                                                 | Data       |
+| ---- | ---- | -------------------------------------- | ----------------------------------------- | ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ---------- |
+| Zivu | 5    | 91                                     | zivu.app, zivu.family, zivu.casa, zivu.me | nessuna app in otto paesi, nessuna impresa omonima, 10 ricerche al mese | in italiano non dice niente; il senso («io vivo» in russo) è nascosto; a una lettera da Vivu | 19/11/2026 |
+| Ruzi | 5    | 86                                     | ruzi.app, ruzi.family, ruzi.casa, ruzi.me | .app libero; marchi USA vivi solo per pneumatici e tè freddo            | in italiano non dice niente; a due lettere da Cozi con la stessa rima                        | 19/11/2026 |
 
 Fonte: [5], sezioni 7 e 8; decisione di Francesco [7].
 
@@ -72,9 +72,9 @@ Fonte: [5], sezioni 7 e 8; decisione di Francesco [7].
 | 3    | 292          | [3], sezioni 4.2-4.7 e 6                                    |
 | 4    | 375          | [4], sezioni 5 e 7                                          |
 | 5    | 339          | [5], sezioni 5 e 7                                          |
-| 6    | 341          | questo documento, sezioni 5 (filtro rapido) e 7 (shortlist) |
+| 6    | 358          | questo documento, sezioni 5 (filtro rapido) e 7 (shortlist) |
 
-In sei fasi, 1.586 nomi. Per non riproporre nomi già provati ho confrontato i nomi nuovi con tutte le parole con l'iniziale maiuscola dei cinque documenti precedenti (2.098 parole). Diciannove nomi della prima stesura erano già stati provati e li ho tolti (sezione 4.3).
+In sei fasi, 1.603 nomi. Per non riproporre nomi già provati ho confrontato i nomi nuovi con tutte le parole con l'iniziale maiuscola dei cinque documenti precedenti (2.098 parole). Diciannove nomi della prima stesura erano già stati provati e li ho tolti (sezione 4.3).
 
 ### 1.4 Fase 6
 
@@ -86,27 +86,28 @@ I nomi tolti in questa fase sono nelle tabelle della sezione 5, ognuno con il mo
 
 ### 2.1 Cosa ha chiesto Francesco il 19/11
 
-| Indicazione                                                                                                                                                             | Come la applico                                                                                                                                             |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Ruzi e Zivu restano in riserva ma non piacciono abbastanza; si continua a cercare                                                                                       | Ruzi e Zivu diventano l'asticella: un finalista deve essere migliore, non solo diverso (2.3). Per ogni finalista c'è un confronto diretto (sezione 8)       |
-| Il punto debole della fase 5: i nomi puliti non evocano nulla                                                                                                           | il senso viene prima del suono: ogni nome nasce da una parola con un significato (sezione 3), e ogni nome della lista ha l'idea scritta accanto (sezione 4) |
-| Nomi corti e leggeri come Cozi e Mazi (4-5 lettere, sillabe aperte, suono simpatico) con un'eco di calore o di senso: casa, insieme, nido, luce, giorno, famiglia, cura | 12 famiglie, una per tema o tecnica: troncamenti italiani, parole di lingue lontane, fusioni, dialetti, diminutivi inventati                                |
-| Troncamenti, fusioni, parole straniere poco note, diminutivi inventati                                                                                                  | sono le tecniche delle famiglie A, H, K (troncamenti, fusioni, dialetti) e B-G, L (parole straniere)                                                        |
-| Le famiglie N, U, doppia N/U e Z per il logo restano possibili, ma non sono obbligatorie                                                                                | due famiglie (I e J) le tengono; nelle altre il logo non è un criterio                                                                                      |
-| Almeno 300 candidati, per famiglia o tecnica, con l'idea dietro                                                                                                         | 341 nomi in 12 famiglie, ognuno con la sua idea                                                                                                             |
-| Distanza da Cozi (concorrente diretto), Mazi e Mozi; esclusi tutti i nomi eliminati                                                                                     | la stessa misura della fase 5 [5], sezione 5.2; il confronto con i 2.098 nomi già scritti (1.3)                                                             |
-| .com non obbligatorio: .app, .me, .family, .casa, .it, .eu, getX, heyX, Xapp                                                                                            | per tutti .com, .app, getX.com, heyX.com, Xapp.com; per la shortlist anche .family, .me, .casa, .it, .eu e altri prefissi                                   |
-| Rischio alto solo nello stesso settore (famiglia, calendario, casa, genitori, bambini, assistenti AI, produttività) o nelle classi 9, 35, 38, 42, 45                    | ogni app o marchio trovato porta l'etichetta **alto** o **basso**                                                                                           |
-| Shortlist di 10-12 con verifiche documentate; top 3-5 con punteggio sulla griglia della fase 4 e confronto con Ruzi e Zivu                                              | sezioni 7 e 8                                                                                                                                               |
-| Un servizio che rifiuta va ritentato una volta, più lentamente, poi «non verificato»                                                                                    | lo faccio e lo scrivo nella sezione 12                                                                                                                      |
-| Aggiornare la tabella dei nomi eliminati e aggiungere quella delle riserve                                                                                              | sezioni 1.1 e 1.2                                                                                                                                           |
-| Dire se il risultato è debole                                                                                                                                           | sezioni 6 e 8                                                                                                                                               |
+| Indicazione                                                                                                                                                             | Come la applico                                                                                                                                               |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Ruzi e Zivu restano in riserva ma non piacciono abbastanza; si continua a cercare                                                                                       | sono nella tabella delle riserve (1.2) e basta                                                                                                                |
+| Correzione del 19/11: Ruzi e Zivu non sono un riferimento né un metro di paragone, né un modello di suono; spaziare liberamente, senza ancorarsi alla forma Z + vocale  | i finalisti sono valutati solo sulla griglia (2.2) e sulle indicazioni di Francesco (2.3); la forma Z + vocale è una sola famiglia su dodici (17 nomi su 341) |
+| Il punto debole della fase 5: i nomi puliti non evocano nulla                                                                                                           | il senso viene prima del suono: ogni nome nasce da una parola con un significato (sezione 3), e ogni nome della lista ha l'idea scritta accanto (sezione 4)   |
+| Nomi corti e leggeri come Cozi e Mazi (4-5 lettere, sillabe aperte, suono simpatico) con un'eco di calore o di senso: casa, insieme, nido, luce, giorno, famiglia, cura | 12 famiglie, una per tema o tecnica: troncamenti italiani, parole di lingue lontane, fusioni, dialetti, diminutivi inventati                                  |
+| Troncamenti, fusioni, parole straniere poco note, diminutivi inventati                                                                                                  | sono le tecniche delle famiglie A, H, K (troncamenti, fusioni, dialetti) e B-G, L (parole straniere)                                                          |
+| Le famiglie N, U, doppia N/U e Z per il logo restano possibili, ma non sono obbligatorie                                                                                | due famiglie (I e J) le tengono; nelle altre il logo non è un criterio                                                                                        |
+| Almeno 300 candidati, per famiglia o tecnica, con l'idea dietro                                                                                                         | 341 nomi in 12 famiglie, ognuno con la sua idea                                                                                                               |
+| Distanza da Cozi (concorrente diretto), Mazi e Mozi; esclusi tutti i nomi eliminati                                                                                     | la stessa misura della fase 5 [5], sezione 5.2; il confronto con i 2.098 nomi già scritti (1.3)                                                               |
+| .com non obbligatorio: .app, .me, .family, .casa, .it, .eu, getX, heyX, Xapp                                                                                            | per tutti .com, .app, getX.com, heyX.com, Xapp.com; per la shortlist anche .family, .me, .casa, .it, .eu e altri prefissi                                     |
+| Rischio alto solo nello stesso settore (famiglia, calendario, casa, genitori, bambini, assistenti AI, produttività) o nelle classi 9, 35, 38, 42, 45                    | ogni app o marchio trovato porta l'etichetta **alto** o **basso**                                                                                             |
+| Shortlist di 10-12 con verifiche documentate; top 3-5 con punteggio sulla griglia della fase 4                                                                          | sezioni 7 e 8                                                                                                                                                 |
+| Un servizio che rifiuta va ritentato una volta, più lentamente, poi «non verificato»                                                                                    | lo faccio e lo scrivo nella sezione 12                                                                                                                        |
+| Aggiornare la tabella dei nomi eliminati e aggiungere quella delle riserve                                                                                              | sezioni 1.1 e 1.2                                                                                                                                             |
+| Dire se il risultato è debole                                                                                                                                           | sezioni 6 e 8                                                                                                                                                 |
 
 Restano i requisiti delle fasi 1-5 [1]-[5]: niente «Family», «Fam», «Nest», «Nido», «Casa», «Home», «Dom-» nel nome; l'assistente non deve avere un'identità umana, quindi niente nomi di persona; convivenza con PartyNest, che resta così.
 
 ### 2.2 La griglia
 
-È la griglia della fase 4 [4], sezione 2.2, la stessa usata in fase 5, così i punteggi si confrontano con Zivu (91) e Ruzi (86). Totale 110 punti; il punteggio è la somma di voto per peso, divisa per 5. Voti da 1 a 5 (5 nessun problema, 3 un problema da gestire, 1 un problema che da solo sconsiglia il nome).
+È la griglia della fase 4 [4], sezione 2.2, la stessa usata nelle fasi 4 e 5. Totale 110 punti; il punteggio è la somma di voto per peso, divisa per 5. Voti da 1 a 5 (5 nessun problema, 3 un problema da gestire, 1 un problema che da solo sconsiglia il nome).
 
 | Criterio               | Peso | Cosa misura                                                                                                           |
 | ---------------------- | ---- | --------------------------------------------------------------------------------------------------------------------- |
@@ -123,25 +124,26 @@ Restano i requisiti delle fasi 1-5 [1]-[5]: niente «Family», «Fam», «Nest»
 
 Nessun nome prende 5 in «Registrabilità»: i registri dei marchi dell'Unione non sono verificati.
 
-**Come voto l'evocazione in questa fase.** In fase 5 Zivu e Ruzi hanno preso 3: il senso c'è, ma solo in russo o in esperanto. Per essere coerente uso questa scala (lettura mia):
+**Come voto l'evocazione in questa fase.** L'eco di senso è la richiesta nuova, quindi la voto con una scala esplicita (lettura mia), con esempi presi da nomi noti:
 
-| Voto | Quando                                                                                                                               | Esempio          |
-| ---- | ------------------------------------------------------------------------------------------------------------------------------------ | ---------------- |
-| 5    | un italiano sente da solo una parola calda, senza spiegazione                                                                        | Luzi («luce»)    |
-| 4    | il senso arriva con una riga di racconto («vuol dire "gioia di stare insieme" in greco»), e il suono da solo è già morbido o allegro | Mazi («insieme») |
-| 3    | il senso c'è solo in una lingua lontana, e il suono non lo suggerisce                                                                | Zivu, Ruzi       |
-| 2    | nessun senso, suono neutro                                                                                                           | —                |
-| 1    | il senso o il suono portano fuori strada                                                                                             | —                |
+| Voto | Quando                                                                                                                               | Esempio                                              |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------- |
+| 5    | un italiano sente da solo una parola calda, senza spiegazione                                                                        | Luzi («luce»)                                        |
+| 4    | il senso arriva con una riga di racconto («vuol dire "gioia di stare insieme" in greco»), e il suono da solo è già morbido o allegro | Mazi («insieme»)                                     |
+| 3    | il senso c'è solo in una lingua lontana, e il suono non lo suggerisce                                                                | Klarna («klar», chiaro, in svedese; fase 4 [4], 3.1) |
+| 2    | nessun senso, suono neutro                                                                                                           | —                                                    |
+| 1    | il senso o il suono portano fuori strada                                                                                             | —                                                    |
 
-### 2.3 L'asticella: migliore di Ruzi e Zivu
+### 2.3 Cosa deve avere un finalista
 
-Francesco chiede nomi migliori, non diversi. Lo traduco in tre condizioni, tutte necessarie (stima mia, sulla griglia):
+Oltre al punteggio sulla griglia, un nome entra nel top solo se rispetta le indicazioni di Francesco (lettura mia di come tradurle in controlli):
 
-1. **Evocazione almeno 4**, cioè un passo sopra Ruzi e Zivu: è il motivo per cui la fase 6 esiste.
-2. **Nessun rischio alto** nel nostro settore o nelle classi 9, 35, 38, 42, 45: Zivu e Ruzi non ne hanno, e un nome che ne ha uno non è migliore.
-3. **Punteggio almeno 87** per battere Ruzi (86) e **almeno 92** per battere Zivu (91).
+1. **Corto e leggero:** quattro o cinque lettere, al massimo sei se il senso lo vale; sillabe aperte; si dice senza fatica.
+2. **Suono piacevole e «Chiedi a …» che scorre:** niente iato, niente «ad», niente genere marcato.
+3. **Un'eco di calore o di senso:** almeno 4 nella scala dell'evocazione qui sopra. È il motivo per cui esiste la fase 6.
+4. **Nessun rischio alto** nel nostro settore o nelle classi 9, 35, 38, 42, 45.
 
-Un nome che soddisfa 1 e 2 ma resta sotto 87 lo segnalo come «più caldo ma più debole»: è una scelta di gusto che spetta a Francesco, non un nome migliore.
+Un nome che ha il senso ma cade su un controllo lo scrivo con il motivo: la scelta di prenderlo comunque spetta a Francesco.
 
 ---
 
@@ -152,7 +154,7 @@ Un nome che soddisfa 1 e 2 ma resta sotto 87 lo segnalo come «più caldo ma pi�
 Lettura mia, sui dati della fase 5 [5], sezione 6.
 
 - Un nome di quattro lettere con un senso caldo in italiano o in inglese è quasi sempre già una parola (luce, sole, cura, cozy, warm) o già un'app. In fase 5 Luzi era il più evocativo e il più occupato: .app e .me presi, un marchio vivo, 590 ricerche al mese.
-- Più un nome è vuoto, più è libero. Zivu era vuoto in quattro paesi: 10 ricerche al mese ovunque.
+- Più un nome è vuoto, più è libero: i nomi più puliti della fase 5 avevano 10 ricerche al mese in quattro paesi, proprio perché non volevano dire niente.
 - Mazi mostra la via d'uscita: un senso vero («insieme» in greco) in una lingua che il pubblico non parla. Il nome resta inventato per chi lo sente, ma ha una storia da raccontare.
 
 ### 3.2 Tre livelli di eco
@@ -161,9 +163,9 @@ Lettura mia, sui dati della fase 5 [5], sezione 6.
 | --------------- | ----------------------------------------------------------------------------- | ---------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | eco trasparente | l'italiano sente la parola dentro il nome                                     | Luzi → luce      | si capisce senza spiegare                            | le parole italiane brevi sono tutte usate; il marchio è più debole se descrive                   |
 | eco raccontata  | una parola vera in una lingua lontana, con un senso che si spiega in una riga | Mazi → «insieme» | una storia per il sito e per la stampa; registrabile | se la lingua è dell'Unione e la parola descrive il prodotto, il marchio è debole (Namai, fase 1) |
-| eco nel suono   | nessun senso preciso, ma un suono che ricorda qualcosa di caldo               | Cozi → cozy      | leggero, libero                                      | è quello che hanno già Ruzi e Zivu                                                               |
+| eco nel suono   | nessun senso preciso, ma un suono che ricorda qualcosa di caldo               | Cozi → cozy      | leggero, libero                                      | il senso resta un'ipotesi di chi ascolta                                                         |
 
-La fase 6 cerca soprattutto i primi due livelli. Il terzo c'è già nelle riserve.
+La fase 6 cerca soprattutto i primi due livelli, perché il terzo è quello che in fase 5 è risultato debole.
 
 ### 3.3 Le parole da cui parto
 
@@ -173,12 +175,13 @@ Ho scelto dieci temi, quelli dell'indicazione di Francesco più tre che vengono 
 
 Restano le regole R1-R9 della fase 5 [5], sezione 3.3, con due aggiustamenti:
 
-| Regola                                                          | Fase 5    | Fase 6                                                                                       |
-| --------------------------------------------------------------- | --------- | -------------------------------------------------------------------------------------------- |
-| R1 quattro lettere, al massimo cinque                           | uguale    | uguale; sei lettere solo per un senso molto forte                                            |
-| R4 una consonante «frizzante» (z, x, v, k) al centro o in testa | richiesta | non richiesta: il senso conta più della z. La tengo nelle famiglie I e J                     |
-| R7 un senso nascosto, mai una parola comune nelle otto lingue   | un di più | **requisito**: ogni nome nasce da una parola con un significato                              |
-| R9 almeno due lettere di differenza da Cozi, Mazi e Mozi        | uguale    | uguale, misurata anche da Ruzi e Zivu per non riproporre le riserve con una lettera cambiata |
+| Regola                                                          | Fase 5    | Fase 6                                                                                      |
+| --------------------------------------------------------------- | --------- | ------------------------------------------------------------------------------------------- |
+| R1 quattro lettere, al massimo cinque                           | uguale    | uguale; sei lettere solo per un senso molto forte                                           |
+| R2, R3 la forma di Cozi e Mazi (CV-CV, accento sulla prima)     | richiesta | non richiesta: la forma Cozi non è un modello; vanno bene anche tre sillabe aperte (Teponi) |
+| R4 una consonante «frizzante» (z, x, v, k) al centro o in testa | richiesta | non richiesta: il senso conta più della z. La z resta solo nella famiglia J                 |
+| R7 un senso nascosto, mai una parola comune nelle otto lingue   | un di più | **requisito**: ogni nome nasce da una parola con un significato                             |
+| R9 almeno due lettere di differenza da Cozi, Mazi e Mozi        | uguale    | uguale                                                                                      |
 
 ---
 
@@ -618,6 +621,32 @@ Nella prima stesura c'erano 19 nomi già comparsi nelle fasi 3 e 5. Li ho tolti,
 
 Fonte: confronto con [3] e [5].
 
+### 4.4 Una strada in più: le cose di casa in italiano
+
+Dopo la correzione di Francesco (spaziare senza ancorarsi alla forma di Cozi o alla Z) ho aggiunto una tredicesima famiglia, M, che non parte da parole straniere ma dagli oggetti e dai momenti di una casa italiana: il tepore, la merenda, il sofà, il piumone, le ciabatte. È la strada che nella prima lista aveva dato i nomi più liberi (Teponi, Tunoi, Lunoi).
+
+| Nome    | L'idea                                                   |
+| ------- | -------------------------------------------------------- |
+| Tenoi   | te + noi: «a te e a noi»; il tè è anche la pausa insieme |
+| Tepini  | «tepore» con un diminutivo inventato                     |
+| Tepola  | «tepore» con un diminutivo inventato                     |
+| Teporu  | «tepore» con la -u                                       |
+| Piumi   | le piume del piumone                                     |
+| Piumu   | «piuma» con la -u                                        |
+| Merendu | «merenda», il momento di famiglia del pomeriggio         |
+| Pigi    | «pigiama»                                                |
+| Ciabi   | «ciabatte», le pantofole di casa                         |
+| Caldu   | ricorda «caldo»                                          |
+| Sofu    | «sofà», il divano di famiglia, con la -u                 |
+| Poltri  | «poltrire», starsene comodi                              |
+| Pisoli  | «pisolino»                                               |
+| Grembu  | «grembo»                                                 |
+| Lumini  | i lumini, le piccole luci                                |
+| Tisanu  | «tisana» con la -u                                       |
+| Brodi   | «brodo», il piatto di casa                               |
+
+Con questi 17 la fase 6 arriva a 358 nomi. Nessuno era già stato provato. Il filtro è nella sezione 6.1.
+
 ---
 
 ## 5. Il filtro rapido
@@ -643,8 +672,6 @@ In cinque passi, il 19/11/2026, dal più economico al più costoso:
 | Fosi  | 1 sul suono     | Cozi, Mozi | la s si legge z in molte lingue: «fo-zi» |
 | Kosu  | 1 sul suono     | Cozi       | k = c, s = z: «ko-zu»                    |
 
-Ho misurato anche la distanza da Ruzi e Zivu, per non proporre le riserve con una lettera cambiata: Rupi, Ruhi e Rozi sono a una lettera da Ruzi, Zinu, Zitu e Ziu da Zivu. Rupi, Ruhi, Rozi e Zitu cadono anche per altri motivi (5.3); Zinu resta, con la nota.
-
 Fonte: calcolo mio sui 341 nomi. 62 nomi sono a distanza 2 da uno dei tre: li tengo, come in fase 5, e per i finalisti lo scrivo.
 
 ### 5.3 Significati, nomi di persona, marchi noti e suono (210 nomi tolti)
@@ -661,7 +688,7 @@ Lettura mia, salvo dove scritto «noto» (fatto pubblico non riletto oggi) o dov
 | iniziale vocale: «Chiedi ad Argi», iato                            | Affi, Albu, Insi, Ognu, Argi, Inti, Ondo, Asu, Egu, Adun                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | H, J, GH, SH, NY in testa o al centro: si leggono in modi diversi  | Hogi, Hejmu, Hemu, Nohu, Ghari, Hika, Hiku, Hida, Hamki, Hamu, Hoiva, Hulpi, Huzu, Hui, Hibi, Hiru, Hugu, Hugi, Hati, Hertu, Zuhu, Zuha (la H è muta in italiano: «Ogi», «Emu», «Ugo»); Joto, Jotu, Jorni, Juntu, Jua, Ojak, Gaju (la J si legge g, i, h o j); Musha, Kesho (sh); Nyumi; Foghi                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | gruppi di consonanti, dittonghi e finali consonantici              | Tiepi, Lieti, Mielu, Zieme, Cielu, Beiti, Cuidi, Briu, Caliu, Taliu, Lauli (dittonghi che cambiano da lingua a lingua); Tbili, Storgi, Sukha, Guyub, Kapwa, Nsemu, Serdu, Srcu, Leblu, Solnoi (gruppi difficili); Baham, Saman, Danran, Tahan, Rukun, Sanuk (finale consonantico); Abbri, Zemmu (doppie da dettare); Goxo (G e X); Mysu (la y)                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| doppioni di nomi già scartati o troppo vicini a Cozi               | Tepa (Tepu con la -a, femminile), Siemu (Siemi, fase 4), Dimi (Dimmi, fase 4), Ritmu (Ritmo, fase 1), Covu (Covo, fase 4, e «Co-» come Cozi), Coru e Coccu («Co-» come Cozi), Komo («Ko-»), Kokoro (contiene Koko, fase 5), Zitu (a una lettera da Zivu, riserva), Zeru («zero»)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| doppioni di nomi già scartati o troppo vicini a Cozi               | Tepa (Tepu con la -a, femminile), Siemu (Siemi, fase 4), Dimi (Dimmi, fase 4), Ritmu (Ritmo, fase 1), Covu (Covo, fase 4, e «Co-» come Cozi), Coru e Coccu («Co-» come Cozi), Komo («Ko-»), Kokoro (contiene Koko, fase 5), Zitu (si sente «zitto»), Zeru («zero»)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | parole senza aggancio vero o poco riuscite                         | Ciau (troppo vicino a «ciao»), Gioi, Gaiu (in inglese si sente «gay»), Lietu (ricorda «Lietuva», la Lituania), Tene (dialettale per «tieni»), Boma (si sente «bomba»), Musha (in giapponese il guerriero), Sema (si sente «semantica»), Ciatu («cia» si legge male fuori dall'Italia), Zawa (la W), Zoki, Zabu, Belu, Goto (il «goto» della programmazione), Gemu (in giapponese il videogioco), Lamma (si sente «lama»), Talo (in finlandese «casa»: descrittivo in una lingua dell'Unione, come Namai), Nidu (contiene «Nid-», regola del nido)                                                                                                                                                                                                                           |
 
 Restano 125 nomi.
@@ -731,3 +758,16 @@ Come in fase 5 ho tenuto in shortlist anche nomi che già sapevo deboli su un pu
 - **Il senso costa.** In fase 5 il filtro dei significati aveva tolto 91 nomi su 339; qui ne ha tolti 210 su 341. Partire da parole vere vuol dire trovare più spesso nomi di persona, parole comuni e sensi sgradevoli in un'altra lingua.
 - **Le parole belle sono già app.** Le parole «casa» e «insieme» in lingue lontane sono state prese proprio da app come la nostra: Tomoni («insieme» in giapponese) è un'app per le attività di famiglia, Musubi («legame») un calendario condiviso, Malu e Luni app per i bambini, Tunza un'app per i pasti. È la stessa corsa ai nomi caldi vista in fase 4 con Yuva e Lontra [4].
 - **Le fusioni italiane sono libere.** Teponi, Noilu, Lunoi e Tunoi non hanno app, marchi o ricerche, e Teponi ha anche il .com libero. Il prezzo è che si capiscono soprattutto in italiano.
+
+### 6.1 La strada in più: la famiglia M (17 nomi)
+
+Stessi controlli, il 19/11/2026: distanza da Cozi, Mazi e Mozi (tutti a 3 o più), domini [11], Google Play Italia e USA [13], App Store Italia e USA per i nomi rimasti [14].
+
+| Esito                                    | Nomi e motivo                                                                                                                                                                                                                                                                                                                                                                |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| app nel nostro settore                   | Lumini («Lumini: Bedtime Stories», storie per bambini: alto)                                                                                                                                                                                                                                                                                                                 |
+| app lontane o significati                | Pigi (integratori; .com e .app presi), Sofu (in turco «sofu» è il devoto; app per la preghiera), Pisoli (Pisolo è uno dei sette nani), Grembu (il grembo fa pensare alla gravidanza), Piumi e Piumu (parola comune; «iu» si legge male), Brodi (Brodie, nome inglese), Ciabi (suono debole), Poltri («poltrire» vuol dire anche oziare), Tisanu (doppione di Tisana, fase 4) |
+| doppioni più deboli di Teponi            | Tepini (.com libero, ma contiene «Tepi», app per il riscaldamento di casa: 5.6), Tepola (-a, femminile), Teporu (si sente «tepore» detto male)                                                                                                                                                                                                                               |
+| tenuti come alternative, fuori shortlist | **Tenoi** (nessuna app, nessun marchio USA, .app libero, 10 ricerche al mese; tenoi.com registrato il 03/02/2025; stesso difetto «-oi» di Tunoi), **Caldu** (nessuna app, .app libero, 30 ricerche al mese; in Francia CALDU è un'impresa di gioielli e una immobiliare), **Merendu** (.com libero, ma sette lettere)                                                        |
+
+**Lettura mia.** La famiglia M conferma che le parole di casa italiane, fuse o accorciate, sono il territorio più libero, ma produce nomi meno leggeri: Merendu e Tepini sono lunghi, Caldu e Tenoi non aggiungono niente a Teponi e Tunoi. Non cambia la shortlist.
