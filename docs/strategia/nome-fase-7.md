@@ -1,5 +1,7 @@
 19/11/2026
 
+> Il 19/11/2026, dopo un test del gusto su 40 marchi e la decisione che il dominio non è un filtro, Francesco ha scelto Casario per l'analisi completa: si veda la fase 8, `nome-fase-8.md`.
+
 Documento vivo: si aggiorna dopo la scelta di Francesco, dopo le prove sulle persone e dopo la verifica del legale-privacy.
 
 # Il nuovo nome, fase 7: analisi completa di Funwa, Yanu, Yobi e Yado
