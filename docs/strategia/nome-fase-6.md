@@ -1,5 +1,7 @@
 19/11/2026
 
+> Il 19/11/2026 Francesco ha scelto quattro nomi da un nuovo catalogo (Funwa, Yanu, Yobi, Yado) e ha cambiato metodo; Teponi, Lunoi e Tunoi restano possibili: si veda la fase 7, `nome-fase-7.md`.
+
 Documento vivo: si aggiorna dopo la scelta di Francesco, dopo le prove sulle persone e dopo la verifica del legale-privacy.
 
 # Il nuovo nome, fase 6: nomi leggeri che dicono qualcosa
