@@ -1,4 +1,4 @@
-import type { MouseEvent } from "react";
+import type { MouseEvent, Ref } from "react";
 import { cx } from "../cx";
 import { Icon, type IconName } from "../Icon/Icon";
 
@@ -19,6 +19,8 @@ export type IconButtonProps = {
   pressed?: boolean;
   /** The button opens a dialog or a sheet (`aria-haspopup`) */
   "aria-haspopup"?: "dialog" | "menu" | true;
+  /** Ref of the `<button>`, to move the focus to it */
+  buttonRef?: Ref<HTMLButtonElement>;
   type?: "button" | "submit";
   onClick?: (event: MouseEvent<HTMLButtonElement>) => void;
   className?: string;
@@ -38,10 +40,12 @@ export function IconButton({
   "aria-label": ariaLabel,
   "aria-disabled": ariaDisabled,
   "aria-haspopup": hasPopup,
+  buttonRef,
   "data-testid": testId,
 }: IconButtonProps) {
   return (
     <button
+      ref={buttonRef}
       type={type}
       className={cx(
         "btn-icona",
