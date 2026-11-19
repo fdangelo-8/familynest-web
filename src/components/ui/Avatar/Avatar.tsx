@@ -1,4 +1,5 @@
 import { cx } from "../cx";
+import { safeImageSrc } from "@/lib/safe-image-src";
 import { AvatarPhoto } from "./AvatarPhoto";
 
 export const MEMBER_COLORS = [
@@ -57,7 +58,8 @@ export function Avatar({
   "data-testid": testId,
 }: AvatarProps) {
   const initial = dot ? "" : name.trim().charAt(0).toLocaleUpperCase("it-IT");
-  const showPhoto = Boolean(photoSrc) && size === "xl" && !dot && !empty;
+  const safePhoto = safeImageSrc(photoSrc);
+  const showPhoto = Boolean(safePhoto) && size === "xl" && !dot && !empty;
   return (
     <span
       className={cx(
@@ -74,8 +76,8 @@ export function Avatar({
       aria-label={nameShown ? undefined : showPhoto ? (photoAlt ?? name) : name}
       data-testid={testId}
     >
-      {showPhoto && photoSrc ? (
-        <AvatarPhoto key={photoSrc} src={photoSrc} initial={initial} />
+      {showPhoto && safePhoto ? (
+        <AvatarPhoto key={safePhoto} src={safePhoto} initial={initial} />
       ) : (
         initial
       )}

@@ -117,7 +117,11 @@ const TURN_SAMPLE_PEOPLE: readonly TurnPerson[] = [
 ];
 
 // A picture that cannot be opened, as a data address: no request is made.
-const BROKEN_PHOTO = "data:image/png;base64,AAAA";
+const BROKEN_PHOTO = "data:image/webp;base64,AAAA";
+
+// A small WebP picture (2:1) as a data address, like the copy of the server.
+const ANIMAL_SAMPLE_PHOTO =
+  "data:image/webp;base64,UklGRkIAAABXRUJQVlA4IDYAAAAQAwCdASooABQAPtFmrFEoJaQipWgBABoJZwAAKa1mnwAA/u69n/qqnr8bv90n6nuMeQEiAAA=";
 
 function AnimalParts() {
   const [photoPicked, setPhotoPicked] = useState("nessuna foto");
@@ -138,14 +142,14 @@ function AnimalParts() {
             name="Biscotto"
             color="zafferano"
             size="xl"
-            photoSrc={WISHLIST_SAMPLE_PHOTO}
+            photoSrc={ANIMAL_SAMPLE_PHOTO}
             photoAlt="Foto di Biscotto"
           />
           <Avatar
             name="Biscotto"
             color="zafferano"
             size="xl"
-            photoSrc={WISHLIST_SAMPLE_PHOTO}
+            photoSrc={ANIMAL_SAMPLE_PHOTO}
             nameShown
           />
           <Avatar
@@ -158,7 +162,7 @@ function AnimalParts() {
             name="Biscotto"
             color="zafferano"
             size="s"
-            photoSrc={WISHLIST_SAMPLE_PHOTO}
+            photoSrc={ANIMAL_SAMPLE_PHOTO}
           />
         </div>
       </Example>
@@ -176,7 +180,7 @@ function AnimalParts() {
           <PhotoField
             name="Biscotto"
             color="zafferano"
-            photoSrc={WISHLIST_SAMPLE_PHOTO}
+            photoSrc={ANIMAL_SAMPLE_PHOTO}
             onPick={() => {}}
             onRemove={() => {}}
           />
@@ -215,7 +219,7 @@ function AnimalParts() {
           <PhotoField
             name="Biscotto"
             color="zafferano"
-            photoSrc={WISHLIST_SAMPLE_PHOTO}
+            photoSrc={ANIMAL_SAMPLE_PHOTO}
             disabled
             onPick={() => {}}
             onRemove={() => {}}
