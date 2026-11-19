@@ -20,7 +20,14 @@ Per ogni controllo scrivo se è verificato, verificato in parte o non verificato
 
 ## Riassunto per Francesco
 
-_In lavorazione: il riassunto si completa dopo le verifiche della shortlist._
+1. Ho generato 358 nomi in 13 famiglie partendo da parole con un senso: casa, focolare, insieme, luce, calore, giorno, cura, cuore, in italiano, nei dialetti e in una trentina di lingue. Ruzi e Zivu restano in riserva e non sono un metro di paragone.
+2. Le parole straniere calde sono quasi tutte già app come la nostra: Tomoni («insieme» in giapponese) è un'app di attività di famiglia, Musubi («legame») un calendario condiviso, Tunza («prendersi cura» in swahili) un'app per i pasti. Kenu («nido» in ebraico) e Kokua («aiuto» in hawaiano) hanno marchi vivi nelle nostre classi.
+3. Le fusioni di parole italiane sono libere. Shortlist di 12; i primi tre: **Teponi 97, Lunoi 92, Tunoi 90**.
+4. Consiglio **Teponi** («tepore» + «noi»): è l'unico nome di sei fasi con **tutti i domini liberi**, teponi.com compreso, più .app, .family, .me, .casa, e dal DNS .it ed .eu. Nessuna app in otto paesi, nessun marchio USA, nessuna impresa omonima, 10 ricerche al mese in quattro paesi.
+5. Il suo limite: sei lettere e tre sillabe, più lungo di Cozi e Mazi.
+6. Se vuoi cinque lettere: **Lunoi** («luna» + «noi», lunoi.app, .family, .me, .casa liberi) o **Tunoi** («tu e noi», stessi domini liberi). In francese «oi» si legge «wa».
+7. Il risultato è solido sulle verifiche; sul senso è meglio della fase 5, ma l'eco di calore arriva soprattutto in italiano. Non esiste un nome di quattro lettere caldo e pulito.
+8. Non verificati: marchi UE, Italia e WIPO (TMview ha rifiutato) e Instagram.
 
 ---
 
@@ -735,6 +742,7 @@ Per i 50 nomi senza app su Google Play ho guardato l'App Store in Italia e negli
 | app nel nostro settore sull'App Store                | **Tepi** («Tepi: Termostato e Termosifoni», riscaldamento di casa: alto), **Sopu** («Sopu – Minimalist Declutter», riordino della casa: alto, già tolto in 5.5)                                                                                                                                                                                                                                                                |
 | app lontane sull'App Store                           | Beru (taxi in Russia), Lambi (giochi), Lazu, Nostu, Nosu («Nosu Travel Checklist»), Samai (sushi), Tagu («TagU»), Tasu (calcolo del tempo), Lapu (sfondi), Fiami                                                                                                                                                                                                                                                               |
 | tolti per suono o senso più deboli di un nome simile | Tepi (vince Tepu), Lusi e Lusu (Lusi si legge «Lucy», un nome; Lusu si sente «lusso»), Vatri (vince Vatru), Lapu (Lapu-Lapu, eroe e città filippina), Kayu (in indonesiano «legno», nessun calore), Seremi, Tuvoi, Ninoi, Miotu (fusioni meno chiare di Tunoi, Noilu, Lunoi, Teponi), Svetu, Teplu, Zonni, Zonu, Zorgu, Yutu, Dugu, Birli, Gunu, Tagi, Tagu, Samai, Vakti, Tempu, Sopi, Zinu, Dilu (suoni duri o senso debole) |
+| tolti dopo un controllo in più                       | Fogu (marchio FOGU vivo negli USA in classe 9, software e serrature elettriche [15]; 140 ricerche al mese in Italia [18]), Tahi (la H muta in italiano fa «Tai»; 110 ricerche al mese [18]), Lumoi e Vinoi (doppioni più deboli di Lunoi e Tunoi)                                                                                                                                                                              |
 | in shortlist                                         | Teponi, Lucu, Vatru, Noilu, Lunoi, Tunoi, Brazi, Zesti, Toplu, Kenu, Kokua, Tepu                                                                                                                                                                                                                                                                                                                                               |
 
 Come in fase 5 ho tenuto in shortlist anche nomi che già sapevo deboli su un punto (Kenu, Kokua, Tepu, Toplu), perché hanno un senso forte e volevo mostrare dove cadono.
@@ -771,3 +779,392 @@ Stessi controlli, il 19/11/2026: distanza da Cozi, Mazi e Mozi (tutti a 3 o più
 | tenuti come alternative, fuori shortlist | **Tenoi** (nessuna app, nessun marchio USA, .app libero, 10 ricerche al mese; tenoi.com registrato il 03/02/2025; stesso difetto «-oi» di Tunoi), **Caldu** (nessuna app, .app libero, 30 ricerche al mese; in Francia CALDU è un'impresa di gioielli e una immobiliare), **Merendu** (.com libero, ma sette lettere)                                                        |
 
 **Lettura mia.** La famiglia M conferma che le parole di casa italiane, fuse o accorciate, sono il territorio più libero, ma produce nomi meno leggeri: Merendu e Tepini sono lunghi, Caldu e Tenoi non aggiungono niente a Teponi e Tunoi. Non cambia la shortlist.
+
+---
+
+## 7. La shortlist di 12
+
+Teponi, Lunoi, Tunoi, Lucu, Vatru, Noilu, Brazi, Zesti, Toplu, Kenu, Kokua, Tepu. Come nelle fasi 4 e 5 ho tenuto anche i nomi che cadono, per mostrare dove e perché.
+
+### 7.1 Domini
+
+Controllo del 19/11/2026. «Libero» = l'RDAP risponde che il dominio non esiste [11]; «prob. libero» = solo DNS, il nome non risulta delegato [12]; «registrato» = ha un titolare (non dice se è in vendita). Per .family e .me, dove il registro ha rifiutato la prima richiesta (codice 429), ho riprovato una volta dopo una pausa di sei secondi; se ha rifiutato ancora scrivo «non verificato».
+
+| Nome   | .com (registrato dal, registrar)          | .app                                    | .family        | .me            | .casa      | .it, .eu, .io                         | .com con prefisso o suffisso liberi                                 |
+| ------ | ----------------------------------------- | --------------------------------------- | -------------- | -------------- | ---------- | ------------------------------------- | ------------------------------------------------------------------- |
+| Teponi | **libero**                                | **libero**                              | libero         | libero         | libero     | tutti e tre prob. liberi              | tutti quelli provati (get, hey, try, my, use, ciao, go, -app, Xapp) |
+| Lunoi  | 19/09/2011, NextName                      | **libero**                              | libero         | libero         | libero     | tutti e tre prob. liberi              | tutti quelli provati                                                |
+| Tunoi  | 13/09/2016, NameBright                    | **libero**                              | libero         | libero         | libero     | tutti e tre prob. liberi              | tutti quelli provati                                                |
+| Lucu   | 27/03/2000, GoDaddy                       | registrato il 30/10/2026 (RU-CENTER)    | non verificato | registrato     | registrato | .io prob. libero; .it, .eu registrati | get, hey, try, use, ciao, go, -app, Xapp                            |
+| Vatru  | 04/10/2008, Gandi                         | **libero**                              | libero         | non verificato | libero     | tutti e tre prob. liberi              | tutti quelli provati                                                |
+| Noilu  | 03/11/2025, Namecheap: è un negozio (7.3) | **libero**                              | non verificato | libero         | libero     | tutti e tre prob. liberi              | tutti quelli provati                                                |
+| Brazi  | 15/06/2006, GoDaddy                       | **libero**                              | libero         | libero         | libero     | .it, .eu prob. liberi; .io registrato | tutti quelli provati                                                |
+| Zesti  | 31/01/2006, GoDaddy                       | registrato il 24/05/2020 (Squarespace)  | libero         | registrato     | libero     | .it prob. libero; .eu, .io registrati | hey, my, use, ciao, go, -app                                        |
+| Toplu  | 25/10/2000, Cloudflare                    | registrato il 26/02/2025: è Toplu (7.3) | libero         | registrato     | libero     | tutti e tre prob. liberi              | tutti quelli provati                                                |
+| Kenu   | 10/05/2003, Squarespace                   | registrato il 09/02/2024 (EuroDNS)      | libero         | registrato     | libero     | .it prob. libero; .eu, .io registrati | get, hey, try, use, ciao, go, -app                                  |
+| Kokua  | 04/04/1997, GoDaddy                       | registrato il 17/02/2026 (Namecheap)    | registrato     | registrato     | libero     | .io prob. libero; .it, .eu registrati | hey, try, my, ciao, -app                                            |
+| Tepu   | 30/11/2001, GoDaddy                       | registrato il 05/12/2019 (Namecheap)    | libero         | libero         | libero     | .it prob. libero; .eu registrato      | tutti quelli provati                                                |
+
+Fonti: [11], [12], [21].
+
+**Lettura mia.** **Teponi ha tutti i domini liberi, .com compreso.** In sei fasi è il primo nome che si può registrare in tutte le estensioni lo stesso giorno. Lunoi, Tunoi, Vatru e Brazi hanno il .app e quasi tutto il resto liberi.
+
+### 7.2 Store
+
+App Store: pagina pubblica di ricerca in otto paesi (Italia, USA, Francia, Germania, Spagna, Regno Unito, Paesi Bassi, Polonia) [14]. Google Play: Italia e USA [13]. 22 richieste all'App Store sono state rifiutate al primo giro (codice 429) e ripetute una volta dopo otto secondi; le cinque rifiutate di nuovo sono «non verificato».
+
+| Nome   | App Store, otto paesi                                                                                                        | Google Play Italia e USA                                                                           | Nel nostro settore?                        |
+| ------ | ---------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| Teponi | nessuna app                                                                                                                  | nessuna                                                                                            | no                                         |
+| Lunoi  | nessuna app                                                                                                                  | nessuna                                                                                            | no                                         |
+| Tunoi  | nessuna app                                                                                                                  | nessuna                                                                                            | no                                         |
+| Lucu   | USA: «Lucu», app dei clienti di un negozio giapponese di toelettatura per cani; Polonia non verificata                       | nessuna                                                                                            | no: rischio basso                          |
+| Vatru  | nessuna app; Spagna non verificata                                                                                           | nessuna; ma «Vatra», a una lettera, ha app di storie per bambini e di benessere                    | vicino: Vatra è nel nostro settore (5.5)   |
+| Noilu  | nessuna app                                                                                                                  | nessuna                                                                                            | no                                         |
+| Brazi  | nessuna app; Polonia non verificata                                                                                          | nessuna                                                                                            | no                                         |
+| Zesti  | «Zesti: Food & Friends» in sette paesi: ordini di gruppo nei caffè con gli amici, carrello condiviso; Germania anche «Zesti» | nessuna                                                                                            | vicino: ordini di gruppo tra amici         |
+| Toplu  | «Toplu: Flights» (prenotazione di voli, di Toplu ApS) e diverse app turche per l'invio di SMS di gruppo («Toplu SMS»)        | nessuna                                                                                            | software con lo stesso nome; SMS di gruppo |
+| Kenu   | nessuna app; Regno Unito non verificato                                                                                      | nessuna                                                                                            | no                                         |
+| Kokua  | «Kokua Shop for iPhone», «Kokua Steps»; Italia non verificata                                                                | nessuna                                                                                            | no: rischio basso                          |
+| Tepu   | nessuna app                                                                                                                  | nessuna; ma «Tepi: Termostato e Termosifoni», a una lettera, è un'app per il riscaldamento di casa | vicino: casa                               |
+
+Fonti: [13], [14], [22], [23], [24].
+
+### 7.3 Marchi USA, aziende e web
+
+| Nome   | Marchi USA (Trademarkia)                                                                                                                             | Imprese in Francia                                                | Imprese nel Regno Unito (stato non letto)                | Sul web                                                                                 | Rischio                                                                  |
+| ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- | -------------------------------------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| Teponi | nessuno (0 risultati)                                                                                                                                | nessuna                                                           | nessuna                                                  | nessun prodotto; la ricerca porta al «teponaztli», un tamburo azteco                    | **basso**                                                                |
+| Lunoi  | LUNOI di Lanyan Limited Company, cosmetici e oli essenziali (classe 3), registrato il 12/08/2025                                                     | nessuna con questo nome (19 risultati per cognomi simili)         | nessuna uguale (LUNOIRE LTD, LUNOIR LTD)                 | lunoi.com registrato dal 2011, nessuna pagina                                           | **basso**                                                                |
+| Tunoi  | nessuno                                                                                                                                              | nessuna                                                           | nessuna                                                  | tunoi.com registrato dal 2016, pagina protetta                                          | **basso**                                                                |
+| Lucu   | LUCU di Shenzhen Grain Beauty Technology, giochi e articoli per feste (classe 28), registrato il 04/12/2024                                          | LUCU (codice 66.19B, servizi finanziari), attiva; cognome diffuso | LUCU PROPERTIES LIMITED                                  | lucu.app registrato il 30/10/2026, nessuna pagina                                       | basso per la regola; ma il marchio riguarda le feste, vicino a PartyNest |
+| Vatru  | nessuno                                                                                                                                              | nessuna                                                           | VATRU LTD                                                | vatru.com registrato dal 2008, nessuna pagina                                           | basso; da guardare le app «Vatra»                                        |
+| Noilu  | nessuno                                                                                                                                              | nessuna                                                           | nessuna                                                  | **noilu.com è «Noilu, Modern Scandinavian Wall Art», un negozio di quadri per la casa** | medio: arredamento della casa, non organizzazione                        |
+| Brazi  | non controllato                                                                                                                                      | 647 risultati: è un cognome diffuso                               | BRAZI LTD, BRAZI CONCIERGE LTD e altre                   | 170 ricerche al mese in Italia                                                          | basso, ma molte omonimie                                                 |
+| Zesti  | ZESTI di Grace Foods, bevande (classe 32), registrato; altri per salse e bicchieri, abbandonati                                                      | **ZESTI (codice 62.01Z, programmazione informatica), attiva**     | ZESTI LTD, ZESTI SOLUTIONS LTD, ZESTI CONSULTING LIMITED | zesti.app è il sito dell'app per ordinare nei caffè                                     | **alto**: software con lo stesso nome in Francia e un'app                |
+| Toplu  | un solo marchio turco abbandonato nel 2008 (classe 35)                                                                                               | TOPLU (codice 43.99C, edilizia) e altre: cognome turco            | AHMET TOPLU LTD                                          | **toplu.app è «Toplu - A Simpler Way to Book Flights», di Toplu ApS (Danimarca)**       | **alto**: software con lo stesso nome nell'Unione                        |
+| Kenu   | **KENU di Kenu, Inc., accessori per smartphone (classe 9), tre registrazioni vive**                                                                  | KENU (codice 68.20B, affitto di immobili), attiva                 | non controllato                                          | Kenu, Inc. vende supporti e custodie per telefoni (noto)                                | **alto per la regola** (classe 9)                                        |
+| Kokua  | **KOKUA vivi in classe 35 (consulenza finanziaria), 42 (informazioni ambientali), 9 (caschi per bici)**, altri in attesa o abbandonati: 41 risultati | KOKUA (associazione), KOKUA (consulenza), KOKUA VACANCES          | non controllato                                          | kokua.app registrato il 17/02/2026                                                      | **alto per la regola** (classi 9, 35, 42)                                |
+| Tepu   | **TEPU di Zhengzhou Erba Intelligence Technology, classe 35 (programmi fedeltà) e 21, registrati**                                                   | un'impresa individuale (cognome)                                  | non controllato                                          | —                                                                                       | **alto per la regola** (classe 35)                                       |
+
+Fonti: [15], [16], [21]-[24]. Trademarkia riprende i dati dell'USPTO; è una fonte secondaria. Il codice delle imprese francesi è quello dell'attività (NAF).
+
+### 7.4 Social
+
+Controllo del 19/11/2026 [17]. TikTok: «preso» se il profilo esiste (con il numero di follower), «libero» se TikTok risponde che l'utente non esiste.
+
+| Nome   | TikTok                  | YouTube    | Varianti libere su TikTok e YouTube | Instagram      |
+| ------ | ----------------------- | ---------- | ----------------------------------- | -------------- |
+| Teponi | preso (35 follower)     | **libero** | @teponiapp, @getteponi, @heyteponi  | non verificato |
+| Lunoi  | preso (3 follower)      | preso      | @lunoiapp, @getlunoi                | non verificato |
+| Tunoi  | preso (144 follower)    | preso      | @tunoiapp, @gettunoi                | non verificato |
+| Lucu   | preso (2.560 follower)  | preso      | @lucuapp, @getlucu                  | non verificato |
+| Vatru  | preso (89 follower)     | preso      | @vatruapp, @getvatru                | non verificato |
+| Noilu  | preso (13 follower)     | preso      | non controllate                     | non verificato |
+| Brazi  | preso (profilo privato) | preso      | non controllate                     | non verificato |
+| Zesti  | preso (3 follower)      | preso      | non controllate                     | non verificato |
+
+Per Toplu, Kenu, Kokua e Tepu non ho controllato i social: erano già caduti su marchi o significati. Instagram mostra la pagina di accesso anche per un nome che non esiste; lo verifica Francesco dal suo account.
+
+### 7.5 Ricerche su Google (Ubersuggest, 19/11/2026)
+
+Ricerche al mese, stima di Ubersuggest [18]. «Non controllato» = non ho speso la richiesta.
+
+| Nome   | Italia | Spagna          | Francia         | Germania        | Lettura mia di cosa c'è dietro                                         |
+| ------ | ------ | --------------- | --------------- | --------------- | ---------------------------------------------------------------------- |
+| Teponi | 10     | 10              | 10              | 10              | niente: il nome è vuoto nei quattro paesi                              |
+| Lunoi  | 10     | non controllato | 10              | 10              | niente                                                                 |
+| Tunoi  | 10     | 10              | non controllato | non controllato | niente                                                                 |
+| Lucu   | 140    | 210             | non controllato | 110             | la parola indonesiana e il cognome; un picco di 590 a maggio in Spagna |
+| Vatru  | 10     | non controllato | non controllato | 40              | in Germania probabilmente chi parla croato o serbo                     |
+| Noilu  | 10     | non controllato | non controllato | non controllato | niente in Italia                                                       |
+| Brazi  | 170    | non controllato | non controllato | non controllato | cognome e ricerche di «Brasile» scritte male (lettura mia)             |
+| Zesti  | 70     | non controllato | non controllato | non controllato | poco                                                                   |
+| Toplu  | 10     | non controllato | non controllato | non controllato | niente in Italia; in Turchia è una parola comune                       |
+| Kenu   | 110    | non controllato | non controllato | non controllato | probabilmente Kenu, Inc. e «Keanu» scritto male                        |
+| Kokua  | 110    | non controllato | non controllato | non controllato | marchi hawaiani (festival, abbigliamento), non identificato            |
+| Tepu   | 140    | non controllato | non controllato | non controllato | non identificato                                                       |
+
+### 7.6 Significati e suoni nelle otto lingue
+
+Lettura mia, salvo dove c'è il Wiktionary [19]. Il Wiktionary non ha voci per teponi, lunoi, tunoi, noilu, vatru e zesti; per zesti ho letto la voce greca ζέστη.
+
+| Nome   | Come si legge | IT                                                             | ES                          | FR                                                            | DE                | EN                                                    | PT               | NL      | PL      |
+| ------ | ------------- | -------------------------------------------------------------- | --------------------------- | ------------------------------------------------------------- | ----------------- | ----------------------------------------------------- | ---------------- | ------- | ------- |
+| Teponi | te-PO-ni      | ricorda «tepore»; «-oni» suona come un accrescitivo affettuoso | nessuna                     | nessuna                                                       | nessuna           | «te-PO-nee», vicino a «pony»                          | nessuna          | nessuna | nessuna |
+| Lunoi  | lu-NOI        | «luna» + «noi»                                                 | nessuna                     | si legge «lu-nwa»                                             | nessuna           | «loo-noy»                                             | nessuna          | nessuna | nessuna |
+| Tunoi  | tu-NOI        | «tu» + «noi»                                                   | ricorda «tuno», birbante    | si legge «tu-nwa»                                             | nessuna           | «too-noy», vicino a «annoy»                           | nessuna          | nessuna | nessuna |
+| Lucu   | LU-cu         | ricorda «luce»                                                 | nessuna                     | si legge «lü-kü»                                              | nessuna           | «loo-koo», vicino a «cuckoo»                          | nessuna          | nessuna | nessuna |
+| Vatru  | VA-tru        | ricorda «vetro»                                                | nessuna                     | si legge «va-trü»                                             | nessuna           | nessuna                                               | nessuna          | nessuna | nessuna |
+| Noilu  | NOI-lu        | «noi» + «luce»                                                 | nessuna                     | si legge «nwa-lu»                                             | nessuna           | «noy-loo»                                             | nessuna          | nessuna | nessuna |
+| Brazi  | BRA-zi        | ricorda «braci»                                                | si legge «brasi» o «brathi» | nessuna                                                       | si legge «bratsi» | «brazy», gergo americano per «crazy»; Brasile         | ricorda «Brasil» | nessuna | nessuna |
+| Zesti  | ZE-sti        | ricorda «zest», la scorza                                      | nessuna                     | nessuna                                                       | si legge «tsesti» | «zesty», vivace                                       | nessuna          | nessuna | nessuna |
+| Toplu  | TOP-lu        | nessuna                                                        | nessuna                     | si legge «top-lü»                                             | nessuna           | **«top loo»: in inglese britannico «loo» è il bagno** | nessuna          | nessuna | nessuna |
+| Kenu   | KE-nu         | nessuna                                                        | nessuna                     | nessuna                                                       | nessuna           | vicino a «Keanu»                                      | nessuna          | nessuna | nessuna |
+| Kokua  | ko-KU-a       | nessuna                                                        | nessuna                     | nessuna                                                       | nessuna           | nessuna                                               | nessuna          | nessuna | nessuna |
+| Tepu   | TE-pu         | nessuna                                                        | nessuna                     | **in francese è il gergo rovesciato di «pute», puttana** [19] | nessuna           | nessuna                                               | nessuna          | nessuna | nessuna |
+
+**Il senso nelle altre lingue, verificato.**
+
+- **Teponi:** nessuna voce. È una fusione mia di «tepore» e «noi». La ricerca web porta solo al «teponaztli», il tamburo di legno degli aztechi [25].
+- **Vatru:** in serbo-croato «vatra» è il fuoco, in ceco il falò e il focolare, in rumeno «vatră» il focolare [19]. «Vatru» è la forma di «vatra» che si usa come complemento in serbo e croato («zapaliti vatru», accendere il fuoco: noto, non verificato oggi).
+- **Lucu:** in indonesiano «buffo» e, in modo colloquiale, «carino»; in malese «buffo» [19].
+- **Brazi:** in rumeno è il plurale di «brad», abete [19].
+- **Zesti:** in greco ζέστη (zésti) vuol dire «caldo, calura» [19].
+- **Toplu:** in turco «collettivo», «riordinato» («toplu bir oda», una stanza in ordine), «tutti insieme» [19]; in serbo-croato «toplo» vuol dire «calorosamente» [19].
+- **Kenu:** in ebraico קֵן (ken) è il nido [19]; in ungherese «kenu» è la canoa, in rapanui il marito [19].
+- **Kokua:** in hawaiano «kōkua» vuol dire aiutare, lavorare insieme, l'aiuto che toglie una difficoltà [19].
+- **Tepu:** in francese è il verlan di «pute»; in indonesiano e malese «pieno» [19].
+
+### 7.7 Distanza da Cozi e Mazi
+
+Calcolo mio, metodo della fase 5 [5], sezione 5.2.
+
+| Nome   | Da Cozi (scrittura / suono) | Da Mazi (suono) | Rima come Cozi e Mazi?   |
+| ------ | --------------------------- | --------------- | ------------------------ |
+| Teponi | 5 / 5                       | 5               | no                       |
+| Lunoi  | 4 / 4                       | 4               | no                       |
+| Tunoi  | 4 / 4                       | 4               | no                       |
+| Lucu   | 3 / 3                       | 3               | no                       |
+| Vatru  | 4 / 4                       | 4               | no                       |
+| Noilu  | 5 / 5                       | 5               | no                       |
+| Brazi  | 3 / 3                       | 2               | **sì, «-azi» come Mazi** |
+| Zesti  | 4 / 4                       | 4               | no                       |
+| Toplu  | 4 / 4                       | 5               | no                       |
+| Kenu   | 4 / 4                       | 4               | no                       |
+| Kokua  | 3 / 3                       | 4               | no                       |
+| Tepu   | 4 / 4                       | 4               | no                       |
+
+**Lettura mia.** Questa volta i finalisti sono lontani da Cozi e Mazi: la distanza non è più un problema, tranne per Brazi, che ha la rima di Mazi.
+
+### 7.8 Punteggi
+
+Griglia della fase 4 (sezione 2.2).
+
+| Nome   | Pronuncia (15) | Significati (10) | Brevità (10) | Distintività (15) | Evocazione (15) | Registrabilità (15) | Domini e social (5) | SEO (10) | Suono e «Chiedi a» (10) | PartyNest (5) | Totale (110) |
+| ------ | -------------- | ---------------- | ------------ | ----------------- | --------------- | ------------------- | ------------------- | -------- | ----------------------- | ------------- | ------------ |
+| Teponi | 5              | 4                | 4            | 5                 | 4               | 4                   | 5                   | 5        | 4                       | 4             | **97**       |
+| Lunoi  | 3              | 4                | 5            | 5                 | 4               | 4                   | 4                   | 5        | 4                       | 4             | **92**       |
+| Tunoi  | 3              | 4                | 5            | 5                 | 4               | 4                   | 4                   | 5        | 3                       | 4             | **90**       |
+| Lucu   | 4              | 4                | 5            | 3                 | 4               | 4                   | 2                   | 3        | 5                       | 4             | **85**       |
+| Vatru  | 4              | 4                | 5            | 4                 | 3               | 3                   | 4                   | 4        | 4                       | 4             | **84**       |
+| Noilu  | 3              | 4                | 5            | 4                 | 4               | 3                   | 3                   | 5        | 3                       | 4             | **83**       |
+| Brazi  | 3              | 3                | 5            | 3                 | 4               | 4                   | 4                   | 3        | 4                       | 4             | **80**       |
+| Toplu  | 4              | 3                | 5            | 3                 | 4               | 2                   | 4                   | 4        | 4                       | 4             | **79**       |
+| Kenu   | 4              | 4                | 5            | 3                 | 4               | 2                   | 3                   | 3        | 4                       | 4             | **78**       |
+| Zesti  | 3              | 4                | 5            | 3                 | 4               | 2                   | 3                   | 4        | 4                       | 4             | **77**       |
+| Tepu   | 4              | 1                | 5            | 4                 | 4               | 2                   | 4                   | 3        | 4                       | 4             | **76**       |
+| Kokua  | 4              | 4                | 4            | 3                 | 4               | 2                   | 2                   | 3        | 4                       | 3             | **74**       |
+
+Esempio di calcolo, Teponi: 5×15 + 4×10 + 4×10 + 5×15 + 4×15 + 4×15 + 5×5 + 5×10 + 4×10 + 4×5 = 485, diviso 5 fa 97.
+
+### 7.9 Perché questi voti
+
+| Nome   | Punti forti                                                                                                                              | Voti sotto 4 e motivo                                                                                                                                                |
+| ------ | ---------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Teponi | tutti i domini liberi, .com compreso; nessuna app, nessun marchio, nessuna impresa; si legge uguale in tutte le lingue; ricorda «tepore» | nessuno sotto 4; Brevità 4 perché ha sei lettere e tre sillabe                                                                                                       |
+| Lunoi  | .app libero; nessuna app; «luna» e «noi» si sentono in italiano                                                                          | Pronuncia 3: in francese «oi» si legge «wa» (lu-nwa), in inglese «oy»                                                                                                |
+| Tunoi  | .app libero; il senso più diretto per una coppia o una famiglia: «tu e noi»                                                              | Pronuncia 3: come Lunoi; «Chiedi a» 3: «Chiedi a Tunoi» si sente «chiedi a tu, noi», una frase spezzata                                                              |
+| Lucu   | «Chiedi a Lucu» è il più scorrevole; «luce» in italiano, «carino» in indonesiano                                                         | Distintività 3: parola comune in indonesiano e malese, cognome; Domini 2: .com, .app (dal 30/10/2026), .me e .casa presi; SEO 3: 110-210 ricerche al mese            |
+| Vatru  | .app libero; il focolare in tre lingue                                                                                                   | Evocazione 3: in italiano non dice niente e il suono «tr» non è morbido; Registrabilità 3: le app «Vatra», a una lettera, sono di storie per bambini                 |
+| Noilu  | «noi» e «luce»; .app libero                                                                                                              | Pronuncia 3: «nwa-lu» in francese; Registrabilità 3: noilu.com è un negozio di quadri per la casa; Domini 3; «Chiedi a» 3: «chiedi a Noilu» si sente «chiedi a noi…» |
+| Brazi  | le braci, il calore; .app libero                                                                                                         | Pronuncia 3: la z; Significati 3: «brazy» in inglese, cognome; Distintività 3: rima di Mazi; SEO 3: 170 ricerche                                                     |
+| Toplu  | il senso più ricco: «al caldo» in croato, «tutti insieme» e «in ordine» in turco                                                         | Registrabilità 2: Toplu ApS, società danese, ha un'app e toplu.app; Significati 3: «top loo» in inglese britannico; Distintività 3                                   |
+| Kenu   | «nido» in ebraico: il vecchio nome detto in un'altra lingua                                                                              | Registrabilità 2: marchi KENU vivi in classe 9; Distintività 3: Keanu; SEO 3                                                                                         |
+| Zesti  | «calore» in greco e «zest» in inglese                                                                                                    | Registrabilità 2: ZESTI è un'impresa di software in Francia e un'app; Pronuncia 3                                                                                    |
+| Tepu   | «tepore» in quattro lettere                                                                                                              | Significati 1: in francese è il verlan di «pute»; Registrabilità 2: TEPU in classe 35                                                                                |
+| Kokua  | il senso più vicino al premium: l'aiuto che toglie una difficoltà                                                                        | Registrabilità 2: marchi KOKUA vivi nelle classi 9, 35 e 42; Domini 2; Brevità 4; PartyNest 3                                                                        |
+
+---
+
+## 8. I consigliati
+
+In ordine di punteggio: **Teponi 97, Lunoi 92, Tunoi 90**, poi Lucu 85 e Vatru 84 come alternative con un difetto da accettare. Li valuto solo sulla griglia e sulle indicazioni di Francesco (sezione 2.3).
+
+| Nome   | Corto e leggero                 | «Chiedi a …»            | Eco di calore o senso | Nessun rischio alto   | Esito                                 |
+| ------ | ------------------------------- | ----------------------- | --------------------- | --------------------- | ------------------------------------- |
+| Teponi | sei lettere, tre sillabe aperte | scorre                  | sì: «tepore» + «noi»  | sì                    | **consigliato**                       |
+| Lunoi  | cinque lettere, due sillabe     | scorre                  | sì: «luna» + «noi»    | sì                    | consigliato, con il difetto «-oi»     |
+| Tunoi  | cinque lettere, due sillabe     | si spezza («a tu, noi») | sì: «tu e noi»        | sì                    | consigliato, con due difetti          |
+| Lucu   | quattro lettere, due sillabe    | il più scorrevole       | sì: «luce»            | sì                    | alternativa: domini quasi tutti presi |
+| Vatru  | cinque lettere, due sillabe     | scorre                  | solo raccontata       | sì, ma vicino a Vatra | alternativa                           |
+
+### 8.1 Teponi (97)
+
+**Come si legge.** te-PO-ni, sei lettere, tre sillabe aperte, nessuna lettera che cambia suono da una lingua all'altra.
+
+**Da dove viene.** È una fusione di «tepore» e «noi»: il caldo di casa, detto al plurale. In italiano il finale «-oni» suona come un accrescitivo affettuoso («i teponi»), un po' buffo, come i soprannomi che si danno in famiglia (lettura mia).
+
+**Perché è il primo.** È l'unico nome delle sei fasi che ha **tutti** i domini liberi: teponi.com, teponi.app, teponi.family, teponi.me, teponi.casa, e dal DNS anche .it, .eu e .io. Nessuna app in otto paesi e due store, nessun marchio USA, nessuna impresa in Francia e nel Regno Unito, 10 ricerche al mese in Italia, Spagna, Francia e Germania. Il canale YouTube @teponi è libero.
+
+**Il punto debole da sapere.** È più lungo di quanto hai chiesto: sei lettere e tre sillabe, contro le quattro o cinque di Cozi e Mazi. Si dice in un fiato, perché le sillabe sono tutte aperte, ma sulla pagina è più lungo. E il senso si capisce in italiano: fuori dall'Italia è un nome inventato che suona bene.
+
+**Come suona.**
+
+- «Chiedi a Teponi chi porta Tommaso a nuoto.»
+- «L'ho messo su Teponi.»
+- «Teponi Plus vale per tutta la casa.»
+- «Teponi Feste», accanto a «PartyNest».
+
+**Stato delle verifiche.**
+
+| Cosa                                                          | Stato                                                                  | Verificato                 | Fonte      |
+| ------------------------------------------------------------- | ---------------------------------------------------------------------- | -------------------------- | ---------- |
+| teponi.com, teponi.app, teponi.family, teponi.me, teponi.casa | liberi                                                                 | sì                         | [11]       |
+| getteponi.com, heyteponi.com, teponiapp.com e altri sei       | liberi                                                                 | sì                         | [11]       |
+| teponi.it, teponi.eu, teponi.io                               | probabilmente liberi                                                   | solo DNS                   | [12]       |
+| App Store, otto paesi; Google Play Italia e USA               | nessuna app                                                            | sì                         | [13], [14] |
+| YouTube                                                       | @teponi libero                                                         | sì                         | [17]       |
+| TikTok                                                        | @teponi preso (35 follower); @teponiapp, @getteponi, @heyteponi liberi | sì                         | [17]       |
+| Instagram                                                     | —                                                                      | no                         | —          |
+| Marchi USA                                                    | nessuno                                                                | in parte: fonte secondaria | [15]       |
+| Marchi UE, Italia, WIPO                                       | —                                                                      | no (TMview ha rifiutato)   | [20]       |
+| Imprese in Francia e nel Regno Unito                          | nessuna                                                                | sì                         | [16]       |
+| Ricerche al mese                                              | 10 in Italia, Spagna, Francia, Germania                                | sì, stima di Ubersuggest   | [18]       |
+
+**Rischi.** 1) La lunghezza: è una questione di gusto, da provare sulle persone (sezione 11). 2) In inglese può far pensare a «pony». 3) Tepini, una variante, contiene «Tepi», un'app per il riscaldamento di casa (5.6): Teponi no, ma conviene non usare varianti.
+
+**Domini da registrare.** teponi.com (principale), teponi.app, teponi.family, teponi.casa, teponi.me, teponi.it, teponi.eu.
+
+### 8.2 Lunoi (92)
+
+**Come si legge.** lu-NOI, cinque lettere, due sillabe.
+
+**Da dove viene.** «Luna» + «noi»: la sera, quando la casa si ritrova. È il nome più leggero dei tre.
+
+**Come suona.** «Chiedi a Lunoi cosa manca per la spesa.» «Lunoi Plus.» «Lunoi Feste.»
+
+**Rischi.** 1) In francese «oi» si legge «wa»: «lu-nwa». In Francia il nome cambia suono; in Italia, Spagna e Germania no. 2) Marchio LUNOI per cosmetici negli USA (classe 3): lontano. 3) lunoi.com è registrato dal 2011, senza una pagina.
+
+**Domini da registrare.** lunoi.app (principale), lunoi.family, lunoi.casa, lunoi.me; lunoi.it e lunoi.eu se liberi al momento dell'acquisto.
+
+### 8.3 Tunoi (90)
+
+**Come si legge.** tu-NOI, cinque lettere, due sillabe.
+
+**Da dove viene.** «Tu» + «noi»: la persona e la famiglia, la coppia e i figli. È il senso più diretto per chi vive insieme.
+
+**Come suona.** «Chiedi a Tunoi quando siamo liberi.» «Tunoi Plus.» «Tunoi Feste.»
+
+**Rischi.** 1) Lo stesso «-oi» di Lunoi. 2) In una frase si spezza: «chiedi a Tunoi» si può sentire «chiedi a tu, noi». 3) In spagnolo ricorda «tuno», birbante. 4) TikTok @tunoi ha 144 follower.
+
+**Domini da registrare.** tunoi.app (principale), tunoi.family, tunoi.casa, tunoi.me; tunoi.it e tunoi.eu se liberi.
+
+### 8.4 Le due alternative
+
+- **Lucu (85)** è quello che suona meglio in «Chiedi a Lucu», e ricorda la luce. Ma lucu.com è preso dal 2000, lucu.app è stato registrato il 30/10/2026 da qualcuno che non usa ancora il dominio, .me e .casa sono presi; in indonesiano è una parola comune (110-210 ricerche al mese in Italia, Spagna e Germania). Con lucu.family (non verificato) o getlucu.com si può fare, ma parte con un vicino sconosciuto sul .app.
+- **Vatru (84)** è il focolare in tre lingue, con .app libero. In italiano però non dice niente, e «Vatra», a una lettera, ha già app di storie per bambini.
+
+### 8.5 Il mio consiglio, e quanto è solido
+
+1. **Teponi**, se ti va bene un nome di tre sillabe. È il più pulito di tutte le fasi e l'unico con il .com libero, e ricorda il tepore di casa.
+2. **Lunoi**, se vuoi un nome di cinque lettere: suona leggero e ha il .app libero. Va provato con chi parla francese.
+3. **Tunoi**, se conta di più il senso «tu e noi»: va provato nella frase «Chiedi a Tunoi».
+
+**Quanto è solido il risultato.** Sulle verifiche è il più solido delle sei fasi: Teponi, Lunoi e Tunoi non hanno app, marchi USA o imprese con lo stesso nome, e hanno il .app libero (Teponi anche il .com). Sul senso è migliore della fase 5, ma con un limite chiaro: l'eco di calore arriva soprattutto in italiano. Le parole straniere che dicono «insieme», «casa» o «aiuto» erano quasi tutte già prese da app come la nostra (Tomoni, Musubi, Tunza) o da marchi nelle nostre classi (Kenu, Kokua). Non c'è un nome di quattro lettere con un senso caldo e tutti i controlli puliti: chi ha il senso e le verifiche (Teponi) è più lungo, chi è corto e caldo (Lucu) ha i domini presi.
+
+**Il voto di Teponi va letto con questo in mente.** Il 97 viene soprattutto da domini, SEO e distintività, dove un nome che nessuno ha mai scritto prende sempre il massimo. Sul piacere del suono decide Francesco, come nelle fasi precedenti.
+
+---
+
+## 9. PartyNest, il logo e i domini
+
+### 9.1 PartyNest
+
+PartyNest resta così [7]. «Teponi Feste», «Lunoi Feste» e «Tunoi Feste» scorrono. Accanto a «PartyNest» tutti e tre sono abbastanza diversi da non sembrare lo stesso prodotto con due nomi (lettura mia).
+
+### 9.2 Il logo
+
+Lettura mia, spunti per il designer. In Teponi e Tunoi c'è la N del logo, e in Lunoi e Tunoi anche la U, che è la N capovolta [5], sezione 3.4: il segno attuale può restare come lettera interna. Nessuno dei tre comincia con la N. La «o» di Teponi, Lunoi e Tunoi può diventare un sole o una luna, cioè il tepore e la sera.
+
+### 9.3 Cosa cambia per il sito e per l'app
+
+Proposte per Francesco, non le faccio io: nuovo dominio principale con rinvio da familynest.me; nome nello store e nella scheda; testi «Chiedi a …». Il piano di cambio è quello della fase 1 [1], sezione 9.
+
+### 9.4 Quanto costano i domini
+
+Dai listini letti in fase 2 il 18/11/2026: .com 11,81 $ il primo anno, .app 8,75 $, .eu 5,88 $, .it da 4,99 € a 12,00 € più IVA [2]. .family, .me e .casa: prezzo non verificato. Stima mia: meno di 100 € il primo anno per i sette domini di Teponi.
+
+### 9.5 Domini da registrare il giorno della scelta
+
+| Nome   | Principale | Insieme                                           | Facoltativi            |
+| ------ | ---------- | ------------------------------------------------- | ---------------------- |
+| Teponi | teponi.com | teponi.app, teponi.family, teponi.casa, teponi.it | teponi.me, teponi.eu   |
+| Lunoi  | lunoi.app  | lunoi.family, lunoi.casa, lunoi.me                | getlunoi.com, lunoi.it |
+| Tunoi  | tunoi.app  | tunoi.family, tunoi.casa, tunoi.me                | gettunoi.com, tunoi.it |
+
+---
+
+## 10. Domande per il legale-privacy
+
+1. **Ricerca di anteriorità** su EUIPO, TMview (con UIBM) e WIPO per TEPONI, LUNOI e TUNOI nelle classi 9 e 42, più 35, 38 e 45; marchi uguali e simili per suono.
+2. **Fusioni di parole italiane:** TEPONI («tepore» + «noi»), LUNOI e TUNOI contengono parole comuni italiane. Sono abbastanza distintivi per un marchio, o il richiamo a «noi» li rende deboli?
+3. **LUNOI:** il marchio USA LUNOI per cosmetici (classe 3) può creare problemi se depositiamo nelle classi 9 e 42?
+4. **Ordine dei passi**, già chiesto nelle fasi precedenti: quanto presto depositare dopo la scelta, e se usare il nome con il ™ prima della registrazione. Il marchio sarà a nome di Francesco [7].
+
+---
+
+## 11. I passi per Francesco
+
+1. **Scegli** fra Teponi, Lunoi e Tunoi, oppure chiedi di portarli tutti e tre al legale nella stessa ricerca, che costa meno [6].
+2. **Lo stesso giorno registra i domini** della tabella 9.5, dallo stesso registrar, a tuo nome, con il rinnovo automatico.
+3. **Non cercare i nomi su siti di domini poco noti prima dell'acquisto:** l'ICANN avverte che queste ricerche possono far capire ad altri l'interesse [26]. Io ho usato solo i registri e il DNS pubblico.
+4. **Controlla Instagram** dal tuo account per il nome scelto e per @[nome]app.
+5. **Prove rapide** con 20-30 adulti e 5-10 persone di lingua francese, spagnola o tedesca. Solo adulti, risposte anonime, nessun dato sui figli.
+   - Cinque secondi: si dice il nome e si chiede che cosa viene in mente. Serve a capire se Teponi fa pensare al tepore, se Lunoi alla luna, se Tunoi a «tu e noi».
+   - Telefono: si detta il nome e si chiede di scriverlo.
+   - La frase: «Chiedi a Teponi chi porta Tommaso a nuoto», «Chiedi a Lunoi cosa manca per la spesa», «Chiedi a Tunoi quando siamo liberi». Quale suona meglio?
+   - La lunghezza: si mostrano Teponi e Lunoi scritti come in un'icona e si chiede quale si ricorda dopo un minuto.
+   - Soglia proposta (stima mia, la stessa delle fasi precedenti): un nome passa se almeno due persone su tre lo scrivono giusto e meno di una su cinque ha un'associazione negativa.
+6. **Niente uso pubblico** del nome prima del parere del legale.
+
+---
+
+## 12. Cosa non ho verificato
+
+- **Marchi nell'Unione, in Italia e WIPO:** TMview ha rifiutato la richiesta automatica («Request Rejected») al primo tentativo e al secondo [20]. Serve il legale.
+- **Marchi USA:** solo da Trademarkia, non sulle schede ufficiali USPTO; per Brazi non controllati.
+- **App Store:** l'API di Apple ha risposto con un errore 403. Ho usato la pagina pubblica di ricerca, che mostra i primi risultati: Italia e USA per 62 nomi, otto paesi per la shortlist. Restano non verificati, dopo il secondo tentativo: Lucu e Brazi in Polonia, Vatru in Spagna, Kenu nel Regno Unito, Kokua in Italia.
+- **Google Play:** prima pagina di risultati, Italia e USA; l'ordine può nascondere app con lo stesso nome.
+- **.it, .eu, .io:** solo DNS. Un nome «probabilmente libero» va confermato al momento dell'acquisto.
+- **.family e .me:** il registro ha rifiutato molte richieste; dopo il secondo tentativo restano non verificati lucu.family, noilu.family e vatru.me.
+- **Instagram:** la pagina chiede l'accesso anche per i nomi che non esistono.
+- **Imprese:** Francia e Regno Unito, senza leggere lo stato delle società inglesi; niente Italia, Spagna e Germania. Per Brazi, Kenu, Kokua e Tepu il Regno Unito non è controllato.
+- **Significati:** Wiktionary per i nomi della shortlist; per gli altri 346 nomi lettura mia. Le parole straniere della sezione 4 sono una lettura mia, da verificare se un nome viene ripreso.
+- **Cosa c'è dietro le ricerche:** per Lucu, Brazi, Kenu, Kokua e Tepu (110-210 al mese) non l'ho identificato con certezza.
+- **Risposte delle AI:** i nomi nuovi non hanno storia, non c'è niente da misurare.
+
+**Uso di Ubersuggest.** 26 richieste in sola lettura il 19/11/2026, tutte panoramiche di parole chiave: 17 in Italia (i 12 della shortlist, più Fogu, Tahi, Sopi, Tenoi e Caldu) e 9 in Spagna, Francia e Germania (Teponi in tutti e tre, Lucu in Spagna e Germania, Lunoi in Francia e Germania, Vatru in Germania, Tunoi in Spagna). Il contatore dei report del giorno è passato da 26 a 52 su 100; nessun credito di aggiornamento usato (0 su 50). Nessun progetto, lista o marchio creati o modificati [18].
+
+---
+
+## Fonti
+
+Tutte consultate il 19/11/2026, salvo diversa indicazione.
+
+1. `docs/strategia/nome-candidati.md`, fase 1, stratega, 18/11/2026 (PR #478).
+2. `docs/strategia/nome-fase-2.md`, fase 2, stratega, 18/11/2026 (PR #483).
+3. `docs/strategia/nome-fase-3.md`, fase 3, stratega, 18/11/2026 (PR #486).
+4. `docs/strategia/nome-fase-4.md`, fase 4, stratega, 18/11/2026 (PR #486).
+5. `docs/strategia/nome-fase-5.md`, fase 5, stratega, 19/11/2026 (PR #486).
+6. `docs/legale/marchio.md`, versione 2, agente legale-privacy, 18/11/2026.
+7. Issue #472 e indicazioni di Francesco del 19/11/2026, arrivate tramite il coordinatore: Ruzi e Zivu in riserva; Zunni, Zetu e Nivu scartati; nomi corti e leggeri con un'eco di calore o di senso; correzione dello stesso giorno: Ruzi e Zivu non sono un riferimento né un metro di paragone.
+8. Cozi: Wikipedia, «Cozi» https://en.wikipedia.org/wiki/Cozi, come citata in [5].
+9. Mazi: AlternativeTo, «Mazi» https://alternativeto.net/software/mazi/about/, come citata in [5].
+10. Effetto bouba/kiki, come citato in [3] e [5].
+11. RDAP: .com `https://rdap.verisign.com/com/v1/domain/<nome>.com`; .app `https://pubapi.registry.google/rdap/domain/<nome>.app`; .family e .me `https://rdap.identitydigital.services/rdap/domain/<nome>.<estensione>`; .casa `https://rdap.nic.casa/domain/<nome>.casa`. Risposta 404: nessun titolare; 200: registrato, con data e registrar; 429: richiesta rifiutata per troppe richieste.
+12. DNS pubblico di Google: `https://dns.google/resolve?name=<nome>.<estensione>&type=NS`; stato 3 (NXDOMAIN) vuol dire che il nome non è delegato.
+13. Google Play, ricerca: `https://play.google.com/store/search?q=<nome>&c=apps&hl=it&gl=IT` e `hl=en&gl=US`, prima pagina, titoli che cominciano con il nome.
+14. App Store, pagina pubblica di ricerca: `https://apps.apple.com/<paese>/iphone/search?term=<nome>`; API di Apple `https://itunes.apple.com/search` rifiutata con errore 403.
+15. Trademarkia: `https://www.trademarkia.com/search/trademarks?q=<nome>` per teponi, lunoi, tunoi (con tenoi e caldu: nessun risultato), lucu, vatru, noilu, zesti, toplu, kenu, kokua, tepu, tahi, fogu, fiami, lazu, mainu.
+16. Registro delle imprese francese: `https://recherche-entreprises.api.gouv.fr/search?q=<nome>`; Companies House: `https://find-and-update.company-information.service.gov.uk/search/companies?q=<nome>`.
+17. Profili pubblici: `https://www.tiktok.com/@<nome>` (codice 10221 = utente inesistente, 10222 = profilo privato), `https://www.youtube.com/@<nome>`, `https://www.instagram.com/<nome>/`.
+18. Ubersuggest, panoramica delle parole chiave: Italia (2380, italiano), Spagna (2724), Francia (2250), Germania (2276); nomi e conteggio nella sezione 12.
+19. Wiktionary inglese, voci lette il 19/11/2026: toplu, toplo, ζέστη, קן, kōkua, fogolâr, lucu, vatra, brazi, tepu, kenu (https://en.wiktionary.org/wiki/toplu e analoghe); assenti teponi, noilu, lunoi, tunoi, zesti, vatru, kokua (senza il segno sulla o).
+20. TMview: `https://www.tmdn.org/tmview/api/search/results`, risposta «Request Rejected» al primo e al secondo tentativo.
+21. Siti sui domini presi: toplu.app («Toplu - A Simpler Way to Book Flights»), noilu.com («Noilu | Modern Scandinavian Wall Art»), zesti.app («Zesti.app»); lucu.app, lunoi.com, vatru.com, tenoi.com senza pagina.
+22. Zesti: App Store USA, «Zesti: Food & Friends» https://apps.apple.com/us/app/zesti-food-friends/id6806939475 (sviluppatore, funzioni, versioni).
+23. Lucu: App Store USA, «Lucu» https://apps.apple.com/us/app/lucu/id6449922056
+24. Toplu: App Store USA, «Toplu: Flights» https://apps.apple.com/us/app/toplu-flights/id6755239035 (Toplu ApS) e «Toplu Kolay Mesaj - Grup Sms» https://apps.apple.com/us/app/toplu-kolay-mesaj-grup-sms/id1148929000
+25. Ricerca web «Teponi», 19/11/2026: i risultati portano al teponaztli, per esempio Britannica https://britannica.com/art/teponaztli
+26. ICANN SSAC, SAC 022, «Domain Name Front Running», ottobre 2007: https://itp.cdn.icann.org/en/files/security-and-stability-advisory-committee-ssac-reports/sac-022-en.pdf
