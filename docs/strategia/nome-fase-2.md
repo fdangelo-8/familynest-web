@@ -1,5 +1,7 @@
 18/11/2026
 
+> Superato dalla fase 3, `nome-fase-3.md`: il 18/11/2026 Francesco ha scartato il top 3 di questo documento (Nolmea, Nelmea, Nelaro).
+
 Documento vivo: si aggiorna dopo la verifica del legale-privacy e dopo la scelta di Francesco.
 
 # Il nuovo nome, fase 2: Nolia e i nomi inventati con la N
