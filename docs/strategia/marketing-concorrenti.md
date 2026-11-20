@@ -1,4 +1,4 @@
-17/11/2026 · aggiornato il 19/11/2026 con i capitoli 10 (Nidly), 11 (Famnest), 12 (altri family organizer su Android) e 13 (FamBox), e con la regola di monitoraggio dei concorrenti piccoli decisa da Francesco
+17/11/2026 · aggiornato il 19/11/2026 con i capitoli 10 (Nidly), 11 (Famnest), 12 (altri family organizer su Android), 13 (FamBox) e 14 (Homsy), e con la regola di monitoraggio dei concorrenti piccoli decisa da Francesco · aggiornato il 20/11/2026 con la decisione di Francesco su Homsy (14.7)
 
 Documento vivo: si aggiorna quando cambiano i concorrenti, i siti di Francesco o il calendario dei rilasci.
 
@@ -8,7 +8,7 @@ Preparato dallo stratega per Francesco. È la base del piano editoriale. Riparte
 
 ## Riassunto per Francesco
 
-1. **In Italia nessun concorrente fa contenuti seri.** FamilyWall vive del suo nome (1.600 ricerche al mese), Share(d) prende circa 170 visite al mese con le pagine in italiano, Bring! quasi niente dal sito: vincono negli store. Il campo dei contenuti è libero.
+1. **In Italia nessun concorrente fa contenuti seri, tranne Homsy** (punto 13, aggiunto il 19/11/2026). FamilyWall vive del suo nome (1.600 ricerche al mese), Share(d) prende circa 170 visite al mese con le pagine in italiano, Bring! quasi niente dal sito: vincono negli store. Il campo dei contenuti è libero.
 2. **Chi cerca «app calendario condiviso» trova solo pagine degli store** (TimeTree primo). Per le ricerche «app …» serve la scheda su Google Play (#397), non un articolo.
 3. **Le guide «come fare» sono la domanda più facile da prendere:** «calendario condiviso» 1.300 ricerche, le varianti Google, iPhone, Outlook e WhatsApp oltre 2.000; per «come creare un calendario condiviso» Google mostra in prima pagina una guida in inglese e una in spagnolo.
 4. **Fuori dalla parola «app» c'è più volume:** menu settimanale (3.600), calendario scolastico 2026 2027 (3.600), pulizie di casa (1.900), lista valigia (1.600), scadenza revisione auto (9.900). Ogni funzione che rilasciamo ha la sua parola: è il motore del piano editoriale.
@@ -20,6 +20,7 @@ Preparato dallo stratega per Francesco. È la base del piano editoriale. Riparte
 10. **Famnest (aggiunto il 19/11/2026):** app svedese e australiana con finanziatori, su Android e iPhone dal 2025, già in italiano. Ha calendario, faccende, liste, pasti, documenti, conti e AI; 15.849 installazioni Android, 1 solo voto in Italia. Costa 3,99 € al mese, 39,99 € all'anno o 99,99 € a vita. Dichiara un marchio FAMNEST registrato nel Regno Unito: è la ragione più forte per cambiare il nome FamilyNest (#472). Minaccia media. **Vale la regola di monitoraggio dei concorrenti piccoli (decisione di Francesco del 19/11/2026):** nessuna azione, controllo ogni 3 mesi; il dato sul marchio va all'agente legale-privacy (capitolo 11).
 11. **Altri family organizer su Android (19/11/2026):** nessuna app nuova sopra le 100.000 installazioni fa il nostro mestiere. Da seguire: Homsy (Lettonia, 26.937 installazioni, 4,5, citata da ChatGPT), Flatastic (faccende e conti per coppie e coinquilini, 731.117), Family Tools (una web app pubblicata su Google Play) e Clantastic, un'app italiana uscita l'08/11/2026 con assistente vocale (capitolo 12). Family Tools, Clantastic e le altre piccole vanno sotto la regola di monitoraggio; Homsy e Flatastic no (sezione seguente).
 12. **FamBox (aggiunto il 19/11/2026):** web app estone in inglese con un assistente su Telegram, da 19 € al mese, senza app negli store. Rischio basso; utile il modello di consenso per persona per la nostra idea dell'assistente su WhatsApp (capitolo 13).
+13. **Homsy (analisi completa del 19/11/2026):** app lettone di un piccolo studio, senza finanziatori trovati, su Android, iPhone e **anche nel browser**, in italiano. Ha 26.937 installazioni Android, 935 voti (4,5) e 2 voti sull'App Store italiano. È forte sulla casa (faccende, spesa, pasti, conti, rifiuti) e debole sul coordinamento tra adulti. Costa 3,99 € al mese, 22,99 € all'anno o 59,99 € a vita, ed è gratis solo per 2 persone. Il suo punto forte è il sito: 190 pagine in italiano, 22 confronti come «alternative a TimeTree» e un `llms.txt`. ChatGPT la consiglia usando proprio quei confronti. Minaccia media, più sui contenuti che sul prodotto; sul nome nuovo (#472) nessun impatto. **Decisione di Francesco (20/11/2026):** controllo mensile di Homsy, il primo il 19/12/2026, e tre azioni prima del lancio: tre confronti in italiano su familynest.me, un `llms.txt` da proporre al team del sito, il messaggio «gratis per tutta la famiglia» solo se lo conferma la decisione su G13 (capitolo 14.7).
 
 ---
 
@@ -70,7 +71,7 @@ Preparato dallo stratega per Francesco. È la base del piano editoriale. Riparte
 
 **Chi resta fuori, e perché.**
 
-- **Homsy:** è uscita il 02/01/2026 e ha 26.937 installazioni, ma ha già 935 voti ed è citata da ChatGPT nel progetto familynest.me [53]. Supera due soglie oggi, quindi non la metto sotto la regola: la segnalo a Francesco come concorrente da seguire con un'analisi completa (capitolo 12.1). Decide lui.
+- **Homsy:** è uscita il 02/01/2026 e ha 26.937 installazioni, ma ha già 935 voti ed è citata da ChatGPT nel progetto familynest.me [53], [87]. Non rientra nella regola. L'analisi completa è nel capitolo 14 (19/11/2026). Decisione di Francesco (20/11/2026): controllo mensile, il primo il 19/12/2026, e tre azioni di marketing prima del lancio (14.7).
 - **Flatastic:** su Google Play dal 2015, 731.117 installazioni e 9.242 voti. Non è né nuova né piccola; resta tra i concorrenti già noti, con rischio medio solo su faccende e conti divisi (12.2).
 - **PlanPop, FamiLami, Family Organizer di Sunflowr, Myfamiliz, Family Planner & Organizer, Cubbily:** tra 52.000 e 145.000 installazioni, quindi sopra la soglia dei piccoli. Il rischio è basso e non serve un'azione; si ricontrollano quando si aggiorna `concorrenti.md`.
 
@@ -947,6 +948,8 @@ Richiesta di Francesco del 19/11/2026: partendo da Famnest, le altre app di orga
 
 ### 12.1 Homsy
 
+Analisi completa nel capitolo 14 (19/11/2026). Rispetto a questa mini-scheda: Homsy è anche sull'App Store dal 26/01/2026 e nel browser (app.gethomsy.com); il gratuito vale per 2 membri; il prezzo in Italia è 3,99 € al mese, 22,99 € all'anno o 59,99 € a vita.
+
 | Voce            | Dato                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Chi             | Must Have Apps SIA, Riga (Lettonia), sviluppatore con altre app di consumo                                                                                                                                                                                                                                                                                                                                                                 |
@@ -1039,6 +1042,261 @@ Segnalato da Francesco il 19/11/2026. Non era nel documento. Dati letti il 19/11
 
 ---
 
+## 14. Homsy: Organizzatore Familiare
+
+Analisi completa chiesta da Francesco il 19/11/2026, perché Homsy supera le soglie della regola di monitoraggio (sezione in testa al documento). Dati raccolti il 19/11/2026 dalle schede di Google Play (USA, Italia, Germania, Francia, Spagna, Lettonia), dalle schede dell'App Store, dall'interfaccia pubblica di Apple (Lookup, Search, feed delle recensioni), dal sito gethomsy.com con il suo `llms.txt` e la `sitemap.xml`, da AppGoblin, da Product Hunt e dalla ricerca web. Ubersuggest: il limite giornaliero di 100 report era già esaurito [87], quindi volumi di ricerca, traffico del sito e posizioni su Google sono **non verificati**; ho letto solo la visibilità nelle AI del progetto familynest.me, che non consuma report. La mini-scheda 12.1 resta come riepilogo; questo capitolo la sostituisce dove i dati sono cambiati.
+
+### 14.1 In breve
+
+- **Chi è:** un'app lettone di un piccolo studio, Must Have Apps SIA di Riga, che pubblica anche app per abitudini e salute (smettere di fumare, ciclo mestruale, digiuno). Nessun finanziamento trovato. È su Android dal 02/01/2026, su iPhone dal 26/01/2026 e **anche nel browser** (app.gethomsy.com).
+- **Cosa fa:** faccende con rotazione e punti, cose da fare con progetti, spesa per corsia, pasti e ricette, calendario con import da Google e Apple, spese divise, «da quanto tempo» e conti alla rovescia, contatori di luce, acqua e gas, calendario dei rifiuti, note di casa, più case per lo stesso account.
+- **Quanto pesa oggi:** 26.937 installazioni Android, 935 voti su Google Play (4,5 nel mondo, 4,7 la media mostrata in Italia), 150 voti sull'App Store in 17 paesi. In Italia 2 voti sull'App Store; quelli di Google Play per paese non sono pubblici.
+- **Cosa la rende diversa dagli altri piccoli:** un sito con 3.807 pagine in 20 lingue, di cui 190 in italiano (145 del blog, 44 di strumenti gratuiti), confronti «Homsy contro Cozi» e «alternative a TimeTree» e un file `llms.txt` scritto per le AI. ChatGPT la consiglia in italiano usando come fonti proprio due di quegli articoli.
+- **Per noi:** minaccia **media, più alta sui contenuti e sulle AI che sul prodotto**. Ci toglie due vantaggi che davamo per nostri: è nel browser come noi e scrive in italiano i confronti che volevamo scrivere noi.
+- **Decisione di Francesco (20/11/2026, 14.7):** fuori dalla regola dei piccoli, controllo mensile (il primo il 19/12/2026) e tre azioni di marketing già nel piano, da fare prima del lancio. Nessuna modifica al prodotto in risposta.
+
+### 14.2 Chi è
+
+| Voce                   | Dato                                                                                                                                                                                                                                                                                                                                       | Fonte            |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------- |
+| Sviluppatore           | Must Have Apps SIA, Valguma iela 18-16, Riga (Lettonia); telefono lettone; assistenza da un indirizzo Gmail. Sull'App Store italiano «si è identificata come operatore commerciale», con numero DUNS 667326112                                                                                                                             | [75], [77]       |
+| Nome sul sito          | il piè di pagina dice «Homsy Inc.»; termini e informativa dicono solo «Homsy», senza società, indirizzo o legge applicabile; contatto su musthaveappscorp.com                                                                                                                                                                              | [81], [83]       |
+| Fondatore e team       | su Product Hunt il maker è «Ziggy Crane», che racconta di averla fatta per la sua famiglia; gli articoli del blog sono firmati «Ziggy». Un registro di terzi indica Zigmārs Dzērve come membro del consiglio della società; che siano la stessa persona è una mia lettura, **non verificata**                                              | [85], [82], [86] |
+| Altre app dello studio | Athena (ciclo mestruale), Unhooked, Burnout (smettere di fumare), Rebuild (smettere di bere), Ghosted, Unbroken, Dailies, Fasted, Rivals (padel)                                                                                                                                                                                           | [75], [77]       |
+| Finanziamenti          | nessuno trovato (ricerca web, sito, Product Hunt). Lettura: è uno studio che pubblica molte app di consumo, non una startup finanziata                                                                                                                                                                                                     | [85], [86]       |
+| Uscita                 | Google Play 02/01/2026; App Store 26/01/2026 (prima versione nella cronologia il 27/01). Product Hunt: lancio nel 2026, «9 mesi fa», giorno non indicato, 3 voti e 10 follower                                                                                                                                                             | [75], [79], [85] |
+| Aggiornamenti          | 1.0.26 del 29/09/2026. La cronologia dell'App Store mostra 15 versioni dal 27/01 al 29/09, circa una ogni 17 giorni (stima: 245 giorni / 14 intervalli). Dal 29/09 al 19/11 nessuna versione nuova negli store (51 giorni); il sito invece è aggiornato di continuo: 100 pagine della sitemap portano la data del 19/11/2026               | [77], [81]       |
+| Piattaforme            | Android, iPhone e iPad (iOS 16), Mac con chip M1 (versione per iPad) e **web app** su app.gethomsy.com, con il Pro pagabile anche sul web tramite Stripe. Widget per la schermata Home                                                                                                                                                     | [77], [81], [83] |
+| Lingue                 | 26 sull'App Store, italiano compreso. Sito in 20 lingue, italiano compreso. Un utente segnala che la web app non ha un selettore di lingua e segue quella del browser                                                                                                                                                                      | [77], [81], [75] |
+| Categoria ed età       | Google Play: Produttività, PEGI 3. App Store: Produttività e Stili di vita, 13+. I termini chiedono 18 anni o il consenso di un genitore                                                                                                                                                                                                   | [75], [77], [83] |
+| Tecnologia             | Flutter, Firebase, RevenueCat per gli abbonamenti, un SDK pubblicitario di Google rilevato ma «nessuna pubblicità» dichiarata (AppGoblin, dati di terzi)                                                                                                                                                                                   | [84]             |
+| Download               | Google Play: fascia «10.000+», valore preciso nella pagina 26.937. AppGoblin (stima di terzi): circa 608 a settimana, circa 2.000 nelle ultime 4 settimane, andamento «stabile». La media dall'uscita è circa 585 a settimana (stima: 26.937 / 46 settimane): la crescita è costante, non in accelerazione. App Store: **non disponibile** | [75], [84]       |
+| Sito                   | gethomsy.com: home in 20 lingue, blog con sei sezioni e una di confronti, 40 strumenti gratuiti nel browser (calcolatori, stampabili, calendari per genitori separati), `llms.txt`, nessun link ai social                                                                                                                                  | [81], [82]       |
+| Social                 | nessun profilo collegato dal sito; la ricerca web non trova Instagram, TikTok, Facebook o Reddit di Homsy. Follower **non disponibili**: vanno cercati a mano (capitolo 5.4)                                                                                                                                                               | [81], [92]       |
+| Pubblicità             | **non verificato**: la Meta Ad Library risponde con errore 403 dalla nostra rete e il Google Ads Transparency Center non carica i risultati senza browser. Vanno aperti a mano                                                                                                                                                             | [91]             |
+
+**Prezzo e piani**
+
+| Store e paese               | Mensile                                     | Annuale | A vita  | Fonte |
+| --------------------------- | ------------------------------------------- | ------- | ------- | ----- |
+| App Store Italia e Germania | 3,99 €                                      | 22,99 € | 59,99 € | [77]  |
+| Google Play Italia          | da 4,29 € a 59,99 € (fascia degli acquisti) | —       | —       | [76]  |
+| App Store USA               | 3,99 $                                      | 19,99 $ | 49,99 $ | [78]  |
+| App Store Regno Unito       | 3,99 £                                      | 19,99 £ | 49,99 £ | [78]  |
+
+Cosa è gratis, secondo il `llms.txt` del sito [81]: senza pubblicità e senza scadenza, ma **solo per una casa di 2 membri attivi**, con tetti (10 cose da fare attive, 2 progetti, 2 liste della spesa, 3 note, 3 faccende ripetute, 3 momenti, 5 ricette). Sono Pro l'import da Google e Apple Calendar, gli eventi ripetuti, la lavagna, i colori personalizzati e gli allegati. Il Pro serve per una casa di 3 o più persone e per amministrare una seconda casa; i membri senza account (i bambini senza telefono) contano nel limite. Non c'è prova gratuita: si paga alla conferma [83].
+
+Lettura: per una coppia Homsy è quasi tutta gratis; una famiglia con un figlio deve pagare. La loro unità di prezzo è il numero di persone in casa, la nostra (`prezzo-per-nest.md`) è il Nest intero con fino a 10 persone.
+
+**Voti e recensioni (19/11/2026)**
+
+| Dove                                                      | Voti         | Media         | Fonte |
+| --------------------------------------------------------- | ------------ | ------------- | ----- |
+| Google Play, mondo                                        | 935          | 4,5           | [75]  |
+| Google Play, media mostrata in Italia                     | (stessi 935) | 4,7           | [76]  |
+| Google Play, media mostrata in Germania, Spagna, Lettonia | (stessi 935) | 4,2; 4,9; 4,3 | [76]  |
+| App Store USA                                             | 38           | 4,8           | [79]  |
+| App Store Australia                                       | 36           | 4,6           | [79]  |
+| App Store Germania                                        | 25           | 4,0           | [79]  |
+| App Store Regno Unito                                     | 16           | 4,1           | [79]  |
+| App Store Polonia                                         | 11           | 3,7           | [79]  |
+| App Store Spagna                                          | 6            | 4,2           | [79]  |
+| App Store Canada, Paesi Bassi                             | 4; 3         | 5,0; 3,7      | [79]  |
+| **App Store Italia**                                      | 2            | 5,0           | [79]  |
+| App Store Francia, Portogallo, Lettonia                   | 2 ciascuno   | 5,0           | [79]  |
+| App Store Austria, Svizzera, Svezia                       | 1 ciascuno   | 4,0; 3,0; 5,0 | [79]  |
+| App Store Belgio, Irlanda                                 | 0            | —             | [79]  |
+
+Google mostra in ogni paese una media diversa sugli stessi 935 voti; quanti di questi siano italiani è **non disponibile**. Sull'App Store i voti europei sono 72 su 150.
+
+Lettura: 935 voti su 26.937 installazioni sono il 3,5%, contro lo 0,5% di Famnest (79 su 15.849, capitolo 11.2). Homsy chiede il voto più spesso o in un momento migliore; come lo faccia è **non verificato** senza installare l'app.
+
+**Temi delle recensioni lette** (3 per paese su Google Play in USA, Italia, Germania e Spagna; 27 sull'App Store in USA, Regno Unito, Germania, Australia e Polonia) [75], [76], [80]. Sono poche: indizi, non temi affermati.
+
+- **Gratuito largo, abbonamento caro:** «Permette di fare gratis tante cose, molto più di altre app simili che invece ti obbligano a pagare. Se l'abbonamento fosse più economico pagherei sicuramente» (Italia, 20/09/2026). Lo stesso utente chiede il saldo di fine mese «di quale membro della famiglia deve ricevere soldi».
+- **Tutto in un posto, anche per chi fatica a ricordare:** «All my stuff. All my notes. The schedules. Routines. All in one place» (USA, 12/10/2026); «Was previously using multiple apps» (Australia, 26/06/2026).
+- **Coppie:** «the perfect app for couples who want to stay organized […] but don't want to have to nag each other» (USA, 03/08/2026).
+- **Sincronizzazione e calendario:** il calendario Google si aggiorna ogni 20 minuti, per scelta dello sviluppatore (risposta del 25/09/2026); recensioni da 1 a 3 stelle su eventi che non si sincronizzano o cambiano data (USA, Germania); prima della 1.0.24 mancava il calendario Apple (Germania, Australia).
+- **Assistenza:** «no customer support. emailed 3 times» (USA, 25/09/2026); «No response after 2 follow-up» dopo un rimborso chiesto pochi minuti dopo l'acquisto annuale (Australia, 27/10/2026).
+- **Dati persi:** entrare in una seconda casa cancellava la propria e il Pro a vita (Germania, 02/08/2026); lo sviluppatore ha risposto che avrebbe aggiunto più case «this week» e ha chiesto di cambiare il voto.
+- **Figli senza telefono:** due recensioni tedesche chiedono di assegnare faccende e visite ai bambini senza account (marzo e settembre 2026); i membri senza account sono arrivati con la 1.0.22 (01/09/2026).
+- **Rifiuti:** carta e plastica non si potevano separare (Regno Unito, Germania, Polonia); sistemato con la 1.0.24 (07/09/2026).
+- Lo sviluppatore risponde sotto le recensioni negative di Google Play, in inglese anche a recensioni in tedesco.
+
+### 14.3 Cosa fa
+
+**Le funzioni** (descrizioni, note di versione, `llms.txt`, informativa) [75], [77], [81], [83]: faccende ripetute con responsabile, rotazione automatica, peso della faccenda (leggera, media, pesante) per vedere «who's really carrying the load», raggruppate per stanza, con pausa, recupero di quelle saltate, serie di giorni («streaks») e punti (1.0.21, 1.0.24); cose da fare con sottocompiti, commenti, priorità, allegati e progetti; spesa in tempo reale con 12 corsie fisse, quantità e note, preferiti, più liste, uscite per la spesa programmate, widget, ricerca del prodotto dal codice a barre (Open Food Facts) e una dispensa citata nell'informativa; pasti della settimana e ricette, con spesa generata dal piano; calendario con colori per persona, viste giorno, 3 giorni, settimana, mese e agenda, faccende nel calendario, import in una sola direzione da Google (fino a 10 calendari per membro) e da Apple su iPhone, entrambi Pro, nessun feed iCal e nessuna esportazione; spese con categorie, budget, divisione tra membri e spese ricorrenti; «Momenti»: da quanto tempo (ultimo cambio dell'olio, dentista, vaccini dell'animale) e conti alla rovescia (compleanni, vacanze); letture dei contatori di luce, acqua e gas con grafici; calendario dei rifiuti con tipi di bidone e colori; lavagna e note di casa (password del Wi-Fi, codice dell'allarme, appunti per la babysitter); più case per lo stesso account (anche due case dopo una separazione); membri senza account per i bambini; invito con link; funziona senza rete; tema chiaro e scuro. Il sito dichiara che non ci sono e non sono previsti messaggi in famiglia e posizione [81].
+
+**Confronto con la nostra mappa delle funzionalità** (`mappa-funzionalita.md`, sezione 1)
+
+| Funzione                                                       | Noi                                                               | Homsy                                                                                       | Differenza                                                                                       |
+| -------------------------------------------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Pagina del giorno e sintesi del mattino                        | sì, Oggi e sintesi del mattino (G1, G10)                          | Home con schede; notifiche via mail delle aggiunte e degli eventi assegnati                 | **più forti noi**, per quanto si vede                                                            |
+| Aggiungi con una frase                                         | sì (G2)                                                           | no; un elenco incollato diventa più voci                                                    | **più forti noi**                                                                                |
+| Calendario settimana, mese, giorno                             | sì (G4, G5, G6)                                                   | sì, più 3 giorni e agenda                                                                   | pari                                                                                             |
+| «Chi è dove», una colonna per persona                          | sì (G6)                                                           | «più viste per ogni persona» (1.0.24)                                                       | simili; da vedere nell'app                                                                       |
+| Eventi ripetuti                                                | sì, gratis (G3)                                                   | sì, ma Pro                                                                                  | **più forti noi** sul gratuito                                                                   |
+| Chi vede ogni impegno («Tutto il Nest», «Occupato», «Solo io») | sì (G7)                                                           | non risulta                                                                                 | **più forti noi**                                                                                |
+| Chi accompagna, «Liberi insieme»                               | sì (G8, G9)                                                       | non risulta                                                                                 | **più forti noi**                                                                                |
+| Calendari collegati                                            | Google e Outlook in due direzioni (G13), piano da decidere        | import da Google e Apple in una sola direzione, Pro, ogni 20 minuti                         | **più forti noi**: Outlook e due direzioni. Loro hanno Apple (per noi G14 è ferma)               |
+| Widget e notifiche push                                        | idee (X4, X6)                                                     | sì                                                                                          | **più forti loro**: app nativa                                                                   |
+| App negli store                                                | idea (X5, #397)                                                   | Android e iPhone                                                                            | **più forti loro**                                                                               |
+| Web app                                                        | sì, è il nostro prodotto                                          | sì, app.gethomsy.com                                                                        | **pari**: il vantaggio «anche sul computer» non vale contro Homsy                                |
+| Cose da fare con chi se ne occupa                              | sì (C2)                                                           | sì, con progetti, sottocompiti, commenti, priorità                                          | **più forti loro**                                                                               |
+| Faccende e routine                                             | idea (F7, #389)                                                   | sì, con rotazione, peso, stanze, punti e serie                                              | **più forti loro, oggi**; serie e punti non vanno copiati (14.6)                                 |
+| Spesa condivisa                                                | sì, in tempo reale (C1)                                           | sì, più corsie, codice a barre e widget                                                     | **più forti loro**                                                                               |
+| Liste multiple, spesa per reparto                              | idee (C5 #378, C8)                                                | sì                                                                                          | **più forti loro, oggi**                                                                         |
+| Dispensa                                                       | non ora (C9)                                                      | citata nell'informativa; nell'app **non verificato**                                        | da verificare                                                                                    |
+| Ricette, pasti, spesa dal piano                                | idee (K1–K4, #381, #382)                                          | sì; 5 ricette nel gratuito                                                                  | **più forti loro, oggi**                                                                         |
+| Scadenze della casa con avvisi a 30, 7 e 1 giorno              | sì (C3)                                                           | Momenti: «da quanto tempo» e conti alla rovescia                                            | simili; loro contano anche il tempo passato, noi avvisiamo prima                                 |
+| Rifiuti e contatori di luce, acqua e gas                       | non nella mappa                                                   | sì                                                                                          | **solo loro**; spunto in 14.6                                                                    |
+| Spese e conti                                                  | idea (D2, #379)                                                   | sì, con budget e divisione; manca il saldo «chi deve a chi» (recensione)                    | **più forti loro, oggi**                                                                         |
+| Documenti                                                      | idea (D1, #380)                                                   | solo allegati alle cose da fare (Pro)                                                       | pari, nessuno dei due li ha davvero                                                              |
+| Note di casa                                                   | no                                                                | lavagna e note (Wi-Fi, codice dell'allarme)                                                 | **solo loro**; per noi un codice d'allarme in una nota è un rischio, non una funzione da copiare |
+| Compleanni e ricorrenze                                        | idea (G16, #387)                                                  | conti alla rovescia                                                                         | **più forti loro, oggi**, ma senza lista desideri                                                |
+| Profilo del figlio, lista desideri, pagina pubblica            | sì (F1, F3, F4)                                                   | membro senza account, senza profilo                                                         | **più forti noi**                                                                                |
+| Profilo dell'animale                                           | sì (F2)                                                           | solo come «momento» (vaccini)                                                               | **più forti noi**                                                                                |
+| Nonni e babysitter                                             | idea (P8, #392)                                                   | note per la babysitter; nessun accesso dedicato                                             | pari                                                                                             |
+| Figli in due case                                              | non ora (G26)                                                     | più case per account, modelli di calendario per l'affido sul sito                           | **più forti loro**                                                                               |
+| Messaggi in famiglia                                           | Citofona, idea (M1, #384); chat scartata (M3)                     | esclusi                                                                                     | stessa scelta                                                                                    |
+| Assistente AI                                                  | idea (A1, #386)                                                   | nessuna AI dichiarata                                                                       | nessuno dei due oggi                                                                             |
+| Persone nel gratuito                                           | fino a 10 nel Nest (P4)                                           | 2 membri attivi; dal terzo serve il Pro                                                     | **più forti noi**, se il gratuito resta così                                                     |
+| Lingua                                                         | italiano                                                          | 26 lingue con l'italiano; descrizione italiana di Google Play più vecchia di quella inglese | loro ovunque, noi più curati in italiano (da dimostrare)                                         |
+| Prezzo                                                         | Plus proposto a 3,99 €/mese o 34,99 €/anno (`prezzo-per-nest.md`) | 3,99 €/mese, 22,99 €/anno, 59,99 € a vita                                                   | stesso mensile; il loro annuale costa 12 € meno del nostro proposto                              |
+
+**Lettura.** Homsy è forte sulla casa (faccende, spesa, conti, rifiuti, contatori) ed è debole dove si coordinano gli adulti: niente privacy per impegno, niente «chi accompagna», calendari esterni solo in lettura e ogni 20 minuti, eventi ripetuti a pagamento. È quasi l'opposto di FamilyNest: noi partiamo dal calendario e dalle persone, loro dalle faccende. Il pubblico però è lo stesso, e il loro gratuito è più ricco del nostro sulla casa e più povero sul calendario.
+
+### 14.4 Posizionamento e messaggi
+
+| Voce                             | Homsy                                                                                                                                                                                                                                                                                                 |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Titolo su Google Play            | Italia «Homsy: Organizzatore Familiare» (30 su 30); USA e Lettonia «Homsy: Home & Family Organizer»; Germania «Homsy - Haus & Familienplaner»; Francia «Homsy - Organisateur Familial»; Spagna «Homsy: Organizador Familiar» [75], [76]                                                               |
+| Descrizione breve (Play)         | Italia «Faccende domestiche, lista della spesa, calendario familiare & gestione casa» (76 su 80); USA «Chore tracker, household chores, family calendar, to do list & household planner» (80 su 80); Germania «Putzplan für Kinder, Haushaltsaufgaben & Familienkalender» [75], [76]                  |
+| Titolo e sottotitolo (App Store) | Italia «Homsy: Organizzatore Familiare» + «Faccende, spesa e casa insieme» (30 + 30); USA «Chore Chart, Tasks & Tracker»; Regno Unito «Chore Tracker, Calendar & List»; Germania «Einkaufsliste & Essensplaner»; Paesi Bassi «Huis & Gezinsplanner», Svezia «Hem & Familjeplanerare» [77], [78], [79] |
+| Promessa                         | «Meno carico mentale. Meno cose dimenticate. Più serenità a casa.»; sul sito «Organizza casa senza fatica.» [76], [81]                                                                                                                                                                                |
+| Attacco sull'App Store italiano  | «Basta litigare su chi lava i piatti.» e in chiusura «Meglio di mille messaggi su WhatsApp. Meglio di litigare ogni sera.» [77]                                                                                                                                                                       |
+| A chi parla                      | coppie che dividono le faccende «in modo equo», famiglie con figli, coinquilini, «chiunque sia stanco di fare tutto da solo»; sul sito anche genitori separati [77], [82]                                                                                                                             |
+| Parole chiave che usa            | faccende domestiche, programma pulizie, lista della spesa condivisa, calendario familiare, agenda condivisa, organizzatore familiare, gestione casa, carico mentale, raccolta differenziata                                                                                                           |
+| Canali                           | store, contenuti SEO e GEO in 20 lingue, strumenti gratuiti incorporabili in altri siti, Product Hunt. Social e pubblicità: non trovati o non verificati (14.2)                                                                                                                                       |
+
+**Il motore dei contenuti** [81], [82]. La `sitemap.xml` del 19/11/2026 elenca 3.807 indirizzi: la versione inglese più 19 lingue con 190 pagine ciascuna. In italiano ci sono 145 pagine del blog e 44 di strumenti. Gli articoli di confronto in italiano sono 22, tra cui «Alternative a Cozi: 7 app simili a Cozi a confronto (2026)», «Le migliori alternative a TimeTree per il calendario di casa», «TimeTree o Google Calendar», «Homsy contro FamilyWall», «Le migliori app per organizzare la famiglia senza abbonamento». L'articolo «Migliori app di organizer di famiglia nel 2026: quanto costa ognuna» ha tabella, 9 domande frequenti, firma, date di verifica dei prezzi e mette Homsy per prima; l'italiano è scorrevole ma tradotto («Il campo a colpo d'occhio», «la new entry») e non cita nessuna app italiana. Il file `llms.txt` descrive funzioni, limiti del gratuito, cosa l'app non fa e le pagine «da citare». Tre strumenti (cena a caso, tabella delle faccende per età, Secret Santa) si possono incorporare in altri siti, quindi portano link.
+
+Lettura: è la strategia dei capitoli 4 e 7 di questo documento (pagine di confronto, risposte brevi, dati con la data, file per le AI), fatta prima di noi, in italiano e con la traduzione automatica a grande scala. Il riassunto (punto 1) diceva che in Italia nessun concorrente fa contenuti seri: Homsy è l'eccezione. Il rischio per loro è la regola di Google sull'abuso di contenuti su larga scala [44]; quanto traffico italiano prendano è **non verificato** (Ubersuggest esaurito; servirebbe `domain_overview` di gethomsy.com con località Italia).
+
+**Ricerche su Google Play, Italia** (pagina web di ricerca senza accesso, 19/11/2026 [88]; mostra solo i primi 8–30 risultati):
+
+| Ricerca                     | Posizione di Homsy   | Primi tre risultati                 |
+| --------------------------- | -------------------- | ----------------------------------- |
+| family organizer            | 3ª su 11             | Cozi, FamilyWall, Homsy             |
+| organizzatore familiare     | 4ª su 8              | Octave, Cozi, FamilyWall            |
+| faccende di casa            | 7ª su 30             | Home Tasker, Nipto, Sweepy          |
+| faccende domestiche         | 11ª su 30            | Home Tasker, Sweepy, BeTidy         |
+| gestione casa               | 11ª su 30            | Home Tasker, Homeowner, HomeOS      |
+| agenda famiglia             | 13ª su 13            | FamCal, FamilyWall, TimeTree        |
+| calendario famiglia         | 30ª su 30            | FamCal, TimeTree, Shared            |
+| calendario condiviso        | assente nei primi 23 | TimeTree, Google Calendar, GroupCal |
+| calendario familiare        | assente nei primi 14 | FamCal, FamilyWall, TimeTree        |
+| organizer famiglia          | assente nei primi 14 | FamilyWall, Cozi, Clantastic        |
+| app per famiglie            | assente nei primi 8  | Shared, FamilyWall, FamCal          |
+| lista della spesa condivisa | assente nei primi 30 | Bring!, poi altre liste della spesa |
+| pulizie di casa             | assente nei primi 30 | Home Tasker, Sweepy, BeTidy         |
+
+**Ricerche nell'App Store, Italia** (interfaccia iTunes Search, fino a 200 risultati, 19/11/2026 [89]): «organizzatore familiare» 2ª su 27; «family organizer» 30ª su 193; «lista della spesa condivisa» 56ª su 167; assente per «calendario condiviso», «calendario famiglia», «organizer famiglia», «faccende di casa» e «faccende domestiche». Nota per il monitoraggio di Famnest: nella stessa ricerca «organizer famiglia» Famnest è 2ª su 167, non è tra le parole chiave della soglia.
+
+**Ricerche su Google (web) e volumi del nome «homsy»:** non verificati (Ubersuggest esaurito il 19/11).
+
+**Visibilità nelle AI** [87]. Nel progetto familynest.me di Ubersuggest (10 domande, 5 risposte di ChatGPT negli ultimi 30 giorni al 19/11/2026) Homsy compare in 1 risposta su 5, alla domanda «alternativa a TimeTree in italiano» (risposta del 17/11/2026), al 5° posto dopo Google Calendar, FamilyWall, FamCal e Cozi: «Calendario condiviso, faccende domestiche e liste della spesa. Interessante per organizzare la vita di casa». Per costruire quella risposta ChatGPT ha cercato sul web e ha citato 8 fonti: tre sono di Homsy, cioè la home e due articoli italiani del blog («Le migliori alternative a TimeTree per il calendario di casa» e «Confronto app calendario di famiglia: Cozi, Google Calendar, Apple e TimeTree»). Le altre sono i siti di Google Calendar, FamilyWall e Cozi, più un confronto di Obikido e uno di ClickUp. FamilyNest compare in 0 risposte.
+
+Lettura: gli articoli di confronto in italiano funzionano già come fonte per ChatGPT, anche quando l'autore è un concorrente. È una sola risposta, quindi un segnale e non una misura, ma va nella direzione della nostra proposta del capitolo 4.3 (pagine di confronto in italiano). Su questa domanda Homsy è arrivata prima.
+
+**ASO, lettura con la skill `aso`** (app «sfidante», giudicata con le regole piene):
+
+| Aspetto              | Giudizio                                                                                                                                                                                              |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Titolo e sottotitolo | usano tutti i 30 caratteri; in italiano prendono «organizzatore familiare» e «faccende» ma non «calendario» né «agenda»: per questo sono assenti sulle ricerche del calendario                        |
+| Descrizione          | in Google Play italiano mancano pasti, spese e più case, presenti in inglese: la traduzione è rimasta indietro. Quella dell'App Store italiano è più corta e punta sul litigio                        |
+| Voti                 | tanti su Google Play (3,5% delle installazioni), pochi in Italia sull'App Store (2)                                                                                                                   |
+| Aggiornamenti        | frequenti fino a settembre, fermi da 51 giorni; note di versione tradotte bene in italiano per le ultime, in inglese per le vecchie                                                                   |
+| Fiducia              | operatore commerciale UE e nessuna pubblicità, ma termini senza società né legge applicabile, informativa senza titolare né paese dei server, assistenza da Gmail con risposte lente nelle recensioni |
+
+### 14.5 Il nome «Homsy» e la nostra scelta (#472)
+
+**Fatti.**
+
+- **Marchio:** la ricerca web non trova un marchio «HOMSY»; trova solo nomi vicini negli USA, come HOMSEY (decaduto), HOMISY (abbigliamento) e HOMSYS (in esame) [90]. Le banche dati ufficiali **non sono state consultate**: TMview ha risposto con errore 503 e EUIPO, UIBM e WIPO vanno aperti da browser. I termini di Homsy non dichiarano un marchio [83]. Esito: **non verificato**.
+- Sull'App Store esiste un'altra app chiamata «Homsy», di un altro sviluppatore, uscita il 21/09/2026 [79]: anche Homsy ha un problema di nome.
+- «Homsy» è già nella griglia dei nomi da evitare di `nome-candidati.md`, tra i prefissi «Casa», «Home», «Dom-» e tra i finali in «-y».
+- **Nomi in gara oggi** (PR #486, fase 7, come nel capitolo 11.5): Funwa, Yanu, Fuva, Yado, Yobi; riserve Teponi, Lunoi, Ruzi e Zivu.
+
+**Lettura (parere commerciale, non legale).**
+
+1. Nessuno dei nomi in gara assomiglia a «Homsy» nel suono o nella scrittura: l'impatto sulla scelta è nullo.
+2. Homsy conferma una regola già scritta: un nome inventato e corto, di due sillabe, va bene negli store solo se il titolo porta le parole cercate. «Homsy: Organizzatore Familiare» prende le ricerche grazie alla seconda metà, non al nome.
+3. Per le AI conta che il nome sia unico. Una seconda app «Homsy» sull'App Store può confondere chi cerca; per il nostro nome vale il requisito di Francesco «nessun concorrente con quel nome» (commento del 18/11 su #472), da controllare anche negli store dopo la scelta.
+
+### 14.6 Minacce e opportunità
+
+**Dove sono più forti**
+
+- Sono negli store **e** nel browser, in 26 lingue, con widget: il nostro vantaggio «funziona anche sul computer» con Homsy non vale.
+- Hanno oggi tutta la parte di casa che per noi è nei mesi 2–8 (faccende, liste, pasti, conti), più rifiuti e contatori.
+- Scrivono in italiano i confronti che le AI leggono, e ChatGPT li usa già.
+- Prendono voti in fretta: 935 in 10 mesi e mezzo.
+- Per una coppia il gratuito basta quasi sempre.
+
+**Dove siamo più forti**
+
+- Il coordinamento tra adulti: chi vede ogni impegno, chi accompagna, «Liberi insieme», la frase che diventa impegno.
+- Calendari collegati in due direzioni, con Outlook; da loro solo import ogni 20 minuti, a pagamento.
+- Eventi ripetuti e fino a 10 persone nel gratuito (se la decisione su G13 e sul piano resta così): una famiglia con figli da Homsy paga, da noi no.
+- Profili dei figli con lista desideri e pagina per i nonni; profilo dell'animale.
+- Italiano scritto da italiani per l'Italia (calendario scolastico #391, festività): da dimostrare con i contenuti, perché oggi non si vede.
+- La fiducia sui dati, se la costruiamo bene: Homsy non dice chi è il titolare, dove stanno i dati né cosa fa con i dati dei bambini senza account, e usa Google Analytics nella web app [83].
+
+**Cosa imparare** (spunti, non decisi)
+
+- **Le pagine di confronto in italiano funzionano come fonte per ChatGPT.** È la proposta del capitolo 4.3; Homsy mostra che conviene farla presto e farla meglio: scritta in italiano da una persona, con le app italiane, le date di verifica e chi ha scritto. Prima su «alternativa a TimeTree», «Cozi in italiano», «calendario condiviso per la famiglia gratis».
+- **Un `llms.txt` onesto,** che dice anche cosa l'app non fa e i limiti del gratuito. Per familynest.me è una proposta a Francesco, da far fare al team del sito, non la faccio io.
+- **Strumenti gratuiti nel browser** (calcolatori, stampabili). Sono la versione «utile» del nostro piano editoriale e portano link. Ci sono vicini il menu settimanale stampabile e il calendario scolastico 2026 2027 (capitolo 3.1).
+- **Il peso delle faccende** («chi sta portando il carico questa settimana») dice il carico mentale con un numero. Da noi va solo come numero della settimana, senza classifica, come già scritto per il «conteggio dei turni equi» (mappa, sezione 2).
+- **Le cose ripetitive della casa:** calendario dei rifiuti e «da quanto tempo». In Italia la raccolta differenziata cambia comune per comune: è un'estensione possibile delle Scadenze (C3), da valutare dopo il lancio.
+- **Chiedere il voto bene:** il 3,5% di voti sulle installazioni è sette volte quello di Famnest. Quando avremo le app (X5), il momento della richiesta va progettato.
+
+**Cosa evitare**
+
+- **Serie di giorni consecutivi e punti sulle faccende:** Homsy li usa anche con i bambini senza account. Da noi sono meccaniche da verificare con la skill `privacy-e-dati-minori` e con la scelta F8 (niente classifiche tra fratelli); non le propongo.
+- Note con password del Wi-Fi e codici dell'allarme in chiaro, condivise con tutta la casa.
+- Termini e informativa senza titolare, paese dei server e regole per i minori: la nostra informativa (#147) deve dire tutto questo.
+- Rispondere alle recensioni chiedendo di cambiare il voto, e lasciare senza risposta le richieste di rimborso.
+- Tradurre la scheda una volta e non aggiornarla: la descrizione italiana di Google Play è rimasta indietro rispetto all'inglese.
+- Contenuti tradotti in serie in 20 lingue: costano poco, ma espongono alla regola di Google sui contenuti su larga scala [44] e si capisce che non sono scritti da italiani.
+
+### 14.7 Decisione di Francesco (20/11/2026)
+
+Il 20/11/2026 Francesco ha approvato la strada C: controllo mensile di Homsy, il primo il 19/12/2026, e le tre azioni qui sotto prima del lancio. Il resto della sezione spiega da dove nasce la scelta.
+
+**Perché è fuori dalla regola dei piccoli.** È nata da meno di 18 mesi (prima condizione), ma ha 935 voti (sopra i 500 della seconda) ed è citata da ChatGPT nel progetto familynest.me (contro la terza). Delle soglie di avviso ne ha già superate due: AI e lingua italiana. In più è già sul web, cioè sulla nostra piattaforma.
+
+**Le tre strade valutate** (scelta: C)
+
+| Strada                                                                          | Cosa vuol dire                                                                                                                 | Pro                                                         | Contro                                                                                                  |
+| ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| A. Come gli altri piccoli                                                       | controllo ogni 3 mesi, nessuna azione                                                                                          | zero lavoro in più                                          | non è coerente con la regola, che la esclude; tre mesi sono tanti per un sito che cambia ogni settimana |
+| B. Controllo mensile, nessuna azione                                            | lo stratega ogni mese: voti, versioni, prezzi, pagine italiane nuove della sitemap, risposte delle AI (circa 30 minuti, stima) | vediamo presto se cresce in Italia                          | non cambia nulla per noi                                                                                |
+| **C. Controllo mensile e tre azioni già nel piano, anticipate** (mio consiglio) | come B, più tre azioni di marketing che erano già nel documento, da fare prima del lancio invece che dopo                      | prendiamo le domande italiane prima che le prenda tutte lui | circa 2–3 giornate di lavoro di contenuti in più prima del lancio (stima)                               |
+
+**Le tre azioni decise, da fare prima del lancio** (nessuna è una risposta di prodotto a Homsy):
+
+1. **Tre pagine di confronto in italiano su familynest.me** (capitolo 4.3): «alternative a TimeTree in italiano», «calendario condiviso per la famiglia gratis», «Cozi in italiano: le alternative». Scritte da una persona, con le app italiane, le date di verifica e una tabella. Le scrive l'agente dei contenuti con la skill `ai-seo`; le pubblica Francesco.
+2. **Un `llms.txt` per familynest.me,** con funzioni, cosa è gratis, cosa non facciamo e le pagine da citare. Lo stratega lo propone al team del sito in una issue; non lo crea lui.
+3. **Il messaggio «gratis per tutta la famiglia»:** fino a 10 persone, eventi ripetuti e calendari in due direzioni nel gratuito. Vale solo se la decisione su G13 e sulla pagina Plus (X2) lo conferma. Per questo la decisione su G13 serve prima del lancio, come già scritto nella mappa.
+
+**Cosa controllare ogni mese:** installazioni e voti (Google Play, App Store Italia); nuove versioni; prezzi in euro; numero di pagine italiane nella sitemap; risposte delle AI del progetto familynest.me; pubblicità nella Meta Ad Library e nel Google Ads Transparency Center (a mano); ricerche nell'App Store e su Google Play italiani per «calendario condiviso», «calendario famiglia», «organizzatore familiare» e «faccende domestiche». Quando il limite di Ubersuggest è libero: traffico di gethomsy.com in Italia e le parole italiane per cui si posiziona. Primo controllo: 19/12/2026.
+
+**Quando avvisare Francesco subito:** più di 20 voti sull'App Store italiano; Homsy tra i primi 5 per «calendario condiviso» o «calendario famiglia»; prima pubblicità in Italia; una funzione AI o una funzione per la coordinazione degli adulti («chi accompagna», privacy per impegno); una raccolta fondi; installazioni Android oltre 50.000.
+
+---
+
 ## Fonti
 
 Ubersuggest: account di Francesco, località Italia (2380) e lingua italiana salvo dove indicato, consultato il 17/11/2026; traffico dei domini di ottobre 2026. Nessun progetto creato, nessuna modifica all'account.
@@ -1117,6 +1375,24 @@ Ubersuggest: account di Francesco, località Italia (2380) e lingua italiana sal
 72. fam.box, home, 19/11/2026: https://fam.box/
 73. fam.box, pagine legali (termini dell'08/11/2026, fornitori, archivio con la nota privacy della beta del 05/10/2026), 19/11/2026: https://fam.box/legal/terms/ ; https://fam.box/legal/subprocessors/ ; https://fam.box/legal/archive/
 74. Google Play (ricerca «fambox», USA) e Apple iTunes Search («fambox», Italia), 19/11/2026: nessuna app FamBox. Ricerca web «"FamBox" family table Pip Telegram», 19/11/2026: nessun articolo su FamBox.
+75. Google Play, «Homsy: Home & Family Organizer», scheda in inglese vista dagli USA (descrizione, installazioni, data di uscita, voti, recensioni con risposte, sicurezza dei dati, sviluppatore, novità), 19/11/2026: https://play.google.com/store/apps/details?id=com.homsy.home.management&hl=en&gl=US
+76. Google Play, schede di Homsy viste da Italia, Germania, Francia, Spagna e Lettonia (titolo, descrizione breve, media mostrata, recensioni, prezzi in euro), 19/11/2026: https://play.google.com/store/apps/details?id=com.homsy.home.management&hl=it&gl=IT (e `hl`/`gl` de/DE, fr/FR, es/ES, lv/LV)
+77. App Store Italia, «Homsy: Organizzatore Familiare», scheda, sottotitolo, cronologia delle versioni, acquisti in-app, privacy, operatore commerciale, 19/11/2026: https://apps.apple.com/it/app/id6758137627
+78. App Store USA, Germania e Regno Unito, schede di Homsy (sottotitolo, acquisti in-app), 19/11/2026: https://apps.apple.com/us/app/id6758137627 ; https://apps.apple.com/de/app/id6758137627 ; https://apps.apple.com/gb/app/id6758137627
+79. Apple, interfaccia iTunes Lookup per l'app 6758137627 (titolo, venditore, uscita, versione, voti, lingue) in 17 paesi (Italia, USA, Regno Unito, Germania, Francia, Spagna, Paesi Bassi, Lettonia, Austria, Svizzera, Belgio, Polonia, Svezia, Canada, Australia, Irlanda, Portogallo) e iTunes Search «homsy» negli USA, 19/11/2026: https://itunes.apple.com/lookup?id=6758137627&country=it
+80. Apple, feed delle recensioni dell'App Store di Homsy per USA, Regno Unito, Germania, Australia e Polonia, 19/11/2026: https://itunes.apple.com/us/rss/customerreviews/id=6758137627/sortby=mostrecent/json
+81. gethomsy.com: home italiana, `llms.txt`, `robots.txt` e `sitemap.xml` (3.807 indirizzi), 19/11/2026: https://gethomsy.com/it/ ; https://gethomsy.com/llms.txt ; https://gethomsy.com/sitemap.xml
+82. gethomsy.com, blog italiano: elenco dei confronti e «Migliori app di organizer di famiglia nel 2026: quanto costa ognuna», 19/11/2026: https://gethomsy.com/it/blog/comparisons ; https://gethomsy.com/it/blog/comparisons/best-family-organizer-apps-2026
+83. gethomsy.com, Terms of Service e Privacy Policy (in vigore dal 12/10/2026), 19/11/2026: https://gethomsy.com/terms ; https://gethomsy.com/privacy
+84. AppGoblin, Homsy su Google Play (stima di terzi di installazioni settimanali e SDK), 19/11/2026: https://appgoblin.info/apps/com.homsy.home.management
+85. Product Hunt, «Homsy - Family Organiser», 19/11/2026: https://www.producthunt.com/products/homsy
+86. Ricerca web «"Must Have Apps" SIA Latvia», 19/11/2026: https://datreal.com/en/lv/person/212426/dzerve-zigmars (registro di terzi, non ufficiale)
+87. Ubersuggest, progetto familynest.me, 19/11/2026: `brand_visibility_overview` e `brand_prompts` (ultimi 30 giorni: 10 domande, 5 risposte di ChatGPT, Homsy in 1); `brand_prompt_answer` per «alternativa a TimeTree in italiano» (risposta di ChatGPT del 17/11/2026, 8 fonti citate); `brand_citations` filtrato su «homsy» (3 pagine di gethomsy.com citate); `user_limits`: report del giorno 100 su 100 già usati.
+88. Google Play, pagina web di ricerca senza accesso (`/store/search?q=…&c=apps&hl=it&gl=IT`) per le 13 ricerche della tabella 14.4, 19/11/2026.
+89. Apple, interfaccia iTunes Search (`entity=software`, `country=it`, fino a 200 risultati) per 8 ricerche italiane, 19/11/2026.
+90. Ricerca web «"HOMSY" trademark EUIPO OR USPTO OR WIPO», 19/11/2026: https://markinton.com/trademark/homsey-88557239 ; https://markinton.com/trademark/homisy-97565950 ; https://markinton.com/trademark/homsys-98064778 . TMview (https://www.tmdn.org/tmview): errore 503 dalla nostra rete.
+91. Meta Ad Library (ricerca «homsy»): errore 403 dalla nostra rete; Google Ads Transparency Center (dominio gethomsy.com, Italia): risultati non caricati senza browser, 19/11/2026.
+92. Ricerca web «gethomsy instagram OR tiktok OR reddit», 19/11/2026: nessun profilo social trovato.
 
 **Dati non disponibili e come ottenerli**
 
@@ -1129,3 +1405,4 @@ Ubersuggest: account di Francesco, località Italia (2380) e lingua italiana sal
 - Famnest: ricerche del nome e traffico di getfamnest.com (Ubersuggest, quando il limite giornaliero è libero); marchio UK00004259820 e marchi FAMNEST nella UE e in Italia (UK IPO, EUIPO, TMview, UIBM, WIPO, da browser o dal legale); limiti precisi del piano gratuito (installare l'app); follower dei social (a mano); pubblicità (Meta Ad Library e Google Ads Transparency Center, a mano); download sull'App Store (Sensor Tower o Appfigures, a pagamento).
 - Altri family organizer su Android: lingua dentro l'app e prezzi in euro (installare l'app o aprire la scheda da un telefono italiano); voti delle app per cui Google non li mostra.
 - FamBox: numero di famiglie e traffico (non pubblicati; Ubersuggest quando il limite è libero).
+- Homsy: traffico italiano di gethomsy.com, parole su cui si posiziona e ricerche del nome (Ubersuggest `domain_overview` e `domain_keywords` con località Italia, quando il limite è libero); voti di Google Play per paese (non pubblici; Sensor Tower o Appfigures, a pagamento); marchio «HOMSY» nelle banche dati ufficiali (EUIPO, TMview, UIBM, WIPO, da browser o dal legale); pubblicità (Meta Ad Library e Google Ads Transparency Center, a mano); follower dei social, se ci sono (a mano); limiti del gratuito e dispensa dentro l'app (installare l'app).
