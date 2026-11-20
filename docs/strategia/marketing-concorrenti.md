@@ -1,4 +1,4 @@
-17/11/2026 · aggiornato il 19/11/2026 con i capitoli 10 (Nidly), 11 (Famnest), 12 (altri family organizer su Android), 13 (FamBox) e 14 (Homsy), e con la regola di monitoraggio dei concorrenti piccoli decisa da Francesco
+17/11/2026 · aggiornato il 19/11/2026 con i capitoli 10 (Nidly), 11 (Famnest), 12 (altri family organizer su Android), 13 (FamBox) e 14 (Homsy), e con la regola di monitoraggio dei concorrenti piccoli decisa da Francesco · aggiornato il 20/11/2026 con la decisione di Francesco su Homsy (14.7)
 
 Documento vivo: si aggiorna quando cambiano i concorrenti, i siti di Francesco o il calendario dei rilasci.
 
@@ -20,7 +20,7 @@ Preparato dallo stratega per Francesco. È la base del piano editoriale. Riparte
 10. **Famnest (aggiunto il 19/11/2026):** app svedese e australiana con finanziatori, su Android e iPhone dal 2025, già in italiano. Ha calendario, faccende, liste, pasti, documenti, conti e AI; 15.849 installazioni Android, 1 solo voto in Italia. Costa 3,99 € al mese, 39,99 € all'anno o 99,99 € a vita. Dichiara un marchio FAMNEST registrato nel Regno Unito: è la ragione più forte per cambiare il nome FamilyNest (#472). Minaccia media. **Vale la regola di monitoraggio dei concorrenti piccoli (decisione di Francesco del 19/11/2026):** nessuna azione, controllo ogni 3 mesi; il dato sul marchio va all'agente legale-privacy (capitolo 11).
 11. **Altri family organizer su Android (19/11/2026):** nessuna app nuova sopra le 100.000 installazioni fa il nostro mestiere. Da seguire: Homsy (Lettonia, 26.937 installazioni, 4,5, citata da ChatGPT), Flatastic (faccende e conti per coppie e coinquilini, 731.117), Family Tools (una web app pubblicata su Google Play) e Clantastic, un'app italiana uscita l'08/11/2026 con assistente vocale (capitolo 12). Family Tools, Clantastic e le altre piccole vanno sotto la regola di monitoraggio; Homsy e Flatastic no (sezione seguente).
 12. **FamBox (aggiunto il 19/11/2026):** web app estone in inglese con un assistente su Telegram, da 19 € al mese, senza app negli store. Rischio basso; utile il modello di consenso per persona per la nostra idea dell'assistente su WhatsApp (capitolo 13).
-13. **Homsy (analisi completa del 19/11/2026):** app lettone di un piccolo studio, senza finanziatori trovati, su Android, iPhone e **anche nel browser**, in italiano. Ha 26.937 installazioni Android, 935 voti (4,5) e 2 voti sull'App Store italiano. È forte sulla casa (faccende, spesa, pasti, conti, rifiuti) e debole sul coordinamento tra adulti. Costa 3,99 € al mese, 22,99 € all'anno o 59,99 € a vita, ed è gratis solo per 2 persone. Il suo punto forte è il sito: 190 pagine in italiano, 22 confronti come «alternative a TimeTree» e un `llms.txt`. ChatGPT la consiglia usando proprio quei confronti. Minaccia media, più sui contenuti che sul prodotto; sul nome nuovo (#472) nessun impatto. **Proposta (decide Francesco):** controllo mensile e tre azioni di marketing già nel piano, da anticipare: confronti in italiano, `llms.txt`, messaggio «gratis per tutta la famiglia» (capitolo 14).
+13. **Homsy (analisi completa del 19/11/2026):** app lettone di un piccolo studio, senza finanziatori trovati, su Android, iPhone e **anche nel browser**, in italiano. Ha 26.937 installazioni Android, 935 voti (4,5) e 2 voti sull'App Store italiano. È forte sulla casa (faccende, spesa, pasti, conti, rifiuti) e debole sul coordinamento tra adulti. Costa 3,99 € al mese, 22,99 € all'anno o 59,99 € a vita, ed è gratis solo per 2 persone. Il suo punto forte è il sito: 190 pagine in italiano, 22 confronti come «alternative a TimeTree» e un `llms.txt`. ChatGPT la consiglia usando proprio quei confronti. Minaccia media, più sui contenuti che sul prodotto; sul nome nuovo (#472) nessun impatto. **Decisione di Francesco (20/11/2026):** controllo mensile di Homsy, il primo il 19/12/2026, e tre azioni prima del lancio: tre confronti in italiano su familynest.me, un `llms.txt` da proporre al team del sito, il messaggio «gratis per tutta la famiglia» solo se lo conferma la decisione su G13 (capitolo 14.7).
 
 ---
 
@@ -71,7 +71,7 @@ Preparato dallo stratega per Francesco. È la base del piano editoriale. Riparte
 
 **Chi resta fuori, e perché.**
 
-- **Homsy:** è uscita il 02/01/2026 e ha 26.937 installazioni, ma ha già 935 voti ed è citata da ChatGPT nel progetto familynest.me [53], [87]. Non rientra nella regola. L'analisi completa è nel capitolo 14 (19/11/2026): la mia proposta è un controllo mensile, primo il 19/12/2026, più tre azioni di marketing già nel piano, da anticipare (14.7). Decide Francesco.
+- **Homsy:** è uscita il 02/01/2026 e ha 26.937 installazioni, ma ha già 935 voti ed è citata da ChatGPT nel progetto familynest.me [53], [87]. Non rientra nella regola. L'analisi completa è nel capitolo 14 (19/11/2026). Decisione di Francesco (20/11/2026): controllo mensile, il primo il 19/12/2026, e tre azioni di marketing prima del lancio (14.7).
 - **Flatastic:** su Google Play dal 2015, 731.117 installazioni e 9.242 voti. Non è né nuova né piccola; resta tra i concorrenti già noti, con rischio medio solo su faccende e conti divisi (12.2).
 - **PlanPop, FamiLami, Family Organizer di Sunflowr, Myfamiliz, Family Planner & Organizer, Cubbily:** tra 52.000 e 145.000 installazioni, quindi sopra la soglia dei piccoli. Il rischio è basso e non serve un'azione; si ricontrollano quando si aggiorna `concorrenti.md`.
 
@@ -1053,7 +1053,7 @@ Analisi completa chiesta da Francesco il 19/11/2026, perché Homsy supera le sog
 - **Quanto pesa oggi:** 26.937 installazioni Android, 935 voti su Google Play (4,5 nel mondo, 4,7 la media mostrata in Italia), 150 voti sull'App Store in 17 paesi. In Italia 2 voti sull'App Store; quelli di Google Play per paese non sono pubblici.
 - **Cosa la rende diversa dagli altri piccoli:** un sito con 3.807 pagine in 20 lingue, di cui 190 in italiano (145 del blog, 44 di strumenti gratuiti), confronti «Homsy contro Cozi» e «alternative a TimeTree» e un file `llms.txt` scritto per le AI. ChatGPT la consiglia in italiano usando come fonti proprio due di quegli articoli.
 - **Per noi:** minaccia **media, più alta sui contenuti e sulle AI che sul prodotto**. Ci toglie due vantaggi che davamo per nostri: è nel browser come noi e scrive in italiano i confronti che volevamo scrivere noi.
-- **Proposta (decide Francesco, 14.7):** fuori dalla regola dei piccoli, controllo mensile e tre azioni di marketing che erano già nel piano, da anticipare. Nessuna modifica al prodotto in risposta.
+- **Decisione di Francesco (20/11/2026, 14.7):** fuori dalla regola dei piccoli, controllo mensile (il primo il 19/12/2026) e tre azioni di marketing già nel piano, da fare prima del lancio. Nessuna modifica al prodotto in risposta.
 
 ### 14.2 Chi è
 
@@ -1271,11 +1271,13 @@ Lettura: gli articoli di confronto in italiano funzionano già come fonte per Ch
 - Tradurre la scheda una volta e non aggiornarla: la descrizione italiana di Google Play è rimasta indietro rispetto all'inglese.
 - Contenuti tradotti in serie in 20 lingue: costano poco, ma espongono alla regola di Google sui contenuti su larga scala [44] e si capisce che non sono scritti da italiani.
 
-### 14.7 Proposta (decide Francesco)
+### 14.7 Decisione di Francesco (20/11/2026)
+
+Il 20/11/2026 Francesco ha approvato la strada C: controllo mensile di Homsy, il primo il 19/12/2026, e le tre azioni qui sotto prima del lancio. Il resto della sezione spiega da dove nasce la scelta.
 
 **Perché è fuori dalla regola dei piccoli.** È nata da meno di 18 mesi (prima condizione), ma ha 935 voti (sopra i 500 della seconda) ed è citata da ChatGPT nel progetto familynest.me (contro la terza). Delle soglie di avviso ne ha già superate due: AI e lingua italiana. In più è già sul web, cioè sulla nostra piattaforma.
 
-**Tre strade possibili**
+**Le tre strade valutate** (scelta: C)
 
 | Strada                                                                          | Cosa vuol dire                                                                                                                 | Pro                                                         | Contro                                                                                                  |
 | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
@@ -1283,13 +1285,13 @@ Lettura: gli articoli di confronto in italiano funzionano già come fonte per Ch
 | B. Controllo mensile, nessuna azione                                            | lo stratega ogni mese: voti, versioni, prezzi, pagine italiane nuove della sitemap, risposte delle AI (circa 30 minuti, stima) | vediamo presto se cresce in Italia                          | non cambia nulla per noi                                                                                |
 | **C. Controllo mensile e tre azioni già nel piano, anticipate** (mio consiglio) | come B, più tre azioni di marketing che erano già nel documento, da fare prima del lancio invece che dopo                      | prendiamo le domande italiane prima che le prenda tutte lui | circa 2–3 giornate di lavoro di contenuti in più prima del lancio (stima)                               |
 
-**Le tre azioni della strada C** (nessuna è una risposta di prodotto a Homsy):
+**Le tre azioni decise, da fare prima del lancio** (nessuna è una risposta di prodotto a Homsy):
 
 1. **Tre pagine di confronto in italiano su familynest.me** (capitolo 4.3): «alternative a TimeTree in italiano», «calendario condiviso per la famiglia gratis», «Cozi in italiano: le alternative». Scritte da una persona, con le app italiane, le date di verifica e una tabella. Le scrive l'agente dei contenuti con la skill `ai-seo`; le pubblica Francesco.
-2. **Un `llms.txt` per familynest.me,** con funzioni, cosa è gratis, cosa non facciamo e le pagine da citare. Proposta per il team del sito, da approvare.
+2. **Un `llms.txt` per familynest.me,** con funzioni, cosa è gratis, cosa non facciamo e le pagine da citare. Lo stratega lo propone al team del sito in una issue; non lo crea lui.
 3. **Il messaggio «gratis per tutta la famiglia»:** fino a 10 persone, eventi ripetuti e calendari in due direzioni nel gratuito. Vale solo se la decisione su G13 e sulla pagina Plus (X2) lo conferma. Per questo la decisione su G13 serve prima del lancio, come già scritto nella mappa.
 
-**Cosa controllare ogni mese** (strade B e C): installazioni e voti (Google Play, App Store Italia); nuove versioni; prezzi in euro; numero di pagine italiane nella sitemap; risposte delle AI del progetto familynest.me; pubblicità nella Meta Ad Library e nel Google Ads Transparency Center (a mano); ricerche nell'App Store e su Google Play italiani per «calendario condiviso», «calendario famiglia», «organizzatore familiare» e «faccende domestiche». Quando il limite di Ubersuggest è libero: traffico di gethomsy.com in Italia e le parole italiane per cui si posiziona. Primo controllo proposto: 19/12/2026.
+**Cosa controllare ogni mese:** installazioni e voti (Google Play, App Store Italia); nuove versioni; prezzi in euro; numero di pagine italiane nella sitemap; risposte delle AI del progetto familynest.me; pubblicità nella Meta Ad Library e nel Google Ads Transparency Center (a mano); ricerche nell'App Store e su Google Play italiani per «calendario condiviso», «calendario famiglia», «organizzatore familiare» e «faccende domestiche». Quando il limite di Ubersuggest è libero: traffico di gethomsy.com in Italia e le parole italiane per cui si posiziona. Primo controllo: 19/12/2026.
 
 **Quando avvisare Francesco subito:** più di 20 voti sull'App Store italiano; Homsy tra i primi 5 per «calendario condiviso» o «calendario famiglia»; prima pubblicità in Italia; una funzione AI o una funzione per la coordinazione degli adulti («chi accompagna», privacy per impegno); una raccolta fondi; installazioni Android oltre 50.000.
 
