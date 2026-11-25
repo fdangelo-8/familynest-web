@@ -13,16 +13,22 @@ import { signInAs, skipReason, usersConfigured } from "../fixtures/auth";
 const PHRASE = "Il piano dei pasti della settimana";
 const WOFF2 = "**/_next/static/media/*.woff2";
 
-/** Width of the sample phrase. `family` is a CSS font-family value. */
+/**
+ * Width of the sample phrase. `family` is a CSS font-family value.
+ * `wait`: "none" measures at once, "load" asks the browser to load the first
+ * family of the stack (the font of next/font, not its local fallback face,
+ * which a runner may not have), "ready" only waits for `document.fonts.ready`
+ * (when the font files are made to fail on purpose).
+ */
 async function phraseWidths(
   page: Page,
   family: string,
   sizes: number[],
   weights: number[],
-  waitForFonts: boolean,
+  wait: "none" | "load" | "ready",
 ): Promise<Record<string, number>> {
   return page.evaluate(
-    async ({ phrase, family, sizes, weights, waitForFonts }) => {
+    async ({ phrase, family, sizes, weights, wait }) => {
       const result: Record<string, number> = {};
       const spans: [string, HTMLSpanElement][] = [];
       for (const size of sizes) {
@@ -34,23 +40,21 @@ async function phraseWidths(
           spans.push([`${size}/${weight}`, span]);
         }
       }
-      if (waitForFonts) {
+      if (wait === "load") {
         for (const [key, span] of spans) {
           const [size, weight] = key.split("/");
-          await document.fonts.load(
-            `${weight} ${size}px ${getComputedStyle(span).fontFamily}`,
-            phrase,
-          );
+          const first = getComputedStyle(span).fontFamily.split(",")[0]!.trim();
+          await document.fonts.load(`${weight} ${size}px ${first}`, phrase);
         }
-        await document.fonts.ready;
       }
+      if (wait !== "none") await document.fonts.ready;
       for (const [key, span] of spans) {
         result[key] = span.getBoundingClientRect().width;
         span.remove();
       }
       return result;
     },
-    { phrase: PHRASE, family, sizes, weights, waitForFonts },
+    { phrase: PHRASE, family, sizes, weights, wait },
   );
 }
 
@@ -82,11 +86,13 @@ test.describe("Figtree", () => {
     const result = await page.evaluate(async () => {
       await document.fonts.ready;
       const family = getComputedStyle(document.body).fontFamily;
+      // First family of the stack: the font itself, not its local fallback.
+      const first = family.split(",")[0]!.trim();
       const ready: Record<string, boolean> = {};
       for (const weight of [400, 600, 700]) {
-        await document.fonts.load(`${weight} 16px ${family}`, "Figtree");
+        await document.fonts.load(`${weight} 16px ${first}`, "Figtree");
         ready[weight] = document.fonts.check(
-          `${weight} 16px ${family}`,
+          `${weight} 16px ${first}`,
           "Figtree",
         );
       }
@@ -140,12 +146,12 @@ test.describe("Figtree", () => {
         "Figtree",
         sizes,
         weights,
-        true,
+        "load",
       );
 
       await page.goto("/design-system");
       await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-      const actual = await phraseWidths(page, APP_FONT, sizes, weights, true);
+      const actual = await phraseWidths(page, APP_FONT, sizes, weights, "load");
       for (const key of Object.keys(wanted)) {
         const gap = Math.abs(actual[key]! - wanted[key]!) / wanted[key]!;
         expect(
@@ -164,8 +170,8 @@ test.describe("Figtree", () => {
     const counter = { delayed: 0 };
     await delayFonts(page, counter);
     await page.goto("/design-system", { waitUntil: "domcontentloaded" });
-    const before = await phraseWidths(page, APP_FONT, [16], [400, 600], false);
-    const after = await phraseWidths(page, APP_FONT, [16], [400, 600], true);
+    const before = await phraseWidths(page, APP_FONT, [16], [400, 600], "none");
+    const after = await phraseWidths(page, APP_FONT, [16], [400, 600], "load");
     expect(
       counter.delayed,
       "nessun file dei font è stato richiesto",
@@ -194,15 +200,31 @@ test.describe("Figtree su /oggi", () => {
     test.skip(info.project.name !== "mobile", "Criterio a 390×844");
     await signInMarco(context, baseURL);
     await page.addInitScript(() => {
-      const holder = window as unknown as { __cls: number };
+      const holder = window as unknown as {
+        __cls: number;
+        __shifts: string[];
+      };
       holder.__cls = 0;
+      holder.__shifts = [];
       new PerformanceObserver((list) => {
         for (const entry of list.getEntries()) {
           const shift = entry as PerformanceEntry & {
             value: number;
             hadRecentInput: boolean;
+            sources?: { node: Node | null }[];
           };
-          if (!shift.hadRecentInput) holder.__cls += shift.value;
+          if (shift.hadRecentInput) continue;
+          holder.__cls += shift.value;
+          // What moved, to read the failure without a trace.
+          const moved = (shift.sources ?? []).map((source) => {
+            const node = source.node as Element | null;
+            return node
+              ? `${node.nodeName.toLowerCase()}.${String(node.className).slice(0, 40)}`
+              : "?";
+          });
+          holder.__shifts.push(
+            `${shift.value.toFixed(4)} a ${Math.round(shift.startTime)} ms: ${moved.join(", ")}`,
+          );
         }
       }).observe({ type: "layout-shift", buffered: true });
     });
@@ -218,10 +240,14 @@ test.describe("Figtree su /oggi", () => {
     const total = await page.evaluate(async () => {
       await document.fonts.ready;
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      return (window as unknown as { __cls: number }).__cls;
+      const holder = window as unknown as {
+        __cls: number;
+        __shifts: string[];
+      };
+      return { cls: holder.__cls, shifts: holder.__shifts };
     });
     expect(counter.delayed).toBeGreaterThan(0);
-    expect(total).toBeLessThanOrEqual(0.01);
+    expect(total.cls, total.shifts.join(" | ")).toBeLessThanOrEqual(0.01);
     await page.unrouteAll({ behavior: "ignoreErrors" });
   });
 
@@ -237,7 +263,7 @@ test.describe("Figtree su /oggi", () => {
       await realPage.goto("/oggi");
       await expect(realPage.getByRole("heading", { level: 1 })).toBeVisible();
       const wanted = (
-        await phraseWidths(realPage, APP_FONT, [16], [400], true)
+        await phraseWidths(realPage, APP_FONT, [16], [400], "load")
       )["16/400"]!;
 
       await signInMarco(blocked, baseURL);
@@ -249,7 +275,7 @@ test.describe("Figtree su /oggi", () => {
       await expect(page.getByRole("button", { name: "Riprova" })).toHaveCount(
         0,
       );
-      const got = (await phraseWidths(page, APP_FONT, [16], [400], true))[
+      const got = (await phraseWidths(page, APP_FONT, [16], [400], "ready"))[
         "16/400"
       ]!;
       expect(Math.abs(got - wanted) / wanted).toBeLessThanOrEqual(0.03);

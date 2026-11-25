@@ -631,8 +631,9 @@ test.describe("sovrapposizioni", () => {
       expect(Math.round(viewport.width - (box.x + box.width))).toBe(40);
       expect(Math.round(viewport.height - (box.y + box.height))).toBe(32);
     } else {
-      expect(Math.round(box.x)).toBe(20);
-      expect(Math.round(viewport.width - (box.x + box.width))).toBe(20);
+      // #196: the page margin on a phone is 24 px (was 20).
+      expect(Math.round(box.x)).toBe(24);
+      expect(Math.round(viewport.width - (box.x + box.width))).toBe(24);
       expect(Math.round(viewport.height - (box.y + box.height))).toBe(104);
     }
 
@@ -776,7 +777,8 @@ test.describe("CA-11: stessi stili del mockup", () => {
     {
       id: "campo",
       selector: ".campo__input",
-      shadowColor: { ours: "rgb(130,133,139)", mock: "rgb(207,209,202)" },
+      // #196: --color-filo-campo #7F9092 and --color-filo-2 #C3CCC9.
+      shadowColor: { ours: "rgb(127,144,146)", mock: "rgb(195,204,201)" },
     },
     { id: "casella", selector: ".casella" },
     { id: "toggle", selector: ".toggle" },
@@ -853,6 +855,16 @@ test.describe("CA-11: stessi stili del mockup", () => {
       specs.map((spec) => spec.ours ?? `#${spec.id} ${spec.selector}`),
     );
     await page.goto(`file://${process.cwd()}/docs/mockup/design-system.html`);
+    // #196: the values of the tokens come from docs/agenti/design/token.css
+    // (the mockup keeps its own components and its old tokens as an archive).
+    // The new :root is laid over the mockup; the two font tokens point to the
+    // variable of next/font, which the mockup page does not have.
+    await page.addStyleTag({
+      content: readFileSync("docs/agenti/design/token.css", "utf8").replace(
+        /--font-(titoli|testo):[^;]+;/g,
+        "",
+      ),
+    });
     const theirs = await read(
       page,
       specs.map((spec) => spec.mock ?? `#${spec.id} ${spec.selector}`),
