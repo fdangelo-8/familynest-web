@@ -366,6 +366,18 @@ html {
   -webkit-text-size-adjust: 100%;
 }
 
+/* Fallback face while Figtree loads: Arial with the metrics of Figtree.
+   Same values as the one Next generates, but size-adjust 101.9% instead of
+   100.72%, so the lines break where they break with Figtree (CA-6). */
+@font-face {
+  font-family: "Figtree Fallback";
+  src: local("Arial");
+  ascent-override: 94.32%;
+  descent-override: 24.82%;
+  line-gap-override: 0%;
+  size-adjust: 101.9%;
+}
+
 body {
   margin: var(--space-0);
   font-family: var(--font-testo);

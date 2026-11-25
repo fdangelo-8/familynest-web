@@ -14,6 +14,10 @@ const figtree = Figtree({
   subsets: ["latin", "latin-ext"],
   display: "swap",
   variable: "--font-figtree",
+  // The adjusted fallback face is written in `globals.css` (Next's own is a
+  // bit narrower than Figtree and made /oggi change lines on arrival, #196).
+  adjustFontFallback: false,
+  fallback: ["Figtree Fallback"],
 });
 
 export const metadata: Metadata = {
