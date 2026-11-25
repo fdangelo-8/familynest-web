@@ -72,7 +72,7 @@ export function formatDayInSentence(dayKey: string, now: Instant): string {
 }
 
 export type RecurrenceInfo = {
-  recurrence: "none" | "weekly" | "monthly";
+  recurrence: "none" | "daily" | "weekly" | "biweekly" | "monthly" | "yearly";
   /** ISO weekdays, 1 = Monday ... 7 = Sunday (weekly series) */
   weekdays: ReadonlyArray<number>;
   /** Day of the series that gives the day of the month (monthly series) */
@@ -107,6 +107,11 @@ export function formatRecurrence(
   } else if (info.recurrence === "monthly") {
     const day = parseDayKey(info.seriesDay).day;
     text = `ogni mese, ${withDayArticle(day, String(day))}`;
+  } else if (info.recurrence === "daily") {
+    text = "ogni giorno";
+  } else if (info.recurrence === "biweekly" || info.recurrence === "yearly") {
+    // No screen for these yet (A2–A4): the plain sentence stands in.
+    text = "si ripete";
   } else {
     return "";
   }
@@ -127,6 +132,7 @@ export function formatRepeatSentence(
     capitalized: false,
     withUntil: false,
   });
+  if (rule === "si ripete") return "Si ripete.";
   return rule ? `Si ripete ${rule}.` : "";
 }
 

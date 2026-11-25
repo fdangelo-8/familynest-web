@@ -32,8 +32,11 @@ const WEEKDAY_NAMES = [
 
 const RECURRENCE_NAMES = {
   none: "nessuna",
+  daily: "ogni giorno",
   weekly: "ogni settimana",
+  biweekly: "si ripete",
   monthly: "ogni mese",
+  yearly: "si ripete",
 } as const;
 
 /** Rome date and time with the offset: `2026-11-04T15:52:00+01:00`. */

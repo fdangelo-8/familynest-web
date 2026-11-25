@@ -10,6 +10,7 @@ import {
   isoWeekdayOf,
   type EventFormValues,
 } from "@/components/evento-modulo/model";
+import { narrowVisibility } from "@/lib/visibility";
 import { initialRepeat, shiftOf } from "./model";
 
 type Client = SupabaseClient<Database>;
@@ -47,7 +48,7 @@ function shiftWeekdays(weekdays: ReadonlyArray<number>, shift: number) {
  * - new rule: it starts from the form's day; the last day stays only if it is
  *   not before that day.
  */
-function repetitionOf(
+export function repetitionOf(
   occ: EventOccurrence,
   values: EventFormValues,
 ): {
@@ -57,6 +58,25 @@ function repetitionOf(
 } {
   const shift = shiftOf(occ, values);
   const sameRule = values.repeat === initialRepeat(occ);
+  if (
+    sameRule &&
+    values.repeat === "current" &&
+    occ.recurrence !== "weekly" &&
+    occ.recurrence !== "monthly" &&
+    occ.recurrence !== "none"
+  ) {
+    // daily, biweekly, yearly: the form cannot edit these rules, so the
+    // series keeps its own rule and weekdays as saved.
+    return {
+      recurrence: occ.recurrence,
+      weekdays: occ.recurrenceWeekdays.length
+        ? shiftWeekdays(occ.recurrenceWeekdays, shift)
+        : null,
+      until: occ.recurrenceUntil
+        ? addDaysToDayKey(occ.recurrenceUntil, shift)
+        : null,
+    };
+  }
   if (values.repeat === "none") {
     return { recurrence: "none", weekdays: null, until: null };
   }
@@ -74,6 +94,20 @@ function repetitionOf(
     ? shiftWeekdays(occ.recurrenceWeekdays, shift)
     : [isoWeekdayOf(values.day)];
   return { recurrence: "weekly", weekdays, until };
+}
+
+/**
+ * The visibility to send. The form shows `selected` as «Solo io»; when the
+ * person has not changed it, the saved value goes back untouched so the chosen
+ * people keep seeing the event and a non-author does not fail.
+ */
+export function visibilityToSave(
+  occ: EventOccurrence,
+  values: EventFormValues,
+): UpdateEventArgs["p_visibility"] {
+  return values.visibility === narrowVisibility(occ.visibility)
+    ? (occ.visibility as UpdateEventArgs["p_visibility"])
+    : values.visibility;
 }
 
 const orNull = (text: string): string | null => {
@@ -116,7 +150,7 @@ export async function saveEvent(
       p_title: values.title.trim(),
       p_starts_at: times.start.toISOString(),
       p_ends_at: times.end.toISOString(),
-      p_visibility: values.visibility,
+      p_visibility: visibilityToSave(occ, values),
       p_member_ids: values.memberIds,
       p_location: orNull(values.place),
       p_escort_member_id: values.escortId,
