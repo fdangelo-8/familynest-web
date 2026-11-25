@@ -10,7 +10,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(32);
+select plan(37);
 
 insert into public.events (
   id, household_id, author_member_id, title, location, starts_at, ends_at, visibility,
@@ -186,6 +186,53 @@ select results_eq(
   $$ values ('a5300000-0000-4000-8000-000000000011'::uuid, '2026-11-16'::date) $$,
   'find_event_conflicts names the occurrence by its day in the series'
 );
+
+-- An event «tutto il giorno» imported from a linked calendar (rule 7 of #510, decision 3
+-- of 25/11): Paolo of Casa Bianchi (b1…02, user bbbbbbbb…02), fake calendar «Personale»
+-- (e2…01, seed), with a meeting of his from 10:00 to 11:00 on the same day.
+reset role;
+insert into public.events (id, household_id, author_member_id, title, starts_at, ends_at, visibility)
+values ('b5300000-0000-4000-8000-000000000003', '22222222-2222-4222-8222-222222222222', 'b1000000-0000-4000-8000-000000000002',
+        'Riunione Paolo', '2027-02-17 10:00+01', '2027-02-17 11:00+01', 'household');
+set local role service_role;
+set local request.jwt.claims to '{"role":"service_role"}';
+select lives_ok(
+  $$ select * from public.sync_external_calendar_events(
+       'e2000000-0000-4000-8000-000000000001',
+       jsonb_build_array(jsonb_build_object('id', 'ev-510-allday', 'title', 'Ferie', 'all_day', true,
+         'start_date', '2027-02-17', 'end_date', '2027-02-18')),
+       false, 'cursor-510', '2027-02-10 09:00+01') $$,
+  'the synchronisation imports an event «tutto il giorno» of Paolo'
+);
+reset role;
+select results_eq(
+  $$ select e.all_day, e.starts_at, e.ends_at
+     from public.events e join public.event_external_links l on l.event_id = e.id
+     where l.calendar_id = 'e2000000-0000-4000-8000-000000000001' and l.provider_event_id = 'ev-510-allday' $$,
+  $$ values (true, '2027-02-17 00:00+01'::timestamptz, '2027-02-18 00:00+01'::timestamptz) $$,
+  'an imported event «tutto il giorno» is saved with all_day = true, from 0:00 to 0:00'
+);
+set local role authenticated;
+set local request.jwt.claims to '{"sub":"bbbbbbbb-0000-4000-8000-000000000002","role":"authenticated"}';
+select is_empty(
+  $$ select 1 from public.list_event_overlaps('2027-02-17 00:00+01', '2027-02-18 00:00+01') o
+     where o.event_id = 'b5300000-0000-4000-8000-000000000003'
+        or o.event_id in (select e.id from public.events e where e.title = 'Ferie') $$,
+  'an imported event «tutto il giorno» does not overlap the meeting of Paolo'
+);
+select is_empty(
+  $$ select 1 from public.find_event_conflicts('2027-02-17 12:00+01', '2027-02-17 13:00+01',
+       array['b1000000-0000-4000-8000-000000000002']::uuid[]) c
+     where c.title = 'Ferie' $$,
+  'nor is it a conflict'
+);
+select results_eq(
+  $$ select c.all_day from public.list_calendar_events('2027-02-17 00:00+01', '2027-02-18 00:00+01') c
+     where c.title = 'Ferie' $$,
+  $$ values (true) $$,
+  'list_calendar_events gives it «tutto il giorno»'
+);
+set local request.jwt.claims to '{"sub":"aaaaaaaa-0000-4000-8000-000000000001","role":"authenticated"}';
 
 -- ---------------------------------------------------------------------------
 -- Invalid arguments (CA-29)
