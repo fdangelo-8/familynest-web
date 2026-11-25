@@ -17,21 +17,23 @@ select has_function(
   'public', 'create_event',
   array[
     'text', 'timestamp with time zone', 'timestamp with time zone', 'event_visibility', 'uuid[]',
-    'text', 'uuid', 'event_recurrence', 'smallint[]', 'date', 'text'
+    'text', 'uuid', 'event_recurrence', 'smallint[]', 'date', 'text',
+    -- #510: the new values, at the end with defaults.
+    'boolean', 'uuid', 'boolean', 'boolean', 'integer', 'boolean', 'event_field[]', 'uuid[]'
   ],
   'create_event exists'
 );
 select ok(
-  not (select p.prosecdef from pg_proc p where p.oid = 'public.create_event(text, timestamptz, timestamptz, public.event_visibility, uuid[], text, uuid, public.event_recurrence, smallint[], date, text)'::regprocedure),
+  not (select p.prosecdef from pg_proc p where p.oid = 'public.create_event(text, timestamptz, timestamptz, public.event_visibility, uuid[], text, uuid, public.event_recurrence, smallint[], date, text, boolean, uuid, boolean, boolean, integer, boolean, public.event_field[], uuid[])'::regprocedure),
   'create_event is security invoker: RLS, triggers and constraints apply'
 );
 select ok(
-  (select p.proconfig @> array['search_path=""'] from pg_proc p where p.oid = 'public.create_event(text, timestamptz, timestamptz, public.event_visibility, uuid[], text, uuid, public.event_recurrence, smallint[], date, text)'::regprocedure),
+  (select p.proconfig @> array['search_path=""'] from pg_proc p where p.oid = 'public.create_event(text, timestamptz, timestamptz, public.event_visibility, uuid[], text, uuid, public.event_recurrence, smallint[], date, text, boolean, uuid, boolean, boolean, integer, boolean, public.event_field[], uuid[])'::regprocedure),
   'create_event has an empty search_path'
 );
 select ok(
-  not has_function_privilege('anon', 'public.create_event(text, timestamptz, timestamptz, public.event_visibility, uuid[], text, uuid, public.event_recurrence, smallint[], date, text)', 'execute')
-  and has_function_privilege('authenticated', 'public.create_event(text, timestamptz, timestamptz, public.event_visibility, uuid[], text, uuid, public.event_recurrence, smallint[], date, text)', 'execute'),
+  not has_function_privilege('anon', 'public.create_event(text, timestamptz, timestamptz, public.event_visibility, uuid[], text, uuid, public.event_recurrence, smallint[], date, text, boolean, uuid, boolean, boolean, integer, boolean, public.event_field[], uuid[])', 'execute')
+  and has_function_privilege('authenticated', 'public.create_event(text, timestamptz, timestamptz, public.event_visibility, uuid[], text, uuid, public.event_recurrence, smallint[], date, text, boolean, uuid, boolean, boolean, integer, boolean, public.event_field[], uuid[])', 'execute'),
   'create_event is for signed-in users only'
 );
 select ok(

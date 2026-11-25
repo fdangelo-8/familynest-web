@@ -4,7 +4,6 @@ Una riga per lezione: `errore → regola`. Le lezioni già imposte da hook, CI, 
 
 ## Database e Supabase
 
-- Policy RLS riscritte al volo per un bug → si cambiano solo con migrazione e test pgTAP.
 - `.select()` dopo una scrittura resta appeso; rilettura con la stessa query dà il vecchio dato → niente `.select()` dopo le scritture; rileggi con una query diversa.
 - `ALTER TYPE ... ADD VALUE` e l'insert che lo usa nella stessa migrazione; migrazioni con estensioni, DDL e dati insieme → una migrazione per passo.
 - Nomi di colonne supposti → verifica lo schema reale nelle migrazioni.
@@ -26,7 +25,6 @@ Una riga per lezione: `errore → regola`. Le lezioni già imposte da hook, CI, 
 - Regole di visibilità copiate in due funzioni → una sola fonte in `private`, o test di equivalenza.
 - PR `db/*` che tocca trigger o funzioni unita con la sola `check` verde → prima del merge, etichetta `suite-completa`.
 - Ruolo e chiamata a `private` in una sola espressione `security invoker` → `service_role` bloccata: il ruolo in un'istruzione a sé; pgTAP con la chiave amministrativa.
-- PR `db/*` con file fuori da `supabase/`, `src/types/database.ts` e `docs/` → guard rosso; i test e2e vanno nel branch della pagina.
 
 ## Sviluppo
 
@@ -63,11 +61,12 @@ Una riga per lezione: `errore → regola`. Le lezioni già imposte da hook, CI, 
 
 - Lista di issue o PR vuota per un istante → ricontrolla prima di creare issue nuove.
 - «CI verde» dichiarato su un commit precedente, o `--watch` letto prima dei run del nuovo SHA → l'esito si dà solo sul commit pushato, con i run completati.
+- `main` rosso per ore dopo un merge → il coordinatore segue la CI di `main` fino all'esito, dopo ogni merge.
+- Job CodeQL `analyze` rosso al caricamento risultati con 500 delle API GitHub → non è della PR: si rilancia una volta.
 - Run annullata dalla concorrenza di `remote-test-data` → il coordinatore la rilancia a mano; mai un job fallito.
 - Suite più lunga del timeout del job, interrotta senza test rossi → misura le ultime run e alza il timeout prima di aggiungere pagine; una suite interrotta non è un esito.
 - Stack Supabase locale con cartella o project-id comuni → entrambi nel proprio worktree; si ferma con `supabase stop --workdir`.
 - Disco pieno per `node_modules`, `.next`, `test-results` → alla fine si cancellano quelli del proprio worktree.
-- `git checkout` nella copia principale che cambia il branch agli altri → si lavora solo nel proprio worktree; per leggere un altro commit (revisore) usa `git show <ref>:<file>`.
 - Script o file temporanei in cartelle condivise tra agenti → ogni agente lavora nel proprio worktree, con file dal prefisso unico (numero di issue o PR).
 - Requisito di un'issue perso nel riepilogo del coordinatore → il revisore confronta la PR con l'issue originale; ogni elemento perso si decide per iscritto prima del test.
 - Scostamento dal criterio deciso in PR → il coordinatore aggiorna il criterio nell'issue prima del test.
@@ -75,7 +74,7 @@ Una riga per lezione: `errore → regola`. Le lezioni già imposte da hook, CI, 
 - Sviluppo senza criteri di accettazione numerati → l'analista li scrive prima; senza, la PR fa più giri di correzioni.
 - Controllo `db` obbligatorio rosso per un test con data passata, mentre la correzione aspetta un'altra PR → PR minima di sblocco, unita per prima.
 - Tester visivo sovrascrive il file del funzionale con una copia vecchia → `git pull --no-rebase` e `git diff --cached --stat` prima del commit; pathspec propri.
-- Edit bloccato da un hook, aggirato con `sed -i`, script Python o Node o copia → mai, nemmeno per annullare: si usano Edit o Write, altrimenti `BLOCCATO`.
+- Edit bloccato da un hook, aggirato con `sed -i` (tester, commit 710eabe, 3 righe corrette: resta errore) → tester e sviluppatori usano solo Edit o Write; mai `sed -i`, script, `tee`, copie, nemmeno per annullare; altrimenti `BLOCCATO`.
 - Proposta di design approvata in ritardo, o stato «da decidere» → un'issue per ogni punto approvato, subito; prima dello stato rileggi i commenti di Francesco.
 - Skill esterne → copia fissa, letta tutta, senza script né login; licenza in `LICENZE-TERZE-PARTI.md`.
 
@@ -106,14 +105,13 @@ Una riga per lezione: `errore → regola`. Le lezioni già imposte da hook, CI, 
 - Misure o clic durante un'animazione, o `force: true` → `waitForAnimationsToEnd` (`tests/fixtures/animations.ts`).
 - Test che blocca tutte le richieste, prefetch di Next incluso → blocca solo la navigazione vera.
 - Didascalia nel font dei codici che va a capo → didascalie corte, su una riga.
-- Test che dipendono dalla data reale (anche pgTAP) → regex sul formato, `pauseAt` o periodo fisso ben nel futuro; mai una data passata.
+- Test con la data reale (anche pgTAP) → regex, `pauseAt` o periodo nel futuro; mai una data passata. Finestra del DB su `now()` (#587) → il test porta l'ora vera o una data relativa.
 - Fixture che scrivono con il ruolo amministrativo dove serve la sessione utente → la scrittura passa dalla sessione; il ruolo amministrativo solo per preparare, detto nel commento.
 - Dati finti di `page.route` che restano nel test successivo → `page.unrouteAll()` nel `finally`.
 - Privacy controllata solo sul DOM → registra le risposte di rete (documento, fetch, xhr) e cerca nomi, date e id.
 - Testo cercato in tutta la pagina con una palette aperta sopra → controlla solo la superficie in cui il test è aperto.
 - `boundingBox` letto una volta su un elemento che React sostituisce → `expect.poll` finché stabile.
 - Commenti CSS con «#numero» letti come colori → togli i commenti `/* … */` prima di cercare i colori.
-- Tracce con `if: failure()` → perse se il retry passa → `if: always()`.
 
 ## Design
 

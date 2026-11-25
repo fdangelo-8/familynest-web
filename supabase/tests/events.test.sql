@@ -28,7 +28,10 @@ select columns_are(
   array[
     'id', 'household_id', 'author_member_id', 'title', 'location', 'starts_at', 'ends_at',
     'visibility', 'escort_member_id', 'recurrence', 'recurrence_weekdays', 'recurrence_until',
-    'created_at', 'updated_at', 'notes'
+    'created_at', 'updated_at', 'notes',
+    -- #510: «Tutto il giorno», «Lo riprende», «Da decidere», «Avviso», «Da verificare».
+    'all_day', 'pickup_member_id', 'escort_undecided', 'pickup_undecided', 'reminder_minutes_before',
+    'remind_rides', 'unverified_fields'
   ],
   'events has exactly the planned columns (notes added by #109, no health data)'
 );
@@ -37,8 +40,11 @@ select columns_are(
   array['event_id', 'member_id', 'household_id', 'created_at'],
   'event_members has exactly the planned columns'
 );
-select enum_has_labels('public', 'event_visibility', array['private', 'busy', 'household'], 'event_visibility labels');
-select enum_has_labels('public', 'event_recurrence', array['none', 'weekly', 'monthly'], 'event_recurrence labels');
+-- #510: «Solo alcune persone»; «Ogni giorno», «Ogni due settimane», «Ogni anno».
+select enum_has_labels('public', 'event_visibility', array['private', 'busy', 'selected', 'household'], 'event_visibility labels');
+select enum_has_labels(
+  'public', 'event_recurrence', array['none', 'daily', 'weekly', 'biweekly', 'monthly', 'yearly'], 'event_recurrence labels'
+);
 select fk_ok(
   'public', 'events', 'household_id', 'public', 'households', 'id',
   'events.household_id references households'

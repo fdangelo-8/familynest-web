@@ -30,6 +30,21 @@ Versione approvata da Francesco il 21/10/2026. Copia operativa per gli agenti: i
 
 **Vietato a tutti gli agenti:** push o merge su `main`; accesso ad altri progetti Supabase (in particolare `jjvnygockahhcrnkfped`) o ad altri repository; scrivere segreti ovunque; installare skill o pacchetti non previsti senza approvazione; disattivare o aggirare hook, test e CI.
 
+### App negli store (decisione di Francesco del 25/11/2026, #397)
+
+Strada A: la stessa app web va dentro un guscio Capacitor, con le parti native. Fonte: `docs/agenti/proposte/app-store-a-vs-b.md`.
+
+- **Pagine:** restano web, servite da Vercel. Il guscio non contiene copie delle pagine.
+- **Build iPhone:** prima con GitHub Actions, poi sul Mac di Francesco.
+- **Corsia nativa N0–N5** (#591–#596): parte dopo F5 (#506). Lavora su file nuovi (`ios/`, `android/`, configurazione Capacitor) e su un solo modulo in `src/lib/`. Il prefisso di branch (proposto `nativo/*`) si attiva in una sessione `admin/*`.
+- **Funzioni con equivalente nativo** (vibrazione, notifiche, sblocco, condivisione, widget): nessuna pagina chiama direttamente un'API del browser. Ognuna passa da una funzione unica in `src/lib/`, che sul web fa la cosa giusta (per esempio, la vibrazione dove il browser la supporta, altrimenti nulla) e nel guscio chiama il plugin nativo. La funzione si chiede con `richiesta-condivisa`.
+- **Navigazione:** il guscio apre solo il dominio dell'app.
+- **Via intermedia:** una o due schermate (per esempio Oggi o Aggiungi) si riscrivono in nativo solo se i dati della beta lo chiedono. Lo decide Francesco con i numeri.
+- **Requisiti degli store in ogni pagina:** cancellazione dell'account dall'app (A19, #552); accesso con Apple accanto a Google; nessun testo «per bambini» (FamilyNest è per genitori); per Plus, acquisti in app dello store, da decidere prima di Plus.
+- **Prove:** Playwright non prova le funzioni native. Face ID, widget e notifiche si provano su iPhone con TestFlight, con una lista di prove scritta dal team.
+- **Pacchetti:** `@capacitor/*` e i plugin si installano solo con approvazione (§2).
+- **Ancora aperto per Francesco:** nome e dominio definitivi, logo, testi di informativa e termini (A24). L'iPad è una proposta («solo telefono» al lancio), non ancora decisa.
+
 ## 3. La squadra
 
 Il coordinatore è la sessione principale avviata con `/sviluppa`: solo la sessione principale può lanciare gli altri agenti.
