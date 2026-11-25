@@ -242,15 +242,6 @@ test.describe("Figtree su /oggi", () => {
           holder.__shifts.push(
             `${shift.value.toFixed(4)} a ${Math.round(shift.startTime)} ms: ${moved.join(", ")}`,
           );
-          // TEMP-LOG (to remove)
-          const rects = (shift.sources ?? []).map((source) => {
-            const node = source.node as Element | null;
-            const r = (x: DOMRectReadOnly) =>
-              `${Math.round(x.x)},${Math.round(x.y)} ${Math.round(x.width)}x${Math.round(x.height)}`;
-            const parent = node?.parentElement;
-            return `${node?.nodeName}.${String(node instanceof Element ? node.className : "").slice(0, 40)} parent=${parent?.nodeName}.${String(parent?.className).slice(0, 40)} text="${(node?.textContent ?? "").slice(0, 40)}" prev[${r((source as unknown as { previousRect: DOMRectReadOnly }).previousRect)}] cur[${r((source as unknown as { currentRect: DOMRectReadOnly }).currentRect)}]`;
-          });
-          holder.__shifts.push(`TEMP-LOG ${rects.join(" ;; ")}`);
         }
       }).observe({ type: "layout-shift", buffered: true });
     });
@@ -261,29 +252,7 @@ test.describe("Figtree su /oggi", () => {
     );
     await page.goto("/oggi");
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-    // TEMP-LOG (to remove)
-    const probe = await page.evaluate(() => {
-      const out: Record<string, number | string> = {
-        stack: getComputedStyle(document.body).fontFamily,
-      };
-      for (const fam of [
-        "var(--font-testo)",
-        '"Figtree Fallback"',
-        "Arial",
-        "ui-sans-serif",
-        "Figtree",
-      ]) {
-        const s = document.createElement("span");
-        s.textContent = "Collega il calendario o aggiungi un impegno.";
-        s.style.cssText = `position:absolute;white-space:nowrap;font-size:14px;font-family:${fam}`;
-        document.body.append(s);
-        out[fam] = s.getBoundingClientRect().width;
-        s.remove();
-      }
-      return JSON.stringify(out);
-    });
     await fontArrived;
-    (globalThis as unknown as { __probe?: string }).__probe = probe;
     // The window of the criterion ends one second after the fonts are ready.
     const total = await page.evaluate(async () => {
       await document.fonts.ready;
@@ -295,12 +264,7 @@ test.describe("Figtree su /oggi", () => {
       return { cls: holder.__cls, shifts: holder.__shifts };
     });
     expect(counter.delayed).toBeGreaterThan(0);
-    expect(
-      total.cls,
-      total.shifts.join(" | ") +
-        " PROBE " +
-        (globalThis as unknown as { __probe?: string }).__probe,
-    ).toBeLessThanOrEqual(0.01);
+    expect(total.cls, total.shifts.join(" | ")).toBeLessThanOrEqual(0.01);
     await page.unrouteAll({ behavior: "ignoreErrors" });
   });
 
