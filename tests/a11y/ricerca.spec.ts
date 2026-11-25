@@ -464,17 +464,19 @@ test.describe("aree di tocco", () => {
           [cx, cy + tall / 2 - 1],
         ];
         // A control that already covers 44 px on a side only needs the other.
+        let probe = "";
         const ok = points.every(([x, y]) => {
           if (x < 0 || y < 0 || x > innerWidth || y > innerHeight) return true;
           const hit = document.elementFromPoint(x, y);
           if (!hit) return true;
-          return (
-            el.contains(hit) || hit.contains(el) || !!hit.closest("label[for]")
-          );
+          const good =
+            el.contains(hit) || hit.contains(el) || !!hit.closest("label[for]");
+          if (!good) probe = ` PROBE pt ${x},${y} rect ${r.left},${r.top},${r.right} hit ${hit.tagName}.${hit.className}`;
+          return good;
         });
         if (!ok) {
           bad.push(
-            `${el.tagName.toLowerCase()} «${(el.getAttribute("aria-label") ?? el.textContent ?? "").trim().slice(0, 40)}» ${Math.round(r.width)}x${Math.round(r.height)}`,
+            `${el.tagName.toLowerCase()} «${(el.getAttribute("aria-label") ?? el.textContent ?? "").trim().slice(0, 40)}» ${Math.round(r.width)}x${Math.round(r.height)}${probe}`,
           );
         }
       }
