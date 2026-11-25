@@ -1,4 +1,5 @@
 import { toDayKey } from "../datetime";
+import { TIME_ZONE } from "../i18n/config";
 import {
   MAX_PAGES,
   arrayOf,
@@ -57,7 +58,6 @@ export const GOOGLE_SCOPE = `openid email ${SCOPE_CALENDAR_LIST} ${SCOPE_EVENTS}
 const EVENT_FIELDS =
   "nextPageToken,nextSyncToken,items(id,etag,status,summary,location,start,end,recurringEventId,originalStartTime,transparency,visibility,attendees(self,responseStatus))";
 const CURSOR_PREFIX = "g1";
-const TIME_ZONE = "Europe/Rome";
 const WEEKDAY_CODES = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"] as const;
 
 export function createGoogleProvider(

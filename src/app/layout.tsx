@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Host_Grotesk, Parkinsans } from "next/font/google";
 import { IconSprite } from "@/components/ui/Icon/IconSprite";
 import { ToastProvider } from "@/components/ui/Toast/ToastProvider";
+import { getLocale } from "@/lib/i18n";
 import "./globals.css";
 import "./components.css";
 
@@ -36,7 +37,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html
-      lang="it"
+      lang={getLocale()}
       className={`${parkinsans.variable} ${hostGrotesk.variable}`}
     >
       <body>

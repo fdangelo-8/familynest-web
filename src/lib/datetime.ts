@@ -6,8 +6,9 @@
  * on its own. All functions are pure and use only `Intl`.
  */
 
-const TIME_ZONE = "Europe/Rome";
-const LOCALE = "it-IT";
+import { DEFAULT_LOCALE, LOCALE_TAGS, TIME_ZONE } from "./i18n/config";
+
+const LOCALE = LOCALE_TAGS[DEFAULT_LOCALE];
 const MS_PER_MINUTE = 60_000;
 const MS_PER_DAY = 86_400_000;
 
