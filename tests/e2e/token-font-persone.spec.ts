@@ -13,16 +13,59 @@ const secretKey = process.env.SUPABASE_SECRET_KEY;
 const rows = (page: Page) =>
   page.getByRole("list", { name: "Chi c’è" }).getByRole("listitem");
 
+test("CA-19 (parte): la PR non contiene file in supabase/", () => {
+  // Meaningful only on the branch of #196; elsewhere the list of changed
+  // files says nothing about this issue (same approach as CA-22 of #52).
+  const run = (args: string[]): string | null => {
+    try {
+      return execFileSync("git", ["-c", "safe.directory=*", ...args], {
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "ignore"],
+      }).trim();
+    } catch {
+      return null;
+    }
+  };
+  const branch =
+    process.env.GITHUB_HEAD_REF ||
+    process.env.GITHUB_REF_NAME ||
+    run(["rev-parse", "--abbrev-ref", "HEAD"]) ||
+    "";
+  if (!/(^|\/)token-font$/.test(branch)) return;
+  let diff = run(["diff", "--name-only", "origin/main...HEAD"]);
+  if (diff === null) {
+    run([
+      "fetch",
+      "--no-tags",
+      "--deepen=200",
+      "origin",
+      "+main:refs/remotes/origin/main",
+    ]);
+    diff = run(["diff", "--name-only", "origin/main...HEAD"]);
+  }
+  expect(
+    diff,
+    "storia comune con origin/main non disponibile: CA-19 non verificabile",
+  ).not.toBeNull();
+  const inSupabase = (diff ?? "")
+    .split("\n")
+    .filter((file) => file.startsWith("supabase/"));
+  expect(inSupabase).toEqual([]);
+});
+
 test.describe("colori delle persone su /nest", () => {
+  // One guard for the seeded users and the administrative key (read only).
+  test.beforeEach(() => {
+    test.skip(
+      !usersConfigured("A", "B2") || !secretKey || !supabaseUrl,
+      `${skipReason("A", "B2")}; serve anche SUPABASE_SECRET_KEY`,
+    );
+  });
+
   test("CA-19: Marco ha l'avatar corallo e nel database è ancora pomodoro", async ({
     page,
     baseURL,
   }) => {
-    test.skip(!usersConfigured("A"), skipReason("A"));
-    test.skip(
-      !secretKey || !supabaseUrl,
-      "Chiave amministrativa non impostata",
-    );
     await signInAs(page.context(), baseURL as string, "A");
     await page.goto("/nest");
     await expect(rows(page)).toHaveCount(5);
@@ -46,51 +89,10 @@ test.describe("colori delle persone su /nest", () => {
     expect(data).toEqual([{ color: "pomodoro" }]);
   });
 
-  test("CA-19 (parte): la PR non contiene file in supabase/", () => {
-    // Meaningful only on the branch of #196; elsewhere the list of changed
-    // files says nothing about this issue (same approach as CA-22 of #52).
-    const run = (args: string[]): string | null => {
-      try {
-        return execFileSync("git", ["-c", "safe.directory=*", ...args], {
-          encoding: "utf8",
-          stdio: ["ignore", "pipe", "ignore"],
-        }).trim();
-      } catch {
-        return null;
-      }
-    };
-    const branch =
-      process.env.GITHUB_HEAD_REF ||
-      process.env.GITHUB_REF_NAME ||
-      run(["rev-parse", "--abbrev-ref", "HEAD"]) ||
-      "";
-    if (!/(^|\/)token-font$/.test(branch)) return;
-    let diff = run(["diff", "--name-only", "origin/main...HEAD"]);
-    if (diff === null) {
-      run([
-        "fetch",
-        "--no-tags",
-        "--deepen=200",
-        "origin",
-        "+main:refs/remotes/origin/main",
-      ]);
-      diff = run(["diff", "--name-only", "origin/main...HEAD"]);
-    }
-    expect(
-      diff,
-      "storia comune con origin/main non disponibile: CA-19 non verificabile",
-    ).not.toBeNull();
-    const inSupabase = (diff ?? "")
-      .split("\n")
-      .filter((file) => file.startsWith("supabase/"));
-    expect(inSupabase).toEqual([]);
-  });
-
   test("CA-20 (isolamento): Paolo vede solo i membri di Casa Bianchi", async ({
     page,
     baseURL,
   }) => {
-    test.skip(!usersConfigured("B2"), skipReason("B2"));
     await signInAs(page.context(), baseURL as string, "B2");
     await page.goto("/nest");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(

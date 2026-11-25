@@ -209,8 +209,9 @@ test.describe("Figtree su /oggi", () => {
     page,
     context,
     baseURL,
-  }, info) => {
-    test.skip(info.project.name !== "mobile", "Criterio a 390×844");
+  }) => {
+    // The criterion is at 390×844: both projects run it at that size.
+    await page.setViewportSize({ width: 390, height: 844 });
     await signInMarco(context, baseURL);
     await page.addInitScript(() => {
       const holder = window as unknown as {
@@ -341,8 +342,9 @@ test.describe("Figtree su /oggi", () => {
     page,
     context,
     baseURL,
-  }, info) => {
-    test.skip(info.project.name !== "mobile", "Criterio a 390 px");
+  }) => {
+    // The criterion is at 390×844: both projects run it at that size.
+    await page.setViewportSize({ width: 390, height: 844 });
     await signInMarco(context, baseURL);
     for (const path of [
       "/oggi",
