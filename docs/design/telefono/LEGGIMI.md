@@ -1,6 +1,6 @@
 # Design per telefono (Fable) · fonte di verità
 
-Approvato da Francesco il **24/11/2026** come **nuova fonte di verità per l'app su telefono**, al posto del vecchio mockup in `docs/mockup/*.html`, che resta come archivio (decisione D4 in `docs/mockup/DECISIONI.md`). Computer e web da telefono arriveranno in `docs/design/computer/`: finché non ci sono, per quelle disposizioni si ricava dal telefono e dal design system, e si scrive una domanda nella issue.
+Approvato da Francesco il **24/11/2026** come **nuova fonte di verità per l'app su telefono**, al posto del vecchio mockup in `docs/mockup/*.html`, che resta come archivio (decisione D4 in `docs/mockup/DECISIONI.md`). Computer e web da telefono sono in [`docs/design/computer/`](../computer/LEGGIMI.md) (Passi 10 e 11, approvati il 25/11/2026; correzioni del Passo 12 in arrivo): per le pagine che lì non sono ancora disegnate si adatta il telefono con le regole di [`regole.md`](../computer/regole.md).
 
 Estratto il 24/11/2026 dal canvas di Fable «FamilyNest: nuovo design» (versione 1795357421-5c16): **547 immagini** in 25 cartelle. Le schermate sono a 390 px di larghezza, salvate a doppia densità (780 px); in `componenti/` ci sono anche 5 tavole intere. Ogni cartella ha un `note.md` con il nome di ogni PNG e la nota di Fable (scelte, stati, movimenti, critica). Peso totale: circa 40 MB.
 
@@ -81,7 +81,7 @@ Perimetro deciso da Francesco il 24/11/2026: si sviluppa tutto da ora; pagamenti
 
 ## Cosa è escluso
 
-- **Computer e web da telefono:** nel secondo canvas di Fable (Passi 10–11), da estrarre a parte in `docs/design/computer/`. Lì stanno anche la pagina pubblica della lista desideri e la pagina di invito aperta da chi non ha l'app. Le poche tavole «al computer» del Passo 5 non sono state estratte.
+- **Computer e web da telefono:** nel secondo canvas di Fable (Passi 10–11), estratti a parte in [`docs/design/computer/`](../computer/LEGGIMI.md). Lì stanno anche la pagina pubblica della lista desideri e la pagina di invito aperta da chi non ha l'app. Le poche tavole «al computer» del Passo 5 non sono state estratte.
 - **Tema scuro e tablet:** non ancora disegnati.
 - **Routine** (in attesa) e **«trillo»** (ex Citofona, da ristudiare).
 - **Logo:** in pausa; nelle schermate c'è il segnaposto 5A.
