@@ -325,5 +325,6 @@ test("confronto con il mockup: stili a riposo identici", async ({ page }) => {
       }
     }
   }
-  expect(diffs).toEqual([]);
+  // Approved (#196, spec table «--text-controllo-size» 14 -> 16 px).
+  expect(diffs).toEqual(["passo.fontSize: app 16px / mockup 14px"]);
 });
