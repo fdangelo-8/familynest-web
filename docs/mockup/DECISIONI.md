@@ -49,6 +49,13 @@ Queste decisioni prevalgono sul mockup dove lo contraddicono. Analista, designer
   - **Dopo il lancio:** tema scuro, tablet.
 - Le «Decisioni aperte del mockup» qui sotto restano valide solo per ciò che questo elenco non decide.
 
+## D5 · Il design di Fable per computer e web da telefono è approvato (25/11/2026)
+
+- Francesco ha approvato il 25/11/2026 i Passi 10 e 11 del secondo canvas di Fable: computer (1280 e 1440 px, finestra stretta 1040 px), web da telefono (390 px) e pagine senza account. Sono in `docs/design/computer/` e sono la fonte di verità per quelle disposizioni, come D4 per il telefono. Le decisioni D1, D2, D3 e D4 restano valide e vincono sul design.
+- Vale il passo più recente (11 > 10). Le regole di adattamento sono in `docs/design/computer/regole.md`, le risposte 170–183 in `docs/design/computer/decisioni.md`.
+- **Correzioni attese nel Passo 12** (chiesto a Fable il 25/11): barrette degli impegni con contrasto almeno 3:1 sul fondo, risposte 177–183 da applicare e le pagine che mancano su computer (Spazi, Contatti, Documenti, Conti, Luoghi, Novità, Proposte, Sfondi, lista dei desideri nell'app, aiutanti, settimana tipo, sintesi del mattino, Turni). Elenco completo in `docs/design/computer/LEGGIMI.md`. Fino ad allora valgono le correzioni scritte lì, non le tavole; per le pagine non disegnate si adatta il telefono con `regole.md`.
+- Colore ardesia dei membri: **`#68778D`** al posto di `#6B7A90` (iniziale bianca 4,55:1), decisione di Francesco del 25/11/2026.
+
 ## Decisioni aperte del mockup
 
 Restano aperte come scritte in `design-system.md` §14. Finché non vengono decise **non si sviluppano**: accesso premium, tema scuro completo, contenuti degli spazi di Esplora oltre a ingresso e pagina "In arrivo", "Proponi qualcosa", Citofona, sintesi della domenica, taglie nella lista pubblica, tablet dedicato. Per l'apertura del profilo figlio dal calendario e la tendina notifiche su desktop si segue il mockup così com'è.
