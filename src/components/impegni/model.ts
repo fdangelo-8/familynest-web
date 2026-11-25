@@ -20,6 +20,7 @@ import {
   type SaveChange,
 } from "@/lib/event-texts";
 import type { EventOccurrence } from "@/lib/household-events";
+import { narrowVisibility } from "@/lib/visibility";
 import {
   BASE_REPEAT_OPTIONS,
   dayDiff,
@@ -252,6 +253,7 @@ export function deleteTextOf(
 export function initialRepeat(occ: EventOccurrence): RepeatChoice {
   if (occ.recurrence === "none") return "none";
   if (occ.recurrence === "monthly") return "monthly";
+  if (occ.recurrence !== "weekly") return "current";
   return occ.recurrenceWeekdays.length === 1 ? "weekly" : "current";
 }
 
@@ -266,7 +268,7 @@ export function initialValues(occ: EventOccurrence): EventFormValues {
     place: occ.location ?? "",
     memberIds: [...occ.memberIds],
     escortId: occ.escortMemberId,
-    visibility: occ.visibility,
+    visibility: narrowVisibility(occ.visibility),
     notes: occ.notes ?? "",
   };
 }

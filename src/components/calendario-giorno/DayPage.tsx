@@ -15,6 +15,7 @@ import { PageError } from "@/components/ui/PageError/PageError";
 import { SectionSwitcher } from "@/components/ui/SegmentedControl/SectionSwitcher";
 import { Skeleton, SkeletonGroup } from "@/components/ui/Skeleton/Skeleton";
 import { hasTodayLinkOnError } from "@/lib/app-routes";
+import { narrowVisibility } from "@/lib/visibility";
 import {
   VISIBILITY_LABELS,
   eventsOfDay,
@@ -468,7 +469,7 @@ function DayContent({ nowMs }: { nowMs: number }) {
           event={chosen}
           members={members}
           info={panelInfo(chosen, dayKey)}
-          note={VISIBILITY_LABELS[chosen.visibility]}
+          note={VISIBILITY_LABELS[narrowVisibility(chosen.visibility)]}
         />
       ) : null
     ) : null;

@@ -6,6 +6,7 @@ import { Tag } from "@/components/ui/Tag/Tag";
 import { VisuallyHidden } from "@/components/ui/VisuallyHidden/VisuallyHidden";
 import { VISIBILITY_LABELS } from "@/lib/calendar";
 import { toDayKey, type Instant } from "@/lib/datetime";
+import { narrowVisibility } from "@/lib/visibility";
 import type {
   EventCalendarLink,
   EventOccurrence,
@@ -135,7 +136,7 @@ export function EventCard({
           </>
         ) : null}
         <dt>Chi lo vede</dt>
-        <dd>{VISIBILITY_LABELS[occurrence.visibility]}</dd>
+        <dd>{VISIBILITY_LABELS[narrowVisibility(occurrence.visibility)]}</dd>
         {occurrence.notes ? (
           <>
             <dt>Note</dt>

@@ -1,5 +1,6 @@
 import type { DigestTime } from "@/lib/digest";
 import { joinNames } from "@/lib/spaces";
+import { narrowVisibility, type StoredVisibility } from "@/lib/visibility";
 
 /*
  * Plain module (no "use client"): shared by the page, the two routes and the
@@ -52,8 +53,9 @@ export function lensLabel(value: StartLens): string {
   return LENS_OPTIONS.find((o) => o.value === value)?.label ?? "Io";
 }
 
-export function visibilityLabel(value: DefaultVisibility): string {
-  return VISIBILITY_OPTIONS.find((o) => o.value === value)?.label ?? "Occupato";
+export function visibilityLabel(value: StoredVisibility): string {
+  const known = narrowVisibility(value);
+  return VISIBILITY_OPTIONS.find((o) => o.value === known)?.label ?? "Occupato";
 }
 
 /**

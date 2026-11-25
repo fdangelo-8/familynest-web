@@ -11,6 +11,7 @@ import {
 } from "@/components/calendari-collegati/times";
 import { formatTime } from "@/lib/datetime";
 import { createClient } from "@/lib/supabase/server";
+import { narrowVisibility } from "@/lib/visibility";
 
 /*
  * Reads «Calendari collegati» (#34, #35) with the adult's own session, so the
@@ -93,7 +94,7 @@ export async function loadLinkedCalendars(
         isReadOnly: c.is_read_only,
         isEnabled: c.is_enabled,
         direction: c.direction,
-        visibility: c.visibility,
+        visibility: narrowVisibility(c.visibility),
         countsForFreeTime: c.counts_for_free_time,
         weekdaysOnly: c.weekdays_only,
         isTarget: c.is_new_events_target,
