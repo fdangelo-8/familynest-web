@@ -261,7 +261,29 @@ test.describe("Figtree su /oggi", () => {
     );
     await page.goto("/oggi");
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    // TEMP-LOG (to remove)
+    const probe = await page.evaluate(() => {
+      const out: Record<string, number | string> = {
+        stack: getComputedStyle(document.body).fontFamily,
+      };
+      for (const fam of [
+        "var(--font-testo)",
+        '"Figtree Fallback"',
+        "Arial",
+        "ui-sans-serif",
+        "Figtree",
+      ]) {
+        const s = document.createElement("span");
+        s.textContent = "Collega il calendario o aggiungi un impegno.";
+        s.style.cssText = `position:absolute;white-space:nowrap;font-size:14px;font-family:${fam}`;
+        document.body.append(s);
+        out[fam] = s.getBoundingClientRect().width;
+        s.remove();
+      }
+      return JSON.stringify(out);
+    });
     await fontArrived;
+    (globalThis as unknown as { __probe?: string }).__probe = probe;
     // The window of the criterion ends one second after the fonts are ready.
     const total = await page.evaluate(async () => {
       await document.fonts.ready;
@@ -273,7 +295,12 @@ test.describe("Figtree su /oggi", () => {
       return { cls: holder.__cls, shifts: holder.__shifts };
     });
     expect(counter.delayed).toBeGreaterThan(0);
-    expect(total.cls, total.shifts.join(" | ")).toBeLessThanOrEqual(0.01);
+    expect(
+      total.cls,
+      total.shifts.join(" | ") +
+        " PROBE " +
+        (globalThis as unknown as { __probe?: string }).__probe,
+    ).toBeLessThanOrEqual(0.01);
     await page.unrouteAll({ behavior: "ignoreErrors" });
   });
 
