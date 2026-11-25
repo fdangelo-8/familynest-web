@@ -5462,6 +5462,57 @@ a.riga-regalo__titolo::before {
     inset 0 0 0 var(--size-azione) var(--color-superficie);
 }
 
+/* #460 · Animali: avatar con foto (solo xl). Il fondo --c resta sotto la foto. */
+.avatar--foto {
+  overflow: hidden;
+}
+.avatar__foto {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
+/* #460 · Animali: campo «Foto», avatar a sinistra e bottoni a destra */
+.campo-foto {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: center;
+}
+.campo-foto__azioni {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+}
+
+/* #460 · Animali: «Giorni», sette chip da lunedì in una griglia */
+.scelta-giorni {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--space-2) var(--space-1);
+}
+.scelta-giorni .chip {
+  justify-content: center;
+  padding-inline: var(--space-0);
+}
+
+/* #460 · Animali: l'elenco del turno è un ol, senza rientro né numeri del browser */
+ol.lista {
+  margin: var(--space-0);
+  padding: var(--space-0);
+  list-style: none;
+}
+
+/* #460 · Animali: azioni di una riga del turno (su, giù, togli) */
+.riga-lista__azioni {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
 /* =========================================================
    CORNICE DELL'APP (fondamenta layout e navigazione, #10)
    Il mockup mette tutto dentro una cornice fissa: qui le regole
@@ -5719,6 +5770,10 @@ body {
   .selettore__voce {
     white-space: normal;
     min-height: calc(var(--size-controllo) - 2 * var(--space-1));
+  }
+  /* #460 · «Giorni»: quattro colonne invece di sette */
+  .scelta-giorni {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
