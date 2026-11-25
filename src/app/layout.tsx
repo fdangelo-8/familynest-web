@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Host_Grotesk, Parkinsans } from "next/font/google";
+import { Figtree } from "next/font/google";
 import { IconSprite } from "@/components/ui/Icon/IconSprite";
 import { ToastProvider } from "@/components/ui/Toast/ToastProvider";
 import { getLocale } from "@/lib/i18n";
@@ -8,16 +8,12 @@ import "./components.css";
 
 // Fonts are downloaded at build time and served from the app domain:
 // the browser never contacts Google (privacy, decision D-1).
-const parkinsans = Parkinsans({
+// Figtree is a variable font (no `weight`), with the adjusted fallback font
+// and preload left on (#196).
+const figtree = Figtree({
   subsets: ["latin", "latin-ext"],
   display: "swap",
-  variable: "--font-parkinsans",
-});
-
-const hostGrotesk = Host_Grotesk({
-  subsets: ["latin", "latin-ext"],
-  display: "swap",
-  variable: "--font-host-grotesk",
+  variable: "--font-figtree",
 });
 
 export const metadata: Metadata = {
@@ -36,10 +32,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html
-      lang={getLocale()}
-      className={`${parkinsans.variable} ${hostGrotesk.variable}`}
-    >
+    <html lang={getLocale()} className={figtree.variable}>
       <body>
         <IconSprite />
         <ToastProvider>{children}</ToastProvider>
