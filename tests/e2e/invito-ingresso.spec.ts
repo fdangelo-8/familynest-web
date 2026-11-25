@@ -768,15 +768,15 @@ test.describe("il tuo colore (08)", () => {
 
   const LAURA_ORDER = [
     "Glicine",
-    "Lampone",
-    "Ceruleo",
-    "Peonia",
-    "Basilico",
+    "Sabbia",
+    "Azzurro",
+    "Rosa",
+    "Ardesia",
     "Cannella",
-    "Pomodoro (già di Marco)",
-    "Salvia (già di Sofia)",
-    "Cobalto (già di Tommaso)",
-    "Zafferano (già di Biscotto)",
+    "Corallo (già di Marco)",
+    "Menta (già di Sofia)",
+    "Blu (già di Tommaso)",
+    "Ambra (già di Biscotto)",
   ];
 
   test("CA-14: su mobile la 08 mostra saluto, passo, anteprima, colori e aiuto", async ({
@@ -806,19 +806,19 @@ test.describe("il tuo colore (08)", () => {
       "true",
     );
     for (const name of [
-      "Pomodoro (già di Marco)",
-      "Salvia (già di Sofia)",
-      "Cobalto (già di Tommaso)",
-      "Zafferano (già di Biscotto)",
+      "Corallo (già di Marco)",
+      "Menta (già di Sofia)",
+      "Blu (già di Tommaso)",
+      "Ambra (già di Biscotto)",
     ]) {
       await expect(radio(page, name)).toBeDisabled();
     }
     for (const name of [
       "Glicine",
-      "Lampone",
-      "Ceruleo",
-      "Peonia",
-      "Basilico",
+      "Sabbia",
+      "Azzurro",
+      "Rosa",
+      "Ardesia",
       "Cannella",
     ]) {
       await expect(radio(page, name)).toBeEnabled();
@@ -862,8 +862,8 @@ test.describe("il tuo colore (08)", () => {
     const requests: string[] = [];
     page.on("request", (request) => requests.push(request.url()));
 
-    await radio(page, "Peonia").click();
-    await expect(radio(page, "Peonia")).toHaveAttribute("aria-checked", "true");
+    await radio(page, "Rosa").click();
+    await expect(radio(page, "Rosa")).toHaveAttribute("aria-checked", "true");
     await expect(
       page.locator(".anteprima-avatar .avatar").filter({ visible: true }),
     ).toHaveClass(/membro-peonia/);
@@ -887,13 +887,13 @@ test.describe("il tuo colore (08)", () => {
     await radio(page, "Glicine").focus();
     // Right: free colours in the order shown, then back to the first one.
     const walk = [
-      "Lampone",
-      "Ceruleo",
-      "Peonia",
-      "Basilico",
+      "Sabbia",
+      "Azzurro",
+      "Rosa",
+      "Ardesia",
       "Cannella",
       "Glicine",
-      "Lampone",
+      "Sabbia",
     ];
     for (const name of walk) {
       await page.keyboard.press("ArrowRight");
@@ -902,10 +902,10 @@ test.describe("il tuo colore (08)", () => {
     }
     // Never on a colour of someone else.
     for (const name of [
-      "Pomodoro (già di Marco)",
-      "Salvia (già di Sofia)",
-      "Cobalto (già di Tommaso)",
-      "Zafferano (già di Biscotto)",
+      "Corallo (già di Marco)",
+      "Menta (già di Sofia)",
+      "Blu (già di Tommaso)",
+      "Ambra (già di Biscotto)",
     ]) {
       await expect(radio(page, name)).not.toBeFocused();
     }
@@ -955,23 +955,20 @@ test.describe("il tuo colore (08)", () => {
       await page.goto("/invito/colore");
       await colorPageReady(page);
       const expected = [
-        "Cobalto",
+        "Blu",
         "Glicine",
-        "Zafferano",
-        "Lampone",
-        "Ceruleo",
-        "Peonia",
-        "Basilico",
+        "Ambra",
+        "Sabbia",
+        "Azzurro",
+        "Rosa",
+        "Ardesia",
         "Cannella",
-        "Pomodoro (già di Ilaria)",
-        "Salvia (già di Pietro)",
+        "Corallo (già di Ilaria)",
+        "Menta (già di Pietro)",
       ];
       expect(await colorNames(page)).toEqual(expected);
-      await radio(page, "Peonia").click();
-      await expect(radio(page, "Peonia")).toHaveAttribute(
-        "aria-checked",
-        "true",
-      );
+      await radio(page, "Rosa").click();
+      await expect(radio(page, "Rosa")).toHaveAttribute("aria-checked", "true");
       expect(await colorNames(page)).toEqual(expected);
       await expect(
         visibleText(
@@ -982,7 +979,7 @@ test.describe("il tuo colore (08)", () => {
     });
   });
 
-  test("CA-18: V sceglie Peonia e «Continua»: entra nel Nest di Davide", async ({
+  test("CA-18: V sceglie Rosa e «Continua»: entra nel Nest di Davide", async ({
     page,
     baseURL,
   }) => {
@@ -992,11 +989,8 @@ test.describe("il tuo colore (08)", () => {
       await page.goto(linkOf(originOf(baseURL), nest.invite.token));
       await page.goto("/invito/colore");
       await colorPageReady(page);
-      await radio(page, "Peonia").click();
-      await expect(radio(page, "Peonia")).toHaveAttribute(
-        "aria-checked",
-        "true",
-      );
+      await radio(page, "Rosa").click();
+      await expect(radio(page, "Rosa")).toHaveAttribute("aria-checked", "true");
       await continueButton(page).click();
       await expect(page).toHaveURL(/\/onboarding\/calendario$/);
       expect(await inviteCookie(page)).toBeUndefined();
@@ -1050,11 +1044,8 @@ test.describe("il tuo colore (08)", () => {
         .eq("id", nest.pietroId);
       expect(taken.error).toBeNull();
 
-      await radio(page, "Peonia").click();
-      await expect(radio(page, "Peonia")).toHaveAttribute(
-        "aria-checked",
-        "true",
-      );
+      await radio(page, "Rosa").click();
+      await expect(radio(page, "Rosa")).toHaveAttribute("aria-checked", "true");
       await continueButton(page).click();
       await expect(
         alertWith(
@@ -1063,11 +1054,11 @@ test.describe("il tuo colore (08)", () => {
         ),
       ).toBeVisible();
       await expect(page).toHaveURL(/\/invito\/colore$/);
-      await expect(radio(page, "Peonia (già di Pietro)")).toBeDisabled();
+      await expect(radio(page, "Rosa (già di Pietro)")).toBeDisabled();
       expect((await nest.member(nest.davideId)).user_id).toBeNull();
 
-      await radio(page, "Basilico").click();
-      await expect(radio(page, "Basilico")).toHaveAttribute(
+      await radio(page, "Ardesia").click();
+      await expect(radio(page, "Ardesia")).toHaveAttribute(
         "aria-checked",
         "true",
       );
@@ -1116,11 +1107,8 @@ test.describe("il tuo colore (08)", () => {
       await page.goto(linkOf(origin, nest.invite.token));
       await page.goto("/invito/colore");
       await colorPageReady(page);
-      await radio(page, "Peonia").click();
-      await expect(radio(page, "Peonia")).toHaveAttribute(
-        "aria-checked",
-        "true",
-      );
+      await radio(page, "Rosa").click();
+      await expect(radio(page, "Rosa")).toHaveAttribute("aria-checked", "true");
 
       // The server action is a POST to the page itself.
       await page.route(
@@ -1140,10 +1128,7 @@ test.describe("il tuo colore (08)", () => {
         notice.getByRole("button", { name: "Riprova" }),
       ).toBeVisible();
       await expect(page).toHaveURL(`${origin}/invito/colore`);
-      await expect(radio(page, "Peonia")).toHaveAttribute(
-        "aria-checked",
-        "true",
-      );
+      await expect(radio(page, "Rosa")).toHaveAttribute("aria-checked", "true");
       expect((await nest.member(nest.davideId)).user_id).toBeNull();
     });
   });
@@ -1263,10 +1248,10 @@ test.describe("isolamento", () => {
     // Only the four colours of Casa D'Angelo are switched off.
     const names = await colorNames(page);
     expect(names.filter((name) => name.includes("(già di"))).toEqual([
-      "Pomodoro (già di Marco)",
-      "Salvia (già di Sofia)",
-      "Cobalto (già di Tommaso)",
-      "Zafferano (già di Biscotto)",
+      "Corallo (già di Marco)",
+      "Menta (già di Sofia)",
+      "Blu (già di Tommaso)",
+      "Ambra (già di Biscotto)",
     ]);
   });
 
