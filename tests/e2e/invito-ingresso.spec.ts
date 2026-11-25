@@ -973,7 +973,7 @@ test.describe("il tuo colore (08)", () => {
       await expect(
         visibleText(
           page,
-          "Ilaria ti aveva dato il cobalto. I colori spenti sono già di qualcun altro.",
+          "Ilaria ti aveva dato il blu. I colori spenti sono già di qualcun altro.",
         ),
       ).toBeVisible();
     });
@@ -1050,7 +1050,7 @@ test.describe("il tuo colore (08)", () => {
       await expect(
         alertWith(
           page,
-          "Pietro ha appena preso la peonia. Scegli un altro colore.",
+          "Pietro ha appena preso la rosa. Scegli un altro colore.",
         ),
       ).toBeVisible();
       await expect(page).toHaveURL(/\/invito\/colore$/);

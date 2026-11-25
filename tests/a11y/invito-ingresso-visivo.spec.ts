@@ -427,7 +427,7 @@ test.describe("invito · il tuo colore (08) · accessibilità", () => {
       shownText(
         page,
         "alert",
-        "Pietro ha appena preso la peonia. Scegli un altro colore.",
+        "Pietro ha appena preso la rosa. Scegli un altro colore.",
       ),
     ).toBeVisible();
     // The focus goes back to the colour the inviter gave.

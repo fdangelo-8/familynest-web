@@ -1,4 +1,5 @@
 import type { ChoosableColor } from "@/components/ui/ColorChoice/ColorChoice";
+import { memberColorLabel } from "@/lib/member-colors";
 import { calendarDaysUntil, formatTime } from "@/lib/datetime";
 
 /** Pure texts and choices of the invitation pages (#16). Nothing here touches the network. */
@@ -62,22 +63,26 @@ export function oneLine(message: string): string {
   return message.replace(/\s*[\r\n]+\s*/g, " ").trim();
 }
 
+// Only the article is written here: the name comes from the messages
+// (`memberColors`), the same one the colour choice reads aloud.
 const ARTICLES: Record<ChoosableColor, string> = {
-  pomodoro: "il pomodoro",
-  glicine: "il glicine",
-  salvia: "la salvia",
-  cobalto: "il cobalto",
-  zafferano: "lo zafferano",
-  lampone: "il lampone",
-  ceruleo: "il ceruleo",
-  peonia: "la peonia",
-  basilico: "il basilico",
-  cannella: "la cannella",
+  pomodoro: "il",
+  glicine: "il",
+  salvia: "la",
+  cobalto: "il",
+  zafferano: "l'",
+  lampone: "la",
+  ceruleo: "l'",
+  peonia: "la",
+  basilico: "l'",
+  cannella: "la",
 };
 
-/** «il glicine», «la salvia», «lo zafferano»… */
+/** «il corallo», «la menta», «l'ambra»… */
 export function colorWithArticle(color: ChoosableColor): string {
-  return ARTICLES[color];
+  const article = ARTICLES[color];
+  const name = memberColorLabel(color).toLowerCase();
+  return article.endsWith("'") ? `${article}${name}` : `${article} ${name}`;
 }
 
 /** Help under the colours; it does not change when another colour is chosen. */

@@ -254,8 +254,8 @@
   --shadow-scheda: 0 1px 2px var(--color-ombra);
   --shadow-barra: 0 8px 24px var(--color-ombra);
   --shadow-foglio: 0 -4px 16px -2px var(--color-ombra-forte);
-  --shadow-menu:
-    0 1px 2px var(--color-ombra), 0 8px 20px -6px var(--color-ombra-forte);
+  /* prettier-ignore */
+  --shadow-menu: 0 1px 2px var(--color-ombra), 0 8px 20px -6px var(--color-ombra-forte);
   --shadow-disco: 0 2px 6px -1px var(--color-ombra-forte);
   --shadow-controllo: 0 1px 3px var(--color-ombra);
   --shadow-modale: 0 30px 80px var(--color-ombra-forte);
@@ -374,6 +374,9 @@ body {
   color: var(--color-inchiostro);
   background: var(--color-carta);
   -webkit-font-smoothing: antialiased;
+  /* Subpixel advances, not rounded to whole pixels: the widths of Figtree 600
+     and 700 stay those of the font (#196, CA-3 and CA-5). */
+  text-rendering: geometricPrecision;
   overflow-wrap: break-word; /* #313 */
   text-align: left;
 }
