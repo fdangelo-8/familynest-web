@@ -4,13 +4,13 @@
 -- Seed ids: A = Marco (Casa D'Angelo, user aaaaaaaa…01, member a1…01), B = Giulia (Casa
 -- Bianchi, bbbbbbbb…01, b1…01). Casa D'Angelo: Laura a1…02, Sofia a1…03 (child), Tommaso
 -- a1…04 (child), Biscotto a1…05 (pet).
--- This test gives Laura an account (user aaaaaaaa…02) and adds a third adult, Davide
--- (a1…06, user aaaaaaaa…03). Dates are fixed: no rule tested here depends on the real
+-- This test gives Laura an account (user aaaaaaaa…02) and adds the adults Davide (a1…06,
+-- user aaaaaaaa…03), Elena (a1…07, …04), Franco (a1…08, …05) and Gino (a1…09, …06). Dates are fixed: no rule tested here depends on the real
 -- clock. No health data (D1).
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(57);
+select plan(71);
 
 insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, created_at, updated_at)
 values
@@ -24,6 +24,24 @@ where id = 'a1000000-0000-4000-8000-000000000002';
 insert into public.household_members (id, household_id, kind, name, color, user_id, joined_at)
 values ('a1000000-0000-4000-8000-000000000006', '11111111-1111-4111-8111-111111111111', 'adult', 'Davide',
         'lampone', 'aaaaaaaa-0000-4000-8000-000000000003', now());
+-- Three more adults with an account, for the event with two chosen people: Elena
+-- (participant, a1…07), Franco (escort, a1…08), Gino (pickup, a1…09).
+insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, created_at, updated_at)
+values
+  ('00000000-0000-0000-0000-000000000000', 'aaaaaaaa-0000-4000-8000-000000000004', 'authenticated',
+   'authenticated', 'utente-elena@example.com', '{"full_name":"Elena Test"}', now(), now()),
+  ('00000000-0000-0000-0000-000000000000', 'aaaaaaaa-0000-4000-8000-000000000005', 'authenticated',
+   'authenticated', 'utente-franco@example.com', '{"full_name":"Franco Test"}', now(), now()),
+  ('00000000-0000-0000-0000-000000000000', 'aaaaaaaa-0000-4000-8000-000000000006', 'authenticated',
+   'authenticated', 'utente-gino@example.com', '{"full_name":"Gino Test"}', now(), now());
+insert into public.household_members (id, household_id, kind, name, color, user_id, joined_at)
+values
+  ('a1000000-0000-4000-8000-000000000007', '11111111-1111-4111-8111-111111111111', 'adult', 'Elena',
+   'ceruleo', 'aaaaaaaa-0000-4000-8000-000000000004', now()),
+  ('a1000000-0000-4000-8000-000000000008', '11111111-1111-4111-8111-111111111111', 'adult', 'Franco',
+   'peonia', 'aaaaaaaa-0000-4000-8000-000000000005', now()),
+  ('a1000000-0000-4000-8000-000000000009', '11111111-1111-4111-8111-111111111111', 'adult', 'Gino',
+   'basilico', 'aaaaaaaa-0000-4000-8000-000000000006', now());
 
 -- ---------------------------------------------------------------------------
 -- Schema and privileges
@@ -168,7 +186,7 @@ select results_eq(
 select results_eq(
   $$ select v.member_id from public.event_viewers v where v.event_id = current_setting('test.sorpresa')::uuid $$,
   $$ values ('a1000000-0000-4000-8000-000000000002'::uuid) $$,
-  'Laura, who sees the event in full, reads its rows of event_viewers'
+  'Laura, chosen, reads her own row of event_viewers'
 );
 
 -- CA-22: Laura cannot change the chosen people.
@@ -303,6 +321,109 @@ select results_eq(
   $$ select v.member_id from public.event_viewers v where v.event_id = current_setting('test.serie_new')::uuid $$,
   $$ values ('a1000000-0000-4000-8000-000000000002'::uuid) $$,
   'the new part has the same chosen people'
+);
+
+-- ---------------------------------------------------------------------------
+-- «Chi è stato scelto non vede chi altro è stato scelto»: two chosen people (Laura and
+-- Davide), a participant (Elena), an escort (Franco) and a pickup (Gino).
+-- ---------------------------------------------------------------------------
+select lives_ok(
+  $$ select set_config('test.due', public.create_event(
+       'Festa a sorpresa', '2026-12-12 20:00+01', '2026-12-12 23:00+01', 'selected',
+       array['a1000000-0000-4000-8000-000000000007']::uuid[],
+       p_escort_member_id => 'a1000000-0000-4000-8000-000000000008',
+       p_pickup_member_id => 'a1000000-0000-4000-8000-000000000009',
+       p_viewer_ids => array['a1000000-0000-4000-8000-000000000002', 'a1000000-0000-4000-8000-000000000006']::uuid[]
+     )::text, true) $$,
+  'Marco creates an event «Solo alcune persone» for Laura and Davide, with Elena, Franco and Gino'
+);
+select results_eq(
+  $$ select v.member_id from public.event_viewers v where v.event_id = current_setting('test.due')::uuid
+     order by v.member_id $$,
+  $$ values ('a1000000-0000-4000-8000-000000000002'::uuid), ('a1000000-0000-4000-8000-000000000006'::uuid) $$,
+  'the author reads both chosen people from the table'
+);
+
+set local request.jwt.claims to '{"sub":"aaaaaaaa-0000-4000-8000-000000000002","role":"authenticated"}';
+select results_eq(
+  $$ select v.member_id from public.event_viewers v where v.event_id = current_setting('test.due')::uuid $$,
+  $$ values ('a1000000-0000-4000-8000-000000000002'::uuid) $$,
+  'Laura, chosen, reads only her own row: not that Davide was chosen too'
+);
+
+set local request.jwt.claims to '{"sub":"aaaaaaaa-0000-4000-8000-000000000003","role":"authenticated"}';
+select results_eq(
+  $$ select v.member_id from public.event_viewers v where v.event_id = current_setting('test.due')::uuid $$,
+  $$ values ('a1000000-0000-4000-8000-000000000006'::uuid) $$,
+  'Davide, chosen, reads only his own row: not that Laura was chosen too'
+);
+
+set local request.jwt.claims to '{"sub":"aaaaaaaa-0000-4000-8000-000000000004","role":"authenticated"}';
+select results_eq(
+  $$ select e.title from public.events e where e.id = current_setting('test.due')::uuid $$,
+  $$ values ('Festa a sorpresa'::text) $$,
+  'Elena, participant, sees the event in full'
+);
+select is_empty(
+  $$ select 1 from public.event_viewers v where v.event_id = current_setting('test.due')::uuid $$,
+  'Elena, participant, reads no chosen person'
+);
+select lives_ok(
+  $$ select * from public.update_event(
+       current_setting('test.due')::uuid, null, 'Festa a sorpresa!', '2026-12-12 20:00+01', '2026-12-12 23:00+01',
+       'selected', array['a1000000-0000-4000-8000-000000000007']::uuid[], null,
+       'a1000000-0000-4000-8000-000000000008', 'none', null, null, null,
+       p_pickup_member_id => 'a1000000-0000-4000-8000-000000000009'
+     ) $$,
+  'Elena still changes the title with update_event (p_viewer_ids null keeps the chosen people)'
+);
+select throws_ok(
+  $$ select * from public.update_event(
+       current_setting('test.due')::uuid, null, 'Festa a sorpresa!', '2026-12-12 20:00+01', '2026-12-12 23:00+01',
+       'selected', array['a1000000-0000-4000-8000-000000000007']::uuid[], null,
+       'a1000000-0000-4000-8000-000000000008', 'none', null, null, null,
+       p_pickup_member_id => 'a1000000-0000-4000-8000-000000000009',
+       p_viewer_ids => array['a1000000-0000-4000-8000-000000000002']::uuid[]
+     ) $$,
+  '42501', null,
+  'Elena cannot guess the chosen people through update_event: any list is refused'
+);
+
+set local request.jwt.claims to '{"sub":"aaaaaaaa-0000-4000-8000-000000000005","role":"authenticated"}';
+select is_empty(
+  $$ select 1 from public.event_viewers v where v.event_id = current_setting('test.due')::uuid $$,
+  'Franco, who takes, reads no chosen person'
+);
+
+set local request.jwt.claims to '{"sub":"aaaaaaaa-0000-4000-8000-000000000006","role":"authenticated"}';
+select is_empty(
+  $$ select 1 from public.event_viewers v where v.event_id = current_setting('test.due')::uuid $$,
+  'Gino, who picks up, reads no chosen person'
+);
+
+-- At least one chosen person also from the table.
+set local request.jwt.claims to '{"sub":"aaaaaaaa-0000-4000-8000-000000000001","role":"authenticated"}';
+select results_eq(
+  $$ select v.member_id, e.title from public.event_viewers v join public.events e on e.id = v.event_id
+     where v.event_id = current_setting('test.due')::uuid order by v.member_id $$,
+  $$ values ('a1000000-0000-4000-8000-000000000002'::uuid, 'Festa a sorpresa!'::text),
+            ('a1000000-0000-4000-8000-000000000006'::uuid, 'Festa a sorpresa!'::text) $$,
+  'the change of Elena kept both chosen people'
+);
+select throws_ok(
+  $$ delete from public.event_viewers v where v.event_id = current_setting('test.due')::uuid $$,
+  '22023', null,
+  'the author cannot remove every chosen person from the table'
+);
+select lives_ok(
+  $$ delete from public.event_viewers v
+     where v.event_id = current_setting('test.due')::uuid and v.member_id = 'a1000000-0000-4000-8000-000000000006' $$,
+  'the author removes Davide from the table'
+);
+select throws_ok(
+  $$ delete from public.event_viewers v where v.event_id = current_setting('test.due')::uuid $$,
+  '22023', null,
+  'but not the last chosen person'
 );
 
 -- When the author leaves, the event goes (as every «Occupato» of theirs).

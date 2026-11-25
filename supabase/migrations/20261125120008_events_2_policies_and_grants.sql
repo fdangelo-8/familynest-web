@@ -9,8 +9,9 @@
 --    the person who picks up («Lo riprende») and, for «Solo alcune persone», the chosen
 --    people: they read, change and delete it from the tables like the escort and the
 --    participants. Everybody else in the household reads it only through the calendar
---    functions, as «Occupato». Only the author chooses the people (insert and delete of
---    event_viewers); nobody updates them.
+--    functions, as «Occupato». Only the author reads all the chosen people and chooses
+--    them (insert and delete of event_viewers); a chosen person reads only their own row;
+--    nobody updates them.
 -- Membership is checked with `household_id = (select public.current_household_id())`; the
 -- other tables are read only through security definer helpers, so the policies never
 -- call each other.
@@ -97,15 +98,20 @@ create policy events_delete on public.events
   );
 
 -- ---------------------------------------------------------------------------
--- event_viewers: visible to everybody who sees the event in full; only the author adds
--- and removes people.
+-- event_viewers: «Chi è stato scelto non vede chi altro è stato scelto». The author reads
+-- every chosen person; a chosen person reads only their own row; participants, escort and
+-- pickup read none (same rule as viewer_ids in the RPC). Only the author adds and removes
+-- people.
 -- ---------------------------------------------------------------------------
 drop policy if exists event_viewers_select on public.event_viewers;
 create policy event_viewers_select on public.event_viewers
   for select to authenticated
   using (
     household_id = (select public.current_household_id())
-    and private.can_read_event(event_id)
+    and (
+      member_id = (select private.current_member_id())
+      or private.is_event_author(event_id)
+    )
   );
 
 drop policy if exists event_viewers_insert on public.event_viewers;
@@ -130,6 +136,7 @@ create policy event_viewers_delete on public.event_viewers
 
 -- Trigger functions are never called directly.
 revoke execute on function private.event_viewers_before_insert() from public, anon, authenticated;
+revoke execute on function private.event_viewers_after_delete() from public, anon, authenticated;
 
 -- Used by the policies, evaluated as the caller. The private schema is not exposed by the
 -- Data API: the app cannot call them as RPC.

@@ -412,6 +412,42 @@ create trigger event_viewers_before_insert
   before insert on public.event_viewers
   for each row execute function private.event_viewers_before_insert();
 
+-- An event «Solo alcune persone» keeps at least one chosen person also when the author
+-- removes them from the table (the same rule as create_event and update_event: 22023).
+-- Only for the Data API roles: when the event goes, changes visibility or a person leaves
+-- the household, the rows go with the trusted roles or the event is no longer «Solo
+-- alcune persone». Security invoker (only the author deletes rows); no private helper.
+create or replace function private.event_viewers_after_delete()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if current_user not in ('authenticated', 'anon') then
+    return null;
+  end if;
+
+  if exists (
+    select 1
+    from public.events e
+    where e.id = old.event_id
+      and e.visibility = 'selected'
+  ) and not exists (
+    select 1
+    from public.event_viewers v
+    where v.event_id = old.event_id
+  ) then
+    raise exception 'invalid chosen people' using errcode = '22023';
+  end if;
+
+  return null;
+end;
+$$;
+
+create trigger event_viewers_after_delete
+  after delete on public.event_viewers
+  for each row execute function private.event_viewers_after_delete();
+
 -- ===========================================================================
 -- Repetitions
 -- ===========================================================================
@@ -1808,7 +1844,15 @@ begin
     location = p_location,
     notes = p_notes,
     starts_at = v_new_start,
-    ends_at = v_new_start + (p_ends_at - p_starts_at),
+    -- «Tutto il giorno»: the same number of calendar days, ending at 0:00 also when the
+    -- clock changes in between (as in split_event_series).
+    ends_at = case
+      when coalesce(p_all_day, false) then (
+        (v_new_start at time zone 'Europe/Rome')::date
+        + ((p_ends_at at time zone 'Europe/Rome')::date - (p_starts_at at time zone 'Europe/Rome')::date)
+      )::timestamp at time zone 'Europe/Rome'
+      else v_new_start + (p_ends_at - p_starts_at)
+    end,
     visibility = p_visibility,
     escort_member_id = p_escort_member_id,
     recurrence = p_recurrence,
@@ -1837,8 +1881,14 @@ begin
       );
   end if;
 
-  -- The chosen people («Solo alcune persone»): only the author changes them.
-  if p_visibility = 'selected' then
+  -- The chosen people («Solo alcune persone»): only the author reads all of them (RLS of
+  -- event_viewers) and changes them. Anybody else keeps them as they are: p_viewer_ids
+  -- null, otherwise 42501 (they never know who else was chosen).
+  if p_visibility = 'selected' and not private.is_event_author(v_target) then
+    if p_viewer_ids is not null then
+      raise exception 'only the author chooses who sees the event' using errcode = '42501';
+    end if;
+  elsif p_visibility = 'selected' then
     select coalesce(array_agg(v.member_id order by v.member_id), array[]::uuid[]) into v_viewers
     from public.event_viewers v
     where v.event_id = v_target;
@@ -1848,10 +1898,6 @@ begin
       from unnest(p_viewer_ids) as w;
 
       if v_new_viewers is distinct from v_viewers then
-        if not private.is_event_author(v_target) then
-          raise exception 'only the author chooses who sees the event' using errcode = '42501';
-        end if;
-
         insert into public.event_viewers (event_id, member_id, household_id)
         select v_target, w, v_event.household_id
         from unnest(v_new_viewers) as w
