@@ -49,10 +49,11 @@ test.describe("pagina Mese", () => {
 // ---------------------------------------------------------------------------
 // CSS states, on a public page of the app.
 
-const CARTA = "rgb(241, 242, 238)";
-const CARTA_2 = "rgb(231, 232, 226)";
+// Values of the new «telefono» tokens (#196): carta and superficie are both white.
+const CARTA = "rgb(255, 255, 255)";
+const CARTA_2 = "rgb(244, 246, 244)";
 const SUPERFICIE = "rgb(255, 255, 255)";
-const INSIEME = "rgb(251, 243, 214)";
+const INSIEME = "rgb(251, 234, 171)";
 const TRASPARENTE = "rgba(0, 0, 0, 0)";
 
 async function openHarness(page: Page) {
@@ -311,11 +312,13 @@ test("confronto con il mockup: stili a riposo identici", async ({ page }) => {
   }, HARNESS_HTML);
   const mock = await readStyles(page);
 
-  // Known, approved differences: none expected at rest.
+  // Approved difference (#196, «telefono» design): every colour has a new value,
+  // so colours are masked and only geometry, weights and shadow structure compare.
+  const mask = (v: string) => v.replace(/rgba?\([^)]*\)/g, "rgb(*)");
   const diffs: string[] = [];
   for (const id of IDS) {
     for (const prop of PROPS) {
-      if (app[id]![prop] !== mock[id]![prop]) {
+      if (mask(app[id]![prop]!) !== mask(mock[id]![prop]!)) {
         diffs.push(
           `${id}.${prop}: app ${app[id]![prop]} / mockup ${mock[id]![prop]}`,
         );

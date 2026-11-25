@@ -181,7 +181,7 @@ test.describe("onboarding · chi c'è nel Nest", () => {
         await dialog.getByLabel("Nome").fill("Sofia");
         await dialog.getByRole("button", { name: "Figlio o figlia" }).click();
         await dialog.getByLabel("Data di nascita").fill("2017-05-12");
-        await dialog.getByRole("radio", { name: /^Salvia/ }).click();
+        await dialog.getByRole("radio", { name: /^Menta/ }).click();
         await expect(
           dialog.getByRole("button", { name: "Aggiungi Sofia" }),
         ).toBeVisible();
