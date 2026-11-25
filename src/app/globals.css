@@ -367,15 +367,17 @@ html {
 }
 
 /* Fallback face while Figtree loads: Arial with the metrics of Figtree.
-   Same values as the one Next generates, but size-adjust 101.9% instead of
-   100.72%, so the lines break where they break with Figtree (CA-6). */
+   Same values as the one Next generates, but with more local names (a CI
+   runner has Liberation Sans, not Arial) and size-adjust 100% (CA-6). */
 @font-face {
   font-family: "Figtree Fallback";
-  src: local("Arial");
+  src:
+    local("Arial"), local("ArialMT"), local("Liberation Sans"), local("Arimo"),
+    local("Helvetica");
   ascent-override: 94.32%;
   descent-override: 24.82%;
   line-gap-override: 0%;
-  size-adjust: 101.9%;
+  size-adjust: 100%;
 }
 
 body {
