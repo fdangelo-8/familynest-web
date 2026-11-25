@@ -859,11 +859,20 @@ test.describe("CA-11: stessi stili del mockup", () => {
     // (the mockup keeps its own components and its old tokens as an archive).
     // The new :root is laid over the mockup; the two font tokens point to the
     // variable of next/font, which the mockup page does not have.
+    // The database codes now show a new shade (#196, §5): the mockup gets the
+    // same `.membro-*` classes as the app, so the code -> shade mapping is the
+    // approved one and every other avatar style is still compared.
+    const memberClasses = (
+      readFileSync("src/app/components.css", "utf8").match(
+        /\.membro-[a-z]+\s*\{[^}]*\}/g,
+      ) ?? []
+    ).join("\n");
     await page.addStyleTag({
-      content: readFileSync("docs/agenti/design/token.css", "utf8").replace(
-        /--font-(titoli|testo):[^;]+;/g,
-        "",
-      ),
+      content:
+        readFileSync("docs/agenti/design/token.css", "utf8").replace(
+          /--font-(titoli|testo):[^;]+;/g,
+          "",
+        ) + memberClasses,
     });
     const theirs = await read(
       page,

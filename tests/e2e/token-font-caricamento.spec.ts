@@ -152,13 +152,20 @@ test.describe("Figtree", () => {
       await page.goto("/design-system");
       await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
       const actual = await phraseWidths(page, APP_FONT, sizes, weights, "load");
-      for (const key of Object.keys(wanted)) {
+      // Every combination (size/weight) is listed, not only the first to fail.
+      const report = Object.keys(wanted).map((key) => {
         const gap = Math.abs(actual[key]! - wanted[key]!) / wanted[key]!;
-        expect(
-          gap,
-          `${key}: app ${actual[key]} contro riferimento ${wanted[key]}`,
-        ).toBeLessThanOrEqual(0.01);
-      }
+        return {
+          key,
+          app: actual[key],
+          reference: wanted[key],
+          gap: Number((gap * 100).toFixed(2)),
+        };
+      });
+      expect(
+        report.filter((row) => row.gap > 1),
+        `scarto massimo 1%; tutte le misure: ${JSON.stringify(report)}`,
+      ).toEqual([]);
     } finally {
       await reference.close();
     }
@@ -176,13 +183,19 @@ test.describe("Figtree", () => {
       counter.delayed,
       "nessun file dei font è stato richiesto",
     ).toBeGreaterThan(0);
-    for (const key of Object.keys(before)) {
+    const report = Object.keys(before).map((key) => {
       const gap = Math.abs(after[key]! - before[key]!) / after[key]!;
-      expect(
-        gap,
-        `${key}: prima ${before[key]}, dopo ${after[key]}`,
-      ).toBeLessThanOrEqual(0.03);
-    }
+      return {
+        key,
+        before: before[key],
+        after: after[key],
+        gap: Number((gap * 100).toFixed(2)),
+      };
+    });
+    expect(
+      report.filter((row) => row.gap > 3),
+      `scarto massimo 3%; tutte le misure: ${JSON.stringify(report)}`,
+    ).toEqual([]);
     await page.unrouteAll({ behavior: "ignoreErrors" });
   });
 });
