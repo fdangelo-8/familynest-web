@@ -7,15 +7,15 @@ import { expect, test, type Page } from "@playwright/test";
 test.use({ reducedMotion: "reduce" });
 
 const COLOR_NAMES = [
-  "Pomodoro",
+  "Corallo",
   "Glicine",
-  "Salvia",
-  "Cobalto",
-  "Zafferano",
-  "Lampone",
-  "Ceruleo",
-  "Peonia",
-  "Basilico",
+  "Menta",
+  "Blu",
+  "Ambra",
+  "Sabbia",
+  "Azzurro",
+  "Rosa",
+  "Ardesia",
   "Cannella",
 ];
 
@@ -93,15 +93,15 @@ test("a11y: scelta del colore è un radiogroup con nomi e stati", async ({
     nodes.map((node) => node.getAttribute("aria-label")),
   );
   expect(names).toEqual([
-    "Pomodoro",
+    "Corallo",
     "Glicine (già usato)",
-    "Salvia (già usato)",
-    "Cobalto",
-    "Zafferano",
-    "Lampone",
-    "Ceruleo",
-    "Peonia",
-    "Basilico",
+    "Menta (già usato)",
+    "Blu",
+    "Ambra",
+    "Sabbia",
+    "Azzurro",
+    "Rosa",
+    "Ardesia",
     "Cannella",
   ]);
   await expect(radios.first()).toHaveAttribute("aria-checked", "true");
@@ -140,7 +140,7 @@ test("a11y: scelta del colore, focus visibile e area di tocco di 44 px", async (
         document.elementFromPoint(x, y)?.getAttribute("aria-label") ?? null,
       { x: cx + dx, y: cy + dy },
     );
-    expect(hit, `punto a ${dx},${dy}`).toBe("Lampone");
+    expect(hit, `punto a ${dx},${dy}`).toBe("Sabbia");
   }
 });
 
@@ -167,7 +167,7 @@ test("a11y: tastiera, i colori liberi si raggiungono con Tab e nessuna trappola"
   const label = await page.evaluate(() =>
     document.activeElement?.getAttribute("aria-label"),
   );
-  expect(["Glicine (già usato)", "Salvia (già usato)"]).not.toContain(label);
+  expect(["Glicine (già usato)", "Menta (già usato)"]).not.toContain(label);
   await page.keyboard.press("Shift+Tab");
   await expect(radios.first()).toBeFocused();
 });

@@ -52,7 +52,7 @@ test("focus da tastiera: ogni controllo raggiunto con Tab ha un anello visibile"
       const container = el.closest(".campo-rapido");
       if (container && container !== el) {
         const m = getComputedStyle(container).boxShadow.match(
-          /rgb\(23, 24, 28\) 0px 0px 0px ([\d.]+)px inset/,
+          /rgb\(16, 38, 42\) 0px 0px 0px ([\d.]+)px inset/,
         );
         ring = !!m && parseFloat(m[1] ?? "0") >= 1.5;
       }

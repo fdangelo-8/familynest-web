@@ -321,7 +321,7 @@ test.describe("onboarding · chi c'è nel Nest · accessibilità", () => {
             "Figlio o figlia",
             "Animale",
             "Data di nascita",
-            "Lampone",
+            "Sabbia",
             ...(isMobile() ? [] : ["Annulla"]),
             "Aggiungi",
             "Chiudi",
@@ -414,19 +414,19 @@ test.describe("onboarding · chi c'è nel Nest · accessibilità", () => {
           await expect(colors.getByRole("radio")).toHaveCount(10);
           // A taken colour says why it is off.
           await expect(
-            colors.getByRole("radio", { name: "Pomodoro (già di Marco)" }),
+            colors.getByRole("radio", { name: "Corallo (già di Marco)" }),
           ).toBeDisabled();
           await expect(
-            colors.getByRole("radio", { name: "Lampone" }),
+            colors.getByRole("radio", { name: "Sabbia" }),
           ).toBeChecked();
-          await colors.getByRole("radio", { name: "Lampone" }).focus();
+          await colors.getByRole("radio", { name: "Sabbia" }).focus();
           await page.keyboard.press("ArrowRight");
           await expect(
-            colors.getByRole("radio", { name: "Ceruleo" }),
+            colors.getByRole("radio", { name: "Azzurro" }),
           ).toBeChecked();
           await page.keyboard.press("ArrowDown");
           await expect(
-            colors.getByRole("radio", { name: "Peonia" }),
+            colors.getByRole("radio", { name: "Rosa" }),
           ).toBeChecked();
           await page.keyboard.press("ArrowLeft");
           await page.keyboard.press("ArrowLeft");
@@ -437,7 +437,7 @@ test.describe("onboarding · chi c'è nel Nest · accessibilità", () => {
           ).toBeChecked();
           await page.keyboard.press("ArrowUp");
           await expect(
-            colors.getByRole("radio", { name: "Basilico" }),
+            colors.getByRole("radio", { name: "Ardesia" }),
           ).toBeChecked();
         },
       );
@@ -522,7 +522,7 @@ test.describe("onboarding · chi c'è nel Nest · accessibilità", () => {
             0,
           );
           await expect(
-            group.getByRole("radio", { name: /^Salvia/ }),
+            group.getByRole("radio", { name: /^Menta/ }),
           ).toBeDisabled();
           await expect(page.locator('[role="radio"]:focus')).toHaveCount(1);
           await expectNoBlocking(page);

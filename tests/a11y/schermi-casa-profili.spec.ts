@@ -349,7 +349,7 @@ async function textProblems(page: Page): Promise<Found[]> {
         rects.push(...range.getClientRects());
         text += (t.textContent ?? "").trim() + " ";
       }
-      // getClientRects gives the font area (Parkinsans is about 1.42 em):
+      // getClientRects gives the font area (Figtree is 1.2 em, #196):
       // shrink every rectangle to the line height, centred.
       const fsz = parseFloat(cs.fontSize);
       const lh = cs.lineHeight.endsWith("px")
