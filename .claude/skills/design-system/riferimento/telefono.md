@@ -1,6 +1,6 @@
 # Design system · telefono 2.0 (Fable, approvato il 24/11/2026)
 
-Fonte: `docs/design/telefono/` (547 PNG, `LEGGIMI.md`, `tokens.md`, `tokens.json`, `decisioni-fable.md`). Dal 24/11/2026 è la fonte di verità per il telefono (decisione D4 in `docs/mockup/DECISIONI.md`). Questo file traduce quei valori in token e regole d'uso.
+Fonte: `docs/design/telefono/` (547 PNG, `LEGGIMI.md`, `tokens.md`, `tokens.json`, `decisioni-fable.md`). Dal 24/11/2026 è la fonte di verità per il telefono (decisione D4 in `docs/mockup/DECISIONI.md`). Questo file traduce quei valori in token e regole d'uso. Computer e web da telefono (approvati il 25/11/2026, D5): `riferimento/computer.md`, solo con ciò che cambia rispetto a qui.
 
 **Stato del codice.** `src/app/globals.css` e `docs/agenti/design/token.css` hanno ancora i valori del vecchio mockup. Il passaggio si fa con un lavoro `shared/*` (Componenti 2.0) assegnato dal coordinatore: fino ad allora le pagine già fatte restano come sono, e nessuna pagina scrive a mano i valori nuovi. I nomi delle variabili qui sotto sono quelli da usare in quel lavoro: dove il ruolo è lo stesso **si tiene il nome attuale e cambia il valore**, così le pagine esistenti seguono da sole; i nomi nuovi sono segnati **nuovo**.
 
@@ -57,10 +57,10 @@ Il colore della persona ora vive nel pallino con l'iniziale, nel **filo attorno 
 | `--color-membro-rosa`     | `#F0A3C0` | da avere  | inchiostro     | 8,03:1    | invitati              | `--color-membro-peonia` `#F2A8C6`                    |
 | `--color-membro-azzurro`  | `#7CC7E0` | da avere  | inchiostro     | 8,33:1    | invitati              | `--color-membro-ceruleo` `#4B96AA`                   |
 | `--color-membro-sabbia`   | `#D9B88F` | da avere  | inchiostro     | 8,41:1    | invitati              | nuovo                                                |
-| `--color-membro-ardesia`  | `#6B7A90` | da avere  | bianco         | 4,36:1    | invitati              | nuovo                                                |
+| `--color-membro-ardesia`  | `#68778D` | da avere  | bianco         | 4,55:1    | invitati              | nuovo (Fable `#6B7A90`, 4,36:1; Francesco 25/11)     |
 | `--color-membro-neutro`   | `#B4BFBC` | `#F1F4F2` | inchiostro     | 8,34:1    | chi non ha un colore  | nuovo                                                |
 
-Spariscono `--color-membro-lampone` e `--color-membro-basilico`: i membri che li hanno vanno riassegnati nel lavoro `shared/*` con una migrazione dei dati, se servono (`richiesta-db`). Con lo stesso iniziale chi arriva dopo prende due lettere («Mi» per Miele): domanda 178 ancora aperta per il telefono.
+**I codici del database non cambiano e non si migra nulla** (requisito F2, `docs/specifiche/196-token-e-font.md` §5). I dieci valori dell'enum `member_color` restano; un modulo unico, `src/lib/member-colors.ts`, dice quale tinta mostra ogni codice, e nessun altro file riscrive la corrispondenza: `pomodoro`→corallo, `glicine`→glicine, `salvia`→menta, `cobalto`→blu, `zafferano`→ambra, `lampone`→**sabbia**, `ceruleo`→azzurro, `peonia`→rosa, `basilico`→**ardesia**, `cannella`→cannella. Spariscono solo i token `--color-membro-lampone` e `--color-membro-basilico` (con gli altri sei nomi vecchi), non i codici. Con la stessa iniziale chi arriva dopo prende due lettere («Mi» per Miele): domanda 178 ancora aperta per il telefono.
 
 ### Scena di Oggi
 
@@ -157,6 +157,6 @@ Regole di fondo (Fable, `v2.css`): pagine bianche, elenchi a filo senza schede n
 ## Da chiarire (domande per la issue del lavoro `shared/*`)
 
 1. Il campo vuoto nelle tavole sembra avere il bordo chiaro `#AEB9B7` (2,01:1), sotto il minimo di 3:1 per il bordo di un controllo; `--e-fld` del canvas usa `#7F9092` (3,33:1). Proposta del designer: `#7F9092`, come già deciso per il vecchio campo (#52).
-2. Ardesia (`#6B7A90`) con iniziale bianca arriva a 4,36:1, con inchiostro a 3,61:1: sotto 4,5:1 per le iniziali piccole. Va bene per i pallini da 44 e 72 px (testo grande); per quelli più piccoli serve una scelta.
+2. ~~Ardesia con iniziale bianca sotto 4,5:1.~~ **Deciso da Francesco il 25/11/2026:** ardesia `#68778D` (al posto di `#6B7A90` di Fable), iniziale bianca 4,55:1 a ogni misura del pallino; la corsia usa lo stesso colore (già sopra 3:1).
 3. Mancano le tinte dei quattro colori per gli invitati e la scala del corpo del testo (vedi in cima).
 4. L'anello di focus `--color-info` `#3355CC` non compare nel canvas: resta finché Fable o Francesco non indicano altro.
