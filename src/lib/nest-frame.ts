@@ -5,6 +5,7 @@ import { connection } from "next/server";
 import { countUnreadNotifications } from "@/lib/notifications";
 import { createClient } from "@/lib/supabase/server";
 import type { NestMember, NestPreferences, NestSelf } from "@/lib/nest-types";
+import { narrowVisibility } from "@/lib/visibility";
 
 export type NestFrameData = NestPreferences & {
   /** null when the data could not be read (technical error) */
@@ -77,7 +78,9 @@ async function loadNestFrame(): Promise<NestFrameData> {
       ? { startLens: "io", defaultVisibility: "private" }
       : {
           startLens: profile.data.start_lens,
-          defaultVisibility: profile.data.default_event_visibility,
+          defaultVisibility: narrowVisibility(
+            profile.data.default_event_visibility,
+          ),
         };
 
   const me = members.data.find((m) => m.user_id === userId);

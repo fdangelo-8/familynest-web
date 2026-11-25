@@ -15,6 +15,7 @@ import {
   readLinkedCalendars,
 } from "@/lib/linked-calendars";
 import { createClient } from "@/lib/supabase/server";
+import { narrowVisibility } from "@/lib/visibility";
 import { buildOutlook } from "./outlook";
 
 export const metadata: Metadata = {
@@ -100,7 +101,7 @@ async function load(frame: NestFrameData): Promise<Loaded> {
       preferences: {
         lens: profile.data.start_lens,
         digestTime: toDigestTime(profile.data.morning_digest_time),
-        visibility: profile.data.default_event_visibility,
+        visibility: narrowVisibility(profile.data.default_event_visibility),
       },
       accessText: accessText(providers),
       calendars: {

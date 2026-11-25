@@ -570,16 +570,22 @@ export async function processOutbox(
             // The event went away: the queue row goes with it (cascade).
             continue;
           }
+          // The providers know weekly and monthly series only; the other
+          // repetitions have no screen yet (A2–A4), so they go out as single.
+          const frequency =
+            event.recurrence === "weekly" || event.recurrence === "monthly"
+              ? event.recurrence
+              : null;
           const outgoing = {
             title: event.title,
             location: event.location,
             startsAt: event.starts_at,
             endsAt: event.ends_at,
             recurrence:
-              event.recurrence === "none"
+              frequency === null
                 ? null
                 : {
-                    frequency: event.recurrence,
+                    frequency,
                     weekdays: event.recurrence_weekdays,
                     until: event.recurrence_until,
                   },
