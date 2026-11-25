@@ -10,6 +10,10 @@ Le lezioni unite in una regola di `LEZIONI.md` durante la compattazione sono nel
   > Imposta da: `.claude/hooks/guard-files.mjs` (`supabase/` si modifica solo da `architetto-dati` su `db/*`) e `.claude/agents/architetto-dati.md`.
 - PR di sola documentazione bloccate perché la verifica `db` non partiva mai → la verifica `db` parte sempre; se la PR tocca solo `docs/**` o `*.md` salta i passi del database e finisce verde.
   > Imposta da: `.github/workflows/db.yml`.
+- Policy RLS riscritte al volo per un bug → si cambiano solo con migrazione e test pgTAP.
+  > Imposta da: ARCHITETTURA §6 (migrazioni su `db/*`) e `.github/workflows/db.yml` (pgTAP da zero).
+- PR `db/*` con file fuori da `supabase/`, `src/types/database.ts` e `docs/` → guard rosso; i test e2e vanno nel branch della pagina.
+  > Imposta da: `.github/workflows/guard.yml` (un branch `db/*` tocca solo quelle aree).
 
 ## Processo
 
@@ -47,8 +51,12 @@ Le lezioni unite in una regola di `LEZIONI.md` durante la compattazione sono nel
   > Imposta da: `eslint.config.mjs` (`.claude/worktrees/**`).
 - Script o file condivisi (`scripts/`, `.env.example`, `package.json`) affidati all'architetto dati → solo su `shared/*`.
   > Imposta da: `.claude/hooks/guard-files.mjs` (file condivisi e configurazione solo su `shared/*`).
+- `git checkout` nella copia principale che cambia il branch agli altri → si lavora solo nel proprio worktree; per leggere un altro commit (revisore) usa `git show <ref>:<file>`.
+  > Imposta da: ARCHITETTURA §5 (un git worktree per agente) e skill `flusso-git`.
 
 ## Test
 
 - Porta 54322 del database locale occupata sul runner, con il controllo `db` rosso senza bug → `db.yml` riprova una volta dopo uno stop pulito; se il controllo cade per la porta, si rilancia prima di cercare un bug.
   > Imposta da: `.github/workflows/db.yml` (riprova una volta dopo `supabase stop`).
+- Tracce con `if: failure()` → perse se il retry passa → `if: always()`.
+  > Imposta da: `.github/workflows/ci.yml` (step di traccia con `if: always()`).
