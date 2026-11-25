@@ -457,26 +457,28 @@ test.describe("aree di tocco", () => {
         const cy = r.top + r.height / 2;
         const wide = Math.max(r.width, 44);
         const tall = Math.max(r.height, 44);
+        // A wide field covers the 12 px gap before the end control on purpose
+        // and that control (with its own 44 px area) sits on top of it, so the
+        // horizontal samples stay 12 px inside the field.
+        const inset = r.width > 88 ? 12 : 1;
         const points: Array<[number, number]> = [
-          [cx - wide / 2 + 1, cy],
-          [cx + wide / 2 - 1, cy],
+          [cx - wide / 2 + inset, cy],
+          [cx + wide / 2 - inset, cy],
           [cx, cy - tall / 2 + 1],
           [cx, cy + tall / 2 - 1],
         ];
         // A control that already covers 44 px on a side only needs the other.
-        let probe = "";
         const ok = points.every(([x, y]) => {
           if (x < 0 || y < 0 || x > innerWidth || y > innerHeight) return true;
           const hit = document.elementFromPoint(x, y);
           if (!hit) return true;
-          const good =
-            el.contains(hit) || hit.contains(el) || !!hit.closest("label[for]");
-          if (!good) probe = ` PROBE pt ${x},${y} rect ${r.left},${r.top},${r.right} hit ${hit.tagName}.${hit.className}`;
-          return good;
+          return (
+            el.contains(hit) || hit.contains(el) || !!hit.closest("label[for]")
+          );
         });
         if (!ok) {
           bad.push(
-            `${el.tagName.toLowerCase()} «${(el.getAttribute("aria-label") ?? el.textContent ?? "").trim().slice(0, 40)}» ${Math.round(r.width)}x${Math.round(r.height)}${probe}`,
+            `${el.tagName.toLowerCase()} «${(el.getAttribute("aria-label") ?? el.textContent ?? "").trim().slice(0, 40)}» ${Math.round(r.width)}x${Math.round(r.height)}`,
           );
         }
       }
