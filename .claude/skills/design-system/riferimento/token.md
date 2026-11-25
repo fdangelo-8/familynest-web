@@ -2,6 +2,8 @@
 
 > Parte di consultazione della skill `design-system` (`../SKILL.md`): tutti i valori. Le regole sempre valide sono nella skill.
 
+> **Dal 24/11/2026:** questi sono i valori del vecchio mockup, ancora nel codice. I valori nuovi del design per telefono di Fable, riga per riga accanto a questi, sono in `telefono.md`; li porta nel codice il lavoro `shared/*` dei Componenti 2.0.
+
 Tutti i valori di `docs/mockup/tokens.css`, senza arrotondamenti. Nome variabile → valore → uso. Unica conversione: dalla #313 dimensioni e interlinee del testo sono in rem (stesso valore a 16 px), vedi «Scala tipografica».
 
 ### Colori: base

@@ -5,15 +5,20 @@ description: Design system di FamilyNest Web - token di colore, tipografia, spaz
 
 # Design system di FamilyNest
 
-> **Stato: v1.0, compilata il 22/10/2026 dal mockup approvato** (`docs/mockup/tokens.css`, `components.css`, `design-system.md`, `design-system.html`) e dalle decisioni di Francesco (`docs/mockup/DECISIONI.md` e decisioni D-1 … D-10 nella issue #8).
+> **Stato: v1.0, compilata il 22/10/2026 dal mockup approvato** (`docs/mockup/tokens.css`, `components.css`, `design-system.md`, `design-system.html`) e dalle decisioni di Francesco (`docs/mockup/DECISIONI.md` e decisioni D-1 … D-10 nella issue #8). **v2.0 del 24/11/2026:** aggiunto il design per telefono di Fable come fonte di verità (`riferimento/telefono.md`).
+
+> **Dal 24/11/2026 la fonte di verità per il telefono è il design di Fable in `docs/design/telefono/`** (decisione D4 in `docs/mockup/DECISIONI.md`). I suoi token e i Componenti 2.0 sono in `riferimento/telefono.md`, con a fianco i valori attuali del codice. Il codice ha ancora i token del vecchio mockup finché il lavoro `shared/*` dei Componenti 2.0 non li cambia: le regole qui sotto descrivono il codice di oggi, e dove `riferimento/telefono.md` dice altro, per il lavoro nuovo vale quello. Le differenze principali: font Figtree (al posto di Parkinsans e Host Grotesk), pesi 400/600/700, pagine bianche, azione primaria `#0F3D44`, inchiostro `#10262A`, rosso `#B3261E`, colori delle persone nuovi (giallo = «adesso»), raggi dei pulsanti 14 e dei fogli 20, freccia indietro D, righe con la freccia sottile B, «Collega» forma 1.
 
 ## Fonti e precedenza
 
-1. Decisioni di Francesco in `docs/mockup/DECISIONI.md` (vincono sul mockup).
-2. Valori: `docs/mockup/tokens.css` (202 variabili), più 2 colori approvati da Francesco dopo il mockup (`--color-filo-campo`, `--color-allerta-scuro`, #43 punti 2 e 4, issue #52) e i 5 colori dei membri aggiunti con la #74. Il blocco pronto da copiare in `src/app/globals.css` è `docs/agenti/design/token.css` (uguale a `tokens.css` tranne l'aggancio dei font a `next/font`, i colori aggiunti con la #52 e la #74, il testo in rem e le 3 misure minime in rem della #313).
-3. Aspetto dei componenti: `docs/mockup/components.css`, portato nell'app **con gli stessi nomi di classe** (decisione D-2).
-4. Comportamento e accessibilità di ogni componente: `docs/mockup/design-system.md` §7–§11.
-5. Questa skill: regole d'uso, stati che il mockup non disegna, componenti React, tono di voce. Dove il mockup e questa skill sembrano in contrasto, vale il mockup e si apre una domanda nella issue.
+1. Decisioni di Francesco in `docs/mockup/DECISIONI.md` (vincono sul design e sul mockup).
+2. **Design per telefono di Fable** in `docs/design/telefono/` (dal 24/11/2026): schermate, note di Fable, `tokens.md` e `tokens.json`, risposte in `decisioni-fable.md`; tra due schermate vale il passo più recente. Tradotto in token e regole in `riferimento/telefono.md`. Computer e web da telefono arriveranno in `docs/design/computer/`; fino ad allora per il desktop valgono il vecchio mockup e le regole qui sotto, coerenti con il telefono.
+3. Vecchio mockup `docs/mockup/*.html` (archivio): vale solo dove il design di Fable non dice niente e per il desktop. Valori: `docs/mockup/tokens.css` (202 variabili), più 2 colori approvati da Francesco dopo il mockup (`--color-filo-campo`, `--color-allerta-scuro`, #43 punti 2 e 4, issue #52) e i 5 colori dei membri aggiunti con la #74. Il blocco pronto da copiare in `src/app/globals.css` è `docs/agenti/design/token.css` (uguale a `tokens.css` tranne l'aggancio dei font a `next/font`, i colori aggiunti con la #52 e la #74, il testo in rem e le 3 misure minime in rem della #313).
+4. Aspetto dei componenti: `docs/mockup/components.css`, portato nell'app **con gli stessi nomi di classe** (decisione D-2).
+5. Comportamento e accessibilità di ogni componente: `docs/mockup/design-system.md` §7–§11.
+6. Questa skill: regole d'uso, stati che il mockup non disegna, componenti React, tono di voce. Dove il mockup e questa skill sembrano in contrasto, vale il mockup e si apre una domanda nella issue.
+
+Mail di servizio: `docs/mockup/mail/` (nove modelli HTML e solo testo con le anteprime, approvati da Francesco il 19/11/2026, #472; istruzioni in `LEGGIMI.md`). Hanno stili scritti dentro gli elementi e caratteri propri, come richiedono i programmi di posta: si usano così come sono, senza token né classi dell'app e senza riformattarli.
 
 ## Regole sempre valide
 
@@ -39,13 +44,14 @@ description: Design system di FamilyNest Web - token di colore, tipografia, spaz
 
 ## Parti di consultazione (leggile quando servono)
 
-Questa skill contiene le regole da avere sempre presenti. I dettagli stanno in tre file accanto, da aprire con Read **quando il lavoro li tocca**:
+Questa skill contiene le regole da avere sempre presenti. I dettagli stanno in quattro file accanto, da aprire con Read **quando il lavoro li tocca**:
 
-| File                                                     | Cosa contiene                                                                                                                                                                      | Quando leggerlo                                                                                                      |
-| -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `.claude/skills/design-system/riferimento/token.md`      | colori, font, scala tipografica, spaziature, griglia, raggi, bordi, ombre, misure, movimento, livelli, breakpoint                                                                  | quando scrivi o rivedi CSS, o confronti valori con il mockup                                                         |
-| `.claude/skills/design-system/riferimento/componenti.md` | componenti React di base, classi del mockup, varianti, stati, accessibilità, correzioni approvate (#11, #43, #52, #63, #67, #74), testo ingrandito (#313), classi senza componente | quando usi, scrivi o rivedi un componente o una classe condivisa (leggi solo le righe dei componenti che ti servono) |
-| `.claude/skills/design-system/riferimento/registro.md`   | storia delle modifiche alla skill                                                                                                                                                  | solo il designer, quando aggiorna la skill                                                                           |
+| File                                                     | Cosa contiene                                                                                                                                                                                             | Quando leggerlo                                                                                                      |
+| -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `.claude/skills/design-system/riferimento/token.md`      | colori, font, scala tipografica, spaziature, griglia, raggi, bordi, ombre, misure, movimento, livelli, breakpoint                                                                                         | quando scrivi o rivedi CSS, o confronti valori con il mockup                                                         |
+| `.claude/skills/design-system/riferimento/componenti.md` | componenti React di base, classi del mockup, varianti, stati, accessibilità, correzioni approvate (#11, #43, #52, #63, #67, #74), testo ingrandito (#313), classi senza componente                        | quando usi, scrivi o rivedi un componente o una classe condivisa (leggi solo le righe dei componenti che ti servono) |
+| `.claude/skills/design-system/riferimento/telefono.md`   | design per telefono di Fable (24/11/2026): token nuovi con i valori attuali del codice a fianco, colori delle persone, Figtree, movimento e splash, Componenti 2.0 con i rimandi alle PNG, domande aperte | sempre, per qualsiasi lavoro sul telefono e per il lavoro `shared/*` dei Componenti 2.0                              |
+| `.claude/skills/design-system/riferimento/registro.md`   | storia delle modifiche alla skill                                                                                                                                                                         | solo il designer, quando aggiorna la skill                                                                           |
 
 Il designer aggiorna la parte giusta e aggiunge una riga al registro.
 

@@ -26,6 +26,7 @@ select ok(
 );
 -- Postgres fires triggers of the same kind in name order (byte order, as the "C"
 -- collation): the limit must be the first before insert row trigger of the table.
+-- household_members_pet_birth_date_range (#488, range of the birth date of a pet) comes after.
 select results_eq(
   $$ select t.tgname::text collate "default"
      from pg_trigger t
@@ -33,8 +34,8 @@ select results_eq(
        and not t.tgisinternal
        and t.tgtype & 7 = 7
      order by t.tgname collate "C" $$,
-  $$ values ('household_members_limit'), ('household_members_normalize') $$,
-  'household_members_limit is the first before insert trigger, then household_members_normalize'
+  $$ values ('household_members_limit'), ('household_members_normalize'), ('household_members_pet_birth_date_range') $$,
+  'household_members_limit is the first before insert trigger, then household_members_normalize and the range of the birth date of a pet'
 );
 select ok(
   (select p.prosecdef from pg_proc p where p.oid = 'public.household_members_enforce_limit()'::regprocedure),

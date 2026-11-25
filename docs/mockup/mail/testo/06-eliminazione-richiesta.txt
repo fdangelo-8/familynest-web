@@ -1,0 +1,30 @@
+Oggetto: Il tuo account sarà eliminato il {{data_eliminazione}}
+
+Il tuo account sarà eliminato {{data_eliminazione_estesa}}
+
+Ciao {{nome}}, abbiamo ricevuto la tua richiesta. Hai
+{{giorni_ripensamento}} giorni per ripensarci.
+
+Annulla l'eliminazione:
+{{link}}
+
+Il pulsante vale fino a {{data_eliminazione_estesa}}. Basta anche
+rientrare nell'app: l'eliminazione si annulla e ritrovi tutto.
+
+Che cosa succede quel giorno
+
+- Spariscono il tuo profilo, la mail, l'accesso, i tuoi impegni privati
+  e i calendari che avevi collegato.
+- {{che_cosa_resta_della_casa}}
+- Nelle cose che avevi fatto resta «un ex componente», senza il tuo
+  nome.
+
+Non sei stato tu?
+
+Annulla subito con il pulsante, poi cambia la password.
+
+--
+Ricevi questa mail perché è stata chiesta l'eliminazione di questo
+account. A eliminazione avvenuta te lo confermiamo con un'ultima mail;
+poi non ti scriviamo più.
+{{nome_prodotto}} · {{ragione_sociale}}, {{indirizzo_societa}}

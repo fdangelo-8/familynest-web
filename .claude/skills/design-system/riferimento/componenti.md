@@ -2,6 +2,8 @@
 
 > Parte di consultazione della skill `design-system` (`../SKILL.md`): componenti React, classi, varianti, stati e correzioni approvate.
 
+> **Dal 24/11/2026:** qui ci sono i componenti del vecchio mockup, ancora nel codice. I Componenti 2.0 del design per telefono di Fable (freccia indietro D, «Collega» forma 1, scelte a schede, righe con la freccia sottile B, tessere, campi, fogli, avvisi, vuoti, errori) sono in `telefono.md`, con i rimandi alle PNG.
+
 Classi: quelle del mockup, globali (D-2). Componenti React: nomi in inglese (regola del progetto) in `src/components/ui/<Nome>/`, ognuno applica le classi indicate. Ogni componente accetta una `className` aggiuntiva. Misure: quelle di `components.css`, regola per regola.
 
 ### Componenti React di base (fondamenta #8)

@@ -1,0 +1,23 @@
+Oggetto: La mail del tuo account sta per cambiare
+
+La mail del tuo account sta per cambiare
+
+Ciao {{nome}}, è stato chiesto di usare {{mail_nuova_mascherata}} al
+posto di questo indirizzo. Il cambio vale quando il nuovo indirizzo
+viene confermato.
+
+Non sono stato io: blocca il cambio:
+{{link}}
+
+Il pulsante vale {{scadenza_link}}. Anche a cambio avvenuto, riporta la
+mail a questa e ti fa scegliere una password nuova.
+
+Sei stato tu?
+
+Non devi fare niente. Dopo la conferma ti scriveremo solo al nuovo
+indirizzo.
+
+--
+Ricevi questa mail perché è l'indirizzo attuale di un account. È un
+avviso di sicurezza: arriva sempre.
+{{nome_prodotto}} · {{ragione_sociale}}, {{indirizzo_societa}}

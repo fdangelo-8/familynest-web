@@ -1,0 +1,21 @@
+Oggetto: Conferma il nuovo indirizzo
+
+Conferma il nuovo indirizzo
+
+Ciao {{nome}}, hai chiesto di usare questo indirizzo per entrare in
+{{nome_prodotto}}, al posto di {{mail_vecchia}}.
+
+Conferma il nuovo indirizzo:
+{{link}}
+
+Il link vale {{scadenza_link}}. Finché non confermi, per entrare vale
+l'indirizzo di prima.
+
+Non hai chiesto tu il cambio?
+
+Ignora questa mail: non cambia niente.
+
+--
+Ricevi questa mail perché questo indirizzo è stato indicato come nuova
+mail di un account.
+{{nome_prodotto}} · {{ragione_sociale}}, {{indirizzo_societa}}
