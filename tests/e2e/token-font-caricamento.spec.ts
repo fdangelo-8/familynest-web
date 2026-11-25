@@ -162,9 +162,12 @@ test.describe("Figtree", () => {
           gap: Number((gap * 100).toFixed(2)),
         };
       });
+      // Tolerance 1,5% (decision on #196): the reference of Google Fonts is a
+      // static font with glyph advances rounded to the pixel (16/700 is 238 px,
+      // the real width of the font is 235,4 px), the app is not rounded.
       expect(
-        report.filter((row) => row.gap > 1),
-        `scarto massimo 1%; tutte le misure: ${JSON.stringify(report)}`,
+        report.filter((row) => row.gap > 1.5),
+        `scarto massimo 1,5%; tutte le misure: ${JSON.stringify(report)}`,
       ).toEqual([]);
     } finally {
       await reference.close();
@@ -239,6 +242,15 @@ test.describe("Figtree su /oggi", () => {
           holder.__shifts.push(
             `${shift.value.toFixed(4)} a ${Math.round(shift.startTime)} ms: ${moved.join(", ")}`,
           );
+          // TEMP-LOG (to remove)
+          const rects = (shift.sources ?? []).map((source) => {
+            const node = source.node as Element | null;
+            const r = (x: DOMRectReadOnly) =>
+              `${Math.round(x.x)},${Math.round(x.y)} ${Math.round(x.width)}x${Math.round(x.height)}`;
+            const parent = node?.parentElement;
+            return `${node?.nodeName}.${String(node instanceof Element ? node.className : "").slice(0, 40)} parent=${parent?.nodeName}.${String(parent?.className).slice(0, 40)} text="${(node?.textContent ?? "").slice(0, 40)}" prev[${r((source as unknown as { previousRect: DOMRectReadOnly }).previousRect)}] cur[${r((source as unknown as { currentRect: DOMRectReadOnly }).currentRect)}]`;
+          });
+          holder.__shifts.push(`TEMP-LOG ${rects.join(" ;; ")}`);
         }
       }).observe({ type: "layout-shift", buffered: true });
     });
