@@ -2,11 +2,12 @@
  * Centralized date and time helpers.
  *
  * Rule (docs/agenti/LEZIONI.md): dates are stored in UTC and always shown in
- * the `Europe/Rome` time zone through these functions. No page formats dates
+ * the application time zone through these functions. No page formats dates
  * on its own. All functions are pure and use only `Intl`.
  */
 
 import { DEFAULT_LOCALE, LOCALE_TAGS, TIME_ZONE } from "./i18n/config";
+import { capitalize } from "./i18n/format";
 
 const LOCALE = LOCALE_TAGS[DEFAULT_LOCALE];
 const MS_PER_MINUTE = 60_000;
@@ -56,10 +57,6 @@ function romeParts(value: Instant): RomeParts {
 
 function pad(value: number): string {
   return String(value).padStart(2, "0");
-}
-
-function capitalize(text: string): string {
-  return text.charAt(0).toLocaleUpperCase(LOCALE) + text.slice(1);
 }
 
 const formatterCache = new Map<string, Intl.DateTimeFormat>();

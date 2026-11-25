@@ -25,7 +25,7 @@ const pluralRules = new Intl.PluralRules(LOCALE_TAGS[DEFAULT_LOCALE]);
  */
 export function t(template: string, params: Params = {}): string {
   return template.replace(PLACEHOLDER, (placeholder, name: string) => {
-    const value = params[name];
+    const value = Object.hasOwn(params, name) ? params[name] : undefined;
     if (value === undefined) {
       if (process.env.NODE_ENV !== "production") {
         throw new Error(`i18n: missing param "${name}"`);

@@ -29,7 +29,8 @@ export function formatCurrency(value: number): string {
 
 /** First letter in capitals, the rest untouched. Empty text stays empty. */
 export function capitalize(text: string): string {
-  return text.charAt(0).toLocaleUpperCase(TAG) + text.slice(1);
+  const [first = "", ...rest] = Array.from(text);
+  return first.toLocaleUpperCase(TAG) + rest.join("");
 }
 
 export function toUpper(text: string): string {
