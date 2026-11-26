@@ -339,10 +339,13 @@ test.describe("avvisi nuovi", () => {
     baseURL,
     solo,
   }) => {
-    await open(page, baseURL, solo, "Rita", { pause: false });
+    // The bell is on Oggi (on mobile it is not in the frame of this page).
+    await open(page, baseURL, solo, "Rita", { path: "/oggi", pause: false });
+    await expect(bell(page)).toHaveAccessibleName("Notifiche");
 
+    await page.goto(PATH);
+    await loaded(page);
     await expect(page.getByText("Tutto tranquillo")).toBeVisible();
     await expect(rows(page)).toHaveCount(0);
-    await expect(bell(page)).toHaveAccessibleName("Notifiche");
   });
 });
