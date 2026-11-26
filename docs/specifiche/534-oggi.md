@@ -2,7 +2,7 @@
 
 Allegato del requisito nella issue #534. La issue contiene obiettivo, regole principali e criteri di accettazione (CA); qui ci sono le tabelle, i testi completi, il formato della copia locale e i dati di prova. Se questo file e la issue si contraddicono, vale la issue. **(default)** segna ciò che il design non dice: la domanda è nella issue.
 
-Fonti: `docs/design/telefono/oggi/` (`og1-02` … `og1-16`, `sf1-*`), `ritocchi-p6/rt1-19` … `rt1-24`, `splash-p9/sp1-05`, `sp1-06`, `animali/4-6-*` (solo forma della spunta), `app-fase-b/cb1-43`, `cb1-44`; `docs/design/computer/oggi/01` … `09`, `regole.md`, `web-da-telefono/01`, `08`, `11`; risposte 4, 87, 119, 120, 121, 123, 128, 132, 149, 172, 176 di `decisioni-fable.md`; requisiti F4a #503, F4b #504, F4c #505, F5 #506, A2 #535, A3 #536, A4 #537; codice in `src/components/oggi/`.
+Fonti: `docs/design/telefono/oggi/` (`og1-02` … `og1-16`, `sf1-*`), `ritocchi-p6/rt1-19` … `rt1-24`, `splash-p9/sp1-05`, `sp1-06`, `animali/4-6-*` (solo forma della spunta), `app-fase-b/cb1-43`, `cb1-44`; `docs/design/computer/oggi/01` … `09`, `regole.md`, `web-da-telefono/01`, `08`, `11`; risposte 4, 87, 119, 120, 121, 123, 128, 132, 149, 172, 176, 180 di `decisioni-fable.md`; requisiti F4a #503, F4b #504, F4c #505, F5 #506, A2 #535, A3 #536, A4 #537; revisione `sicurezza` della copia locale (commento del 26/11 su #534); codice in `src/components/oggi/`.
 
 ## 1. Cosa cambia rispetto a `/oggi` di oggi
 
@@ -160,16 +160,63 @@ Lista di partenza di oggi (`buildStarter`; `households.first_shopping_item_at`, 
 
 Sul computer: un solo «+» leggero per blocco, nessun «Domani» (c'è «I prossimi giorni»).
 
-## 9. Copia locale di Oggi (per F7 #148 e per il widget nativo N4)
+## 9. Copia locale di Oggi (per F7 #148 e per il widget nativo N4 #595)
 
-**Chi la scrive e dove.** La pagina, dopo ogni lettura riuscita, costruisce l'istantanea e la passa a funzioni uniche di `src/lib/` (richiesta condivisa, insieme a F7): `saveTodaySnapshot(s)`, `readTodaySnapshot()`, `clearTodaySnapshot()`. Si scrive **solo** nell'app installata (`display-mode: standalone`) o nel guscio nativo, mai nella scheda del browser (telefono o computer condiviso). Una sola istantanea, sovrascritta. Si cancella in ogni uscita e alla pagina di accesso (funzione esistente dei dati locali, LEZIONI). Mai in log, URL, analytics. Si usa solo se `dayKey` è oggi a Roma e `householdId` e `meId` sono quelli della sessione; altrimenti è come se non ci fosse.
+Rivista dopo il `DA CORREGGERE` dell'agente `sicurezza` (commento del 26/11 su #534). I sei punti sono 9.2–9.7.
 
-**Formato v1** (stabile: il widget lo legge senza la logica della pagina). JSON, campi in inglese:
+### 9.1 Funzioni e contenuto
+
+La pagina, dopo ogni lettura riuscita, costruisce l'istantanea e la passa a funzioni uniche di `src/lib/` (richiesta condivisa, insieme a F7): `canKeepLocalCopy()`, `saveTodaySnapshot(s)`, `readTodaySnapshot()`, `clearTodaySnapshot()`. Mai in log, URL, analytics. Una sola istantanea, sovrascritta. Formato in 9.8.
+
+### 9.2 Telefono condiviso (punto 1)
+
+`canKeepLocalCopy()` è vera solo se **tutte** queste condizioni valgono; altrimenti la copia non si scrive, quella che c'era si cancella e il widget non mostra niente:
+
+- app installata (`display-mode: standalone`) o guscio nativo; mai nella scheda del browser, su telefono o computer;
+- all'accesso **non** era accesa la casella «Questo telefono non è solo mio» (risposta 180, A20 #553), e la sessione è di quelle che restano attive. Il dato che lo dice lo fissa A20 (nessun dato personale, nessun token); finché A20 non lo dà, `canKeepLocalCopy()` è falsa **(default protettivo)**.
+
+### 9.3 Quando si cancella (punto 2)
+
+Cancellare vuol dire togliere la copia dal deposito, non ignorarla. `clearTodaySnapshot()` si chiama, prima di mostrare qualsiasi cosa, quando:
+
+| Caso                                                  | Come lo si riconosce                                                                                                                    |
+| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| «Esci»                                                | funzione unica di uscita (LEZIONI: cancella i dati locali in ogni uscita)                                                               |
+| apertura di `/accesso`                                | la pagina di accesso cancella i dati locali (LEZIONI)                                                                                   |
+| sessione scaduta o revocata                           | nessuna sessione all'apertura, o una lettura qualsiasi risponde 401 (anche `PGRST301` o JWT scaduto)                                    |
+| account eliminato                                     | su questo telefono: il flusso di A19 #552 la cancella prima di uscire; sugli altri: la sessione revocata dà 401 (riga sopra)            |
+| persona tolta dal Nest                                | una lettura risponde 42501 (non membro), `current_household_id` è nullo o la cornice (`requireNest`) non trova il Nest                  |
+| entra in un altro Nest                                | `householdId` o `meId` della sessione diversi da quelli della copia; anche il flusso di accettazione dell'invito (A22 #555) la cancella |
+| una lettura risponde «non autenticato» o «non membro» | 401 o 42501 su una qualsiasi delle letture di Oggi o delle altre pagine che leggono con la sessione                                     |
+
+Nel guscio nativo la stessa chiamata cancella anche la copia del widget e chiede al sistema di ridisegnarlo subito (N4).
+
+### 9.4 Durata (punto 3)
+
+La copia ha `expiresAt` = il primo tra la mezzanotte di Roma dopo `savedAt` e `savedAt` + 12 ore **(default, domanda 8)**. `readTodaySnapshot()` cancella e restituisce nulla se `dayKey` non è oggi a Roma o se adesso ≥ `expiresAt`. Il widget applica la stessa regola da solo, anche se l'app non si apre: una copia scaduta è assente.
+
+### 9.5 Ricostruzione (punto 4)
+
+Ogni istantanea si costruisce **da zero** con le sole risposte del server della lettura appena riuscita, per la sessione attuale. Mai unirla con la copia precedente, con eventi in tempo reale o con la coda senza rete (le spunte in attesa non entrano). Così un impegno passato a «Occupato» o «Solo alcune persone», o cancellato, non resta nella copia. Una lettura fallita non scrive niente e non tocca la copia (salvo i casi di 9.3).
+
+### 9.6 Dove si salva (punto 5)
+
+- **Web (app installata):** un solo spazio dell'app, IndexedDB dell'origine con un solo archivio e una sola voce (nomi nella richiesta condivisa). **Mai** nella cache del service worker (`caches`) o di HTTP, nei cookie, in `localStorage` o `sessionStorage`. Nessun invio al server. Nessun token, nessuna intestazione e nessun id di sessione nella copia.
+- **Guscio nativo (N4 #595):** uno spazio condiviso solo tra l'app e il widget di FamilyNest (per iPhone un App Group dedicato), escluso dai backup del telefono e del cloud. Due voci: `counts` (solo `dayKey`, `expiresAt` e i tre conti delle due lenti, senza nomi né titoli) leggibile anche a telefono bloccato; `snapshot` (la copia intera) protetta dal blocco (su iPhone protezione dati «completa»: illeggibile a telefono bloccato). Android: memoria privata dell'app, esclusa dal backup, cifrata con una chiave che richiede il telefono sbloccato. «Esci» e ogni caso di 9.3 cancellano tutte e due le voci e aggiornano subito il widget.
+
+### 9.7 Widget e schermata di blocco (punto 6, requisiti per N4 #595)
+
+Il widget non controlla la sessione da solo. A telefono bloccato (schermata di blocco, StandBy, anteprime) mostra **solo i conti** (dalla voce `counts`). Titoli, luoghi, nomi dei figli, chi porta e chi riprende si vedono solo a telefono sbloccato. Un tocco con `eventId` apre l'app su `eventHref`, che rifà tutti i controlli (sessione, Nest, visibilità). Le prove su iPhone (TestFlight) le scrive N4 nella sua lista, con almeno: bloccato, StandBy, dopo «Esci», dopo la scadenza, dopo l'uscita dal Nest.
+
+### 9.8 Formato v1
+
+Stabile: il widget lo legge senza la logica della pagina. JSON, campi in inglese:
 
 ```ts
 type TodaySnapshotV1 = {
   version: 1;
   savedAt: string; // ISO, istante della lettura
+  expiresAt: string; // ISO, 9.4
   dayKey: string; // "2027-11-17", Roma
   householdId: string;
   meId: string;
@@ -209,7 +256,7 @@ type SnapshotTile = {
 };
 ```
 
-Testi già composti in italiano: il widget li mostra così come sono. Campi **esclusi**: note, avvisi, `viewer_ids`, campi «da verificare», titoli dei mascherati, qualsiasi `private` di altri, date di nascita, dati di altri Nest. Il formato si documenta in `docs/agenti/APP.md` con la PR; un cambio di forma alza `version`. Serve il verdetto dell'agente `sicurezza` (dati personali sul telefono, nota di F7).
+Testi già composti in italiano: il widget li mostra così come sono. Campi **esclusi**: note, avvisi, `viewer_ids`, campi «da verificare», titoli dei mascherati, qualsiasi `private` di altri, date di nascita, dati di altri Nest, token e dati di sessione. Il formato si documenta in `docs/agenti/APP.md` con la PR; un cambio di forma alza `version`. Serve un nuovo verdetto `sicurezza` sulla PR di sviluppo.
 
 ## 10. Dati
 
@@ -253,6 +300,7 @@ Come li vede Marco alle 15:52:
 - **Spesa:** `6`, righe Latte intero `2 bottiglie`, Pane integrale, Uova `Una confezione da 6`, `Altre 3 cose`. **Scadenze:** `3`, righe `mar 23` Antiparassitario di Biscotto `Ogni mese`, `lun 29` Bollo auto `Ogni anno`.
 - **Domani (Io):** Scuola 08:10 `Li porti tu`, Calcio Tommaso 18:00 `La porti tu`; non c'è Toelettatura di Biscotto.
 - Mai nel browser di Marco: `Colloquio di lavoro`, `Appuntamento in banca`.
+- **Copia locale (CA-32, CA-50):** a 15:52 `expiresAt` = 18 novembre 2027 00:00 di Roma (`2027-11-17T23:00:00Z`). Per CA-50 Laura cambia la «Cena di lavoro» in `busy` e Marco cancella «Palestra» prima della lettura nuova.
 
 ## 12. Test esistenti da rifare
 
