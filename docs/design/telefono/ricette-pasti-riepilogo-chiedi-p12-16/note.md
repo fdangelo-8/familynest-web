@@ -91,3 +91,35 @@ Color sabbia (risposta 205): le quattro tinte sono diventate un ruolo. Critica o
 Segnaposto
 
 Le ricette senza foto hanno quattro ruoli (rosato, sabbia, grigio, azzurro) con il valore scuro.
+
+---
+
+# Correzioni del Passo 17
+
+Aggiunte il 26/11/2026 dal passaggio del Passo 17 (`docs/design/tablet/LEGGIMI.md`). Fonte: pagina «Passo 17 · Correzioni piccole» (`project/D-CZ1.dc.html`) del secondo canvas, versione 1795711570-0525. Sezione «2 · Ricette senza foto: sabbia con il piatto»: un segnaposto solo, con la stessa icona in tutti gli schermi (risposte 205 e 210). Le tavole al buio qui sopra (03, 04, 07) valgono per i colori; l'icona è il piatto.
+
+## p17-01 · Telefono · Ricette
+
+telefono, 390 × 844 px · Passo 17
+
+- `p17-01-ricette-telefono-chiaro.png`: chiaro, dal canvas
+
+**Nota di Fable**
+
+Sul telefono
+
+Stessa icona in Ricette, nella scheda, nei Pasti e in «Stasera». Le ricette con la foto non cambiano.
+
+Critica onesta: l'icona del piatto è nuova, disegnata per questo passo (un piatto visto da sopra, con forchetta e coltello); è l'unica icona non presa dalla serie delle altre. Domanda 219 (risposta: si tiene, ridisegnata nello stile della serie; altrimenti forchetta e coltello della serie, una sola icona dappertutto).
+
+## p17-02 · Telefono · una ricetta
+
+telefono, 390 × 1770 px · Passo 17
+
+- `p17-02-una-ricetta-telefono-chiaro.png`: chiaro, dal canvas («Polpette al sugo», senza foto)
+
+## p17-03 · Telefono · Pasti
+
+telefono, 390 × 844 px · Passo 17
+
+- `p17-03-pasti-telefono-chiaro.png`: chiaro, dal canvas

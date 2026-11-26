@@ -1,6 +1,6 @@
 # Tavolozza comune · Passi 14–16 (telefono, web da telefono, computer)
 
-> Archiviata il 26/11/2026 (PR dei Passi 12–16, #501). **È la fonte di verità per i colori in chiaro e al buio**, comune ai formati; vince sulle tavole, anche su quelle scure di `scuro-derivato/`. La cartella `regole-e-valori/` citata qui è `docs/design/computer/regole-e-valori-p12-16/`. Traduzione in token per l'app: `.claude/skills/design-system/riferimento/token.md`, «Tavolozza comune dei Passi 12–16». La barretta di Tommaso al buio (#4E7BE2 nella tavola, #3F6FE0 nel foglio di stile) è da chiarire: vedi la fine del §2.
+> Archiviata il 26/11/2026 (PR dei Passi 12–16, #501). **È la fonte di verità per i colori in chiaro e al buio**, comune ai formati; vince sulle tavole, anche su quelle scure di `scuro-derivato/`. La cartella `regole-e-valori/` citata qui è `docs/design/computer/regole-e-valori-p12-16/`. Traduzione in token per l'app: `.claude/skills/design-system/riferimento/token.md`, «Tavolozza comune dei Passi 12–16». La barretta di Tommaso al buio è #4E7BE2 (deciso nel Passo 17, vedi la fine del §2); i due ruoli delle icone dei Piani sono arrivati con il Passo 17 (`docs/design/tablet/decisioni.md`).
 
 Estratta il 26/11/2026 dal secondo canvas di Fable («FamilyNest: computer e web da telefono», https://claude.ai/artifact/PVgH6JrYhzhkPXu6js4Ktc, versione 1795707258-333f). Fonte dei valori: `project/v2.css`, riga 8 (`.v2`, tema chiaro) e riga 10 (`.v2.th-d`, tema scuro); nomi dei ruoli dalla tavola «Passo 14 · La tavolozza per ruoli» (`project/D-TV1.dc.html`, immagine in `regole-e-valori/`). Ho confrontato i 73 ruoli della tavola con il foglio di stile: i valori coincidono tutti. Lo stesso foglio vale per telefono e computer. Gli stessi dati, in forma leggibile da un programma, sono in `tavolozza.json`.
 
@@ -108,6 +108,8 @@ Estratta il 26/11/2026 dal secondo canvas di Fable («FamilyNest: computer e web
 | Rosa della tavolozza delle persone (chi è invitato) | `--c-rosa`           | `#F0A3C0` | uguale    |
 | Pallino e barretta di quello che non è di nessuno   | `--c-nessuno`        | `#B4BFBC` | `#5E6F72` |
 | Segno di conferma, piano scelto                     | `--c-conferma`       | `#2F8F99` | `#8FD0CB` |
+| Icona sul disco di Plus (Passo 17)                  | `--c-piano-icona-1`  | `#FFFFFF` | `#10262A` |
+| Icona sul disco di Plus Max (Passo 17)              | `--c-piano-icona-2`  | `#BFE5E1` | `#0E5A66` |
 | Tratto fatto della linea del tempo                  | `--c-conferma-fondo` | `#CFE5E1` | `#1F3F42` |
 | Aiutanti: un solo colore neutro, con l'iniziale     | `--c-aiutante`       | `#D5DBD8` | uguale    |
 
@@ -147,7 +149,7 @@ Decisione di Francesco del 25/11: la barretta a sinistra di ogni impegno stacca 
 
 Nel foglio di stile la barretta si sceglie con la classe dell'impegno: `pM` → `--c-marco-barra`, `pL` → `--c-laura-barra`, `pS` → `--c-sofia-barra`, `pT` → `--c-tommaso`, `pB` → `--c-biscotto-barra`, `pG` (Miele) → `--c-miele-barra`, `pY` («Liberi insieme») → `--c-liberi-barra`, `pN` → `--c-testo2`; la barretta è `box-shadow: inset 3px 0 0`. Rosa, Azzurro, Sabbia e Ardesia sono i colori liberi della tavolozza delle persone (per chi arriva dopo): le loro tinte sono solo in questa tabella (tavola «I valori», `regole-e-valori/`), non sono ruoli e non hanno valori scuri. Il rosa è diventato `--c-rosa` (chi è invitato). Sul computer Biscotto e Miele avevano un ambra e un cannella un po' diversi dal telefono: Fable li ha riportati agli stessi valori.
 
-**Da chiarire (Tommaso al buio).** La tavola della tavolozza dà come barretta scura `--c-tommaso-barra` = #4E7BE2 (3,5 : 1 sul fondo #1B2D49), ma il foglio di stile assegna alla classe `pT` il ruolo `--c-tommaso`, che resta #3F6FE0 (3,0 : 1, al limite). Chi sviluppa usa `--c-tommaso-barra`: rispetta la tavola e la soglia con margine.
+**Tommaso al buio (deciso nel Passo 17).** La barretta di Tommaso al buio è **#4E7BE2** (`--c-tommaso-barra`, 3,5 : 1 sul fondo #1B2D49). Il foglio di stile del canvas assegna alla classe `pT` il ruolo `--c-tommaso` (#3F6FE0, 3,0 : 1), e così fanno le tavole del tablet al buio: non si copia. Fonte: `docs/design/tablet/decisioni.md`.
 
 ## 3 · La regola del pallino (Passo 16)
 
@@ -216,7 +218,7 @@ Verde petrolio al buio `#1F7D8A` (`--c-pieno` e `--c-accento`) con il bianco sop
 - Passo 16: anteprima dello sfondo «Semplice» → --c-scena (#1D3536 al buio)
 - Passo 16: un solo segnaposto per le ricette senza foto, color sabbia → --c-segnaposto / --c-segnaposto-testo (le quattro tinte di prima sono diventate un ruolo)
 - Passo 16: il rosa di chi è invitato → --c-rosa
-- Passo 17 (in attesa): #BFE5E1 della pagina «Piani» da portare nella tavolozza; al buio le due icone di «Piani» almeno a 3 a 1
+- Passo 17: #BFE5E1 e il bianco delle icone della pagina «Piani» → `--c-piano-icona-2` e `--c-piano-icona-1`; al buio le icone diventano scure sui dischi chiari (#8FD0CB e #EAF2EE): 9,0 e 6,9 a 1 (prima 1,7 e 1,2). I ruoli passano da 73 a 75.
 
 Fable non elenca uno per uno i «cinque colori scritti a mano» chiesti nel Passo 16: l'elenco sopra viene dalle note delle tavole dei Passi 15 e 16 e dalla tavola della tavolozza. Restano scritti a mano, per scelta: veli e testi bianchi sopra le foto, colori dentro la scena di Oggi e dello splash, campioni degli sfondi (anteprime di immagini). Il segnaposto sabbia è un ruolo.
 
