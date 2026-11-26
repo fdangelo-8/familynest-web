@@ -25,6 +25,8 @@ function run(hook, input) {
   const r = spawnSync("node", [path.join(here, hook)], {
     input: JSON.stringify({ cwd: repo, ...input }),
     encoding: "utf8",
+    // Empty TMPDIR, so that ${TMPDIR:-default} takes the default in every environment.
+    env: { ...process.env, TMPDIR: "" },
   });
   return r.status;
 }
@@ -267,6 +269,12 @@ const blocked = {
   "redirezione su variabile sconosciuta": ['echo x > "$OUT"'],
   "redirezione dentro bash -c": [`bash -c "echo x > src/a.ts"`],
   "redirezione su variabile del repo": ["D=src && echo x > $D/a.ts"],
+  "redirezione >| su src/": ["echo x >| src/a.ts"],
+  "tee dopo una redirezione": ["echo x | tee >/dev/null src/a.ts"],
+  "tee -a su docs/": ["echo x | tee -a docs/x.md"],
+  "tee dopo 2>/dev/null": ["echo x | tee 2>/dev/null src/a.ts"],
+  "default di TMPDIR nel repo": ['echo x > "${TMPDIR:-src}/a.ts"'],
+  "[[ ]] seguito da redirezione": ["[[ a > b ]] && echo x > src/a.ts"],
 };
 for (const [label, [command, agent]] of Object.entries(blocked))
   expect(label, B, bash(command, agent), true);
@@ -295,6 +303,10 @@ const allowed = {
     `S=${tmpdir()} && npx prettier x.ts > $S/x.ts`,
   ],
   "variabile da mktemp": ['out=$(mktemp) && npm test > "$out"'],
+  "aritmetica $(( ))": ["echo $((3 > 1))"],
+  "confronto in [[ ]]": ["[[ a > b ]] && echo si"],
+  "${TMPDIR:-/tmp}": ['npm test > "${TMPDIR:-/tmp}/fn-out.log"'],
+  "tee con redirezione verso tmp": [`echo x | tee >/dev/null ${tmpFile}`],
 };
 for (const [label, [command, agent]] of Object.entries(allowed))
   expect(label, B, bash(command, agent), false);

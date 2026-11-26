@@ -196,12 +196,18 @@ const IN_PLACE = [
 const CD = new RegExp(String.raw`${AT_CMD}(?:cd|pushd)(?=\s|$)`, "g");
 const TEE = new RegExp(String.raw`${AT_CMD}tee(?=\s|$)`, "g");
 const ASSIGN = /(?:^|[\n;&|(]|\bexport|\blocal)\s*([A-Za-z_]\w*)=/g;
-const REDIRECT = /(?<![<>=&\-\d])(?:\d+|&)?(?:>>?|>\|)(?![&(>])/g;
+// `>|` before `>`, or `>|` would be read as `>` followed by a pipe.
+const REDIRECT = /(?<![<>=&\-\d])(?:\d+|&)?(?:>\||>>?)(?![&(>])/g;
+// A redirection operator inside a command's arguments (to skip it with its target).
+const REDIRECT_OP = /^(?:\d+|&)?(?:>\||>>?|<<<|<<-?|<>|<)(&(?=[\d-]))?/;
+// `[[ ... ]]` test: `<` and `>` compare strings there, they do not redirect.
+const DOUBLE_TEST = /(^|[\s;&|(])\[\[(?:[^\]]|\](?!\]))*\]\]/g;
 const SHELL_BEFORE =
   /(?:^|[\s;&|(])(?:(?:ba|da|k|z)?sh|eval|su|watch|ssh)\b[^;&|\n]*$/;
 const SIMPLE_WORD = /^[\w./=+:@%,~-]*$/;
+// $TMPDIR, ${TMPDIR} and ${TMPDIR:-default} (also with -, := and =).
 const TEMP_VAR =
-  /^\$(?:\{(TMPDIR|TMP|TEMP|RUNNER_TEMP)\}|(TMPDIR|TMP|TEMP|RUNNER_TEMP)\b)/;
+  /^\$(?:\{(TMPDIR|TMP|TEMP|RUNNER_TEMP)(?:(:?)[-=]([^}]*))?\}|(TMPDIR|TMP|TEMP|RUNNER_TEMP)\b)/;
 
 /**
  * Masks quoted text and heredoc bodies so that only real shell syntax is
@@ -214,6 +220,7 @@ function scan(src) {
   let plain = "";
   const strings = [];
   const heredocs = [];
+  const arithmetic = [];
   const pending = [];
   const put = (m, p = m) => {
     masked += m;
@@ -239,6 +246,20 @@ function scan(src) {
         });
         put(h[0]);
         i += h[0].length;
+        continue;
+      }
+    }
+    // Arithmetic, $((a > b)) or ((a > b)): no redirections inside.
+    if (src.startsWith("((", i)) {
+      let depth = 2;
+      let j = i + 2;
+      for (; j < src.length && depth; j++)
+        depth += src[j] === "(" ? 1 : src[j] === ")" ? -1 : 0;
+      if (!depth) {
+        const inner = src.slice(i + 2, j - 2);
+        arithmetic.push(inner);
+        put(`((${"\0".repeat(inner.length)}))`, src.slice(i, j));
+        i = j;
         continue;
       }
     }
@@ -287,7 +308,8 @@ function scan(src) {
     put(c);
     i++;
   }
-  return { masked, plain, strings, heredocs };
+  masked = masked.replace(DOUBLE_TEST, (t) => t.replace(/[<>]/g, "\0"));
+  return { masked, plain, strings, heredocs, arithmetic };
 }
 
 /** Command substitutions ($(...) and backticks) inside a text. */
@@ -355,7 +377,12 @@ function readWord(s, i) {
 function resolveTarget(word, cwd, vars = {}) {
   let w = word;
   if (w === "~" || w.startsWith("~/")) w = os.homedir() + w.slice(1);
-  w = w.replace(TEMP_VAR, (_, a, b) => process.env[a || b] || os.tmpdir());
+  w = w.replace(TEMP_VAR, (_, name, colon, fallback, bare) => {
+    const value = process.env[name || bare];
+    if (fallback === undefined) return value || os.tmpdir();
+    // Without the colon the default applies only when the variable is unset.
+    return colon ? value || fallback : (value ?? fallback);
+  });
   w = w.replace(/^\$(?:\{HOME\}|HOME\b)/, os.homedir());
   w = w.replace(/^\$(?:\{(\w+)\}|(\w+))/, (all, a, b) => vars[a || b] ?? all);
   if (/[$`*?]/.test(w)) return null;
@@ -420,7 +447,15 @@ function redirectTarget(masked, plain, cwd) {
     let at = m.index + m[0].length;
     for (;;) {
       while (plain[at] === " " || plain[at] === "\t") at++;
-      if (at >= plain.length || /[;&|()<>\n]/.test(plain[at])) break;
+      // A redirection among the arguments (tee >/dev/null file): skip it and
+      // its target, checked by the loop above, and keep reading tee's files.
+      const op = REDIRECT_OP.exec(masked.slice(at));
+      if (op && /[<>]/.test(op[0])) {
+        at += op[0].length;
+        if (!op[1]) at = readWord(plain, at).end;
+        continue;
+      }
+      if (at >= plain.length || /[;&|()\n]/.test(plain[at])) break;
       const { word, end } = readWord(plain, at);
       if (end === at) break;
       at = end;
@@ -434,6 +469,9 @@ function redirectTarget(masked, plain, cwd) {
 function shellEdit(command, cwd, depth = 0) {
   const parsed = scan(command);
   if (IN_PLACE.some((re) => re.test(parsed.masked))) return EDIT_ONLY;
+  // Arithmetic is masked for redirections only: an editor hidden in it still counts.
+  if (parsed.arithmetic.some((a) => IN_PLACE.some((re) => re.test(a))))
+    return EDIT_ONLY;
   const target = redirectTarget(parsed.masked, parsed.plain, cwd);
   if (target)
     return `${EDIT_ONLY} Redirezioni e tee verso file del repository sono vietate (qui: ${target}); restano permesse verso la cartella temporanea, lo scratchpad e /dev/null.`;
