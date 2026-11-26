@@ -66,7 +66,7 @@ test.describe("ColorChoice: funzioni di supporto", () => {
       "cobalto",
       "zafferano",
     ]);
-    expect(memberColorLabel("salvia")).toBe("Salvia");
+    expect(memberColorLabel("salvia")).toBe("Menta");
   });
 
   test("il primo colore libero salta i presi; con 10 presi non ce n'è", () => {
@@ -90,19 +90,19 @@ test.describe("ColorChoice: pagina dimostrativa", () => {
   }) => {
     await page.goto(DEMO);
     const group = page.getByRole("radiogroup", { name: "Il tuo colore" });
-    await group.getByRole("radio", { name: "Cobalto" }).click();
-    await expect(group.getByRole("radio", { name: "Cobalto" })).toHaveAttribute(
+    await group.getByRole("radio", { name: "Blu" }).click();
+    await expect(group.getByRole("radio", { name: "Blu" })).toHaveAttribute(
       "aria-checked",
       "true",
     );
-    await expect(group.getByRole("radio", { name: "Salvia" })).toHaveAttribute(
+    await expect(group.getByRole("radio", { name: "Menta" })).toHaveAttribute(
       "aria-checked",
       "false",
     );
     await group
-      .getByRole("radio", { name: "Pomodoro (già di Marco)" })
+      .getByRole("radio", { name: "Corallo (già di Marco)" })
       .click({ force: true });
-    await expect(group.getByRole("radio", { name: "Cobalto" })).toHaveAttribute(
+    await expect(group.getByRole("radio", { name: "Blu" })).toHaveAttribute(
       "aria-checked",
       "true",
     );
@@ -113,13 +113,13 @@ test.describe("ColorChoice: pagina dimostrativa", () => {
   }) => {
     await page.goto(DEMO);
     const group = page.getByRole("radiogroup", { name: "Il tuo colore" });
-    await group.getByRole("radio", { name: "Cobalto" }).click();
+    await group.getByRole("radio", { name: "Blu" }).click();
     await page.keyboard.press("Tab");
     await expect(
       group.getByRole("radio").and(page.locator(":focus")),
     ).toHaveCount(0);
     await page.keyboard.press("Shift+Tab");
-    await expect(group.getByRole("radio", { name: "Cobalto" })).toBeFocused();
+    await expect(group.getByRole("radio", { name: "Blu" })).toBeFocused();
   });
 
   test("i cerchi distano almeno 44 px (area di tocco)", async ({ page }) => {
@@ -318,7 +318,7 @@ test.describe("MemberSheet: aggiunta, regole dei campi", () => {
       dialog.getByRole("button", { name: "Figlio o figlia" }),
       dialog.getByRole("button", { name: "Animale" }),
       dialog.getByLabel("Data di nascita"),
-      dialog.getByRole("radio", { name: "Salvia" }),
+      dialog.getByRole("radio", { name: "Menta" }),
       ...(desktop ? [dialog.getByRole("button", { name: "Annulla" })] : []),
       dialog.getByRole("button", { name: "Aggiungi", exact: true }),
     ];
@@ -349,14 +349,14 @@ test.describe("MemberSheet: aggiunta, regole dei campi", () => {
   }) => {
     const dialog = await openSheet(page, ADD);
     await dialog.getByLabel("Nome").fill("Rita");
-    await dialog.getByRole("radio", { name: "Cobalto" }).click();
+    await dialog.getByRole("radio", { name: "Blu" }).click();
     await page.keyboard.press("Escape");
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await page.getByRole("button", { name: ADD }).click();
     const reopened = page.getByRole("dialog");
     await expect(reopened.getByLabel("Nome")).toHaveValue("");
     await expect(
-      reopened.getByRole("radio", { name: "Salvia" }),
+      reopened.getByRole("radio", { name: "Menta" }),
     ).toHaveAttribute("aria-checked", "true");
     await expect(page.getByTestId("membri-salvato")).toHaveText(
       "Niente salvato",
@@ -370,13 +370,13 @@ test.describe("MemberSheet: modifica", () => {
   }) => {
     const dialog = await openSheet(page, "Modifica Sofia");
     for (const taken of [
-      "Pomodoro (già di Marco)",
+      "Corallo (già di Marco)",
       "Glicine (già di Laura)",
-      "Zafferano (già usato)",
+      "Ambra (già usato)",
     ]) {
       await expect(dialog.getByRole("radio", { name: taken })).toBeDisabled();
     }
-    await expect(dialog.getByRole("radio", { name: "Cobalto" })).toBeEnabled();
+    await expect(dialog.getByRole("radio", { name: "Blu" })).toBeEnabled();
     // the entry animation must end first: on mobile the sheet slides up and a
     // click during the slide lands outside the viewport (no fixed wait)
     await waitForAnimationsToEnd(page);
@@ -406,7 +406,7 @@ test.describe("MemberSheet: modifica", () => {
   test("salvare cambia nome e colore, tiene ruolo e data", async ({ page }) => {
     const dialog = await openSheet(page, "Modifica Sofia");
     await dialog.getByLabel("Nome").fill("Sofi");
-    await dialog.getByRole("radio", { name: "Cobalto" }).click();
+    await dialog.getByRole("radio", { name: "Blu" }).click();
     await dialog.getByRole("button", { name: "Salva le modifiche" }).click();
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(page.getByTestId("membri-salvato")).toHaveText(
@@ -455,7 +455,7 @@ test.describe("MemberSheet: invito", () => {
     ).toBeVisible();
     await expect(dialog.getByLabel("Nome")).toHaveValue("");
     await expect(dialog.getByLabel("Nome")).toHaveAttribute("maxlength", "40");
-    await expect(dialog.getByRole("radio", { name: "Salvia" })).toHaveAttribute(
+    await expect(dialog.getByRole("radio", { name: "Menta" })).toHaveAttribute(
       "aria-checked",
       "true",
     );
@@ -489,7 +489,7 @@ test.describe("MemberSheet: invito", () => {
   }) => {
     const dialog = await openSheet(page, INVITE);
     await dialog.getByLabel("Nome").fill("  Laura  ");
-    await dialog.getByRole("radio", { name: "Cobalto" }).click();
+    await dialog.getByRole("radio", { name: "Blu" }).click();
     await dialog.getByRole("button", { name: "Continua" }).click();
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(page.getByTestId("membri-salvato")).toHaveText(

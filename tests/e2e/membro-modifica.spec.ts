@@ -286,12 +286,12 @@ test.describe("il foglio in modifica", () => {
       await expect(own).toBeChecked();
       await expect(own).toBeEnabled();
       // The colours of the others are off, with the name of whoever has them.
-      const ilaria = colorRadio(dialog, "Pomodoro (già di Ilaria)");
+      const ilaria = colorRadio(dialog, "Corallo (già di Ilaria)");
       await expect(ilaria).toBeDisabled();
       await expect(ilaria).not.toBeChecked();
-      await expect(colorRadio(dialog, "Salvia (già di Marta)")).toBeDisabled();
+      await expect(colorRadio(dialog, "Menta (già di Marta)")).toBeDisabled();
       // A free colour can be chosen.
-      await expect(colorRadio(dialog, "Cobalto")).toBeEnabled();
+      await expect(colorRadio(dialog, "Blu")).toBeEnabled();
       // «Chi è»: only the current voice is active; an adult has no birth date.
       const kind = dialog.getByRole("group", { name: "Chi è" });
       await expect(kind.getByRole("button", { name: "Adulto" })).toBeEnabled();
@@ -326,9 +326,9 @@ test.describe("il foglio in modifica", () => {
       await expect(kind.getByRole("button", { name: "Animale" })).toBeEnabled();
       await expect(kind.getByRole("button", { name: "Adulto" })).toBeDisabled();
       await expect(
-        colorRadio(dialog, "Pomodoro (già di Ilaria)"),
+        colorRadio(dialog, "Corallo (già di Ilaria)"),
       ).toBeDisabled();
-      await expect(colorRadio(dialog, "Lampone")).toBeChecked();
+      await expect(colorRadio(dialog, "Sabbia")).toBeChecked();
     });
   });
 
@@ -450,8 +450,8 @@ test.describe("salvataggio con modifiche", () => {
       await expect(avatar).toHaveClass(/membro-glicine/);
 
       const dialog = await openSheet(page, "Laura");
-      await colorRadio(dialog, "Cobalto").click();
-      await expect(colorRadio(dialog, "Cobalto")).toBeChecked();
+      await colorRadio(dialog, "Blu").click();
+      await expect(colorRadio(dialog, "Blu")).toBeChecked();
       await saveButton(dialog).click();
 
       await expect(dialog).toBeHidden();
@@ -478,7 +478,7 @@ test.describe("salvataggio con modifiche", () => {
 
       const dialog = await openSheet(page, "Biscotto");
       await nameField(dialog).fill("Briciola");
-      await colorRadio(dialog, "Ceruleo").click();
+      await colorRadio(dialog, "Azzurro").click();
       await dialog.getByLabel("Data di nascita").fill(yearsAgo(5));
       await saveButton(dialog).click();
 
@@ -622,7 +622,7 @@ test.describe("«Annulla» del toast", () => {
 
       const dialog = await openSheet(page, "Laura");
       await nameField(dialog).fill("Lara");
-      await colorRadio(dialog, "Cobalto").click();
+      await colorRadio(dialog, "Blu").click();
       await saveButton(dialog).click();
       await expect(h1(page)).toHaveText("Lara");
       await expect(toast(page, SAVED)).toBeVisible();
@@ -726,7 +726,7 @@ test.describe("«Annulla» del toast", () => {
       await openMember(page, laura, "Laura");
 
       const dialog = await openSheet(page, "Laura");
-      await colorRadio(dialog, "Cobalto").click();
+      await colorRadio(dialog, "Blu").click();
       await saveButton(dialog).click();
       await expect(toast(page, SAVED)).toBeVisible();
       await expect(page.locator(".profilo-testa .avatar")).toHaveClass(
@@ -766,22 +766,22 @@ test.describe("errori nel foglio", () => {
 
       const dialog = await openSheet(page, "Laura");
       // Cobalto is free when the sheet opens...
-      await expect(colorRadio(dialog, "Cobalto")).toBeEnabled();
-      await colorRadio(dialog, "Cobalto").click();
+      await expect(colorRadio(dialog, "Blu")).toBeEnabled();
+      await colorRadio(dialog, "Blu").click();
       // ... and somebody takes it before the save.
       await addAdult("Marta", "cobalto");
       await saveButton(dialog).click();
 
       await expect(dialog.getByText(COLOR_TAKEN)).toBeVisible();
       await expect(dialog).toBeVisible();
-      await expect(colorRadio(dialog, "Cobalto (già usato)")).toBeDisabled();
-      await expect(colorRadio(dialog, "Cobalto (già usato)")).not.toBeChecked();
+      await expect(colorRadio(dialog, "Blu (già usato)")).toBeDisabled();
+      await expect(colorRadio(dialog, "Blu (già usato)")).not.toBeChecked();
       await expect(anyToast(page)).toHaveCount(0);
       await expect(h1(page)).toHaveText("Laura");
       expect((await memberById(laura))!.color).toBe("glicine");
 
       // Choosing another colour and saving works.
-      await colorRadio(dialog, "Salvia").click();
+      await colorRadio(dialog, "Menta").click();
       await saveButton(dialog).click();
       await expect(dialog).toBeHidden();
       await expect(toast(page, SAVED)).toBeVisible();
@@ -960,7 +960,7 @@ test.describe("privacy della data di nascita", () => {
       await user.signInContext(page.context(), baseURL as string);
       await openMember(page, fido, "Fido");
       const dialog = await openSheet(page, "Fido");
-      await expect(colorRadio(dialog, "Peonia (già di Sofia)")).toBeDisabled();
+      await expect(colorRadio(dialog, "Rosa (già di Sofia)")).toBeDisabled();
       for (const form of dateForms(childDate)) {
         expect(await pageText(page)).not.toContain(form);
       }

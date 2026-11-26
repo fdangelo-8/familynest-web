@@ -127,6 +127,17 @@ test("nomi lunghi", async ({ page }) => {
 
 test("caricamento", async ({ page }) => {
   await open(page, { items: NORMAL_LIST, reads: "slow" }, false);
+  // The document is streamed: wait until the page is painted, not only present
+  // in a hidden staging container (#196).
+  await expect(
+    page.getByRole("heading", { name: "Casa", level: 1 }),
+  ).toBeVisible();
+  await expect(
+    page
+      .locator('[aria-busy="true"] .skeleton')
+      .filter({ visible: true })
+      .first(),
+  ).toBeVisible();
   // The page's own loading state (the route frame shows a similar one first).
   await expect(
     page.locator('[aria-busy="true"][aria-live="polite"]'),

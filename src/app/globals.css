@@ -1,58 +1,109 @@
 /* =========================================================
-   FamilyNest · blocco :root pronto per src/app/globals.css
-   Copia fedele di docs/mockup/tokens.css v1.0 (22 ottobre 2026):
-   stessi nomi, stessi valori. Unica differenza: --font-titoli e
-   --font-testo puntano alle variabili create da next/font
-   (--font-parkinsans, --font-host-grotesk, vedi skill design-system,
-   sezione "Caricamento dei font"). La pila di riserva resta identica.
-   Prettier scrive gli esadecimali in minuscolo e lo zero prima dei
-   decimali: i valori non cambiano.
-   Se tokens.css del mockup cambia, si aggiorna prima questo file.
+   FamilyNest · token del design per telefono 2.0 (#196, 25/11/2026)
+   Valori da .claude/skills/design-system/riferimento/telefono.md.
+   Il blocco :root è copiato identico in docs/agenti/design/token.css
+   (lo confronta il test dei token): si cambiano insieme.
+   --font-titoli e --font-testo puntano alla variabile di next/font
+   (--font-figtree). Prettier scrive gli esadecimali in minuscolo e lo
+   zero prima dei decimali: i valori non cambiano.
    ========================================================= */
 :root {
   /* ---------- Colori: base ---------- */
-  --color-carta: #f1f2ee; /* sfondo delle pagine */
-  --color-carta-2: #e7e8e2; /* segnaposto foto, scheletri di caricamento */
+  --color-carta: #ffffff; /* sfondo delle pagine: le pagine sono bianche */
+  --color-carta-2: #f4f6f4; /* fondi quieti: avvisi, scheletri, segnaposto foto */
   --color-superficie: #ffffff; /* schede, campi, barre */
-  --color-inchiostro: #17181c; /* testo principale, azione principale */
-  --color-inchiostro-2: #5a5d64; /* testo secondario */
-  --color-inchiostro-3: #8a8d93; /* solo elementi non testuali (tacche, segni) */
-  --color-filo: #dfe0da; /* bordi e divisori */
-  --color-filo-2: #cfd1ca; /* bordi tratteggiati, cornici di selezione */
-  --color-filo-campo: #82858b; /* bordo dei campi a riposo */
+  --color-fondo-app: #f5f6f4; /* fondo sotto Oggi e dietro la barra */
+  --color-premuto: #ecefec; /* riga premuta, da bordo a bordo */
+  --color-scelta-tenue: #e2e9e5; /* voce scelta del selettore, scheda di scelta premuta */
+  --color-anello-scelta: #b5cbcb; /* anello decorativo attorno a una scelta */
+  --color-inchiostro: #10262a; /* testo principale, azione principale */
+  --color-inchiostro-2: #55686c; /* testo secondario sulle pagine bianche */
+  --color-inchiostro-2-fondo: #4a5f63; /* testo secondario sul fondo dell'app */
+  --color-inchiostro-3: #8a989a; /* solo elementi non testuali (tacche, segni) */
+  --color-azione: #0f3d44; /* pulsante primario, voce scelta della barra */
+  --color-azione-premuto: #0a2d33; /* primario premuto e al passaggio del mouse */
+  --color-filo: #e4e8e5; /* bordi e divisori */
+  --color-filo-2: #c3ccc9; /* bordi di tessere e schede a riposo */
+  --color-filo-tenue: #aeb9b7; /* solo decorazione (2,01:1) */
+  --color-filo-barra: rgba(16, 38, 42, 0.1);
+  --color-filo-campo: #7f9092; /* bordo dei campi a riposo (3,33:1) */
+  --color-corsia-vuota: #eef1ef; /* barra vuota delle corsie del calendario */
   --color-notte: #1b1a17; /* blocchi scuri: porte, piano, onboarding */
   --color-notte-2: #2a2925; /* elementi sopra notte */
   --color-latte: #f4f2ec; /* testo e superfici chiare su inchiostro e notte */
   --color-latte-2: #b9b5ac; /* testo secondario su notte */
 
   /* ---------- Colori: Liberi insieme ---------- */
-  --color-insieme: #fbf3d6; /* fondo */
-  --color-insieme-bordo: #c9a43a; /* bordo */
-  --color-insieme-testo: #6b5413; /* testo */
+  --color-insieme: #fbeaab; /* fondo */
+  --color-insieme-bordo: #e0be52; /* bordo */
+  --color-insieme-testo: #4a3906; /* testo */
+
+  /* ---------- Colori: adesso ---------- */
+  --color-adesso: #f6c945; /* «adesso»: il giallo vuol dire solo questo */
+  --color-adesso-tinta: #fcefc0; /* fondo tenue dell'«adesso» */
 
   /* ---------- Colori: impegni «Occupato» (righe grigie) ---------- */
   --color-occupato-1: #ecede7;
   --color-occupato-2: #e4e5de;
 
   /* ---------- Colori: stato ---------- */
-  --color-ok: #237a4b;
+  --color-ok: #1b6b45;
   --color-avviso: #a15c07;
-  --color-allerta: #c8322f;
+  --color-allerta: #b3261e;
+  --color-allerta-fondo: #fceeea; /* fondo dell'avviso d'errore e del campo sbagliato */
+  --color-scaduto: #a8321f; /* scadenza passata */
   --color-allerta-scuro: #a82a27; /* passaggio del mouse e premuto del bottone rosso pieno */
   --color-info: #3355cc;
   --color-bianco: #ffffff;
 
-  /* ---------- Colori: membri (solo negli avatar) ---------- */
-  --color-membro-pomodoro: #f06a4f;
-  --color-membro-glicine: #b9a3e8;
-  --color-membro-salvia: #8dbf9b;
-  --color-membro-cobalto: #5c7fe0;
-  --color-membro-zafferano: #f2b33d;
-  --color-membro-lampone: #d75596; /* aggiunto, #74 */
-  --color-membro-ceruleo: #4b96aa; /* aggiunto, #74 */
-  --color-membro-peonia: #f2a8c6; /* aggiunto, #74 */
-  --color-membro-basilico: #649100; /* aggiunto, #74 */
-  --color-membro-cannella: #af8273; /* aggiunto, #74 */
+  /* ---------- Colori: persone (avatar, filo delle foto, corsie, punti) ----------
+     Tre token per tinta: pieno, -tinta (fondo tenue), -corsia (barra, almeno
+     3:1). Il codice del database sceglie la tinta in src/lib/member-colors.ts.
+     Mancano le tinte di sabbia, azzurro, rosa e ardesia: usano il neutro. */
+  --color-membro-corallo: #f2765c;
+  --color-membro-corallo-tinta: #fdeae5;
+  --color-membro-corallo-corsia: #ef5839;
+  --color-membro-glicine: #b9a2ec;
+  --color-membro-glicine-tinta: #f2ecfc;
+  --color-membro-glicine-corsia: #9978e3;
+  --color-membro-menta: #8fd0a8;
+  --color-membro-menta-tinta: #e7f5ec;
+  --color-membro-menta-corsia: #419a63;
+  --color-membro-blu: #3f6fe0;
+  --color-membro-blu-tinta: #e5ecfc;
+  --color-membro-blu-corsia: #3f6fe0;
+  --color-membro-ambra: #e8a15c;
+  --color-membro-ambra-tinta: #fceedd;
+  --color-membro-ambra-corsia: #ce741d;
+  --color-membro-sabbia: #d9b88f;
+  --color-membro-sabbia-corsia: #b5803d;
+  --color-membro-azzurro: #7cc7e0;
+  --color-membro-azzurro-corsia: #2c95b8;
+  --color-membro-rosa: #f0a3c0;
+  --color-membro-rosa-corsia: #e4588d;
+  --color-membro-ardesia: #68778d; /* decisione di Francesco, 25/11 (Fable: #6b7a90) */
+  --color-membro-ardesia-corsia: #68778d;
+  --color-membro-cannella: #af8273;
+  --color-membro-cannella-tinta: #f5ece8;
+  --color-membro-cannella-corsia: #ad7f70;
+  --color-membro-neutro: #b4bfbc; /* chi non ha un colore (solo interfaccia) */
+  --color-membro-neutro-tinta: #f1f4f2;
+  --color-membro-neutro-corsia: #7c8f8a;
+
+  /* ---------- Colori: scena di Oggi ---------- */
+  --color-scena-mattino-cielo: #bfe3f7;
+  --color-scena-mattino-casa-1: #7dbfc2;
+  --color-scena-mattino-casa-2: #4e9da6;
+  --color-scena-mattino-sole: #ffb84d;
+  --color-scena-pomeriggio-cielo: #7fc4f2;
+  --color-scena-pomeriggio-casa-1: #57b0b5;
+  --color-scena-pomeriggio-casa-2: #2f8f99;
+  --color-scena-pomeriggio-sole: #fff1a8;
+  --color-scena-sera-cielo: #35539e;
+  --color-scena-sera-casa-1: #2a7f80;
+  --color-scena-sera-casa-2: #0c4a52;
+  --color-scena-sera-sole: #ff9e3c;
+  --color-scena-tetto: #0f3d44;
 
   /* ---------- Colori: marchi dei calendari esterni (solo nei loghi) ---------- */
   --color-marchio-outlook: #0f6cbd;
@@ -61,8 +112,8 @@
 
   /* ---------- Colori: trasparenze ---------- */
   --color-velo: rgba(23, 24, 28, 0.3); /* sotto fogli e modali */
-  --color-ombra: rgba(23, 24, 28, 0.06);
-  --color-ombra-forte: rgba(23, 24, 28, 0.3);
+  --color-ombra: rgba(16, 38, 42, 0.12);
+  --color-ombra-forte: rgba(16, 38, 42, 0.2);
   --color-ombra-adesivo: rgba(0, 0, 0, 0.25);
   --color-avatar-su-colore: rgba(
     255,
@@ -72,18 +123,15 @@
   ); /* cerchio dentro gli adesivi */
 
   /* ---------- Font ---------- */
-  --font-titoli:
-    var(--font-parkinsans), "Parkinsans", ui-sans-serif, system-ui, sans-serif;
-  --font-testo:
-    var(--font-host-grotesk), "Host Grotesk", ui-sans-serif, system-ui,
-    -apple-system, "Segoe UI", sans-serif;
+  --font-titoli: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
+  --font-testo: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
   --font-codice:
     ui-monospace, "SF Mono", Menlo, monospace; /* solo nella documentazione */
-  --weight-sottile: 300;
+  --weight-sottile: 400;
   --weight-normale: 400;
-  --weight-medio: 500;
+  --weight-medio: 400;
   --weight-semi: 600;
-  --weight-forte: 650;
+  --weight-forte: 600;
   --weight-pieno: 700;
 
   /* ---------- Scala tipografica (mobile; *-desktop dove cambia) ---------- */
@@ -104,11 +152,20 @@
   --text-numero-size: 2.75rem; /* 44px */
   --text-numero-line: 3rem; /* 48px */
   --text-numero-tracking: -0.04em;
-  --text-titolo-pagina-size: 2rem; /* 32px */
+  --text-titolo-pagina-size: 1.875rem; /* 30px */
   --text-titolo-pagina-line: 2.25rem; /* 36px */
-  --text-titolo-pagina-tracking: -0.03em;
+  --text-titolo-pagina-tracking: -0.02em;
   --text-titolo-pagina-desktop-size: 2.5rem; /* 40px */
   --text-titolo-pagina-desktop-line: 2.75rem; /* 44px */
+  --text-titolo-sezione-size: 1.3125rem; /* 21px */
+  --text-titolo-sezione-line: 1.6875rem; /* 27px */
+  --text-titolo-sezione-tracking: -0.012em;
+  --text-sottotitolo-size: 1.0625rem; /* 17px */
+  --text-sottotitolo-line: 1.5625rem; /* 25px */
+  --text-titolo-barra-size: 1rem; /* 16px: titolo della barra e dei fogli */
+  --text-titolo-barra-line: 1.375rem; /* 22px */
+  --text-tag-size: 0.75rem; /* 12px */
+  --text-tag-line: 1rem; /* 16px */
   --text-titolo-scheda-size: 1.375rem; /* 22px */
   --text-titolo-scheda-line: 1.625rem; /* 26px */
   --text-titolo-scheda-tracking: -0.02em;
@@ -128,11 +185,11 @@
   --text-nota-line: 1.125rem; /* 18px */
   --text-etichetta-size: 0.75rem; /* 12px */
   --text-etichetta-line: 1rem; /* 16px */
-  --text-etichetta-tracking: 0.02em;
+  --text-etichetta-tracking: 0;
   --text-micro-size: 0.6875rem; /* 11px */
   --text-micro-line: 0.875rem; /* 14px */
-  --text-controllo-size: 0.875rem; /* 14px */
-  --text-controllo-line: 1.25rem; /* 20px: testo di bottoni, selettori, righe compatte */
+  --text-controllo-size: 1rem; /* 16px */
+  --text-controllo-line: 1.375rem; /* 22px: testo di bottoni, selettori, righe compatte */
   --text-numero-m-size: 2.25rem; /* 36px */
   --text-numero-m-line: 2.25rem; /* 36px: giorni alle scadenze */
   --text-numero-s-size: 1.875rem; /* 30px */
@@ -165,9 +222,11 @@
   --space-10: 40px;
   --space-12: 48px;
   --space-16: 64px;
+  --space-riga: 13px; /* spazio verticale delle righe */
+  --space-link: 3px; /* distanza della sottolineatura dei collegamenti */
 
   /* ---------- Griglia ---------- */
-  --grid-margine-mobile: 20px;
+  --grid-margine-mobile: 24px;
   --grid-margine-desktop: 40px;
   --grid-colonne-desktop: 12; /* griglia di riferimento per le colonne desktop */
   --grid-gutter: 24px;
@@ -179,19 +238,26 @@
   --radius-s: 8px; /* etichette, chip, voce attiva dei selettori */
   --radius-m: 12px; /* controlli: bottoni, campi, selettori */
   --radius-l: 16px; /* schede */
-  --radius-xl: 24px; /* fogli e modali */
+  --radius-xl: 20px; /* fogli e modali */
+  --radius-pulsante: 14px; /* pulsanti */
+  --radius-capsula: 28px; /* pillole */
   --radius-tondo: 999px; /* avatar, interruttori, pallini */
 
   /* ---------- Bordi ---------- */
   --border-sottile: 1px;
   --border-medio: 1.5px;
   --border-evidenza: 3px; /* filo nero in cima alla scheda in evidenza */
+  --border-link: 1.5px; /* sottolineatura dei collegamenti */
 
   /* ---------- Ombre ed elevazione ---------- */
   --shadow-nessuna: none;
   --shadow-scheda: 0 1px 2px var(--color-ombra);
   --shadow-barra: 0 8px 24px var(--color-ombra);
-  --shadow-foglio: 0 -8px 32px var(--color-ombra);
+  --shadow-foglio: 0 -4px 16px -2px var(--color-ombra-forte);
+  /* prettier-ignore */
+  --shadow-menu: 0 1px 2px var(--color-ombra), 0 8px 20px -6px var(--color-ombra-forte);
+  --shadow-disco: 0 2px 6px -1px var(--color-ombra-forte);
+  --shadow-controllo: 0 1px 3px var(--color-ombra);
   --shadow-modale: 0 30px 80px var(--color-ombra-forte);
   --shadow-adesivo: 0 10px 24px var(--color-ombra-adesivo);
 
@@ -201,9 +267,11 @@
   --size-azione: 52px; /* bottoni principali, campi */
   --size-riga: 56px; /* righe di lista */
   --size-riga-alta: 64px; /* righe evento, righe con due testi */
+  --size-campo: 56px; /* altezza minima dei campi */
   --size-barra: 64px; /* barra di navigazione mobile, bottone Aggiungi */
+  --size-barra-alta: 56px; /* barra in alto delle pagine */
   --size-nav-desktop: 72px; /* barra di navigazione desktop */
-  --size-etichetta: 28px; /* etichette e chip piccoli */
+  --size-etichetta: 24px; /* etichette e chip piccoli */
   --size-chip: 36px; /* chip filtro */
   --size-interruttore-l: 44px;
   --size-interruttore-a: 26px;
@@ -263,6 +331,12 @@
   --durata-normale: 300ms;
   --durata-ampia: 600ms;
   --curva: cubic-bezier(0.32, 0.72, 0, 1);
+  --curva-entrata: cubic-bezier(0.22, 1, 0.36, 1);
+  --curva-scatto: cubic-bezier(0.16, 1, 0.3, 1); /* scatti brevi */
+  --durata-apertura: 420ms; /* aperture della cima di Oggi */
+  --durata-barra: 520ms; /* movimento della barra */
+  --durata-splash-breve: 1400ms; /* splash alle riaperture */
+  --durata-splash-lungo: 2900ms; /* splash alla prima apertura del giorno */
 
   /* ---------- Opacità ---------- */
   --opacity-passato: 0.5;
@@ -292,6 +366,20 @@ html {
   -webkit-text-size-adjust: 100%;
 }
 
+/* Fallback face while Figtree loads: Arial with the metrics of Figtree.
+   Same values as the one Next generates, but with more local names (a CI
+   runner has Liberation Sans, not Arial) and size-adjust 100% (CA-6). */
+@font-face {
+  font-family: "Figtree Fallback";
+  src:
+    local("Arial"), local("ArialMT"), local("Liberation Sans"), local("Arimo"),
+    local("Helvetica");
+  ascent-override: 94.32%;
+  descent-override: 24.82%;
+  line-gap-override: 0%;
+  size-adjust: 100%;
+}
+
 body {
   margin: var(--space-0);
   font-family: var(--font-testo);
@@ -300,6 +388,9 @@ body {
   color: var(--color-inchiostro);
   background: var(--color-carta);
   -webkit-font-smoothing: antialiased;
+  /* Subpixel advances, not rounded to whole pixels: the widths of Figtree 600
+     and 700 stay those of the font (#196, CA-3 and CA-5). */
+  text-rendering: geometricPrecision;
   overflow-wrap: break-word; /* #313 */
   text-align: left;
 }

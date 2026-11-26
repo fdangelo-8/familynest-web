@@ -28,7 +28,8 @@ function rgb(color: string): Rgb {
 }
 
 const WHITE: Rgb = [255, 255, 255];
-const CARTA: Rgb = [241, 242, 238];
+// New «telefono» tokens (#196): carta is white like WHITE, the quiet grey is carta-2.
+const CARTA_2: Rgb = [244, 246, 244];
 
 async function resting(page: Page, selector: string) {
   return page
@@ -47,9 +48,9 @@ test("il bordo dei campi a riposo ha contrasto >= 3:1 su bianco e carta", async 
   const field = await resting(page, "#campo .campo__input");
   expect(field.shadow).toMatch(/inset/);
   const border = rgb(field.shadow);
-  expect(border).toEqual([130, 133, 139]);
+  expect(border).toEqual([127, 144, 146]); // --color-filo-campo #7F9092 (#196)
   const onWhite = contrast(border, WHITE);
-  const onCarta = contrast(border, CARTA);
+  const onCarta = contrast(border, CARTA_2);
   expect(onWhite).toBeGreaterThanOrEqual(3);
   expect(onCarta).toBeGreaterThanOrEqual(3);
   test.info().annotations.push({
@@ -71,8 +72,8 @@ test("giorno fuori mese: grigio leggibile >= 4,5:1", async ({ page }) => {
     return getComputedStyle(num).color;
   });
   const c = rgb(color);
-  expect(c).toEqual([90, 93, 100]);
-  expect(contrast(c, CARTA)).toBeGreaterThanOrEqual(4.5);
+  expect(c).toEqual([85, 104, 108]); // --color-inchiostro-2 #55686C (#196)
+  expect(contrast(c, CARTA_2)).toBeGreaterThanOrEqual(4.5);
   expect(contrast(c, WHITE)).toBeGreaterThanOrEqual(4.5);
 });
 

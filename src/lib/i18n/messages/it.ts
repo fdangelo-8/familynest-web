@@ -11,4 +11,16 @@ export const it = {
   back: "Indietro",
   cancel: "Annulla",
   retry: "Riprova",
+  memberColors: {
+    pomodoro: "Corallo",
+    glicine: "Glicine",
+    salvia: "Menta",
+    cobalto: "Blu",
+    zafferano: "Ambra",
+    lampone: "Sabbia",
+    ceruleo: "Azzurro",
+    peonia: "Rosa",
+    basilico: "Ardesia",
+    cannella: "Cannella",
+  },
 } satisfies MessageTree;
