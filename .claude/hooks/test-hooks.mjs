@@ -276,18 +276,27 @@ const blocked = {
   "tee dopo 2>/dev/null": ["echo x | tee 2>/dev/null src/a.ts"],
   "default di TMPDIR nel repo": ['echo x > "${TMPDIR:-src}/a.ts"'],
   "[[ ]] seguito da redirezione": ["[[ a > b ]] && echo x > src/a.ts"],
-  // [[ and ]] that are not a test command do not hide what follows.
+  // [[ ]] and arithmetic get no exception: strict on purpose (known limit).
+  "confronto in [[ ]]": ["[[ a > b ]] && echo si"],
+  "aritmetica $(( ))": ["echo $((3 > 1))"],
+  "aritmetica (( ))": ["(( 3 > 1 )) && echo si"],
   "[[ come argomento": ["echo [[ && echo x > src/a.ts && echo ]]"],
   "]] attaccato a una parola": ["[[ a ]]x; echo x > src/a.ts ]]"],
   "[[ senza ]] nello stesso comando": ["[[ -n a; echo x > src/a.ts; ]]"],
   "[[ con redirezione in $()": ["[[ $(echo x > src/a.ts) ]]"],
-  // Arithmetic: commands inside still count, non-arithmetic text is not hidden.
   "$() dentro $(( ))": ["echo $(( $(echo x > src/a.ts) + 1 ))"],
+  "$() dentro (( ))": ["(( $(echo x > src/a.ts) ))"],
   "sed -i dentro $(( ))": ["echo $(( $(sed -i s/a/b/ src/x.ts) ))"],
   "(( )) che non è aritmetica": ["((echo x > src/a.ts))"],
-  // Temp variables reassigned or unset in the same command.
+  // A temp variable set or unset in the command, with a file write: blocked.
   "TMPDIR riassegnata": ["TMPDIR=src; echo x > $TMPDIR/a.ts"],
+  "TMPDIR=src prima di ${TMPDIR}": ["TMPDIR=src; echo x > ${TMPDIR}/a.ts"],
+  "export TMPDIR=src": ["export TMPDIR=src && echo x > ${TMPDIR}/a.ts"],
   "TMPDIR esportata": ["export TMPDIR=docs && echo x > ${TMPDIR}/x.md"],
+  "TMPDIR riassegnata alla cartella temporanea": [
+    `TMPDIR=${tmpdir()}; npm test > $TMPDIR/fn-out.log`,
+  ],
+  "TMP cambiata dentro bash -c": [`TMP=src bash -c "echo x > ${tmpFile}"`],
   "TMPDIR tolta, default nel repo": [
     'unset TMPDIR; echo x > "${TMPDIR-src}/a.ts"',
   ],
@@ -322,29 +331,34 @@ const allowed = {
     `S=${tmpdir()} && npx prettier x.ts > $S/x.ts`,
   ],
   "variabile da mktemp": ['out=$(mktemp) && npm test > "$out"'],
-  "aritmetica $(( ))": ["echo $((3 > 1))"],
-  "confronto in [[ ]]": ["[[ a > b ]] && echo si"],
   "${TMPDIR:-/tmp}": ['npm test > "${TMPDIR:-/tmp}/fn-out.log"'],
   "tee con redirezione verso tmp": [`echo x | tee >/dev/null ${tmpFile}`],
 };
 for (const [label, [command, agent]] of Object.entries(allowed))
   expect(label, B, bash(command, agent), false);
-expect("(( )) aritmetica", B, bash("(( 3 > 1 )) && echo si"), false);
-expect(
-  "TMPDIR riassegnata alla cartella temporanea",
-  B,
-  bash(`TMPDIR=${tmpdir()}; npm test > $TMPDIR/fn-out.log`),
-  false,
-);
 
-// ${TMPDIR:-...} with TMPDIR set: the variable wins over the default.
+// ${TMPDIR:-dir}: allowed only when both the environment value and dir are temp folders.
 const withTmp = { TMPDIR: tmpdir() };
 expect(
   "TMPDIR impostata: ${TMPDIR:-src}",
   B,
   bash('echo x > "${TMPDIR:-src}/fn-out.log"'),
-  false,
+  true,
   withTmp,
+);
+expect(
+  "TMPDIR dell'ambiente nel repo",
+  B,
+  bash('echo x > "$TMPDIR/a.ts"'),
+  true,
+  { TMPDIR: path.join(repo, "src") },
+);
+expect(
+  "TMPDIR dell'ambiente nel repo con default temporaneo",
+  B,
+  bash('echo x > "${TMPDIR:-/tmp}/a.ts"'),
+  true,
+  { TMPDIR: path.join(repo, "src") },
 );
 expect(
   "TMPDIR impostata: ${TMPDIR:-/tmp}",

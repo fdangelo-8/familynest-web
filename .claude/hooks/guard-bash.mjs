@@ -200,16 +200,22 @@ const ASSIGN = /(?:^|[\n;&|(]|\bexport|\blocal)\s*([A-Za-z_]\w*)=/g;
 const REDIRECT = /(?<![<>=&\-\d])(?:\d+|&)?(?:>\||>>?)(?![&(>])/g;
 // A redirection operator inside a command's arguments (to skip it with its target).
 const REDIRECT_OP = /^(?:\d+|&)?(?:>\||>>?|<<<|<<-?|<>|<)(&(?=[\d-]))?/;
-// `[[` as a command: inside the test `<` and `>` compare strings, they do not redirect.
-const TEST_START =
-  /(?:^|[\n;&|(]|(?:^|\s)(?:if|elif|while|until|then|do|else|!))\s*\[\[(?=\s)/g;
-const UNSET = new RegExp(
-  String.raw`${AT_CMD}unset((?:\s+-[vf])*(?:\s+[A-Za-z_]\w*)+)`,
-  "g",
-);
 const SHELL_BEFORE =
   /(?:^|[\s;&|(])(?:(?:ba|da|k|z)?sh|eval|su|watch|ssh)\b[^;&|\n]*$/;
 const SIMPLE_WORD = /^[\w./=+:@%,~-]*$/;
+// System temp folders; a temp variable must point inside one of them.
+const TEMP_ROOTS = [
+  "/tmp",
+  "/var/tmp",
+  "/private/tmp",
+  "/var/folders",
+  "/private/var/folders",
+];
+// The command assigns, exports, reads into or unsets a temp variable.
+const TEMP_NAMES = String.raw`(?:TMPDIR|TMP|TEMP|RUNNER_TEMP)`;
+const TEMP_TOUCH = new RegExp(
+  String.raw`\b${TEMP_NAMES}\+?=|\$\{${TEMP_NAMES}:?=|\b(?:unset|export|declare|typeset|readonly|local|read|for|printf\s+-v|mapfile|readarray)\b[^;&|\n]*\b${TEMP_NAMES}\b`,
+);
 // $TMPDIR, ${TMPDIR} and ${TMPDIR:-default} (also with -, := and =).
 const TEMP_VAR =
   /^\$(?:\{(TMPDIR|TMP|TEMP|RUNNER_TEMP)(?:(:?)[-=]([^}]*))?\}|(TMPDIR|TMP|TEMP|RUNNER_TEMP)\b)/;
@@ -225,7 +231,6 @@ function scan(src) {
   let plain = "";
   const strings = [];
   const heredocs = [];
-  const arithmetic = [];
   const pending = [];
   const put = (m, p = m) => {
     masked += m;
@@ -251,21 +256,6 @@ function scan(src) {
         });
         put(h[0]);
         i += h[0].length;
-        continue;
-      }
-    }
-    // Arithmetic, $((a > b)) or ((a > b)): no redirections inside. Only text
-    // that is really arithmetic is masked; its $(...) still run (innerCommands).
-    if (src.startsWith("((", i)) {
-      let depth = 2;
-      let j = i + 2;
-      for (; j < src.length && depth; j++)
-        depth += src[j] === "(" ? 1 : src[j] === ")" ? -1 : 0;
-      if (!depth && isArithmetic(src.slice(i + 2, j - 2))) {
-        const inner = src.slice(i + 2, j - 2);
-        arithmetic.push(inner);
-        put(`((${"\0".repeat(inner.length)}))`, src.slice(i, j));
-        i = j;
         continue;
       }
     }
@@ -314,56 +304,13 @@ function scan(src) {
     put(c);
     i++;
   }
-  return { masked: maskTests(masked), plain, strings, heredocs, arithmetic };
-}
-
-/** True for the body of (( )) that is arithmetic and not commands. */
-function isArithmetic(text) {
-  const bare = text.replace(
-    /\$\((?:[^()]|\([^()]*\))*\)|`[^`]*`|\$\{[^}]*\}/g,
-    "0",
-  );
-  return (
-    /^[\w\s$+\-*/%<>=!&|^~?:,()[\]#]*$/.test(bare) &&
-    !/[A-Za-z_]\w*\s+[A-Za-z_]/.test(bare)
-  );
+  return { masked, plain, strings, heredocs };
 }
 
 /**
- * Masks `<` and `>` of a `[[ ... ]]` test in command position, up to its `]]`
- * in the same simple command, outside $(...). Anything else stays as it is.
+ * Command substitutions ($(...) and backticks) inside a text. $((...)) is
+ * taken too: the check is deliberately strict and looks inside it.
  */
-function maskTests(masked) {
-  const out = masked.split("");
-  for (const m of masked.matchAll(TEST_START)) {
-    const hide = [];
-    let depth = 0;
-    for (let j = m.index + m[0].length; j < masked.length; j++) {
-      const c = masked[j];
-      if (c === "\n" || c === ";") break;
-      if (c === "&" || c === "|") {
-        if (masked[j + 1] !== c) break; // & or | end the command; && and || do not
-        j++;
-        continue;
-      }
-      if (masked.startsWith("$(", j) || c === "`") break; // substitution: keep it all
-      if (c === "(") depth++;
-      if (c === ")" && --depth < 0) break;
-      if (
-        masked.startsWith("]]", j) &&
-        /\s/.test(masked[j - 1]) &&
-        /^($|[\s;&|)])/.test(masked.slice(j + 2, j + 3))
-      ) {
-        for (const k of hide) out[k] = "\0";
-        break;
-      }
-      if ((c === "<" || c === ">") && depth === 0) hide.push(j);
-    }
-  }
-  return out.join("");
-}
-
-/** Command substitutions ($(...) and backticks) inside a text. */
 function substitutions(text) {
   const out = [];
   for (let i = 0; i < text.length; i++) {
@@ -372,7 +319,7 @@ function substitutions(text) {
       if (j < 0) break;
       out.push(text.slice(i + 1, j));
       i = j;
-    } else if (text.startsWith("$(", i) && text[i + 2] !== "(") {
+    } else if (text.startsWith("$(", i)) {
       let depth = 1;
       let j = i + 2;
       for (; j < text.length && depth; j++)
@@ -385,8 +332,8 @@ function substitutions(text) {
 }
 
 /** Quoted or heredoc text that the shell will run as commands. */
-function innerCommands({ strings, heredocs, arithmetic }) {
-  const inner = arithmetic.flatMap(substitutions);
+function innerCommands({ strings, heredocs }) {
+  const inner = [];
   for (const s of strings) {
     if (SHELL_BEFORE.test(s.before)) inner.push(s.text);
     else if (s.double) inner.push(...substitutions(s.text));
@@ -424,20 +371,28 @@ function readWord(s, i) {
   return { word, end: i };
 }
 
+/** True for a path inside a system temp folder (the scratchpad is in /tmp). */
+function isTempDir(p) {
+  if (!p || !path.isAbsolute(p)) return false;
+  const abs = path.resolve(p);
+  return TEMP_ROOTS.some((r) => abs === r || abs.startsWith(`${r}/`));
+}
+
 /** Absolute path of a target, or null when it cannot be known (variables). */
 function resolveTarget(word, cwd, vars = {}) {
   let w = word;
   if (w === "~" || w.startsWith("~/")) w = os.homedir() + w.slice(1);
+  // Temp variables come from the hook's environment (a command that sets
+  // them and writes a file is blocked before this) and must point to a temp
+  // folder; with ${VAR:-dir} the default must be a temp folder as well.
   w = w.replace(TEMP_VAR, (_, name, colon, fallback, bare) => {
-    const key = name || bare;
-    // Assigned, exported or unset in the same command: that wins over the
-    // hook's environment (null = unset). Otherwise the inherited value.
-    const own = Object.hasOwn(vars, key);
-    const value = own ? (vars[key] ?? undefined) : process.env[key];
+    const value = process.env[name || bare];
     if (fallback === undefined) {
-      if (own) return value ?? "$unset";
-      return value || os.tmpdir();
+      const used = value || os.tmpdir();
+      return isTempDir(used) ? used : "$untrusted";
     }
+    if (value && !isTempDir(value)) return "$untrusted";
+    if (!isTempDir(fallback)) return "$untrusted";
     // Without the colon the default applies only when the variable is unset.
     return colon ? value || fallback : (value ?? fallback);
   });
@@ -457,8 +412,12 @@ function isRepoFile(word, cwd, vars) {
   return !!relativeToRepo(abs, cwd).root;
 }
 
-/** First repository file written by a redirection or by tee, if any. */
-function redirectTarget(masked, plain, cwd) {
+/**
+ * First repository file written by a redirection or by tee, if any. With
+ * `tempTouched` (the command sets or unsets a temp variable) every file
+ * written counts, temp folders included.
+ */
+function redirectTarget(masked, plain, cwd, tempTouched) {
   // Variables assigned in the same command (S=/tmp/x, out=$(mktemp)) and cd
   // steps, in order, so that a target is resolved as the shell would.
   const steps = [];
@@ -468,10 +427,6 @@ function redirectTarget(masked, plain, cwd) {
   }
   for (const m of masked.matchAll(CD))
     steps.push({ at: m.index + m[0].length, cd: true });
-  for (const m of masked.matchAll(UNSET)) {
-    const names = m[1].split(/\s+/).filter((n) => n && !n.startsWith("-"));
-    steps.push({ at: m.index + m[0].length, unset: names });
-  }
   steps.sort((a, b) => a.at - b.at);
   const states = [];
   let dir = cwd;
@@ -484,8 +439,6 @@ function redirectTarget(masked, plain, cwd) {
         : word === "-"
           ? null
           : resolveTarget(word, dir, vars);
-    } else if (s.unset) {
-      vars = { ...vars, ...Object.fromEntries(s.unset.map((n) => [n, null])) };
     } else {
       const { word } = readWord(plain, s.at);
       const value = plain.startsWith("$(mktemp", s.at)
@@ -503,6 +456,8 @@ function redirectTarget(masked, plain, cwd) {
     return st;
   };
   const writes = (word, pos) => {
+    if (tempTouched && word && word !== "-" && !word.startsWith("/dev/"))
+      return true;
     const st = stateAt(pos);
     return isRepoFile(word, st.dir, st.vars);
   };
@@ -533,21 +488,28 @@ function redirectTarget(masked, plain, cwd) {
 }
 
 /** Reason to block when the command edits files from the shell, else null. */
-function shellEdit(command, cwd, depth = 0) {
+function shellEdit(command, cwd, tempTouched, depth = 0) {
   const parsed = scan(command);
   if (IN_PLACE.some((re) => re.test(parsed.masked))) return EDIT_ONLY;
-  const target = redirectTarget(parsed.masked, parsed.plain, cwd);
+  const target = redirectTarget(parsed.masked, parsed.plain, cwd, tempTouched);
+  if (target && tempTouched)
+    return `${EDIT_ONLY} Il comando cambia TMPDIR, TMP, TEMP o RUNNER_TEMP e scrive un file (qui: ${target}): scrivi il percorso temporaneo per esteso, senza cambiare quelle variabili.`;
   if (target)
     return `${EDIT_ONLY} Redirezioni e tee verso file del repository sono vietate (qui: ${target}); restano permesse verso la cartella temporanea, lo scratchpad e /dev/null.`;
   if (depth >= 3) return null;
   for (const inner of innerCommands(parsed)) {
-    const reason = shellEdit(inner, cwd, depth + 1);
+    const reason = shellEdit(inner, cwd, tempTouched, depth + 1);
     if (reason) return reason;
   }
   return null;
 }
 
-const shellEditReason = shellEdit(cmd, input.cwd || process.cwd());
+// Decided on the whole command text, nested commands and quotes included.
+const shellEditReason = shellEdit(
+  cmd,
+  input.cwd || process.cwd(),
+  TEMP_TOUCH.test(cmd),
+);
 if (shellEditReason) block(`${shellEditReason}\nComando: ${cmd.slice(0, 300)}`);
 
 // Commits are never made on main.
