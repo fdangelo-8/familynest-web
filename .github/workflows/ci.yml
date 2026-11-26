@@ -62,7 +62,7 @@ jobs:
           fi
           # Current labels, not the ones in the event: a re-run sees a label added later.
           tests=false
-          if gh api "repos/$REPO/pulls/$PR" --jq '.labels[].name' | grep -Eqx 'suite-completa'; then
+          if gh api "repos/$REPO/pulls/$PR" --jq '.labels[].name' | grep -Ecx 'suite-completa' >/dev/null; then
             tests=true
           fi
           echo "tests=$tests" >> "$GITHUB_OUTPUT"
@@ -71,7 +71,8 @@ jobs:
           echo "File modificati:"; cat "$files"
 
           app=false
-          if awk '/^docs\/mockup\// { print; next } /^docs\// || /\.md$/ { next } { print }' "$files" | grep -q .; then
+          # grep -c reads all input: grep -q would exit early, awk would get SIGPIPE (141) and pipefail would fail the test.
+          if awk '/^docs\/mockup\// { print; next } /^docs\// || /\.md$/ { next } { print }' "$files" | grep -c . >/dev/null; then
             app=true
           fi
           visual=false
