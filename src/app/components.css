@@ -1769,11 +1769,12 @@ button.riga-lista {
 .btn-pericolo-pieno {
   min-height: var(--size-azione); /* #313 */
   border: 0;
-  border-radius: var(--radius-m);
+  border-radius: var(--radius-pulsante);
   background: var(--color-allerta);
   color: var(--color-bianco);
-  font-size: var(--text-corpo-forte-size);
-  font-weight: var(--weight-pieno);
+  font-size: var(--text-controllo-size);
+  line-height: var(--text-controllo-line);
+  font-weight: var(--weight-semi);
   padding: var(--space-0) var(--space-5);
   cursor: pointer;
 }
@@ -3816,7 +3817,7 @@ button.riga-lista {
   color: var(--color-inchiostro);
 }
 .tema-notte .avviso :focus-visible {
-  outline-color: var(--color-info);
+  outline-color: var(--color-azione);
 }
 
 /* Link sottolineati dentro la frase legale (#11) */
@@ -4842,7 +4843,7 @@ button.riga-lista {
 /* Anello di focus sulla scheda intera, anche su «Noi due» (sta fuori dalla
    scheda, sulla pagina chiara) */
 .scheda-modulo:has(> .scheda-modulo__link:focus-visible) {
-  outline: var(--border-medio) solid var(--color-info);
+  outline: var(--border-medio) solid var(--color-azione);
   outline-offset: var(--space-half);
 }
 
@@ -6317,6 +6318,26 @@ body {
   }
   .lista .riga-lista--2.riga-lista--cliccabile:active:not(:disabled) {
     background: var(--color-premuto);
+  }
+}
+/* Riga a due livelli su fondo notte: icona e + chiari, fondi scuri anche
+   al passaggio del mouse e al tocco */
+.riga-lista--2.riga-lista--notte .riga-lista__icona,
+.riga-lista--2.riga-lista--notte .riga-lista__freccia {
+  color: var(--color-latte-2);
+}
+.riga-lista--2.riga-lista--notte .riga-lista__piu {
+  border-color: var(--color-latte);
+  color: var(--color-latte);
+}
+.lista .riga-lista--2.riga-lista--notte.riga-lista--cliccabile:active {
+  background: var(--color-notte-2);
+}
+@media (hover: hover) {
+  .lista .riga-lista--2.riga-lista--notte.riga-lista--cliccabile:hover,
+  .lista .riga-lista--2.riga-lista--notte.riga-lista--cliccabile:active {
+    background: var(--color-notte-2);
+    color: var(--color-latte);
   }
 }
 

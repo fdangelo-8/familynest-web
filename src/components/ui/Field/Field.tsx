@@ -266,29 +266,35 @@ type GroupChildProps = {
   children?: ReactNode;
 };
 
-/** First error text among the fields of a group, nested rows included. */
-function firstGroupError(children: ReactNode): string | undefined {
-  let found: string | undefined;
-  Children.forEach(children, (child) => {
-    if (found || !isValidElement<GroupChildProps>(child)) return;
-    if (child.props.error) found = child.props.error;
-    else if (child.props.columns) found = firstGroupError(child.props.children);
-  });
-  return found;
-}
+type GroupError = { id: string; text: string };
 
-/** Hands the box and the id of the error text to the fields of a group. */
-function linkGroupChildren(children: ReactNode, errorId: string): ReactNode {
+/**
+ * Hands the box and an own error id to each field of a group (nested rows
+ * included) and collects the error texts, one per wrong field, in order.
+ */
+function linkGroupChildren(
+  children: ReactNode,
+  prefix: string,
+  errors: GroupError[],
+): ReactNode {
   return Children.map(children, (child) => {
     if (!isValidElement<GroupChildProps>(child)) return child;
-    return child.props.columns
-      ? cloneElement(child as ReactElement<{ groupErrorId?: string }>, {
-          groupErrorId: errorId,
-        })
-      : cloneElement(
-          child as ReactElement<{ grouped?: boolean; groupErrorId?: string }>,
-          { grouped: true, groupErrorId: errorId },
-        );
+    if (child.props.columns) {
+      return cloneElement(
+        child as ReactElement<{ groupErrorId?: string; children?: ReactNode }>,
+        {
+          groupErrorId: prefix,
+          children: linkGroupChildren(child.props.children, prefix, errors),
+        },
+      );
+    }
+    const id = `${prefix}-${errors.length}`;
+    if (child.props.error) errors.push({ id, text: child.props.error });
+    else errors.push({ id, text: "" });
+    return cloneElement(
+      child as ReactElement<{ grouped?: boolean; groupErrorId?: string }>,
+      { grouped: true, groupErrorId: id },
+    );
   });
 }
 
@@ -316,25 +322,24 @@ export function FieldGroup({
 }) {
   const generated = useId();
   if (groupErrorId !== undefined) {
-    return (
-      <div className="campo-unito__colonne">
-        {linkGroupChildren(children, groupErrorId)}
-      </div>
-    );
+    // Row of an outer group: the outer group already linked the fields.
+    return <div className="campo-unito__colonne">{children}</div>;
   }
-  const errorId = `${generated}-errore`;
-  const error = firstGroupError(children);
+  const errors: GroupError[] = [];
+  const linked = linkGroupChildren(children, `${generated}-errore`, errors);
   return (
     <div className={cx("campo-gruppo", className)}>
       <div className={cx("campo-unito", columns && "campo-unito--colonne")}>
-        {linkGroupChildren(children, errorId)}
+        {linked}
       </div>
-      {error ? (
-        <p className="campo__errore" id={errorId}>
-          <Icon name="circle-alert" size="s" />
-          {error}
-        </p>
-      ) : null}
+      {errors
+        .filter((e) => e.text)
+        .map((e) => (
+          <p className="campo__errore" id={e.id} key={e.id}>
+            <Icon name="circle-alert" size="s" />
+            {e.text}
+          </p>
+        ))}
     </div>
   );
 }

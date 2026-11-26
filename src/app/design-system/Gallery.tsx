@@ -634,11 +634,36 @@ function BaseComponentsSection() {
   );
 }
 
+// CA-13 (#503): view with the offline notice at the top and more than 800 px of
+// content under it, to try the notice while the page scrolls. Shown only with
+// ?avviso-offline=1.
+function OfflineNoticeView() {
+  return (
+    <main className={styles.pagina}>
+      <Alert variant="offline" data-testid="base-avviso-offline-alto">
+        Vedi le cose aggiornate alle 19:05; le modifiche partiranno appena torna
+        la connessione.
+      </Alert>
+      <h1 className="t-titolo-pagina">Design system</h1>
+      <div data-testid="base-avviso-offline-contenuto">
+        {Array.from({ length: 40 }, (_, i) => (
+          <p className="t-corpo" key={i}>
+            Riga di prova {i + 1}: il contenuto continua sotto l&apos;avviso per
+            provare lo scorrimento della pagina.
+          </p>
+        ))}
+      </div>
+    </main>
+  );
+}
+
 export function Gallery() {
   const rowCards = useQueryFlag("righe-scheda");
   const pageParts = useQueryFlag("pezzi-pagine");
   const passwordField = useQueryFlag("campo-password");
   const splitUnico = useQueryFlag("split-unico");
+  const offlineView = useQueryFlag("avviso-offline");
+  if (offlineView) return <OfflineNoticeView />;
   return (
     <main className={styles.pagina}>
       <h1 className="t-titolo-pagina">Design system</h1>
