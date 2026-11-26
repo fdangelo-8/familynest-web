@@ -110,3 +110,10 @@ Se il browser non ha il permesso, lo dice in cima e offre di accenderlo: il perm
 Vuoto
 
 Una frase, niente azione.
+
+## Tavole sostituite dai Passi 12–16
+
+La versione più recente ha preso il posto di queste tavole (26/11/2026); la vecchia resta nella storia git. La nota qui sopra resta valida dove la tavola nuova non dice altro.
+
+- `02-un-invito-in-attesa.png` → `docs/design/computer/accesso-profilo-impostazioni-p12-16/02-il-tuo-nest-l-invito-in-attesa-chiaro.png`
+- `01-il-tuo-nest.png` → `docs/design/computer/accesso-profilo-impostazioni-p12-16/12-il-tuo-nest-chiaro.png`

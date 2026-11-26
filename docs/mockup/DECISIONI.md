@@ -53,7 +53,7 @@ Queste decisioni prevalgono sul mockup dove lo contraddicono. Analista, designer
 
 - Francesco ha approvato il 25/11/2026 i Passi 10 e 11 del secondo canvas di Fable: computer (1280 e 1440 px, finestra stretta 1040 px), web da telefono (390 px) e pagine senza account. Sono in `docs/design/computer/` e sono la fonte di verità per quelle disposizioni, come D4 per il telefono. Le decisioni D1, D2, D3 e D4 restano valide e vincono sul design.
 - Vale il passo più recente (11 > 10). Le regole di adattamento sono in `docs/design/computer/regole.md`, le risposte 170–183 in `docs/design/computer/decisioni.md`.
-- **Correzioni attese nel Passo 12** (chiesto a Fable il 25/11): barrette degli impegni con contrasto almeno 3:1 sul fondo, risposte 177–183 da applicare e le pagine che mancano su computer (Spazi, Contatti, Documenti, Conti, Luoghi, Novità, Proposte, Sfondi, lista dei desideri nell'app, aiutanti, settimana tipo, sintesi del mattino, Turni). Elenco completo in `docs/design/computer/LEGGIMI.md`. Fino ad allora valgono le correzioni scritte lì, non le tavole; per le pagine non disegnate si adatta il telefono con `regole.md`.
+- **Correzioni attese nel Passo 12** (chiesto a Fable il 25/11; arrivate con i Passi 12–16, vedi D7): barrette degli impegni con contrasto almeno 3:1 sul fondo, risposte 177–183 da applicare e le pagine che mancano su computer (Spazi, Contatti, Documenti, Conti, Luoghi, Novità, Proposte, Sfondi, lista dei desideri nell'app, aiutanti, settimana tipo, sintesi del mattino, Turni). Elenco completo in `docs/design/computer/LEGGIMI.md`. Fino ad allora valgono le correzioni scritte lì, non le tavole; per le pagine non disegnate si adatta il telefono con `regole.md`.
 - Colore ardesia dei membri: **`#68778D`** al posto di `#6B7A90` (iniziale bianca 4,55:1), decisione di Francesco del 25/11/2026.
 
 ## D6 · App negli store: strada A (25/11/2026)
@@ -63,6 +63,13 @@ Queste decisioni prevalgono sul mockup dove lo contraddicono. Analista, designer
 - In via intermedia si riscrivono in nativo una o due schermate, solo se i dati della beta lo chiedono.
 - Regole per gli agenti: `docs/agenti/ARCHITETTURA.md`, sezione «App negli store». Il documento di analisi è `docs/agenti/proposte/app-store-a-vs-b.md`.
 
+## D7 · Design dei Passi 12–16 approvato, tema scuro al lancio (26/11/2026)
+
+- Francesco ha approvato i Passi 12–16 del secondo canvas di Fable per telefono, web da telefono e computer. Sono la fonte di verità insieme a D4 e D5 e, dove sono diversi, vincono sulle tavole dei passi precedenti (vale il passo più recente: 16 > 15 > 14 > 13 > 12). Tavole nelle cartelle `docs/design/computer/*-p12-16/` e `docs/design/telefono/*-p12-16/`, guida in `docs/design/passi-12-16/LEGGIMI.md`. Le decisioni D1–D6 restano valide e vincono sul design.
+- **Il tema scuro c'è al lancio**, su telefono, web da telefono e computer. Segue il sistema; in Impostazioni › Aspetto la scelta «Chiaro / Scuro / Come il sistema» vince sul sistema. I colori sono la tavolozza comune di `docs/design/tavolozza.md` (73 ruoli, chiaro e scuro); le regole in `docs/design/passi-12-16/regole-tema-scuro.md`. Le 103 tavole in `scuro-derivato/` non sono approvate una per una: vale la tavolozza.
+- **Taglia e numero di scarpe tolti dalla lista dei desideri aperta da link.** Chi apre la lista da un link non vede né la taglia («Taglia 134») né il numero di scarpe («N. 33»); dentro l'app, per i genitori, restano. Il numero di scarpe non è ancora nelle tavole (arriva con il Passo 17): si applica già ora. Completa D2.
+- Domande 177–211 con le risposte di Francesco: `docs/design/passi-12-16/decisioni.md`.
+
 ## Decisioni aperte del mockup
 
-Restano aperte come scritte in `design-system.md` §14. Finché non vengono decise **non si sviluppano**: accesso premium, tema scuro completo, contenuti degli spazi di Esplora oltre a ingresso e pagina "In arrivo", "Proponi qualcosa", Citofona, sintesi della domenica, taglie nella lista pubblica, tablet dedicato. Per l'apertura del profilo figlio dal calendario e la tendina notifiche su desktop si segue il mockup così com'è.
+Restano aperte come scritte in `design-system.md` §14. Finché non vengono decise **non si sviluppano**: accesso premium, contenuti degli spazi di Esplora oltre a ingresso e pagina "In arrivo", "Proponi qualcosa", Citofona, sintesi della domenica, tablet dedicato. Tema scuro e taglie nella lista pubblica sono decisi in D7. Per l'apertura del profilo figlio dal calendario e la tendina notifiche su desktop si segue il mockup così com'è.
