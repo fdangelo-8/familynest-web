@@ -72,7 +72,7 @@ test.describe("marchio", () => {
   test("CA-8: l'esempio «Il nome» della galleria mostra marchio, «Entra in FamilyNest», «Chiedi a Nest» e «Energia di Nest»", async ({
     page,
   }) => {
-    await page.goto("/design-system");
+    await page.goto("/design-system?pezzi-pagine=1");
     const example = page.getByTestId("il-nome");
     await expect(example.getByRole("img", { name: BRAND.full })).toBeVisible();
     await expect(example.getByText("Entra in FamilyNest")).toBeVisible();
@@ -207,7 +207,11 @@ test.describe("errori, isolamento, accessibilità", () => {
     await expect(main).not.toContainText("Laura");
   });
 
-  for (const path of ["/accesso", "/onboarding", "/design-system"]) {
+  for (const path of [
+    "/accesso",
+    "/onboarding",
+    "/design-system?pezzi-pagine=1",
+  ]) {
     test(`CA-17: ${path} senza violazioni serious o critical e senza label-content-name-mismatch`, async ({
       page,
       baseURL,
@@ -217,7 +221,12 @@ test.describe("errori, isolamento, accessibilità", () => {
         await signInAs(page.context(), baseURL as string, "C");
       }
       await page.goto(path);
-      await expect(visibleMark(page).first()).toBeVisible();
+      await expect(
+        page
+          .getByRole("heading", { level: 1 })
+          .filter({ visible: true })
+          .first(),
+      ).toBeVisible();
       const results = await new AxeBuilder({ page }).analyze();
       expect(
         results.violations.filter((v) =>
