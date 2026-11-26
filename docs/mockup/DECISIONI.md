@@ -70,6 +70,19 @@ Queste decisioni prevalgono sul mockup dove lo contraddicono. Analista, designer
 - **Taglia e numero di scarpe tolti dalla lista dei desideri aperta da link.** Chi apre la lista da un link non vede né la taglia («Taglia 134») né il numero di scarpe («N. 33»); dentro l'app, per i genitori, restano. Il numero di scarpe non è ancora nelle tavole (arriva con il Passo 17): si applica già ora. Completa D2.
 - Domande 177–211 con le risposte di Francesco: `docs/design/passi-12-16/decisioni.md`.
 
+## D8 · Design del Passo 17 approvato: tablet e regole finali (26/11/2026)
+
+- Francesco ha approvato il Passo 17 di Fable, l'ultimo passo di design: **il design è completo su telefono, web da telefono, computer e tablet**. Le tavole del tablet (Passi 16 e 17, chiaro e scuro, verticale e orizzontale) sono in `docs/design/tablet/`, con la guida `docs/design/tablet/LEGGIMI.md`; le tavole di telefono e computer corrette nel Passo 17 sono nelle cartelle `*-p12-16/` con il prefisso `p17-`. Vale il passo più recente (17 > 16 > …). Le decisioni D1–D7 restano valide e vincono sul design.
+- **Tablet** (supera «Dopo il lancio: tablet» di D4 per il design; il calendario dei rilasci resta da decidere): il tablet non ha pagine sue, conta la finestra. Sotto 900 px di larghezza le pagine del telefono (in verticale liste e moduli in una colonna di 640 px, fogli dal basso, mese a griglia con i titoli, scena di Oggi larga); da 900 px quelle del computer con la barra a icone; col tocco ogni comando ha un'area di almeno 44 px.
+- **Soglie uniche per tutta l'app (214):** 900 e 1280 px di larghezza; sotto i 600 px di altezza sempre la forma del telefono, anche per il telefono girato in orizzontale (213, senza tavola dedicata). I valori 1100 e 760 px di `docs/design/computer/regole.md` sono superati.
+- **Lista dei desideri dal link (212, completa D2 e D7):** taglia e numero di scarpe stanno in un campo a parte «Solo per noi», che la pagina aperta da link non mostra mai; il resto della nota si vede. I prezzi dal link si vedono come «circa», uguali su tutti i formati.
+- **Errori delle tavole del computer da non copiare:** nel calendario un'ora è alta 45 px e le righe cadono sulle ore (215; la tavola le ha ogni 40 px); in Casa · Spesa il campo «Aggiungi alla spesa» è alto 48 px (216; la tavola lo mostra a 20).
+- **Aree di tocco (217):** su tutti i formati nessun comando ha un'area di tocco sotto i 44 px; si allarga l'area senza cambiare il disegno, e i test automatici lo verificano.
+- **Mese sul tablet (218):** col dito si tocca la cella e si apre l'elenco del giorno; con mouse o trackpad come sul computer.
+- **Icona del piatto (219):** si tiene, ridisegnata nello stile della serie (stesso tratto, stessa misura); se non si riesce, forchetta e coltello della serie. L'icona è una sola dappertutto.
+- **Colori:** al buio la barretta di Tommaso è #4E7BE2 (`--c-tommaso-barra`); due ruoli nuovi per le icone dei Piani, `--c-piano-icona-1` (#FFFFFF / #10262A) e `--c-piano-icona-2` (#BFE5E1 / #0E5A66).
+- Domande 212–219 con le risposte e le regole per chi sviluppa: `docs/design/tablet/decisioni.md`.
+
 ## Decisioni aperte del mockup
 
-Restano aperte come scritte in `design-system.md` §14. Finché non vengono decise **non si sviluppano**: accesso premium, contenuti degli spazi di Esplora oltre a ingresso e pagina "In arrivo", "Proponi qualcosa", Citofona, sintesi della domenica, tablet dedicato. Tema scuro e taglie nella lista pubblica sono decisi in D7. Per l'apertura del profilo figlio dal calendario e la tendina notifiche su desktop si segue il mockup così com'è.
+Restano aperte come scritte in `design-system.md` §14. Finché non vengono decise **non si sviluppano**: accesso premium, contenuti degli spazi di Esplora oltre a ingresso e pagina "In arrivo", "Proponi qualcosa", Citofona, sintesi della domenica, tablet dedicato. Tema scuro e taglie nella lista pubblica sono decisi in D7; il tablet come adattamento delle pagine di telefono e computer, senza pagine sue, è deciso in D8. Per l'apertura del profilo figlio dal calendario e la tendina notifiche su desktop si segue il mockup così com'è.

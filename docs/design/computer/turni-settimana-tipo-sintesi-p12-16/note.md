@@ -259,3 +259,22 @@ Ruolo dell'errore
 Era un rosso scritto a mano (#B4432F, 3,3 a 1 al buio). Ora è il ruolo dell'errore: #B3261E in chiaro (6,5 a 1), #FF9D90 al buio (7,6 a 1).
 
 Con lui ho portato nei ruoli altri 29 colori scritti in linea negli schermi di esempio del computer (testi, fondi, il pulsante dell'assistente, il segnaposto delle foto).
+
+---
+
+# Correzioni del Passo 17
+
+Aggiunte il 26/11/2026 dal passaggio del Passo 17 (`docs/design/tablet/LEGGIMI.md`). Fonte: pagina «Passo 17 · Correzioni piccole» (`project/D-CZ1.dc.html`) del secondo canvas, versione 1795711570-0525.
+
+## p17-01 · Chi porta, chi riprende · computer
+
+computer, 1280 × 800 px · Passo 17 · sezione «1 · «Nessuno, per ora» e i Piani»
+
+- `p17-01-chi-porta-chi-riprende-chiaro.png`: chiaro, dal canvas
+- Corregge «Nessuno, per ora» in tutte le tavole della settimana dei viaggi qui sopra (07–10, 14): al buio valgono i colori di `14-1-viaggio-scoperto-scuro.png` con «Nessuno, per ora» nel testo secondario.
+
+**Nota di Fable**
+
+«Nessuno, per ora»
+
+Giovedì alle 19:00 il viaggio scoperto è scritto con il testo secondario, come sul telefono e in «Chi si occupa di cosa». Che manchi qualcuno lo dice «1 viaggio scoperto», in alto, con il ruolo dell'errore.

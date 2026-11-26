@@ -141,4 +141,4 @@ Le vostre ricette restano; il catalogo e le raccolte tornano con la connessione.
 
 La versione più recente ha preso il posto di queste tavole (26/11/2026); la vecchia resta nella storia git. La nota qui sopra resta valida dove la tavola nuova non dice altro.
 
-- `08-pasti-la-settimana.png` → `docs/design/computer/ricette-pasti-riepilogo-chiedi-p12-16/08-pasti-chiaro.png`
+- `08-pasti-la-settimana.png` → `docs/design/computer/ricette-pasti-riepilogo-chiedi-p12-16/p17-01-pasti-chiaro.png` (Passo 17, segnaposto sabbia con il piatto)

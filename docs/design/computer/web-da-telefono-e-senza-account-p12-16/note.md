@@ -34,8 +34,7 @@ Una tavola di prova ciascuna, su computer.
 
 computer, 1280 × 800 px · Passo 16 · pagina «Passo 16 · Correzioni» (`project/D-CU1.dc.html`), sezione «3 · La lista dei desideri dal link, senza taglia; un solo segnaposto»
 
-- `05-la-lista-dal-link-chiaro.png`: chiaro, dal canvas
-- `05-la-lista-dal-link-scuro.png`: scuro, dal canvas: Passo 14, «Lista dei desideri, dal link» (`project/D-SC2.dc.html`)
+- ~~`05-la-lista-dal-link-chiaro.png`~~ e ~~`05-la-lista-dal-link-scuro.png`~~: tolte il 26/11/2026 perché mostravano ancora «N. 33»; sostituite da `p17-01-la-lista-dal-link-chiaro.png` e `scuro-derivato/p17-01-la-lista-dal-link-scuro.png`. Restano nella storia git
 
 **Nota di Fable**
 
@@ -48,3 +47,27 @@ Nella lista che si apre da un link, fuori casa, «Body da danza rosa» dice solo
 Senza account
 
 Anche le pagine aperte da un link seguono il sistema di chi le apre. Le email invece restano chiare.
+
+---
+
+# Correzioni del Passo 17
+
+Aggiunte il 26/11/2026 dal passaggio del Passo 17 (`docs/design/tablet/LEGGIMI.md`). Fonte: pagina «Passo 17 · Correzioni piccole» (`project/D-CZ1.dc.html`) del secondo canvas, versione 1795711570-0525, sezione «3 · La lista dei desideri dal link, senza numero di scarpe».
+
+## p17-01 · La lista dal link · computer
+
+computer, 1280 × 800 px · Passo 17
+
+- `p17-01-la-lista-dal-link-chiaro.png`: chiaro, dal canvas
+- `scuro-derivato/p17-01-la-lista-dal-link-scuro.png`: scuro **ottenuto da me** applicando la tavolozza scura (classe `th-d`) alla tavola chiara: il canvas non ha questa tavola al buio
+- Sostituisce: `05-la-lista-dal-link-chiaro.png` e `-scuro.png` (Passo 16 e 14)
+
+**Nota di Fable**
+
+Senza numero
+
+«Pattini a rotelle» ora dice solo «Regolabili»: «N. 33» è tolto, come la taglia nel Passo 16. Dentro l'app, per i genitori, la nota resta intera.
+
+La regola che propongo: taglia e numero stanno in un campo a parte, «Solo per noi», che la pagina dal link non mostra mai. Domanda 212.
+
+**Decisione (risposta 212):** sì, il campo «Solo per noi», mai mostrato dalla pagina aperta da link; il resto della nota si vede. I prezzi dal link si vedono come «circa» («circa 45 €»), uguali su tutti i formati: vale anche se questa tavola non li mostra. Superata la nota del Passo 11 (`docs/design/computer/pagine-senza-account/`) secondo cui la taglia «134» si vede.
