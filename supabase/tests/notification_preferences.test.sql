@@ -24,13 +24,17 @@ select ok(
 select columns_are(
   'public', 'notification_preferences',
   array['id', 'household_id', 'member_id', 'events', 'assigned_todos', 'shopping',
-        'free_together', 'morning_digest', 'created_at', 'updated_at'],
-  'notification_preferences has exactly the planned columns (five choices, nothing personal)'
+        'free_together', 'morning_digest', 'created_at', 'updated_at',
+        -- #511 part 1: how the phone rings.
+        'delivery_mode', 'evening_digest_time', 'quiet_hours', 'hide_content'],
+  'notification_preferences has exactly the planned columns (choices only, nothing personal)'
 );
 select enum_has_labels(
   'public', 'notification_preference',
-  array['events', 'assigned_todos', 'shopping', 'free_together', 'morning_digest'],
-  'the five kinds of notification, in the order of the page'
+  array['events', 'assigned_todos', 'shopping', 'free_together', 'morning_digest',
+        -- #511 part 1
+        'quiet_hours', 'hide_content'],
+  'the switches of the page, in order (five of #217, then the two of #511)'
 );
 select col_default_is('public', 'notification_preferences', 'events', 'true', '«Impegni e cambi d''orario» on by default');
 select col_default_is('public', 'notification_preferences', 'assigned_todos', 'true', '«Da fare assegnati a me» on by default');
