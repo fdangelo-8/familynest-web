@@ -55,7 +55,8 @@ jobs:
 
           # db/* branches may only touch the database area and docs.
           if [[ "$BRANCH" == db/* ]]; then
-            if grep -Ev '^(supabase/|src/types/database\.ts$|docs/)' files.txt | grep -q .; then
+            # grep -c reads all input: grep -q would exit early, the first grep would get SIGPIPE (141) and pipefail would fail the test.
+            if grep -Ev '^(supabase/|src/types/database\.ts$|docs/)' files.txt | grep -c . >/dev/null; then
               errors+=("Un branch db/* può modificare solo supabase/, src/types/database.ts e docs/.")
             fi
           fi
@@ -80,7 +81,7 @@ jobs:
           # Every work pull request must close its issue.
           case "$BRANCH" in
             feat/*|shared/*|fix/*|db/*)
-              if ! printf '%s' "$BODY" | grep -Eiq '(close[sd]?|fix(e[sd])?|resolve[sd]?) #[0-9]+'; then
+              if ! printf '%s' "$BODY" | grep -Eic '(close[sd]?|fix(e[sd])?|resolve[sd]?) #[0-9]+' >/dev/null; then
                 errors+=("La descrizione deve contenere 'Closes #<numero issue>'.")
               fi ;;
           esac
