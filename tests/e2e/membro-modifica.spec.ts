@@ -413,7 +413,9 @@ test.describe("salvataggio con modifiche", () => {
       await expect(removeButton(page, "Laura")).toHaveCount(0);
       const saved = toast(page, SAVED);
       await expect(saved).toBeVisible();
-      await expect(saved.locator("svg")).toHaveCount(1);
+      // #503 (F4a), CA-16 e domanda 7: nessuna icona nel messaggio se la
+      // pagina non la passa (prima c'era la spunta).
+      await expect(saved.locator("svg")).toHaveCount(0);
       await expect(
         saved.getByRole("button", { name: "Annulla", exact: true }),
       ).toBeVisible();

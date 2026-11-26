@@ -61,6 +61,25 @@
   border-radius: var(--radius-l);
 }
 
+/* #503: freccia a sinistra, azione a destra; piede con «Annulla» e «Salva» */
+.barraFreccia,
+.piede {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+/* #503: riquadro scuro al posto di una foto, sotto la freccia nel disco */
+.mediaSegnaposto {
+  display: flex;
+  align-items: flex-start;
+  min-height: var(--size-scelta);
+  padding: var(--space-2);
+  border-radius: var(--radius-l);
+  background: var(--color-notte);
+}
+
 .contatore {
   font-size: var(--text-nota-size);
   line-height: var(--text-nota-line);

@@ -117,7 +117,9 @@ test.describe("eliminare", () => {
     const toast = toastOf(page, textRx("Eliminato: Cena da Marta."));
     await expect(toast).toBeVisible();
     await expect(toast.locator("b")).toHaveText("Cena da Marta");
-    await expect(toast.locator("svg").first()).toBeVisible();
+    // #503 (F4a), CA-16 e domanda 7: il messaggio non ha icona se la pagina
+    // non ne passa una (prima mostrava la spunta).
+    await expect(toast.locator("svg")).toHaveCount(0);
     await expect(toast.getByRole("button")).toHaveCount(0);
     // It leaves by itself after 5 seconds.
     await expect(toast).toBeHidden({ timeout: 15_000 });

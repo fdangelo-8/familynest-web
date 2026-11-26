@@ -91,3 +91,10 @@ L'avviso in cima, con l'ora dell'ultimo aggiornamento. Si può spuntare: parte q
 Errore
 
 La barra laterale resta: da lì si torna dove si vuole. Al centro la frase e «Riprova».
+
+## Tavole sostituite dai Passi 12–16
+
+La versione più recente ha preso il posto di queste tavole (26/11/2026); la vecchia resta nella storia git. La nota qui sopra resta valida dove la tavola nuova non dice altro.
+
+- `01-animali-biscotto.png` → `docs/design/computer/casa-e-animali-p12-16/01-animali-chiamare-dal-chiaro.png`
+- `03-una-scadenza-con-fatta.png` → `docs/design/computer/casa-e-animali-p12-16/02-la-prossima-da-confermare-chiaro.png`

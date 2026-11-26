@@ -1,5 +1,6 @@
 "use client";
 
+import { it } from "@/lib/i18n/messages/it";
 import { cx } from "../cx";
 import { Button } from "../Button/Button";
 import { Icon, type IconName } from "../Icon/Icon";
@@ -7,7 +8,7 @@ import { Icon, type IconName } from "../Icon/Icon";
 type PageErrorBase = {
   title?: string;
   text?: string;
-  /** Icon in the circle (default `wifi-off`) */
+  /** Bare icon over the title (default `wifi-off`) */
   icon?: IconName;
   /** Heading level of the title: 1 when the error replaces the whole page, 2 (default) when the page already has an h1 */
   headingLevel?: 1 | 2;
@@ -50,28 +51,17 @@ export function PageError({
       data-testid={testId}
     >
       <span className="errore-pagina__icona">
-        <Icon name={icon} />
+        <Icon name={icon} size="l" />
       </span>
       <Heading className="errore-pagina__titolo">{title}</Heading>
       <p className="errore-pagina__testo">{text}</p>
       {action ? (
-        <Button
-          variant="secondary"
-          small
-          icon={action.icon ?? "rotate-cw"}
-          href={action.href}
-        >
+        <Button variant="secondary" icon={action.icon} href={action.href}>
           {action.label}
         </Button>
       ) : (
-        <Button
-          variant="secondary"
-          small
-          icon="rotate-cw"
-          loading={retrying}
-          onClick={onRetry}
-        >
-          Riprova
+        <Button variant="secondary" loading={retrying} onClick={onRetry}>
+          {it.retry}
         </Button>
       )}
       {exit ? (

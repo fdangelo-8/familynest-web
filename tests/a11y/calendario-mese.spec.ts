@@ -308,7 +308,9 @@ test.describe("tastiera", () => {
       const ring = await found!.evaluate((el) => {
         const s = getComputedStyle(el);
         const probe = document.createElement("span");
-        probe.style.color = "var(--color-info)";
+        // #503 (F4a), requisito 8 e CA-25: l'anello di fuoco globale passa da
+        // --color-info a --color-azione.
+        probe.style.color = "var(--color-azione)";
         document.body.appendChild(probe);
         const info = getComputedStyle(probe).color;
         probe.remove();

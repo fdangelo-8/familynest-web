@@ -153,9 +153,10 @@ test.describe("galleria: esempi nuovi", () => {
         color: s.outlineColor,
       };
     });
-    const info = await page.evaluate(() => {
+    // F4a (#503): the focus ring is --color-azione, no longer --color-info.
+    const azione = await page.evaluate(() => {
       const probe = document.createElement("i");
-      probe.style.backgroundColor = "var(--color-info)";
+      probe.style.backgroundColor = "var(--color-azione)";
       document.body.append(probe);
       const c = getComputedStyle(probe).backgroundColor;
       probe.remove();
@@ -165,7 +166,7 @@ test.describe("galleria: esempi nuovi", () => {
     // --border-medio is 1.5px; Chromium snaps outline widths to whole pixels.
     expect(parseFloat(ring.width)).toBeGreaterThanOrEqual(1);
     expect(ring.offset).toBe("2px");
-    expect(ring.color).toBe(info);
+    expect(ring.color).toBe(azione);
   });
 
   test("#40 P1: il numero dei chip non scelti è a piena opacità", async ({

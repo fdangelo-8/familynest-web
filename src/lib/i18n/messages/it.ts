@@ -11,6 +11,10 @@ export const it = {
   back: "Indietro",
   cancel: "Annulla",
   retry: "Riprova",
+  // Basic components (#503)
+  edit: "Modifica",
+  showPassword: "Mostra la password",
+  offlineLead: "Sei offline.",
   // Product name (#502): `{app}` is the name, `{nest}` is the home. The two
   // articles of «Il tuo {nest}» change here when the final name arrives.
   brand: {

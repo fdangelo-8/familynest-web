@@ -423,7 +423,7 @@ body {
 }
 
 :focus-visible {
-  outline: var(--border-medio) solid var(--color-info);
+  outline: var(--border-medio) solid var(--color-azione);
   outline-offset: var(--space-half);
 }
 
