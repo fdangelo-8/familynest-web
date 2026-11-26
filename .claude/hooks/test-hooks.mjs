@@ -21,18 +21,19 @@ const on = (b) => g("switch", "-q", "-C", b);
 
 let fail = 0,
   n = 0;
-function run(hook, input) {
+function run(hook, input, env) {
   const r = spawnSync("node", [path.join(here, hook)], {
     input: JSON.stringify({ cwd: repo, ...input }),
     encoding: "utf8",
-    // Empty TMPDIR, so that ${TMPDIR:-default} takes the default in every environment.
-    env: { ...process.env, TMPDIR: "" },
+    // Empty TMPDIR by default, so that ${TMPDIR:-default} takes the default in
+    // every environment; `env` sets it for the cases that need it.
+    env: { ...process.env, TMPDIR: "", ...env },
   });
   return r.status;
 }
-function expect(label, hook, input, blocked) {
+function expect(label, hook, input, blocked, env) {
   n++;
-  const status = run(hook, input);
+  const status = run(hook, input, env);
   const ok = blocked ? status === 2 : status === 0;
   if (!ok) {
     fail++;
@@ -275,6 +276,24 @@ const blocked = {
   "tee dopo 2>/dev/null": ["echo x | tee 2>/dev/null src/a.ts"],
   "default di TMPDIR nel repo": ['echo x > "${TMPDIR:-src}/a.ts"'],
   "[[ ]] seguito da redirezione": ["[[ a > b ]] && echo x > src/a.ts"],
+  // [[ and ]] that are not a test command do not hide what follows.
+  "[[ come argomento": ["echo [[ && echo x > src/a.ts && echo ]]"],
+  "]] attaccato a una parola": ["[[ a ]]x; echo x > src/a.ts ]]"],
+  "[[ senza ]] nello stesso comando": ["[[ -n a; echo x > src/a.ts; ]]"],
+  "[[ con redirezione in $()": ["[[ $(echo x > src/a.ts) ]]"],
+  // Arithmetic: commands inside still count, non-arithmetic text is not hidden.
+  "$() dentro $(( ))": ["echo $(( $(echo x > src/a.ts) + 1 ))"],
+  "sed -i dentro $(( ))": ["echo $(( $(sed -i s/a/b/ src/x.ts) ))"],
+  "(( )) che non è aritmetica": ["((echo x > src/a.ts))"],
+  // Temp variables reassigned or unset in the same command.
+  "TMPDIR riassegnata": ["TMPDIR=src; echo x > $TMPDIR/a.ts"],
+  "TMPDIR esportata": ["export TMPDIR=docs && echo x > ${TMPDIR}/x.md"],
+  "TMPDIR tolta, default nel repo": [
+    'unset TMPDIR; echo x > "${TMPDIR-src}/a.ts"',
+  ],
+  "TMPDIR vuota, default nel repo": [
+    'TMPDIR= ; echo x > "${TMPDIR:-src}/a.ts"',
+  ],
 };
 for (const [label, [command, agent]] of Object.entries(blocked))
   expect(label, B, bash(command, agent), true);
@@ -310,6 +329,37 @@ const allowed = {
 };
 for (const [label, [command, agent]] of Object.entries(allowed))
   expect(label, B, bash(command, agent), false);
+expect("(( )) aritmetica", B, bash("(( 3 > 1 )) && echo si"), false);
+expect(
+  "TMPDIR riassegnata alla cartella temporanea",
+  B,
+  bash(`TMPDIR=${tmpdir()}; npm test > $TMPDIR/fn-out.log`),
+  false,
+);
+
+// ${TMPDIR:-...} with TMPDIR set: the variable wins over the default.
+const withTmp = { TMPDIR: tmpdir() };
+expect(
+  "TMPDIR impostata: ${TMPDIR:-src}",
+  B,
+  bash('echo x > "${TMPDIR:-src}/fn-out.log"'),
+  false,
+  withTmp,
+);
+expect(
+  "TMPDIR impostata: ${TMPDIR:-/tmp}",
+  B,
+  bash('npm test > "${TMPDIR:-/tmp}/fn-out.log"'),
+  false,
+  withTmp,
+);
+expect(
+  "TMPDIR impostata ma riassegnata nel comando",
+  B,
+  bash('TMPDIR=src; echo x > "${TMPDIR:-/tmp}/a.ts"'),
+  true,
+  withTmp,
+);
 
 on("main");
 expect("commit su main", B, bash("git commit -m x"), true);

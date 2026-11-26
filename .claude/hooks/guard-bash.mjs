@@ -200,8 +200,13 @@ const ASSIGN = /(?:^|[\n;&|(]|\bexport|\blocal)\s*([A-Za-z_]\w*)=/g;
 const REDIRECT = /(?<![<>=&\-\d])(?:\d+|&)?(?:>\||>>?)(?![&(>])/g;
 // A redirection operator inside a command's arguments (to skip it with its target).
 const REDIRECT_OP = /^(?:\d+|&)?(?:>\||>>?|<<<|<<-?|<>|<)(&(?=[\d-]))?/;
-// `[[ ... ]]` test: `<` and `>` compare strings there, they do not redirect.
-const DOUBLE_TEST = /(^|[\s;&|(])\[\[(?:[^\]]|\](?!\]))*\]\]/g;
+// `[[` as a command: inside the test `<` and `>` compare strings, they do not redirect.
+const TEST_START =
+  /(?:^|[\n;&|(]|(?:^|\s)(?:if|elif|while|until|then|do|else|!))\s*\[\[(?=\s)/g;
+const UNSET = new RegExp(
+  String.raw`${AT_CMD}unset((?:\s+-[vf])*(?:\s+[A-Za-z_]\w*)+)`,
+  "g",
+);
 const SHELL_BEFORE =
   /(?:^|[\s;&|(])(?:(?:ba|da|k|z)?sh|eval|su|watch|ssh)\b[^;&|\n]*$/;
 const SIMPLE_WORD = /^[\w./=+:@%,~-]*$/;
@@ -249,13 +254,14 @@ function scan(src) {
         continue;
       }
     }
-    // Arithmetic, $((a > b)) or ((a > b)): no redirections inside.
+    // Arithmetic, $((a > b)) or ((a > b)): no redirections inside. Only text
+    // that is really arithmetic is masked; its $(...) still run (innerCommands).
     if (src.startsWith("((", i)) {
       let depth = 2;
       let j = i + 2;
       for (; j < src.length && depth; j++)
         depth += src[j] === "(" ? 1 : src[j] === ")" ? -1 : 0;
-      if (!depth) {
+      if (!depth && isArithmetic(src.slice(i + 2, j - 2))) {
         const inner = src.slice(i + 2, j - 2);
         arithmetic.push(inner);
         put(`((${"\0".repeat(inner.length)}))`, src.slice(i, j));
@@ -308,8 +314,53 @@ function scan(src) {
     put(c);
     i++;
   }
-  masked = masked.replace(DOUBLE_TEST, (t) => t.replace(/[<>]/g, "\0"));
-  return { masked, plain, strings, heredocs, arithmetic };
+  return { masked: maskTests(masked), plain, strings, heredocs, arithmetic };
+}
+
+/** True for the body of (( )) that is arithmetic and not commands. */
+function isArithmetic(text) {
+  const bare = text.replace(
+    /\$\((?:[^()]|\([^()]*\))*\)|`[^`]*`|\$\{[^}]*\}/g,
+    "0",
+  );
+  return (
+    /^[\w\s$+\-*/%<>=!&|^~?:,()[\]#]*$/.test(bare) &&
+    !/[A-Za-z_]\w*\s+[A-Za-z_]/.test(bare)
+  );
+}
+
+/**
+ * Masks `<` and `>` of a `[[ ... ]]` test in command position, up to its `]]`
+ * in the same simple command, outside $(...). Anything else stays as it is.
+ */
+function maskTests(masked) {
+  const out = masked.split("");
+  for (const m of masked.matchAll(TEST_START)) {
+    const hide = [];
+    let depth = 0;
+    for (let j = m.index + m[0].length; j < masked.length; j++) {
+      const c = masked[j];
+      if (c === "\n" || c === ";") break;
+      if (c === "&" || c === "|") {
+        if (masked[j + 1] !== c) break; // & or | end the command; && and || do not
+        j++;
+        continue;
+      }
+      if (masked.startsWith("$(", j) || c === "`") break; // substitution: keep it all
+      if (c === "(") depth++;
+      if (c === ")" && --depth < 0) break;
+      if (
+        masked.startsWith("]]", j) &&
+        /\s/.test(masked[j - 1]) &&
+        /^($|[\s;&|)])/.test(masked.slice(j + 2, j + 3))
+      ) {
+        for (const k of hide) out[k] = "\0";
+        break;
+      }
+      if ((c === "<" || c === ">") && depth === 0) hide.push(j);
+    }
+  }
+  return out.join("");
 }
 
 /** Command substitutions ($(...) and backticks) inside a text. */
@@ -334,8 +385,8 @@ function substitutions(text) {
 }
 
 /** Quoted or heredoc text that the shell will run as commands. */
-function innerCommands({ strings, heredocs }) {
-  const inner = [];
+function innerCommands({ strings, heredocs, arithmetic }) {
+  const inner = arithmetic.flatMap(substitutions);
   for (const s of strings) {
     if (SHELL_BEFORE.test(s.before)) inner.push(s.text);
     else if (s.double) inner.push(...substitutions(s.text));
@@ -378,8 +429,15 @@ function resolveTarget(word, cwd, vars = {}) {
   let w = word;
   if (w === "~" || w.startsWith("~/")) w = os.homedir() + w.slice(1);
   w = w.replace(TEMP_VAR, (_, name, colon, fallback, bare) => {
-    const value = process.env[name || bare];
-    if (fallback === undefined) return value || os.tmpdir();
+    const key = name || bare;
+    // Assigned, exported or unset in the same command: that wins over the
+    // hook's environment (null = unset). Otherwise the inherited value.
+    const own = Object.hasOwn(vars, key);
+    const value = own ? (vars[key] ?? undefined) : process.env[key];
+    if (fallback === undefined) {
+      if (own) return value ?? "$unset";
+      return value || os.tmpdir();
+    }
     // Without the colon the default applies only when the variable is unset.
     return colon ? value || fallback : (value ?? fallback);
   });
@@ -410,6 +468,10 @@ function redirectTarget(masked, plain, cwd) {
   }
   for (const m of masked.matchAll(CD))
     steps.push({ at: m.index + m[0].length, cd: true });
+  for (const m of masked.matchAll(UNSET)) {
+    const names = m[1].split(/\s+/).filter((n) => n && !n.startsWith("-"));
+    steps.push({ at: m.index + m[0].length, unset: names });
+  }
   steps.sort((a, b) => a.at - b.at);
   const states = [];
   let dir = cwd;
@@ -422,10 +484,15 @@ function redirectTarget(masked, plain, cwd) {
         : word === "-"
           ? null
           : resolveTarget(word, dir, vars);
+    } else if (s.unset) {
+      vars = { ...vars, ...Object.fromEntries(s.unset.map((n) => [n, null])) };
     } else {
+      const { word } = readWord(plain, s.at);
       const value = plain.startsWith("$(mktemp", s.at)
         ? path.join(os.tmpdir(), "mktemp")
-        : resolveTarget(readWord(plain, s.at).word, dir, vars);
+        : word === ""
+          ? ""
+          : resolveTarget(word, dir, vars);
       vars = { ...vars, [s.name]: value ?? "$unknown" };
     }
     states.push({ at: s.at, dir, vars });
@@ -469,9 +536,6 @@ function redirectTarget(masked, plain, cwd) {
 function shellEdit(command, cwd, depth = 0) {
   const parsed = scan(command);
   if (IN_PLACE.some((re) => re.test(parsed.masked))) return EDIT_ONLY;
-  // Arithmetic is masked for redirections only: an editor hidden in it still counts.
-  if (parsed.arithmetic.some((a) => IN_PLACE.some((re) => re.test(a))))
-    return EDIT_ONLY;
   const target = redirectTarget(parsed.masked, parsed.plain, cwd);
   if (target)
     return `${EDIT_ONLY} Redirezioni e tee verso file del repository sono vietate (qui: ${target}); restano permesse verso la cartella temporanea, lo scratchpad e /dev/null.`;
