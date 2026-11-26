@@ -1,6 +1,8 @@
 # Design per telefono (Fable) · fonte di verità
 
-Approvato da Francesco il **24/11/2026** come **nuova fonte di verità per l'app su telefono**, al posto del vecchio mockup in `docs/mockup/*.html`, che resta come archivio (decisione D4 in `docs/mockup/DECISIONI.md`). Computer e web da telefono sono in [`docs/design/computer/`](../computer/LEGGIMI.md) (Passi 10 e 11, approvati il 25/11/2026; correzioni del Passo 12 in arrivo): per le pagine che lì non sono ancora disegnate si adatta il telefono con le regole di [`regole.md`](../computer/regole.md).
+Approvato da Francesco il **24/11/2026** come **nuova fonte di verità per l'app su telefono**, al posto del vecchio mockup in `docs/mockup/*.html`, che resta come archivio (decisione D4 in `docs/mockup/DECISIONI.md`). Computer e web da telefono sono in [`docs/design/computer/`](../computer/LEGGIMI.md) (Passi 10 e 11, approvati il 25/11/2026): per le pagine che lì non sono ancora disegnate si adatta il telefono con le regole di [`regole.md`](../computer/regole.md).
+
+**Dal 26/11/2026 i Passi 12–16 completano e correggono anche il telefono** (D7): tema scuro al lancio, correzioni e pagine nuove nelle cartelle `*-p12-16/` (telefono e web da telefono qui, computer in `docs/design/computer/`), guida in [`docs/design/passi-12-16/LEGGIMI.md`](../passi-12-16/LEGGIMI.md). I colori in chiaro e al buio sono quelli di [`docs/design/tavolozza.md`](../tavolozza.md), che vince su `tokens.md` e `tokens.json` dove è diversa (per esempio barrette e bordo dei campi #869390). Le tavole di qui che hanno una versione nuova sono state tolte: l'elenco è in fondo al `note.md` della cartella.
 
 Estratto il 24/11/2026 dal canvas di Fable «FamilyNest: nuovo design» (versione 1795357421-5c16): **547 immagini** in 25 cartelle. Le schermate sono a 390 px di larghezza, salvate a doppia densità (780 px); in `componenti/` ci sono anche 5 tavole intere. Ogni cartella ha un `note.md` con il nome di ogni PNG e la nota di Fable (scelte, stati, movimenti, critica). Peso totale: circa 40 MB.
 
@@ -77,12 +79,12 @@ Perimetro deciso da Francesco il 24/11/2026: si sviluppa tutto da ora; pagamenti
 
 **In un secondo momento:** pagamenti e Plus (`piani/`).
 
-**In attesa:** Routine, «trillo» (ex Citofona). **Dopo il lancio, non ancora disegnati:** tema scuro, tablet.
+**In attesa:** Routine, «trillo» (ex Citofona). **Al lancio, disegnato nei Passi 14–16:** tema scuro (D7). **Con il Passo 17:** tablet.
 
 ## Cosa è escluso
 
 - **Computer e web da telefono:** nel secondo canvas di Fable (Passi 10–11), estratti a parte in [`docs/design/computer/`](../computer/LEGGIMI.md). Lì stanno anche la pagina pubblica della lista desideri e la pagina di invito aperta da chi non ha l'app. Le poche tavole «al computer» del Passo 5 non sono state estratte.
-- **Tema scuro e tablet:** non ancora disegnati.
+- **Tema scuro:** nei Passi 14–16, cartelle `*-p12-16/` e `docs/design/passi-12-16/regole-tema-scuro.md`. **Tablet:** arriva con il Passo 17.
 - **Routine** (in attesa) e **«trillo»** (ex Citofona, da ristudiare).
 - **Logo:** in pausa; nelle schermate c'è il segnaposto 5A.
 - Le tavole dei giri precedenti (Fasi 1–3, Passo 4): archivio, non estratte.

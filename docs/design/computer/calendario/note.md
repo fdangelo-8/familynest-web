@@ -169,3 +169,14 @@ Giorni e ore ci sono subito; gli impegni arrivano a scheletro e non spostano nie
 Errore
 
 L'avviso sta sopra la griglia con l'ora dell'ultimo aggiornamento; la settimana resta leggibile.
+
+## Tavole sostituite dai Passi 12–16
+
+La versione più recente ha preso il posto di queste tavole (26/11/2026); la vecchia resta nella storia git. La nota qui sopra resta valida dove la tavola nuova non dice altro.
+
+- `01-settimana-con-le-ore.png` → `docs/design/computer/calendario-p12-16/01-settimana-con-le-ore-chiaro.png`
+- `05-settimana-pannello-aperto-1280-px.png` → `docs/design/computer/calendario-p12-16/02-settimana-pannello-aperto-1280-px-chiaro.png`
+- `02-settimana-a-corsie-miele-e-mi.png` → `docs/design/computer/calendario-p12-16/05-settimana-a-corsie-chiaro.png`
+- `04-mese.png` → `docs/design/computer/calendario-p12-16/06-il-mese-chiaro.png`
+- `03-giorno-a-colonne-chi-e-dove.png` → `docs/design/computer/calendario-p12-16/12-giorno-a-colonne-le-iniziali-chiaro.png`
+- `07-nuovo-impegno.png` → `docs/design/computer/calendario-p12-16/13-per-chi-chiaro.png`
