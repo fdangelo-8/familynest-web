@@ -12,6 +12,7 @@ import {
   PASSWORD_MIN_LENGTH,
   isPasswordLengthValid,
 } from "@/lib/auth/password";
+import { it } from "@/lib/i18n/messages/it";
 import { cx } from "../cx";
 import { Icon } from "../Icon/Icon";
 import { VisuallyHidden } from "../VisuallyHidden/VisuallyHidden";
@@ -40,6 +41,10 @@ export type PasswordFieldProps = Omit<
   /** Ref of the `<input>`, to move the focus to the first wrong field */
   inputRef?: Ref<HTMLInputElement>;
   className?: string;
+  /** Set by `FieldGroup`: the field loses its own box. Do not pass it by hand. */
+  grouped?: boolean;
+  /** Set by `FieldGroup`: id of the error text under the block. Do not pass it by hand. */
+  groupErrorId?: string;
 };
 
 /**
@@ -56,12 +61,14 @@ export function PasswordField({
   onShownChange,
   inputRef,
   className,
+  grouped,
+  groupErrorId,
   id,
   ...rest
 }: PasswordFieldProps) {
   const generated = useId();
   const inputId = id ?? generated;
-  const errorId = error ? `${inputId}-errore` : undefined;
+  const errorId = error ? (groupErrorId ?? `${inputId}-errore`) : undefined;
   const rulesId = rules ? `${inputId}-regole` : undefined;
   const describedBy = [errorId, rulesId].filter(Boolean).join(" ") || undefined;
   const [ownShown, setOwnShown] = useState(false);
@@ -78,12 +85,18 @@ export function PasswordField({
   }
 
   return (
-    <div className={cx("campo", error && "campo--errore", className)}>
-      <label className="campo__etichetta" htmlFor={inputId}>
-        {label}
-      </label>
-      <div className="campo-password">
+    <div
+      className={cx(
+        "campo",
+        error && "campo--errore",
+        grouped && "campo--unito",
+        rest.placeholder !== undefined && "campo--alto",
+        className,
+      )}
+    >
+      <div className="campo__scatola campo-password">
         <input
+          placeholder=" "
           {...rest}
           ref={inputRef}
           id={inputId}
@@ -99,11 +112,14 @@ export function PasswordField({
           aria-describedby={describedBy}
           aria-invalid={error ? true : undefined}
         />
+        <label className="campo__etichetta" htmlFor={inputId}>
+          {label}
+        </label>
         <button
           ref={toggleRef}
           type="button"
           className="campo-password__mostra"
-          aria-label="Mostra la password"
+          aria-label={it.showPassword}
           aria-pressed={visible}
           aria-controls={inputId}
           disabled={rest.disabled}
@@ -112,7 +128,7 @@ export function PasswordField({
           <Icon name={visible ? "eye-off" : "eye"} />
         </button>
       </div>
-      {error ? (
+      {error && !groupErrorId ? (
         <p className="campo__errore" id={errorId}>
           <Icon name="circle-alert" size="s" />
           {error}

@@ -413,7 +413,7 @@ test.describe("PageError con action (#165)", () => {
     await expect(error.getByText("Riprova")).toHaveCount(0);
   });
 
-  test("l'icona predefinita dell'azione è quella di «Riprova»", async ({
+  test("«Riprova» non ha icona (Componenti 2.0) e continua a funzionare", async ({
     page,
   }) => {
     await mountComponents(page, "errore-pagina");
@@ -422,10 +422,9 @@ test.describe("PageError con action (#165)", () => {
       .getByTestId("errore-riprova")
       .getByRole("button", { name: "Riprova" });
     await expect(retry).toBeVisible();
-    await expect(retry.locator("svg use")).toHaveAttribute(
-      "href",
-      "#i-rotate-cw",
-    );
+    // #503 (F4a), CA-14 e §3: «Riprova» è un secondario senza icona (prima
+    // aveva rotate-cw).
+    await expect(retry.locator("svg")).toHaveCount(0);
     await retry.click();
     await expect(page.getByTestId("riprova-conteggio")).toHaveText(
       "Riprova: 1",

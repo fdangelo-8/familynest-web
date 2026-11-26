@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { MouseEvent } from "react";
+import { it } from "@/lib/i18n/messages/it";
+import { cx } from "../cx";
 import { Icon, type IconName } from "../Icon/Icon";
-import { useNest } from "./NestProvider";
+import { useOptionalNest } from "./NestProvider";
 
 /**
  * Bell link to the notifications page. Shows the red dot only with new
@@ -69,16 +71,23 @@ function HistoryLink({
   fallback,
   label,
   icon,
+  onMedia,
 }: {
   fallback: string;
   label: string;
   icon: "arrow-left" | "x";
+  onMedia?: boolean;
 }) {
   const router = useRouter();
-  const { hasPreviousPage } = useNest();
+  const nest = useOptionalNest();
 
   const handleClick = (event: MouseEvent<HTMLAnchorElement>) => {
-    if (hasPreviousPage.current) {
+    // Outside the app frame (the gallery) there is no Nest to remember the
+    // path: the tab history tells whether there is a page before this one.
+    const hasPrevious = nest
+      ? nest.hasPreviousPage.current
+      : window.history.length > 1;
+    if (hasPrevious) {
       event.preventDefault();
       router.back();
     }
@@ -87,11 +96,11 @@ function HistoryLink({
   return (
     <Link
       href={fallback}
-      className="btn-icona"
+      className={cx("btn-freccia", onMedia && "btn-freccia--disco")}
       aria-label={label}
       onClick={handleClick}
     >
-      <Icon name={icon} />
+      <Icon name={icon} size="l" />
     </Link>
   );
 }
@@ -114,12 +123,41 @@ export function BarIconLink({
   );
 }
 
-/** "Indietro" icon button (arrow). */
-export function BackLink({ fallback }: { fallback: string }) {
-  return <HistoryLink fallback={fallback} label="Indietro" icon="arrow-left" />;
+/**
+ * "Indietro" arrow D (#503): bare on white, in a white disc (`onMedia`) over
+ * a photo or a scene. No label next to it.
+ */
+export function BackLink({
+  fallback,
+  onMedia,
+}: {
+  fallback: string;
+  onMedia?: boolean;
+}) {
+  return (
+    <HistoryLink
+      fallback={fallback}
+      label={it.back}
+      icon="arrow-left"
+      onMedia={onMedia}
+    />
+  );
 }
 
-/** "Chiudi" icon button (X): same behaviour as `BackLink`. */
-export function CloseLink({ fallback }: { fallback: string }) {
-  return <HistoryLink fallback={fallback} label="Chiudi" icon="x" />;
+/** "Chiudi" icon button (X): same behaviour and look as `BackLink`. */
+export function CloseLink({
+  fallback,
+  onMedia,
+}: {
+  fallback: string;
+  onMedia?: boolean;
+}) {
+  return (
+    <HistoryLink
+      fallback={fallback}
+      label={it.close}
+      icon="x"
+      onMedia={onMedia}
+    />
+  );
 }

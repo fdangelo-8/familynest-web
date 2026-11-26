@@ -7,6 +7,7 @@ import { Spinner } from "../Spinner/Spinner";
 export type ButtonVariant =
   | "primary"
   | "secondary"
+  | "quieto"
   | "chiaro"
   | "tenue"
   | "tratteggiato"
@@ -18,6 +19,7 @@ export type ButtonVariant =
 const VARIANT_CLASS: Record<ButtonVariant, string> = {
   primary: "btn-primary",
   secondary: "btn-secondary",
+  quieto: "btn-quieto",
   chiaro: "btn-chiaro",
   tenue: "btn-tenue",
   tratteggiato: "btn-tratteggiato",

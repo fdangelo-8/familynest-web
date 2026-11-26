@@ -25,7 +25,8 @@ test("il campo parte nascosto e il bottone è 44 × 44 con nome fisso", async ({
   expect(Math.round(box!.width)).toBe(44);
   expect(Math.round(box!.height)).toBe(44);
   const fieldBox = await input.boundingBox();
-  expect(Math.round(fieldBox!.height)).toBe(52);
+  // #503: the field is 56 px (--size-campo), with the label inside the box.
+  expect(Math.round(fieldBox!.height)).toBe(56);
 });
 
 test("mostra e nasconde la password, il focus resta sul bottone", async ({
