@@ -1,6 +1,6 @@
 -- The overlapping events of tomorrow (issue #511, DB-2 of plan #501, part 2):
 -- overlap_tomorrow at the time of the evening summary of each recipient (CA-23, CA-24),
--- only to who sees both occurrences in full, without duplicates.
+-- only to who sees both occurrences in full, without duplicates; on the phone, never late.
 -- Seed ids: Marco (Casa D'Angelo, admin, user aaaaaaaa…01, member a1…01), Laura a1…02,
 -- Sofia a1…03, Tommaso a1…04. This test gives Laura an account (user aaaaaaaa…02) and adds
 -- a third adult, Davide (a1…06, user aaaaaaaa…03). Created here: events c9….
@@ -9,7 +9,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(10);
+select plan(14);
 
 insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, created_at, updated_at)
 values
@@ -23,6 +23,11 @@ where id = 'a1000000-0000-4000-8000-000000000002';
 insert into public.household_members (id, household_id, kind, name, color, user_id, joined_at)
 values ('a1000000-0000-4000-8000-000000000006', '11111111-1111-4111-8111-111111111111', 'adult', 'Davide',
         'lampone', 'aaaaaaaa-0000-4000-8000-000000000003', now());
+-- Marco has a browser («Subito quelle per me», the default: an overlap waits for the summary).
+insert into public.push_subscriptions (id, household_id, member_id, platform, endpoint, p256dh, auth)
+values ('cb000000-0000-4000-8000-000000000011', '11111111-1111-4111-8111-111111111111',
+        'a1000000-0000-4000-8000-000000000001', 'web', 'https://fcm.googleapis.com/fcm/send/marco-511-overlaps',
+        repeat('M', 87), repeat('m', 22));
 
 -- Thursday 3 December:
 --   O1 Commercialista     busy, Marco, participant Marco          17:00–18:30
@@ -75,6 +80,21 @@ select is(
   'CA-23: run again, nothing more'
 );
 
+-- On the phone: the evening summary of 19:00 carries the overlap of Marco.
+select is(
+  public.run_notification_job('push_digests', '11111111-1111-4111-8111-111111111111', '2026-12-02 19:00+01'),
+  1,
+  'the evening summary of Marco at 19:00'
+);
+select ok(
+  (select i.delivery_id = d.id
+   from public.notifications n
+   join private.push_digest_items i on i.notification_id = n.id
+   join private.push_deliveries d on d.kind = 'evening_digest' and d.recipient_member_id = n.recipient_member_id
+   where n.kind = 'overlap_tomorrow' and n.recipient_member_id = 'a1000000-0000-4000-8000-000000000001'),
+  'the summary of 19:00 carries the overlap of Marco'
+);
+
 -- CA-24
 select results_eq(
   $$ select n.subject_member_id, n.event_id, n.other_event_id
@@ -117,6 +137,34 @@ delete from public.events where id = 'c9000000-0000-4000-8000-000000000004';
 select is_empty(
   $$ select 1 from public.notifications n where n.recipient_member_id = 'a1000000-0000-4000-8000-000000000002' $$,
   'the other event deleted: the overlap goes with it'
+);
+
+-- An overlap born after the summary of the evening never rings late: at 19:30 Marco adds
+--   O5 Riunione  busy, Marco, participant Marco  18:15–19:30
+-- which overlaps the Commercialista and the Calcio. The summary of today is gone and the
+-- one of tomorrow would arrive when «domani» has passed: no push (it stays in Notifiche).
+insert into public.events (id, household_id, author_member_id, title, starts_at, ends_at, visibility, recurrence)
+values ('c9000000-0000-4000-8000-000000000005', '11111111-1111-4111-8111-111111111111', 'a1000000-0000-4000-8000-000000000001',
+        'Riunione', '2026-12-03 18:15+01', '2026-12-03 19:30+01', 'busy', 'none');
+insert into public.event_members (event_id, member_id, household_id)
+values ('c9000000-0000-4000-8000-000000000005', 'a1000000-0000-4000-8000-000000000001', '11111111-1111-4111-8111-111111111111');
+select is(
+  public.run_notification_job('overlaps', '11111111-1111-4111-8111-111111111111', '2026-12-02 19:30+01'),
+  2,
+  'at 19:30, two new overlaps for Marco'
+);
+select ok(
+  not exists (
+    select 1
+    from public.notifications n
+    where n.kind = 'overlap_tomorrow'
+      and n.other_event_id = 'c9000000-0000-4000-8000-000000000005'
+      and (
+        exists (select 1 from private.push_digest_items i where i.notification_id = n.id)
+        or exists (select 1 from private.push_deliveries d where d.notification_id = n.id)
+      )
+  ),
+  'born after the summary of the evening, they do not wait for the summary of tomorrow nor ring'
 );
 
 select * from finish();

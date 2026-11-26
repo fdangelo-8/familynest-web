@@ -7,13 +7,15 @@
 -- Seed ids: Marco (Casa D'Angelo, admin, user aaaaaaaa…01, member a1…01), Laura a1…02
 -- (adult without account, with a pending invitation a2…01), Sofia a1…03, Tommaso a1…04;
 -- Giulia (Casa Bianchi, bbbbbbbb…01, b1…01). This test adds a third adult with an account,
--- Davide (a1…06, user aaaaaaaa…03), and Laura accepts her invitation (user aaaaaaaa…02).
--- Created here: events c8…. Dates: December 2026 (future), Europe/Rome (+01). The jobs run
--- with an explicit instant, never with the real time.
+-- Davide (a1…06, user aaaaaaaa…03), an adult without account, Nonna Rita (a1…07), and
+-- Laura accepts her invitation (user aaaaaaaa…02).
+-- Created here: events c8…. Dates: December 2026 (future), Europe/Rome (+01); the events of
+-- request_ride() follow the real day. The jobs run with an explicit instant, never with the
+-- real time.
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(48);
+select plan(51);
 
 insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, created_at, updated_at)
 values
@@ -24,6 +26,9 @@ values
 insert into public.household_members (id, household_id, kind, name, color, user_id, joined_at)
 values ('a1000000-0000-4000-8000-000000000006', '11111111-1111-4111-8111-111111111111', 'adult', 'Davide',
         'lampone', 'aaaaaaaa-0000-4000-8000-000000000003', now());
+insert into public.household_members (id, household_id, kind, name, color)
+values ('a1000000-0000-4000-8000-000000000007', '11111111-1111-4111-8111-111111111111', 'adult', 'Nonna Rita',
+        'ceruleo');
 
 -- ---------------------------------------------------------------------------
 -- The fields of each kind
@@ -78,9 +83,13 @@ reset role;
 --   E8 Nuoto (da decidere) same, with remind_rides, both ways «Da decidere»
 --   E9 Danza di Sofia     household, Laura, Sofia, Fri 4/12 17:00–18:00, Marco takes, Laura
 --                         picks up, remind_rides
---   E10 Calcio di Tommaso household, Marco, Tommaso, Thu 3/12 18:00–19:00
+--   E10 Calcio di Tommaso household, Marco, Tommaso, in 3 days (real time) 18:00–19:00
 --   E11 Spesa grande      household, Davide, nobody else, Fri 4/12 11:35–12:00, avviso 60
+--   E12 Calcio passato    household, Marco, nobody else, yesterday (real time) 18:00–19:00
+--   E13 Calcio lontano    household, Marco, nobody else, in 20 days (real time) 18:00–19:00
+-- E10, E12 and E13 follow the real day: request_ride() accepts only the next 14 days.
 -- ---------------------------------------------------------------------------
+select set_config('test.ride_day', ((now() at time zone 'Europe/Rome')::date + 3)::text, true);
 insert into public.events (id, household_id, author_member_id, title, starts_at, ends_at, visibility, recurrence,
                            escort_member_id, pickup_member_id, escort_undecided, pickup_undecided,
                            reminder_minutes_before, remind_rides)
@@ -104,7 +113,19 @@ values
    'Danza di Sofia', '2026-12-04 17:00+01', '2026-12-04 18:00+01', 'household', 'none',
    'a1000000-0000-4000-8000-000000000001', 'a1000000-0000-4000-8000-000000000002', false, false, null, true),
   ('c8000000-0000-4000-8000-000000000010', '11111111-1111-4111-8111-111111111111', 'a1000000-0000-4000-8000-000000000001',
-   'Calcio di Tommaso', '2026-12-03 18:00+01', '2026-12-03 19:00+01', 'household', 'none',
+   'Calcio di Tommaso',
+   (current_setting('test.ride_day')::date + time '18:00') at time zone 'Europe/Rome',
+   (current_setting('test.ride_day')::date + time '19:00') at time zone 'Europe/Rome', 'household', 'none',
+   null, null, false, false, null, false),
+  ('c8000000-0000-4000-8000-000000000012', '11111111-1111-4111-8111-111111111111', 'a1000000-0000-4000-8000-000000000001',
+   'Calcio passato',
+   (current_setting('test.ride_day')::date - 4 + time '18:00') at time zone 'Europe/Rome',
+   (current_setting('test.ride_day')::date - 4 + time '19:00') at time zone 'Europe/Rome', 'household', 'none',
+   null, null, false, false, null, false),
+  ('c8000000-0000-4000-8000-000000000013', '11111111-1111-4111-8111-111111111111', 'a1000000-0000-4000-8000-000000000001',
+   'Calcio lontano',
+   (current_setting('test.ride_day')::date + 17 + time '18:00') at time zone 'Europe/Rome',
+   (current_setting('test.ride_day')::date + 17 + time '19:00') at time zone 'Europe/Rome', 'household', 'none',
    null, null, false, false, null, false),
   ('c8000000-0000-4000-8000-000000000011', '11111111-1111-4111-8111-111111111111', 'a1000000-0000-4000-8000-000000000006',
    'Spesa grande', '2026-12-04 11:35+01', '2026-12-04 12:00+01', 'household', 'none',
@@ -308,13 +329,13 @@ select results_eq(
 set local role authenticated;
 set local request.jwt.claims to '{"sub":"aaaaaaaa-0000-4000-8000-000000000001","role":"authenticated"}';
 select lives_ok(
-  $$ select public.request_ride('c8000000-0000-4000-8000-000000000010', '2026-12-03', 'escort',
-                                'a1000000-0000-4000-8000-000000000002') $$,
+  $$ select public.request_ride('c8000000-0000-4000-8000-000000000010', current_setting('test.ride_day')::date,
+                                'escort', 'a1000000-0000-4000-8000-000000000002') $$,
   'CA-25: Marco asks Laura to take Tommaso to the Calcio'
 );
 select lives_ok(
-  $$ select public.request_ride('c8000000-0000-4000-8000-000000000010', '2026-12-03', 'escort',
-                                'a1000000-0000-4000-8000-000000000002') $$,
+  $$ select public.request_ride('c8000000-0000-4000-8000-000000000010', current_setting('test.ride_day')::date,
+                                'escort', 'a1000000-0000-4000-8000-000000000002') $$,
   'CA-25: Marco asks again the same day, without error'
 );
 reset role;
@@ -322,7 +343,7 @@ select results_eq(
   $$ select n.recipient_member_id, n.actor_member_id, n.event_id, n.occurrence_date, n.ride_leg::text
      from public.notifications n where n.kind = 'ride_request' $$,
   $$ values ('a1000000-0000-4000-8000-000000000002'::uuid, 'a1000000-0000-4000-8000-000000000001'::uuid,
-             'c8000000-0000-4000-8000-000000000010'::uuid, '2026-12-03'::date, 'escort') $$,
+             'c8000000-0000-4000-8000-000000000010'::uuid, current_setting('test.ride_day')::date, 'escort') $$,
   'CA-25: Laura has one ride_request from Marco'
 );
 set local role authenticated;
@@ -338,14 +359,31 @@ select results_eq(
 -- ---------------------------------------------------------------------------
 set local request.jwt.claims to '{"sub":"aaaaaaaa-0000-4000-8000-000000000001","role":"authenticated"}';
 select throws_ok(
-  $$ select public.request_ride('c8000000-0000-4000-8000-000000000010', '2026-12-03', 'escort',
-                                'a1000000-0000-4000-8000-000000000001') $$,
+  $$ select public.request_ride('c8000000-0000-4000-8000-000000000010', current_setting('test.ride_day')::date,
+                                'escort', 'a1000000-0000-4000-8000-000000000001') $$,
   '23514', null, 'CA-26: Marco cannot ask himself'
 );
 select throws_ok(
-  $$ select public.request_ride('c8000000-0000-4000-8000-000000000010', '2026-12-03', 'pickup',
-                                'a1000000-0000-4000-8000-000000000003') $$,
+  $$ select public.request_ride('c8000000-0000-4000-8000-000000000010', current_setting('test.ride_day')::date,
+                                'pickup', 'a1000000-0000-4000-8000-000000000003') $$,
   '23514', null, 'CA-26: nor Sofia, a child'
+);
+select throws_ok(
+  $$ select public.request_ride('c8000000-0000-4000-8000-000000000010', current_setting('test.ride_day')::date,
+                                'escort', 'a1000000-0000-4000-8000-000000000007') $$,
+  '23514', null, 'CA-26: nor Nonna Rita, an adult without account'
+);
+select throws_ok(
+  $$ select public.request_ride('c8000000-0000-4000-8000-000000000012',
+                                current_setting('test.ride_day')::date - 4,
+                                'pickup', 'a1000000-0000-4000-8000-000000000002') $$,
+  '22023', 'only a ride of the next 14 days can be asked', 'nor about an occurrence already past'
+);
+select throws_ok(
+  $$ select public.request_ride('c8000000-0000-4000-8000-000000000013',
+                                current_setting('test.ride_day')::date + 17,
+                                'escort', 'a1000000-0000-4000-8000-000000000002') $$,
+  '22023', 'only a ride of the next 14 days can be asked', 'nor about an occurrence more than 14 days away'
 );
 select throws_ok(
   $$ select public.request_ride('c8000000-0000-4000-8000-000000000001', '2026-12-02', 'escort',
@@ -353,13 +391,13 @@ select throws_ok(
   '42501', null, 'CA-26: nor about an «Occupato»'
 );
 select throws_ok(
-  $$ select public.request_ride('c8000000-0000-4000-8000-000000000010', '2026-12-04', 'escort',
-                                'a1000000-0000-4000-8000-000000000002') $$,
-  '22023', null, 'CA-26: nor on a day without occurrence'
+  $$ select public.request_ride('c8000000-0000-4000-8000-000000000010', current_setting('test.ride_day')::date + 1,
+                                'escort', 'a1000000-0000-4000-8000-000000000002') $$,
+  '22023', 'no occurrence on that day', 'CA-26: nor on a day without occurrence'
 );
 select throws_ok(
-  $$ select public.request_ride('c8000000-0000-4000-8000-000000000010', '2026-12-03', 'escort',
-                                'b1000000-0000-4000-8000-000000000001') $$,
+  $$ select public.request_ride('c8000000-0000-4000-8000-000000000010', current_setting('test.ride_day')::date,
+                                'escort', 'b1000000-0000-4000-8000-000000000001') $$,
   '22023', null, 'CA-26: nor the adult of another household'
 );
 select throws_ok(
@@ -369,8 +407,8 @@ select throws_ok(
 );
 set local request.method to 'GET';
 select throws_ok(
-  $$ select public.request_ride('c8000000-0000-4000-8000-000000000010', '2026-12-03', 'pickup',
-                                'a1000000-0000-4000-8000-000000000002') $$,
+  $$ select public.request_ride('c8000000-0000-4000-8000-000000000010', current_setting('test.ride_day')::date,
+                                'pickup', 'a1000000-0000-4000-8000-000000000002') $$,
   'P0001', 'use POST', 'request_ride accepts only POST'
 );
 set local request.method to 'POST';
@@ -378,8 +416,8 @@ set local request.method to 'POST';
 -- CA-40: Giulia, of another household, cannot ask about an event of Casa D'Angelo.
 set local request.jwt.claims to '{"sub":"bbbbbbbb-0000-4000-8000-000000000001","role":"authenticated"}';
 select throws_ok(
-  $$ select public.request_ride('c8000000-0000-4000-8000-000000000010', '2026-12-03', 'escort',
-                                'a1000000-0000-4000-8000-000000000002') $$,
+  $$ select public.request_ride('c8000000-0000-4000-8000-000000000010', current_setting('test.ride_day')::date,
+                                'escort', 'a1000000-0000-4000-8000-000000000002') $$,
   '42501', null, 'CA-40: Giulia cannot ask about an event of Casa D''Angelo'
 );
 select is_empty(
@@ -391,8 +429,8 @@ select is_empty(
 set local role anon;
 set local request.jwt.claims to '{"role":"anon"}';
 select throws_ok(
-  $$ select public.request_ride('c8000000-0000-4000-8000-000000000010', '2026-12-03', 'escort',
-                                'a1000000-0000-4000-8000-000000000002') $$,
+  $$ select public.request_ride('c8000000-0000-4000-8000-000000000010', current_setting('test.ride_day')::date,
+                                'escort', 'a1000000-0000-4000-8000-000000000002') $$,
   '42501', null, 'CA-40: anon cannot ask a ride'
 );
 reset role;

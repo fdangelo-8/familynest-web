@@ -22,8 +22,8 @@
 -- Error codes:
 -- - 42501: no signed-in user, a caller without household, an event the caller cannot ask
 --   about (another household, not «Tutto il Nest»);
--- - 22023: invalid arguments (null, a day without occurrence, a person of another
---   household, a job without instant);
+-- - 22023: invalid arguments (null, a day without occurrence, a ride already past or more
+--   than 14 days away, a person of another household, a job without instant);
 -- - 23514: a ride asked to oneself, to a child, a pet or an adult without account;
 -- - P0001 'use POST': called through the Data API with a method other than POST.
 
@@ -254,7 +254,11 @@ $$;
 -- - otherwise a row waiting for the evening summary (private.push_digest_items);
 -- - a single delivery rings at the creation of the notification, or at 7:00 when that falls
 --   in the silence of the night («Silenzio di notte» on; member_joined always, ap1-34); a
---   reminder of an event or a ride whose moment is not after 7:00 does not ring at all.
+--   reminder of an event or a ride whose moment is not after 7:00 does not ring at all;
+-- - an overlap_tomorrow speaks of tomorrow and never rings late: it goes to the summary only
+--   while today's evening summary of the recipient has not been sent (the summary of the
+--   same run carries it), a single delivery only when it rings before tomorrow starts;
+--   otherwise it does not ring at all (it stays in Notifiche).
 -- Runs once per notification (unique indexes). Owner only, security invoker (called by
 -- security definer triggers).
 create or replace function private.push_schedule(p_notification_id uuid, p_urgent boolean)
@@ -301,6 +305,15 @@ begin
     or (v_note.kind = 'event_time_changed' and coalesce(p_urgent, false));
 
   if not v_now then
+    if v_note.kind = 'overlap_tomorrow' and exists (
+      select 1
+      from private.push_deliveries x
+      where x.recipient_member_id = v_note.recipient_member_id
+        and x.kind = 'evening_digest'
+        and x.digest_day = (v_note.created_at at time zone 'Europe/Rome')::date
+    ) then
+      return;
+    end if;
     insert into private.push_digest_items (notification_id, household_id, recipient_member_id, created_at)
     values (v_note.id, v_note.household_id, v_note.recipient_member_id, v_note.created_at)
     on conflict do nothing;
@@ -308,6 +321,11 @@ begin
   end if;
 
   v_due := private.push_ring_at(v_note.created_at, v_quiet or v_note.kind = 'member_joined');
+
+  if v_note.kind = 'overlap_tomorrow'
+     and v_due >= (((v_note.created_at at time zone 'Europe/Rome')::date + 1)::timestamp at time zone 'Europe/Rome') then
+    return;
+  end if;
 
   if v_due > v_note.created_at and v_note.kind in ('event_reminder', 'ride_reminder') then
     select case when v_note.ride_leg = 'pickup' then o.ends_at else o.starts_at end
@@ -1088,6 +1106,8 @@ $$;
 -- - The event is of the caller's household and «Tutto il Nest» (42501 otherwise: «Solo
 --   io», «Occupato» and «Solo alcune persone» are never asked about, mn1-39);
 -- - p_occurrence_date is a day on which the event has an occurrence (22023 otherwise);
+-- - the moment of the way (start for «escort», end for «pickup») is after now and within
+--   14 days from now (22023 otherwise): a long series cannot generate many requests;
 -- - the person asked is a member of the caller's household (22023 otherwise) and an adult
 --   with an account other than the caller (23514 otherwise);
 -- - one request a day per person asked, occurrence and way, whoever asks: asked again, it
@@ -1114,6 +1134,7 @@ declare
   v_household_id uuid;
   v_visibility public.event_visibility;
   v_target public.household_members;
+  v_moment timestamptz;
 begin
   if coalesce(current_setting('request.method', true), '') not in ('', 'POST') then
     raise exception 'use POST' using errcode = 'P0001';
@@ -1154,8 +1175,17 @@ begin
     raise exception 'only another adult with an account can be asked' using errcode = '23514';
   end if;
 
-  if not exists (select 1 from private.event_occurrence_on(p_event_id, p_occurrence_date)) then
+  select case when p_leg = 'pickup' then o.ends_at else o.starts_at end
+  into v_moment
+  from private.event_occurrence_on(p_event_id, p_occurrence_date) o
+  limit 1;
+
+  if v_moment is null then
     raise exception 'no occurrence on that day' using errcode = '22023';
+  end if;
+
+  if v_moment <= now() or v_moment > now() + interval '14 days' then
+    raise exception 'only a ride of the next 14 days can be asked' using errcode = '22023';
   end if;
 
   if private.notification_recipient_wants(v_target.id, 'rides') then
