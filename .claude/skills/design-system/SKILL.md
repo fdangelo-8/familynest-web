@@ -5,15 +5,15 @@ description: Design system di FamilyNest Web - token di colore, tipografia, spaz
 
 # Design system di FamilyNest
 
-> **Stato: v1.0, compilata il 22/10/2026 dal mockup approvato** (`docs/mockup/tokens.css`, `components.css`, `design-system.md`, `design-system.html`) e dalle decisioni di Francesco (`docs/mockup/DECISIONI.md` e decisioni D-1 … D-10 nella issue #8). **v2.0 del 24/11/2026:** aggiunto il design per telefono di Fable come fonte di verità (`riferimento/telefono.md`).
+> **Stato: v1.0, compilata il 22/10/2026 dal mockup approvato** (`docs/mockup/tokens.css`, `components.css`, `design-system.md`, `design-system.html`) e dalle decisioni di Francesco (`docs/mockup/DECISIONI.md` e decisioni D-1 … D-10 nella issue #8). **v2.0 del 24/11/2026:** aggiunto il design per telefono di Fable come fonte di verità (`riferimento/telefono.md`). **v2.1 del 25/11/2026:** token e font di F2 (#196): un solo font, Figtree; pesi 400/600/700; colori, misure, raggi, ombre e movimenti di Fable; colori delle persone con il modulo `src/lib/member-colors.ts`.
 
-> **Dal 24/11/2026 la fonte di verità per il telefono è il design di Fable in `docs/design/telefono/`** (decisione D4 in `docs/mockup/DECISIONI.md`). I suoi token e i Componenti 2.0 sono in `riferimento/telefono.md`, con a fianco i valori attuali del codice. Il codice ha ancora i token del vecchio mockup finché il lavoro `shared/*` dei Componenti 2.0 non li cambia: le regole qui sotto descrivono il codice di oggi, e dove `riferimento/telefono.md` dice altro, per il lavoro nuovo vale quello. Le differenze principali: font Figtree (al posto di Parkinsans e Host Grotesk), pesi 400/600/700, pagine bianche, azione primaria `#0F3D44`, inchiostro `#10262A`, rosso `#B3261E`, colori delle persone nuovi (giallo = «adesso»), raggi dei pulsanti 14 e dei fogli 20, freccia indietro D, righe con la freccia sottile B, «Collega» forma 1.
+> **Dal 24/11/2026 la fonte di verità per il telefono è il design di Fable in `docs/design/telefono/`** (decisione D4 in `docs/mockup/DECISIONI.md`). **Con F2 (#196, PR #585) i token di Fable sono nel codice:** `:root` di `src/app/globals.css` e `docs/agenti/design/token.css` (copia identica) hanno i valori di `riferimento/telefono.md`, e `riferimento/token.md` li elenca tutti. I componenti invece sono ancora quelli del vecchio mockup finché i lavori F4 e F5 (Componenti 2.0) non li ridisegnano: le regole sui componenti qui sotto descrivono il codice di oggi, e dove `riferimento/telefono.md` dice altro, per il lavoro nuovo vale quello. Le differenze principali dei componenti: pagine bianche, azione primaria `--color-azione`, raggi dei pulsanti 14 e dei fogli 20, freccia indietro D, righe con la freccia sottile B, «Collega» forma 1, giallo solo per «adesso».
 
 ## Fonti e precedenza
 
 1. Decisioni di Francesco in `docs/mockup/DECISIONI.md` (vincono sul design e sul mockup).
 2. **Design per telefono di Fable** in `docs/design/telefono/` (dal 24/11/2026): schermate, note di Fable, `tokens.md` e `tokens.json`, risposte in `decisioni-fable.md`; tra due schermate vale il passo più recente. Tradotto in token e regole in `riferimento/telefono.md`. **Computer e web da telefono di Fable** in `docs/design/computer/` (approvati il 25/11/2026, D5; correzioni del Passo 12 in arrivo): regole di adattamento in `regole.md`, token diversi in `tokens-computer.md`, tradotti in `riferimento/computer.md`. Per le pagine non ancora disegnate su computer si adatta il telefono con quelle regole.
-3. Vecchio mockup `docs/mockup/*.html` (archivio): vale solo dove il design di Fable non dice niente e per il desktop. Valori: `docs/mockup/tokens.css` (202 variabili), più 2 colori approvati da Francesco dopo il mockup (`--color-filo-campo`, `--color-allerta-scuro`, #43 punti 2 e 4, issue #52) e i 5 colori dei membri aggiunti con la #74. Il blocco pronto da copiare in `src/app/globals.css` è `docs/agenti/design/token.css` (uguale a `tokens.css` tranne l'aggancio dei font a `next/font`, i colori aggiunti con la #52 e la #74, il testo in rem e le 3 misure minime in rem della #313).
+3. Vecchio mockup `docs/mockup/*.html` (archivio): vale solo dove il design di Fable non dice niente. `docs/mockup/tokens.css` resta come archivio e nessun test lo confronta più (F2). **Valori:** `docs/agenti/design/token.css`, copia esatta del `:root` di `src/app/globals.css` e riferimento del test dei token; si cambiano sempre insieme, nella PR `shared/*` che tocca i token.
 4. Aspetto dei componenti: `docs/mockup/components.css`, portato nell'app **con gli stessi nomi di classe** (decisione D-2).
 5. Comportamento e accessibilità di ogni componente: `docs/mockup/design-system.md` §7–§11.
 6. Questa skill: regole d'uso, stati che il mockup non disegna, componenti React, tono di voce. Dove il mockup e questa skill sembrano in contrasto, vale il mockup e si apre una domanda nella issue.
@@ -29,7 +29,7 @@ Mail di servizio: `docs/mockup/mail/` (nove modelli HTML e solo testo con le ant
   - Colonne di griglia `minmax(0, 1fr)`, mai `1fr`; una colonna fissa con testo `minmax(<token>, max-content)`. `body { overflow-wrap: break-word }`, niente `hyphens: auto`, niente `white-space: nowrap` su bottoni, chip, etichette, adesivi.
   - Puntini di sospensione solo dentro `.blocco-orario`.
   - Le disposizioni per il testo grande si fanno con query di contenitore in rem, solo sui cinque contenitori `barra` (`.nav-basso`), `riga` (`.riga-lista`, `.riga-regalo`), `selettore` (`.contenitore-selettore`), `blocco` (`.blocco-orario`) e `avviso` (`.avviso`); mai media query per questo. Una parola più larga della colonna si spezza senza trattino, anche nei titoli: è accettato (#327). Dettagli e regole per componente: `riferimento/componenti.md`, «Testo ingrandito».
-- Se un valore manca, non si inventa: lo aggiunge il designer qui e in `docs/agenti/design/token.css`, con una issue `proposta-design` se cambia il mockup.
+- Se un valore manca, non si inventa: lo definisce il designer qui (in `riferimento/token.md`), con una issue `proposta-design` se cambia il design di Fable; lo sviluppatore lo porta in `src/app/globals.css` e in `docs/agenti/design/token.css` nella stessa PR `shared/*`.
 - Niente Tailwind, niente librerie di componenti, niente CSS-in-JS.
 - Mobile first: si scrive prima il layout a 390 px, poi si adatta a 1280 px con media query.
 - **Classi del design system globali, con i nomi del mockup (D-2).** Tutte le classi di `docs/mockup/components.css` (tranne il blocco «IMPALCATURA DEL MOCKUP», classi `mock-*`) stanno in `src/app/globals.css` o in un file importato da lì, con lo stesso nome: `.btn-primary`, `.campo--errore`, `.foglio`… Così pagine, tester e revisore confrontano 1:1 con il mockup.
@@ -37,8 +37,8 @@ Mail di servizio: `docs/mockup/mail/` (nove modelli HTML e solo testo con le ant
 - Se una pagina ha bisogno di una variante nuova, la definisce il designer qui (nome di classe nello stile del mockup: `blocco__parte--variante`, in italiano), non lo sviluppatore.
 - Niente estetica "generata dall'AI": niente gradienti, card inclinate, ombre sulle schede, illustrazioni, emoji, CTA generiche ("Clicca qui", "Invia"), icone `+` senza testo dove il mockup ha un'etichetta.
 - Tema scuro completo: **fuori perimetro** (decisione aperta). `.tema-notte` e i token `--color-notte*`, `--color-latte*` servono solo alle schermate scure già disegnate: accesso, chiusura dell'onboarding, schede e blocchi «porta».
-- Il colore delle persone (`--color-membro-*`) vive solo negli avatar, nei punti del mese e negli adesivi. Mai su testi, schede o sfondi.
-- `--color-inchiostro-3` non si usa mai per il testo (3,33:1). Il rosso (`--color-allerta`) solo per errori e urgente, mai per «tra poco».
+- Il colore delle persone (`--color-membro-*`) vive solo negli avatar, nei punti del mese, negli adesivi, nel filo attorno alla foto, nelle barre delle corsie (`-corsia`) e, come tinta (`-tinta`), nel fondo del pallino non scelto. Mai su testi, schede o fondi di pagina. Le pagine non scrivono mai i nomi delle tinte: usano le classi `.membro-<codice>` (variabili `--c`, `--c-tinta`, `--c-corsia`, `--c-iniziale`) date da `memberColorClass()` di `src/lib/member-colors.ts`, unica fonte della corrispondenza codice → tinta.
+- `--color-inchiostro-3` non si usa mai per il testo (2,98:1). Il rosso (`--color-allerta`) solo per errori e urgente, mai per «tra poco».
 - Niente stile in linea (`style=`). Le posizioni calcolate dei blocchi del calendario si decidono nella specifica di quelle pagine.
 - Niente icone o campi legati alla salute dei figli (D1): l'icona `stethoscope` non entra nello sprite dell'app.
 
@@ -46,77 +46,83 @@ Mail di servizio: `docs/mockup/mail/` (nove modelli HTML e solo testo con le ant
 
 Questa skill contiene le regole da avere sempre presenti. I dettagli stanno in quattro file accanto, da aprire con Read **quando il lavoro li tocca**:
 
-| File                                                     | Cosa contiene                                                                                                                                                                                             | Quando leggerlo                                                                                                      |
-| -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `.claude/skills/design-system/riferimento/token.md`      | colori, font, scala tipografica, spaziature, griglia, raggi, bordi, ombre, misure, movimento, livelli, breakpoint                                                                                         | quando scrivi o rivedi CSS, o confronti valori con il mockup                                                         |
-| `.claude/skills/design-system/riferimento/componenti.md` | componenti React di base, classi del mockup, varianti, stati, accessibilità, correzioni approvate (#11, #43, #52, #63, #67, #74), testo ingrandito (#313), classi senza componente                        | quando usi, scrivi o rivedi un componente o una classe condivisa (leggi solo le righe dei componenti che ti servono) |
-| `.claude/skills/design-system/riferimento/telefono.md`   | design per telefono di Fable (24/11/2026): token nuovi con i valori attuali del codice a fianco, colori delle persone, Figtree, movimento e splash, Componenti 2.0 con i rimandi alle PNG, domande aperte | sempre, per qualsiasi lavoro sul telefono e per il lavoro `shared/*` dei Componenti 2.0                              |
-| `.claude/skills/design-system/riferimento/computer.md`   | computer e web da telefono di Fable (25/11/2026): larghezze, barra laterale, pannello, finestra, fumetto, ricerca, fuoco e mouse, token del guscio e colori diversi dal telefono, contrasti da correggere | per qualsiasi disposizione da 760 px in su, per il web da telefono e per le pagine senza account                     |
-| `.claude/skills/design-system/riferimento/registro.md`   | storia delle modifiche alla skill                                                                                                                                                                         | solo il designer, quando aggiorna la skill                                                                           |
+| File                                                     | Cosa contiene                                                                                                                                                                                                | Quando leggerlo                                                                                                      |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| `.claude/skills/design-system/riferimento/token.md`      | colori, font, scala tipografica, spaziature, griglia, raggi, bordi, ombre, misure, movimento, livelli, breakpoint                                                                                            | quando scrivi o rivedi CSS, o confronti valori con il mockup                                                         |
+| `.claude/skills/design-system/riferimento/componenti.md` | componenti React di base, classi del mockup, varianti, stati, accessibilità, correzioni approvate (#11, #43, #52, #63, #67, #74), testo ingrandito (#313), classi senza componente                           | quando usi, scrivi o rivedi un componente o una classe condivisa (leggi solo le righe dei componenti che ti servono) |
+| `.claude/skills/design-system/riferimento/telefono.md`   | design per telefono di Fable (24/11/2026): token di Fable con i valori del vecchio mockup a fianco, colori delle persone, Figtree, movimento e splash, Componenti 2.0 con i rimandi alle PNG, domande aperte | sempre, per qualsiasi lavoro sul telefono e per il lavoro `shared/*` dei Componenti 2.0                              |
+| `.claude/skills/design-system/riferimento/computer.md`   | computer e web da telefono di Fable (25/11/2026): larghezze, barra laterale, pannello, finestra, fumetto, ricerca, fuoco e mouse, token del guscio e colori diversi dal telefono, contrasti da correggere    | per qualsiasi disposizione da 760 px in su, per il web da telefono e per le pagine senza account                     |
+| `.claude/skills/design-system/riferimento/registro.md`   | storia delle modifiche alla skill                                                                                                                                                                            | solo il designer, quando aggiorna la skill                                                                           |
 
 Il designer aggiorna la parte giusta e aggiunge una riga al registro.
 
 ## Tipografia
 
-- **Parkinsans** (`--font-titoli`), peso sottile (300): titoli di pagina, ore, numeri, frasi. Ore e numeri hanno tutti lo stesso stile, con cifre tabellari.
-- **Host Grotesk** (`--font-testo`): tutto il resto, pesi 400–700 (650 = `--weight-forte`).
+- **Un solo font: Figtree**, per titoli e testo. `--font-titoli` e `--font-testo` hanno lo stesso valore: si tengono i due nomi perché le classi esistenti li usano.
+- **Pesi: solo 400, 600, 700.** I nomi dei token restano, cambia il valore: `--weight-sottile`, `--weight-normale` e `--weight-medio` valgono 400; `--weight-semi` e `--weight-forte` 600; `--weight-pieno` 700. Mai altri pesi, nemmeno scritti a mano.
+- Ore e numeri hanno tutti lo stesso stile, con cifre tabellari (`font-variant-numeric: tabular-nums`).
 - Testo di base del `body`: `--font-testo`, `--text-corpo-size` / `--text-corpo-line`, colore `--color-inchiostro`, fondo `--color-carta`, `-webkit-font-smoothing: antialiased`, `overflow-wrap: break-word` (#313). I token del testo sono in rem (#313): seguono il carattere scelto nel sistema o nel browser.
 
 ### Caricamento dei font
 
-Nel mockup i font arrivano da un `<link>` a Google Fonts. Nell'app si usano **`next/font/google`** (stessi file, scaricati alla build e serviti dal nostro dominio: nessuna richiesta del browser a Google, quindi nessun indirizzo IP delle famiglie inviato a terzi, e salto del testo al caricamento ridotto al minimo dal font di riserva calibrato).
+Nell'app Figtree arriva da **`next/font/google`**: il file è scaricato alla build e servito dal nostro dominio, quindi il browser non chiede niente a Google e nessun indirizzo IP delle famiglie va a terzi (D-1). Nessun `<link>` a Google Fonts.
 
-- `Parkinsans`: `subsets: ["latin", "latin-ext"]`, font variabile (nessun `weight` fisso, copre 300–800), `display: "swap"`, `variable: "--font-parkinsans"`.
-- `Host_Grotesk`: stesse opzioni, `variable: "--font-host-grotesk"`.
-- Le due classi `.variable` vanno sull'elemento `<html>` in `src/app/layout.tsx` (non su `<body>`), perché `--font-titoli` e `--font-testo` sono dichiarati in `:root`.
-- In `:root`: `--font-titoli: var(--font-parkinsans), "Parkinsans", ui-sans-serif, system-ui, sans-serif;` e `--font-testo: var(--font-host-grotesk), "Host Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;` (già scritti in `docs/agenti/design/token.css`). La pila di riserva è quella del mockup.
-- `--font-codice` serve solo alla documentazione: non si usa nell'app.
+- `Figtree` in `src/app/layout.tsx`: font variabile (nessun `weight`), `subsets: ["latin", "latin-ext"]`, `display: "swap"`, `variable: "--font-figtree"`. `adjustFontFallback` e `preload` restano al valore predefinito (attivi): Next genera da solo il font di riserva calibrato («Figtree Fallback», con `size-adjust`), così il testo non cambia misura dopo il primo disegno.
+- La classe `.variable` va sull'elemento `<html>` (non su `<body>`), perché `--font-titoli` e `--font-testo` sono dichiarati in `:root`.
+- In `:root`: `--font-titoli: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;` e `--font-testo` uguale.
+- Nessun altro font nell'app. `--font-codice` (caratteri di sistema a spaziatura fissa) serve solo alla documentazione.
 
 ### Classi di testo
 
 Classi globali in `globals.css` (servono a tutte le pagine). La classe cambia l'aspetto, non il livello: `h1`/`h2` restano in ordine.
 
-| Classe             | Font e peso                     | Token (mobile → desktop)                                    | Esempio dal mockup                        |
-| ------------------ | ------------------------------- | ----------------------------------------------------------- | ----------------------------------------- |
-| `.t-display`       | Parkinsans 300                  | `--text-display-*` → `--text-display-desktop-*`             | Buon pomeriggio                           |
-| `.t-titolo-pagina` | Parkinsans 300                  | `--text-titolo-pagina-*` → `--text-titolo-pagina-desktop-*` | Calendari collegati                       |
-| `.t-titolo-scheda` | Parkinsans 400                  | `--text-titolo-scheda-*`                                    | Completa il profilo di Sofia              |
-| `.t-frase`         | Parkinsans 300                  | `--text-frase-*`                                            | Stasera siete liberi insieme dalle 21:30. |
-| `.t-numero`        | Parkinsans 300, cifre tabellari | `--text-numero-*`                                           | 14                                        |
-| `.t-sezione`       | Host Grotesk 650                | `--text-sezione-*`                                          | Questa settimana                          |
-| `.t-corpo-forte`   | Host Grotesk 650                | `--text-corpo-forte-*`                                      | Nuoto Sofia                               |
-| `.t-corpo`         | Host Grotesk 400                | `--text-corpo-*`                                            | Piscina comunale, la porta Laura          |
-| `.t-controllo`     | Host Grotesk 600                | `--text-controllo-*`                                        | Aggiungi                                  |
-| `.t-nota`          | Host Grotesk 500                | `--text-nota-*`                                             | Entro giovedì                             |
-| `.t-etichetta`     | Host Grotesk 650                | `--text-etichetta-*`                                        | OUTLOOK                                   |
-| `.t-micro`         | Host Grotesk 600                | `--text-micro-*`                                            | Lun                                       |
-| `.t-secondario`    | —                               | colore `--color-inchiostro-2`                               | ritocco                                   |
-| `.t-forte`         | —                               | peso `--weight-pieno`                                       | ritocco                                   |
-| `.t-allerta`       | —                               | colore `--color-allerta`                                    | ritocco                                   |
+Tutte in Figtree. Il peso è il token della classe in `src/app/components.css`, con il valore di F2.
+
+| Classe             | Peso                                      | Token (mobile → desktop)                                    | Esempio                                   |
+| ------------------ | ----------------------------------------- | ----------------------------------------------------------- | ----------------------------------------- |
+| `.t-display`       | 400 (`--weight-sottile`)                  | `--text-display-*` → `--text-display-desktop-*`             | Buon pomeriggio                           |
+| `.t-titolo-pagina` | 700 (`--weight-pieno`)                    | `--text-titolo-pagina-*` → `--text-titolo-pagina-desktop-*` | Calendari collegati                       |
+| `.t-titolo-scheda` | 400 (`--weight-normale`)                  | `--text-titolo-scheda-*`                                    | Completa il profilo di Sofia              |
+| `.t-frase`         | 400 (`--weight-sottile`)                  | `--text-frase-*`                                            | Stasera siete liberi insieme dalle 21:30. |
+| `.t-numero`        | 400 (`--weight-sottile`), cifre tabellari | `--text-numero-*`                                           | 14                                        |
+| `.t-sezione`       | 600 (`--weight-forte`)                    | `--text-sezione-*`                                          | Questa settimana                          |
+| `.t-corpo-forte`   | 600 (`--weight-forte`)                    | `--text-corpo-forte-*`                                      | Nuoto Sofia                               |
+| `.t-corpo`         | 400 (`--weight-normale`)                  | `--text-corpo-*`                                            | Piscina comunale, la porta Laura          |
+| `.t-controllo`     | 600 (`--weight-semi`)                     | `--text-controllo-*`                                        | Aggiungi                                  |
+| `.t-nota`          | 400 (`--weight-medio`)                    | `--text-nota-*`                                             | Entro giovedì                             |
+| `.t-etichetta`     | 400 (`--weight-normale`)                  | `--text-etichetta-*`                                        | OUTLOOK                                   |
+| `.t-micro`         | 600 (`--weight-semi`)                     | `--text-micro-*`                                            | Lun                                       |
+| `.t-secondario`    | —                                         | colore `--color-inchiostro-2`                               | ritocco                                   |
+| `.t-forte`         | —                                         | peso `--weight-pieno`                                       | ritocco                                   |
+| `.t-allerta`       | —                                         | colore `--color-allerta`                                    | ritocco                                   |
+
+Il maiuscolo di `.t-etichetta`, dove c'è ancora, lo toglie F4a. Token del testo nati con F2 e ancora senza classe (le classi le definisce il designer quando un componente 2.0 li usa): `--text-titolo-sezione-*` (21/27, 700), `--text-sottotitolo-*` (17/25, 400), `--text-titolo-barra-*` (16/22, 700, barra e fogli), `--text-tag-*` (12/16, 600, etichetta piccola). Misure e tracking in `riferimento/token.md`.
 
 ## Contrasti (WCAG 2.1 AA)
 
-Tabella completa in `docs/mockup/design-system.md` §2. Coppie da ricordare:
+Valori di F2 (#196), formula WCAG 2.1 sui valori dei token. Le coppie del §7 di `docs/specifiche/196-token-e-font.md` le verifica un test. Coppie da ricordare:
 
-| Testo o segno          | Fondo                     | Rapporto | Uso                                                                             |
-| ---------------------- | ------------------------- | -------- | ------------------------------------------------------------------------------- |
-| `--color-inchiostro`   | `--color-carta`           | 15,78:1  | testo principale                                                                |
-| `--color-inchiostro-2` | `--color-carta`           | 5,86:1   | testo secondario sulle pagine; numeri dei giorni fuori dal mese (#52)           |
-| `--color-inchiostro-2` | `--color-superficie`      | 6,59:1   | testo secondario nelle schede                                                   |
-| `--color-latte`        | `--color-inchiostro`      | 15,85:1  | bottoni principali, voci scelte                                                 |
-| `--color-latte`        | `--color-notte`           | 15,55:1  | toast, schede scure, schermate notte                                            |
-| `--color-allerta`      | `--color-carta`           | 4,72:1   | errori sulle pagine (minimo raggiunto)                                          |
-| `--color-bianco`       | `--color-allerta`         | 5,31:1   | bottone pericoloso pieno                                                        |
-| `--color-bianco`       | `--color-allerta-scuro`   | 6,94:1   | bottone pericoloso pieno, passaggio e premuto (#52)                             |
-| `--color-filo-campo`   | `--color-superficie`      | 3,70:1   | bordo del campo contro il suo fondo bianco (#52, minimo non testuale 3:1)       |
-| `--color-filo-campo`   | `--color-carta`           | 3,29:1   | bordo del campo contro la pagina (#52)                                          |
-| `--color-inchiostro`   | `--color-membro-lampone`  | 4,75:1   | iniziale dell'avatar (#74)                                                      |
-| `--color-inchiostro`   | `--color-membro-ceruleo`  | 5,27:1   | iniziale dell'avatar (#74)                                                      |
-| `--color-inchiostro`   | `--color-membro-peonia`   | 9,45:1   | iniziale dell'avatar (#74)                                                      |
-| `--color-inchiostro`   | `--color-membro-basilico` | 4,72:1   | iniziale dell'avatar (#74)                                                      |
-| `--color-inchiostro`   | `--color-membro-cannella` | 5,29:1   | iniziale dell'avatar (#74)                                                      |
-| `--color-info`         | `--color-carta`           | 5,64:1   | anello di focus su fondo chiaro                                                 |
-| `--color-info`         | `--color-notte`           | 2,74:1   | **insufficiente**: su fondo scuro l'anello di focus è `--color-latte` (15,55:1) |
+| Testo o segno                    | Fondo                                             | Rapporto          | Uso                                                                             |
+| -------------------------------- | ------------------------------------------------- | ----------------- | ------------------------------------------------------------------------------- |
+| `--color-inchiostro`             | `--color-carta` (bianco)                          | 15,76:1           | testo principale                                                                |
+| `--color-inchiostro`             | `--color-carta-2` / `--color-fondo-app`           | 14,51:1 / 14,54:1 | testo sui fondi quieti                                                          |
+| `--color-inchiostro-2`           | `--color-carta` / `--color-carta-2`               | 5,86:1 / 5,40:1   | testo secondario sulle pagine e negli avvisi quieti                             |
+| `--color-inchiostro-2-fondo`     | `--color-fondo-app`                               | 6,23:1            | testo secondario sul fondo dell'app                                             |
+| `--color-bianco`                 | `--color-azione` / `--color-azione-premuto`       | 11,86:1 / 14,62:1 | pulsante primario                                                               |
+| `--color-latte`                  | `--color-inchiostro`                              | 14,08:1           | bottoni e voci scelte del vecchio mockup, finché F4 non li ridisegna            |
+| `--color-latte`                  | `--color-notte`                                   | 15,55:1           | toast, schede scure, schermate notte                                            |
+| `--color-allerta`                | `--color-superficie` / `--color-allerta-fondo`    | 6,54:1 / 5,78:1   | errori; testo dell'avviso d'errore                                              |
+| `--color-bianco`                 | `--color-allerta` / `--color-allerta-scuro`       | 6,54:1 / 6,94:1   | rosso pieno del dialogo di conferma, normale e premuto                          |
+| `--color-ok` / `--color-scaduto` | `--color-superficie`                              | 6,49:1 / 6,69:1   | fatto e collegato; scadenza passata                                             |
+| `--color-insieme-testo`          | `--color-insieme`                                 | 9,29:1            | Liberi insieme                                                                  |
+| `--color-inchiostro`             | `--color-adesso` / `--color-adesso-tinta`         | 10,02:1 / 13,69:1 | «adesso»                                                                        |
+| `--color-filo-campo`             | `--color-superficie` / `--color-carta-2`          | 3,33:1 / 3,07:1   | bordo del campo (minimo non testuale 3:1)                                       |
+| `--c-iniziale`                   | `--c` di ogni colore delle persone                | da 4,55:1         | iniziale dell'avatar (tabella in `riferimento/token.md`)                        |
+| `--c-corsia`                     | bianco, `--color-carta-2`, `--color-corsia-vuota` | da 3,00:1         | barra delle corsie (decisione di Francesco del 25/11)                           |
+| `--color-info`                   | `--color-carta` / `--color-carta-2`               | 6,34:1 / 5,84:1   | anello di focus su fondo chiaro                                                 |
+| `--color-info`                   | `--color-notte`                                   | 2,74:1            | **insufficiente**: su fondo scuro l'anello di focus è `--color-latte` (15,55:1) |
+
+Solo decorativi, mai testo né unico bordo di un controllo: `--color-inchiostro-3` (2,98:1), `--color-filo-tenue` (2,01:1), `--color-filo`, `--color-filo-2`. L'interruttore spento (pallino bianco su `--color-filo-2`, 1,64:1) resta sotto 3:1 come prima: lo risolve F4a (#503).
 
 ## Iconografia
 

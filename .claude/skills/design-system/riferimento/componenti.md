@@ -2,7 +2,7 @@
 
 > Parte di consultazione della skill `design-system` (`../SKILL.md`): componenti React, classi, varianti, stati e correzioni approvate.
 
-> **Dal 24/11/2026:** qui ci sono i componenti del vecchio mockup, ancora nel codice. I Componenti 2.0 del design per telefono di Fable (freccia indietro D, «Collega» forma 1, scelte a schede, righe con la freccia sottile B, tessere, campi, fogli, avvisi, vuoti, errori) sono in `telefono.md`, con i rimandi alle PNG.
+> **Dal 24/11/2026:** qui ci sono i componenti del vecchio mockup, ancora nel codice (dal 25/11, con F2, disegnati con i token nuovi: `riferimento/token.md`). I Componenti 2.0 del design per telefono di Fable (freccia indietro D, «Collega» forma 1, scelte a schede, righe con la freccia sottile B, tessere, campi, fogli, avvisi, vuoti, errori) sono in `telefono.md`, con i rimandi alle PNG.
 
 Classi: quelle del mockup, globali (D-2). Componenti React: nomi in inglese (regola del progetto) in `src/components/ui/<Nome>/`, ognuno applica le classi indicate. Ogni componente accetta una `className` aggiuntiva. Misure: quelle di `components.css`, regola per regola.
 
@@ -90,9 +90,9 @@ Nati per Spesa (#21), riusati da Da fare (#23) e Scadenze (#24). Specifica compl
 Decisione di Francesco del 28/10: fino a 10 membri per Nest, ognuno con il suo colore. Si discosta dal mockup **di proposito** (il tester visivo confronta con questa regola, non con `components.css`).
 
 - `.scelta-colore` è una griglia di **2 righe da 5**, sia a 390 sia a 1280 px, centrata (a sinistra con `.scelta-colore--sinistra` e in `.profilo-testa--riga`): `display: grid; grid-template-columns: repeat(5, var(--size-avatar-m)); gap: var(--space-3)`. Larga 208 px, alta 76 px. Cerchi da 32 px, anello e spazio come prima. Il passo tra i centri è 44 px, quindi l'area di tocco di 44 x 44 non si sovrappone. La regola sta nel blocco del designer, dopo quella del mockup (che resta com'è).
-- Ordine: pomodoro, glicine, salvia, cobalto, zafferano (prima riga), poi lampone, ceruleo, peonia, basilico, cannella (seconda riga). In `08` e `27`: prima il colore scelto, poi i liberi, infine i già presi (spenti), ognuno nell'ordine base. Le righe si riempiono da sinistra a destra.
+- Ordine dei codici (`MEMBER_COLOR_CODES` in `src/lib/member-colors.ts`): pomodoro, glicine, salvia, cobalto, zafferano (prima riga), poi lampone, ceruleo, peonia, basilico, cannella (seconda riga). Dal 25/11 (F2) mostrano corallo, glicine, menta, blu, ambra, sabbia, azzurro, rosa, ardesia, cannella (`riferimento/token.md`, «Colori: persone e animali»). In `08` e `27`: prima il colore scelto, poi i liberi, infine i già presi (spenti), ognuno nell'ordine base. Le righe si riempiono da sinistra a destra.
 - Tastiera: `role="radiogroup"`; destra e giù vanno al successivo, sinistra e su al precedente, con ritorno da 10 a 1; i colori spenti si saltano.
-- Nome accessibile come oggi: `<Nome>` (iniziale maiuscola), `<Nome> (già di <persona>)` in 08, `<Nome> (già usato)` in 27 e altrove. Esempi nuovi: «Lampone», «Ceruleo (già usato)».
+- Nome accessibile: il nome della **tinta** (F2, `memberColorLabel()`, testi in `src/lib/i18n/messages/it.ts`), con l'iniziale maiuscola; `<Tinta> (già di <persona>)` in 08, `<Tinta> (già usato)` in 27 e altrove. Esempi: «Sabbia» (codice `lampone`), «Corallo (già di Laura)», «Azzurro (già usato)». Mai il nome del codice («Pomodoro», «Basilico»).
 - Nest al completo: il testo è `HOUSEHOLD_FULL_MESSAGE` in `src/lib/household-limits.ts` («Il Nest è al completo: ci stanno al massimo 10 tra persone e animali.»), mai il messaggio tecnico del database; `isHouseholdFullError(error)` riconosce l'errore `P0001` con `household member limit reached`; `MAX_HOUSEHOLD_MEMBERS` vale 10.
 
 ### Classi senza componente React (per ora)
