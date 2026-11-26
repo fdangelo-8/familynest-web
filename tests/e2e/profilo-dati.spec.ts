@@ -171,7 +171,8 @@ test.describe("file «I tuoi dati»", () => {
       expect(file.json.preferenze_di_notifica).toBeNull();
       expect(file.json.preferenze).toEqual({
         all_apertura: "Io",
-        sintesi_del_mattino: "7:30",
+        // 7:15 is the default after #612 (passes only once #612 is merged).
+        sintesi_del_mattino: "7:15",
         visibilita_predefinita: "Occupato",
       });
     });

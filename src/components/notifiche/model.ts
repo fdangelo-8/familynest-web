@@ -57,6 +57,8 @@ export type RowView = {
   todo: { id: string; title: string; isDone: boolean } | null;
   /** «Apri» to an event (kind «Cambio d'orario») */
   openHref: string | null;
+  /** Text of the open button: «Apri», or «Vedi l'impegno» for a ride request */
+  openLabel: string;
 };
 
 export type SectionView = {
@@ -168,6 +170,7 @@ function toRow(
     time: formatTime(item.createdAt),
     todo: null,
     openHref: null,
+    openLabel: it.notifiche.open,
   };
   switch (item.kind) {
     case "todo_assigned": {
@@ -307,7 +310,13 @@ function toRow(
       const subject = context.members.find(
         (m) => m.id === item.subjectMemberId,
       );
-      const titles = { first: first.title, second: second.title };
+      // The day is worked out when the row is read, so it stays true later.
+      const dayText = dayInPhrase(toDayKey(first.startsAt), now);
+      const titles = {
+        first: first.title,
+        second: second.title,
+        day: dayText.charAt(0).toUpperCase() + dayText.slice(1),
+      };
       // Somebody who is no longer in the Nest cannot be named: no row.
       if (item.subjectMemberId !== context.meId && !subject) return null;
       return {
@@ -323,10 +332,11 @@ function toRow(
       };
     }
     case "ride_request":
-      // The design has no actions for this kind: text only.
       return {
         ...base,
         lead: leadOf(item.actor),
+        openHref: occurrenceHref(item.event),
+        openLabel: it.notifiche.openEvent,
         parts: richParts(
           item.leg === "escort"
             ? it.notifiche.rideRequestEscort

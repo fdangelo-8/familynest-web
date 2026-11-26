@@ -85,13 +85,15 @@ export const it = {
   notifiche: {
     memberJoined:
       "<b>{name}</b> ha accettato l'invito: ora avete lo stesso calendario e le stesse liste.",
-    eventReminder: "Tra poco: <b>{title}</b>, {day} alle {time}.",
+    open: "Apri",
+    openEvent: "Vedi l'impegno",
+    eventReminder: "Promemoria: <b>{title}</b>, {day} alle {time}.",
     rideEscort: "Tocca a te portare, {day} alle {time}: <b>{title}</b>.",
     ridePickup: "Tocca a te riprendere, {day} alle {time}: <b>{title}</b>.",
     overlapMine:
-      "Domani, alla stessa ora: <b>{first}</b> e <b>{second}</b>. Sei in due posti insieme.",
+      "{day}, alla stessa ora: <b>{first}</b> e <b>{second}</b>. Sei in due posti insieme.",
     overlapOther:
-      "Domani, alla stessa ora: <b>{first}</b> e <b>{second}</b>. Riguarda {name}.",
+      "{day}, alla stessa ora: <b>{first}</b> e <b>{second}</b>. Riguarda {name}.",
     rideRequestEscort:
       "<b>{name}</b> ti chiede di portare, {day} alle {time}: <b>{title}</b>.",
     rideRequestPickup:

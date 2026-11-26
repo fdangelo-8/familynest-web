@@ -96,7 +96,7 @@ export function NotificationRow({
                 href={row.todo ? "/casa/da-fare" : (row.openHref ?? "")}
                 aria-describedby={textId}
               >
-                Apri
+                {row.openLabel}
               </Button>
             ) : null}
           </div>

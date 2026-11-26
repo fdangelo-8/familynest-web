@@ -245,7 +245,9 @@ test.describe("testa e colore, come si leggono", () => {
 // --------------------------------------------------------- Come usi l'app
 
 test.describe("Come usi l'app, come si legge", () => {
-  test("CA-14: senza scelte fatte le righe dicono Io, 7:30, Occupato e Nessuno collegato", async ({
+  // User A is created on a fresh database, so its profile takes the default
+  // of #612 (07:15): this passes only once #612 is merged.
+  test("CA-14: senza scelte fatte le righe dicono Io, 7:15, Occupato e Nessuno collegato", async ({
     page,
     baseURL,
   }) => {
@@ -254,7 +256,7 @@ test.describe("Come usi l'app, come si legge", () => {
     await page.goto(PATH);
     await expect(h1(page)).toBeVisible();
     await expect(valueOf(page, "All'apertura")).toHaveText("Io");
-    await expect(valueOf(page, "Sintesi del mattino")).toHaveText("7:30");
+    await expect(valueOf(page, "Sintesi del mattino")).toHaveText("7:15");
     await expect(valueOf(page, "Visibilità predefinita")).toHaveText(
       "Occupato",
     );
