@@ -62,7 +62,7 @@ test("#85: scelta del colore con il fuoco da tastiera", async ({ page }) => {
   await page.keyboard.press("Shift+Tab");
   await page.keyboard.press("ArrowRight");
   await page.keyboard.press("ArrowRight");
-  await expect(group.getByRole("radio", { name: "Lampone" })).toBeFocused();
+  await expect(group.getByRole("radio", { name: "Sabbia" })).toBeFocused();
   await expect(group).toHaveScreenshot("scelta-colore-fuoco.png");
 });
 

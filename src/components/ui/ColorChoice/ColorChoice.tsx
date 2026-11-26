@@ -3,6 +3,7 @@
 import { useRef, type KeyboardEvent } from "react";
 import { MEMBER_COLORS, type MemberColor } from "../Avatar/Avatar";
 import { cx } from "../cx";
+import { memberColorClass, memberColorLabel } from "@/lib/member-colors";
 
 /** The ten colours a member can have, in the base order (#74). */
 export type ChoosableColor = Exclude<MemberColor, "insieme">;
@@ -13,10 +14,8 @@ export const CHOOSABLE_COLORS: ReadonlyArray<ChoosableColor> =
 /** Colour already used in the Nest. `by` is the name of whoever has it, when known. */
 export type TakenColor = { color: ChoosableColor; by?: string };
 
-/** Name of a colour as read aloud: `Salvia`. */
-export function memberColorLabel(color: MemberColor): string {
-  return color.charAt(0).toLocaleUpperCase("it-IT") + color.slice(1);
-}
+/** Name of a colour as read aloud: `Menta` (from the messages, see `member-colors`). */
+export { memberColorLabel };
 
 /** First colour, in the base order, that is not taken. `null` if all ten are. */
 export function firstFreeColor(
@@ -173,7 +172,7 @@ export function ColorChoice({
             id={idPrefix ? `${idPrefix}-${color}` : undefined}
             type="button"
             role="radio"
-            className={cx("scelta-colore__colore", `membro-${color}`)}
+            className={cx("scelta-colore__colore", memberColorClass(color))}
             aria-checked={value === color}
             aria-label={label}
             disabled={isOff(color)}

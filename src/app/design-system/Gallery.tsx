@@ -4,7 +4,12 @@ import Link from "next/link";
 import { useState, useSyncExternalStore, type ReactNode } from "react";
 import { Brand, Claim, LegalLine, Stickers } from "@/components/accesso/parts";
 import { Alert } from "@/components/ui/Alert/Alert";
-import { Avatar, MEMBER_COLORS } from "@/components/ui/Avatar/Avatar";
+import { Avatar } from "@/components/ui/Avatar/Avatar";
+import {
+  MEMBER_COLOR_CODES,
+  memberColorClass,
+  memberColorLabel,
+} from "@/lib/member-colors";
 import { Button } from "@/components/ui/Button/Button";
 import { Card } from "@/components/ui/Card/Card";
 import { Checkbox } from "@/components/ui/Checkbox/Checkbox";
@@ -44,10 +49,6 @@ import { Toggle } from "@/components/ui/Toggle/Toggle";
 import { useToast } from "@/components/ui/Toast/ToastProvider";
 import { VisuallyHidden } from "@/components/ui/VisuallyHidden/VisuallyHidden";
 import styles from "./gallery.module.css";
-
-function colorLabel(color: string) {
-  return color.charAt(0).toLocaleUpperCase("it-IT") + color.slice(1);
-}
 
 function Section({
   id,
@@ -1407,16 +1408,31 @@ function PeopleSection() {
         </Example>
         <Example caption="avatar · i 10 colori dei membri">
           <div className={styles.riga} data-testid="avatar-dieci-colori">
-            {MEMBER_COLORS.filter((color) => color !== "insieme").map(
-              (color) => (
-                <Avatar
-                  key={color}
-                  name={colorLabel(color)}
-                  color={color}
-                  size="m"
+            {MEMBER_COLOR_CODES.map((color) => (
+              <Avatar
+                key={color}
+                name={memberColorLabel(color)}
+                color={color}
+                size="m"
+              />
+            ))}
+          </div>
+        </Example>
+        <Example caption="colori delle persone · pieno, tinta, corsia">
+          <div className={styles.esempi} data-testid="colori-persone">
+            {[...MEMBER_COLOR_CODES, "neutro" as const].map((color) => (
+              <div
+                key={color}
+                className={`${styles.tinte} ${memberColorClass(color)}`}
+                data-testid={`colori-persone-${color}`}
+              >
+                <span className={`${styles.tinta} ${styles["tinta--pieno"]}`} />
+                <span className={`${styles.tinta} ${styles["tinta--tinta"]}`} />
+                <span
+                  className={`${styles.tinta} ${styles["tinta--corsia"]}`}
                 />
-              ),
-            )}
+              </div>
+            ))}
           </div>
         </Example>
         <Example caption="scelta-colore · 10 colori">
@@ -1426,26 +1442,24 @@ function PeopleSection() {
             aria-label="Il tuo colore"
             data-testid="scelta-colore-dieci"
           >
-            {MEMBER_COLORS.filter((color) => color !== "insieme").map(
-              (color, index) => {
-                const taken = color === "glicine" || color === "salvia";
-                return (
-                  <button
-                    key={color}
-                    type="button"
-                    role="radio"
-                    aria-checked={index === 0}
-                    aria-label={
-                      taken
-                        ? `${colorLabel(color)} (già usato)`
-                        : colorLabel(color)
-                    }
-                    disabled={taken}
-                    className={`scelta-colore__colore membro-${color}`}
-                  />
-                );
-              },
-            )}
+            {MEMBER_COLOR_CODES.map((color, index) => {
+              const taken = color === "pomodoro";
+              return (
+                <button
+                  key={color}
+                  type="button"
+                  role="radio"
+                  aria-checked={index === 1}
+                  aria-label={
+                    taken
+                      ? `${memberColorLabel(color)} (già di Laura)`
+                      : memberColorLabel(color)
+                  }
+                  disabled={taken}
+                  className={`scelta-colore__colore ${memberColorClass(color)}`}
+                />
+              );
+            })}
           </div>
         </Example>
       </Section>

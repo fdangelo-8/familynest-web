@@ -148,7 +148,7 @@ test.describe("apertura del modulo", () => {
         await expect(field(dialog, "Data di nascita")).toHaveValue(
           "2016-12-14",
         );
-        await expect(colorRadio(dialog, "Salvia")).toBeChecked();
+        await expect(colorRadio(dialog, "Menta")).toBeChecked();
 
         const school = schoolGroup(dialog);
         await expect(field(school, "Nome della scuola")).toHaveValue(

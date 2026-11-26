@@ -457,9 +457,13 @@ test.describe("aree di tocco", () => {
         const cy = r.top + r.height / 2;
         const wide = Math.max(r.width, 44);
         const tall = Math.max(r.height, 44);
+        // A wide field covers the 12 px gap before the end control on purpose
+        // and that control (with its own 44 px area) sits on top of it, so the
+        // horizontal samples stay 12 px inside the field.
+        const inset = r.width > 88 ? 12 : 1;
         const points: Array<[number, number]> = [
-          [cx - wide / 2 + 1, cy],
-          [cx + wide / 2 - 1, cy],
+          [cx - wide / 2 + inset, cy],
+          [cx + wide / 2 - inset, cy],
           [cx, cy - tall / 2 + 1],
           [cx, cy + tall / 2 - 1],
         ];

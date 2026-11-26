@@ -137,30 +137,30 @@ test.describe("scelta del colore: tastiera", () => {
     // (the group is the first control of the page).
     await page.getByRole("button", { name: "Riuscito" }).focus();
     await page.keyboard.press("Shift+Tab");
-    const salvia = group.getByRole("radio", { name: "Salvia" });
+    const salvia = group.getByRole("radio", { name: "Menta" });
     await expect(salvia).toBeFocused();
     expect(await focusRingVisible(page)).toBe(true);
 
-    // Right: next free colour. Cobalto, zafferano is taken so it is skipped.
+    // Right: next free colour. Blu, ambra is taken so it is skipped.
     await page.keyboard.press("ArrowRight");
-    await expect(group.getByRole("radio", { name: "Cobalto" })).toBeFocused();
-    await expect(group.getByRole("radio", { name: "Cobalto" })).toHaveAttribute(
+    await expect(group.getByRole("radio", { name: "Blu" })).toBeFocused();
+    await expect(group.getByRole("radio", { name: "Blu" })).toHaveAttribute(
       "aria-checked",
       "true",
     );
     await page.keyboard.press("ArrowRight");
-    await expect(group.getByRole("radio", { name: "Lampone" })).toBeFocused();
+    await expect(group.getByRole("radio", { name: "Sabbia" })).toBeFocused();
     await page.keyboard.press("ArrowDown");
-    await expect(group.getByRole("radio", { name: "Ceruleo" })).toBeFocused();
+    await expect(group.getByRole("radio", { name: "Azzurro" })).toBeFocused();
     await page.keyboard.press("ArrowLeft");
     await page.keyboard.press("ArrowUp");
-    await expect(group.getByRole("radio", { name: "Cobalto" })).toBeFocused();
+    await expect(group.getByRole("radio", { name: "Blu" })).toBeFocused();
     expect(await focusRingVisible(page)).toBe(true);
 
     // Wrap-around: from the last colour to the first free one.
     await group.getByRole("radio", { name: "Cannella" }).focus();
     await page.keyboard.press("ArrowRight");
-    await expect(group.getByRole("radio", { name: "Salvia" })).toBeFocused();
+    await expect(group.getByRole("radio", { name: "Menta" })).toBeFocused();
 
     // Tab leaves the group in one press (no trap, no second stop).
     await page.keyboard.press("Tab");
@@ -171,9 +171,9 @@ test.describe("scelta del colore: tastiera", () => {
     await page.goto(DEMO);
     const group = page.getByTestId("scelta-colore-demo");
     for (const name of [
-      "Pomodoro (già di Marco)",
+      "Corallo (già di Marco)",
       "Glicine (già di Laura)",
-      "Zafferano (già usato)",
+      "Ambra (già usato)",
     ]) {
       await expect(group.getByRole("radio", { name })).toBeDisabled();
     }

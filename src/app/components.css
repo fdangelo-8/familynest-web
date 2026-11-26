@@ -39,22 +39,75 @@
 }
 
 /* ---------- Colori dei membri (solo avatar e punti) ---------- */
+/* Codice del database → tinta: src/lib/member-colors.ts (#196). */
 .membro-pomodoro {
-  --c: var(--color-membro-pomodoro);
+  --c: var(--color-membro-corallo);
+  --c-tinta: var(--color-membro-corallo-tinta);
+  --c-corsia: var(--color-membro-corallo-corsia);
+  --c-iniziale: var(--color-inchiostro);
 }
 .membro-glicine {
   --c: var(--color-membro-glicine);
+  --c-tinta: var(--color-membro-glicine-tinta);
+  --c-corsia: var(--color-membro-glicine-corsia);
+  --c-iniziale: var(--color-inchiostro);
 }
 .membro-salvia {
-  --c: var(--color-membro-salvia);
+  --c: var(--color-membro-menta);
+  --c-tinta: var(--color-membro-menta-tinta);
+  --c-corsia: var(--color-membro-menta-corsia);
+  --c-iniziale: var(--color-inchiostro);
 }
 .membro-cobalto {
-  --c: var(--color-membro-cobalto);
+  --c: var(--color-membro-blu);
+  --c-tinta: var(--color-membro-blu-tinta);
+  --c-corsia: var(--color-membro-blu-corsia);
+  --c-iniziale: var(--color-bianco);
 }
 .membro-zafferano {
-  --c: var(--color-membro-zafferano);
+  --c: var(--color-membro-ambra);
+  --c-tinta: var(--color-membro-ambra-tinta);
+  --c-corsia: var(--color-membro-ambra-corsia);
+  --c-iniziale: var(--color-inchiostro);
+}
+.membro-lampone {
+  --c: var(--color-membro-sabbia);
+  --c-tinta: var(--color-membro-neutro-tinta);
+  --c-corsia: var(--color-membro-sabbia-corsia);
+  --c-iniziale: var(--color-inchiostro);
+}
+.membro-ceruleo {
+  --c: var(--color-membro-azzurro);
+  --c-tinta: var(--color-membro-neutro-tinta);
+  --c-corsia: var(--color-membro-azzurro-corsia);
+  --c-iniziale: var(--color-inchiostro);
+}
+.membro-peonia {
+  --c: var(--color-membro-rosa);
+  --c-tinta: var(--color-membro-neutro-tinta);
+  --c-corsia: var(--color-membro-rosa-corsia);
+  --c-iniziale: var(--color-inchiostro);
+}
+.membro-basilico {
+  --c: var(--color-membro-ardesia);
+  --c-tinta: var(--color-membro-neutro-tinta);
+  --c-corsia: var(--color-membro-ardesia-corsia);
+  --c-iniziale: var(--color-bianco);
+}
+.membro-cannella {
+  --c: var(--color-membro-cannella);
+  --c-tinta: var(--color-membro-cannella-tinta);
+  --c-corsia: var(--color-membro-cannella-corsia);
+  --c-iniziale: var(--color-inchiostro);
+}
+.membro-neutro {
+  --c: var(--color-membro-neutro);
+  --c-tinta: var(--color-membro-neutro-tinta);
+  --c-corsia: var(--color-membro-neutro-corsia);
+  --c-iniziale: var(--color-inchiostro);
 }
 .membro-insieme {
+  --c-iniziale: var(--color-inchiostro);
   --c: var(--color-insieme);
 }
 
@@ -68,7 +121,7 @@
 }
 .t-titolo-pagina {
   font-family: var(--font-titoli);
-  font-weight: var(--weight-sottile);
+  font-weight: var(--weight-pieno);
   font-size: var(--text-titolo-pagina-size);
   line-height: var(--text-titolo-pagina-line);
   letter-spacing: var(--text-titolo-pagina-tracking);
@@ -124,7 +177,7 @@
   font-size: var(--text-etichetta-size);
   line-height: var(--text-etichetta-line);
   letter-spacing: var(--text-etichetta-tracking);
-  font-weight: var(--weight-forte);
+  font-weight: var(--weight-normale);
 }
 .t-micro {
   font-size: var(--text-micro-size);
@@ -1403,7 +1456,7 @@ button.riga-lista {
   font-family: var(--font-titoli);
   font-weight: var(--weight-semi);
   font-size: var(--text-avatar-s-size);
-  color: var(--color-inchiostro);
+  color: var(--c-iniziale, var(--color-inchiostro));
   flex: none;
   font-style: normal;
   line-height: 1;
@@ -2485,6 +2538,14 @@ button.riga-lista {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: var(--space-1);
+}
+/* A 360 px the margin of 24 px leaves 312 px: seven days with a gap of 4 px
+   are 41 px wide, under the touch area of 44 px. Without the gap they are
+   44,5 px. From 375 px on nothing changes (#196). */
+@media (max-width: 374px) {
+  .striscia-giorni {
+    gap: var(--space-0);
+  }
 }
 .striscia-giorni__giorno {
   border: 0;
@@ -3671,23 +3732,6 @@ button.riga-lista {
 .parte-4-4 {
   width: calc(100% / var(--persone) / 4 - var(--space-1));
   margin-left: calc(100% / var(--persone) / 4 * 3);
-}
-
-/* Cinque colori nuovi dei membri (#74): stesso schema delle classi sopra */
-.membro-lampone {
-  --c: var(--color-membro-lampone);
-}
-.membro-ceruleo {
-  --c: var(--color-membro-ceruleo);
-}
-.membro-peonia {
-  --c: var(--color-membro-peonia);
-}
-.membro-basilico {
-  --c: var(--color-membro-basilico);
-}
-.membro-cannella {
-  --c: var(--color-membro-cannella);
 }
 
 /* Scelta del colore con 10 colori (#74): due righe da 5 a ogni larghezza.

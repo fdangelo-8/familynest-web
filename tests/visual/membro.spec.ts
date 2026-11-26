@@ -345,8 +345,8 @@ test.describe("#144: modifica nome e colore (utenti usa e getta)", () => {
     await page.getByRole("button", { name: "Modifica nome e colore" }).click();
     const dialog = page.getByRole("dialog", { name: "Modifica Laura" });
     await expect(dialog).toBeVisible();
-    await dialog.getByRole("radio", { name: "Salvia", exact: true }).click();
-    // Someone else takes Salvia while the sheet is open.
+    await dialog.getByRole("radio", { name: "Menta", exact: true }).click();
+    // Someone else takes Menta while the sheet is open.
     await addMember(user, { name: "Marta", kind: "adult" });
     await dialog.getByRole("button", { name: "Salva le modifiche" }).click();
     await expect(dialog).toContainText(

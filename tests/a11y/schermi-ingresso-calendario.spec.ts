@@ -279,7 +279,7 @@ async function textProblems(page: Page): Promise<Problems> {
         range.selectNodeContents(node);
         for (const rect of range.getClientRects()) {
           if (rect.width <= 2 || rect.height <= 2) continue;
-          // getClientRects gives the font area (Parkinsans is about 1.42 em):
+          // getClientRects gives the font area (Figtree is 1.2 em, #196):
           // shrink it to the line height, centred.
           const h = Math.min(rect.height, lh);
           const top = rect.top + (rect.height - h) / 2;

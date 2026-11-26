@@ -299,10 +299,10 @@ test.describe("invito · il tuo colore (08) · accessibilità", () => {
       "true",
     );
     for (const name of [
-      "Pomodoro (già di Marco)",
-      "Salvia (già di Sofia)",
-      "Cobalto (già di Tommaso)",
-      "Zafferano (già di Biscotto)",
+      "Corallo (già di Marco)",
+      "Menta (già di Sofia)",
+      "Blu (già di Tommaso)",
+      "Ambra (già di Biscotto)",
     ]) {
       await expect(group.getByRole("radio", { name })).toBeDisabled();
     }
@@ -348,10 +348,10 @@ test.describe("invito · il tuo colore (08) · accessibilità", () => {
       walked.push(await active());
     }
     expect(walked).toEqual([
-      "Lampone",
-      "Ceruleo",
-      "Peonia",
-      "Basilico",
+      "Sabbia",
+      "Azzurro",
+      "Rosa",
+      "Ardesia",
       "Cannella",
       "Glicine",
     ]);
@@ -371,10 +371,10 @@ test.describe("invito · il tuo colore (08) · accessibilità", () => {
       }
       for (const name of [
         "Glicine",
-        "Lampone",
-        "Ceruleo",
-        "Peonia",
-        "Basilico",
+        "Sabbia",
+        "Azzurro",
+        "Rosa",
+        "Ardesia",
         "Cannella",
       ]) {
         await expectTouchArea(shown(page, "radio", name), name);
@@ -421,18 +421,18 @@ test.describe("invito · il tuo colore (08) · accessibilità", () => {
       ],
     });
     await openColor(page, baseURL, laura, nest.token);
-    await shown(page, "radio", "Peonia").click();
+    await shown(page, "radio", "Rosa").click();
     await shown(page, "button", "Continua").click();
     await expect(
       shownText(
         page,
         "alert",
-        "Pietro ha appena preso la peonia. Scegli un altro colore.",
+        "Pietro ha appena preso la rosa. Scegli un altro colore.",
       ),
     ).toBeVisible();
     // The focus goes back to the colour the inviter gave.
     await expect(shown(page, "radio", "Glicine")).toBeFocused();
-    await expect(shown(page, "radio", "Peonia (già di Pietro)")).toBeDisabled();
+    await expect(shown(page, "radio", "Rosa (già di Pietro)")).toBeDisabled();
     await expectNoBlocking(page);
     await expectStructure(page);
   });

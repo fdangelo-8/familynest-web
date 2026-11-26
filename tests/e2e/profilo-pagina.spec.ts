@@ -174,18 +174,18 @@ test.describe("testa e colore, come si leggono", () => {
       els.map((el) => el.getAttribute("aria-label")),
     );
     expect(names).toEqual([
-      "Pomodoro",
-      "Lampone",
-      "Ceruleo",
-      "Peonia",
-      "Basilico",
+      "Corallo",
+      "Sabbia",
+      "Azzurro",
+      "Rosa",
+      "Ardesia",
       "Cannella",
       "Glicine (già usato)",
-      "Salvia (già usato)",
-      "Cobalto (già usato)",
-      "Zafferano (già usato)",
+      "Menta (già usato)",
+      "Blu (già usato)",
+      "Ambra (già usato)",
     ]);
-    await expect(colorRadio(page, "Pomodoro")).toHaveAttribute(
+    await expect(colorRadio(page, "Corallo")).toHaveAttribute(
       "aria-checked",
       "true",
     );
@@ -216,9 +216,9 @@ test.describe("testa e colore, come si leggono", () => {
     await expect(h1(page)).toBeVisible();
     await expect(colorRadio(page, "Glicine")).toBeEnabled();
     for (const taken of [
-      "Pomodoro (già usato)",
-      "Salvia (già usato)",
-      "Zafferano (già usato)",
+      "Corallo (già usato)",
+      "Menta (già usato)",
+      "Ambra (già usato)",
     ]) {
       await expect(colorRadio(page, taken)).toBeDisabled();
     }
