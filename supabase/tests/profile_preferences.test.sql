@@ -28,12 +28,12 @@ select col_has_default('public', 'profiles', 'start_lens', 'start_lens has a def
 select col_has_default('public', 'profiles', 'morning_digest_time', 'morning_digest_time has a default');
 select col_has_default('public', 'profiles', 'default_event_visibility', 'default_event_visibility has a default');
 
--- Existing accounts (seed) and new accounts get «Io», «7:30», «Occupato».
+-- Existing accounts (seed) and new accounts get «Io», «7:15» (#511, mn1-16), «Occupato».
 select results_eq(
   $$ select distinct p.start_lens::text, p.morning_digest_time::text, p.default_event_visibility::text
      from public.profiles p $$,
-  $$ values ('io', '07:30:00', 'busy') $$,
-  'every existing profile has the defaults: Io, 7:30, Occupato'
+  $$ values ('io', '07:15:00', 'busy') $$,
+  'every existing profile has the defaults: Io, 7:15, Occupato'
 );
 
 insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, created_at, updated_at)
@@ -43,8 +43,8 @@ values ('00000000-0000-0000-0000-000000000000', 'eeeeeeee-0000-4000-8000-0000000
 select results_eq(
   $$ select p.start_lens::text, p.morning_digest_time::text, p.default_event_visibility::text
      from public.profiles p where p.id = 'eeeeeeee-0000-4000-8000-000000000001' $$,
-  $$ values ('io', '07:30:00', 'busy') $$,
-  'a new account gets the defaults: Io, 7:30, Occupato'
+  $$ values ('io', '07:15:00', 'busy') $$,
+  'a new account gets the defaults: Io, 7:15, Occupato'
 );
 
 -- ---------------------------------------------------------------------------
@@ -83,8 +83,8 @@ set local request.jwt.claims to '{"sub":"aaaaaaaa-0000-4000-8000-000000000001","
 select results_eq(
   $$ select p.start_lens::text, p.morning_digest_time::text, p.default_event_visibility::text
      from public.profiles p where p.id = 'aaaaaaaa-0000-4000-8000-000000000001' $$,
-  $$ values ('io', '07:30:00', 'busy') $$,
-  'CA-14: A reads their own preferences (never changed: Io, 7:30, Occupato)'
+  $$ values ('io', '07:15:00', 'busy') $$,
+  'CA-14: A reads their own preferences (never changed: Io, 7:15, Occupato)'
 );
 select results_eq(
   $$ update public.profiles set start_lens = 'nest'
@@ -141,8 +141,8 @@ select lives_ok(
 
 -- Values outside the lists are refused, and nothing changes.
 select throws_ok(
-  $$ update public.profiles set morning_digest_time = '07:15' where id = 'aaaaaaaa-0000-4000-8000-000000000001' $$,
-  '23514', null, '7:15 is refused (not a half hour)'
+  $$ update public.profiles set morning_digest_time = '07:10' where id = 'aaaaaaaa-0000-4000-8000-000000000001' $$,
+  '23514', null, '7:10 is refused (not a quarter of an hour, #511)'
 );
 select throws_ok(
   $$ update public.profiles set morning_digest_time = '05:30' where id = 'aaaaaaaa-0000-4000-8000-000000000001' $$,
@@ -251,9 +251,9 @@ select results_eq(
      order by p.id $$,
   $$ values
        ('aaaaaaaa-0000-4000-8000-000000000001'::uuid, 'nest', '08:30:00', 'private'),
-       ('bbbbbbbb-0000-4000-8000-000000000001'::uuid, 'io', '07:30:00', 'busy'),
-       ('bbbbbbbb-0000-4000-8000-000000000002'::uuid, 'io', '07:30:00', 'busy'),
-       ('cccccccc-0000-4000-8000-000000000001'::uuid, 'io', '07:30:00', 'busy') $$,
+       ('bbbbbbbb-0000-4000-8000-000000000001'::uuid, 'io', '07:15:00', 'busy'),
+       ('bbbbbbbb-0000-4000-8000-000000000002'::uuid, 'io', '07:15:00', 'busy'),
+       ('cccccccc-0000-4000-8000-000000000001'::uuid, 'io', '07:15:00', 'busy') $$,
   'only the preferences of A changed'
 );
 

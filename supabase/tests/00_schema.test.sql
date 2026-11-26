@@ -56,9 +56,9 @@ select columns_are(
 select columns_are(
   'public', 'profiles',
   array['id', 'display_name', 'created_at', 'updated_at', 'start_lens', 'morning_digest_time', 'default_event_visibility',
-        -- #511 part 1: the days of the morning digest.
-        'morning_digest_weekdays'],
-  'profiles has exactly the planned columns (no email; three preferences of #218, the digest days of #511)'
+        -- #511 part 1: the days of the morning digest; part 2: its introduction seen (mn1-17).
+        'morning_digest_weekdays', 'morning_digest_intro_seen_at'],
+  'profiles has exactly the planned columns (no email; three preferences of #218, the digest days and introduction of #511)'
 );
 -- Only exception: the vet of a pet (name, practice, phone) in pet_profiles, allowed by
 -- Francesco's answer 3 of #460 (18/11/2026, with the legal opinion of the same issue): data

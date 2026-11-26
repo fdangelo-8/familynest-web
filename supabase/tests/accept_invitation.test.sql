@@ -24,15 +24,18 @@ select is_empty(
 -- #458 changed both on purpose, only in the token filter (64 lowercase hexadecimal
 -- characters instead of 32-128 characters); before #458 they were
 -- f383434f35d7827ddbf8ca36a7805321 and cd02ff85ab53f2198e3c0d6dc44eb114.
+-- #511 (part 2, 20261126142928) changed accept_invitation_with_color on purpose, only by
+-- adding the member_joined notifications after the invitation is accepted (checks, errors
+-- and locks unchanged); with #458 it was da43d8025e0fd2379f3000c75f1f9882.
 select results_eq(
   $$ select p.proname::text collate "default", md5(p.prosrc) collate "default"
      from pg_proc p
      where p.oid in ('public.invitation_preview(text)'::regprocedure,
                      'public.accept_invitation_with_color(text, public.member_color)'::regprocedure)
      order by p.proname $$,
-  $$ values ('accept_invitation_with_color', 'da43d8025e0fd2379f3000c75f1f9882'),
+  $$ values ('accept_invitation_with_color', '140092391ae3ca9fd5aa086c344eda9d'),
             ('invitation_preview', 'a0de9ea8dfc88f373f56cb21338a0789') $$,
-  '#458: the code of accept_invitation_with_color and invitation_preview is the one of #458'
+  '#458, #511: the code of accept_invitation_with_color (with member_joined) and invitation_preview'
 );
 select results_eq(
   $$ select p.proargnames::text[] collate "default", p.prorettype::regtype::text collate "default", p.proretset
