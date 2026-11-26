@@ -118,7 +118,7 @@ jobs:
             "mcr.microsoft.com/playwright:v${{ steps.pw.outputs.version }}-noble" \
             bash -c 'npx playwright test $SPEC'
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: playwright-report
