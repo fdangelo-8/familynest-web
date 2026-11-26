@@ -791,7 +791,13 @@ test.describe("CA-11: stessi stili del mockup", () => {
     // gallery shows it on paper: the secondary link is on paper in both.
     { id: "btn-link", selector: ".btn-link--secondario" },
     { id: "btn-pericolo", selector: ".btn-pericolo" },
-    { id: "btn-pericolo-pieno", selector: ".btn-pericolo-pieno" },
+    {
+      id: "btn-pericolo-pieno",
+      selector: ".btn-pericolo-pieno",
+      // #503, §1 of docs/specifiche/503-componenti-base.md: same measures as
+      // the primary (radius 14, 16 px, weight 600): approved differences.
+      skip: ["border-top-left-radius", "font-size", "font-weight"],
+    },
     { id: "btn-icona", selector: ".btn-icona" },
     // The mockup shows the spinner only on the dark frame, the gallery on
     // paper: the inherited text color is context, not the component.

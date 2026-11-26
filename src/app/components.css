@@ -5184,7 +5184,7 @@ a.parola--insieme:active {
 /* 1. Anello di focus del campo di ricerca: il bordo di 2 px c'è sempre,
       senza anello il focus non si vedrebbe */
 .campo-ricerca:focus-within {
-  outline: var(--border-medio) solid var(--color-info);
+  outline: var(--border-medio) solid var(--color-azione);
   outline-offset: var(--space-half);
 }
 
@@ -6330,12 +6330,21 @@ body {
   border-color: var(--color-latte);
   color: var(--color-latte);
 }
-.lista .riga-lista--2.riga-lista--notte.riga-lista--cliccabile:active {
+.lista
+  .riga-lista--2.riga-lista--notte.riga-lista--cliccabile:not(
+    :disabled
+  ):active {
   background: var(--color-notte-2);
 }
 @media (hover: hover) {
-  .lista .riga-lista--2.riga-lista--notte.riga-lista--cliccabile:hover,
-  .lista .riga-lista--2.riga-lista--notte.riga-lista--cliccabile:active {
+  .lista
+    .riga-lista--2.riga-lista--notte.riga-lista--cliccabile:not(
+      :disabled
+    ):hover,
+  .lista
+    .riga-lista--2.riga-lista--notte.riga-lista--cliccabile:not(
+      :disabled
+    ):active {
     background: var(--color-notte-2);
     color: var(--color-latte);
   }
