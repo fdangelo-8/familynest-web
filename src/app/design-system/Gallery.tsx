@@ -639,21 +639,23 @@ function BaseComponentsSection() {
 // ?avviso-offline=1.
 function OfflineNoticeView() {
   return (
-    <main className={styles.pagina}>
+    <>
       <Alert variant="offline" data-testid="base-avviso-offline-alto">
         Vedi le cose aggiornate alle 19:05; le modifiche partiranno appena torna
         la connessione.
       </Alert>
-      <h1 className="t-titolo-pagina">Design system</h1>
-      <div data-testid="base-avviso-offline-contenuto">
-        {Array.from({ length: 40 }, (_, i) => (
-          <p className="t-corpo" key={i}>
-            Riga di prova {i + 1}: il contenuto continua sotto l&apos;avviso per
-            provare lo scorrimento della pagina.
-          </p>
-        ))}
-      </div>
-    </main>
+      <main className={styles.pagina}>
+        <h1 className="t-titolo-pagina">Design system</h1>
+        <div data-testid="base-avviso-offline-contenuto">
+          {Array.from({ length: 150 }, (_, i) => (
+            <p className="t-corpo" key={i}>
+              Riga di prova {i + 1}: il contenuto continua sotto l&apos;avviso
+              per provare lo scorrimento della pagina.
+            </p>
+          ))}
+        </div>
+      </main>
+    </>
   );
 }
 
