@@ -86,6 +86,9 @@ values
 -- personal data. Page tests start from an empty list and must clear these first.
 --   Casa D'Angelo: to buy Latte (2 l), Pane, Mele (1 kg); taken Detersivo piatti.
 --   Casa Bianchi:  to buy Yogurt (added by Paolo), Biscotti; taken Caffè.
+-- The taken items were taken an hour ago (#512): the pg_cron job purge-taken-shopping-items
+-- deletes the things taken more than 12 hours ago every 10 minutes, so an older check
+-- would make them disappear between the reset and the tests.
 insert into public.shopping_items (
   id, household_id, name, quantity, added_by_member_id, checked_at, created_at
 )
@@ -97,13 +100,13 @@ values
   ('a3000000-0000-4000-8000-000000000003', '11111111-1111-4111-8111-111111111111', 'Mele', '1 kg',
    'a1000000-0000-4000-8000-000000000001', null, now() - interval '2 days' + interval '2 minutes'),
   ('a3000000-0000-4000-8000-000000000004', '11111111-1111-4111-8111-111111111111', 'Detersivo piatti', null,
-   'a1000000-0000-4000-8000-000000000001', now() - interval '1 day', now() - interval '2 days' + interval '3 minutes'),
+   'a1000000-0000-4000-8000-000000000001', now() - interval '1 hour', now() - interval '2 days' + interval '3 minutes'),
   ('b3000000-0000-4000-8000-000000000001', '22222222-2222-4222-8222-222222222222', 'Yogurt', '4',
    'b1000000-0000-4000-8000-000000000002', null, now() - interval '2 days'),
   ('b3000000-0000-4000-8000-000000000002', '22222222-2222-4222-8222-222222222222', 'Biscotti', null,
    'b1000000-0000-4000-8000-000000000001', null, now() - interval '2 days' + interval '1 minute'),
   ('b3000000-0000-4000-8000-000000000003', '22222222-2222-4222-8222-222222222222', 'Caffè', null,
-   'b1000000-0000-4000-8000-000000000001', now() - interval '1 day', now() - interval '2 days' + interval '2 minutes');
+   'b1000000-0000-4000-8000-000000000001', now() - interval '1 hour', now() - interval '2 days' + interval '2 minutes');
 
 -- Things to do (issue #87): a few examples per household. Invented texts, no health
 -- data (D1). Due dates are days in Europe/Rome counted from today. Page tests start
