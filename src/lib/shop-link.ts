@@ -3,6 +3,7 @@ import dns from "node:dns";
 import http from "node:http";
 import https from "node:https";
 import { isIP, type LookupFunction } from "node:net";
+import { BRAND } from "@/lib/brand";
 import { getShopLinkTestOrigin } from "@/lib/env";
 import { isPublicAddress } from "@/lib/shop-link-address";
 import { readShopPage } from "@/lib/shop-link-parse";
@@ -37,7 +38,7 @@ const TOTAL_TIMEOUT_MS = 8000;
 const MAX_REDIRECTS = 3;
 const MAX_HTML_BYTES = 1024 * 1024;
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
-const USER_AGENT = "FamilyNestBot/1.0 (lista desideri)";
+const USER_AGENT = `${BRAND.full}Bot/1.0 (lista desideri)`;
 const HTML_TYPES = ["text/html"] as const;
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
 

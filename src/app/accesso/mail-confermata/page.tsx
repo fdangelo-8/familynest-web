@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageTitle } from "@/lib/brand";
 import { redirect } from "next/navigation";
 import {
   ConfirmedError,
@@ -8,7 +9,7 @@ import { resolveDestination } from "@/lib/auth/destination";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
-  title: "FamilyNest · Mail confermata",
+  title: pageTitle("Mail confermata"),
   robots: { index: false },
 };
 

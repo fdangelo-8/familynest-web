@@ -16,6 +16,7 @@ import {
   type AccessError,
   type Provider,
 } from "@/lib/auth/oauth";
+import { brandRich, brandText, messages } from "@/lib/brand";
 import { createClient } from "@/lib/supabase/client";
 import { AuthLayout, Intro } from "./AuthLayout";
 import {
@@ -490,9 +491,11 @@ export function AccessScreen({
             title="Controlla la posta"
             titleRef={titleRef}
           >
-            Se è un indirizzo nuovo, ti abbiamo mandato una mail a{" "}
-            <b className={styles.address}>{email}</b>. Apri il link che
-            contiene: entri subito in FamilyNest.
+            {brandRich(
+              messages.accesso.checkMail,
+              { b: (children) => <b className={styles.address}>{children}</b> },
+              { email },
+            )}
           </Intro>
         }
         body={<HintList rows={SENT_ROWS} />}
@@ -557,7 +560,9 @@ export function AccessScreen({
       intro={
         <Intro
           eyebrow="Benvenuto"
-          title={login ? "Entra in FamilyNest" : "Crea il tuo account"}
+          title={
+            login ? brandText(messages.brand.enter) : "Crea il tuo account"
+          }
         >
           {login
             ? "Il calendario, la spesa e le cose da fare di chi vive con te, in un posto solo."

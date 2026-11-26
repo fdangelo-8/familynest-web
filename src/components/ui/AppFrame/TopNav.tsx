@@ -6,6 +6,7 @@ import {
   getActiveNavItem,
   getNavAriaCurrent,
 } from "@/lib/app-routes";
+import { Brand } from "../Brand/Brand";
 import { cx } from "../cx";
 import { Icon } from "../Icon/Icon";
 import { NestSquare } from "../NestSquare/NestSquare";
@@ -22,7 +23,7 @@ export function TopNav() {
   return (
     <header className="nav-alto">
       <Link href="/oggi" className="nav-alto__logo">
-        FamilyNest
+        <Brand />
       </Link>
       <nav className="nav-alto__voci" aria-label="Navigazione principale">
         {NAV_ITEMS.map((item) => (

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageTitle } from "@/lib/brand";
 import { PublicWishlistPage } from "@/components/desideri/PublicWishlistPage";
 
 // The only public page with the data of a family (decision D2). The HTML has
@@ -7,7 +8,7 @@ import { PublicWishlistPage } from "@/components/desideri/PublicWishlistPage";
 // The headers `X-Robots-Tag`, `Referrer-Policy` and `Cache-Control` of
 // `/desideri/...` are in `next.config.ts`.
 export const metadata: Metadata = {
-  title: "FamilyNest · Lista desideri",
+  title: pageTitle("Lista desideri"),
   robots: { index: false, follow: false },
   referrer: "no-referrer",
 };

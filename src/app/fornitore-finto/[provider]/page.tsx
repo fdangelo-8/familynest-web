@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { brandText, messages, pageTitle } from "@/lib/brand";
 import { mintFakeConsentCodes } from "@/lib/calendar-sync/fake-provider";
 import { ADMIN_APPROVAL_ERROR } from "@/lib/calendar-sync/oauth";
 import { isProviderId } from "@/lib/calendar-sync/types";
@@ -14,7 +15,7 @@ import { createClient } from "@/lib/supabase/server";
  * production): everywhere else it is a 404.
  */
 export const metadata: Metadata = {
-  title: "FamilyNest · Fornitore finto",
+  title: pageTitle("Fornitore finto"),
   robots: { index: false, follow: false },
 };
 
@@ -70,7 +71,7 @@ async function FakeProviderConsent({ params, searchParams }: PageProps) {
         </h1>
         <p className="intestazione__sotto">
           {codes
-            ? "FamilyNest chiede di leggere i tuoi calendari e di scrivere i loro impegni."
+            ? brandText(messages.fornitoreFinto.request)
             : "Non c'è nessun account preparato per questa prova."}
         </p>
       </div>

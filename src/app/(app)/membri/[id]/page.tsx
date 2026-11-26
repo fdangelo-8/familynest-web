@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageTitle } from "@/lib/brand";
 import { notFound, redirect } from "next/navigation";
 import { MemberError } from "@/components/membri/MemberError";
 import {
@@ -19,7 +20,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   // The name is not in the title: the title ends up in the history.
-  title: "FamilyNest · Un membro del Nest",
+  title: pageTitle("Un membro del Nest"),
 };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

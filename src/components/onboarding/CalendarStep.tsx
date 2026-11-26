@@ -13,6 +13,7 @@ import {
 import { clearLinkResult } from "@/app/onboarding/calendario/actions";
 import { Brand, Claim, Stickers } from "@/components/accesso/parts";
 import type { LinkResult } from "@/lib/calendar-sync/oauth";
+import { brandText, messages } from "@/lib/brand";
 import { Alert } from "@/components/ui/Alert/Alert";
 import { Button } from "@/components/ui/Button/Button";
 import { Icon } from "@/components/ui/Icon/Icon";
@@ -68,7 +69,7 @@ function noticeText(notice: CalendarNotice): string {
     return "Per ora non è possibile collegare Google o Outlook. Premi «Continua senza calendario»: potrai collegarlo più avanti da Calendari collegati.";
   }
   if (notice.result === "admin_approval") {
-    return `Il tuo account di lavoro non permette di collegare app esterne a ${name}. Chiedi a chi gestisce gli account in ufficio di approvare FamilyNest, oppure collega un altro calendario.`;
+    return brandText(messages.onboarding.adminApproval, { name });
   }
   return `Non siamo riusciti a collegare ${name}. Riprova o salta questo passo.`;
 }

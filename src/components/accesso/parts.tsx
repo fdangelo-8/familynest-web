@@ -1,23 +1,8 @@
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon/Icon";
 
-const DOTS = ["pomodoro", "glicine", "salvia", "cobalto"] as const;
-
-export function Brand() {
-  return (
-    <p className="marchio">
-      <span className="quadrato-nest quadrato-nest--notte" aria-hidden="true">
-        {DOTS.map((color) => (
-          <span
-            key={color}
-            className={`quadrato-nest__punto membro-${color}`}
-          />
-        ))}
-      </span>
-      FamilyNest
-    </p>
-  );
-}
+// The mark lives in one place (#502); this file only re-exports it.
+export { Brand } from "@/components/ui/Brand/Brand";
 
 /** Decorative stickers (decision D1: four, none health-related). */
 export function Stickers() {
