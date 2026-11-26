@@ -5952,7 +5952,7 @@ body {
 }
 .campo--errore .campo__scatola {
   background: var(--color-allerta-fondo);
-  box-shadow: inset 0 0 0 var(--border-sottile) var(--color-allerta);
+  box-shadow: inset 0 0 0 var(--border-medio) var(--color-allerta);
 }
 .campo--errore .campo__scatola:focus-within {
   box-shadow: inset 0 0 0 var(--space-half) var(--color-allerta);
@@ -5966,11 +5966,21 @@ body {
   min-height: var(--size-campo);
   border-radius: inherit;
   background: transparent;
-  box-shadow: none;
+  /* Lo stesso filo della scatola: il campo che ha il fuoco lo porta anche lui */
+  box-shadow: inset 0 0 0 var(--border-sottile) var(--color-filo-campo);
   padding: calc(var(--space-2) + var(--text-etichetta-line)) var(--space-4)
     var(--space-2);
   font-size: var(--text-controllo-size);
   line-height: var(--text-controllo-line);
+}
+.campo__scatola .campo__input:focus {
+  box-shadow: inset 0 0 0 var(--space-half) var(--color-inchiostro);
+}
+.campo--errore .campo__scatola .campo__input {
+  box-shadow: inset 0 0 0 var(--border-medio) var(--color-allerta);
+}
+.campo--errore .campo__scatola .campo__input:focus {
+  box-shadow: inset 0 0 0 var(--space-half) var(--color-allerta);
 }
 .campo__scatola .campo__input:disabled {
   opacity: 1;
@@ -5981,13 +5991,25 @@ body {
 .campo__scatola.campo-password .campo__input {
   padding-right: calc(var(--size-tocco) + var(--space-2));
 }
-.campo__scatola .campo__input:-webkit-autofill,
-.campo__scatola .campo__input:-webkit-autofill:focus {
-  box-shadow: inset 0 0 0 var(--size-azione) var(--color-superficie);
+.campo__scatola .campo__input:-webkit-autofill {
+  box-shadow:
+    inset 0 0 0 var(--border-sottile) var(--color-filo-campo),
+    inset 0 0 0 var(--size-riga-alta) var(--color-superficie);
 }
-.campo--errore .campo__scatola .campo__input:-webkit-autofill,
+.campo__scatola .campo__input:-webkit-autofill:focus {
+  box-shadow:
+    inset 0 0 0 var(--space-half) var(--color-inchiostro),
+    inset 0 0 0 var(--size-riga-alta) var(--color-superficie);
+}
+.campo--errore .campo__scatola .campo__input:-webkit-autofill {
+  box-shadow:
+    inset 0 0 0 var(--border-medio) var(--color-allerta),
+    inset 0 0 0 var(--size-riga-alta) var(--color-allerta-fondo);
+}
 .campo--errore .campo__scatola .campo__input:-webkit-autofill:focus {
-  box-shadow: inset 0 0 0 var(--size-azione) var(--color-allerta-fondo);
+  box-shadow:
+    inset 0 0 0 var(--space-half) var(--color-allerta),
+    inset 0 0 0 var(--size-riga-alta) var(--color-allerta-fondo);
 }
 .campo__scatola > .campo__etichetta {
   position: absolute;
@@ -6054,9 +6076,21 @@ body {
 }
 .campo--unito.campo--errore .campo__scatola {
   background: var(--color-allerta-fondo);
-  box-shadow: inset 0 0 0 var(--border-sottile) var(--color-allerta);
+  box-shadow: inset 0 0 0 var(--border-medio) var(--color-allerta);
 }
 .campo--unito.campo--errore .campo__scatola:focus-within {
+  box-shadow: inset 0 0 0 var(--space-half) var(--color-allerta);
+}
+.campo--unito .campo__scatola .campo__input {
+  box-shadow: none;
+}
+.campo--unito .campo__scatola .campo__input:focus {
+  box-shadow: inset 0 0 0 var(--space-half) var(--color-inchiostro);
+}
+.campo--unito.campo--errore .campo__scatola .campo__input {
+  box-shadow: inset 0 0 0 var(--border-medio) var(--color-allerta);
+}
+.campo--unito.campo--errore .campo__scatola .campo__input:focus {
   box-shadow: inset 0 0 0 var(--space-half) var(--color-allerta);
 }
 

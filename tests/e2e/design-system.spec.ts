@@ -206,7 +206,8 @@ test.describe("token e base", () => {
     await expect(target).toHaveCSS("outline-style", "solid");
     // Chrome rounds 1.5px down to a whole device pixel at 1x.
     await expect(target).toHaveCSS("outline-width", /^1(\.5)?px$/);
-    await expect(target).toHaveCSS("outline-color", "rgb(51, 85, 204)");
+    // #503 (computer.md, question 6): the global ring is --color-azione.
+    await expect(target).toHaveCSS("outline-color", "rgb(15, 61, 68)");
     await expect(target).toHaveCSS("outline-offset", "2px");
   });
 
@@ -387,7 +388,8 @@ test.describe("campi e controlli", () => {
     await expect(date).toHaveValue("2026-10-20");
     await expect(time).toHaveValue("17:00");
     for (const field of [date, time, page.getByTestId("campo-predefinito")]) {
-      await expect(field).toHaveCSS("height", "52px");
+      // #503: --size-campo, the label sits inside the box.
+      await expect(field).toHaveCSS("height", "56px");
       await expect(field).toHaveCSS("border-top-left-radius", "12px");
     }
   });
@@ -750,14 +752,36 @@ test.describe("CA-11: stessi stili del mockup", () => {
     // Height follows the wrapping of the sample text (line-height is checked).
     { id: "t-display", selector: ".t-display", skip: ["height"] },
     { id: "icona", selector: "svg.icona" },
-    { id: "btn-primary", selector: ".btn-primary", inlinePaddingOnly: true },
+    // #503 (Componenti 2.0, decision of 24/11/2026): primary, secondary,
+    // tenue, the fields, the notices and the toast take the form of Fable;
+    // the properties listed in `skip` are the approved differences.
+    {
+      id: "btn-primary",
+      selector: ".btn-primary",
+      inlinePaddingOnly: true,
+      skip: [
+        "background-color",
+        "color",
+        "border",
+        "border-top-left-radius",
+        "font-size",
+        "font-weight",
+      ],
+    },
     {
       id: "btn-secondary",
       selector: ".btn-secondary",
       inlinePaddingOnly: true,
+      skip: [
+        "border",
+        "box-shadow",
+        "border-top-left-radius",
+        "font-size",
+        "font-weight",
+      ],
     },
     { id: "btn-chiaro", selector: ".btn-chiaro", inlinePaddingOnly: true },
-    { id: "btn-tenue", selector: ".btn-tenue" },
+    { id: "btn-tenue", selector: ".btn-tenue", skip: ["background-color"] },
     {
       id: "btn-tratteggiato",
       selector: ".btn-tratteggiato",
@@ -779,9 +803,19 @@ test.describe("CA-11: stessi stili del mockup", () => {
       selector: ".campo__input",
       // #196: --color-filo-campo #7F9092 and --color-filo-2 #C3CCC9.
       shadowColor: { ours: "rgb(127,144,146)", mock: "rgb(195,204,201)" },
+      // #503: the label sits inside the box (56 px, 16/22 value, the box
+      // draws the white background).
+      skip: [
+        "height",
+        "padding",
+        "font-size",
+        "line-height",
+        "background-color",
+      ],
     },
     { id: "casella", selector: ".casella" },
-    { id: "toggle", selector: ".toggle" },
+    // #503: the off switch has the border of the field around it.
+    { id: "toggle", selector: ".toggle", skip: ["box-shadow"] },
     { id: "selettore", selector: ".selettore" },
     { id: "chip", selector: ".chip--statico" },
     { id: "avatar", selector: '.avatar:not([class*="avatar--"])' },
@@ -800,15 +834,28 @@ test.describe("CA-11: stessi stili del mockup", () => {
     // One per variant; the height depends on how the text wraps.
     // The mockup shows the error one on the dark frame: the inherited text
     // color (and the border color that follows it) is context there.
+    // #503: notices have a grey or pink background, radius 12 and no ring.
     {
       id: "avviso",
       selector: ".avviso--errore",
-      skip: ["height", "color", "border"],
+      skip: [
+        "height",
+        "color",
+        "border",
+        "background-color",
+        "border-top-left-radius",
+        "box-shadow",
+      ],
     },
     ...[".avviso--avviso", ".avviso--info", ".avviso--ok"].map((selector) => ({
       id: "avviso",
       selector,
-      skip: ["height"],
+      skip: [
+        "height",
+        "background-color",
+        "border-top-left-radius",
+        "box-shadow",
+      ],
     })),
     { id: "errore-pagina", selector: ".errore-pagina", skip: ["height"] },
   ];
@@ -992,7 +1039,15 @@ test.describe("CA-11: stessi stili del mockup", () => {
     await compare(
       page,
       390,
-      [{ id: "toast", selector: ".toast", ours: ".toast", skip: ["height"] }],
+      [
+        {
+          id: "toast",
+          selector: ".toast",
+          ours: ".toast",
+          // #503: the message is --color-inchiostro with white text.
+          skip: ["height", "background-color", "color", "border"],
+        },
+      ],
       async () => {
         await page.getByTestId("toast-mostra-altro").click();
         await expect(page.locator(".toast")).toBeVisible();
@@ -1295,7 +1350,9 @@ test.describe("correzioni approvate (#52)", () => {
         const s = getComputedStyle(el);
         return `${s.boxShadow} | ${s.borderTopColor}`;
       });
-    expect(secondary).toContain("rgb(195, 204, 201)");
+    // #503: the secondary button has a 1 px --color-inchiostro border now;
+    // --color-filo-2 stays on the dashed button and the off switch.
+    expect(secondary).toContain("rgb(16, 38, 42)");
     const dashed = await page
       .locator("#btn-tratteggiato .btn-tratteggiato")
       .first()
