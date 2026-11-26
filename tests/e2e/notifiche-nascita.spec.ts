@@ -610,7 +610,7 @@ test.describe("liberi insieme", () => {
 });
 
 test.describe("spesa raggruppata", () => {
-  test("CA-20: con «Spesa» accesa Giulia riceve «Paolo ha aggiunto 3 cose alla spesa.» e Paolo nessuna; spenta no", async ({
+  test("CA-20: con «Spesa» accesa (predefinita) Giulia riceve «Paolo ha aggiunto 3 cose alla spesa.» e Paolo nessuna; spenta no", async ({
     page,
     baseURL,
     nest,
@@ -625,12 +625,13 @@ test.describe("spesa raggruppata", () => {
     // 24 hours before the instant it is given, so it runs a minute from now.
     const evening = new Date(Date.now() + 60_000);
 
-    // «Spesa» is off by default: nobody is told.
+    // «Spesa» is on by default (database of #511, PR #612): this test passes
+    // only after that PR. Giulia turns it off: nobody is told.
+    await setPreference(nest, "Giulia", "shopping", false);
     expect(await runJob(nest, "shopping_digest", evening)).toBe(0);
     expect(await notificationRows(nest)).toHaveLength(0);
 
     await setPreference(nest, "Giulia", "shopping", true);
-    await setPreference(nest, "Paolo", "shopping", true);
     expect(await runJob(nest, "shopping_digest", evening)).toBe(1);
     const giulia = await notificationRows(nest, "Giulia");
     expect(giulia).toHaveLength(1);

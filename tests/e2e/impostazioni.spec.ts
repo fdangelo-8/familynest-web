@@ -566,7 +566,8 @@ test.describe("contenuto", () => {
 // ------------------------------------------------------------- notifiche
 
 test.describe("notifiche", () => {
-  test("CA-18: «Spesa» si accende e si spegne, e la scelta resta dopo il ricaricamento", async ({
+  // «Spesa» starts on (DB of #511, PR #612): it is turned off, then on again.
+  test("CA-18: «Spesa» si spegne e si riaccende, e la scelta resta dopo il ricaricamento", async ({
     page,
     baseURL,
   }) => {
@@ -576,23 +577,10 @@ test.describe("notifiche", () => {
       await user.signInContext(page.context(), baseURL as string);
       await openSettings(page, nest);
       const spesa = switchOf(page, "Spesa");
+      await expect(spesa).toHaveAttribute("aria-checked", "true");
 
       await spesa.click();
-      await expect(spesa).toHaveAttribute("aria-checked", "true");
-      await expect
-        .poll(async () => (await prefsOf(adminMemberId))?.shopping)
-        .toBe(true);
-      await openSettings(page, nest);
-      await expect(switchOf(page, "Spesa")).toHaveAttribute(
-        "aria-checked",
-        "true",
-      );
-
-      await switchOf(page, "Spesa").click();
-      await expect(switchOf(page, "Spesa")).toHaveAttribute(
-        "aria-checked",
-        "false",
-      );
+      await expect(spesa).toHaveAttribute("aria-checked", "false");
       await expect
         .poll(async () => (await prefsOf(adminMemberId))?.shopping)
         .toBe(false);
@@ -600,6 +588,20 @@ test.describe("notifiche", () => {
       await expect(switchOf(page, "Spesa")).toHaveAttribute(
         "aria-checked",
         "false",
+      );
+
+      await switchOf(page, "Spesa").click();
+      await expect(switchOf(page, "Spesa")).toHaveAttribute(
+        "aria-checked",
+        "true",
+      );
+      await expect
+        .poll(async () => (await prefsOf(adminMemberId))?.shopping)
+        .toBe(true);
+      await openSettings(page, nest);
+      await expect(switchOf(page, "Spesa")).toHaveAttribute(
+        "aria-checked",
+        "true",
       );
     });
   });
@@ -625,10 +627,11 @@ test.describe("notifiche", () => {
           .toBe(false);
       }
       await openSettings(page, nest);
+      // «Spesa» was not touched: it stays on, the default of #511 (PR #612).
       expect((await switchStates(page)).map((s) => s[1])).toEqual([
         "false",
         "false",
-        "false",
+        "true",
         "false",
         "false",
       ]);
@@ -636,7 +639,7 @@ test.describe("notifiche", () => {
       expect(row).toEqual({
         events: false,
         assigned_todos: false,
-        shopping: false,
+        shopping: true,
         free_together: false,
         morning_digest: false,
       });
@@ -714,12 +717,13 @@ test.describe("notifiche", () => {
       await openSettings(page, nest);
       const spesa = switchOf(page, "Spesa");
 
+      // «Spesa» starts on (PR #612): the one request turns it off.
       await spesa.click();
       await spesa.click();
       await expect
         .poll(async () => (await prefsOf(adminMemberId))?.shopping)
-        .toBe(true);
-      await expect(spesa).toHaveAttribute("aria-checked", "true");
+        .toBe(false);
+      await expect(spesa).toHaveAttribute("aria-checked", "false");
       await expect(spesa.locator("xpath=ancestor::li[1]")).not.toHaveAttribute(
         "aria-busy",
         "true",
@@ -749,7 +753,7 @@ test.describe("notifiche", () => {
     ).toBeInViewport();
   });
 
-  test("CA-36 (tastiera): Tab porta il fuoco su «Spesa» e Spazio la accende", async ({
+  test("CA-36 (tastiera): Tab porta il fuoco su «Spesa» e Spazio la spegne", async ({
     page,
     baseURL,
   }) => {
@@ -762,12 +766,13 @@ test.describe("notifiche", () => {
       await page.keyboard.press("Tab");
       const spesa = switchOf(page, "Spesa");
       await expect(spesa).toBeFocused();
+      // «Spesa» starts on (PR #612): Space turns it off.
       await page.keyboard.press("Space");
-      await expect(spesa).toHaveAttribute("aria-checked", "true");
+      await expect(spesa).toHaveAttribute("aria-checked", "false");
       await expect(spesa).toBeFocused();
       await expect
         .poll(async () => (await prefsOf(adminMemberId))?.shopping)
-        .toBe(true);
+        .toBe(false);
     });
   });
 });
@@ -1178,10 +1183,11 @@ test.describe("sicurezza e privacy", () => {
       });
       await user.signInContext(page.context(), baseURL as string);
       await openSettings(page, nest);
+      // «Spesa» starts on (PR #612): the tap turns it off.
       await switchOf(page, "Spesa").click();
       await expect
         .poll(async () => (await prefsOf(adminMemberId))?.shopping)
-        .toBe(true);
+        .toBe(false);
       await leaveButton(page, nest).click();
       await dialog(page)
         .getByRole("button", { name: "Esci e cancella la casa" })

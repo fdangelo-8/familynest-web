@@ -217,7 +217,9 @@ test.describe("Come usi l'app: scelte", () => {
     });
   });
 
-  test("CA-16: «Sintesi del mattino» ha nove orari come chip, «7:30» scelto; «8:30» si salva", async ({
+  // «7:15» is the default of the database of #511 (PR #612): this test passes
+  // only after that PR.
+  test("CA-16: «Sintesi del mattino» ha diciassette orari a quarti d'ora come chip, «7:15» scelto; «8:30» si salva", async ({
     page,
     baseURL,
   }) => {
@@ -231,13 +233,21 @@ test.describe("Come usi l'app: scelte", () => {
       const chips = sheet.getByRole("button", { name: /^\d{1,2}:\d{2}$/ });
       await expect(chips).toHaveText([
         "6:00",
+        "6:15",
         "6:30",
+        "6:45",
         "7:00",
+        "7:15",
         "7:30",
+        "7:45",
         "8:00",
+        "8:15",
         "8:30",
+        "8:45",
         "9:00",
+        "9:15",
         "9:30",
+        "9:45",
         "10:00",
       ]);
       const pressed = await chips.evaluateAll((els) =>
@@ -245,7 +255,7 @@ test.describe("Come usi l'app: scelte", () => {
           .filter((el) => el.getAttribute("aria-pressed") === "true")
           .map((el) => el.textContent),
       );
-      expect(pressed).toEqual(["7:30"]);
+      expect(pressed).toEqual(["7:15"]);
 
       await chips.filter({ hasText: /^8:30$/ }).click();
       await expect(sheet).toBeHidden();
@@ -348,8 +358,9 @@ test.describe("Come usi l'app: scelte", () => {
       await expect(alertWith(page, PREFERENCE_NETWORK_ERROR)).toHaveText(
         PREFERENCE_NETWORK_ERROR,
       );
-      await expect(valueOf(page, "Sintesi del mattino")).toHaveText("7:30");
-      expect((await profileOf(user.id))?.morning_digest_time).toMatch(/^07:30/);
+      // 7:15 is the default of the database of #511 (PR #612).
+      await expect(valueOf(page, "Sintesi del mattino")).toHaveText("7:15");
+      expect((await profileOf(user.id))?.morning_digest_time).toMatch(/^07:15/);
     });
   });
 });

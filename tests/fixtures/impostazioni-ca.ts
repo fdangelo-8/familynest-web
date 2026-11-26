@@ -15,8 +15,12 @@ export const NOTIFICATIONS = [
   { column: "morning_digest", title: "Sintesi del mattino" },
 ] as const;
 
-/** Value of the five switches for someone who never chose (CA-12). */
-export const DEFAULT_STATES = ["true", "true", "false", "true", "true"];
+/**
+ * Value of the five switches for someone who never chose (CA-12). «Spesa» is
+ * on by default from the database of #511 (DB-2 part 2, PR #612): these tests
+ * pass only after that PR.
+ */
+export const DEFAULT_STATES = ["true", "true", "true", "true", "true"];
 
 export const BLOCKED_NOTE =
   "Sei l'unica persona che gestisce la casa: prima di uscire, dai il ruolo di amministratore a un altro adulto in «Chi c’è».";

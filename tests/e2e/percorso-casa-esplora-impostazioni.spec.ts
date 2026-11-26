@@ -181,9 +181,10 @@ test.describe("percorso di Esplora e delle impostazioni", () => {
     ).toHaveText(["Marco, tu", "Laura", "Sofia", "Tommaso", "Biscotto"]);
     const shopping = switchOf(page, "Spesa");
     await waitHydrated(shopping);
-    await expect(shopping).toHaveAttribute("aria-checked", "false");
-    await shopping.click();
+    // «Spesa» starts on (database of #511, PR #612): the tap turns it off.
     await expect(shopping).toHaveAttribute("aria-checked", "true");
+    await shopping.click();
+    await expect(shopping).toHaveAttribute("aria-checked", "false");
     const savedChoice = async () => {
       const { data } = await marco.admin
         .from("notification_preferences")
@@ -192,13 +193,13 @@ test.describe("percorso di Esplora e delle impostazioni", () => {
         .maybeSingle();
       return data?.shopping ?? null;
     };
-    await expect.poll(savedChoice).toBe(true);
+    await expect.poll(savedChoice).toBe(false);
     await page.reload();
     await expect(h1(page)).toHaveText(NEST);
     await waitHydrated(switchOf(page, "Spesa"));
     await expect(switchOf(page, "Spesa")).toHaveAttribute(
       "aria-checked",
-      "true",
+      "false",
     );
     await expect(notificationsSection(page).getByRole("switch")).toHaveCount(5);
 
@@ -227,9 +228,10 @@ test.describe("percorso di Esplora e delle impostazioni", () => {
       await other.goto("/impostazioni");
       await expect(h1(other)).toHaveText("Casa Bianchi");
       await waitHydrated(switchOf(other, "Spesa"));
+      // Marco's choice (off) does not reach her: she keeps the default (on).
       await expect(switchOf(other, "Spesa")).toHaveAttribute(
         "aria-checked",
-        "false",
+        "true",
       );
       const html = await (await other.request.get("/impostazioni")).text();
       for (const forbidden of [
