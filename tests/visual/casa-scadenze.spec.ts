@@ -106,6 +106,17 @@ test("vuoto", async ({ page }) => {
 
 test("caricamento", async ({ page }) => {
   await open(page, { deadlines: NORMAL_DEADLINES, reads: "slow" }, false);
+  // The document is streamed: wait until the page is painted, not only present
+  // in a hidden staging container (#196).
+  await expect(
+    page.getByRole("heading", { name: "Casa", level: 1 }),
+  ).toBeVisible();
+  await expect(
+    page
+      .locator('[aria-busy="true"] .skeleton')
+      .filter({ visible: true })
+      .first(),
+  ).toBeVisible();
   await expect(
     page.locator('[aria-busy="true"][aria-live="polite"]'),
   ).toContainText("Caricamento in corso");
