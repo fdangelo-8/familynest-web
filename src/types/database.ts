@@ -1943,6 +1943,25 @@ export type Database = {
           isSetofReturn: true;
         };
       };
+      clear_shopping_list: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          added_by_member_id: string | null;
+          checked_at: string | null;
+          created_at: string;
+          household_id: string;
+          id: string;
+          name: string;
+          quantity: string | null;
+          updated_at: string;
+        }[];
+        SetofOptions: {
+          from: "*";
+          to: "shopping_items";
+          isOneToOne: false;
+          isSetofReturn: true;
+        };
+      };
       complete_calendar_outbox_item: {
         Args: {
           p_claim_token?: string;
@@ -2307,6 +2326,10 @@ export type Database = {
           p_household_id: string;
           p_job: Database["public"]["Enums"]["notification_job"];
         };
+        Returns: number;
+      };
+      run_shopping_purge: {
+        Args: { p_at?: string; p_household_id: string };
         Returns: number;
       };
       run_wishlist_cleanup: {
