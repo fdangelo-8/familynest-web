@@ -138,6 +138,16 @@ test("filtro senza risultati", async ({ page }) => {
 
 test("caricamento", async ({ page }) => {
   await open(page, { todos: NORMAL_TODOS, reads: "slow" }, false);
+  // The document is streamed: right after `load` the content can still sit in
+  // a hidden staging container, and `toContainText` also reads hidden text.
+  // Wait until the page is really painted (heading and skeleton visible), or
+  // a cold run shoots a blank page (#196).
+  await expect(
+    page.getByRole("heading", { name: "Casa", level: 1 }),
+  ).toBeVisible();
+  await expect(
+    page.locator('[aria-busy="true"] .skeleton').first(),
+  ).toBeVisible();
   await expect(page.locator('[aria-busy="true"]').first()).toContainText(
     "Caricamento in corso",
   );
