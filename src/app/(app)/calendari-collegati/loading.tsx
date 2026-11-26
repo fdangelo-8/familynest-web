@@ -1,5 +1,6 @@
 import { SettingsMenu } from "@/components/ui/AppFrame/SettingsMenu";
 import { Skeleton, SkeletonGroup } from "@/components/ui/Skeleton/Skeleton";
+import { brandText, messages } from "@/lib/brand";
 
 /**
  * Shown inside the frame while the page loads: the side menu stays still and
@@ -17,8 +18,7 @@ export default function Loading() {
               Calendari collegati
             </h1>
             <p className="intestazione__sotto">
-              Scegli quali calendari portare in FamilyNest e cosa vedono gli
-              altri.
+              {brandText(messages.calendariCollegati.intro)}
             </p>
           </div>
           <Skeleton shape="testo-corto" />

@@ -194,8 +194,9 @@ select ok(
   'triggers, helpers and jobs cannot be called by the app'
 );
 select ok(
-  has_function_privilege('authenticated', 'private.notification_is_visible(public.notification_kind, uuid, uuid, uuid, date, uuid)', 'execute')
-  and not has_function_privilege('anon', 'private.notification_is_visible(public.notification_kind, uuid, uuid, uuid, date, uuid)', 'execute'),
+  -- #511 part 1: one argument (the notification), one source with the push.
+  has_function_privilege('authenticated', 'private.notification_is_visible(uuid)', 'execute')
+  and not has_function_privilege('anon', 'private.notification_is_visible(uuid)', 'execute'),
   'the visibility check of the select policy is evaluated as the reader'
 );
 select policies_are(

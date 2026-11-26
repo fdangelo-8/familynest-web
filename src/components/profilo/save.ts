@@ -1,3 +1,4 @@
+import { BRAND } from "@/lib/brand";
 import { createClient } from "@/lib/supabase/client";
 import type { ChoosableColor } from "@/components/ui/ColorChoice/ColorChoice";
 import type {
@@ -90,7 +91,7 @@ export async function downloadMyData(): Promise<SaveResult> {
     const disposition = response.headers.get("content-disposition") ?? "";
     const name =
       /filename="([^"]+)"/.exec(disposition)?.[1] ??
-      "familynest-i-tuoi-dati.json";
+      `${BRAND.slug}-i-tuoi-dati.json`;
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;

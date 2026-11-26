@@ -1,3 +1,4 @@
+import { brandText, messages } from "../../lib/brand";
 import {
   formatDayNumber,
   formatLongDay,
@@ -18,11 +19,12 @@ export const TITLE_MAX_LENGTH = MODEL_TITLE_MAX_LENGTH;
 export const SAVE_FAILED_TEXT =
   "Non siamo riusciti a salvare l'impegno. Controlla la connessione e riprova.";
 /** «Anche su …»: the calendar could not be read (#304) */
-export const ALSO_ON_READ_FAILED_TEXT =
-  "Non riusciamo a caricare i tuoi calendari collegati: per ora l'impegno resta solo in FamilyNest. Controlla la connessione e riprova.";
+export const ALSO_ON_READ_FAILED_TEXT = brandText(
+  messages.aggiungi.alsoOnReadFailed,
+);
 /** «Anche su …»: under the notice of the failed sending (#304) */
 export function alsoOnLeftText(providerLabel: string): string {
-  return `Se chiudi, l'impegno resta solo in FamilyNest. Puoi mandarlo a ${providerLabel} più tardi, da «Modifica» nel dettaglio dell'impegno.`;
+  return brandText(messages.aggiungi.alsoOnLeft, { provider: providerLabel });
 }
 export function alsoOnSendFailedText(
   title: string,

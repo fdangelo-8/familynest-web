@@ -35,6 +35,7 @@ import {
   type TurnPerson,
 } from "@/components/ui/TurnPeople/TurnPeople";
 import { WeekdayPicker } from "@/components/ui/WeekdayPicker/WeekdayPicker";
+import { askNest, brandText, messages, nestEnergy } from "@/lib/brand";
 import { PHOTO_REDUCE_ERROR } from "@/lib/photo-field-texts";
 import { REPEAT_DAYS_ERROR } from "@/lib/repeat-options";
 import { PageError } from "@/components/ui/PageError/PageError";
@@ -398,7 +399,7 @@ function AccessParts() {
               <div className="intestazione">
                 <p className="intestazione__sopra">Benvenuto</p>
                 <h3 className="intestazione__titolo t-titolo-pagina">
-                  Entra in FamilyNest
+                  {brandText(messages.brand.enter)}
                 </h3>
                 <p className="intestazione__sotto">
                   Il calendario, la spesa e le cose da fare di chi vive con te,
@@ -455,6 +456,16 @@ function AccessParts() {
               <LegalLine className="t-nota t-secondario" />
             </div>
           </div>
+        </div>
+      </Example>
+      <Example caption="Il nome · Brand · brand.enter · brand.askNest · brand.nestEnergy (#502)">
+        <div className="colonna" data-testid="il-nome">
+          <div className="tema-notte">
+            <Brand />
+          </div>
+          <p className="t-titolo-scheda">{brandText(messages.brand.enter)}</p>
+          <p className="t-corpo">{askNest()}</p>
+          <p className="t-corpo">{nestEnergy()}</p>
         </div>
       </Example>
     </Section>
@@ -2399,8 +2410,9 @@ function LinkedCalendarParts() {
               <span>
                 <span className="scelta__titolo">Entrata e uscita</span>
                 <span className="scelta__info">
-                  Quello che crei su Outlook arriva qui, e puoi mandare su
-                  Outlook gli impegni di FamilyNest.
+                  {brandText(messages.calendariCollegati.directionBoth, {
+                    provider: "Outlook",
+                  })}
                 </span>
               </span>
               <span />
@@ -2416,7 +2428,10 @@ function LinkedCalendarParts() {
               <span>
                 <span className="scelta__titolo">Solo in entrata</span>
                 <span className="scelta__info">
-                  Vedi i tuoi impegni, ma FamilyNest non scrive su Outlook.
+                  {brandText(messages.calendariCollegati.directionIncoming, {
+                    work: "",
+                    provider: "Outlook",
+                  })}
                 </span>
               </span>
               <span />
@@ -2639,7 +2654,7 @@ function WishlistParts() {
                 <span className="quadrato-nest__punto membro-salvia" />
                 <span className="quadrato-nest__punto membro-cobalto" />
               </span>
-              Lista creata con FamilyNest
+              {brandText(messages.brand.createdWith)}
             </p>
           </div>
         </div>

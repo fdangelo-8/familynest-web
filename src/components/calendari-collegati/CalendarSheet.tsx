@@ -8,6 +8,7 @@ import { useIsDesktop } from "@/components/ui/overlay";
 import { SegmentedControl } from "@/components/ui/SegmentedControl/SegmentedControl";
 import { Sheet } from "@/components/ui/Sheet/Sheet";
 import { Toggle } from "@/components/ui/Toggle/Toggle";
+import { brandText, messages } from "@/lib/brand";
 import {
   PROVIDER_NAME,
   joinNames,
@@ -139,7 +140,10 @@ export function CalendarSheet({
     .map((c) => c.name);
   const unlinkText =
     enabledNames.length > 0
-      ? `Gli impegni di ${joinNames(enabledNames)} spariscono da FamilyNest. Su ${provider} non cambia niente.`
+      ? brandText(messages.calendariCollegati.unlinkWithCalendars, {
+          names: joinNames(enabledNames),
+          provider,
+        })
       : `Su ${provider} non cambia niente.`;
 
   const radio = (
@@ -223,7 +227,9 @@ export function CalendarSheet({
               {radio(
                 "two_way",
                 "Entrata e uscita",
-                `Quello che crei su ${provider} arriva qui, e puoi mandare su ${provider} gli impegni di FamilyNest.`,
+                brandText(messages.calendariCollegati.directionBoth, {
+                  provider,
+                }),
                 readOnly,
               )}
               {radio(
@@ -231,7 +237,10 @@ export function CalendarSheet({
                 "Solo in entrata",
                 // «di lavoro» only where the calendar is for work: Outlook (mockup, #35
                 // CA-4); the other providers are personal calendars (#34 §5a).
-                `Vedi i tuoi impegni${account.provider === "outlook" ? " di lavoro" : ""}, ma FamilyNest non scrive su ${provider}.`,
+                brandText(messages.calendariCollegati.directionIncoming, {
+                  work: account.provider === "outlook" ? " di lavoro" : "",
+                  provider,
+                }),
                 false,
               )}
             </div>

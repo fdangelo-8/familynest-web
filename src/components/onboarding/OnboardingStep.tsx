@@ -8,6 +8,7 @@ import { clearLens } from "@/lib/lens";
 import { clearAllRecentSearches } from "@/lib/recent-searches";
 import { Button } from "@/components/ui/Button/Button";
 import { Icon } from "@/components/ui/Icon/Icon";
+import { brandText, messages } from "@/lib/brand";
 import { CHOICES, type Living } from "./choices";
 import styles from "./onboarding.module.css";
 import { Steps } from "./Steps";
@@ -15,10 +16,8 @@ import { Steps } from "./Steps";
 type Failure = "network" | "server";
 
 const FAILURE_TEXT: Record<Failure, string> = {
-  network:
-    "Non siamo riusciti a creare il tuo Nest. Controlla la connessione e riprova.",
-  server:
-    "Non siamo riusciti a creare il tuo Nest per un problema nostro. Riprova tra qualche minuto.",
+  network: brandText(messages.onboarding.createFailedNetwork),
+  server: brandText(messages.onboarding.createFailedServer),
 };
 
 const SIGN_OUT_FORM = "onboarding-signout";

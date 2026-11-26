@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageTitle } from "@/lib/brand";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { OnboardingError } from "@/components/onboarding/OnboardingError";
@@ -9,7 +10,7 @@ import { formatAge } from "@/lib/datetime";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
-  title: "FamilyNest · Chi c'è nel Nest?",
+  title: pageTitle("Chi c'è nel Nest?"),
 };
 
 /** Second line of a row: the role, plus age or invitation note. */

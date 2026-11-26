@@ -1006,12 +1006,16 @@ export type Database = {
         Row: {
           assigned_todos: boolean;
           created_at: string;
+          delivery_mode: Database["public"]["Enums"]["notification_delivery_mode"];
+          evening_digest_time: string;
           events: boolean;
           free_together: boolean;
+          hide_content: boolean;
           household_id: string;
           id: string;
           member_id: string;
           morning_digest: boolean;
+          quiet_hours: boolean;
           shopping: boolean;
           updated_at: string;
         };
@@ -1019,24 +1023,32 @@ export type Database = {
         Insert: {
           assigned_todos?: boolean;
           created_at?: string;
+          delivery_mode?: Database["public"]["Enums"]["notification_delivery_mode"];
+          evening_digest_time?: string;
           events?: boolean;
           free_together?: boolean;
+          hide_content?: boolean;
           household_id?: string;
           id?: string;
           member_id: string;
           morning_digest?: boolean;
+          quiet_hours?: boolean;
           shopping?: boolean;
           updated_at?: string;
         };
         Update: {
           assigned_todos?: boolean;
           created_at?: string;
+          delivery_mode?: Database["public"]["Enums"]["notification_delivery_mode"];
+          evening_digest_time?: string;
           events?: boolean;
           free_together?: boolean;
+          hide_content?: boolean;
           household_id?: string;
           id?: string;
           member_id?: string;
           morning_digest?: boolean;
+          quiet_hours?: boolean;
           shopping?: boolean;
           updated_at?: string;
         };
@@ -1337,6 +1349,7 @@ export type Database = {
           display_name: string | null;
           id: string;
           morning_digest_time: string;
+          morning_digest_weekdays: number[];
           start_lens: Database["public"]["Enums"]["lens"];
           updated_at: string;
         };
@@ -1347,6 +1360,7 @@ export type Database = {
           display_name?: string | null;
           id: string;
           morning_digest_time?: string;
+          morning_digest_weekdays?: number[];
           start_lens?: Database["public"]["Enums"]["lens"];
           updated_at?: string;
         };
@@ -1356,10 +1370,69 @@ export type Database = {
           display_name?: string | null;
           id?: string;
           morning_digest_time?: string;
+          morning_digest_weekdays?: number[];
           start_lens?: Database["public"]["Enums"]["lens"];
           updated_at?: string;
         };
         Relationships: [];
+      };
+      push_subscriptions: {
+        Row: {
+          auth: string | null;
+          created_at: string;
+          endpoint: string | null;
+          household_id: string;
+          id: string;
+          last_seen_at: string;
+          member_id: string;
+          p256dh: string | null;
+          platform: Database["public"]["Enums"]["push_platform"];
+          token: string | null;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          auth?: string | null;
+          created_at?: string;
+          endpoint?: string | null;
+          household_id: string;
+          id?: string;
+          last_seen_at?: string;
+          member_id: string;
+          p256dh?: string | null;
+          platform: Database["public"]["Enums"]["push_platform"];
+          token?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          auth?: string | null;
+          created_at?: string;
+          endpoint?: string | null;
+          household_id?: string;
+          id?: string;
+          last_seen_at?: string;
+          member_id?: string;
+          p256dh?: string | null;
+          platform?: Database["public"]["Enums"]["push_platform"];
+          token?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_household_id_fkey";
+            columns: ["household_id"];
+            isOneToOne: false;
+            referencedRelation: "households";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "push_subscriptions_member_fkey";
+            columns: ["member_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "household_members";
+            referencedColumns: ["id", "household_id"];
+          },
+        ];
       };
       shopping_item_assignees: {
         Row: {
@@ -1920,12 +1993,40 @@ export type Database = {
           provider_event_id: string;
         }[];
       };
+      claim_push_deliveries: {
+        Args: { p_at?: string; p_limit: number };
+        Returns: {
+          attempts: number;
+          claim_token: string;
+          id: string;
+          kind: Database["public"]["Enums"]["push_delivery_kind"];
+        }[];
+      };
       claim_shop_link_read: {
         Args: Record<PropertyKey, never>;
         Returns: boolean;
       };
       clear_checked_shopping_items: {
         Args: { item_ids: string[] };
+        Returns: {
+          added_by_member_id: string | null;
+          checked_at: string | null;
+          created_at: string;
+          household_id: string;
+          id: string;
+          name: string;
+          quantity: string | null;
+          updated_at: string;
+        }[];
+        SetofOptions: {
+          from: "*";
+          to: "shopping_items";
+          isOneToOne: false;
+          isSetofReturn: true;
+        };
+      };
+      clear_shopping_list: {
+        Args: Record<PropertyKey, never>;
         Returns: {
           added_by_member_id: string | null;
           checked_at: string | null;
@@ -1955,6 +2056,10 @@ export type Database = {
       complete_deadline: {
         Args: { p_deadline_id: string; p_due_date?: string };
         Returns: string;
+      };
+      complete_push_delivery: {
+        Args: { p_claim_token: string; p_delivery_id: string };
+        Returns: boolean;
       };
       complete_starter_list: {
         Args: Record<PropertyKey, never>;
@@ -2066,6 +2171,14 @@ export type Database = {
         Args: { p_claim_token?: string; p_id: string; p_retry_at: string };
         Returns: undefined;
       };
+      fail_push_delivery: {
+        Args: {
+          p_claim_token: string;
+          p_delivery_id: string;
+          p_retry_at: string;
+        };
+        Returns: boolean;
+      };
       find_event_conflicts: {
         Args: {
           p_ends_at: string;
@@ -2165,6 +2278,20 @@ export type Database = {
           data_base64: string;
         }[];
       };
+      get_push_content: {
+        Args: { p_claim_token: string; p_delivery_id: string };
+        Returns: {
+          at: string;
+          is_hidden: boolean;
+          item_count: number;
+          kind: Database["public"]["Enums"]["notification_kind"];
+          line: Database["public"]["Enums"]["morning_digest_line"];
+          notification_id: string;
+          person_name: string;
+          place: string;
+          title: string;
+        }[];
+      };
       invitation_preview: {
         Args: { p_token: string };
         Returns: {
@@ -2249,6 +2376,17 @@ export type Database = {
           visibility: Database["public"]["Enums"]["event_visibility"];
         }[];
       };
+      list_push_targets: {
+        Args: { p_claim_token: string; p_delivery_id: string };
+        Returns: {
+          auth: string;
+          endpoint: string;
+          id: string;
+          p256dh: string;
+          platform: Database["public"]["Enums"]["push_platform"];
+          token: string;
+        }[];
+      };
       mark_external_calendar_failing: {
         Args: { p_at?: string; p_calendar_id: string };
         Returns: undefined;
@@ -2268,6 +2406,20 @@ export type Database = {
           p_outcome: Database["public"]["Enums"]["calendar_sync_outcome"];
         };
         Returns: undefined;
+      };
+      register_push_subscription: {
+        Args: {
+          p_auth?: string;
+          p_endpoint?: string;
+          p_p256dh?: string;
+          p_platform: Database["public"]["Enums"]["push_platform"];
+          p_token?: string;
+        };
+        Returns: string;
+      };
+      remove_push_subscription: {
+        Args: { p_subscription_id: string };
+        Returns: boolean;
       };
       remove_space_interest: {
         Args: { p_space: Database["public"]["Enums"]["space_key"] };
@@ -2307,6 +2459,10 @@ export type Database = {
           p_household_id: string;
           p_job: Database["public"]["Enums"]["notification_job"];
         };
+        Returns: number;
+      };
+      run_shopping_purge: {
+        Args: { p_at?: string; p_household_id: string };
         Returns: number;
       };
       run_wishlist_cleanup: {
@@ -2413,6 +2569,14 @@ export type Database = {
         Args: { p_calendar_id: string };
         Returns: undefined;
       };
+      set_notification_options: {
+        Args: {
+          p_delivery_mode?: Database["public"]["Enums"]["notification_delivery_mode"];
+          p_evening_digest_time?: string;
+          p_morning_digest_weekdays?: number[];
+        };
+        Returns: undefined;
+      };
       set_notification_preference: {
         Args: {
           p_enabled: boolean;
@@ -2459,6 +2623,10 @@ export type Database = {
       };
       unpin_space: {
         Args: { p_space: Database["public"]["Enums"]["space_key"] };
+        Returns: undefined;
+      };
+      unregister_push_subscription: {
+        Args: { p_endpoint?: string; p_token?: string };
         Returns: undefined;
       };
       update_calendar_account_credentials: {
@@ -2589,6 +2757,15 @@ export type Database = {
         | "basilico"
         | "cannella";
       member_kind: "adult" | "child" | "pet";
+      morning_digest_line:
+        | "events"
+        | "ride"
+        | "todos"
+        | "deadlines_today"
+        | "deadlines_tomorrow"
+        | "shopping"
+        | "free_together";
+      notification_delivery_mode: "each" | "mine_now" | "digest_only";
       notification_job:
         "free_together" | "deadline_reminders" | "shopping_digest" | "purge";
       notification_kind:
@@ -2603,10 +2780,14 @@ export type Database = {
         | "assigned_todos"
         | "shopping"
         | "free_together"
-        | "morning_digest";
+        | "morning_digest"
+        | "quiet_hours"
+        | "hide_content";
       pet_date_kind: "birth" | "adoption";
       pet_date_precision: "day" | "year";
       pet_species: "dog" | "cat" | "other";
+      push_delivery_kind: "single" | "evening_digest" | "morning_digest";
+      push_platform: "web" | "apns" | "fcm";
       search_result_kind: "event" | "deadline" | "todo" | "shopping_item";
       space_key:
         | "meals"
@@ -2812,6 +2993,16 @@ export const Constants = {
         "cannella",
       ],
       member_kind: ["adult", "child", "pet"],
+      morning_digest_line: [
+        "events",
+        "ride",
+        "todos",
+        "deadlines_today",
+        "deadlines_tomorrow",
+        "shopping",
+        "free_together",
+      ],
+      notification_delivery_mode: ["each", "mine_now", "digest_only"],
       notification_job: [
         "free_together",
         "deadline_reminders",
@@ -2832,10 +3023,14 @@ export const Constants = {
         "shopping",
         "free_together",
         "morning_digest",
+        "quiet_hours",
+        "hide_content",
       ],
       pet_date_kind: ["birth", "adoption"],
       pet_date_precision: ["day", "year"],
       pet_species: ["dog", "cat", "other"],
+      push_delivery_kind: ["single", "evening_digest", "morning_digest"],
+      push_platform: ["web", "apns", "fcm"],
       search_result_kind: ["event", "deadline", "todo", "shopping_item"],
       space_key: [
         "meals",

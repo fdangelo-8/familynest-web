@@ -237,15 +237,16 @@ select results_eq(
   $$ values (now()) $$,
   'CA-DB-12: A checks Pane, the check time is the server time'
 );
--- Detersivo piatti was taken yesterday (seed): checking it again keeps that time.
+-- Detersivo piatti was taken an hour ago (seed; yesterday before #512, whose job deletes
+-- the things taken more than 12 hours ago): checking it again keeps that time.
 select set_config(
   'test.detersivo_checked_at',
   (select i.checked_at::text from public.shopping_items i where i.id = 'a3000000-0000-4000-8000-000000000004'),
   true
 );
 select ok(
-  current_setting('test.detersivo_checked_at')::timestamptz < now() - interval '23 hours',
-  'CA-DB-12: Detersivo piatti was taken yesterday'
+  current_setting('test.detersivo_checked_at')::timestamptz < now() - interval '30 minutes',
+  'CA-DB-12: Detersivo piatti was taken before this test'
 );
 select results_eq(
   $$ update public.shopping_items set checked_at = now()
@@ -309,7 +310,7 @@ select ok(
 
 -- ---------------------------------------------------------------------------
 -- Strappo and Annulla (CA-DB-15, CA-DB-16, CA-DB-17)
--- Taken now: Detersivo piatti (yesterday) and Pane (now).
+-- Taken now: Detersivo piatti (an hour ago) and Pane (now).
 -- ---------------------------------------------------------------------------
 select set_config(
   'test.taken',

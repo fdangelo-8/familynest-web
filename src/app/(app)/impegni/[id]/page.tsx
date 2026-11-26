@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
+import { pageTitle } from "@/lib/brand";
 import { EventDetailPage } from "@/components/impegni/EventDetailPage";
 import { isValidDayKey } from "@/lib/datetime";
 import { requireNest } from "@/lib/nest-frame";
 
 export const metadata: Metadata = {
   // The title of the event is not here: the title ends up in the history.
-  title: "FamilyNest · Impegno",
+  title: pageTitle("Impegno"),
 };
 
 export default async function Page({

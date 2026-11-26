@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { yourNestLower } from "@/lib/brand";
 import { cx } from "../cx";
 import { useNest } from "../AppFrame/NestProvider";
 
@@ -9,7 +10,7 @@ export function NestSquare({ className }: { className?: string }) {
   const { nestName, members } = useNest();
   const label = nestName
     ? `Apri ${nestName}: membri, Esplora e impostazioni`
-    : "Apri il tuo Nest: membri, Esplora e impostazioni";
+    : `Apri ${yourNestLower()}: membri, Esplora e impostazioni`;
 
   return (
     <Link

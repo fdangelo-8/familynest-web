@@ -10,6 +10,7 @@ import { Icon } from "@/components/ui/Icon/Icon";
 import { PageError } from "@/components/ui/PageError/PageError";
 import { useToast } from "@/components/ui/Toast/ToastProvider";
 import { VisuallyHidden } from "@/components/ui/VisuallyHidden/VisuallyHidden";
+import { brandText, messages } from "@/lib/brand";
 import { toDayKey } from "@/lib/datetime";
 import {
   getGiverKey,
@@ -329,7 +330,7 @@ function Content({
         <span className="quadrato-nest__punto membro-salvia" />
         <span className="quadrato-nest__punto membro-cobalto" />
       </span>
-      Lista creata con FamilyNest
+      {brandText(messages.brand.createdWith)}
     </p>
   );
 

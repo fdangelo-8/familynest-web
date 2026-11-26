@@ -2889,6 +2889,16 @@ button.riga-lista {
   font-size: var(--text-titolo-scheda-size);
   letter-spacing: var(--text-titolo-scheda-tracking);
 }
+/* #502 · Il marchio scritto: «family» 400 e «nest» 700, nel colore intorno */
+.marchio--scritta {
+  gap: 0;
+}
+.marchio__famiglia {
+  font-weight: var(--weight-normale);
+}
+.marchio__nido {
+  font-weight: var(--weight-pieno);
+}
 .adesivi {
   display: flex;
   flex-direction: column;
