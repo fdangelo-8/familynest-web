@@ -6059,3 +6059,268 @@ body {
 .campo--unito.campo--errore .campo__scatola:focus-within {
   box-shadow: inset 0 0 0 var(--space-half) var(--color-allerta);
 }
+
+/* Avvisi: fondo grigio chiaro e icona nuda; errore e senza rete hanno il
+   fondo rosato e l'icona rossa. Il testo resta inchiostro. */
+.avviso {
+  border-radius: var(--radius-m);
+  background: var(--color-carta-2);
+  box-shadow: none;
+}
+.avviso--errore,
+.avviso--offline {
+  background: var(--color-allerta-fondo);
+  box-shadow: none;
+}
+.avviso--info > .icona,
+.avviso--avviso > .icona {
+  color: var(--color-inchiostro);
+}
+.avviso--errore > .icona,
+.avviso--offline > .icona {
+  color: var(--color-allerta);
+}
+.avviso--offline {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-nav);
+}
+
+/* Errore di pagina: icona nuda, titolo 21/27 a 700, tutto a sinistra */
+.errore-pagina {
+  justify-items: start;
+  text-align: start;
+}
+.errore-pagina__icona {
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  display: block;
+}
+.errore-pagina__titolo {
+  font-weight: var(--weight-pieno);
+  font-size: var(--text-titolo-sezione-size);
+  line-height: var(--text-titolo-sezione-line);
+  letter-spacing: var(--text-titolo-sezione-tracking);
+}
+
+/* Vuoto «box»: tutto il riquadro è il pulsante o il link */
+.stato-vuoto-box {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: center;
+  width: 100%;
+  min-height: var(--size-scelta);
+  padding: var(--space-4);
+  border: var(--border-sottile) solid var(--color-filo-2);
+  border-radius: var(--radius-l);
+  background: transparent;
+  color: var(--color-inchiostro);
+  font: inherit;
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+}
+/* Anche gli angoli, che il raggio toglierebbe alla zona di tocco */
+.stato-vuoto-box::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+.stato-vuoto-box__piu {
+  display: grid;
+  place-items: center;
+  width: var(--size-controllo);
+  height: var(--size-controllo);
+  border: var(--border-sottile) solid var(--color-inchiostro);
+  border-radius: var(--radius-tondo);
+}
+.stato-vuoto-box__testo {
+  display: grid;
+  gap: var(--space-half);
+}
+.stato-vuoto-box:active {
+  background: var(--color-premuto);
+}
+@media (hover: hover) {
+  .stato-vuoto-box {
+    transition: background-color var(--durata-rapida) var(--curva);
+  }
+  .stato-vuoto-box:hover {
+    background: var(--color-carta-2);
+  }
+  .stato-vuoto-box:active {
+    background: var(--color-premuto);
+  }
+}
+
+/* Messaggio: scuro, «Annulla» sottolineato e bianco */
+.toast {
+  background: var(--color-inchiostro);
+  color: var(--color-bianco);
+}
+.toast__azione {
+  color: var(--color-bianco);
+  font-weight: var(--weight-semi);
+  text-decoration-thickness: var(--border-link);
+  text-underline-offset: var(--space-link);
+}
+
+/* Freccia indietro D: nuda, 44 x 44, freccia con l'asta a 24 px. Sopra una
+   foto o una scena sta in un disco bianco di 40 px con l'ombra del disco. */
+.btn-freccia {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: var(--size-tocco);
+  height: var(--size-tocco);
+  border: 0;
+  border-radius: var(--radius-tondo);
+  background: transparent;
+  color: var(--color-inchiostro);
+  cursor: pointer;
+}
+.btn-freccia--disco {
+  width: var(--size-controllo);
+  height: var(--size-controllo);
+  background: var(--color-superficie);
+  box-shadow: var(--shadow-disco);
+}
+.btn-freccia--disco::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--size-tocco);
+  height: var(--size-tocco);
+  transform: translate(-50%, -50%);
+}
+@media (hover: hover) {
+  .btn-freccia {
+    transition: background-color var(--durata-rapida) var(--curva);
+  }
+  .btn-freccia:hover {
+    background: var(--color-carta-2);
+  }
+  .btn-freccia--disco:hover {
+    background: var(--color-carta-2);
+  }
+}
+.btn-freccia:active {
+  background: var(--color-premuto);
+}
+
+/* Righe 2.0: a filo, titolo e riga sotto, icona nuda, valore e freccia B.
+   Premuta, il fondo scuro va da bordo a bordo della riga. */
+.lista--flush {
+  background: transparent;
+  box-shadow: none;
+}
+.lista--flush > li + li {
+  box-shadow: none;
+  border-top: var(--border-sottile) solid var(--color-filo);
+}
+.riga-lista--2 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: var(--size-riga-alta);
+  padding-block: var(--space-riga);
+  background: transparent;
+  box-shadow: none;
+  text-align: start;
+}
+.riga-lista--2 .riga-lista__testo {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.riga-lista--2 .riga-lista__titolo {
+  font-size: var(--text-corpo-forte-size);
+  line-height: var(--text-corpo-forte-line);
+  font-weight: var(--weight-normale);
+}
+.riga-lista--2.riga-lista--cliccabile .riga-lista__titolo {
+  font-weight: var(--weight-semi);
+}
+.riga-lista--2 .riga-lista__icona {
+  flex: none;
+  color: var(--color-inchiostro);
+}
+.riga-lista--2 .riga-lista__valore {
+  flex: none;
+}
+.riga-lista--2 .riga-lista__freccia {
+  flex: none;
+  color: var(--color-inchiostro-3);
+}
+.riga-lista__piu {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--size-icona-l);
+  height: var(--size-icona-l);
+  border: var(--border-sottile) solid var(--color-inchiostro);
+  border-radius: var(--radius-tondo);
+  color: var(--color-inchiostro);
+}
+.riga-lista--pericolo .riga-lista__titolo,
+.riga-lista--pericolo .riga-lista__icona {
+  color: var(--color-allerta);
+}
+.lista .riga-lista--2.riga-lista--cliccabile:active:not(:disabled) {
+  background: var(--color-premuto);
+}
+@media (hover: hover) {
+  .lista .riga-lista--2.riga-lista--cliccabile:hover:not(:disabled) {
+    background: var(--color-carta-2);
+  }
+  .lista .riga-lista--2.riga-lista--cliccabile:active:not(:disabled) {
+    background: var(--color-premuto);
+  }
+}
+
+/* «Dato che si cambia»: etichetta sopra, valore sotto, «Modifica» a destra */
+.riga-dato {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: var(--size-riga-alta);
+  padding: var(--space-riga) var(--space-4);
+}
+.riga-dato__testo {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: grid;
+}
+.riga-dato__etichetta {
+  font-size: var(--text-etichetta-size);
+  line-height: var(--text-etichetta-line);
+  color: var(--color-inchiostro-2);
+}
+.riga-dato__valore {
+  font-size: var(--text-controllo-size);
+  line-height: var(--text-controllo-line);
+  color: var(--color-inchiostro);
+}
+
+/* Interruttore: acceso pieno di inchiostro, spento con il bordo del campo
+   (il pallino bianco sul binario grigio non arrivava a 3:1) */
+.toggle {
+  box-shadow: inset 0 0 0 var(--border-sottile) var(--color-filo-campo);
+}
+.toggle::after {
+  background: var(--color-superficie);
+}
+.toggle[aria-checked="true"] {
+  box-shadow: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .toggle::after {
+    transition: none;
+  }
+}
