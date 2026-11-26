@@ -218,6 +218,87 @@ expect(
   true,
 );
 expect("sudo", B, bash("sudo apt install x"), true);
+
+// Files change only with Edit and Write: in-place editors on any path.
+const tmpFile = path.join(tmpdir(), "fn-hooks-out.log");
+const blocked = {
+  "sed -i su tests/": [
+    "sed -i 's/a/b/' tests/e2e/calendario.spec.ts",
+    "tester-funzionale",
+  ],
+  "sed -i su docs/": [
+    "sed -i 's/a/b/' docs/agenti/LEZIONI.md",
+    "documentalista",
+  ],
+  "sed -i su src/": ['sed -i "s/a/b/" src/app/page.tsx', "sviluppatore"],
+  "perl -pi -e": ["perl -pi -e 's/a/b/' src/app/page.tsx", "sviluppatore"],
+  "sed --in-place": ["sed --in-place 's/a/b/' tests/a.spec.ts"],
+  "sed -i''": ["sed -i'' 's/a/b/' tests/a.spec.ts"],
+  "sed -i.bak": ["sed -i.bak 's/a/b/' docs/x.md"],
+  "sed -Ei": ["sed -Ei 's/(a)/b/' src/x.ts"],
+  "sed -ni": ["sed -ni '1p' src/x.ts"],
+  "sed -e ... -i": ["sed -e 's/a/b/' -i src/x.ts"],
+  "sed -i dopo &&": ["git status && sed -i 's/a/b/' src/x.ts"],
+  "find -exec sed -i": ["find tests -name '*.ts' -exec sed -i 's/a/b/' {} +"],
+  "xargs sed -i": ["grep -rl x src | xargs sed -i 's/a/b/'"],
+  "/usr/bin/sed -i": ["/usr/bin/sed -i 's/a/b/' src/x.ts"],
+  "sed -i in bash -c": [`bash -c "sed -i 's/a/b/' src/x.ts"`],
+  "sed -i in $()": ['echo "$(sed -i s/a/b/ src/x.ts)"'],
+  "sed -i in heredoc per bash": ["bash <<'EOF'\nsed -i 's/a/b/' src/x.ts\nEOF"],
+  "sed -i fuori dal repo": [`sed -i 's/a/b/' ${tmpFile}`],
+  "perl -i -pe": ["perl -i -pe 's/a/b/' src/x.ts"],
+  "perl -0777 -pi": ["perl -0777 -pi -e 's/a/b/g' src/x.ts"],
+  "ruby -pi -e": ["ruby -pi -e 'gsub(/a/, \"b\")' src/x.ts"],
+  "awk -i inplace": ["awk -i inplace '{print}' src/x.ts"],
+  "gawk -i inplace": ["gawk -i inplace '{print}' src/x.ts"],
+  "ed su file": ["ed -s src/x.ts <<'EOF'\n1d\nw\nq\nEOF"],
+  "ex su file": ["printf '%s\\n' '1d' 'wq' | ex -s src/x.ts"],
+  "vim -es": ["vim -es -c '%s/a/b/' -c wq src/x.ts"],
+  // Redirections and tee into repository files.
+  "redirezione su src/": ["echo x > src/a.ts", "sviluppatore"],
+  "redirezione >> su tests/": ["npm test >> tests/log.txt"],
+  "heredoc su docs/": ["cat > docs/x.md <<'EOF'\n# x\nEOF", "documentalista"],
+  "redirezione percorso assoluto nel repo": [
+    `echo x > ${path.join(repo, "README.md")}`,
+  ],
+  "redirezione 2> su file del repo": ["npm test 2> errori.txt"],
+  "tee su tests/": ["echo x | tee tests/a.spec.ts"],
+  "tee -a su docs/": ["echo x | tee -a /dev/null docs/x.md"],
+  "redirezione su variabile sconosciuta": ['echo x > "$OUT"'],
+  "redirezione dentro bash -c": [`bash -c "echo x > src/a.ts"`],
+  "redirezione su variabile del repo": ["D=src && echo x > $D/a.ts"],
+};
+for (const [label, [command, agent]] of Object.entries(blocked))
+  expect(label, B, bash(command, agent), true);
+
+const allowed = {
+  "sed -n in sola lettura": ["sed -n '1,20p' src/app/page.tsx", "revisore"],
+  "sed in una pipe": ["git log --oneline | sed 's/a/b/' | head -5"],
+  "sed -e senza scrittura": ["sed -e 's/a/b/' src/x.ts"],
+  "grep di sed -i": ['grep -rn "sed -i" docs .claude'],
+  "commit che cita sed -i": ['git commit -m "blocca sed -i e tee"'],
+  "commit da heredoc": ["git commit -F - <<'EOF'\nsed -i -> Edit > tee\nEOF"],
+  "perl in lettura": ["perl -ne 'print if /x/' src/x.ts"],
+  "awk con confronto": ["awk '$1 > 5' src/x.ts"],
+  "node -e con >": ['node -e "console.log(2 > 1)"'],
+  "2>&1 e /dev/null": ["npm test 2>&1 >/dev/null"],
+  "&>/dev/null": ["npm run check &>/dev/null"],
+  "redirezione nella cartella temporanea": [`npm test > ${tmpFile} 2>&1`],
+  "redirezione su $TMPDIR": ['npm test > "$TMPDIR/fn-out.log"'],
+  "tee nella cartella temporanea": [`npm test | tee ${tmpFile}`],
+  "cd nella cartella temporanea": [`cd ${tmpdir()} && echo x > fn-hooks.txt`],
+  "body-file da stdin": [
+    "node scripts/agenti/gh.mjs comment 3 --body-file - <<'EOF'\nesito: a -> b > c\nEOF",
+  ],
+  "ed come parola": ['echo "test ed esempio"'],
+  "variabile verso la cartella temporanea": [
+    `S=${tmpdir()} && npx prettier x.ts > $S/x.ts`,
+  ],
+  "variabile da mktemp": ['out=$(mktemp) && npm test > "$out"'],
+};
+for (const [label, [command, agent]] of Object.entries(allowed))
+  expect(label, B, bash(command, agent), false);
+
 on("main");
 expect("commit su main", B, bash("git commit -m x"), true);
 expect(
@@ -245,6 +326,13 @@ expect(
   bash("git push origin main"),
   true,
 );
+expect(
+  "admin: sed -i ancora vietato",
+  B,
+  bash("sed -i 's/a/b/' .claude/hooks/guard-bash.mjs"),
+  true,
+);
+expect("admin: redirezione ancora vietata", B, bash("echo x > a.txt"), true);
 
 // ---------- File ----------
 const F = "guard-files.mjs";

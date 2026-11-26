@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 // PreToolUse hook for Bash: blocks commands that break the team rules.
-import { readInput, repoInfo, block } from "./lib.mjs";
+import os from "node:os";
+import path from "node:path";
+import { readInput, repoInfo, relativeToRepo, block } from "./lib.mjs";
 
 const ALLOWED_SUPABASE_REF = "yksosqvugiempsldejyt";
 
@@ -171,6 +173,280 @@ for (const [re, reason, adminOk] of rules) {
   if (adminOk && admin) continue;
   if (re.test(cmd)) block(`${reason}\nComando: ${cmd.slice(0, 300)}`);
 }
+
+// ---------------------------------------------------------------------------
+// Files change only through the Edit and Write tools (Francesco, 05/11): no
+// in-place editors (sed -i, perl -i, ruby -i, awk -i inplace, ed, ex) on any
+// path, and no redirection or tee into a repository file. Applies to every
+// agent and to maintenance sessions too. Reading commands stay allowed.
+const EDIT_ONLY =
+  "i file si modificano solo con gli strumenti Edit e Write: niente modifiche dalla riga di comando (regola di Francesco del 05/11). Se Edit o Write non sono disponibili, fermati con BLOCCATO.";
+
+// Start of a simple command, possibly behind a wrapper (sudo, env, xargs, find -exec...).
+const AT_CMD = String.raw`(?:^|[\n;&|({\x60]|\$\(|(?:^|\s)(?:then|do|else|if|while|until|!|-exec|-execdir|-ok|-okdir))\s*(?:(?:sudo|env|command|builtin|exec|nohup|timeout|time|nice|ionice|stdbuf|xargs|busybox)(?:\s[^;&|\n]*?)?\s)?(?:\S*\/)?`;
+const ARGS = String.raw`\s(?:[^;&|\n]*?\s)?`;
+const IN_PLACE = [
+  String.raw`g?sed${ARGS}(?:-[nErsuz]*i|--in-place)`,
+  String.raw`perl${ARGS}-[aclnpsTtuUwWX0-9]*i`,
+  String.raw`ruby${ARGS}-[acdlnpsvwWy0-9]*i`,
+  String.raw`g?awk${ARGS}(?:-i\s*|--include(?:=|\s+))inplace\b`,
+  String.raw`(?:ed|ex)(?=\s|$)`,
+  String.raw`n?vim?${ARGS}(?:-[Ees]+|-c|\+)`,
+].map((p) => new RegExp(`${AT_CMD}(?:${p})`));
+const CD = new RegExp(String.raw`${AT_CMD}(?:cd|pushd)(?=\s|$)`, "g");
+const TEE = new RegExp(String.raw`${AT_CMD}tee(?=\s|$)`, "g");
+const ASSIGN = /(?:^|[\n;&|(]|\bexport|\blocal)\s*([A-Za-z_]\w*)=/g;
+const REDIRECT = /(?<![<>=&\-\d])(?:\d+|&)?(?:>>?|>\|)(?![&(>])/g;
+const SHELL_BEFORE =
+  /(?:^|[\s;&|(])(?:(?:ba|da|k|z)?sh|eval|su|watch|ssh)\b[^;&|\n]*$/;
+const SIMPLE_WORD = /^[\w./=+:@%,~-]*$/;
+const TEMP_VAR =
+  /^\$(?:\{(TMPDIR|TMP|TEMP|RUNNER_TEMP)\}|(TMPDIR|TMP|TEMP|RUNNER_TEMP)\b)/;
+
+/**
+ * Masks quoted text and heredoc bodies so that only real shell syntax is
+ * matched. `masked` and `plain` have the same length: `plain` keeps the text,
+ * `masked` replaces quoted content with \0. Quotes around simple words are
+ * dropped (-i'' → -i, 'inplace' → inplace).
+ */
+function scan(src) {
+  let masked = "";
+  let plain = "";
+  const strings = [];
+  const heredocs = [];
+  const pending = [];
+  const put = (m, p = m) => {
+    masked += m;
+    plain += p;
+  };
+  let i = 0;
+  while (i < src.length) {
+    const c = src[i];
+    if (c === "\\") {
+      const pair = src.slice(i, i + 2);
+      put(c + "\0".repeat(pair.length - 1), pair);
+      i += 2;
+      continue;
+    }
+    if (src.startsWith("<<", i) && src[i + 2] !== "<") {
+      const h = /^<<(-?)[ \t]*(['"]?)([\w.-]+)\2/.exec(src.slice(i));
+      if (h) {
+        pending.push({
+          delim: h[3],
+          strip: !!h[1],
+          quoted: !!h[2],
+          before: masked.slice(masked.lastIndexOf("\n") + 1),
+        });
+        put(h[0]);
+        i += h[0].length;
+        continue;
+      }
+    }
+    if (c === "'" || c === '"') {
+      let j = i + 1;
+      while (j < src.length && src[j] !== c)
+        j += c === '"' && src[j] === "\\" ? 2 : 1;
+      const text = src.slice(i + 1, j);
+      if (SIMPLE_WORD.test(text)) put(text);
+      else {
+        strings.push({ text, double: c === '"', before: masked });
+        const close = j < src.length ? c : "";
+        put(c + "\0".repeat(text.length) + close, c + text + close);
+      }
+      i = j + 1;
+      continue;
+    }
+    if (c === "\n" && pending.length) {
+      put("\n");
+      i++;
+      pending.forEach((h, k) => {
+        if (k > 0 && src[i] === "\n") {
+          put("\n");
+          i++;
+        }
+        let text = "";
+        while (i < src.length) {
+          let e = src.indexOf("\n", i);
+          if (e < 0) e = src.length;
+          const line = src.slice(i, e);
+          if ((h.strip ? line.replace(/^\t+/, "") : line) === h.delim) {
+            put("\0".repeat(line.length), line);
+            i = e;
+            break;
+          }
+          const take = src.slice(i, e + 1);
+          text += take;
+          put("\0".repeat(take.length), take);
+          i += take.length;
+        }
+        heredocs.push({ ...h, text });
+      });
+      pending.length = 0;
+      continue;
+    }
+    put(c);
+    i++;
+  }
+  return { masked, plain, strings, heredocs };
+}
+
+/** Command substitutions ($(...) and backticks) inside a text. */
+function substitutions(text) {
+  const out = [];
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] === "`") {
+      const j = text.indexOf("`", i + 1);
+      if (j < 0) break;
+      out.push(text.slice(i + 1, j));
+      i = j;
+    } else if (text.startsWith("$(", i) && text[i + 2] !== "(") {
+      let depth = 1;
+      let j = i + 2;
+      for (; j < text.length && depth; j++)
+        depth += text[j] === "(" ? 1 : text[j] === ")" ? -1 : 0;
+      out.push(text.slice(i + 2, depth ? j : j - 1));
+      i = j - 1;
+    }
+  }
+  return out;
+}
+
+/** Quoted or heredoc text that the shell will run as commands. */
+function innerCommands({ strings, heredocs }) {
+  const inner = [];
+  for (const s of strings) {
+    if (SHELL_BEFORE.test(s.before)) inner.push(s.text);
+    else if (s.double) inner.push(...substitutions(s.text));
+  }
+  for (const h of heredocs) {
+    if (SHELL_BEFORE.test(h.before)) inner.push(h.text);
+    else if (!h.quoted) inner.push(...substitutions(h.text));
+  }
+  return inner;
+}
+
+/** One shell word starting at `i`, with quotes removed. */
+function readWord(s, i) {
+  while (s[i] === " " || s[i] === "\t") i++;
+  let word = "";
+  for (; i < s.length; i++) {
+    const c = s[i];
+    if (/[\s;&|()<>]/.test(c)) break;
+    if (c === "\\") {
+      word += s[++i] ?? "";
+      continue;
+    }
+    if (c === "'" || c === '"') {
+      let j = i + 1;
+      while (j < s.length && s[j] !== c) {
+        if (c === '"' && s[j] === "\\") j++;
+        word += s[j] ?? "";
+        j++;
+      }
+      i = j;
+      continue;
+    }
+    word += c;
+  }
+  return { word, end: i };
+}
+
+/** Absolute path of a target, or null when it cannot be known (variables). */
+function resolveTarget(word, cwd, vars = {}) {
+  let w = word;
+  if (w === "~" || w.startsWith("~/")) w = os.homedir() + w.slice(1);
+  w = w.replace(TEMP_VAR, (_, a, b) => process.env[a || b] || os.tmpdir());
+  w = w.replace(/^\$(?:\{HOME\}|HOME\b)/, os.homedir());
+  w = w.replace(/^\$(?:\{(\w+)\}|(\w+))/, (all, a, b) => vars[a || b] ?? all);
+  if (/[$`*?]/.test(w)) return null;
+  if (path.isAbsolute(w)) return w;
+  return cwd ? path.resolve(cwd, w) : null;
+}
+
+/** True when writing to `word` would change a file inside a git repository. */
+function isRepoFile(word, cwd, vars) {
+  if (!word || word === "-" || word.startsWith("/dev/")) return false;
+  const abs = resolveTarget(word, cwd, vars);
+  if (!abs) return true; // unknown target: only temp variables are allowed
+  if (abs.startsWith("/dev/")) return false;
+  return !!relativeToRepo(abs, cwd).root;
+}
+
+/** First repository file written by a redirection or by tee, if any. */
+function redirectTarget(masked, plain, cwd) {
+  // Variables assigned in the same command (S=/tmp/x, out=$(mktemp)) and cd
+  // steps, in order, so that a target is resolved as the shell would.
+  const steps = [];
+  for (const m of masked.matchAll(ASSIGN)) {
+    const at = m.index + m[0].length;
+    steps.push({ at, name: m[1] });
+  }
+  for (const m of masked.matchAll(CD))
+    steps.push({ at: m.index + m[0].length, cd: true });
+  steps.sort((a, b) => a.at - b.at);
+  const states = [];
+  let dir = cwd;
+  let vars = {};
+  for (const s of steps) {
+    if (s.cd) {
+      const { word } = readWord(plain, s.at);
+      dir = !word
+        ? os.homedir()
+        : word === "-"
+          ? null
+          : resolveTarget(word, dir, vars);
+    } else {
+      const value = plain.startsWith("$(mktemp", s.at)
+        ? path.join(os.tmpdir(), "mktemp")
+        : resolveTarget(readWord(plain, s.at).word, dir, vars);
+      vars = { ...vars, [s.name]: value ?? "$unknown" };
+    }
+    states.push({ at: s.at, dir, vars });
+  }
+  const stateAt = (pos) => {
+    let st = { dir: cwd, vars: {} };
+    for (const x of states) if (x.at < pos) st = x;
+    return st;
+  };
+  const writes = (word, pos) => {
+    const st = stateAt(pos);
+    return isRepoFile(word, st.dir, st.vars);
+  };
+  for (const m of masked.matchAll(REDIRECT)) {
+    const { word } = readWord(plain, m.index + m[0].length);
+    if (writes(word, m.index)) return word;
+  }
+  for (const m of masked.matchAll(TEE)) {
+    let at = m.index + m[0].length;
+    for (;;) {
+      while (plain[at] === " " || plain[at] === "\t") at++;
+      if (at >= plain.length || /[;&|()<>\n]/.test(plain[at])) break;
+      const { word, end } = readWord(plain, at);
+      if (end === at) break;
+      at = end;
+      if (!word.startsWith("-") && writes(word, m.index)) return word;
+    }
+  }
+  return null;
+}
+
+/** Reason to block when the command edits files from the shell, else null. */
+function shellEdit(command, cwd, depth = 0) {
+  const parsed = scan(command);
+  if (IN_PLACE.some((re) => re.test(parsed.masked))) return EDIT_ONLY;
+  const target = redirectTarget(parsed.masked, parsed.plain, cwd);
+  if (target)
+    return `${EDIT_ONLY} Redirezioni e tee verso file del repository sono vietate (qui: ${target}); restano permesse verso la cartella temporanea, lo scratchpad e /dev/null.`;
+  if (depth >= 3) return null;
+  for (const inner of innerCommands(parsed)) {
+    const reason = shellEdit(inner, cwd, depth + 1);
+    if (reason) return reason;
+  }
+  return null;
+}
+
+const shellEditReason = shellEdit(cmd, input.cwd || process.cwd());
+if (shellEditReason) block(`${shellEditReason}\nComando: ${cmd.slice(0, 300)}`);
 
 // Commits are never made on main.
 if (

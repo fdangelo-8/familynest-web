@@ -74,7 +74,7 @@ Una riga per lezione: `errore → regola`. Le lezioni già imposte da hook, CI, 
 - Sviluppo senza criteri di accettazione numerati → l'analista li scrive prima; senza, la PR fa più giri di correzioni.
 - Controllo `db` obbligatorio rosso per un test con data passata, mentre la correzione aspetta un'altra PR → PR minima di sblocco, unita per prima.
 - Tester visivo sovrascrive il file del funzionale con una copia vecchia → `git pull --no-rebase` e `git diff --cached --stat` prima del commit; pathspec propri.
-- Edit bloccato da un hook, aggirato con `sed -i` (tester, commit 710eabe, 3 righe corrette: resta errore) → tester e sviluppatori usano solo Edit o Write; mai `sed -i`, script, `tee`, copie, nemmeno per annullare; altrimenti `BLOCCATO`.
+- Edit bloccato da un hook, aggirato con `sed -i` (tester, commit 710eabe, 3 righe corrette: resta errore) → tester e sviluppatori usano solo Edit o Write; mai `sed -i`, script, `tee`, copie, nemmeno per annullare; altrimenti `BLOCCATO`. Dal 26/11 `sed -i`, `perl -i`, `ruby -i`, `awk -i inplace`, `ed`, `ex` e le redirezioni o `tee` verso file del repository sono **bloccati dal hook** `guard-bash` su qualsiasi percorso e per tutti gli agenti (dopo tre casi del 25-26/11 su test e documentazione).
 - Proposta di design approvata in ritardo, o stato «da decidere» → un'issue per ogni punto approvato, subito; prima dello stato rileggi i commenti di Francesco.
 - Skill esterne → copia fissa, letta tutta, senza script né login; licenza in `LICENZE-TERZE-PARTI.md`.
 
