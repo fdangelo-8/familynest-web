@@ -59,7 +59,7 @@ test.describe("ingresso con invito: testi", () => {
       "Marco ti aveva dato il glicine. I colori spenti sono già di qualcun altro.",
     );
     expect(colorHelp(null, "zafferano")).toBe(
-      "Ti era stato dato lo zafferano. I colori spenti sono già di qualcun altro.",
+      "Ti era stato dato l'ambra. I colori spenti sono già di qualcun altro.",
     );
   });
 

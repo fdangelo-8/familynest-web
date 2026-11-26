@@ -9,21 +9,38 @@ import { MEMBER_COLORS } from "../../src/components/ui/Avatar/Avatar";
 
 // Shared part of #74 (ten member colours) and #80 (icon of Alert).
 
-const NEW_COLORS = {
-  lampone: "#d75596",
-  ceruleo: "#4b96aa",
-  peonia: "#f2a8c6",
-  basilico: "#649100",
+// #196: the database codes stay, the tint shown changes (spec §5).
+const SHADES: Record<string, string> = {
+  pomodoro: "corallo",
+  glicine: "glicine",
+  salvia: "menta",
+  cobalto: "blu",
+  zafferano: "ambra",
+  lampone: "sabbia",
+  ceruleo: "azzurro",
+  peonia: "rosa",
+  basilico: "ardesia",
+  cannella: "cannella",
+};
+const SHADE_NAMES: Record<string, string> = Object.fromEntries(
+  Object.entries(SHADES).map(([code, shade]) => [
+    code,
+    shade.charAt(0).toUpperCase() + shade.slice(1),
+  ]),
+);
+const COLORS: Record<string, string> = {
+  pomodoro: "#f2765c",
+  glicine: "#b9a2ec",
+  salvia: "#8fd0a8",
+  cobalto: "#3f6fe0",
+  zafferano: "#e8a15c",
+  lampone: "#d9b88f",
+  ceruleo: "#7cc7e0",
+  peonia: "#f0a3c0",
+  basilico: "#68778d",
   cannella: "#af8273",
 };
-const OLD_COLORS = {
-  pomodoro: "#f06a4f",
-  glicine: "#b9a3e8",
-  salvia: "#8dbf9b",
-  cobalto: "#5c7fe0",
-  zafferano: "#f2b33d",
-};
-const TEN = [...Object.keys(OLD_COLORS), ...Object.keys(NEW_COLORS)];
+const TEN = Object.keys(COLORS);
 
 function toHex(rgb: string): string {
   const [r, g, b] = (rgb.match(/\d+(\.\d+)?/g) ?? []).map(Number);
@@ -43,10 +60,12 @@ test.describe("colori dei membri (#74, parte 2)", () => {
               .trim(),
           ]),
         ),
-      TEN,
+      TEN.map((code) => SHADES[code]!),
     );
-    const wanted: Record<string, string> = { ...OLD_COLORS, ...NEW_COLORS };
-    for (const name of TEN) {
+    const wanted: Record<string, string> = Object.fromEntries(
+      TEN.map((code) => [SHADES[code]!, COLORS[code]!]),
+    );
+    for (const name of TEN.map((code) => SHADES[code]!)) {
       const got = values[name]!.toLowerCase();
       const short = got.replace(
         /^#([0-9a-f])([0-9a-f])([0-9a-f])$/,
@@ -60,9 +79,10 @@ test.describe("colori dei membri (#74, parte 2)", () => {
     expect([...MEMBER_COLORS]).toEqual([...TEN, "insieme"]);
     const css = readFileSync("src/app/components.css", "utf8");
     for (const name of TEN) {
+      // The class sets --c from the token of the shade of the code (#196).
       expect(css, name).toMatch(
         new RegExp(
-          `\\.membro-${name}\\s*\\{\\s*--c:\\s*var\\(--color-membro-${name}\\);?\\s*\\}`,
+          `\\.membro-${name}\\s*\\{\\s*--c:\\s*var\\(--color-membro-${SHADES[name]}\\);`,
         ),
       );
     }
@@ -102,19 +122,19 @@ test.describe("colori dei membri (#74, parte 2)", () => {
     const group = page.getByTestId("avatar-dieci-colori");
     const avatars = group.getByRole("img");
     await expect(avatars).toHaveCount(10);
+    // #196: the name read aloud is the one of the shade, the initial is white
+    // on blue and slate and ink on the others.
     for (const [index, name] of TEN.entries()) {
       const avatar = avatars.nth(index);
-      await expect(avatar).toHaveAttribute(
-        "aria-label",
-        name.charAt(0).toUpperCase() + name.slice(1),
-      );
+      await expect(avatar).toHaveAttribute("aria-label", SHADE_NAMES[name]!);
       const colors = await avatar.evaluate((node) => {
         const style = getComputedStyle(node);
         return [style.backgroundColor, style.color];
       });
-      const wanted: Record<string, string> = { ...OLD_COLORS, ...NEW_COLORS };
-      expect(toHex(colors[0]!), name).toBe(wanted[name]);
-      expect(toHex(colors[1]!), name).toBe("#17181c");
+      expect(toHex(colors[0]!), name).toBe(COLORS[name]);
+      expect(toHex(colors[1]!), name).toBe(
+        name === "cobalto" || name === "basilico" ? "#ffffff" : "#10262a",
+      );
     }
   });
 
@@ -133,15 +153,15 @@ test.describe("colori dei membri (#74, parte 2)", () => {
       const radios = group.getByRole("radio");
       await expect(radios).toHaveCount(10);
       const names = [
-        "Pomodoro",
-        "Glicine (già usato)",
-        "Salvia (già usato)",
-        "Cobalto",
-        "Zafferano",
-        "Lampone",
-        "Ceruleo",
-        "Peonia",
-        "Basilico",
+        "Corallo (già di Laura)",
+        "Glicine",
+        "Menta",
+        "Blu",
+        "Ambra",
+        "Sabbia",
+        "Azzurro",
+        "Rosa",
+        "Ardesia",
         "Cannella",
       ];
       const boxes = [];
@@ -150,7 +170,7 @@ test.describe("colori dei membri (#74, parte 2)", () => {
         await expect(radio).toHaveAccessibleName(name);
         boxes.push((await radio.boundingBox())!);
       }
-      await expect(radios.nth(0)).toHaveAttribute("aria-checked", "true");
+      await expect(radios.nth(1)).toHaveAttribute("aria-checked", "true");
       expect(new Set(boxes.slice(0, 5).map((b) => b.y)).size).toBe(1);
       expect(new Set(boxes.slice(5).map((b) => b.y)).size).toBe(1);
       expect(boxes[5]!.y).toBeGreaterThan(boxes[0]!.y);
@@ -171,17 +191,17 @@ test.describe("colori dei membri (#74, parte 2)", () => {
     });
   }
 
-  test("CA-12: Tab tocca solo gli 8 colori liberi, in ordine", async ({
+  test("CA-12: Tab tocca solo i 9 colori liberi, in ordine", async ({
     page,
   }) => {
     await page.goto("/design-system");
     const group = page.getByTestId("scelta-colore-dieci");
     const radios = group.getByRole("radio");
-    await expect(radios.nth(1)).toBeDisabled();
-    await expect(radios.nth(2)).toBeDisabled();
-    await radios.nth(0).focus();
+    // #196: only the first colour is taken (by Laura), the second is chosen.
+    await expect(radios.nth(0)).toBeDisabled();
+    await radios.nth(1).focus();
     const seen: string[] = [];
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 9; i++) {
       seen.push(
         await page.evaluate(
           () => document.activeElement?.getAttribute("aria-label") ?? "",
@@ -190,13 +210,14 @@ test.describe("colori dei membri (#74, parte 2)", () => {
       await page.keyboard.press("Tab");
     }
     expect(seen).toEqual([
-      "Pomodoro",
-      "Cobalto",
-      "Zafferano",
-      "Lampone",
-      "Ceruleo",
-      "Peonia",
-      "Basilico",
+      "Glicine",
+      "Menta",
+      "Blu",
+      "Ambra",
+      "Sabbia",
+      "Azzurro",
+      "Rosa",
+      "Ardesia",
       "Cannella",
     ]);
   });

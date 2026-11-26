@@ -105,3 +105,29 @@
 .stretta {
   max-width: calc(var(--size-modulo-min) + var(--size-contatore-min));
 }
+
+/* Colori delle persone: tre quadrati per tinta (pieno, tinta, corsia) */
+.tinte {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.tinta {
+  height: var(--size-avatar-m);
+  border-radius: var(--radius-s);
+  border: var(--border-sottile) solid var(--color-filo);
+}
+
+.tinta--pieno {
+  background: var(--c);
+}
+
+.tinta--tinta {
+  background: var(--c-tinta);
+}
+
+.tinta--corsia {
+  background: var(--c-corsia);
+}

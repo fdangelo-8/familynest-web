@@ -67,7 +67,9 @@ select columns_are(
   'public', 'event_exceptions',
   array[
     'event_id', 'household_id', 'occurrence_date', 'is_cancelled', 'title', 'location', 'notes',
-    'starts_at', 'ends_at', 'escort_member_id', 'created_at', 'updated_at'
+    'starts_at', 'ends_at', 'escort_member_id', 'created_at', 'updated_at',
+    -- #510: «Lo riprende» and «Da decidere» of one occurrence.
+    'pickup_member_id', 'escort_undecided', 'pickup_undecided'
   ],
   'event_exceptions has exactly the planned columns (no visibility, no participants, no health data)'
 );
@@ -105,13 +107,13 @@ select ok(
 );
 select ok(
   not (select p.prosecdef from pg_proc p where p.oid = 'public.get_event_occurrence(uuid, date)'::regprocedure)
-  and not (select p.prosecdef from pg_proc p where p.oid = 'public.update_event_occurrence(uuid, date, text, timestamptz, timestamptz, text, uuid, text)'::regprocedure)
+  and not (select p.prosecdef from pg_proc p where p.oid = 'public.update_event_occurrence(uuid, date, text, timestamptz, timestamptz, text, uuid, text, uuid, boolean, boolean)'::regprocedure)
   and not (select p.prosecdef from pg_proc p where p.oid = 'public.delete_event_occurrence(uuid, date, public.event_change_scope)'::regprocedure),
   'the occurrence functions are security invoker (RLS applies)'
 );
 select ok(
   not has_function_privilege('anon', 'public.get_event_occurrence(uuid, date)', 'execute')
-  and not has_function_privilege('anon', 'public.update_event_occurrence(uuid, date, text, timestamptz, timestamptz, text, uuid, text)', 'execute')
+  and not has_function_privilege('anon', 'public.update_event_occurrence(uuid, date, text, timestamptz, timestamptz, text, uuid, text, uuid, boolean, boolean)', 'execute')
   and not has_function_privilege('anon', 'public.delete_event_occurrence(uuid, date, public.event_change_scope)', 'execute')
   and has_function_privilege('authenticated', 'public.get_event_occurrence(uuid, date)', 'execute'),
   'the occurrence functions are for signed-in users only'

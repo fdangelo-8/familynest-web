@@ -463,7 +463,7 @@ test.describe("aggiungere", () => {
       ).toHaveText("Figlio o figlia");
       await expect(dateField(d)).toHaveValue("");
       await expect(colorGroup(d).getByRole("radio")).toHaveCount(10);
-      await expect(colorRadio(d, "Pomodoro (già di Ilaria)")).toBeDisabled();
+      await expect(colorRadio(d, "Corallo (già di Ilaria)")).toBeDisabled();
       await expect(colorRadio(d, "Glicine")).toHaveAttribute(
         "aria-checked",
         "true",
@@ -498,7 +498,7 @@ test.describe("aggiungere", () => {
       await nameField(d).fill("  Sofia  ");
       await kindButton(d, "Figlio o figlia").click();
       await dateField(d).fill(birth);
-      await colorRadio(d, "Salvia").click();
+      await colorRadio(d, "Menta").click();
       await submit(d, "Aggiungi Sofia").click();
       await expect(d).toBeHidden();
       await expect(rows(page)).toHaveCount(2);
@@ -728,7 +728,7 @@ test.describe("errori del foglio", () => {
         ),
       ).toBeVisible();
       expect((await members(user)).some((m) => m.name === "Rita")).toBe(false);
-      await colorRadio(d, "Cobalto").click();
+      await colorRadio(d, "Blu").click();
       await submit(d, "Aggiungi Rita").click();
       await expect(d).toBeHidden();
       const rita = (await members(user)).find((m) => m.name === "Rita");
@@ -968,10 +968,10 @@ test.describe("modifica", () => {
       "true",
     );
     await expect(dateField(d)).toHaveValue("2016-12-14");
-    const salvia = colorRadio(d, "Salvia");
+    const salvia = colorRadio(d, "Menta");
     await expect(salvia).toBeEnabled();
     await expect(salvia).toHaveAttribute("aria-checked", "true");
-    for (const taken of ["Pomodoro", "Glicine", "Cobalto", "Zafferano"]) {
+    for (const taken of ["Corallo", "Glicine", "Blu", "Ambra"]) {
       await expect(
         colorGroup(d).getByRole("radio", { name: new RegExp(`^${taken}`) }),
       ).toBeDisabled();
@@ -997,7 +997,7 @@ test.describe("modifica", () => {
       await openPage(page, user, baseURL);
       const d = await openEdit(page, "Sofia");
       await nameField(d).fill("Sofi");
-      await colorRadio(d, "Cobalto").click();
+      await colorRadio(d, "Blu").click();
       await submit(d, "Salva le modifiche").click();
       await expect(d).toBeHidden();
       const row = await expectRow(page, 1, "Sofi", "Figlio o figlia · 7 anni");

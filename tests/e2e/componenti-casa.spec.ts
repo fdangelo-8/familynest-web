@@ -11,9 +11,10 @@ import {
 // Functional tests for #63 "Componenti condivisi della Casa" (PR #71).
 // Everything runs on the design-system gallery (no data, no login), on the
 // pure functions of app-routes.ts and on static checks of the source files.
-// Colors: ink = rgb(23, 24, 28), night-2 = rgb(42, 41, 37), milk = rgb(244, 242, 236).
+// Colors (#196): ink = rgb(16, 38, 42), ink-2 = rgb(85, 104, 108),
+// night-2 = rgb(42, 41, 37), milk = rgb(244, 242, 236).
 
-const INK = "rgb(23, 24, 28)";
+const INK = "rgb(16, 38, 42)";
 const NIGHT_2 = "rgb(42, 41, 37)";
 const MILK = "rgb(244, 242, 236)";
 
@@ -866,7 +867,7 @@ test.describe("Conteggio leggibile", () => {
       .getByRole("link", { name: "Scadenze 99+" })
       .locator(".selettore__conteggio");
     expect(await css(scadenze, "opacity")).toBe("1");
-    expect(await css(scadenze, "color")).toBe("rgb(90, 93, 100)");
+    expect(await css(scadenze, "color")).toBe("rgb(85, 104, 108)");
     const spesa = group
       .getByRole("button", { name: "Spesa 4" })
       .locator(".selettore__conteggio");

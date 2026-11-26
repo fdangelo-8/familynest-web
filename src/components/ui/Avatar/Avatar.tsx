@@ -1,20 +1,9 @@
 import { cx } from "../cx";
 import { safeImageSrc } from "@/lib/safe-image-src";
+import { memberColorClass, MEMBER_COLOR_CODES } from "@/lib/member-colors";
 import { AvatarPhoto } from "./AvatarPhoto";
 
-export const MEMBER_COLORS = [
-  "pomodoro",
-  "glicine",
-  "salvia",
-  "cobalto",
-  "zafferano",
-  "lampone",
-  "ceruleo",
-  "peonia",
-  "basilico",
-  "cannella",
-  "insieme",
-] as const;
+export const MEMBER_COLORS = [...MEMBER_COLOR_CODES, "insieme"] as const;
 
 export type MemberColor = (typeof MEMBER_COLORS)[number];
 
@@ -68,7 +57,7 @@ export function Avatar({
         dot && "avatar--punto",
         empty && "avatar--vuoto",
         showPhoto && "avatar--foto",
-        `membro-${color}`,
+        memberColorClass(color),
         className,
       )}
       aria-hidden={nameShown ? true : undefined}

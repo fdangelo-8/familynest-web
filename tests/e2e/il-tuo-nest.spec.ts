@@ -632,17 +632,17 @@ test.describe("invita qualcuno", () => {
     await expect(dialog.getByLabel("Data di nascita")).toHaveCount(0);
     await expect(dialog.getByRole("radio")).toHaveCount(10);
     for (const taken of [
-      "Pomodoro (già di Marco)",
+      "Corallo (già di Marco)",
       "Glicine (già di Laura)",
-      "Salvia (già di Sofia)",
-      "Cobalto (già di Tommaso)",
-      "Zafferano (già di Biscotto)",
+      "Menta (già di Sofia)",
+      "Blu (già di Tommaso)",
+      "Ambra (già di Biscotto)",
     ]) {
       await expect(dialog.getByRole("radio", { name: taken })).toBeDisabled();
     }
     // The sixth colour of MEMBER_COLORS (lampone) is the first free one.
     await expect(
-      dialog.getByRole("radio", { name: /^Lampone/ }),
+      dialog.getByRole("radio", { name: /^Sabbia/ }),
     ).toHaveAttribute("aria-checked", "true");
     await expect(
       dialog.locator('[role="radio"][aria-checked="true"]'),
@@ -768,7 +768,7 @@ test.describe("invita qualcuno", () => {
       ).toBeVisible();
       expect((await members(user)).some((m) => m.name === "Rita")).toBe(false);
 
-      await dialog.getByRole("radio", { name: "Cobalto" }).click();
+      await dialog.getByRole("radio", { name: "Blu" }).click();
       await dialog.getByRole("button", { name: "Continua" }).click();
       await expect(dialog).toBeHidden();
       const rita = (await members(user)).find((m) => m.name === "Rita");

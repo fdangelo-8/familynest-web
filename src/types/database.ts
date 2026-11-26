@@ -430,12 +430,15 @@ export type Database = {
           created_at: string;
           ends_at: string | null;
           escort_member_id: string | null;
+          escort_undecided: boolean;
           event_id: string;
           household_id: string;
           is_cancelled: boolean;
           location: string | null;
           notes: string | null;
           occurrence_date: string;
+          pickup_member_id: string | null;
+          pickup_undecided: boolean;
           starts_at: string | null;
           title: string | null;
           updated_at: string;
@@ -445,12 +448,15 @@ export type Database = {
           created_at?: string;
           ends_at?: string | null;
           escort_member_id?: string | null;
+          escort_undecided?: boolean;
           event_id: string;
           household_id?: string;
           is_cancelled?: boolean;
           location?: string | null;
           notes?: string | null;
           occurrence_date: string;
+          pickup_member_id?: string | null;
+          pickup_undecided?: boolean;
           starts_at?: string | null;
           title?: string | null;
           updated_at?: string;
@@ -459,12 +465,15 @@ export type Database = {
           created_at?: string;
           ends_at?: string | null;
           escort_member_id?: string | null;
+          escort_undecided?: boolean;
           event_id?: string;
           household_id?: string;
           is_cancelled?: boolean;
           location?: string | null;
           notes?: string | null;
           occurrence_date?: string;
+          pickup_member_id?: string | null;
+          pickup_undecided?: boolean;
           starts_at?: string | null;
           title?: string | null;
           updated_at?: string;
@@ -490,6 +499,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "households";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "event_exceptions_pickup_fkey";
+            columns: ["pickup_member_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "household_members";
+            referencedColumns: ["id", "household_id"];
           },
         ];
       };
@@ -608,56 +624,121 @@ export type Database = {
           },
         ];
       };
+      event_viewers: {
+        Row: {
+          created_at: string;
+          event_id: string;
+          household_id: string;
+          member_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          event_id: string;
+          household_id?: string;
+          member_id: string;
+        };
+        Update: {
+          created_at?: string;
+          event_id?: string;
+          household_id?: string;
+          member_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "event_viewers_event_fkey";
+            columns: ["event_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "events";
+            referencedColumns: ["id", "household_id"];
+          },
+          {
+            foreignKeyName: "event_viewers_household_id_fkey";
+            columns: ["household_id"];
+            isOneToOne: false;
+            referencedRelation: "households";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "event_viewers_member_fkey";
+            columns: ["member_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "household_members";
+            referencedColumns: ["id", "household_id"];
+          },
+        ];
+      };
       events: {
         Row: {
+          all_day: boolean;
           author_member_id: string | null;
           created_at: string;
           ends_at: string;
           escort_member_id: string | null;
+          escort_undecided: boolean;
           household_id: string;
           id: string;
           location: string | null;
           notes: string | null;
+          pickup_member_id: string | null;
+          pickup_undecided: boolean;
           recurrence: Database["public"]["Enums"]["event_recurrence"];
           recurrence_until: string | null;
           recurrence_weekdays: number[] | null;
+          remind_rides: boolean;
+          reminder_minutes_before: number | null;
           starts_at: string;
           title: string;
+          unverified_fields: Database["public"]["Enums"]["event_field"][];
           updated_at: string;
           visibility: Database["public"]["Enums"]["event_visibility"];
         };
         ComputedFields: never;
         Insert: {
+          all_day?: boolean;
           author_member_id?: string | null;
           created_at?: string;
           ends_at: string;
           escort_member_id?: string | null;
+          escort_undecided?: boolean;
           household_id?: string;
           id?: string;
           location?: string | null;
           notes?: string | null;
+          pickup_member_id?: string | null;
+          pickup_undecided?: boolean;
           recurrence?: Database["public"]["Enums"]["event_recurrence"];
           recurrence_until?: string | null;
           recurrence_weekdays?: number[] | null;
+          remind_rides?: boolean;
+          reminder_minutes_before?: number | null;
           starts_at: string;
           title: string;
+          unverified_fields?: Database["public"]["Enums"]["event_field"][];
           updated_at?: string;
           visibility: Database["public"]["Enums"]["event_visibility"];
         };
         Update: {
+          all_day?: boolean;
           author_member_id?: string | null;
           created_at?: string;
           ends_at?: string;
           escort_member_id?: string | null;
+          escort_undecided?: boolean;
           household_id?: string;
           id?: string;
           location?: string | null;
           notes?: string | null;
+          pickup_member_id?: string | null;
+          pickup_undecided?: boolean;
           recurrence?: Database["public"]["Enums"]["event_recurrence"];
           recurrence_until?: string | null;
           recurrence_weekdays?: number[] | null;
+          remind_rides?: boolean;
+          reminder_minutes_before?: number | null;
           starts_at?: string;
           title?: string;
+          unverified_fields?: Database["public"]["Enums"]["event_field"][];
           updated_at?: string;
           visibility?: Database["public"]["Enums"]["event_visibility"];
         };
@@ -682,6 +763,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "households";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "events_pickup_fkey";
+            columns: ["pickup_member_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "household_members";
+            referencedColumns: ["id", "household_id"];
           },
         ];
       };
@@ -1872,6 +1960,13 @@ export type Database = {
         Args: Record<PropertyKey, never>;
         Returns: boolean;
       };
+      confirm_event_fields: {
+        Args: {
+          p_event_id: string;
+          p_fields?: Database["public"]["Enums"]["event_field"][];
+        };
+        Returns: undefined;
+      };
       count_imported_events: {
         Args: { p_from: string };
         Returns: {
@@ -1899,16 +1994,24 @@ export type Database = {
       };
       create_event: {
         Args: {
+          p_all_day?: boolean;
           p_ends_at: string;
           p_escort_member_id?: string;
+          p_escort_undecided?: boolean;
           p_location?: string;
           p_member_ids: string[];
           p_notes?: string;
+          p_pickup_member_id?: string;
+          p_pickup_undecided?: boolean;
           p_recurrence?: Database["public"]["Enums"]["event_recurrence"];
           p_recurrence_until?: string;
           p_recurrence_weekdays?: number[];
+          p_remind_rides?: boolean;
+          p_reminder_minutes_before?: number;
           p_starts_at: string;
           p_title: string;
+          p_unverified_fields?: Database["public"]["Enums"]["event_field"][];
+          p_viewer_ids?: string[];
           p_visibility: Database["public"]["Enums"]["event_visibility"];
         };
         Returns: string;
@@ -1963,6 +2066,29 @@ export type Database = {
         Args: { p_claim_token?: string; p_id: string; p_retry_at: string };
         Returns: undefined;
       };
+      find_event_conflicts: {
+        Args: {
+          p_ends_at: string;
+          p_escort_member_id?: string;
+          p_exclude_event_id?: string;
+          p_member_ids: string[];
+          p_pickup_member_id?: string;
+          p_starts_at: string;
+        };
+        Returns: {
+          author_member_id: string;
+          ends_at: string;
+          escort_member_id: string;
+          event_id: string;
+          is_masked: boolean;
+          member_id: string;
+          member_ids: string[];
+          occurrence_date: string;
+          pickup_member_id: string;
+          starts_at: string;
+          title: string;
+        }[];
+      };
       get_account_deletion_outcome: {
         Args: Record<PropertyKey, never>;
         Returns: {
@@ -1984,22 +2110,30 @@ export type Database = {
       get_event_occurrence: {
         Args: { p_day?: string; p_event_id: string };
         Returns: {
+          all_day: boolean;
           author_member_id: string;
           ends_at: string;
           escort_member_id: string;
+          escort_undecided: boolean;
           id: string;
           is_modified: boolean;
           location: string;
           member_ids: string[];
           notes: string;
           occurrence_date: string;
+          pickup_member_id: string;
+          pickup_undecided: boolean;
           recurrence: Database["public"]["Enums"]["event_recurrence"];
           recurrence_until: string;
           recurrence_weekdays: number[];
+          remind_rides: boolean;
+          reminder_minutes_before: number;
           series_ends_at: string;
           series_starts_at: string;
           starts_at: string;
           title: string;
+          unverified_fields: Database["public"]["Enums"]["event_field"][];
+          viewer_ids: string[];
           visibility: Database["public"]["Enums"]["event_visibility"];
         }[];
       };
@@ -2043,6 +2177,43 @@ export type Database = {
           members: Database["public"]["CompositeTypes"]["invitation_preview_member"][];
           message: string;
           status: Database["public"]["Enums"]["invitation_preview_status"];
+        }[];
+      };
+      list_calendar_events: {
+        Args: { p_from: string; p_to: string };
+        Returns: {
+          all_day: boolean;
+          author_member_id: string;
+          counts_for_free_time: boolean;
+          ends_at: string;
+          escort_member_id: string;
+          escort_undecided: boolean;
+          id: string;
+          is_imported: boolean;
+          is_masked: boolean;
+          location: string;
+          member_ids: string[];
+          pickup_member_id: string;
+          pickup_undecided: boolean;
+          remind_rides: boolean;
+          reminder_minutes_before: number;
+          source_provider: Database["public"]["Enums"]["calendar_provider"];
+          starts_at: string;
+          title: string;
+          unverified_fields: Database["public"]["Enums"]["event_field"][];
+          viewer_ids: string[];
+          visibility: Database["public"]["Enums"]["event_visibility"];
+        }[];
+      };
+      list_event_overlaps: {
+        Args: { p_from: string; p_to: string };
+        Returns: {
+          day: string;
+          ends_at: string;
+          event_id: string;
+          is_masked: boolean;
+          member_id: string;
+          starts_at: string;
         }[];
       };
       list_household_events: {
@@ -2315,18 +2486,25 @@ export type Database = {
       };
       update_event: {
         Args: {
+          p_all_day?: boolean;
           p_day: string;
           p_ends_at: string;
           p_escort_member_id: string;
+          p_escort_undecided?: boolean;
           p_event_id: string;
           p_location: string;
           p_member_ids: string[];
           p_notes: string;
+          p_pickup_member_id?: string;
+          p_pickup_undecided?: boolean;
           p_recurrence: Database["public"]["Enums"]["event_recurrence"];
           p_recurrence_until: string;
           p_recurrence_weekdays: number[];
+          p_remind_rides?: boolean;
+          p_reminder_minutes_before?: number;
           p_starts_at: string;
           p_title: string;
+          p_viewer_ids?: string[];
           p_visibility: Database["public"]["Enums"]["event_visibility"];
         };
         Returns: {
@@ -2339,9 +2517,12 @@ export type Database = {
           p_day: string;
           p_ends_at: string;
           p_escort_member_id: string;
+          p_escort_undecided?: boolean;
           p_event_id: string;
           p_location: string;
           p_notes: string;
+          p_pickup_member_id?: string;
+          p_pickup_undecided?: boolean;
           p_starts_at: string;
           p_title: string;
         };
@@ -2386,8 +2567,10 @@ export type Database = {
         | "yearly"
         | "every_n_days";
       event_change_scope: "this" | "following";
-      event_recurrence: "none" | "weekly" | "monthly";
-      event_visibility: "private" | "busy" | "household";
+      event_field: "title" | "day" | "time" | "members" | "location";
+      event_recurrence:
+        "none" | "daily" | "weekly" | "biweekly" | "monthly" | "yearly";
+      event_visibility: "private" | "busy" | "selected" | "household";
       external_event_origin: "imported" | "sent";
       household_type:
         "single" | "couple" | "family_with_children" | "roommates";
@@ -2601,8 +2784,16 @@ export const Constants = {
         "every_n_days",
       ],
       event_change_scope: ["this", "following"],
-      event_recurrence: ["none", "weekly", "monthly"],
-      event_visibility: ["private", "busy", "household"],
+      event_field: ["title", "day", "time", "members", "location"],
+      event_recurrence: [
+        "none",
+        "daily",
+        "weekly",
+        "biweekly",
+        "monthly",
+        "yearly",
+      ],
+      event_visibility: ["private", "busy", "selected", "household"],
       external_event_origin: ["imported", "sent"],
       household_type: ["single", "couple", "family_with_children", "roommates"],
       invitation_preview_status: ["valid", "invalid"],

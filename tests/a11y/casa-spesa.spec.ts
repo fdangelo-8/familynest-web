@@ -386,7 +386,7 @@ test("anello di focus visibile su tondo, chip, lama e campo", async ({
   const before = await container.evaluate(
     (el) => getComputedStyle(el).boxShadow,
   );
-  expect(before).toContain("23, 24, 28");
+  expect(before).toContain("16, 38, 42"); // --color-inchiostro (#196)
 });
 
 test("focus: aggiungendo un chip va sul chip vicino", async ({ page }) => {

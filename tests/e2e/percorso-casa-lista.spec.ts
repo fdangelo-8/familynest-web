@@ -112,6 +112,23 @@ test.describe("percorso della casa", () => {
   }) => {
     test.setTimeout(300_000);
     await setClock(page, NOW);
+    // The browser clock is fixed on 20 October 2026, but the database checks
+    // «done_at» against its own real clock and accepts only the last 30 days
+    // (and refuses the tap, rolling the row back, once that day is older). So
+    // the tap «Segna come fatto» is sent with the real time of the test run.
+    await page.route("**/rest/v1/todos*", async (route) => {
+      const request = route.request();
+      const body = request.postData();
+      if (request.method() === "PATCH" && body?.includes('"done_at":"')) {
+        const patch = JSON.parse(body) as { done_at?: string | null };
+        if (typeof patch.done_at === "string") {
+          patch.done_at = new Date().toISOString();
+          await route.continue({ postData: JSON.stringify(patch) });
+          return;
+        }
+      }
+      await route.continue();
+    });
     await casa.signIn(page, baseURL, "Marco");
     await page.goto("/oggi");
     await expect(

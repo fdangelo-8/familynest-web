@@ -71,14 +71,16 @@ select has_function(
   'public', 'update_event',
   array[
     'uuid', 'date', 'text', 'timestamp with time zone', 'timestamp with time zone', 'event_visibility', 'uuid[]',
-    'text', 'uuid', 'event_recurrence', 'smallint[]', 'date', 'text'
+    'text', 'uuid', 'event_recurrence', 'smallint[]', 'date', 'text',
+    -- #510: the new values, at the end with defaults.
+    'boolean', 'uuid', 'boolean', 'boolean', 'integer', 'boolean', 'uuid[]'
   ],
   'update_event exists'
 );
 select ok(
-  not (select p.prosecdef from pg_proc p where p.oid = 'public.update_event(uuid, date, text, timestamptz, timestamptz, public.event_visibility, uuid[], text, uuid, public.event_recurrence, smallint[], date, text)'::regprocedure)
-  and not has_function_privilege('anon', 'public.update_event(uuid, date, text, timestamptz, timestamptz, public.event_visibility, uuid[], text, uuid, public.event_recurrence, smallint[], date, text)', 'execute')
-  and has_function_privilege('authenticated', 'public.update_event(uuid, date, text, timestamptz, timestamptz, public.event_visibility, uuid[], text, uuid, public.event_recurrence, smallint[], date, text)', 'execute'),
+  not (select p.prosecdef from pg_proc p where p.oid = 'public.update_event(uuid, date, text, timestamptz, timestamptz, public.event_visibility, uuid[], text, uuid, public.event_recurrence, smallint[], date, text, boolean, uuid, boolean, boolean, integer, boolean, uuid[])'::regprocedure)
+  and not has_function_privilege('anon', 'public.update_event(uuid, date, text, timestamptz, timestamptz, public.event_visibility, uuid[], text, uuid, public.event_recurrence, smallint[], date, text, boolean, uuid, boolean, boolean, integer, boolean, uuid[])', 'execute')
+  and has_function_privilege('authenticated', 'public.update_event(uuid, date, text, timestamptz, timestamptz, public.event_visibility, uuid[], text, uuid, public.event_recurrence, smallint[], date, text, boolean, uuid, boolean, boolean, integer, boolean, uuid[])', 'execute'),
   'update_event is security invoker and for signed-in users only'
 );
 select ok(

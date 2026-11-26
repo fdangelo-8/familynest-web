@@ -92,9 +92,9 @@ test("a11y: la scelta del colore mostra l'anello del fuoco da tastiera", async (
 }) => {
   await page.goto(DEMO);
   const group = page.getByRole("radiogroup", { name: "Il tuo colore" });
-  await group.getByRole("radio", { name: "Salvia" }).focus();
+  await group.getByRole("radio", { name: "Menta" }).focus();
   await page.keyboard.press("ArrowRight");
-  const focused = group.getByRole("radio", { name: "Cobalto" });
+  const focused = group.getByRole("radio", { name: "Blu" });
   await expect(focused).toBeFocused();
   // the chosen colour already has its own ring: compare focused and blurred
   const read = (el: Element) => {

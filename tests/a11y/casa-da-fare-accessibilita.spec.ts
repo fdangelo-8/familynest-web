@@ -387,7 +387,7 @@ test("anello di focus visibile su casella, chip, voce del selettore e campo", as
     const shadow = await page
       .locator('form.campo-rapido[aria-label="Aggiungi una cosa da fare…"]')
       .evaluate((el) => getComputedStyle(el).boxShadow);
-    expect(shadow).toContain("23, 24, 28");
+    expect(shadow).toContain("16, 38, 42"); // --color-inchiostro (#196)
   }
 });
 

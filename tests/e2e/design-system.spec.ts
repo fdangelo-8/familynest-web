@@ -8,8 +8,10 @@ test.beforeEach(async ({ page }) => {
   await page.goto(BASE_PATH);
 });
 
-function tokensFromMockup(): Record<string, string> {
-  const css = readFileSync("docs/mockup/tokens.css", "utf8").replace(
+// #196: the reference of the tokens is the exact copy of the :root of the app.
+// docs/mockup/tokens.css stays as an archive and is no longer compared.
+function tokensFromReference(): Record<string, string> {
+  const css = readFileSync("docs/agenti/design/token.css", "utf8").replace(
     /\/\*[\s\S]*?\*\//g,
     "",
   );
@@ -60,45 +62,14 @@ async function rootValues(page: Page, names: string[]) {
 }
 
 test.describe("token e base", () => {
-  // Differences approved by Francesco (#52, proposals 2 and 4 of #43): tokens
-  // that exist in the app and not in docs/mockup/tokens.css.
-  const APPROVED_TOKENS_52: Record<string, string> = {
-    "--color-filo-campo": "#82858b",
-    "--color-allerta-scuro": "#a82a27",
-  };
-  // Approved by Francesco (#74, decision of 28/10): five new member colours.
-  const APPROVED_TOKENS_74: Record<string, string> = {
-    "--color-membro-lampone": "#d75596",
-    "--color-membro-ceruleo": "#4b96aa",
-    "--color-membro-peonia": "#f2a8c6",
-    "--color-membro-basilico": "#649100",
-    "--color-membro-cannella": "#af8273",
-  };
-  // #313 (text enlarged to 200%): minimum sizes that follow the text, in rem.
-  const APPROVED_TOKENS_313: Record<string, string> = {
-    "--size-modulo-min": "9.5rem",
-    "--size-contatore-min": "6rem",
-    "--size-dati-min": "8rem",
-  };
-  const APPROVED_TOKENS = {
-    ...APPROVED_TOKENS_52,
-    ...APPROVED_TOKENS_74,
-    ...APPROVED_TOKENS_313,
-  };
-
-  // #313: the typographic scale is in rem (px of the mockup / 16); only the
-  // initials of the avatars stay in px.
-  const isRemText = (name: string) =>
-    /^--text-.+-(size|line)$/.test(name) && !name.startsWith("--text-avatar-");
-  const pxToRem = (value: string) =>
-    value.replace(/^([\d.]+)px$/, (_, px: string) => `${Number(px) / 16}rem`);
-
-  test("CA-1: i token coincidono con tokens.css, più le differenze approvate (#52, #74, #313)", async ({
+  // #196: the lists of approved differences (#52, #74, #313) are gone, their
+  // values are in docs/agenti/design/token.css, copy of the :root of the app.
+  test("CA-1: i token coincidono con docs/agenti/design/token.css", async ({
     page,
   }) => {
-    const tokens = tokensFromMockup();
+    const tokens = tokensFromReference();
     const names = Object.keys(tokens);
-    expect(names).toHaveLength(202);
+    expect(names.length).toBeGreaterThan(200);
     const actual = await rootValues(page, names);
     for (const name of names) {
       if (name === "--font-titoli" || name === "--font-testo") continue;
@@ -110,7 +81,6 @@ test.describe("token e base", () => {
           (_, ref: string) => tokens[ref]!,
         );
       }
-      if (isRemText(name)) source = pxToRem(source.trim());
       const wanted = normalize(source);
       expect(normalize(actual[name]!), name).toBe(wanted);
     }
@@ -139,24 +109,22 @@ test.describe("token e base", () => {
       return [...found];
     });
     const extra = declared.filter((name) => !names.includes(name));
-    expect(extra.sort()).toEqual(Object.keys(APPROVED_TOKENS).sort());
-    const added = await rootValues(page, Object.keys(APPROVED_TOKENS));
-    for (const [name, value] of Object.entries(APPROVED_TOKENS)) {
-      expect(normalize(added[name]!), name).toBe(normalize(value));
-    }
+    expect(extra.sort()).toEqual([]);
   });
 
-  test("CA-2: i font agganciati a next/font", async ({ page }) => {
-    const tokens = tokensFromMockup();
+  test("CA-2: i font agganciati a next/font sono Figtree", async ({ page }) => {
+    const tokens = tokensFromReference();
     const actual = await rootValues(page, ["--font-titoli", "--font-testo"]);
-    expect(actual["--font-titoli"]).toContain("Parkinsans");
-    expect(actual["--font-testo"]).toContain("Host Grotesk");
-    // Same fallback families as tokens.css, same order.
+    expect(actual["--font-titoli"]).toContain("Figtree");
+    expect(actual["--font-testo"]).toContain("Figtree");
+    expect(actual["--font-titoli"]).not.toMatch(/Parkinsans|Host Grotesk/);
+    expect(actual["--font-testo"]).not.toMatch(/Parkinsans|Host Grotesk/);
+    // Same fallback families as the reference file, same order.
     const fallbacks = (value: string) =>
       value
         .split(",")
         .map((part) => part.trim().replace(/['"]/g, ""))
-        .filter((part) => !/Parkinsans|Host Grotesk/.test(part));
+        .filter((part) => !/Figtree|var\(--font-figtree\)/.test(part));
     for (const name of ["--font-titoli", "--font-testo"]) {
       expect(fallbacks(actual[name]!), name).toEqual(fallbacks(tokens[name]!));
     }
@@ -173,11 +141,12 @@ test.describe("token e base", () => {
         family: style.fontFamily,
       };
     });
-    expect(body.background).toBe("rgb(241, 242, 238)");
-    expect(body.color).toBe("rgb(23, 24, 28)");
+    // #196: white pages, new ink, Figtree.
+    expect(body.background).toBe("rgb(255, 255, 255)");
+    expect(body.color).toBe("rgb(16, 38, 42)");
     expect(body.size).toBe("15px");
     expect(body.line).toBe("22px");
-    expect(body.family).toContain("Host Grotesk");
+    expect(body.family).toContain("Figtree");
   });
 
   test("CA-4: font caricati e t-display", async ({ page }) => {
@@ -187,11 +156,13 @@ test.describe("token e base", () => {
         .filter((font) => font.status === "loaded")
         .map((font) => font.family);
     });
-    expect(loaded.some((family) => family.includes("Parkinsans"))).toBe(true);
-    expect(loaded.some((family) => family.includes("Host Grotesk"))).toBe(true);
+    expect(loaded.some((family) => family.includes("Figtree"))).toBe(true);
+    expect(
+      loaded.filter((family) => /Parkinsans|Host.?Grotesk/i.test(family)),
+    ).toEqual([]);
     const display = page.getByTestId("t-display-esempio");
-    await expect(display).toHaveCSS("font-weight", "300");
-    await expect(display).toHaveCSS("font-family", /Parkinsans/);
+    await expect(display).toHaveCSS("font-weight", "400");
+    await expect(display).toHaveCSS("font-family", /Figtree/);
   });
 
   test("CA-5: nessuna richiesta a Google Fonts", async ({ page }) => {
@@ -206,9 +177,10 @@ test.describe("token e base", () => {
 
   test("CA-6: misure dei titoli tra mobile e desktop", async ({ page }) => {
     await page.setViewportSize({ width: 1023, height: 800 });
+    // #196: the page title is 30 px on mobile (was 32).
     await expect(page.getByTestId("t-titolo-pagina-esempio")).toHaveCSS(
       "font-size",
-      "32px",
+      "30px",
     );
     await expect(page.getByTestId("t-display-esempio")).toHaveCSS(
       "font-size",
@@ -403,7 +375,7 @@ test.describe("campi e controlli", () => {
     );
     await expect(invalid).toHaveCSS(
       "box-shadow",
-      "rgb(200, 50, 47) 0px 0px 0px 1.5px inset",
+      "rgb(179, 38, 30) 0px 0px 0px 1.5px inset",
     );
   });
 
@@ -467,7 +439,7 @@ test.describe("campi e controlli", () => {
       await expect(chips.nth(index)).toHaveAttribute("aria-pressed", "true");
       await expect(chips.nth(index)).toHaveCSS(
         "background-color",
-        "rgb(23, 24, 28)",
+        "rgb(16, 38, 42)",
       );
     }
     await chips.nth(0).hover();
@@ -497,7 +469,8 @@ test.describe("persone, etichette e righe", () => {
     ).toHaveText("");
     const laura = page.getByTestId("avatar-cobalto").locator(".avatar");
     await expect(laura).toHaveText("L");
-    await expect(laura).toHaveCSS("background-color", "rgb(92, 127, 224)");
+    // #196: cobalto shows the blue tint #3F6FE0.
+    await expect(laura).toHaveCSS("background-color", "rgb(63, 111, 224)");
     await expect(laura).toHaveAttribute("role", "img");
     await expect(laura).toHaveAttribute("aria-label", "Laura");
     await expect(
@@ -658,8 +631,9 @@ test.describe("sovrapposizioni", () => {
       expect(Math.round(viewport.width - (box.x + box.width))).toBe(40);
       expect(Math.round(viewport.height - (box.y + box.height))).toBe(32);
     } else {
-      expect(Math.round(box.x)).toBe(20);
-      expect(Math.round(viewport.width - (box.x + box.width))).toBe(20);
+      // #196: the page margin on a phone is 24 px (was 20).
+      expect(Math.round(box.x)).toBe(24);
+      expect(Math.round(viewport.width - (box.x + box.width))).toBe(24);
       expect(Math.round(viewport.height - (box.y + box.height))).toBe(104);
     }
 
@@ -803,7 +777,8 @@ test.describe("CA-11: stessi stili del mockup", () => {
     {
       id: "campo",
       selector: ".campo__input",
-      shadowColor: { ours: "rgb(130,133,139)", mock: "rgb(207,209,202)" },
+      // #196: --color-filo-campo #7F9092 and --color-filo-2 #C3CCC9.
+      shadowColor: { ours: "rgb(127,144,146)", mock: "rgb(195,204,201)" },
     },
     { id: "casella", selector: ".casella" },
     { id: "toggle", selector: ".toggle" },
@@ -880,6 +855,25 @@ test.describe("CA-11: stessi stili del mockup", () => {
       specs.map((spec) => spec.ours ?? `#${spec.id} ${spec.selector}`),
     );
     await page.goto(`file://${process.cwd()}/docs/mockup/design-system.html`);
+    // #196: the values of the tokens come from docs/agenti/design/token.css
+    // (the mockup keeps its own components and its old tokens as an archive).
+    // The new :root is laid over the mockup; the two font tokens point to the
+    // variable of next/font, which the mockup page does not have.
+    // The database codes now show a new shade (#196, §5): the mockup gets the
+    // same `.membro-*` classes as the app, so the code -> shade mapping is the
+    // approved one and every other avatar style is still compared.
+    const memberClasses = (
+      readFileSync("src/app/components.css", "utf8").match(
+        /\.membro-[a-z]+\s*\{[^}]*\}/g,
+      ) ?? []
+    ).join("\n");
+    await page.addStyleTag({
+      content:
+        readFileSync("docs/agenti/design/token.css", "utf8").replace(
+          /--font-(titoli|testo):[^;]+;/g,
+          "",
+        ) + memberClasses,
+    });
     const theirs = await read(
       page,
       specs.map((spec) => spec.mock ?? `#${spec.id} ${spec.selector}`),
@@ -1214,17 +1208,19 @@ test.describe("correzioni approvate (#52)", () => {
 
   // ---- Punto 2: bordo dei campi ----
 
-  test("CA-1 (#52): --color-filo-campo vale #82858B con contrasto >= 3:1", async ({
+  test("CA-1 (#52): --color-filo-campo vale #7F9092 con contrasto >= 3:1", async ({
     page,
   }) => {
-    expect(await rootToken(page, "--color-filo-campo")).toBe("#82858b");
-    expect(contrast("#82858B", "#FFFFFF")).toBeGreaterThanOrEqual(3);
-    expect(contrast("#82858B", "#F1F2EE")).toBeGreaterThanOrEqual(3);
-    expectRatio("#82858B", "#FFFFFF", 3.69);
-    expectRatio("#82858B", "#F1F2EE", 3.29);
+    // #196: the value moved from #82858B to #7F9092 (3,33:1 on white, 3,07:1
+    // on the quiet grey).
+    expect(await rootToken(page, "--color-filo-campo")).toBe("#7f9092");
+    expect(contrast("#7F9092", "#FFFFFF")).toBeGreaterThanOrEqual(3);
+    expect(contrast("#7F9092", "#F4F6F4")).toBeGreaterThanOrEqual(3);
+    expectRatio("#7F9092", "#FFFFFF", 3.33);
+    expectRatio("#7F9092", "#F4F6F4", 3.07);
   });
 
-  test("CA-2 (#52): il campo vuoto ha il bordo a riposo #82858B", async ({
+  test("CA-2 (#52): il campo vuoto ha il bordo a riposo #7F9092", async ({
     page,
   }) => {
     const input = page.locator("#campo .campo__input").first();
@@ -1235,16 +1231,16 @@ test.describe("correzioni approvate (#52)", () => {
       await style(page, "#campo .campo__input", "box-shadow"),
     );
     expect(value.width).toBe(1);
-    sameColor(value.color, "#82858b");
+    sameColor(value.color, "#7f9092");
   });
 
-  test("CA-3 (#52): il campo rapido ha il bordo a riposo #82858B", async ({
+  test("CA-3 (#52): il campo rapido ha il bordo a riposo #7F9092", async ({
     page,
   }) => {
     await addQuickField(page);
     const value = shadow(await style(page, "#campo-rapido-test", "box-shadow"));
     expect(value.width).toBe(1);
-    sameColor(value.color, "#82858b");
+    sameColor(value.color, "#7f9092");
   });
 
   test("CA-4 (#52): il focus con Tab mostra l'anello inchiostro", async ({
@@ -1260,7 +1256,7 @@ test.describe("correzioni approvate (#52)", () => {
     );
     // --border-medio (1.5px in tokens.css), thicker than the resting 1px.
     expect(value.width).toBeGreaterThan(1);
-    sameColor(value.color, "#17181c");
+    sameColor(value.color, "#10262a");
   });
 
   test("CA-5 (#52): il campo in errore ha l'anello allerta", async ({
@@ -1270,7 +1266,7 @@ test.describe("correzioni approvate (#52)", () => {
       await style(page, "[data-testid=campo-errore]", "box-shadow"),
     );
     expect(gallery.width).toBeGreaterThan(1);
-    sameColor(gallery.color, "#c8322f");
+    sameColor(gallery.color, "#b3261e");
 
     await page.evaluate(() => {
       const wrap = document.createElement("div");
@@ -1284,13 +1280,14 @@ test.describe("correzioni approvate (#52)", () => {
     });
     const created = shadow(await style(page, "#errore-test", "box-shadow"));
     expect(created.width).toBeGreaterThan(1);
-    sameColor(created.color, "#c8322f");
+    sameColor(created.color, "#b3261e");
   });
 
   test("CA-6 (#52): --color-filo-2 e i suoi usi non cambiano", async ({
     page,
   }) => {
-    expect(await rootToken(page, "--color-filo-2")).toBe("#cfd1ca");
+    // #196: the value is now #C3CCC9, the uses are the same.
+    expect(await rootToken(page, "--color-filo-2")).toBe("#c3ccc9");
     const secondary = await page
       .locator("#btn-secondary .btn-secondary")
       .first()
@@ -1298,7 +1295,7 @@ test.describe("correzioni approvate (#52)", () => {
         const s = getComputedStyle(el);
         return `${s.boxShadow} | ${s.borderTopColor}`;
       });
-    expect(secondary).toContain("rgb(207, 209, 202)");
+    expect(secondary).toContain("rgb(195, 204, 201)");
     const dashed = await page
       .locator("#btn-tratteggiato .btn-tratteggiato")
       .first()
@@ -1306,19 +1303,19 @@ test.describe("correzioni approvate (#52)", () => {
         const s = getComputedStyle(el);
         return `${s.boxShadow} | ${s.borderTopColor}`;
       });
-    expect(dashed).toContain("rgb(207, 209, 202)");
+    expect(dashed).toContain("rgb(195, 204, 201)");
     const toggleOff = page
       .locator("#toggle .toggle:not([aria-checked='true'])")
       .first();
     sameColor(
       await toggleOff.evaluate((el) => getComputedStyle(el).backgroundColor),
-      "#cfd1ca",
+      "#c3ccc9",
     );
   });
 
   // ---- Punto 3: giorni fuori dal mese ----
 
-  test("CA-7 (#52): il numero fuori mese è #5A5D64, contrasto >= 4,5:1", async ({
+  test("CA-7 (#52): il numero fuori mese è #55686C, contrasto >= 4,5:1", async ({
     page,
   }) => {
     await addCells(page, ["griglia-mese__cella--fuori"]);
@@ -1327,11 +1324,12 @@ test.describe("correzioni approvate (#52)", () => {
       "#griglia-test .griglia-mese__numero",
       "color",
     );
-    sameColor(color, "#5a5d64");
-    expect(contrast("#5A5D64", "#F1F2EE")).toBeGreaterThanOrEqual(4.5);
-    expect(contrast("#5A5D64", "#FFFFFF")).toBeGreaterThanOrEqual(4.5);
-    expectRatio("#5A5D64", "#F1F2EE", 5.86);
-    expectRatio("#5A5D64", "#FFFFFF", 6.59);
+    // #196: secondary ink #55686C, 5,86:1 on white and 5,40:1 on the quiet grey.
+    sameColor(color, "#55686c");
+    expect(contrast("#55686C", "#F4F6F4")).toBeGreaterThanOrEqual(4.5);
+    expect(contrast("#55686C", "#FFFFFF")).toBeGreaterThanOrEqual(4.5);
+    expectRatio("#55686C", "#F4F6F4", 5.4);
+    expectRatio("#55686C", "#FFFFFF", 5.86);
   });
 
   test("CA-8 (#52): il numero fuori mese è visibile, opaco, con testo 28", async ({
@@ -1360,12 +1358,12 @@ test.describe("correzioni approvate (#52)", () => {
           const s = getComputedStyle(el);
           return { color: s.color, background: s.backgroundColor };
         });
-    sameColor((await read(0)).color, "#c8322f");
-    sameColor((await read(1)).color, "#5a5d64");
+    sameColor((await read(0)).color, "#b3261e");
+    sameColor((await read(1)).color, "#55686c");
     const today = await read(2);
     sameColor(today.color, "#f4f2ec");
-    sameColor(today.background, "#17181c");
-    sameColor((await read(3)).color, "#17181c");
+    sameColor(today.background, "#10262a");
+    sameColor((await read(3)).color, "#10262a");
   });
 
   test("CA-10 (#52): la regola fuori mese non usa più inchiostro-3", async ({
@@ -1396,7 +1394,7 @@ test.describe("correzioni approvate (#52)", () => {
     page,
   }) => {
     expect(await rootToken(page, "--color-allerta-scuro")).toBe("#a82a27");
-    expect(luminance(hex("#A82A27"))).toBeLessThan(luminance(hex("#C8322F")));
+    expect(luminance(hex("#A82A27"))).toBeLessThan(luminance(hex("#B3261E")));
     expect(contrast("#A82A27", "#FFFFFF")).toBeGreaterThanOrEqual(4.5);
     expectRatio("#A82A27", "#FFFFFF", 6.94);
   });
@@ -1406,12 +1404,12 @@ test.describe("correzioni approvate (#52)", () => {
   }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop", "solo con un puntatore");
     const button = page.locator(danger);
-    await expect(button).toHaveCSS("background-color", "rgb(200, 50, 47)");
+    await expect(button).toHaveCSS("background-color", "rgb(179, 38, 30)");
     await button.hover();
     await expect(button).toHaveCSS("background-color", "rgb(168, 42, 39)");
     await expect(button).toHaveCSS("color", "rgb(255, 255, 255)");
     await page.mouse.move(1, 1);
-    await expect(button).toHaveCSS("background-color", "rgb(200, 50, 47)");
+    await expect(button).toHaveCSS("background-color", "rgb(179, 38, 30)");
   });
 
   for (const how of ["disabled", "aria-disabled"] as const) {
@@ -1428,10 +1426,10 @@ test.describe("correzioni approvate (#52)", () => {
       await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
       // The pointer really is over the button, so :hover applies.
       expect(await button.evaluate((el) => el.matches(":hover"))).toBe(true);
-      await expect(button).toHaveCSS("background-color", "rgb(200, 50, 47)");
+      await expect(button).toHaveCSS("background-color", "rgb(179, 38, 30)");
       await page.mouse.down();
       try {
-        await expect(button).toHaveCSS("background-color", "rgb(200, 50, 47)");
+        await expect(button).toHaveCSS("background-color", "rgb(179, 38, 30)");
       } finally {
         await page.mouse.up();
       }

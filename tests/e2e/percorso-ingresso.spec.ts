@@ -85,7 +85,7 @@ async function onboarding(page: Page): Promise<string> {
   await dialog.getByLabel("Nome", { exact: true }).fill("Marco");
   await dialog
     .getByRole("radiogroup", { name: "Colore" })
-    .getByRole("radio", { name: "Salvia", exact: true })
+    .getByRole("radio", { name: "Menta", exact: true })
     .click();
   await dialog
     .getByRole("button", { name: "Aggiungi Marco", exact: true })
@@ -150,7 +150,7 @@ async function joinWithLink(page: Page, link: string) {
   await page.goto("/accesso");
   await expect(page).toHaveURL(/\/invito\/colore$/);
   await colorPageReady(page);
-  await radio(page, "Peonia").click();
+  await radio(page, "Rosa").click();
   await continueButton(page).click();
   await expect(page).toHaveURL(/\/onboarding\/calendario$/);
   await expect(bar(page, "Passo 2 di 3")).toBeVisible();

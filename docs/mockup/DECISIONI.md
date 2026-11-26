@@ -56,6 +56,13 @@ Queste decisioni prevalgono sul mockup dove lo contraddicono. Analista, designer
 - **Correzioni attese nel Passo 12** (chiesto a Fable il 25/11): barrette degli impegni con contrasto almeno 3:1 sul fondo, risposte 177–183 da applicare e le pagine che mancano su computer (Spazi, Contatti, Documenti, Conti, Luoghi, Novità, Proposte, Sfondi, lista dei desideri nell'app, aiutanti, settimana tipo, sintesi del mattino, Turni). Elenco completo in `docs/design/computer/LEGGIMI.md`. Fino ad allora valgono le correzioni scritte lì, non le tavole; per le pagine non disegnate si adatta il telefono con `regole.md`.
 - Colore ardesia dei membri: **`#68778D`** al posto di `#6B7A90` (iniziale bianca 4,55:1), decisione di Francesco del 25/11/2026.
 
+## D6 · App negli store: strada A (25/11/2026)
+
+- Francesco ha scelto la strada A (#397, commento del 25/11/2026): la stessa app web dentro un guscio Capacitor, con le parti native. Le pagine non cambiano per effetto del guscio.
+- Le build iPhone prima con GitHub Actions, poi sul Mac di Francesco. La corsia nativa N0–N5 (#591–#596) parte dopo F5 (#506).
+- In via intermedia si riscrivono in nativo una o due schermate, solo se i dati della beta lo chiedono.
+- Regole per gli agenti: `docs/agenti/ARCHITETTURA.md`, sezione «App negli store». Il documento di analisi è `docs/agenti/proposte/app-store-a-vs-b.md`.
+
 ## Decisioni aperte del mockup
 
 Restano aperte come scritte in `design-system.md` §14. Finché non vengono decise **non si sviluppano**: accesso premium, tema scuro completo, contenuti degli spazi di Esplora oltre a ingresso e pagina "In arrivo", "Proponi qualcosa", Citofona, sintesi della domenica, taglie nella lista pubblica, tablet dedicato. Per l'apertura del profilo figlio dal calendario e la tendina notifiche su desktop si segue il mockup così com'è.

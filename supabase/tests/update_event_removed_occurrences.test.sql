@@ -265,12 +265,12 @@ select results_eq(
 );
 select ok(
   (select not p.prosecdef and p.proconfig @> array['search_path=""'] from pg_proc p
-   where p.oid = 'public.update_event(uuid, date, text, timestamptz, timestamptz, public.event_visibility, uuid[], text, uuid, public.event_recurrence, smallint[], date, text)'::regprocedure),
+   where p.oid = 'public.update_event(uuid, date, text, timestamptz, timestamptz, public.event_visibility, uuid[], text, uuid, public.event_recurrence, smallint[], date, text, boolean, uuid, boolean, boolean, integer, boolean, uuid[])'::regprocedure),
   'update_event stays security invoker with an empty search_path'
 );
 select ok(
-  not has_function_privilege('anon', 'public.update_event(uuid, date, text, timestamptz, timestamptz, public.event_visibility, uuid[], text, uuid, public.event_recurrence, smallint[], date, text)', 'execute')
-  and has_function_privilege('authenticated', 'public.update_event(uuid, date, text, timestamptz, timestamptz, public.event_visibility, uuid[], text, uuid, public.event_recurrence, smallint[], date, text)', 'execute'),
+  not has_function_privilege('anon', 'public.update_event(uuid, date, text, timestamptz, timestamptz, public.event_visibility, uuid[], text, uuid, public.event_recurrence, smallint[], date, text, boolean, uuid, boolean, boolean, integer, boolean, uuid[])', 'execute')
+  and has_function_privilege('authenticated', 'public.update_event(uuid, date, text, timestamptz, timestamptz, public.event_visibility, uuid[], text, uuid, public.event_recurrence, smallint[], date, text, boolean, uuid, boolean, boolean, integer, boolean, uuid[])', 'execute'),
   'update_event stays for signed-in users only'
 );
 

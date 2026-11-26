@@ -41,7 +41,7 @@ const radioIn = (sheet: Locator, label: RegExp) =>
 // ------------------------------------------------------------------ colore
 
 test.describe("colore", () => {
-  test("CA-10: toccare «Lampone» lo sceglie subito, lo salva e la pagina rilegge", async ({
+  test("CA-10: toccare «Sabbia» lo sceglie subito, lo salva e la pagina rilegge", async ({
     page,
     baseURL,
   }) => {
@@ -49,16 +49,16 @@ test.describe("colore", () => {
     await withMemberNest(async ({ user }) => {
       await user.signInContext(page.context(), baseURL as string);
       await openProfile(page);
-      await waitHydrated(colorRadio(page, "Lampone"));
+      await waitHydrated(colorRadio(page, "Sabbia"));
       const refreshes = countRefreshes(page);
-      await expect(colorRadio(page, "Pomodoro")).toHaveAttribute(
+      await expect(colorRadio(page, "Corallo")).toHaveAttribute(
         "aria-checked",
         "true",
       );
       await expect(headAvatar(page)).toHaveClass(/membro-pomodoro/);
 
-      await colorRadio(page, "Lampone").click();
-      await expect(colorRadio(page, "Lampone")).toHaveAttribute(
+      await colorRadio(page, "Sabbia").click();
+      await expect(colorRadio(page, "Sabbia")).toHaveAttribute(
         "aria-checked",
         "true",
       );
@@ -68,14 +68,14 @@ test.describe("colore", () => {
       await expect.poll(refreshes).toBeGreaterThan(0);
 
       await page.reload();
-      await expect(colorRadio(page, "Lampone")).toHaveAttribute(
+      await expect(colorRadio(page, "Sabbia")).toHaveAttribute(
         "aria-checked",
         "true",
       );
     });
   });
 
-  test("CA-11: con le frecce il fuoco e la scelta passano al colore dopo «Pomodoro» e si salva; Tab esce dal gruppo", async ({
+  test("CA-11: con le frecce il fuoco e la scelta passano al colore dopo «Corallo» e si salva; Tab esce dal gruppo", async ({
     page,
     baseURL,
   }) => {
@@ -83,23 +83,23 @@ test.describe("colore", () => {
     await withMemberNest(async ({ user }) => {
       await user.signInContext(page.context(), baseURL as string);
       await openProfile(page);
-      await waitHydrated(colorRadio(page, "Pomodoro"));
-      // In a Nest where nobody else has a colour the circle after «Pomodoro» is
+      await waitHydrated(colorRadio(page, "Corallo"));
+      // In a Nest where nobody else has a colour the circle after «Corallo» is
       // the second of the base order («Glicine»); with other colours taken it
-      // is the next free one (for Marco: «Lampone»). The test reads it.
+      // is the next free one (for Marco: «Sabbia»). The test reads it.
       const radios = colorGroup(page).getByRole("radio");
       const next = radios.nth(1);
       const nextName = (await next.getAttribute("aria-label")) as string;
       expect(nextName).toBeTruthy();
       expect(nextName).not.toMatch(/già usato/);
 
-      await colorRadio(page, "Pomodoro").focus();
-      await expect(colorRadio(page, "Pomodoro")).toBeFocused();
+      await colorRadio(page, "Corallo").focus();
+      await expect(colorRadio(page, "Corallo")).toBeFocused();
 
       await page.keyboard.press("ArrowRight");
       await expect(next).toBeFocused();
       await expect(next).toHaveAttribute("aria-checked", "true");
-      await expect(colorRadio(page, "Pomodoro")).toHaveAttribute(
+      await expect(colorRadio(page, "Corallo")).toHaveAttribute(
         "aria-checked",
         "false",
       );
@@ -118,21 +118,21 @@ test.describe("colore", () => {
     await withMemberNest(async ({ user, addPet }) => {
       await user.signInContext(page.context(), baseURL as string);
       await openProfile(page);
-      await waitHydrated(colorRadio(page, "Ceruleo"));
-      await expect(colorRadio(page, "Ceruleo")).toBeEnabled();
+      await waitHydrated(colorRadio(page, "Azzurro"));
+      await expect(colorRadio(page, "Azzurro")).toBeEnabled();
 
       // Meanwhile an animal with the colour «ceruleo» joins the Nest.
       await addPet("Fido", "ceruleo");
 
-      await colorRadio(page, "Ceruleo").click();
+      await colorRadio(page, "Azzurro").click();
       await expect(alertWith(page, COLOR_TAKEN_ERROR)).toHaveText(
         COLOR_TAKEN_ERROR,
       );
-      await expect(colorRadio(page, "Pomodoro")).toHaveAttribute(
+      await expect(colorRadio(page, "Corallo")).toHaveAttribute(
         "aria-checked",
         "true",
       );
-      await expect(colorRadio(page, "Ceruleo (già usato)")).toBeDisabled();
+      await expect(colorRadio(page, "Azzurro (già usato)")).toBeDisabled();
       expect(await colorOf(user.id)).toBe("pomodoro");
     });
   });
@@ -146,13 +146,13 @@ test.describe("colore", () => {
       await user.signInContext(page.context(), baseURL as string);
       await breakWrites(page, "household_members", "server");
       await openProfile(page);
-      await waitHydrated(colorRadio(page, "Lampone"));
+      await waitHydrated(colorRadio(page, "Sabbia"));
       const refreshes = countRefreshes(page);
 
-      await colorRadio(page, "Lampone").click();
+      await colorRadio(page, "Sabbia").click();
       const alert = alertWith(page, COLOR_SERVER_ERROR);
       await expect(alert).toHaveText(COLOR_SERVER_ERROR);
-      await expect(colorRadio(page, "Pomodoro")).toHaveAttribute(
+      await expect(colorRadio(page, "Corallo")).toHaveAttribute(
         "aria-checked",
         "true",
       );
@@ -172,13 +172,13 @@ test.describe("colore", () => {
       await user.signInContext(page.context(), baseURL as string);
       await breakWrites(page, "household_members", "network");
       await openProfile(page);
-      await waitHydrated(colorRadio(page, "Lampone"));
+      await waitHydrated(colorRadio(page, "Sabbia"));
 
-      await colorRadio(page, "Lampone").click();
+      await colorRadio(page, "Sabbia").click();
       await expect(alertWith(page, COLOR_NETWORK_ERROR)).toHaveText(
         COLOR_NETWORK_ERROR,
       );
-      await expect(colorRadio(page, "Pomodoro")).toHaveAttribute(
+      await expect(colorRadio(page, "Corallo")).toHaveAttribute(
         "aria-checked",
         "true",
       );

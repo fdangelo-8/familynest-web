@@ -173,8 +173,8 @@ test.describe("invito · il tuo colore (08)", () => {
   test("altro colore scelto", async ({ page, baseURL }) => {
     const nest = await caseNest("mockup");
     await openColor(page, baseURL, await caseVisitor("mockup"), nest.token);
-    await shown(page, "radio", "Peonia").click();
-    await expect(shown(page, "radio", "Peonia")).toHaveAttribute(
+    await shown(page, "radio", "Rosa").click();
+    await expect(shown(page, "radio", "Rosa")).toHaveAttribute(
       "aria-checked",
       "true",
     );
@@ -204,13 +204,13 @@ test.describe("invito · il tuo colore (08)", () => {
     const nest = await caseNest("mockup");
     await answerContinue(page, { status: "taken", taken: TAKEN_BY_PIETRO });
     await openColor(page, baseURL, await caseVisitor("mockup"), nest.token);
-    await shown(page, "radio", "Peonia").click();
+    await shown(page, "radio", "Rosa").click();
     await shown(page, "button", "Continua").click();
     await expect(
       shownText(
         page,
         "alert",
-        "Pietro ha appena preso la peonia. Scegli un altro colore.",
+        "Pietro ha appena preso la rosa. Scegli un altro colore.",
       ),
     ).toBeVisible();
     await settle(page);
