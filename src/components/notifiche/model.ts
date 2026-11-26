@@ -14,8 +14,15 @@ import {
 } from "@/lib/datetime";
 import { formatEveningDay } from "@/lib/calendar";
 import { formatDayInSentence, joinNames } from "@/lib/event-texts";
+import { it } from "@/lib/i18n/messages/it";
+import { t, type Params } from "@/lib/i18n/translate";
 import { giftTakenParts } from "@/lib/notifications";
-import type { NotificationItem } from "@/lib/notifications";
+import type {
+  NotificationActor,
+  NotificationItem,
+  NotificationOccurrence,
+  RideLeg,
+} from "@/lib/notifications";
 
 /** A member of the Nest as the page needs it (names of the people in a text). */
 export type Member = {
@@ -61,6 +68,46 @@ export type SectionView = {
 
 const text = (value: string): Part => ({ kind: "text", text: value });
 const bold = (value: string): Part => ({ kind: "bold", text: value });
+
+const BOLD = /<b>(.*?)<\/b>/g;
+
+/** A message of `i18n` with `<b>` tags to the parts of a row; the values are plain text. */
+function richParts(template: string, params: Params): Part[] {
+  const parts: Part[] = [];
+  let last = 0;
+  for (const match of template.matchAll(BOLD)) {
+    if (match.index > last) {
+      parts.push(text(t(template.slice(last, match.index), params)));
+    }
+    parts.push(bold(t(match[1] ?? "", params)));
+    last = match.index + match[0].length;
+  }
+  if (last < template.length) parts.push(text(t(template.slice(last), params)));
+  return parts;
+}
+
+function leadOf(actor: NotificationActor): RowLead {
+  return { type: "avatar", name: actor.name, color: actor.color };
+}
+
+/** The detail of the occurrence a row is about. */
+function occurrenceHref(event: NotificationOccurrence): string {
+  return `/impegni/${encodeURIComponent(event.id)}?giorno=${event.occurrenceDate}`;
+}
+
+/** Bringing is at the start of the event, picking up at its end. */
+function rideParams(
+  event: NotificationOccurrence,
+  leg: RideLeg,
+  now: Date,
+): Params {
+  const at = leg === "escort" ? event.startsAt : event.endsAt;
+  return {
+    title: event.title,
+    day: dayInPhrase(toDayKey(at), now),
+    time: formatTime(at),
+  };
+}
 
 /** `venerdì` from a day key. */
 function weekdayOf(dayKey: string): string {
@@ -223,6 +270,70 @@ function toRow(
         ],
       };
     }
+    case "member_joined":
+      return {
+        ...base,
+        lead: leadOf(item.actor),
+        parts: richParts(it.notifiche.memberJoined, { name: item.actor.name }),
+      };
+    case "event_reminder":
+      return {
+        ...base,
+        lead: { type: "icon", icon: "bell-ring", together: false },
+        parts: richParts(it.notifiche.eventReminder, {
+          title: item.event.title,
+          day: dayInPhrase(toDayKey(item.event.startsAt), now),
+          time: formatTime(item.event.startsAt),
+        }),
+        openHref: occurrenceHref(item.event),
+      };
+    case "ride_reminder":
+      return {
+        ...base,
+        lead: { type: "icon", icon: "car", together: false },
+        parts: richParts(
+          item.leg === "escort"
+            ? it.notifiche.rideEscort
+            : it.notifiche.ridePickup,
+          rideParams(item.event, item.leg, now),
+        ),
+        openHref: occurrenceHref(item.event),
+      };
+    case "overlap_tomorrow": {
+      const [first, second] =
+        item.event.startsAt <= item.otherEvent.startsAt
+          ? [item.event, item.otherEvent]
+          : [item.otherEvent, item.event];
+      const subject = context.members.find(
+        (m) => m.id === item.subjectMemberId,
+      );
+      const titles = { first: first.title, second: second.title };
+      // Somebody who is no longer in the Nest cannot be named: no row.
+      if (item.subjectMemberId !== context.meId && !subject) return null;
+      return {
+        ...base,
+        lead: { type: "icon", icon: "triangle-alert", together: false },
+        parts: richParts(
+          item.subjectMemberId === context.meId
+            ? it.notifiche.overlapMine
+            : it.notifiche.overlapOther,
+          { ...titles, name: subject?.name ?? "" },
+        ),
+        openHref: occurrenceHref(first),
+      };
+    }
+    case "ride_request":
+      // The design has no actions for this kind: text only.
+      return {
+        ...base,
+        lead: leadOf(item.actor),
+        parts: richParts(
+          item.leg === "escort"
+            ? it.notifiche.rideRequestEscort
+            : it.notifiche.rideRequestPickup,
+          { ...rideParams(item.event, item.leg, now), name: item.actor.name },
+        ),
+      };
   }
 }
 

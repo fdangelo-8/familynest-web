@@ -81,6 +81,22 @@ export const it = {
     request:
       "{app} chiede di leggere i tuoi calendari e di scrivere i loro impegni.",
   },
+  // Rows of the Notifiche page for the avvisi of #511 (`<b>` = bold).
+  notifiche: {
+    memberJoined:
+      "<b>{name}</b> ha accettato l'invito: ora avete lo stesso calendario e le stesse liste.",
+    eventReminder: "Tra poco: <b>{title}</b>, {day} alle {time}.",
+    rideEscort: "Tocca a te portare, {day} alle {time}: <b>{title}</b>.",
+    ridePickup: "Tocca a te riprendere, {day} alle {time}: <b>{title}</b>.",
+    overlapMine:
+      "Domani, alla stessa ora: <b>{first}</b> e <b>{second}</b>. Sei in due posti insieme.",
+    overlapOther:
+      "Domani, alla stessa ora: <b>{first}</b> e <b>{second}</b>. Riguarda {name}.",
+    rideRequestEscort:
+      "<b>{name}</b> ti chiede di portare, {day} alle {time}: <b>{title}</b>.",
+    rideRequestPickup:
+      "<b>{name}</b> ti chiede di riprendere, {day} alle {time}: <b>{title}</b>.",
+  },
   memberColors: {
     pomodoro: "Corallo",
     glicine: "Glicine",
