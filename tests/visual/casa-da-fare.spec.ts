@@ -146,7 +146,10 @@ test("caricamento", async ({ page }) => {
     page.getByRole("heading", { name: "Casa", level: 1 }),
   ).toBeVisible();
   await expect(
-    page.locator('[aria-busy="true"] .skeleton').first(),
+    page
+      .locator('[aria-busy="true"] .skeleton')
+      .filter({ visible: true })
+      .first(),
   ).toBeVisible();
   await expect(page.locator('[aria-busy="true"]').first()).toContainText(
     "Caricamento in corso",
