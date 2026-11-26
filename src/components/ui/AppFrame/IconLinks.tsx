@@ -6,7 +6,7 @@ import type { MouseEvent } from "react";
 import { it } from "@/lib/i18n/messages/it";
 import { cx } from "../cx";
 import { Icon, type IconName } from "../Icon/Icon";
-import { useNest } from "./NestProvider";
+import { useOptionalNest } from "./NestProvider";
 
 /**
  * Bell link to the notifications page. Shows the red dot only with new
@@ -79,10 +79,15 @@ function HistoryLink({
   onMedia?: boolean;
 }) {
   const router = useRouter();
-  const { hasPreviousPage } = useNest();
+  const nest = useOptionalNest();
 
   const handleClick = (event: MouseEvent<HTMLAnchorElement>) => {
-    if (hasPreviousPage.current) {
+    // Outside the app frame (the gallery) there is no Nest to remember the
+    // path: the tab history tells whether there is a page before this one.
+    const hasPrevious = nest
+      ? nest.hasPreviousPage.current
+      : window.history.length > 1;
+    if (hasPrevious) {
       event.preventDefault();
       router.back();
     }

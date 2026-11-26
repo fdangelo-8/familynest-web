@@ -18,6 +18,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog/ConfirmDialog";
 import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
 import {
   DateField,
+  FieldGroup,
   FieldPair,
   SelectField,
   TextField,
@@ -26,7 +27,8 @@ import {
 import { Icon } from "@/components/ui/Icon/Icon";
 import { ColorChoice } from "@/components/ui/ColorChoice/ColorChoice";
 import { IconButton } from "@/components/ui/IconButton/IconButton";
-import { List, ListRow } from "@/components/ui/List/List";
+import { BackLink } from "@/components/ui/AppFrame/IconLinks";
+import { List, ListRow, ValueRow } from "@/components/ui/List/List";
 import { PasswordField } from "@/components/ui/PasswordField/PasswordField";
 import { PhotoField } from "@/components/ui/PhotoField/PhotoField";
 import { RepeatField } from "@/components/ui/RepeatField/RepeatField";
@@ -342,6 +344,296 @@ function AnimalParts() {
   );
 }
 
+// #503 (F4a): the basic components 2.0, one example for every new prop, with
+// the texts of the boards of Fable (docs/specifiche/503-componenti-base.md §7).
+function BaseComponentsSection() {
+  const toast = useToast();
+  const [retries, setRetries] = useState(0);
+  const [boxClicks, setBoxClicks] = useState(0);
+  const [undone, setUndone] = useState(0);
+  const [edits, setEdits] = useState(0);
+  const [reminderClicks, setReminderClicks] = useState(0);
+  const [doNotDisturb, setDoNotDisturb] = useState(true);
+  const [shopping, setShopping] = useState(false);
+  const [invited, setInvited] = useState(0);
+  const [added, setAdded] = useState(0);
+  const [removed, setRemoved] = useState(0);
+  const [mail, setMail] = useState("");
+  const [password, setPassword] = useState("");
+  return (
+    <Section id="base-2" title="Componenti di base 2.0 (#503)">
+      <Example caption="1 · Pulsanti · quattro livelli" wide>
+        <div className={styles.riga} data-testid="base-pulsanti">
+          <Button>Salva</Button>
+          <Button variant="secondary" icon="rotate-cw">
+            Usa di nuovo
+          </Button>
+          <Button variant="quieto" icon="shopping-basket">
+            Metti in spesa
+          </Button>
+          <Button variant="link">Annulla</Button>
+          <Button variant="pericolo">Elimina la lista</Button>
+        </div>
+      </Example>
+      <Example caption="2 · Piede della pagina">
+        <div className={styles.piede} data-testid="base-piede">
+          <Button variant="link">Annulla</Button>
+          <Button>Salva</Button>
+        </div>
+      </Example>
+      <Example caption="3 · Campi · vuoto, pieno, a fuoco">
+        <div className="colonna" data-testid="base-campi">
+          <TextField label="Nome" id="base-nome-vuoto" />
+          <TextField
+            label="Nome"
+            id="base-nome-pieno"
+            defaultValue="Sofia"
+            autoComplete="off"
+          />
+          <TextField
+            label="Nome"
+            id="base-nome-fuoco"
+            defaultValue="Sofi"
+            autoComplete="off"
+          />
+        </div>
+      </Example>
+      <Example caption="4 · Campi · errore e aiuto">
+        <div className="colonna" data-testid="base-campi-errore">
+          <TextField
+            label="Telefono"
+            id="base-telefono"
+            type="tel"
+            defaultValue="02 48"
+            error="Il numero è troppo corto: controlla le cifre."
+          />
+          <TextField
+            label="Nota"
+            id="base-nota"
+            multiline
+            help="Niente dati di salute delle persone."
+          />
+        </div>
+      </Example>
+      <Example caption="5 · Campi uniti">
+        <div className="colonna" data-testid="base-campi-uniti">
+          <FieldGroup>
+            <TextField
+              label="La tua mail"
+              id="base-mail"
+              type="email"
+              value={mail}
+              onChange={(event) => setMail(event.target.value)}
+            />
+            <PasswordField
+              label="Password"
+              id="base-password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+            />
+          </FieldGroup>
+          <FieldGroup>
+            <TextField
+              label="Numero della carta"
+              id="base-carta"
+              inputMode="numeric"
+            />
+            <FieldGroup columns>
+              <TextField label="Scadenza" id="base-scadenza" />
+              <TextField label="Codice" id="base-codice" />
+            </FieldGroup>
+          </FieldGroup>
+        </div>
+      </Example>
+      <Example caption="6 · Avvisi">
+        <div className="colonna" data-testid="base-avvisi">
+          <Alert variant="info" data-testid="base-avviso-info">
+            Sofia non ha un account: il suo profilo lo tenete voi adulti.
+          </Alert>
+          <Alert variant="offline" data-testid="base-avviso-offline">
+            Vedi le cose aggiornate alle 19:05; le modifiche partiranno appena
+            torna la connessione.
+          </Alert>
+        </div>
+      </Example>
+      <Example caption="7 · Vuoto · tutto il riquadro">
+        <div data-testid="base-vuoto-box">
+          <EmptyState
+            variant="box"
+            title="Nuova scadenza"
+            text="Antiparassitario, vaccino, visita: ve li ricordiamo noi."
+            onClick={() => setBoxClicks((n) => n + 1)}
+          />
+          <p className={styles.contatore} data-testid="base-vuoto-conteggio">
+            Aperto: {boxClicks}
+          </p>
+        </div>
+      </Example>
+      <Example caption="8 · Errore di pagina">
+        <div data-testid="base-errore-pagina">
+          <PageError
+            title="Questa pagina non si è caricata"
+            text="Controlla la connessione e riprova."
+            onRetry={() => setRetries((n) => n + 1)}
+          />
+          <p className={styles.contatore} data-testid="base-errore-conteggio">
+            Riprova: {retries}
+          </p>
+        </div>
+      </Example>
+      <Example caption="9 · Messaggio">
+        <div className={styles.riga}>
+          <Button
+            variant="secondary"
+            data-testid="base-messaggio-mostra"
+            onClick={() =>
+              toast.showToast({
+                text: "Fatto:",
+                emphasis: "Passeggiata della sera",
+                onUndo: () => setUndone((n) => n + 1),
+              })
+            }
+          >
+            Mostra il messaggio
+          </Button>
+          <span
+            className={styles.contatore}
+            data-testid="base-messaggio-conteggio"
+          >
+            Annullato: {undone}
+          </span>
+        </div>
+      </Example>
+      <Example caption="10 · Freccia indietro" wide>
+        <div className="colonna" data-testid="base-freccia">
+          <div className={styles.barraFreccia}>
+            <BackLink fallback="/design-system" />
+            <Button
+              variant="link"
+              onClick={() => setEdits((n) => n + 1)}
+              data-testid="base-freccia-modifica"
+            >
+              Modifica
+            </Button>
+          </div>
+          <p className={styles.contatore}>Modifica: {edits}</p>
+          <div className={styles.mediaSegnaposto}>
+            <BackLink fallback="/design-system" onMedia />
+          </div>
+        </div>
+      </Example>
+      <Example caption="11 · Righe che portano altrove">
+        <div data-testid="base-righe">
+          <List flush>
+            <ListRow
+              href="/design-system"
+              icon="settings"
+              title="Impostazioni"
+              text="Tema, notifiche, privacy"
+              arrow
+            />
+            <ListRow
+              href="/design-system"
+              icon="calendar"
+              title="Calendari collegati"
+              text="Google e Outlook"
+              arrow
+            />
+            <ListRow
+              href="/design-system"
+              icon="user-round"
+              title="Il tuo profilo"
+              text="I tuoi dati e il tuo account"
+              arrow
+            />
+          </List>
+        </div>
+      </Example>
+      <Example caption="12 · Dati che si cambiano">
+        <List flush>
+          <ValueRow
+            label="Nome"
+            value="Marco"
+            onEdit={() => setEdits((n) => n + 1)}
+          />
+          <ValueRow
+            label="Mail"
+            value="marco.bianchi@esempio.it"
+            onEdit={() => setEdits((n) => n + 1)}
+          />
+          <ValueRow
+            label="Compleanno"
+            value="18 settembre"
+            onEdit={() => setEdits((n) => n + 1)}
+          />
+        </List>
+      </Example>
+      <Example caption="13 · Scelte veloci e interruttori">
+        <div data-testid="base-interruttori">
+          <List flush>
+            <ListRow
+              onClick={() => setReminderClicks((n) => n + 1)}
+              title="Promemoria prima di un impegno"
+              value="Un'ora prima"
+              arrow
+            />
+            <ListRow
+              title="Non disturbare"
+              text="Dalle 22:00 alle 7:00"
+              trailing={
+                <Toggle
+                  checked={doNotDisturb}
+                  onChange={setDoNotDisturb}
+                  aria-label="Non disturbare"
+                />
+              }
+            />
+            <ListRow
+              title="Cose aggiunte alla spesa"
+              trailing={
+                <Toggle
+                  checked={shopping}
+                  onChange={setShopping}
+                  aria-label="Cose aggiunte alla spesa"
+                />
+              }
+            />
+          </List>
+          <p className={styles.contatore}>Scelte: {reminderClicks}</p>
+        </div>
+      </Example>
+      <Example caption="14 · Azioni dentro un elenco">
+        <div data-testid="base-azioni">
+          <List flush>
+            <ListRow
+              onClick={() => setInvited((n) => n + 1)}
+              icon="user-plus"
+              title="Invita una persona"
+              text="Riceve un link ed entra"
+              arrow
+            />
+            <ListRow
+              onClick={() => setAdded((n) => n + 1)}
+              add
+              title="Aggiungi un figlio o un animale"
+            />
+            <ListRow
+              onClick={() => setRemoved((n) => n + 1)}
+              tone="danger"
+              icon="log-out"
+              title="Togli Laura dal Nest"
+            />
+          </List>
+          <p className={styles.contatore}>
+            Invitati: {invited} · Aggiunti: {added} · Tolti: {removed}
+          </p>
+        </div>
+      </Example>
+    </Section>
+  );
+}
+
 export function Gallery() {
   const rowCards = useQueryFlag("righe-scheda");
   const pageParts = useQueryFlag("pezzi-pagine");
@@ -356,6 +648,7 @@ export function Gallery() {
       <ControlsSection />
       <PeopleSection />
       <ListSection rowCards={rowCards} />
+      <BaseComponentsSection />
       <OverlaysSection />
       <StatesSection />
       <DayViewSection />

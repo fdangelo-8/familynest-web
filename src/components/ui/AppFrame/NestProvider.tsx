@@ -29,6 +29,11 @@ export function useNest(): NestContextValue {
   return value;
 }
 
+/** Like `useNest`, but `null` outside the provider (pages outside the app frame, the gallery). */
+export function useOptionalNest(): NestContextValue | null {
+  return useContext(NestContext);
+}
+
 /** Gives the frame components the Nest data read on the server. Renders no element. */
 export function NestProvider({
   nestName,
