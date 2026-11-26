@@ -390,7 +390,12 @@ test.describe("Toast con grassetto all'inizio e icona a scelta", () => {
     const contatore = tid(page, "toast-annullato");
     await expect(contatore).toHaveText("Annullato: 0");
     await tid(page, "toast-mostra-inizio").click();
-    await page.getByRole("button", { name: "Annulla" }).click();
+    // #503 (F4a), CA-31: la galleria ha ora altri «Annulla» (esempi 1 e 2),
+    // quindi il pulsante si cerca dentro il messaggio.
+    await page
+      .getByTestId("toast")
+      .getByRole("button", { name: "Annulla" })
+      .click();
     await expect(page.getByTestId("toast")).toHaveCount(0);
     await expect(contatore).toHaveText("Annullato: 1");
   });
@@ -411,12 +416,15 @@ test.describe("Toast con grassetto all'inizio e icona a scelta", () => {
     await expect(toast.getByRole("button", { name: "Annulla" })).toHaveCount(0);
   });
 
-  test("CA-22: il toast esistente mantiene icona check e grassetto finale", async ({
+  test("CA-22: il toast esistente mantiene il grassetto finale; senza icon non ha più la spunta", async ({
     page,
   }) => {
     await tid(page, "toast-mostra").click();
     const toast = page.getByTestId("toast");
-    await expect(toast.locator("svg use")).toHaveAttribute("href", /#i-check$/);
+    // #503 (F4a), CA-16 e domanda 7: senza `icon` il messaggio non mostra
+    // nessuna icona (prima mostrava la spunta).
+    await expect(toast).toBeVisible();
+    await expect(toast.locator("svg")).toHaveCount(0);
     const testo = toast.locator(".toast__testo");
     await expect(testo).toHaveText("Fatto: Chiamare il commercialista");
     expect(await testo.evaluate((el) => el.lastElementChild?.tagName)).toBe(
