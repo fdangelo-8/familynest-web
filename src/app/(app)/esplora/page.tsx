@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import { pageTitle } from "@/lib/brand";
 import { EsploraPage } from "@/components/esplora/EsploraPage";
 import { requireNest } from "@/lib/nest-frame";
 
 export const metadata: Metadata = {
-  title: "FamilyNest · Esplora",
+  title: pageTitle("Esplora"),
 };
 
 export default async function Page() {

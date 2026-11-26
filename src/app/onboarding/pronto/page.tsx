@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageTitle } from "@/lib/brand";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { OnboardingError } from "@/components/onboarding/OnboardingError";
@@ -66,7 +67,7 @@ async function importedLine(supabase: Supabase): Promise<string | null> {
 }
 
 export const metadata: Metadata = {
-  title: "FamilyNest · Pronto",
+  title: pageTitle("Pronto"),
 };
 
 /** True while `expiresAt` (UTC) is after the moment the page is opened. */

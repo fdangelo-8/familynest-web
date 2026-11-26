@@ -362,7 +362,7 @@ test.describe("contenuto", () => {
     await page.goto(PATH);
     await expect(
       page
-        .getByText("FamilyNest", { exact: true })
+        .getByRole("img", { name: "FamilyNest", exact: true })
         .filter({ visible: true })
         .first(),
     ).toBeVisible();

@@ -490,7 +490,9 @@ test.describe("Rotte di Casa e segnaposto", () => {
       const file = `src/app/(app)/casa/${dir}/page.tsx`;
       expect(existsSync(file), file).toBe(true);
       const source = readFileSync(file, "utf8");
-      expect(source, file).toContain(`title: "FamilyNest · Casa · ${label}"`);
+      expect(source, file).toContain('import { pageTitle } from "@/lib/brand"');
+      expect(source, file).toContain(`title: pageTitle("Casa", "${label}")`);
+      expect(source, file).not.toContain('title: "FamilyNest');
       expect(source, file).toContain(
         'import { CasaPage } from "@/components/casa/CasaPage"',
       );

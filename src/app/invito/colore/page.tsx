@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageTitle } from "@/lib/brand";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
@@ -12,7 +13,7 @@ import { INVITE_WELCOME_PATH, readInviteToken } from "@/lib/invitations";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
-  title: "FamilyNest · Scegli il tuo colore",
+  title: pageTitle("Scegli il tuo colore"),
   robots: { index: false },
 };
 

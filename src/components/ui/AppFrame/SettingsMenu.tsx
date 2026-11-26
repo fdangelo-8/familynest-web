@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { getActiveSettingsItem } from "@/lib/app-routes";
+import { yourNest } from "@/lib/brand";
 import { cx } from "../cx";
 import { Icon } from "../Icon/Icon";
 import { useNest } from "./NestProvider";
@@ -31,7 +32,7 @@ export function SettingsMenu() {
       <span className="menu-laterale__separatore" aria-hidden="true" />
       <Link href="/impostazioni" {...itemProps("impostazioni")}>
         <Icon name="house" />
-        {nestName ?? "Il tuo Nest"}
+        {nestName ?? yourNest()}
       </Link>
       <Link href="/membri" {...itemProps("membri")}>
         <Icon name="users" />

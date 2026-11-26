@@ -3,6 +3,7 @@
 import { Brand } from "@/components/accesso/parts";
 import styles from "@/components/accesso/accesso.module.css";
 import { Button } from "@/components/ui/Button/Button";
+import { brandText, messages } from "@/lib/brand";
 
 export type InviteEndedKind = "expired" | "other-nest";
 
@@ -11,8 +12,8 @@ const CONTENT = {
     lead: "Questo invito",
     emphasis: "non vale più.",
     desktopTitle: "Invito non più valido",
-    text: "Chiedi a chi ti ha mandato il link di invitarti di nuovo: dal suo FamilyNest bastano due tocchi.",
-    action: "Entra in FamilyNest",
+    text: brandText(messages.invito.expiredText),
+    action: brandText(messages.brand.enter),
     href: "/accesso",
   },
   "other-nest": {

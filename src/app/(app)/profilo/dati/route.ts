@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { BRAND } from "@/lib/brand";
 import { toDateFieldValue } from "@/lib/datetime";
 import { createClient } from "@/lib/supabase/server";
 import { buildExport } from "./build";
@@ -48,7 +49,7 @@ export async function POST(request: NextRequest) {
       status: 200,
       headers: {
         "Content-Type": "application/json; charset=utf-8",
-        "Content-Disposition": `attachment; filename="familynest-i-tuoi-dati-${toDateFieldValue(now)}.json"`,
+        "Content-Disposition": `attachment; filename="${BRAND.slug}-i-tuoi-dati-${toDateFieldValue(now)}.json"`,
         ...NO_STORE,
       },
     });
