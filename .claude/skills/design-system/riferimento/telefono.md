@@ -2,9 +2,9 @@
 
 Fonte: `docs/design/telefono/` (547 PNG, `LEGGIMI.md`, `tokens.md`, `tokens.json`, `decisioni-fable.md`). Dal 24/11/2026 è la fonte di verità per il telefono (decisione D4 in `docs/mockup/DECISIONI.md`). Questo file traduce quei valori in token e regole d'uso. Computer e web da telefono (approvati il 25/11/2026, D5): `riferimento/computer.md`, solo con ciò che cambia rispetto a qui.
 
-**Stato del codice.** `src/app/globals.css` e `docs/agenti/design/token.css` hanno ancora i valori del vecchio mockup. Il passaggio si fa con un lavoro `shared/*` (Componenti 2.0) assegnato dal coordinatore: fino ad allora le pagine già fatte restano come sono, e nessuna pagina scrive a mano i valori nuovi. I nomi delle variabili qui sotto sono quelli da usare in quel lavoro: dove il ruolo è lo stesso **si tiene il nome attuale e cambia il valore**, così le pagine esistenti seguono da sole; i nomi nuovi sono segnati **nuovo**.
+**Stato del codice.** Con F2 (#196, PR #585, requisito in `docs/specifiche/196-token-e-font.md`) i token di questo file sono nel codice: `:root` di `src/app/globals.css`, copiato identico in `docs/agenti/design/token.css`, ha i valori della colonna «Nuovo valore», più `--color-corsia-vuota` e `--grid-margine-mobile: 24px`; l'elenco completo è in `token.md`. Dove il ruolo è lo stesso **si è tenuto il nome e cambiato il valore**, così le pagine esistenti seguono da sole; i nomi segnati **nuovo** sono nati con F2. La colonna «Attuale nel codice» riporta i valori del vecchio mockup, che il codice non ha più. I componenti invece restano quelli del vecchio mockup finché F4 e F5 non li ridisegnano («Componenti 2.0» qui sotto); nessuna pagina scrive a mano i valori.
 
-Valori mancanti nel passaggio di Fable (non si inventano: si misurano sul CSS del canvas quando serve, o si chiede nella issue): scala del corpo del testo (righe, valore dei campi, note), testi grandi di Oggi (saluto, ore, numeri), tinte dei quattro colori per gli invitati, misure della barra in basso.
+Valori mancanti nel passaggio di Fable (non si inventano: si misurano sul CSS del canvas quando serve, o si chiede nella issue): scala del corpo del testo (righe, valore dei campi, note), testi grandi di Oggi (saluto, ore, numeri), tinte dei quattro colori per gli invitati, misure della barra in basso. In F2 i token del corpo e dei testi grandi restano quelli del vecchio mockup (corpo 15/22) e le quattro tinte mancanti usano la tinta del neutro.
 
 ## Colori
 
@@ -40,27 +40,27 @@ Valori mancanti nel passaggio di Fable (non si inventano: si misurano sul CSS de
 | `--color-ombra`              | `rgba(23,24,28,.06)` | `rgba(16, 38, 42, 0.12)`          | palette `--sh`               | base delle ombre                                                                    |
 | `--color-ombra-forte`        | `rgba(23,24,28,.3)`  | `rgba(16, 38, 42, 0.2)`           | palette `--sh2`              | ombre di fogli, menu, dischi                                                        |
 
-Restano com'erano finché il lavoro `shared/*` non decide: `--color-notte*`, `--color-latte*`, `--color-occupato-*`, `--color-info` (anello di focus: va riverificato sui nuovi fondi), `--color-avviso`, `--color-marchio-*`, `--color-velo`.
+Restano com'erano (deciso in F2): `--color-notte*`, `--color-latte*`, `--color-occupato-*`, `--color-info` (anello di focus, riverificato sui nuovi fondi: 6,34:1 sul bianco, 5,84:1 su `--color-carta-2`), `--color-avviso`, `--color-allerta-scuro`, `--color-bianco`, `--color-marchio-*`, `--color-velo`, `--color-ombra-adesivo`, `--color-avatar-su-colore`. Nato con F2 fuori da questa tabella: `--color-corsia-vuota` `#EEF1EF` (barra vuota delle corsie, misurato; domanda 5 della specifica grafica di A4).
 
 ### Colori delle persone e degli animali
 
 Il colore della persona ora vive nel pallino con l'iniziale, nel **filo attorno alla foto**, nelle **corsie del calendario** e, come **tinta**, nel fondo del pallino non scelto («Per chi» in `decisioni-p8/ap1-36`). Resta vietato su testi, schede e fondi di pagina. Il giallo non è più un colore di persona: vuol dire «adesso» (risposta 73).
 
-| Variabile (nuova)         | Colore    | Tinta     | Iniziale sopra | Contrasto | Chi nei dati di prova | Al posto di (codice attuale)                         |
-| ------------------------- | --------- | --------- | -------------- | --------- | --------------------- | ---------------------------------------------------- |
-| `--color-membro-corallo`  | `#F2765C` | `#FDEAE5` | inchiostro     | 5,64:1    | Marco                 | `--color-membro-pomodoro` `#F06A4F`                  |
-| `--color-membro-glicine`  | `#B9A2EC` | `#F2ECFC` | inchiostro     | 7,08:1    | Laura                 | stesso nome, era `#B9A3E8`                           |
-| `--color-membro-menta`    | `#8FD0A8` | `#E7F5EC` | inchiostro     | 8,82:1    | Sofia                 | `--color-membro-salvia` `#8DBF9B`                    |
-| `--color-membro-blu`      | `#3F6FE0` | `#E5ECFC` | **bianco**     | 4,60:1    | Tommaso               | `--color-membro-cobalto` `#5C7FE0`                   |
-| `--color-membro-ambra`    | `#E8A15C` | `#FCEEDD` | inchiostro     | 7,27:1    | Biscotto (cane)       | `--color-membro-zafferano` `#F2B33D` (tolto: giallo) |
-| `--color-membro-cannella` | `#AF8273` | `#F5ECE8` | inchiostro     | 4,70:1    | Miele (gatto)         | stesso nome e valore                                 |
-| `--color-membro-rosa`     | `#F0A3C0` | da avere  | inchiostro     | 8,03:1    | invitati              | `--color-membro-peonia` `#F2A8C6`                    |
-| `--color-membro-azzurro`  | `#7CC7E0` | da avere  | inchiostro     | 8,33:1    | invitati              | `--color-membro-ceruleo` `#4B96AA`                   |
-| `--color-membro-sabbia`   | `#D9B88F` | da avere  | inchiostro     | 8,41:1    | invitati              | nuovo                                                |
-| `--color-membro-ardesia`  | `#68778D` | da avere  | bianco         | 4,55:1    | invitati              | nuovo (Fable `#6B7A90`, 4,36:1; Francesco 25/11)     |
-| `--color-membro-neutro`   | `#B4BFBC` | `#F1F4F2` | inchiostro     | 8,34:1    | chi non ha un colore  | nuovo                                                |
+| Variabile                 | Colore    | Tinta (`-tinta`)        | Corsia (`-corsia`) | Iniziale sopra | Contrasto | Chi nei dati di prova | Codice del database (vecchio valore)   |
+| ------------------------- | --------- | ----------------------- | ------------------ | -------------- | --------- | --------------------- | -------------------------------------- |
+| `--color-membro-corallo`  | `#F2765C` | `#FDEAE5`               | `#EF5839`          | inchiostro     | 5,64:1    | Marco                 | `pomodoro` (`#F06A4F`)                 |
+| `--color-membro-glicine`  | `#B9A2EC` | `#F2ECFC`               | `#9978E3`          | inchiostro     | 7,08:1    | Laura                 | `glicine` (`#B9A3E8`)                  |
+| `--color-membro-menta`    | `#8FD0A8` | `#E7F5EC`               | `#419A63`          | inchiostro     | 8,82:1    | Sofia                 | `salvia` (`#8DBF9B`)                   |
+| `--color-membro-blu`      | `#3F6FE0` | `#E5ECFC`               | il colore          | **bianco**     | 4,60:1    | Tommaso               | `cobalto` (`#5C7FE0`)                  |
+| `--color-membro-ambra`    | `#E8A15C` | `#FCEEDD`               | `#CE741D`          | inchiostro     | 7,27:1    | Biscotto (cane)       | `zafferano` (`#F2B33D`, tolto: giallo) |
+| `--color-membro-cannella` | `#AF8273` | `#F5ECE8`               | `#AD7F70`          | inchiostro     | 4,70:1    | Miele (gatto)         | `cannella` (stesso valore)             |
+| `--color-membro-rosa`     | `#F0A3C0` | manca: tinta del neutro | `#E4588D`          | inchiostro     | 8,03:1    | invitati              | `peonia` (`#F2A8C6`)                   |
+| `--color-membro-azzurro`  | `#7CC7E0` | manca: tinta del neutro | `#2C95B8`          | inchiostro     | 8,33:1    | invitati              | `ceruleo` (`#4B96AA`)                  |
+| `--color-membro-sabbia`   | `#D9B88F` | manca: tinta del neutro | `#B5803D`          | inchiostro     | 8,41:1    | invitati              | `lampone` (`#D75596`)                  |
+| `--color-membro-ardesia`  | `#68778D` | manca: tinta del neutro | il colore          | **bianco**     | 4,55:1    | invitati              | `basilico` (`#649100`)                 |
+| `--color-membro-neutro`   | `#B4BFBC` | `#F1F4F2`               | `#7C8F8A`          | inchiostro     | 8,34:1    | chi non ha un colore  | nessuno (solo interfaccia)             |
 
-**I codici del database non cambiano e non si migra nulla** (requisito F2, `docs/specifiche/196-token-e-font.md` §5). I dieci valori dell'enum `member_color` restano; un modulo unico, `src/lib/member-colors.ts`, dice quale tinta mostra ogni codice, e nessun altro file riscrive la corrispondenza: `pomodoro`→corallo, `glicine`→glicine, `salvia`→menta, `cobalto`→blu, `zafferano`→ambra, `lampone`→**sabbia**, `ceruleo`→azzurro, `peonia`→rosa, `basilico`→**ardesia**, `cannella`→cannella. Spariscono solo i token `--color-membro-lampone` e `--color-membro-basilico` (con gli altri sei nomi vecchi), non i codici. Con la stessa iniziale chi arriva dopo prende due lettere («Mi» per Miele): domanda 178 ancora aperta per il telefono.
+**I codici del database non cambiano e non si migra nulla** (F2, `docs/specifiche/196-token-e-font.md` §5). I dieci valori dell'enum `member_color` restano; un modulo unico, `src/lib/member-colors.ts`, dice quale tinta mostra ogni codice, e nessun altro file riscrive la corrispondenza: `pomodoro`→corallo, `glicine`→glicine, `salvia`→menta, `cobalto`→blu, `zafferano`→ambra, `lampone`→**sabbia**, `ceruleo`→azzurro, `peonia`→rosa, `basilico`→**ardesia**, `cannella`→cannella. Le pagine usano le classi `.membro-<codice>` (`--c`, `--c-tinta`, `--c-corsia`, `--c-iniziale`), date da `memberColorClass()`; il nome accessibile è quello della tinta («Corallo», «Sabbia»), da `src/lib/i18n/messages/it.ts`. Spariscono solo gli otto token con i nomi vecchi (`--color-membro-pomodoro`, `-salvia`, `-cobalto`, `-zafferano`, `-lampone`, `-ceruleo`, `-peonia`, `-basilico`), non i codici. Ardesia `#68778D` al posto di `#6B7A90` di Fable: decisione di Francesco del 25/11 (iniziale bianca 4,55:1 invece di 4,36:1). Corsie: tinta più scura dello stesso colore, almeno 3:1 sul bianco, su `--color-carta-2` e su `--color-corsia-vuota` (decisione di Francesco del 25/11; regola di calcolo e contrasti in `token.md`, valori confermati dal designer). Con la stessa iniziale chi arriva dopo prende due lettere («Mi» per Miele): domanda 178 ancora aperta per il telefono.
 
 ### Scena di Oggi
 
@@ -70,7 +70,7 @@ Cielo, case e sole della cima di Oggi (variabili nuove `--color-scena-*`), da `t
 
 - **Un solo font: Figtree** (Google Fonts) al posto di Parkinsans e Host Grotesk. Nell'app con `next/font/google`, font variabile, `subsets: ["latin", "latin-ext"]`, `display: "swap"`, `variable: "--font-figtree"`. `--font-titoli` e `--font-testo` puntano entrambi a Figtree (si tengono i due nomi, così le classi esistenti seguono).
 - **Fraunces** solo nei titoli delle Ricette (risposta 124): variabile nuova `--font-ricette`, caricata solo nelle pagine delle ricette.
-- **Pesi: 400, 600, 700.** Il 300 sottile dei titoli e l'800 spariscono; `--weight-forte` (650) diventa 600 o 700 secondo la tabella.
+- **Pesi: 400, 600, 700.** Il 300 sottile dei titoli e l'800 spariscono. In F2: `--weight-sottile` e `--weight-medio` valgono 400, `--weight-forte` (650) diventa 600 (righe e titoli di riga); dove serve 700 si usa `--weight-pieno`.
 
 | Uso (classe del canvas)            | Peso | Misura / interlinea        | Tracking | Token (rem)                                                                   | Attuale                   |
 | ---------------------------------- | ---- | -------------------------- | -------- | ----------------------------------------------------------------------------- | ------------------------- |
@@ -87,7 +87,7 @@ Collegamento (`.lk2`): peso 600, sottolineato di 1,5 px, distanza 3 px (`text-de
 
 ## Spazi, misure, raggi, ombre
 
-- **Spazi:** margine di pagina 24 px (`--space-6`), griglia di 4 px (scala `--space-*` invariata), area di tocco 44 × 44 px (`--size-tocco`). Pagina: `padding: 4px 24px 36px`, 128 px in fondo quando c'è la barra. Barra alta 56 px più 8 px sopra (**nuovo** `--size-barra-alta: 56px`). Riga: `min-height` 64 px (`--size-riga-alta`), `padding` 13 px in alto e in basso (fuori griglia, come nel canvas: **nuovo** `--space-riga: 13px`), distanza 16 px.
+- **Spazi:** margine di pagina 24 px (`--grid-margine-mobile`, era 20), griglia di 4 px (scala `--space-*` invariata), area di tocco 44 × 44 px (`--size-tocco`). Pagina: `padding: 4px 24px 36px`, 128 px in fondo quando c'è la barra. Barra alta 56 px più 8 px sopra (**nuovo** `--size-barra-alta: 56px`). Riga: `min-height` 64 px (`--size-riga-alta`), `padding` 13 px in alto e in basso (fuori griglia, come nel canvas: **nuovo** `--space-riga: 13px`), distanza 16 px.
 - **Misure:** pulsante alto 52 px (`--size-azione`, invariato); campo `min-height` 56 px (**nuovo** `--size-campo`; era 52); freccia indietro e dischi sopra le foto 44 px (`--size-tocco`); pillola «Collega» 36 px (`--size-chip`); giorni 44 px; volti 72 px (`--size-avatar-xl`); etichetta piccola 24 px (era `--size-etichetta` 28).
 - **Raggi** (forma «Equilibrata»): `--radius-xs` 6 (etichette piccole), `--radius-s` 8, `--radius-m` 12 (campi, tessere piccole), `--radius-l` 16 (tessere, schede di scelta), `--radius-xl` **24 → 20** (fogli), **nuovo** `--radius-pulsante` 14 (pulsanti, era 12), **nuovo** `--radius-capsula` 28 (pastiglie, pillole). `--radius-tondo` invariato.
 - **Ombre:** pagine ed elenchi **senza ombre** (resta la regola). `--shadow-foglio`: `0 -4px 16px -2px var(--color-ombra-forte)` (era `0 -8px 32px`). **Nuove:** `--shadow-menu` `0 1px 2px var(--color-ombra), 0 8px 20px -6px var(--color-ombra-forte)`; `--shadow-disco` `0 2px 6px -1px var(--color-ombra-forte)` (dischi bianchi sopra foto e scene); `--shadow-controllo` `0 1px 3px var(--color-ombra)`. L'ombra «card» del canvas (`0 1px 2px, 0 6px 14px -4px`) è dei giri precedenti: non si usa sulle pagine 2.0.
@@ -154,9 +154,13 @@ Regole di fondo (Fable, `v2.css`): pagine bianche, elenchi a filo senza schede n
 | `#8A989A`     | `#FFFFFF` | 2,98:1   | **solo segni decorativi**                          |
 | `#AEB9B7`     | `#FFFFFF` | 2,01:1   | **insufficiente** come unico bordo di un controllo |
 
-## Da chiarire (domande per la issue del lavoro `shared/*`)
+## Da chiarire: risposte (F2, #196)
 
-1. Il campo vuoto nelle tavole sembra avere il bordo chiaro `#AEB9B7` (2,01:1), sotto il minimo di 3:1 per il bordo di un controllo; `--e-fld` del canvas usa `#7F9092` (3,33:1). Proposta del designer: `#7F9092`, come già deciso per il vecchio campo (#52).
+Le domande sono chiuse dal requisito di F2 (#196, «Domande aperte», default adottati) e dalle decisioni di Francesco del 25/11.
+
+1. ~~Bordo del campo vuoto.~~ **Risolto in F2:** `--color-filo-campo: #7F9092` (3,33:1 sul bianco, 3,07:1 su `--color-carta-2` e su `--color-fondo-app`), come già deciso per il vecchio campo (#52). `#AEB9B7` resta solo decorativo (`--color-filo-tenue`, 2,01:1).
 2. ~~Ardesia con iniziale bianca sotto 4,5:1.~~ **Deciso da Francesco il 25/11/2026:** ardesia `#68778D` (al posto di `#6B7A90` di Fable), iniziale bianca 4,55:1 a ogni misura del pallino; la corsia usa lo stesso colore (già sopra 3:1).
-3. Mancano le tinte dei quattro colori per gli invitati e la scala del corpo del testo (vedi in cima).
-4. L'anello di focus `--color-info` `#3355CC` non compare nel canvas: resta finché Fable o Francesco non indicano altro.
+3. ~~Tinte dei quattro colori per gli invitati e scala del corpo.~~ **Risolto in F2:** non si inventano. Sabbia, azzurro, rosa e ardesia usano `--color-membro-neutro-tinta` finché Fable non le dà; i `--text-corpo-*` restano 15/22. Resta da chiedere a Fable, non blocca nulla.
+4. ~~Anello di focus.~~ **Risolto in F2:** `--color-info` `#3355CC` resta (6,34:1 sul bianco, 5,84:1 sui grigi), disegnato fuori dall'elemento; sui fondi scuri resta `--color-latte`.
+
+Decisi in F2 insieme a queste (default della #196): margine di pagina `--grid-margine-mobile: 24px`; `--weight-forte` 600; barra vuota delle corsie `--color-corsia-vuota: #EEF1EF`; nomi accessibili dei colori uguali alle tinte. L'interruttore spento (pallino bianco su `--color-filo-2`, 1,64:1, era 1,54:1) resta sotto 3:1 e non peggiora: lo ridisegna F4a (#503), dove il designer propone come distinguere lo spento (per esempio bordo `--color-filo-campo`, 3,33:1).
