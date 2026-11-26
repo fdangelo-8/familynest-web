@@ -1,0 +1,919 @@
+{
+  "fonte": {
+    "canvas": "https://claude.ai/artifact/PVgH6JrYhzhkPXu6js4Ktc",
+    "versione": "1795707258-333f",
+    "file": [
+      "project/v2.css (righe 8 e 10: .v2 chiaro, .v2.th-d scuro)",
+      "project/D-TV1.dc.html (Passo 14 · La tavolozza per ruoli)",
+      "project/D-CX1.dc.html (Passo 12 · I valori)",
+      "project/D-CU1.dc.html (Passo 16 · La regola del pallino)",
+      "project/D-SC1.dc.html (scena della notte)"
+    ],
+    "estratto": "2026-11-26"
+  },
+  "uso": {
+    "chiaro": ".v2 { --c-…: chiaro }",
+    "scuro": ".v2.th-d { --c-…: scuro } (color-scheme: dark)",
+    "nota": "'uguale' = il ruolo non ha un valore scuro: resta lo stesso nei due temi"
+  },
+  "ruoli": [
+    {
+      "gruppo": "Fondo e superfici",
+      "nome": "--c-fondo",
+      "ruolo": "Fondo della pagina",
+      "chiaro": "#FFFFFF",
+      "scuro": "#0F1819",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Fondo e superfici",
+      "nome": "--c-sup",
+      "ruolo": "Superficie alzata: pannello, finestra, foglio, menu",
+      "chiaro": "#FFFFFF",
+      "scuro": "#1A2729",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Fondo e superfici",
+      "nome": "--c-basso",
+      "ruolo": "Superficie bassa: barra laterale, riquadri, campi pieni",
+      "chiaro": "#F4F6F4",
+      "scuro": "#172224",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Fondo e superfici",
+      "nome": "--c-premuto",
+      "ruolo": "Premuto, scelto, passaggio del mouse",
+      "chiaro": "#ECEFEC",
+      "scuro": "#263639",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Fondo e superfici",
+      "nome": "--c-scheletro",
+      "ruolo": "Scheletro del caricamento, binari spenti",
+      "chiaro": "#DCE2DF",
+      "scuro": "#2B3A3C",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Fondo e superfici",
+      "nome": "--c-velo",
+      "ruolo": "Velo dietro finestre e fogli",
+      "chiaro": "rgba(16,38,42,.36)",
+      "scuro": "rgba(0,0,0,.62)",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Fondo e superfici",
+      "nome": "--c-ombra",
+      "ruolo": "Ombra leggera",
+      "chiaro": "rgba(16,38,42,.08)",
+      "scuro": "rgba(0,0,0,.4)",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Fondo e superfici",
+      "nome": "--c-ombra2",
+      "ruolo": "Ombra di finestre, fumetti, avvisi",
+      "chiaro": "rgba(16,38,42,.2)",
+      "scuro": "rgba(0,0,0,.6)",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Fondo e superfici",
+      "nome": "--c-barra",
+      "ruolo": "Barra in basso del telefono",
+      "chiaro": "rgba(255,255,255,.52)",
+      "scuro": "rgba(30,45,48,.9)",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Fondo e superfici",
+      "nome": "--c-cielo",
+      "ruolo": "Splash: il fondo prende il colore del cielo della scena",
+      "chiaro": "#BBE1F4",
+      "scuro": "#12294A",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Fondo e superfici",
+      "nome": "--c-cielo-mezzo",
+      "ruolo": "Splash: a metà dissolvenza",
+      "chiaro": "#2A7F8E",
+      "scuro": "#0D2238",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Fondo e superfici",
+      "nome": "--c-segnaposto",
+      "ruolo": "Segnaposto di una foto che manca: uno solo, color sabbia, con l'icona del piatto",
+      "chiaro": "#F1E9DD",
+      "scuro": "#2E2A22",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Fondo e superfici",
+      "nome": "--c-segnaposto-testo",
+      "ruolo": "Icona e testo sul segnaposto",
+      "chiaro": "#5B5145",
+      "scuro": "#D9CDB8",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Fondo e superfici",
+      "nome": "--c-idea-1",
+      "ruolo": "Miniatura di un'idea: all'aperto",
+      "chiaro": "#E4EEDD",
+      "scuro": "#24332A",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Fondo e superfici",
+      "nome": "--c-idea-2",
+      "ruolo": "Miniatura di un'idea: al chiuso",
+      "chiaro": "#EFE6F2",
+      "scuro": "#322A38",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Fondo e superfici",
+      "nome": "--c-idea-3",
+      "ruolo": "Miniatura di un'idea: in casa",
+      "chiaro": "#F6E4CF",
+      "scuro": "#3A2F22",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Fondo e superfici",
+      "nome": "--c-scena",
+      "ruolo": "Fondo della scena e dello sfondo semplice",
+      "chiaro": "#DDE9E4",
+      "scuro": "#1D3536",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Fili e bordi",
+      "nome": "--c-filo",
+      "ruolo": "Filo leggero tra le righe",
+      "chiaro": "#E4E8E5",
+      "scuro": "#2B3A3C",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Fili e bordi",
+      "nome": "--c-filo2",
+      "ruolo": "Filo medio, bordo dei pulsanti quieti",
+      "chiaro": "#C3CCC9",
+      "scuro": "#3A4F52",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Fili e bordi",
+      "nome": "--c-campo",
+      "ruolo": "Bordo dei campi e dei tratteggi (almeno 3 a 1)",
+      "chiaro": "#869390",
+      "scuro": "#7E9496",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Fili e bordi",
+      "nome": "--c-fuoco",
+      "ruolo": "Anello del fuoco da tastiera",
+      "chiaro": "#0F3D44",
+      "scuro": "#F2F7F5",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Testo",
+      "nome": "--c-testo",
+      "ruolo": "Testo e icone",
+      "chiaro": "#10262A",
+      "scuro": "#EAF2EE",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Testo",
+      "nome": "--c-testo-m",
+      "ruolo": "Testo medio",
+      "chiaro": "#33474B",
+      "scuro": "#C9D5D2",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Testo",
+      "nome": "--c-testo2",
+      "ruolo": "Testo secondario",
+      "chiaro": "#55686C",
+      "scuro": "#A9C0BF",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Testo",
+      "nome": "--c-testo3",
+      "ruolo": "Testo spento, mai da solo",
+      "chiaro": "#8A989A",
+      "scuro": "#84999A",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Testo",
+      "nome": "--c-su",
+      "ruolo": "Testo e icone sopra l'accento",
+      "chiaro": "#FFFFFF",
+      "scuro": "#FFFFFF",
+      "uguale_nei_due_temi": true
+    },
+    {
+      "gruppo": "Testo",
+      "nome": "--c-su2",
+      "ruolo": "Testo secondario sopra l'accento e i fumetti",
+      "chiaro": "#D5DEDC",
+      "scuro": "#D5DEDC",
+      "uguale_nei_due_temi": true
+    },
+    {
+      "gruppo": "Testo",
+      "nome": "--c-link",
+      "ruolo": "Collegamento",
+      "chiaro": "#0E5A66",
+      "scuro": "#7FD3DE",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Accento",
+      "nome": "--c-pieno",
+      "ruolo": "Fondo pieno: pulsante principale, spunta, interruttore acceso",
+      "chiaro": "#10262A",
+      "scuro": "#1F7D8A",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Accento",
+      "nome": "--c-accento",
+      "ruolo": "Accento: voce scelta, energia, barre",
+      "chiaro": "#0F3D44",
+      "scuro": "#1F7D8A",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Accento",
+      "nome": "--c-notte",
+      "ruolo": "Fondo scuro di marca: benvenuto, metà dell'accesso, splash. Non cambia",
+      "chiaro": "#0B2A31",
+      "scuro": "#0B2A31",
+      "uguale_nei_due_temi": true
+    },
+    {
+      "gruppo": "Accento",
+      "nome": "--c-logo-a",
+      "ruolo": "Logo: il tetto",
+      "chiaro": "#0F3D44",
+      "scuro": "#F2F6F3",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Accento",
+      "nome": "--c-logo-b",
+      "ruolo": "Logo: il secondo tratto",
+      "chiaro": "#2F8F99",
+      "scuro": "#8FD0CB",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Accento",
+      "nome": "--c-logo-a-notte",
+      "ruolo": "Logo sul fondo scuro di marca",
+      "chiaro": "#F2F6F3",
+      "scuro": "#F2F6F3",
+      "uguale_nei_due_temi": true
+    },
+    {
+      "gruppo": "Accento",
+      "nome": "--c-logo-b-notte",
+      "ruolo": "Logo sul fondo scuro di marca, secondo tratto",
+      "chiaro": "#8FD0CB",
+      "scuro": "#8FD0CB",
+      "uguale_nei_due_temi": true
+    },
+    {
+      "gruppo": "Accento",
+      "nome": "--c-fumetto",
+      "ruolo": "Fumetto e avviso in basso",
+      "chiaro": "#10262A",
+      "scuro": "#2F4448",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Accento",
+      "nome": "--c-assistente",
+      "ruolo": "Fondo del pulsante dell'assistente",
+      "chiaro": "#FCE7E0",
+      "scuro": "#3B2621",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Stati",
+      "nome": "--c-errore",
+      "ruolo": "Errore: testo, icona, filo",
+      "chiaro": "#B3261E",
+      "scuro": "#FF9D90",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Stati",
+      "nome": "--c-errore-pieno",
+      "ruolo": "Errore: punto e pulsante pieno",
+      "chiaro": "#B3261E",
+      "scuro": "#C4483A",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Stati",
+      "nome": "--c-errore-fondo",
+      "ruolo": "Errore: fondo dell'avviso",
+      "chiaro": "#FCEEEA",
+      "scuro": "#3A1E1B",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Stati",
+      "nome": "--c-errore-bordo",
+      "ruolo": "Errore: bordo dell'avviso",
+      "chiaro": "#E7B9AB",
+      "scuro": "#7A3A32",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Stati",
+      "nome": "--c-adesso",
+      "ruolo": "Giallo di «adesso»",
+      "chiaro": "#F6C945",
+      "scuro": "#F6C945",
+      "uguale_nei_due_temi": true
+    },
+    {
+      "gruppo": "Stati",
+      "nome": "--c-adesso-testo",
+      "ruolo": "Testo sul giallo di «adesso» e sui colori delle persone",
+      "chiaro": "#10262A",
+      "scuro": "#10262A",
+      "uguale_nei_due_temi": true
+    },
+    {
+      "gruppo": "Stati",
+      "nome": "--c-liberi",
+      "ruolo": "«Liberi insieme»: fondo",
+      "chiaro": "#FCEFC0",
+      "scuro": "#3A3112",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Stati",
+      "nome": "--c-liberi-barra",
+      "ruolo": "«Liberi insieme»: barretta",
+      "chiaro": "#A38009",
+      "scuro": "#E2B93B",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Stati",
+      "nome": "--c-liberi-testo",
+      "ruolo": "«Liberi insieme»: testo secondario",
+      "chiaro": "#4A4630",
+      "scuro": "#F1E3A8",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Persone e corsie",
+      "nome": "--c-marco",
+      "ruolo": "Marco, corallo: pallino scelto",
+      "chiaro": "#F2765C",
+      "scuro": "#F2765C",
+      "uguale_nei_due_temi": true
+    },
+    {
+      "gruppo": "Persone e corsie",
+      "nome": "--c-marco-barra",
+      "ruolo": "Marco, corallo: barretta della corsia",
+      "chiaro": "#D75E45",
+      "scuro": "#F2765C",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Persone e corsie",
+      "nome": "--c-marco-fondo",
+      "ruolo": "Marco, corallo: fondo dell'impegno",
+      "chiaro": "#FDEAE5",
+      "scuro": "#452F29",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Persone e corsie",
+      "nome": "--c-laura",
+      "ruolo": "Laura, glicine: pallino scelto",
+      "chiaro": "#B9A2EC",
+      "scuro": "#B9A2EC",
+      "uguale_nei_due_temi": true
+    },
+    {
+      "gruppo": "Persone e corsie",
+      "nome": "--c-laura-barra",
+      "ruolo": "Laura, glicine: barretta della corsia",
+      "chiaro": "#8F78BF",
+      "scuro": "#B9A2EC",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Persone e corsie",
+      "nome": "--c-laura-fondo",
+      "ruolo": "Laura, glicine: fondo dell'impegno",
+      "chiaro": "#F2ECFC",
+      "scuro": "#38394C",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Persone e corsie",
+      "nome": "--c-sofia",
+      "ruolo": "Sofia, menta: pallino scelto",
+      "chiaro": "#8FD0A8",
+      "scuro": "#8FD0A8",
+      "uguale_nei_due_temi": true
+    },
+    {
+      "gruppo": "Persone e corsie",
+      "nome": "--c-sofia-barra",
+      "ruolo": "Sofia, menta: barretta della corsia",
+      "chiaro": "#54936E",
+      "scuro": "#8FD0A8",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Persone e corsie",
+      "nome": "--c-sofia-fondo",
+      "ruolo": "Sofia, menta: fondo dell'impegno",
+      "chiaro": "#E7F5EC",
+      "scuro": "#2E443B",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Persone e corsie",
+      "nome": "--c-tommaso",
+      "ruolo": "Tommaso, blu: pallino scelto",
+      "chiaro": "#3F6FE0",
+      "scuro": "#3F6FE0",
+      "uguale_nei_due_temi": true
+    },
+    {
+      "gruppo": "Persone e corsie",
+      "nome": "--c-tommaso-barra",
+      "ruolo": "Tommaso, blu: barretta della corsia",
+      "chiaro": "#3F6FE0",
+      "scuro": "#4E7BE2",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Persone e corsie",
+      "nome": "--c-tommaso-fondo",
+      "ruolo": "Tommaso, blu: fondo dell'impegno",
+      "chiaro": "#E5ECFC",
+      "scuro": "#1B2D49",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Persone e corsie",
+      "nome": "--c-biscotto",
+      "ruolo": "Biscotto, ambra: pallino scelto",
+      "chiaro": "#E8A15C",
+      "scuro": "#E8A15C",
+      "uguale_nei_due_temi": true
+    },
+    {
+      "gruppo": "Persone e corsie",
+      "nome": "--c-biscotto-barra",
+      "ruolo": "Biscotto, ambra: barretta della corsia",
+      "chiaro": "#B9762E",
+      "scuro": "#E8A15C",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Persone e corsie",
+      "nome": "--c-biscotto-fondo",
+      "ruolo": "Biscotto, ambra: fondo dell'impegno",
+      "chiaro": "#FCEEDD",
+      "scuro": "#433929",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Persone e corsie",
+      "nome": "--c-miele",
+      "ruolo": "Miele, cannella: pallino scelto",
+      "chiaro": "#AF8273",
+      "scuro": "#AF8273",
+      "uguale_nei_due_temi": true
+    },
+    {
+      "gruppo": "Persone e corsie",
+      "nome": "--c-miele-barra",
+      "ruolo": "Miele, cannella: barretta della corsia",
+      "chiaro": "#A67A6B",
+      "scuro": "#AF8273",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Persone e corsie",
+      "nome": "--c-miele-fondo",
+      "ruolo": "Miele, cannella: fondo dell'impegno",
+      "chiaro": "#F5ECE8",
+      "scuro": "#35312F",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Persone e corsie",
+      "nome": "--c-casa-barra",
+      "ruolo": "Di casa, grigio: barretta",
+      "chiaro": "#55686C",
+      "scuro": "#A9C0BF",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Persone e corsie",
+      "nome": "--c-casa-fondo",
+      "ruolo": "Di casa, grigio: fondo dell'impegno",
+      "chiaro": "#EEF1EF",
+      "scuro": "#1E2B2E",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Persone e corsie",
+      "nome": "--c-iniziale",
+      "ruolo": "Iniziale nel pallino scelto: scura nei due temi",
+      "chiaro": "#10262A",
+      "scuro": "#10262A",
+      "uguale_nei_due_temi": true
+    },
+    {
+      "gruppo": "Persone e corsie",
+      "nome": "--c-iniziale-blu",
+      "ruolo": "Iniziale sul blu di Tommaso: bianca nei due temi",
+      "chiaro": "#FFFFFF",
+      "scuro": "#FFFFFF",
+      "uguale_nei_due_temi": true
+    },
+    {
+      "gruppo": "Persone e corsie",
+      "nome": "--c-rosa",
+      "ruolo": "Rosa della tavolozza delle persone (chi è invitato)",
+      "chiaro": "#F0A3C0",
+      "scuro": "#F0A3C0",
+      "uguale_nei_due_temi": true
+    },
+    {
+      "gruppo": "Persone e corsie",
+      "nome": "--c-nessuno",
+      "ruolo": "Pallino e barretta di quello che non è di nessuno",
+      "chiaro": "#B4BFBC",
+      "scuro": "#5E6F72",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Persone e corsie",
+      "nome": "--c-conferma",
+      "ruolo": "Segno di conferma, piano scelto",
+      "chiaro": "#2F8F99",
+      "scuro": "#8FD0CB",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Persone e corsie",
+      "nome": "--c-conferma-fondo",
+      "ruolo": "Tratto fatto della linea del tempo",
+      "chiaro": "#CFE5E1",
+      "scuro": "#1F3F42",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Persone e corsie",
+      "nome": "--c-aiutante",
+      "ruolo": "Aiutanti: un solo colore neutro, con l'iniziale",
+      "chiaro": "#D5DBD8",
+      "scuro": "#D5DBD8",
+      "uguale_nei_due_temi": true
+    }
+  ],
+  "persone": [
+    {
+      "persona": "Marco",
+      "colore": "corallo",
+      "iniziale": "M",
+      "pallino": "#F2765C",
+      "iniziale_colore": "#10262A",
+      "barretta_chiaro": "#D75E45",
+      "barretta_scuro": "#F2765C",
+      "fondo_impegno_chiaro": "#FDEAE5",
+      "fondo_impegno_scuro": "#452F29",
+      "contrasto_barretta_chiaro": 3.2,
+      "contrasto_barretta_scuro": 4.4,
+      "contrasto_testo_fondo_chiaro": 13.6,
+      "contrasto_testo_fondo_scuro": 10.9,
+      "contrasto_iniziale_pallino": 5.6
+    },
+    {
+      "persona": "Laura",
+      "colore": "glicine",
+      "iniziale": "L",
+      "pallino": "#B9A2EC",
+      "iniziale_colore": "#10262A",
+      "barretta_chiaro": "#8F78BF",
+      "barretta_scuro": "#B9A2EC",
+      "fondo_impegno_chiaro": "#F2ECFC",
+      "fondo_impegno_scuro": "#38394C",
+      "contrasto_barretta_chiaro": 3.2,
+      "contrasto_barretta_scuro": 5.1,
+      "contrasto_testo_fondo_chiaro": 13.6,
+      "contrasto_testo_fondo_scuro": 9.9,
+      "contrasto_iniziale_pallino": 7.1
+    },
+    {
+      "persona": "Sofia",
+      "colore": "menta",
+      "iniziale": "S",
+      "pallino": "#8FD0A8",
+      "iniziale_colore": "#10262A",
+      "barretta_chiaro": "#54936E",
+      "barretta_scuro": "#8FD0A8",
+      "fondo_impegno_chiaro": "#E7F5EC",
+      "fondo_impegno_scuro": "#2E443B",
+      "contrasto_barretta_chiaro": 3.2,
+      "contrasto_barretta_scuro": 5.9,
+      "contrasto_testo_fondo_chiaro": 14.0,
+      "contrasto_testo_fondo_scuro": 9.2,
+      "contrasto_iniziale_pallino": 8.8
+    },
+    {
+      "persona": "Tommaso",
+      "colore": "blu",
+      "iniziale": "T",
+      "pallino": "#3F6FE0",
+      "iniziale_colore": "#FFFFFF",
+      "barretta_chiaro": "#3F6FE0",
+      "barretta_scuro": "#4E7BE2",
+      "fondo_impegno_chiaro": "#E5ECFC",
+      "fondo_impegno_scuro": "#1B2D49",
+      "contrasto_barretta_chiaro": 3.9,
+      "contrasto_barretta_scuro": 3.0,
+      "contrasto_testo_fondo_chiaro": 13.3,
+      "contrasto_testo_fondo_scuro": 12.1,
+      "contrasto_iniziale_pallino": 4.6
+    },
+    {
+      "persona": "Biscotto (cane)",
+      "colore": "ambra",
+      "iniziale": "B",
+      "pallino": "#E8A15C",
+      "iniziale_colore": "#10262A",
+      "barretta_chiaro": "#B9762E",
+      "barretta_scuro": "#E8A15C",
+      "fondo_impegno_chiaro": "#FCEEDD",
+      "fondo_impegno_scuro": "#433929",
+      "contrasto_barretta_chiaro": 3.2,
+      "contrasto_barretta_scuro": 5.2,
+      "contrasto_testo_fondo_chiaro": 13.8,
+      "contrasto_testo_fondo_scuro": 9.9,
+      "contrasto_iniziale_pallino": 7.3
+    },
+    {
+      "persona": "Miele (gatto)",
+      "colore": "cannella",
+      "iniziale": "Mi",
+      "pallino": "#AF8273",
+      "iniziale_colore": "#10262A",
+      "barretta_chiaro": "#A67A6B",
+      "barretta_scuro": "#AF8273",
+      "fondo_impegno_chiaro": "#F5ECE8",
+      "fondo_impegno_scuro": "#35312F",
+      "contrasto_barretta_chiaro": 3.2,
+      "contrasto_barretta_scuro": 3.8,
+      "contrasto_testo_fondo_chiaro": 13.5,
+      "contrasto_testo_fondo_scuro": 11.3,
+      "contrasto_iniziale_pallino": 4.7
+    }
+  ],
+  "regola_del_pallino": {
+    "scelto": "colore pieno della persona (--c-<persona>); iniziale --c-iniziale (#10262A), bianca (--c-iniziale-blu, #FFFFFF) solo sul blu di Tommaso; uguale in chiaro e al buio",
+    "non_scelto": "color-mix(in srgb, <colore della persona> 30%, var(--c-fondo)); iniziale var(--c-testo): scura in chiaro, chiara al buio; nessuna ombra",
+    "segnale": "chi è scelto ha anche la spunta o l'anello: il colore non è mai l'unico segnale (risposta 202)",
+    "css": ".v2 .av{color:var(--c-iniziale)} .v2 .av.u4{color:var(--c-iniziale-blu)} .v2 .y5w button.off .av,.v2 .av.off{background:color-mix(in srgb,var(--avc,var(--c-nessuno)) 30%,var(--c-fondo));color:var(--c-testo)}",
+    "contrasti_iniziale": {
+      "Marco": [5.6, 5.6, 11.7, 9.7],
+      "Laura": [7.1, 7.1, 12.6, 8.7],
+      "Sofia": [8.8, 8.8, 13.3, 7.8],
+      "Tommaso": [4.6, 4.6, 10.6, 11.2],
+      "Biscotto": [7.3, 7.3, 12.7, 8.6],
+      "Miele": [4.7, 4.7, 11.5, 10.1],
+      "_colonne": [
+        "scelto chiaro",
+        "scelto buio",
+        "non scelto chiaro",
+        "non scelto buio"
+      ]
+    },
+    "vale_per": [
+      "«Per chi» di «Nuovo impegno»",
+      "fila dei volti del giorno",
+      "filtri del calendario",
+      "«Chi vedo»",
+      "ogni fila di volti e selettore di persone"
+    ]
+  },
+  "barrette": {
+    "regola": "la barretta a sinistra dell'impegno usa una tinta più scura dello stesso colore, almeno 3 a 1 sul fondo dell'impegno (e sul bianco); pallino e fondo non cambiano. Al buio la barretta torna al colore pieno della persona.",
+    "css_classi": {
+      "pM": "--c-marco-barra",
+      "pL": "--c-laura-barra",
+      "pS": "--c-sofia-barra",
+      "pT": "--c-tommaso",
+      "pB": "--c-biscotto-barra",
+      "pG (Miele)": "--c-miele-barra",
+      "pY (Liberi insieme)": "--c-liberi-barra",
+      "pN (di casa / nessuno)": "--c-testo2"
+    },
+    "tinte_passo12": [
+      {
+        "di_chi": "Marco",
+        "colore": "Corallo",
+        "pallino": "#F2765C",
+        "fondo_impegno": "#FDEAE5",
+        "contrasto_prima": "2,4",
+        "barretta": "#D75E45",
+        "contrasto_dopo": "3,2"
+      },
+      {
+        "di_chi": "Laura",
+        "colore": "Glicine",
+        "pallino": "#B9A2EC",
+        "fondo_impegno": "#F2ECFC",
+        "contrasto_prima": "1,9",
+        "barretta": "#8F78BF",
+        "contrasto_dopo": "3,2"
+      },
+      {
+        "di_chi": "Sofia",
+        "colore": "Menta",
+        "pallino": "#8FD0A8",
+        "fondo_impegno": "#E7F5EC",
+        "contrasto_prima": "1,6",
+        "barretta": "#54936E",
+        "contrasto_dopo": "3,2"
+      },
+      {
+        "di_chi": "Tommaso",
+        "colore": "Blu",
+        "pallino": "#3F6FE0",
+        "fondo_impegno": "#E5ECFC",
+        "contrasto_prima": "3,9",
+        "barretta": "#3F6FE0",
+        "contrasto_dopo": "3,9 (non cambia)"
+      },
+      {
+        "di_chi": "Biscotto",
+        "colore": "Ambra",
+        "pallino": "#E8A15C",
+        "fondo_impegno": "#FCEEDD",
+        "contrasto_prima": "1,9",
+        "barretta": "#B9762E",
+        "contrasto_dopo": "3,2"
+      },
+      {
+        "di_chi": "Miele",
+        "colore": "Cannella",
+        "pallino": "#AF8273",
+        "fondo_impegno": "#F5ECE8",
+        "contrasto_prima": "2,9",
+        "barretta": "#A67A6B",
+        "contrasto_dopo": "3,2"
+      },
+      {
+        "di_chi": "libero",
+        "colore": "Rosa",
+        "pallino": "#F0A3C0",
+        "fondo_impegno": "#FDF2F6",
+        "contrasto_prima": "1,8",
+        "barretta": "#BC7390",
+        "contrasto_dopo": "3,2"
+      },
+      {
+        "di_chi": "libero",
+        "colore": "Azzurro",
+        "pallino": "#7CC7E0",
+        "fondo_impegno": "#EDF7FB",
+        "contrasto_prima": "1,7",
+        "barretta": "#4792AA",
+        "contrasto_dopo": "3,2"
+      },
+      {
+        "di_chi": "libero",
+        "colore": "Sabbia",
+        "pallino": "#D9B88F",
+        "fondo_impegno": "#FAF5EF",
+        "contrasto_prima": "1,7",
+        "barretta": "#A3845D",
+        "contrasto_dopo": "3,2"
+      },
+      {
+        "di_chi": "libero",
+        "colore": "Ardesia",
+        "pallino": "#6B7A90",
+        "fondo_impegno": "#EAECEF",
+        "contrasto_prima": "3,7",
+        "barretta": "#6B7A90",
+        "contrasto_dopo": "3,7 (non cambia)"
+      },
+      {
+        "di_chi": "Liberi insieme",
+        "colore": "Giallo",
+        "pallino": "#F6C945",
+        "fondo_impegno": "#FCEFC0",
+        "contrasto_prima": "1,4",
+        "barretta": "#A38009",
+        "contrasto_dopo": "3,2"
+      }
+    ],
+    "da_chiarire": "Tommaso al buio: la tavola dice barretta #4E7BE2 (--c-tommaso-barra), ma il foglio di stile usa --c-tommaso (#3F6FE0) per la classe pT. Sul fondo #1B2D49: #3F6FE0 = 3,0 : 1, #4E7BE2 = 3,5 : 1. Usare --c-tommaso-barra.",
+    "nota_colori_liberi": "Rosa, Azzurro, Sabbia, Ardesia: colori liberi della tavolozza delle persone (per chi arriva dopo). Nel foglio di stile ci sono solo come valori di questa tabella, non come ruoli; al buio non hanno ancora valori: da chiedere se servono al lancio."
+  },
+  "scena_della_notte": {
+    "regola": "al buio la scena di Oggi è sempre la notte, anche di giorno; lo splash scuro usa la stessa scena (risposte 198 e 204). Colori scritti nella scena (immagine): non sono ruoli e non si invertono.",
+    "viewBox": "0 0 390 300",
+    "cielo_alto": "#081A33",
+    "cielo_basso": "#1E3A5C",
+    "stelle": "#E8EEF6 (opacità 0,42–0,89, raggio 0,8–1,3)",
+    "luna": "#EEF2F7 (r 20) con l'ombra #0C2140 (r 18) che la fa falce",
+    "collina_dietro": "#1F3F50",
+    "collina_davanti": "#16303E",
+    "casa": "#C9D3DA",
+    "tetto": "#0F3D44",
+    "finestra_accesa": "#FFDFA8",
+    "splash_scuro": {
+      "fondo_di_marca": "#0B2A31 (--c-notte)",
+      "meta_dissolvenza": "#0D2238 (--c-cielo-mezzo, scuro)",
+      "arrivo": "#12294A (--c-cielo, scuro)"
+    },
+    "sfondo_semplice_al_buio": "#1D3536 (--c-scena)"
+  },
+  "scena_del_giorno_riferimento": {
+    "nota": "solo tema chiaro, pomeriggio",
+    "cielo_alto": "#86C8EE",
+    "cielo_basso": "#DDF0F8",
+    "sole": "#FFF4C8",
+    "collina_dietro": "#7FC3B5",
+    "collina_davanti": "#4FA394",
+    "casa": "#FFFFFF",
+    "tetto": "#0F3D44",
+    "finestra": "#CFE3EE",
+    "mattino_cielo_alto": "#BFE3F2",
+    "mattino_cielo_basso": "#F8E6D8"
+  },
+  "contrasti_tema_scuro": [
+    ["Testo sul fondo", "15,8"],
+    ["Testo secondario sul fondo", "9,4"],
+    ["Testo secondario sulla superficie alzata", "8,0"],
+    ["Testo spento sul fondo", "6,0"],
+    ["Bordo dei campi sul fondo", "5,6"],
+    ["Bordo dei campi sulla superficie alzata", "4,8"],
+    ["Bianco sul fondo pieno (pulsante principale)", "4,8"],
+    ["Fondo pieno sul fondo della pagina", "3,7"],
+    ["Anello del fuoco sul fondo", "16,7"],
+    ["Errore sul fondo", "9,0"],
+    ["Errore sul suo fondo", "7,6"],
+    ["Collegamento sul fondo", "10,5"],
+    ["«Liberi insieme»: barretta sul suo fondo", "6,9"]
+  ],
+  "verde_petrolio": {
+    "valore": "#1F7D8A",
+    "ruoli": ["--c-pieno (scuro)", "--c-accento (scuro)"],
+    "testo_sopra": "#FFFFFF (--c-su)",
+    "contrasti": "bianco sopra 4,8; sul fondo 3,7; su finestre e pannelli 3,2; sulla barra laterale 3,4; sul fondo «premuto» 2,6 (mai unico segnale)"
+  },
+  "bordo_dei_campi": {
+    "chiaro": "#869390 (3,2 : 1 sul bianco, telefono e computer)",
+    "scuro": "#7E9496 (5,6 sul fondo, 4,8 sulla superficie alzata)"
+  },
+  "ultimi_colori_portati": [
+    "Passo 15: «1 viaggio scoperto» (#B4432F scritto a mano, 3,3 a 1 al buio) → --c-errore; con lui altri 29 colori in linea degli schermi del computer (testi, fondi, pulsante dell'assistente, segnaposto delle foto)",
+    "Passo 15: iniziali dei pallini → --c-iniziale (#10262A) e --c-iniziale-blu (#FFFFFF); ora di «adesso» → --c-adesso-testo (#10262A nei due temi, 10 a 1)",
+    "Passo 15: miniature delle idee → --c-idea-1/2/3; tessere dei Pasti senza foto → --c-segnaposto",
+    "Passo 16: «Nessuno, per ora» → --c-testo2 su telefono e computer (classe .nn16)",
+    "Passo 16: anteprima dello sfondo «Semplice» → --c-scena (#1D3536 al buio)",
+    "Passo 16: un solo segnaposto per le ricette senza foto, color sabbia → --c-segnaposto / --c-segnaposto-testo (le quattro tinte di prima sono diventate un ruolo)",
+    "Passo 16: il rosa di chi è invitato → --c-rosa",
+    "Passo 17 (in attesa): #BFE5E1 della pagina «Piani» da portare nella tavolozza; al buio le due icone di «Piani» almeno a 3 a 1"
+  ],
+  "restano_scritti_a_mano": [
+    "veli e testi bianchi sopra le foto",
+    "colori dentro la scena di Oggi e dello splash",
+    "logo sul fondo scuro di marca (--c-logo-a-notte, --c-logo-b-notte sono ruoli)",
+    "campioni degli sfondi (anteprime di immagini)"
+  ]
+}

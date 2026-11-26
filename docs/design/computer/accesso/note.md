@@ -115,3 +115,9 @@ Pronto
 La scena passa al giorno. Tre righe dicono che cosa c'è già; l'ultima è da fare. «Apri Oggi» ha il fuoco: basta Invio.
 
 Movimento: da un passo all'altro il modulo cambia in dissolvenza (200 ms); la scena a sinistra sfuma tra sera e giorno in 400 ms. Movimento ridotto: cambio senza dissolvenza.
+
+## Tavole sostituite dai Passi 12–16
+
+La versione più recente ha preso il posto di queste tavole (26/11/2026); la vecchia resta nella storia git. La nota qui sopra resta valida dove la tavola nuova non dice altro.
+
+- `02-accesso-mail-o-password-sbagliate.png` → `docs/design/computer/accesso-profilo-impostazioni-p12-16/01-accesso-mail-o-password-non-corrispondono-chiaro.png`
