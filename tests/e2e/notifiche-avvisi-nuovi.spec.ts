@@ -23,10 +23,8 @@ import type { CasaNest } from "../fixtures/notifiche";
 // Notifiche (#613, PR #629): the five kinds of avviso of #511 on the page and
 // in the bell: CA-2 and CA-3.
 //
-// IMPORTANT: these tests insert rows of kinds and with columns that exist only
-// in the database of #612 (`db/notifiche-2-parte-2`). They pass only AFTER the
-// merge of #612 (or on a merge of the two branches); on the database of today
-// the insert is refused. They are not skipped on purpose.
+// These tests insert rows of the kinds and with the columns of the database of
+// #612 (already merged).
 //
 // The clock of the browser is on T, the most recent Tuesday, at 12:00: the
 // events are on day(1), so the texts say «domani».
@@ -193,6 +191,26 @@ test.describe("avvisi nuovi", () => {
     await expect(textOf(rowOf(page, "ti chiede di riprendere"))).toHaveText(
       "Nuova. Paolo ti chiede di riprendere, domani alle 18:00: Danza.",
     );
+
+    // The three kinds on an event have «Apri»; the overlap goes to the event
+    // that starts first (Pediatra at 17:00, before Dentista at 17:30).
+    await expect(openLink(rowOf(page, "Calcio"))).toHaveAttribute(
+      "href",
+      `/impegni/${escort}?giorno=${day(1)}`,
+    );
+    await expect(
+      openLink(rowOf(page, "Tocca a te riprendere")),
+    ).toHaveAttribute("href", `/impegni/${pickup}?giorno=${day(1)}`);
+    await expect(
+      openLink(rowOf(page, "Sei in due posti insieme")),
+    ).toHaveAttribute("href", `/impegni/${mineA}?giorno=${day(1)}`);
+
+    // The request to pick up has «Vedi l'impegno», not «Apri».
+    const pickupRequest = rowOf(page, "ti chiede di riprendere");
+    await expect(openLink(pickupRequest)).toHaveCount(0);
+    await expect(
+      pickupRequest.getByRole("link", { name: "Vedi l'impegno" }),
+    ).toHaveAttribute("href", `/impegni/${pickup}?giorno=${day(1)}`);
 
     // Opening the page reads them all, like the other kinds.
     await expect.poll(() => unreadCount(nest, "Giulia")).toBe(0);

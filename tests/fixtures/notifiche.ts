@@ -313,14 +313,14 @@ export type NewAvviso =
 /**
  * Inserts a notification of the five kinds of #511 directly (administrative
  * key, only to prepare), with the fields the check constraint of the database
- * asks for each kind. It works only after the database of #612: before it,
- * the kinds and the columns do not exist and the insert is refused.
+ * asks for each kind (the kinds and the columns come from the database of
+ * #612).
  */
 export async function insertAvviso(
   nest: CasaNest,
   row: NewAvviso,
   createdAt: Date = new Date(),
-): Promise<string> {
+): Promise<void> {
   const common = {
     household_id: nest.householdId,
     recipient_member_id: memberId(nest, row.recipient),
@@ -369,13 +369,10 @@ export async function insertAvviso(
       };
       break;
   }
-  const { data, error } = await adminOf(nest)
+  const { error } = await adminOf(nest)
     .from("notifications")
-    .insert({ ...common, ...fields })
-    .select("id")
-    .single();
-  if (error || !data) throw new Error("Avviso di prova non inserito");
-  return data.id as string;
+    .insert({ ...common, ...fields });
+  if (error) throw new Error("Avviso di prova non inserito");
 }
 
 /**
