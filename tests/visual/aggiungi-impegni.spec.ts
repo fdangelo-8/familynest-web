@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { dateField, expectDay } from "../fixtures/campi-data-ora";
 import {
   THURSDAY,
   installFakes,
@@ -88,9 +89,7 @@ test("frase riconosciuta con i campi compilati", async ({ page }) => {
   const served = await installFakes(page);
   const { dialog, field } = await open(page);
   await field.pressSequentially(PHRASE);
-  await expect(dialog.getByLabel("Giorno", { exact: true })).toHaveValue(
-    "2026-10-22",
-  );
+  await expectDay(dateField(dialog, "Giorno"), "2026-10-22");
   await expect(dialog.getByLabel("Dalle", { exact: true })).toHaveValue(
     "17:00",
   );
@@ -170,9 +169,7 @@ test("persone del Nest non lette", async ({ page }) => {
     "Non riusciamo a caricare le persone del Nest",
   );
   await field.pressSequentially(PHRASE);
-  await expect(dialog.getByLabel("Giorno", { exact: true })).toHaveValue(
-    "2026-10-22",
-  );
+  await expectDay(dateField(dialog, "Giorno"), "2026-10-22");
   await shoot(page, "persone-non-lette.png");
 });
 

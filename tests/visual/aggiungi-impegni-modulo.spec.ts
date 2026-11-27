@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { dateField, expectDay } from "../fixtures/campi-data-ora";
 import { installFakes } from "../fixtures/aggiungi-fake";
 import { hasTestUser } from "../fixtures/visual-login";
 import { signInAsCached } from "../fixtures/visual-login-cached";
@@ -176,9 +177,7 @@ test("foglio con i campi dell'impegno compilati dalla frase", async ({
 }) => {
   await installFakes(page);
   const { dialog } = await openWithPhrase(page);
-  await expect(dialog.getByLabel("Giorno", { exact: true })).toHaveValue(
-    "2026-10-22",
-  );
+  await expectDay(dateField(dialog, "Giorno"), "2026-10-22");
   await expect(
     dialog.getByRole("group", { name: "Chi lo vede", exact: true }),
   ).toBeVisible();

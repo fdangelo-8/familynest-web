@@ -1,4 +1,5 @@
 import { expect, test } from "../fixtures/casa";
+import { expectDay } from "../fixtures/campi-data-ora";
 import {
   GONE_TITLE,
   PRIVATE,
@@ -43,7 +44,7 @@ test.describe("Aggiungi · Scadenza · creazione", () => {
       day: "Lunedì 7 dicembre",
       title: "Bollo auto",
     });
-    await expect(s.date).toHaveValue("2026-12-07");
+    await expectDay(s.date, "2026-12-07");
     for (const name of ["30 giorni prima", "7 giorni", "1 giorno"]) {
       await expect(s.reminder(name)).toHaveAttribute("aria-pressed", "true");
     }

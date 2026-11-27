@@ -1,5 +1,12 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import {
+  clearDay,
+  dateField,
+  expectDay,
+  pickDay,
+  typeTime,
+} from "../fixtures/campi-data-ora";
+import {
   CORS,
   FULL_MIA,
   SAVE_RPC,
@@ -145,9 +152,7 @@ test.describe("apertura del modulo", () => {
         await expect(
           kind.getByRole("button", { name: "Animale" }),
         ).toBeDisabled();
-        await expect(field(dialog, "Data di nascita")).toHaveValue(
-          "2016-12-14",
-        );
+        await expectDay(dateField(dialog, "Data di nascita"), "2016-12-14");
         await expect(colorRadio(dialog, "Menta")).toBeChecked();
 
         const school = schoolGroup(dialog);
@@ -252,6 +257,34 @@ test.describe("salvataggio", () => {
       await expect(
         section(page, "Taglie").locator(".sezione__info"),
       ).toHaveText(sizesUpdatedLabel(saved.row!.sizes_updated_at!));
+    });
+  });
+
+  test("CA-33: il giorno scelto e l'ora scritta si salvano come sono; CA-43: «Togli la data» salva nulla", async ({
+    page,
+    baseURL,
+  }) => {
+    only390();
+    needsThrowaway();
+    await withFigli(async (ctx) => {
+      await writeProfile(ctx, ctx.mia, FULL_MIA);
+      await openMia(page, baseURL, ctx);
+      let dialog = await openSheet(page, "Mia");
+      const birth = dateField(dialog, "Data di nascita");
+      await pickDay(birth, "2016-03-09");
+      await expectDay(birth, "2016-03-09");
+      await typeTime(field(schoolGroup(dialog), "Entra alle"), "8:30");
+      await saveButton(dialog).click();
+      await expect(dialog).toBeHidden();
+      const saved = await readProfile(ctx, ctx.mia);
+      expect(saved.member.birth_date).toBe("2016-03-09");
+      expect(saved.row?.school_starts_at).toMatch(/^08:30/);
+
+      dialog = await openSheet(page, "Mia");
+      await clearDay(dateField(dialog, "Data di nascita"));
+      await saveButton(dialog).click();
+      await expect(dialog).toBeHidden();
+      expect((await readProfile(ctx, ctx.mia)).member.birth_date).toBeNull();
     });
   });
 
@@ -480,7 +513,7 @@ test.describe("chiusura senza salvare", () => {
 // --------------------------------------------------------------------- errori
 
 test.describe("errori di compilazione", () => {
-  test("CA-35: nome vuoto e data nel futuro: errore sotto il campo, il modulo resta aperto, il database non cambia", async ({
+  test("CA-35: nome vuoto dà l'errore sotto il campo, il giorno dopo oggi non si sceglie, il modulo resta aperto, il database non cambia", async ({
     page,
     baseURL,
   }) => {
@@ -502,15 +535,17 @@ test.describe("errori di compilazione", () => {
       expect(await readProfile(ctx, ctx.mia)).toEqual(before);
 
       await field(dialog, "Nome").fill("Mia");
-      // 21/10/2026 is the day after «today» (the clock is fixed at 20/10).
-      await field(dialog, "Data di nascita").fill("2026-10-21");
-      await saveButton(dialog).click();
-      await expect(
-        dialog.getByText(
-          "Questa data è nel futuro: scegli un giorno fino a oggi.",
-          { exact: true },
-        ),
-      ).toBeVisible();
+      // 21/10/2026 is the day after «today» (the clock is fixed at 20/10):
+      // the calendar does not let it be chosen (`max` is today in Rome).
+      await dateField(dialog, "Data di nascita").click();
+      const tomorrow = page
+        .getByTestId("calendario")
+        .locator('[role="gridcell"][data-day="2026-10-21"]');
+      await expect(tomorrow).toHaveAttribute("aria-disabled", "true");
+      await tomorrow.click();
+      await expect(page.getByTestId("calendario")).toBeVisible();
+      await page.keyboard.press("Escape");
+      await expect(page.getByTestId("calendario")).toHaveCount(0);
       await expect(dialog).toBeVisible();
       expect(await readProfile(ctx, ctx.mia)).toEqual(before);
       await expect(anyToast(page)).toHaveCount(0);

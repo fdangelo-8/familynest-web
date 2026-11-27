@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { expectDay } from "../fixtures/campi-data-ora";
 import { signInAs, skipReason, usersConfigured } from "../fixtures/auth";
 
 // Aggiungi · Impegni, phase 2 (#171): from the phrase to the full form «Nuovo
@@ -54,7 +55,7 @@ test.describe("Aggiungi · Impegni · modulo completo", () => {
     expect(new URL(page.url()).pathname).toBe("/aggiungi");
     await expect(form.getByLabel("Titolo")).toHaveValue("Prova Modulo");
     await expect(form.getByLabel("Titolo")).toBeFocused();
-    await expect(form.getByLabel("Giorno")).toHaveValue("2030-11-03");
+    await expectDay(form.getByLabel("Giorno"), "2030-11-03");
     await expect(form.getByLabel("Dalle", { exact: true })).toHaveValue(
       "17:00",
     );

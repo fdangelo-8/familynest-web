@@ -1,4 +1,5 @@
 import type { Locator, Page } from "@playwright/test";
+import { expectDay, pickDay } from "../fixtures/campi-data-ora";
 import {
   addDays,
   column,
@@ -459,7 +460,7 @@ test("CA-1 (dettaglio impegno salvato): tornando con Indietro dopo aver cambiato
   await expect(h1(page, title)).toBeVisible({ timeout: 20_000 });
   const dialog = await openForm(page);
   await fieldOf(dialog, "Titolo").fill(newTitle);
-  await fieldOf(dialog, "Giorno").fill(newDay);
+  await pickDay(fieldOf(dialog, "Giorno"), newDay);
   await pressSave(page);
   await expect(editDialog(page)).toBeHidden();
   await expect(toastOf(page, "Modifiche salvate")).toBeVisible();
@@ -483,7 +484,7 @@ test("CA-1 (dettaglio impegno salvato): tornando con Indietro dopo aver cambiato
   await expect(editDialog(page)).toHaveCount(0);
   const again = await openForm(page);
   await expect(fieldOf(again, "Titolo")).toHaveValue(newTitle);
-  await expect(fieldOf(again, "Giorno")).toHaveValue(newDay);
+  await expectDay(fieldOf(again, "Giorno"), newDay);
   await expectNotReloaded(page);
 });
 

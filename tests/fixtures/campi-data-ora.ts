@@ -1,4 +1,48 @@
-import type { Locator } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
+
+const escapeRegExp = (text: string) =>
+  text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/**
+ * The date field with that label, with or without a day: its name is the label
+ * alone when empty and «<label>, <day>» when it has a day.
+ */
+export function dateField(scope: Page | Locator, label: string): Locator {
+  return scope.getByLabel(label, { exact: true }).or(
+    scope.getByRole("button", {
+      name: new RegExp(`^${escapeRegExp(label)}, `),
+    }),
+  );
+}
+
+/** «Giovedì 22 ottobre» for `2026-10-22` (the year only if it is not this one). */
+function dayText(dayKey: string): string {
+  const text = new Intl.DateTimeFormat("it-IT", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    timeZone: "UTC",
+  }).format(new Date(`${dayKey}T12:00:00Z`));
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+/** The field shows this day (value `YYYY-MM-DD` of the old native field). */
+export async function expectDay(field: Locator, dayKey: string) {
+  await expect(field.locator(".campo__valore")).toHaveText(
+    new RegExp(`^${escapeRegExp(dayText(dayKey))}( \\d{4})?$`),
+  );
+}
+
+/** The field shows no day. */
+export async function expectNoDay(field: Locator) {
+  await expect(field.locator(".campo__valore")).toHaveText("");
+}
+
+/** Opens the calendar and taps «Togli la data» (optional fields only). */
+export async function clearDay(field: Locator): Promise<void> {
+  await field.click();
+  await field.page().getByRole("button", { name: "Togli la data" }).click();
+}
 
 // F4c (#505): the date field is a button that opens a month calendar and the
 // time field is a text field read on leaving it. These two helpers are the

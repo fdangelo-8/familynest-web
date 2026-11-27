@@ -1,3 +1,4 @@
+import { expectDay } from "../fixtures/campi-data-ora";
 import {
   barEditButton,
   buttonOf,
@@ -62,7 +63,7 @@ test.describe("aprire il modulo", () => {
     await expect(dialog).toHaveClass(mobile ? /\bfoglio\b/ : /\bmodale\b/);
 
     await expect(fieldOf(dialog, "Titolo")).toHaveValue(NUOTO);
-    await expect(fieldOf(dialog, "Giorno")).toHaveValue("2026-10-20");
+    await expectDay(fieldOf(dialog, "Giorno"), "2026-10-20");
     await expect(fieldOf(dialog, "Dalle")).toHaveValue("17:00");
     await expect(fieldOf(dialog, "Alle")).toHaveValue("18:30");
     await expect(

@@ -2,7 +2,7 @@ import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { waitForAnimationsToEnd } from "../fixtures/animations";
-import { pickDay, typeTime } from "../fixtures/campi-data-ora";
+import { dateField, pickDay, typeTime } from "../fixtures/campi-data-ora";
 import { waitHydrated } from "../fixtures/esplora";
 
 // #505 (F4c): sheets, confirmation dialog, «Collega» row, date and time
@@ -285,25 +285,123 @@ test.describe("Foglio", () => {
     await expect(dialog).toBeHidden();
   });
 
-  test("D8: a 899 × 844 è un foglio, a 900 × 844 una modale, a 1280 × 560 un foglio", async ({
+  test("CA-40: a 1023 × 844 foglio e calendario salgono dal basso; a 1024 × 500 modale e riquadro", async ({
     page,
   }) => {
     const opener = tid(page, "ds-foglio-azione").getByRole("button", {
       name: "Apri Nuovo impegno",
     });
     const dialog = page.getByRole("dialog", { name: "Nuovo impegno" });
-    for (const [width, height, shape] of [
-      [899, 844, /foglio/],
-      [900, 844, /modale/],
-      [1280, 560, /foglio/],
-      [1280, 800, /modale/],
+    const field = tid(page, "ds-data").getByRole("button", { name: /^Giorno/ });
+    for (const [width, height, shape, calendar, other] of [
+      [1023, 844, /foglio/, "calendario-foglio", "calendario-riquadro"],
+      [1024, 500, /modale/, "calendario-riquadro", "calendario-foglio"],
+      [1280, 800, /modale/, "calendario-riquadro", "calendario-foglio"],
     ] as const) {
       await page.setViewportSize({ width, height });
       await opener.click();
       await expect(dialog).toHaveClass(shape);
       await page.keyboard.press("Escape");
       await expect(dialog).toBeHidden();
+      await field.click();
+      await expect(tid(page, calendar)).toBeVisible();
+      await expect(tid(page, other)).toHaveCount(0);
+      await page.keyboard.press("Escape");
+      await expect(tid(page, calendar)).toHaveCount(0);
     }
+  });
+
+  test("CA-5: il foglio entra in 300 ms con --curva ed esce in 200 ms, con transform", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await tid(page, "ds-foglio-azione")
+      .getByRole("button", { name: "Apri Nuovo impegno" })
+      .click();
+    const dialog = page.getByRole("dialog", { name: "Nuovo impegno" });
+    await expect(dialog).toBeVisible();
+    expect(await css(dialog, "animation-name")).toBe("foglio-entra");
+    expect(await css(dialog, "animation-duration")).toBe(
+      await resolve(dialog, "var(--durata-normale)", "animation-duration"),
+    );
+    expect(await css(dialog, "animation-timing-function")).toBe(
+      await resolve(dialog, "var(--curva)", "animation-timing-function"),
+    );
+    await waitForAnimationsToEnd(page);
+
+    // The exit class is recorded the moment it is set.
+    await dialog.evaluate((el) => {
+      const store = window as unknown as {
+        __exit?: { name: string; duration: string; timing: string };
+      };
+      new MutationObserver(() => {
+        if (!el.classList.contains("is-uscita")) return;
+        const style = getComputedStyle(el);
+        store.__exit = {
+          name: style.animationName,
+          duration: style.animationDuration,
+          timing: style.animationTimingFunction,
+        };
+      }).observe(el, { attributes: true, attributeFilter: ["class"] });
+    });
+    await dialog.getByRole("button", { name: "Chiudi" }).click();
+    await expect(dialog).toBeHidden();
+    const exit = await page.evaluate(
+      () =>
+        (
+          window as unknown as {
+            __exit?: { name: string; duration: string; timing: string };
+          }
+        ).__exit,
+    );
+    expect(exit?.name).toBe("foglio-esce");
+    expect(exit?.duration).toBe("0.2s");
+    expect(exit?.timing).toBe(
+      await resolve(
+        page.locator("body"),
+        "var(--curva)",
+        "animation-timing-function",
+      ),
+    );
+  });
+
+  test("CA-5, CA-19: con il movimento ridotto solo opacity, in non più di 200 ms, e il foglio si chiude", async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await tid(page, "ds-foglio-azione")
+      .getByRole("button", { name: "Apri Nuovo impegno" })
+      .click();
+    const dialog = page.getByRole("dialog", { name: "Nuovo impegno" });
+    await expect(dialog).toBeVisible();
+    expect(await css(dialog, "animation-name")).toBe("appare");
+    expect(await css(dialog, "animation-duration")).toBe("0.2s");
+    await dialog.evaluate((el) => {
+      const store = window as unknown as {
+        __exit?: { name: string; duration: string };
+      };
+      new MutationObserver(() => {
+        if (!el.classList.contains("is-uscita")) return;
+        const style = getComputedStyle(el);
+        store.__exit = {
+          name: style.animationName,
+          duration: style.animationDuration,
+        };
+      }).observe(el, { attributes: true, attributeFilter: ["class"] });
+    });
+    await dialog.getByRole("button", { name: "Chiudi" }).click();
+    // The fade-out runs, then the sheet is gone.
+    await expect(dialog).toBeHidden();
+    const exit = await page.evaluate(
+      () =>
+        (
+          window as unknown as {
+            __exit?: { name: string; duration: string };
+          }
+        ).__exit,
+    );
+    expect(exit).toEqual({ name: "sparisce", duration: "0.2s" });
   });
 
   test("CA-11: trascinare la testata oltre il 25% chiude, sotto torna al suo posto", async ({
@@ -478,7 +576,7 @@ test.describe("Riga «Collega»", () => {
     expect(hit).toBe("Collega Outlook");
   });
 
-  test("CA-17, CA-19: Outlook collega, «Collegato» in verde, annuncio e fuoco", async ({
+  test("CA-17: Outlook collega, «Collegato» in verde, annuncio e fuoco", async ({
     page,
   }) => {
     const rows = tid(page, "ds-collega");
@@ -500,6 +598,32 @@ test.describe("Riga «Collega»", () => {
       await resolve(state, "var(--color-ok)", "color"),
     );
     expect(await css(state, "border-top-width")).toBe("0px");
+  });
+
+  test("CA-19: con il movimento ridotto la spunta di «Collegato» compare senza transform", async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    const rows = tid(page, "ds-collega");
+    await rows.getByRole("button", { name: "Collega Outlook" }).click();
+    const state = rows.getByTestId("collega-stato");
+    await expect(state).toHaveText("Collegato");
+    // Nothing in the row animates a transform, and none is applied.
+    const moving = await state.evaluate((el) => {
+      const nodes = [el, ...Array.from(el.querySelectorAll("*"))];
+      return nodes.flatMap((node) => {
+        const style = getComputedStyle(node);
+        const animated = node
+          .getAnimations()
+          .some((a) =>
+            ((a.effect as KeyframeEffect).getKeyframes() as Keyframe[]).some(
+              (frame) => "transform" in frame || "translate" in frame,
+            ),
+          );
+        return style.transform !== "none" || animated ? [node.tagName] : [];
+      });
+    });
+    expect(moving).toEqual([]);
   });
 
   test("CA-18: se Google Calendar non collega, avviso sopra l'elenco e «Riprova»", async ({
@@ -716,6 +840,102 @@ test.describe("Selettore di data, computer", () => {
     await page.mouse.click(5, 5);
     await expect(popover).toBeHidden();
     await expect(field).toBeFocused();
+  });
+});
+
+test.describe("Selettore di data, dentro una modale", () => {
+  test("il riquadro del calendario è `aria-modal` e si raggiunge dentro la modale a 1280", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await open(page);
+    await tid(page, "ds-foglio-piede")
+      .getByRole("button", { name: "Apri Nuova scadenza" })
+      .click();
+    const dialog = page.getByRole("dialog", { name: "Nuova scadenza" });
+    await expect(dialog).toHaveClass(/modale/);
+    await dateField(dialog, "Quando").click();
+    const popover = tid(page, "calendario-riquadro");
+    await expect(popover).toBeVisible();
+    await expect(popover).toHaveAttribute("role", "dialog");
+    await expect(popover).toHaveAttribute("aria-modal", "true");
+    await expect(popover.getByRole("grid")).toBeVisible();
+    // Esc closes only the box: the modal stays.
+    await page.keyboard.press("Escape");
+    await expect(popover).toHaveCount(0);
+    await expect(dialog).toBeVisible();
+  });
+});
+
+// ------------------------------------------------------------- Togli la data
+
+test.describe("Togli la data", () => {
+  for (const [width, height] of [
+    [390, 844],
+    [1280, 800],
+  ] as const) {
+    test(`CA-41: a ${width} il tocco svuota il valore, chiude e il fuoco torna sul campo`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height });
+      await open(page);
+      const root = tid(page, "ds-data-facoltativa");
+      const field = dateField(root, "Data di nascita");
+      await expect(field).toHaveAccessibleName(
+        "Data di nascita, Domenica 14 maggio 2017",
+      );
+      await field.click();
+      const clear = page.getByRole("button", { name: "Togli la data" });
+      await expect(clear).toHaveCount(1);
+      // It comes after the grid: Tab from the chosen day reaches it.
+      await page.keyboard.press("Tab");
+      await expect(clear).toBeFocused();
+      const clearBox = await box(clear);
+      expect(clearBox.height).toBeGreaterThanOrEqual(44);
+      expect(clearBox.width).toBeGreaterThanOrEqual(44);
+      expect(await css(clear, "text-decoration-line")).toBe("underline");
+      expect(await css(clear, "color")).toBe(
+        await resolve(clear, "var(--color-inchiostro-2)", "color"),
+      );
+      await clear.click();
+      await expect(page.getByTestId("calendario")).toHaveCount(0);
+      await expect(tid(page, "ds-data-facoltativa-stato")).toHaveText(
+        "Valore:",
+      );
+      await expect(field).toBeFocused();
+      await expect(field).toHaveAccessibleName("Data di nascita");
+    });
+  }
+
+  test("CA-42: senza `clearable` o senza valore «Togli la data» non c'è", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await open(page);
+    const clear = page.getByRole("button", { name: "Togli la data" });
+    // Not clearable, with a value.
+    await tid(page, "ds-data")
+      .getByRole("button", { name: /^Giorno/ })
+      .click();
+    await expect(tid(page, "calendario-riquadro")).toBeVisible();
+    await expect(clear).toHaveCount(0);
+    await page.keyboard.press("Escape");
+    // Not clearable, empty.
+    await dateField(tid(page, "ds-data-vuota"), "Quando").click();
+    await expect(tid(page, "calendario-riquadro")).toBeVisible();
+    await expect(clear).toHaveCount(0);
+    await page.keyboard.press("Escape");
+    // Clearable, but already emptied.
+    const field = dateField(
+      tid(page, "ds-data-facoltativa"),
+      "Data di nascita",
+    );
+    await field.click();
+    await expect(clear).toHaveCount(1);
+    await clear.click();
+    await field.click();
+    await expect(tid(page, "calendario-riquadro")).toBeVisible();
+    await expect(clear).toHaveCount(0);
   });
 });
 

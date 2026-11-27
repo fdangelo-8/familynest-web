@@ -10,7 +10,12 @@ import {
   usersConfigured,
   type TestUserKey,
 } from "../fixtures/auth";
-import { pickDay } from "../fixtures/campi-data-ora";
+import {
+  clearDay,
+  dateField,
+  expectDay,
+  pickDay,
+} from "../fixtures/campi-data-ora";
 import { waitForAnimationsToEnd } from "../fixtures/animations";
 import { formatAge } from "../../src/lib/datetime";
 
@@ -212,42 +217,37 @@ test.describe("MemberSheet: aggiunta, regole dei campi", () => {
     );
   });
 
-  test("data nel futuro: il campo data è segnato, descritto e ha il fuoco", async ({
+  test("data di nascita: i giorni dopo oggi sono spenti, oggi si sceglie e si salva", async ({
     page,
   }) => {
+    // Wednesday 18 November 2026, 10:00 in Rome (the clock keeps running)
+    await page.clock.install({ time: new Date("2026-11-18T09:00:00Z") });
     const dialog = await openSheet(page, ADD);
     await dialog.getByLabel("Nome").fill("Sofia");
-    const date = dialog.getByLabel("Data di nascita");
-    await expect(date).toHaveAttribute("max", /^\d{4}-\d{2}-\d{2}$/);
-    await date.evaluate((input) => {
-      const element = input as HTMLInputElement;
-      element.removeAttribute("max");
-      const setter = Object.getOwnPropertyDescriptor(
-        HTMLInputElement.prototype,
-        "value",
-      )!.set!;
-      setter.call(element, "2099-01-01");
-      element.dispatchEvent(new Event("input", { bubbles: true }));
-    });
-    await dialog.getByRole("button", { name: "Aggiungi Sofia" }).click();
-    await expect(date).toHaveAttribute("aria-invalid", "true");
-    await expect(date).toBeFocused();
-    await expect(date).toHaveAccessibleDescription(
-      /Questa data è nel futuro: scegli un giorno fino a oggi\./,
+    const date = dateField(dialog, "Data di nascita");
+    await date.click();
+    const calendar = page.getByTestId("calendario");
+    const tomorrow = calendar.locator(
+      '[role="gridcell"][data-day="2026-11-19"]',
     );
-  });
+    await expect(tomorrow).toHaveAttribute("aria-disabled", "true");
+    await expect(
+      calendar.getByRole("button", { name: "Mese successivo" }),
+    ).toHaveAttribute("aria-disabled", "true");
+    // A tap on a day after today does not close the calendar and chooses nothing
+    await tomorrow.click();
+    await expect(calendar).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(calendar).toHaveCount(0);
+    await expect(date).toHaveAccessibleName("Data di nascita");
 
-  test("la data di oggi a Roma è accettata", async ({ page }) => {
-    const today = new Intl.DateTimeFormat("sv-SE", {
-      timeZone: "Europe/Rome",
-    }).format(new Date());
-    const dialog = await openSheet(page, ADD);
-    await dialog.getByLabel("Nome").fill("Neo");
-    await pickDay(dialog.getByLabel("Data di nascita"), today);
-    await dialog.getByRole("button", { name: "Aggiungi Neo" }).click();
+    // Today in Rome is chosen and saved
+    await pickDay(date, "2026-11-18");
+    await expectDay(date, "2026-11-18");
+    await dialog.getByRole("button", { name: "Aggiungi Sofia" }).click();
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(page.getByTestId("membri-salvato")).toContainText(
-      `"birthDate":"${today}"`,
+      '"birthDate":"2026-11-18"',
     );
   });
 
@@ -324,16 +324,8 @@ test.describe("MemberSheet: aggiunta, regole dei campi", () => {
       dialog.getByRole("button", { name: "Aggiungi", exact: true }),
     ];
     for (const target of sequence) {
+      // the date field is one stop: a button that opens the calendar
       await page.keyboard.press("Tab");
-      if (target === sequence[4]) {
-        // the native date field has several stops (day, month, year)
-        for (let i = 0; i < 4; i += 1) {
-          if (await target.evaluate((el) => el === document.activeElement)) {
-            break;
-          }
-          await page.keyboard.press("Tab");
-        }
-      }
       await expect(target).toBeFocused();
     }
     await page.keyboard.press("Tab");
@@ -433,16 +425,29 @@ test.describe("MemberSheet: modifica", () => {
     await expect(page.getByTestId("membri-chiamate")).toHaveText("Chiamate: 0");
   });
 
-  test("la data si può svuotare e viene salvata come nulla", async ({
+  test("la data si toglie con «Togli la data» e viene salvata come nulla", async ({
     page,
   }) => {
     const dialog = await openSheet(page, "Modifica Sofia");
-    await dialog.getByLabel("Data di nascita").fill("");
+    const date = dateField(dialog, "Data di nascita");
+    await clearDay(date);
+    await expect(page.getByTestId("calendario")).toHaveCount(0);
+    await expect(date).toBeFocused();
+    await expect(date).toHaveAccessibleName("Data di nascita");
     await dialog.getByRole("button", { name: "Salva le modifiche" }).click();
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(page.getByTestId("membri-salvato")).toContainText(
       '"birthDate":null',
     );
+  });
+
+  test("«Togli la data» non c'è se il campo è vuoto", async ({ page }) => {
+    const dialog = await openSheet(page, ADD);
+    await dialog.getByLabel("Data di nascita").click();
+    await expect(page.getByTestId("calendario")).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Togli la data" }),
+    ).toHaveCount(0);
   });
 });
 

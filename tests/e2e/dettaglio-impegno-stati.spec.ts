@@ -1,4 +1,5 @@
 import type { Page } from "@playwright/test";
+import { pickDay } from "../fixtures/campi-data-ora";
 import {
   blockingViolations,
   buttonOf,
@@ -180,7 +181,7 @@ test.describe("accessibilità degli stati", () => {
     await openDetail(page, baseURL, casa, "Marco", id, "2026-10-20");
     await expect(h1(page, NUOTO)).toBeVisible();
     const dialog = await openForm(page);
-    await fieldOf(dialog, "Giorno").fill("2026-10-22");
+    await pickDay(fieldOf(dialog, "Giorno"), "2026-10-22");
     await pressSave(page);
     await buttonOf(confirmDialog(page), "Salva solo questo").click();
     await expect(fieldOf(dialog, "Giorno")).toHaveAttribute(

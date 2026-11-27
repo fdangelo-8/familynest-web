@@ -1,4 +1,5 @@
 import { type Page } from "@playwright/test";
+import { expectDay } from "../fixtures/campi-data-ora";
 import { waitForAnimationsToEnd } from "../fixtures/animations";
 import { expect, isMobileProject, test } from "../fixtures/casa";
 import {
@@ -65,7 +66,7 @@ test.describe("Aggiungi · Impegni · salvataggio", () => {
 
     // #333: the fields show what the phrase says (no chips under the field)
     const f = impegnoFields(page);
-    await expect(f.day).toHaveValue("2026-10-22");
+    await expectDay(f.day, "2026-10-22");
     await expect(f.from).toHaveValue("17:00");
     await expect(f.to).toHaveValue("18:00");
     await f.expectWho(["Sofia"]);
@@ -134,7 +135,7 @@ test.describe("Aggiungi · Impegni · salvataggio", () => {
 
     // The only person chosen is «Tu»; the day and the hour are in the fields.
     const f = impegnoFields(page);
-    await expect(f.day).toHaveValue("2026-11-07");
+    await expectDay(f.day, "2026-11-07");
     await expect(f.from).toHaveValue("16:00");
     await f.expectWho(["Tu"]);
     await expect(f.person("Marco")).toHaveCount(0);
@@ -324,7 +325,7 @@ test.describe("Aggiungi · Impegni · caricamento ed errori", () => {
 
     await fieldOf(page).fill(PHRASE);
     const f = impegnoFields(page);
-    await expect(f.day).toHaveValue("2026-10-22");
+    await expectDay(f.day, "2026-10-22");
     await expect(f.from).toHaveValue("17:00");
     // Without the list of people there is no «Chi» to show
     await expect(f.who).toHaveCount(0);
@@ -416,7 +417,7 @@ test.describe("Aggiungi · Impegni · «chi accompagna?» e anteprima", () => {
 
     const f = impegnoFields(page);
     await field.fill("Riunione giovedì alle 17");
-    await expect(f.day).toHaveValue("2026-10-22");
+    await expectDay(f.day, "2026-10-22");
     await expect(f.from).toHaveValue("17:00");
     await expect(noticeOf(page)).toHaveCount(0);
 
@@ -543,7 +544,7 @@ test.describe("Aggiungi · Impegni · isolamento tra Nest", () => {
     // among the people. «Tu» appears once the people are read, so the absence
     // below is real.
     const f = impegnoFields(page);
-    await expect(f.day).toHaveValue("2026-10-22");
+    await expectDay(f.day, "2026-10-22");
     await expect(f.from).toHaveValue("17:00");
     await f.expectWho(["Tu"]);
     await expect(f.person("Sofia")).toHaveCount(0);

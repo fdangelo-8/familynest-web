@@ -215,10 +215,20 @@ export function DateField({
       </Button>
     ) : null;
 
-  // Tab leaves the box: the focus goes back to the field and the keystroke
-  // carries it to the next one.
+  // Tab inside the box moves between its controls (arrows, day, «Togli la
+  // data»). Tab past the last one, or Shift+Tab before the first, leaves the
+  // box: the focus goes back to the field and the keystroke carries it on.
   const onBoxKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (event.key === "Tab") closeBox(true);
+    if (event.key !== "Tab") return;
+    const box = boxRef.current;
+    if (!box) return;
+    const stops = Array.from(
+      box.querySelectorAll<HTMLElement>(
+        'button:not([disabled]):not([tabindex="-1"]),[tabindex="0"]',
+      ),
+    );
+    const edge = event.shiftKey ? stops[0] : stops[stops.length - 1];
+    if (!edge || document.activeElement === edge) closeBox(true);
   };
 
   const onBoxBlur = (event: FocusEvent<HTMLDivElement>) => {
