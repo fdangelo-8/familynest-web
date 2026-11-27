@@ -1,6 +1,7 @@
 -- private.invitation_mails and record_invitation_mail() (issue #617, R4: CA-21…CA-25,
--- CA-34): the counter of the invitation mails, 3 per invitation and 20 per household in the
--- last 24 hours, never the address.
+-- CA-34; review of #652): the counter of the invitation mails, 3 per invitation, 20 per
+-- household and 20 per account in the last 24 hours, rows kept 48 hours whatever happens to
+-- the invitation, the household or the account, never the address.
 -- Seed: A = Marco (Casa D'Angelo, organises; Laura has the valid invitation a2…01),
 -- B = Giulia (Casa Bianchi, organises; Anna has the expired pending invitation b2…01),
 -- B2 = Paolo (Casa Bianchi, does not organise).
@@ -12,7 +13,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(41);
+select plan(56);
 
 insert into public.household_members (id, household_id, kind, name, color)
 values
@@ -30,14 +31,19 @@ values
   ('b2000000-0000-4000-8000-000000000620', '22222222-2222-4222-8222-222222222222',
    'b1000000-0000-4000-8000-000000000004', 'b1000000-0000-4000-8000-000000000001', 'accepted', now());
 
-insert into private.invitation_mails (household_id, invitation_id, sent_at)
-select '22222222-2222-4222-8222-222222222222', 'b2000000-0000-4000-8000-000000000001', now() - interval '1 hour'
+-- The mails already in the window were sent by an account that is not in the seed (an adult
+-- who organised before), so the limit per account of Giulia does not come into play.
+insert into private.invitation_mails (household_id, invitation_id, sender_user_id, sent_at)
+select '22222222-2222-4222-8222-222222222222', 'b2000000-0000-4000-8000-000000000001',
+       '61700000-0000-4000-8000-00000000ffff', now() - interval '1 hour'
 from generate_series(1, 10);
-insert into private.invitation_mails (household_id, invitation_id, sent_at)
-select '22222222-2222-4222-8222-222222222222', 'b2000000-0000-4000-8000-000000000617', now() - interval '1 hour'
+insert into private.invitation_mails (household_id, invitation_id, sender_user_id, sent_at)
+select '22222222-2222-4222-8222-222222222222', 'b2000000-0000-4000-8000-000000000617',
+       '61700000-0000-4000-8000-00000000ffff', now() - interval '1 hour'
 from generate_series(1, 9);
-insert into private.invitation_mails (household_id, invitation_id, sent_at)
-values ('22222222-2222-4222-8222-222222222222', 'b2000000-0000-4000-8000-000000000617', now() - interval '25 hours');
+insert into private.invitation_mails (household_id, invitation_id, sender_user_id, sent_at)
+values ('22222222-2222-4222-8222-222222222222', 'b2000000-0000-4000-8000-000000000617',
+        '61700000-0000-4000-8000-00000000ffff', now() - interval '25 hours');
 
 -- ---------------------------------------------------------------------------
 -- CA-23: the table holds no address and no API role reads it.
@@ -46,8 +52,12 @@ select results_eq(
   $$ select array_agg(a.attname::text collate "default" order by a.attnum)
      from pg_attribute a
      where a.attrelid = 'private.invitation_mails'::regclass and a.attnum > 0 and not a.attisdropped $$,
-  $$ values (array['id', 'household_id', 'invitation_id', 'sent_at']::text[]) $$,
-  'CA-23: exactly the columns id, household_id, invitation_id, sent_at: no address in any column'
+  $$ values (array['id', 'household_id', 'invitation_id', 'sender_user_id', 'sent_at']::text[]) $$,
+  'CA-23: exactly the columns id, household_id, invitation_id, sender_user_id, sent_at: no address in any column'
+);
+select is_empty(
+  $$ select c.conname from pg_constraint c where c.conrelid = 'private.invitation_mails'::regclass and c.contype = 'f' $$,
+  'no foreign key: the rows are deleted only by the purge after 48 hours'
 );
 select ok(
   (select c.relrowsecurity from pg_class c where c.oid = 'private.invitation_mails'::regclass),
@@ -150,10 +160,11 @@ select throws_ok(
 );
 reset role;
 select results_eq(
-  $$ select count(*)::integer, bool_and(x.household_id = '11111111-1111-4111-8111-111111111111'), bool_and(x.sent_at = now())
+  $$ select count(*)::integer, bool_and(x.household_id = '11111111-1111-4111-8111-111111111111'), bool_and(x.sent_at = now()),
+            bool_and(x.sender_user_id = 'aaaaaaaa-0000-4000-8000-000000000001')
      from private.invitation_mails x where x.invitation_id = 'a2000000-0000-4000-8000-000000000001' $$,
-  $$ values (3, true, true) $$,
-  'CA-21: 3 rows, of Casa D''Angelo, now; the refused call added none'
+  $$ values (3, true, true, true) $$,
+  'CA-21: 3 rows, of Casa D''Angelo, sent by Marco, now; the refused call added none'
 );
 
 -- ---------------------------------------------------------------------------
@@ -231,10 +242,100 @@ select is(
 );
 
 -- ---------------------------------------------------------------------------
--- CA-25: the purge after 48 hours and the cascades.
+-- Review of #652 (a): the adult is removed («Annulla l'invito») and invited again: the
+-- mails of the window still count for the household.
 -- ---------------------------------------------------------------------------
-insert into private.invitation_mails (household_id, invitation_id, sent_at)
-values ('11111111-1111-4111-8111-111111111111', 'a2000000-0000-4000-8000-000000000001', now() - interval '49 hours');
+set local role authenticated;
+set local request.jwt.claims to '{"sub":"bbbbbbbb-0000-4000-8000-000000000001","role":"authenticated"}';
+select isnt_empty(
+  $$ delete from public.household_members m where m.id = 'b1000000-0000-4000-8000-000000000618' returning m.id $$,
+  '(a) Giulia removes Ivo, with his invitation'
+);
+reset role;
+select is(
+  (select count(*)::integer from private.invitation_mails x where x.invitation_id = 'b2000000-0000-4000-8000-000000000618'),
+  1,
+  '(a) the mail of the removed invitation stays'
+);
+set local role authenticated;
+select lives_ok(
+  $$ select set_config('test.ivo_again', public.invite_adult('Ivo', 'basilico')::text, true) $$,
+  '(a) Giulia invites Ivo again, with the same name'
+);
+reset role;
+do $$
+begin
+  perform set_config('test.ivo_again_invitation',
+    (select i.id::text from public.invitations i where i.member_id = current_setting('test.ivo_again')::uuid), true);
+end;
+$$;
+set local role authenticated;
+select throws_ok(
+  $$ select public.record_invitation_mail(current_setting('test.ivo_again_invitation')::uuid) $$,
+  'FN010', 'invitation mail limit reached', '(a) the new invitation gets FN010: the household already sent 20 mails'
+);
+reset role;
+select is(
+  (select count(*)::integer from private.invitation_mails x where x.household_id = '22222222-2222-4222-8222-222222222222'),
+  21,
+  '(a) no row was added, none was deleted'
+);
+
+-- ---------------------------------------------------------------------------
+-- Review of #652 (b): the account limit. Marco already sent 3 mails; 17 more of the last
+-- hour (from an earlier invitation) make 20. He leaves (his household goes with him),
+-- creates a new one and invites: FN010 on the account limit.
+-- ---------------------------------------------------------------------------
+insert into private.invitation_mails (household_id, invitation_id, sender_user_id, sent_at)
+select '11111111-1111-4111-8111-111111111111', 'a2000000-0000-4000-8000-0000000000ee',
+       'aaaaaaaa-0000-4000-8000-000000000001', now() - interval '1 hour'
+from generate_series(1, 17);
+set local role authenticated;
+set local request.jwt.claims to '{"sub":"aaaaaaaa-0000-4000-8000-000000000001","role":"authenticated"}';
+select isnt_empty(
+  $$ delete from public.household_members m where m.user_id = 'aaaaaaaa-0000-4000-8000-000000000001' returning m.id $$,
+  '(b) Marco leaves Casa D''Angelo'
+);
+reset role;
+select is_empty(
+  $$ select 1 from public.households h where h.id = '11111111-1111-4111-8111-111111111111' $$,
+  '(b) Casa D''Angelo is deleted (no adult with an account left)'
+);
+select is(
+  (select count(*)::integer from private.invitation_mails x where x.household_id = '11111111-1111-4111-8111-111111111111'),
+  20,
+  '(b) the 20 mails of Marco stay after his household is deleted'
+);
+set local role authenticated;
+select lives_ok(
+  $$ select set_config('test.new_home', public.create_household('Casa Nuova', 'family_with_children', 'Marco', 'pomodoro')::text, true) $$,
+  '(b) Marco creates a new household'
+);
+select lives_ok(
+  $$ select set_config('test.new_guest', public.invite_adult('Laura', 'glicine')::text, true) $$,
+  '(b) Marco invites in the new household'
+);
+select lives_ok(
+  $$ select set_config('test.new_guest_invitation',
+       (select i.id::text from public.invitations i where i.member_id = current_setting('test.new_guest')::uuid), true) $$,
+  '(b) Marco reads the id of the new invitation'
+);
+select throws_ok(
+  $$ select public.record_invitation_mail(current_setting('test.new_guest_invitation')::uuid) $$,
+  'FN010', 'invitation mail limit reached', '(b) FN010: the account already sent 20 mails in 24 hours'
+);
+reset role;
+select is_empty(
+  $$ select 1 from private.invitation_mails x where x.household_id = current_setting('test.new_home')::uuid $$,
+  '(b) the new household has no mail: the refusal came from the account limit'
+);
+
+-- ---------------------------------------------------------------------------
+-- CA-25: the purge after 48 hours is the only deletion.
+-- ---------------------------------------------------------------------------
+insert into private.invitation_mails (household_id, invitation_id, sender_user_id, sent_at)
+values ('11111111-1111-4111-8111-111111111111', 'a2000000-0000-4000-8000-000000000001',
+        'aaaaaaaa-0000-4000-8000-000000000001', now() - interval '49 hours');
 select is(
   private.purge_invitation_mails(now()),
   1,
@@ -256,25 +357,29 @@ select results_eq(
 );
 
 delete from public.invitations where id = 'b2000000-0000-4000-8000-000000000617';
-select is_empty(
-  $$ select 1 from private.invitation_mails x where x.invitation_id = 'b2000000-0000-4000-8000-000000000617' $$,
-  'CA-25: deleting the invitation deletes its rows'
+select is(
+  (select count(*)::integer from private.invitation_mails x where x.invitation_id = 'b2000000-0000-4000-8000-000000000617'),
+  10,
+  'CA-25: deleting the invitation keeps its rows (9 of the last hour, 1 of 25 hours ago)'
 );
+delete from public.households where id = '22222222-2222-4222-8222-222222222222';
 select is(
   (select count(*)::integer from private.invitation_mails x where x.household_id = '22222222-2222-4222-8222-222222222222'),
-  11,
-  'CA-25: the other rows of Casa Bianchi stay'
+  21,
+  'CA-25: deleting the household keeps its rows'
 );
-delete from public.household_members where id = 'b1000000-0000-4000-8000-000000000618';
-select is_empty(
-  $$ select 1 from private.invitation_mails x where x.invitation_id = 'b2000000-0000-4000-8000-000000000618' $$,
-  'removing the invitee (Annulla l''invito) deletes the invitation and its rows'
+delete from auth.users where id = 'bbbbbbbb-0000-4000-8000-000000000001';
+select is(
+  (select count(*)::integer from private.invitation_mails x where x.sender_user_id = 'bbbbbbbb-0000-4000-8000-000000000001'),
+  1,
+  'CA-25: deleting the account keeps its row'
 );
-delete from public.households where id = '11111111-1111-4111-8111-111111111111';
-select is_empty(
-  $$ select 1 from private.invitation_mails x where x.household_id = '11111111-1111-4111-8111-111111111111' $$,
-  'deleting the household deletes its rows'
+select is(
+  private.purge_invitation_mails(now() + interval '49 hours'),
+  41,
+  'CA-25: 49 hours later the purge deletes every row of the window'
 );
+select is_empty($$ select 1 from private.invitation_mails $$, 'CA-25: nothing is left after the purge');
 
 select * from finish();
 rollback;

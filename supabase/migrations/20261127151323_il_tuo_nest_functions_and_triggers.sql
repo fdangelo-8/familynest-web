@@ -39,8 +39,9 @@
 --   pet, a birth date for an adult;
 -- - 23505: the colour is already taken in the household (household_members_household_color_key);
 -- - P0001 'household member limit reached': the household has 10 members (household_members_limit);
--- - FN010 'invitation mail limit reached': R4, 3 mails for the invitation or 20 for the
---   household in the last 24 hours (FN001–FN009 are used by earlier migrations).
+-- - FN010 'invitation mail limit reached': R4, 3 mails for the invitation, 20 for the
+--   household or 20 for the account in the last 24 hours (FN001–FN009 are used by earlier
+--   migrations).
 
 -- ===========================================================================
 -- «In coppia» (#546 §1, answer 19)
@@ -262,12 +263,18 @@ revoke execute on function public.household_member_calendars()
 -- of invitation. Only who organises, only for a pending invitation not expired of the
 -- caller's household. Under the limits it records the mail and returns; beyond them it
 -- records nothing and gives FN010. The address is never received nor stored.
--- The limits (decision 3 of #617), the constants at the top and nowhere else:
+-- The limits (decision 3 of #617 and decision of the coordinator on the review of #652),
+-- the constants at the top and nowhere else:
 --   at most 3 mails for one invitation in the last 24 hours,
---   at most 20 mails for one household in the last 24 hours.
--- The windows are sliding. The purge keeps 48 hours (longer than the window).
+--   at most 20 mails for one household in the last 24 hours,
+--   at most 20 mails sent by one account in the last 24 hours.
+-- The windows are sliding. The rows are deleted only by the purge, after 48 hours (longer
+-- than the window), never with their invitation, household or account: every mail of the
+-- window always counts. The limit per invitation follows the id of the invitation: a new
+-- invitation is a new id, and the limits per household and per account cover it.
 -- Concurrency (lesson: a limit checked with a count before the insert): the mails of one
--- household are serialised by a transaction advisory lock taken before counting.
+-- account and of one household are serialised by two transaction advisory locks taken
+-- before counting, always in the same order (account, then household).
 -- Unknown invitation or of another household → 42501 (same message).
 create or replace function public.record_invitation_mail(p_invitation_id uuid)
 returns void
@@ -280,11 +287,14 @@ declare
   c_window constant interval := interval '24 hours';
   c_max_per_invitation constant integer := 3;
   c_max_per_household constant integer := 20;
+  c_max_per_account constant integer := 20;
 
+  v_user_id uuid := (select auth.uid());
   v_household_id uuid;
   v_invitation public.invitations%rowtype;
   v_invitation_count integer;
   v_household_count integer;
+  v_account_count integer;
 begin
   if coalesce(current_setting('request.method', true), '') not in ('', 'POST') then
     raise exception 'use POST' using errcode = 'P0001';
@@ -316,6 +326,7 @@ begin
     raise exception 'the invitation is not valid' using errcode = '22023';
   end if;
 
+  perform pg_advisory_xact_lock(hashtextextended('private.invitation_mails:account:' || v_user_id::text, 0));
   perform pg_advisory_xact_lock(hashtextextended('private.invitation_mails:' || v_household_id::text, 0));
 
   select
@@ -326,12 +337,19 @@ begin
   where x.household_id = v_household_id
     and x.sent_at > now() - c_window;
 
-  if v_invitation_count >= c_max_per_invitation or v_household_count >= c_max_per_household then
+  select count(*) into v_account_count
+  from private.invitation_mails x
+  where x.sender_user_id = v_user_id
+    and x.sent_at > now() - c_window;
+
+  if v_invitation_count >= c_max_per_invitation
+     or v_household_count >= c_max_per_household
+     or v_account_count >= c_max_per_account then
     raise exception 'invitation mail limit reached' using errcode = 'FN010';
   end if;
 
-  insert into private.invitation_mails (household_id, invitation_id)
-  values (v_household_id, v_invitation.id);
+  insert into private.invitation_mails (household_id, invitation_id, sender_user_id)
+  values (v_household_id, v_invitation.id, v_user_id);
 end;
 $$;
 
@@ -367,7 +385,8 @@ $$;
 -- privileges), with one more step: once the invitee is linked to the account, if the
 -- household is now «in coppia» (private.household_is_couple: the person who organises and
 -- the person who enters, nobody else), the person who enters organises too (decision 4 of
--- #617). Otherwise the person enters without the role, as before.
+-- #617). Otherwise the person enters without the role, as before. Before the check the
+-- household is serialised with the advisory lock of the role rules.
 create or replace function public.accept_invitation_with_color(
   p_token text,
   p_color public.member_color
@@ -437,7 +456,10 @@ begin
       color = p_color
   where m.id = v_invitation.member_id;
 
-  -- #617 R5: in a couple, who enters organises too.
+  -- #617 R5: in a couple, who enters organises too. The household is serialised with the
+  -- same advisory lock as the other role rules (household_members_guard_update,
+  -- household_members_after_delete, household_members_couple_guard) before the check.
+  perform pg_advisory_xact_lock(hashtextextended(v_invitation.household_id::text, 0));
   if private.household_is_couple(v_invitation.household_id) then
     update public.household_members m
     set is_admin = true

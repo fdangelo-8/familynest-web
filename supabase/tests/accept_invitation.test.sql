@@ -28,15 +28,16 @@ select is_empty(
 -- adding the member_joined notifications after the invitation is accepted (checks, errors
 -- and locks unchanged); with #458 it was da43d8025e0fd2379f3000c75f1f9882.
 -- #617 (R5, 20261127151323) changed it on purpose, only by giving the role to who enters
--- when the household becomes «in coppia» (checks, errors, locks and member_joined
--- unchanged); with #511 it was 140092391ae3ca9fd5aa086c344eda9d.
+-- when the household becomes «in coppia», after the advisory lock of the household used by
+-- the other role rules (checks, errors, row locks and member_joined unchanged); with #511 it
+-- was 140092391ae3ca9fd5aa086c344eda9d.
 select results_eq(
   $$ select p.proname::text collate "default", md5(p.prosrc) collate "default"
      from pg_proc p
      where p.oid in ('public.invitation_preview(text)'::regprocedure,
                      'public.accept_invitation_with_color(text, public.member_color)'::regprocedure)
      order by p.proname $$,
-  $$ values ('accept_invitation_with_color', 'eddd82bbf5037af17ce149fc3437512c'),
+  $$ values ('accept_invitation_with_color', '5d74a997cc3be12cee1f3ca8865d10cd'),
             ('invitation_preview', 'a0de9ea8dfc88f373f56cb21338a0789') $$,
   '#458, #511, #617: the code of accept_invitation_with_color (member_joined, couple) and invitation_preview'
 );
