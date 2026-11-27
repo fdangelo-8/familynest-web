@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
@@ -99,7 +99,7 @@ test.describe("sessione", () => {
     expect(existsSync("middleware.ts")).toBe(false);
     expect(existsSync("src/middleware.ts")).toBe(false);
     expect(existsSync("proxy.ts")).toBe(false);
-    expect(existsSync("src/proxy.ts")).toBe(true);
+    // Read directly: a missing file makes the read throw (no check-then-read).
     const source = readFileSync("src/proxy.ts", "utf8");
     expect(source).not.toMatch(/NextResponse\s*\.\s*(redirect|rewrite)/);
     expect(source).not.toMatch(/\bredirect\s*\(/);
@@ -469,9 +469,11 @@ test.describe("regole di navigazione (funzioni pure, §2)", () => {
 
 /** Every file of `src/` as [path, text]. */
 function sourceTexts(dir = "src"): [string, string][] {
-  return readdirSync(dir).flatMap((name) => {
+  // Entry types come with the listing: no stat before the read.
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const name = entry.name;
     const path = join(dir, name);
-    if (statSync(path).isDirectory()) return sourceTexts(path);
+    if (entry.isDirectory()) return sourceTexts(path);
     return /\.(tsx?|css)$/.test(name)
       ? [[path, readFileSync(path, "utf8")]]
       : [];
