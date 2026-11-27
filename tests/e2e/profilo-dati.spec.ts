@@ -15,6 +15,7 @@ import {
   needsUsers,
   openProfile,
   romeToday,
+  savedDigestTime,
   withMemberNest,
   withRita,
   seedMine,
@@ -158,6 +159,8 @@ test.describe("file «I tuoi dati»", () => {
   }) => {
     needsThrowaway();
     await withMemberNest(async ({ user }) => {
+      // The starting time is what the database holds, not a fixed value.
+      const startingTime = await savedDigestTime(user.id);
       await user.signInContext(page.context(), baseURL as string);
       await openProfile(page);
       const file = await downloadData(page);
@@ -171,7 +174,7 @@ test.describe("file «I tuoi dati»", () => {
       expect(file.json.preferenze_di_notifica).toBeNull();
       expect(file.json.preferenze).toEqual({
         all_apertura: "Io",
-        sintesi_del_mattino: "7:30",
+        sintesi_del_mattino: startingTime,
         visibilita_predefinita: "Occupato",
       });
     });

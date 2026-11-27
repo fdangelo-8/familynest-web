@@ -23,6 +23,7 @@ import { NOT_FOUND, h1 } from "../fixtures/figlio";
 import {
   notificationsSection,
   peopleSection,
+  startingOf,
   switchOf,
 } from "../fixtures/impostazioni-ca";
 import { contextLike, goTo } from "../fixtures/percorso-casa";
@@ -181,9 +182,23 @@ test.describe("percorso di Esplora e delle impostazioni", () => {
     ).toHaveText(["Marco, tu", "Laura", "Sofia", "Tommaso", "Biscotto"]);
     const shopping = switchOf(page, "Spesa");
     await waitHydrated(shopping);
-    await expect(shopping).toHaveAttribute("aria-checked", "false");
+    // The tap flips «Spesa»: the starting value is read from the database.
+    const shoppingStart = await startingOf(marco.client, "shopping");
+    await expect(shopping).toHaveAttribute(
+      "aria-checked",
+      String(shoppingStart),
+    );
+    // Giulia lives in another house: her «Spesa» is read BEFORE Marco's tap,
+    // so the isolation check below can compare it after.
+    const giuliaShoppingBefore = await startingOf(
+      bianchi.users["Giulia"]!.client,
+      "shopping",
+    );
     await shopping.click();
-    await expect(shopping).toHaveAttribute("aria-checked", "true");
+    await expect(shopping).toHaveAttribute(
+      "aria-checked",
+      String(!shoppingStart),
+    );
     const savedChoice = async () => {
       const { data } = await marco.admin
         .from("notification_preferences")
@@ -192,13 +207,13 @@ test.describe("percorso di Esplora e delle impostazioni", () => {
         .maybeSingle();
       return data?.shopping ?? null;
     };
-    await expect.poll(savedChoice).toBe(true);
+    await expect.poll(savedChoice).toBe(!shoppingStart);
     await page.reload();
     await expect(h1(page)).toHaveText(NEST);
     await waitHydrated(switchOf(page, "Spesa"));
     await expect(switchOf(page, "Spesa")).toHaveAttribute(
       "aria-checked",
-      "true",
+      String(!shoppingStart),
     );
     await expect(notificationsSection(page).getByRole("switch")).toHaveCount(5);
 
@@ -227,10 +242,17 @@ test.describe("percorso di Esplora e delle impostazioni", () => {
       await other.goto("/impostazioni");
       await expect(h1(other)).toHaveText("Casa Bianchi");
       await waitHydrated(switchOf(other, "Spesa"));
+      // Marco's tap does not reach her: she still has the value read before
+      // his click, and the database still holds it now.
       await expect(switchOf(other, "Spesa")).toHaveAttribute(
         "aria-checked",
-        "false",
+        String(giuliaShoppingBefore),
       );
+      const giuliaShoppingAfter = await startingOf(
+        bianchi.users["Giulia"]!.client,
+        "shopping",
+      );
+      expect(giuliaShoppingAfter).toBe(giuliaShoppingBefore);
       const html = await (await other.request.get("/impostazioni")).text();
       for (const forbidden of [
         /Casa D(?:'|&#x27;|&#39;|\\u0027)Angelo/,

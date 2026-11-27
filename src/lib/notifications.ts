@@ -118,13 +118,62 @@ export type GiftTakenNotification = NotificationBase & {
   childId: string;
 };
 
+/** The occurrence of an event as the new kinds show it. */
+export type NotificationOccurrence = EventTimeChangedNotification["event"];
+
+/** Which way of a ride: bringing (`escort`) or picking up (`pickup`). */
+export type RideLeg = "escort" | "pickup";
+
+/** An adult entered the Nest with the invitation (#511). */
+export type MemberJoinedNotification = NotificationBase & {
+  kind: "member_joined";
+  /** Who entered */
+  actor: NotificationActor;
+};
+
+/** Before an event of the reader starts (#511). */
+export type EventReminderNotification = NotificationBase & {
+  kind: "event_reminder";
+  event: NotificationOccurrence;
+};
+
+/** Before a ride: the evening before (`daysBefore` 1) or an hour before (0). */
+export type RideReminderNotification = NotificationBase & {
+  kind: "ride_reminder";
+  event: NotificationOccurrence;
+  leg: RideLeg;
+  daysBefore: 1 | 0;
+};
+
+/** Two events of tomorrow overlap for the same person (#511). */
+export type OverlapTomorrowNotification = NotificationBase & {
+  kind: "overlap_tomorrow";
+  event: NotificationOccurrence;
+  otherEvent: NotificationOccurrence;
+  /** The person who is in both: a member of the Nest, resolved by the page */
+  subjectMemberId: string;
+};
+
+/** An adult asks the reader to bring or pick up (#511). */
+export type RideRequestNotification = NotificationBase & {
+  kind: "ride_request";
+  actor: NotificationActor;
+  event: NotificationOccurrence;
+  leg: RideLeg;
+};
+
 export type NotificationItem =
   | TodoAssignedNotification
   | DeadlineReminderNotification
   | FreeTogetherNotification
   | EventTimeChangedNotification
   | ShoppingAddedNotification
-  | GiftTakenNotification;
+  | GiftTakenNotification
+  | MemberJoinedNotification
+  | EventReminderNotification
+  | RideReminderNotification
+  | OverlapTomorrowNotification
+  | RideRequestNotification;
 
 /** «<giver> regala <title> a <child>.» : the words of a `gift_taken` row. */
 export function giftTakenParts(item: GiftTakenNotification): {
@@ -174,9 +223,34 @@ class OccurrenceReadFailed extends Error {}
 
 const DAYS_BEFORE = [30, 7, 1, 0] as const;
 
+/**
+ * Kinds that need the occurrence of an event, read apart. A plain string, not
+ * the generated enum: the code works with the database before and after the
+ * kinds of #511 exist; an unknown kind is dropped.
+ */
+const OCCURRENCE_KINDS = [
+  "event_time_changed",
+  "event_reminder",
+  "ride_reminder",
+  "overlap_tomorrow",
+  "ride_request",
+] as const;
+
+/** Columns that only exist with the kinds of #511: read only when one is there. */
+const EXTRA_COLUMNS =
+  "id, ride_leg, other_event_id, other_occurrence_date, subject_member_id";
+
+type ExtraRaw = {
+  id: string;
+  ride_leg: string | null;
+  other_event_id: string | null;
+  other_occurrence_date: string | null;
+  subject_member_id: string | null;
+};
+
 type RawNotification = {
   id: string;
-  kind: Database["public"]["Enums"]["notification_kind"];
+  kind: string;
   created_at: string;
   read_at: string | null;
   event_id: string | null;
@@ -303,7 +377,12 @@ function toItem(raw: RawNotification): NotificationItem | null {
         childId: child.id,
       };
     }
-    // The occurrence is read separately (see `listNotifications`).
+    case "member_joined": {
+      const actor = toActor(raw.actor);
+      return actor ? { ...base, kind: "member_joined", actor } : null;
+    }
+    // The occurrence is read separately (see `listNotifications`); an unknown
+    // kind is dropped.
     default:
       return null;
   }
@@ -375,24 +454,107 @@ export async function listNotifications(
     return found;
   };
 
+  // The columns of the kinds of #511 are read only when such a row is there,
+  // so the list also works on a database that does not have them yet.
+  const extras = new Map<string, ExtraRaw>();
+  const needsExtra = rows
+    .filter(
+      (raw) =>
+        raw.kind === "ride_reminder" ||
+        raw.kind === "ride_request" ||
+        raw.kind === "overlap_tomorrow",
+    )
+    .map((raw) => raw.id);
+  if (needsExtra.length > 0) {
+    try {
+      const supabase = client ?? createBrowserClient();
+      const { data, error, status } = await supabase
+        .from("notifications")
+        .select(EXTRA_COLUMNS as string)
+        .in("id", needsExtra);
+      if (error) return { ok: false, reason: failureOf(status) };
+      if (!Array.isArray(data)) return { ok: false, reason: "server" };
+      for (const row of data as unknown as ExtraRaw[]) extras.set(row.id, row);
+    } catch {
+      return { ok: false, reason: "network" };
+    }
+  }
+
   let items: (NotificationItem | null)[];
   try {
     items = await Promise.all(
       rows.map(async (raw): Promise<NotificationItem | null> => {
-        if (raw.kind !== "event_time_changed") return toItem(raw);
-        const actor = toActor(raw.actor);
-        if (!actor || raw.event_id === null) return null;
-        const event = await readOccurrence(raw.event_id, raw.occurrence_date);
-        if (event === "failed") throw new OccurrenceReadFailed();
-        if (!event) return null;
-        return {
+        if (!(OCCURRENCE_KINDS as readonly string[]).includes(raw.kind)) {
+          return toItem(raw);
+        }
+        if (raw.event_id === null) return null;
+        const base = {
           id: raw.id,
           createdAt: raw.created_at,
           readAt: raw.read_at,
-          kind: "event_time_changed",
-          actor,
-          event,
         };
+        const event = await readOccurrence(raw.event_id, raw.occurrence_date);
+        if (event === "failed") throw new OccurrenceReadFailed();
+        if (!event) return null;
+        const extra = extras.get(raw.id);
+        const leg =
+          extra?.ride_leg === "escort" || extra?.ride_leg === "pickup"
+            ? extra.ride_leg
+            : null;
+        switch (raw.kind) {
+          case "event_time_changed": {
+            const actor = toActor(raw.actor);
+            return actor
+              ? { ...base, kind: "event_time_changed", actor, event }
+              : null;
+          }
+          case "event_reminder":
+            return { ...base, kind: "event_reminder", event };
+          case "ride_reminder":
+            if (
+              leg === null ||
+              (raw.days_before !== 0 && raw.days_before !== 1)
+            ) {
+              return null;
+            }
+            return {
+              ...base,
+              kind: "ride_reminder",
+              event,
+              leg,
+              daysBefore: raw.days_before,
+            };
+          case "ride_request": {
+            const actor = toActor(raw.actor);
+            return actor && leg
+              ? { ...base, kind: "ride_request", actor, event, leg }
+              : null;
+          }
+          case "overlap_tomorrow": {
+            if (
+              !extra?.other_event_id ||
+              !extra.subject_member_id ||
+              !extra.other_occurrence_date
+            ) {
+              return null;
+            }
+            const otherEvent = await readOccurrence(
+              extra.other_event_id,
+              extra.other_occurrence_date,
+            );
+            if (otherEvent === "failed") throw new OccurrenceReadFailed();
+            if (!otherEvent) return null;
+            return {
+              ...base,
+              kind: "overlap_tomorrow",
+              event,
+              otherEvent,
+              subjectMemberId: extra.subject_member_id,
+            };
+          }
+          default:
+            return null;
+        }
       }),
     );
   } catch (error) {
