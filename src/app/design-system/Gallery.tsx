@@ -1061,7 +1061,7 @@ function ChoicesPeopleSection() {
         </TileGrid>
       </Example>
       <Example
-        caption={`Tile · tessere del ${BRAND.short} (avatar, in attesa, 4 colonne)`}
+        caption={`Tile · tessere del ${BRAND.short} (4 colonne)`}
         wide
       >
         <TileGrid columns={4} data-testid="ds-tessere-nest">
