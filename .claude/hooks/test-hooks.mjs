@@ -296,7 +296,7 @@ const blocked = {
   "TMPDIR riassegnata alla cartella temporanea": [
     `TMPDIR=${tmpdir()}; npm test > $TMPDIR/fn-out.log`,
   ],
-  "TMP cambiata dentro bash -c": [`TMP=src bash -c "echo x > ${tmpFile}"`],
+  "TMP cambiata dentro bash -c": [`TMP=src bash -c 'echo x > $TMP/a.ts'`],
   "TMPDIR tolta, default nel repo": [
     'unset TMPDIR; echo x > "${TMPDIR-src}/a.ts"',
   ],
@@ -327,7 +327,7 @@ const blocked = {
   "HOME esportata": ["export HOME=src && echo x > $HOME/a.ts"],
   "HOME tolta": ['unset HOME; echo x > "${HOME-src}/a.ts"'],
   "eval su TMPDIR": ['eval "TMPDIR=src"; echo x > $TMPDIR/a.ts'],
-  "eval con scrittura in tmp": [`eval true; echo x > ${tmpFile}`],
+  "eval e scrittura attraverso ~": ["eval true; echo x > ~/a.ts"],
   "declare -n": ["declare -n r=TMPDIR; r=src; echo x > $TMPDIR/a.ts"],
   "typeset -n": ["typeset -n r=HOME; r=src; echo x > ~/a.ts"],
   let: ["let TMPDIR=0; echo x > $TMPDIR/a.ts"],
@@ -336,10 +336,21 @@ const blocked = {
   "env -i con bash -c": [`env -i bash -c 'echo x > "$HOME/a.ts"'`],
   "eval scritto con barra": ['ev\\al "TMPDIR=src"; echo x > $TMPDIR/a.ts'],
   // The constructs are blocked with any write, even when no variable is named.
-  "declare -n con scrittura in tmp": [`declare -n r=x; echo x > ${tmpFile}`],
-  "let con scrittura in tmp": [`let x=1; echo x > ${tmpFile}`],
-  "(( = )) con scrittura in tmp": [`(( x = 1 )); echo x > ${tmpFile}`],
-  "env -i con scrittura in tmp": [`env -i bash -c 'echo x > ${tmpFile}'`],
+  "declare -n e scrittura su $TMPDIR": [
+    "declare -n r=x; echo x > $TMPDIR/a.ts",
+  ],
+  "let e scrittura su $HOME": ["let x=1; echo x > $HOME/a.ts"],
+  "(( = )) e scrittura su ${TMP}": ["(( x = 1 )); echo x > ${TMP}/a.ts"],
+  "env -i e scrittura su $HOME": [`env -i bash -c 'echo x > "$HOME/a.ts"'`],
+  "cd senza argomenti dopo eval": ["eval true; cd && echo x > a.ts"],
+  // #642 review, optional cases.
+  "variabile scritta come array": ["TMPDIR[0]=src; echo x > $TMPDIR/a.ts"],
+  "HOME scritta come array": ["HOME[0]=src; echo x > ~/a.ts"],
+  "env -u con l'opzione attaccata": ["env -uHOME sh -c 'cd && echo x > a.ts'"],
+  "exec -c": ["exec -c sh -c 'cd && echo x > a.ts'"],
+  ">& seguito da numero e lettere": ["echo x >&2src/a.ts"],
+  "barra e a capo nel nome del comando": ["se\\\nd -i s/a/b/ src/a.ts"],
+  "barra e a capo nel nome di tee": ["echo x | te\\\ne src/a.ts"],
   // #642 review: escapes and quotes that the shell does not simply drop.
   "= con barra non è un'assegnazione": ["S\\=.; echo x > ${S}src/a.ts"],
   "= tra virgolette non è un'assegnazione": ["'S=.'; echo x > ${S}src/a.ts"],
@@ -402,6 +413,21 @@ const allowed = {
   "testo tra apici a un comando che non è una shell": [
     `printf '%s\\n' 'let x = (a) => a; eval' > ${tmpFile}`,
   ],
+  // Writes to a path written in full are not blocked for the text they carry.
+  "heredoc con let verso tmp": [
+    `cat > ${tmpFile}.mjs <<'EOF'\nlet x = 1;\nEOF`,
+  ],
+  "heredoc con funzione freccia verso tmp": [
+    `cat > ${tmpFile}.mjs <<'EOF'\nconst big = (n) => n > 1;\nEOF`,
+  ],
+  "testo con eval verso tmp": [`echo "non usare eval" > ${tmpFile}`],
+  "grep di eval in /tmp": ['grep -rn "eval" src > /tmp/hits.txt'],
+  "eval e scrittura in tmp per intero": [`eval true; echo x > ${tmpFile}`],
+  "let e scrittura in tmp per intero": [`let x=1; echo x > ${tmpFile}`],
+  "env -i e scrittura in tmp per intero": [
+    `env -i bash -c 'echo x > ${tmpFile}'`,
+  ],
+  "2>&1 con fd a più cifre": ["npm test 2>&1 >&2"],
 };
 for (const [label, [command, agent]] of Object.entries(allowed))
   expect(label, B, bash(command, agent), false);
