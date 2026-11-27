@@ -36,7 +36,9 @@ select ok(
 select columns_are(
   'public', 'push_subscriptions',
   array['id', 'household_id', 'member_id', 'platform', 'endpoint', 'p256dh', 'auth', 'token',
-        'created_at', 'last_seen_at', 'updated_at'],
+        'created_at', 'last_seen_at', 'updated_at',
+        -- #513 part 1: the session that registered the device (rule 7).
+        'session_id'],
   'rule 3: push_subscriptions has exactly the planned columns'
 );
 select fk_ok(
