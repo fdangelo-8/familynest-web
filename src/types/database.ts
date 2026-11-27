@@ -349,6 +349,43 @@ export type Database = {
           },
         ];
       };
+      data_exports: {
+        Row: {
+          created_at: string;
+          expires_at: string | null;
+          id: string;
+          ready_at: string | null;
+          requested_at: string;
+          size_bytes: number | null;
+          status: Database["public"]["Enums"]["data_export_status"];
+          updated_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          expires_at?: string | null;
+          id?: string;
+          ready_at?: string | null;
+          requested_at?: string;
+          size_bytes?: number | null;
+          status?: Database["public"]["Enums"]["data_export_status"];
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          expires_at?: string | null;
+          id?: string;
+          ready_at?: string | null;
+          requested_at?: string;
+          size_bytes?: number | null;
+          status?: Database["public"]["Enums"]["data_export_status"];
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       deadline_assignees: {
         Row: {
           created_at: string;
@@ -2133,6 +2170,10 @@ export type Database = {
         };
         Returns: string;
       };
+      cancel_account_deletion: {
+        Args: Record<PropertyKey, never>;
+        Returns: undefined;
+      };
       claim_calendar_outbox_items: {
         Args: {
           p_at?: string;
@@ -2333,6 +2374,7 @@ export type Database = {
         Args: { p_claim_token?: string; p_id: string; p_retry_at: string };
         Returns: undefined;
       };
+      fail_data_export: { Args: { p_id: string }; Returns: undefined };
       fail_push_delivery: {
         Args: {
           p_claim_token: string;
@@ -2364,6 +2406,11 @@ export type Database = {
           title: string;
         }[];
       };
+      finish_data_export: {
+        Args: { p_id: string; p_size_bytes: number };
+        Returns: undefined;
+      };
+      forget_data_export: { Args: { p_id: string }; Returns: undefined };
       get_account_deletion_outcome: {
         Args: Record<PropertyKey, never>;
         Returns: {
@@ -2433,6 +2480,13 @@ export type Database = {
           title: string;
         }[];
       };
+      get_my_account_deletion: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          delete_on: string;
+          deletes_household: boolean;
+        }[];
+      };
       get_my_consents: {
         Args: Record<PropertyKey, never>;
         Returns: {
@@ -2442,6 +2496,17 @@ export type Database = {
           privacy_effective_from: string;
           required_ok: boolean;
           terms_effective_from: string;
+        }[];
+      };
+      get_my_data_export: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          expires_at: string;
+          id: string;
+          ready_at: string;
+          requested_at: string;
+          size_bytes: number;
+          status: Database["public"]["Enums"]["data_export_status"];
         }[];
       };
       get_notification_preferences: {
@@ -2573,6 +2638,13 @@ export type Database = {
           starts_at: string;
         }[];
       };
+      list_expired_data_exports: {
+        Args: { p_limit: number };
+        Returns: {
+          export_id: string;
+          object_path: string;
+        }[];
+      };
       list_household_events: {
         Args: { p_from: string; p_to: string };
         Returns: {
@@ -2681,6 +2753,10 @@ export type Database = {
         Returns: undefined;
       };
       renew_invitation: { Args: { p_member_id: string }; Returns: undefined };
+      request_account_deletion: {
+        Args: { p_expect_household_deletion: boolean };
+        Returns: string;
+      };
       request_ride: {
         Args: {
           p_event_id: string;
@@ -2717,6 +2793,13 @@ export type Database = {
           isOneToOne: false;
           isSetofReturn: true;
         };
+      };
+      run_account_job: {
+        Args: {
+          p_at?: string;
+          p_job: Database["public"]["Enums"]["account_job"];
+        };
+        Returns: number;
       };
       run_notification_job: {
         Args: {
@@ -2873,6 +2956,7 @@ export type Database = {
           space: Database["public"]["Enums"]["space_key"];
         }[];
       };
+      start_data_export: { Args: Record<PropertyKey, never>; Returns: string };
       sync_external_calendar_events: {
         Args: {
           p_at?: string;
@@ -2884,6 +2968,13 @@ export type Database = {
         Returns: {
           deleted_count: number;
           imported_count: number;
+        }[];
+      };
+      take_account_deletion_mails: {
+        Args: { p_limit: number };
+        Returns: {
+          deleted_on: string;
+          email: string;
         }[];
       };
       undo_added_shopping_items: {
@@ -2995,6 +3086,7 @@ export type Database = {
       };
     };
     Enums: {
+      account_job: "deletions" | "exports" | "mail_purge" | "evidence_purge";
       appearance_mode: "light" | "dark" | "system";
       calendar_account_status: "active" | "reconnect" | "temporary_error";
       calendar_direction: "two_way" | "incoming";
@@ -3008,6 +3100,7 @@ export type Database = {
         | "usage_analytics"
         | "assistant_questions";
       consent_source: "signup" | "settings" | "first_use" | "update";
+      data_export_status: "preparing" | "ready" | "failed";
       deadline_recurrence:
         | "none"
         | "monthly"
@@ -3069,7 +3162,9 @@ export type Database = {
         | "event_reminder"
         | "ride_reminder"
         | "overlap_tomorrow"
-        | "ride_request";
+        | "ride_request"
+        | "household_handed_over"
+        | "data_export_ready";
       notification_preference:
         | "events"
         | "assigned_todos"
@@ -3257,6 +3352,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      account_job: ["deletions", "exports", "mail_purge", "evidence_purge"],
       appearance_mode: ["light", "dark", "system"],
       calendar_account_status: ["active", "reconnect", "temporary_error"],
       calendar_direction: ["two_way", "incoming"],
@@ -3271,6 +3367,7 @@ export const Constants = {
         "assistant_questions",
       ],
       consent_source: ["signup", "settings", "first_use", "update"],
+      data_export_status: ["preparing", "ready", "failed"],
       deadline_recurrence: [
         "none",
         "monthly",
@@ -3342,6 +3439,8 @@ export const Constants = {
         "ride_reminder",
         "overlap_tomorrow",
         "ride_request",
+        "household_handed_over",
+        "data_export_ready",
       ],
       notification_preference: [
         "events",
