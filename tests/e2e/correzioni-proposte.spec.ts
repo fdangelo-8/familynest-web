@@ -1242,10 +1242,9 @@ test.describe("isolamento tra nuclei", () => {
 
   async function expectNothingOfA(page: Page, route: string, withAdd: boolean) {
     await openFrame(page, route);
-    const square = page.getByRole("link", {
-      name: "Apri Casa Bianchi: membri, Esplora e impostazioni",
-    });
-    await expect(square.first()).toBeAttached();
+    // F5 (#506): the Nest of B shows in the profile of the sidebar, not in a square.
+    const profile = page.getByRole("link", { name: "Giulia, Il tuo Nest" });
+    await expect(profile.first()).toBeAttached();
     // The fixed example of the quick-add field of Oggi («nuoto Sofia giovedì
     // alle 17», text of the mockup) is not data of the Nest of A.
     const html = (await page.content()).replaceAll(FIXED_EXAMPLE, "");
