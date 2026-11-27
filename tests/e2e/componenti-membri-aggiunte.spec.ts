@@ -10,6 +10,7 @@ import {
   usersConfigured,
   type TestUserKey,
 } from "../fixtures/auth";
+import { pickDay } from "../fixtures/campi-data-ora";
 import { waitForAnimationsToEnd } from "../fixtures/animations";
 import { formatAge } from "../../src/lib/datetime";
 
@@ -242,7 +243,7 @@ test.describe("MemberSheet: aggiunta, regole dei campi", () => {
     }).format(new Date());
     const dialog = await openSheet(page, ADD);
     await dialog.getByLabel("Nome").fill("Neo");
-    await dialog.getByLabel("Data di nascita").fill(today);
+    await pickDay(dialog.getByLabel("Data di nascita"), today);
     await dialog.getByRole("button", { name: "Aggiungi Neo" }).click();
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(page.getByTestId("membri-salvato")).toContainText(

@@ -7000,7 +7000,7 @@ body {
   font-weight: var(--weight-semi);
   cursor: pointer;
 }
-.pillola-collega::after {
+.pillola-collega::before {
   content: "";
   position: absolute;
   inset: var(--space-0);
@@ -7008,7 +7008,7 @@ body {
 .pillola-collega:focus-visible {
   outline: none;
 }
-.pillola-collega:focus-visible::after {
+.pillola-collega:focus-visible::before {
   outline: var(--border-medio) solid var(--color-info);
   outline-offset: calc(-1 * var(--space-half));
   border-radius: var(--radius-m);
@@ -7028,7 +7028,7 @@ body {
   position: relative;
   cursor: default;
 }
-.pillola-collega[aria-busy="true"]::after {
+.pillola-collega[aria-busy="true"]::before {
   display: none;
 }
 .riga-collega__stato {

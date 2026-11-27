@@ -466,6 +466,7 @@ test.describe("Riga «Collega»", () => {
       );
     }
     const text = rows.getByText("Lavoro e calendari condivisi");
+    await text.scrollIntoViewIfNeeded();
     const textBox = await box(text);
     const hit = await page.evaluate(
       ([x, y]) => {
@@ -636,6 +637,7 @@ test.describe("Selettore di data, telefono", () => {
     const field = fieldOf(page, "ds-data-limiti", /^Fino a/);
     await field.click();
     const dialog = page.getByRole("dialog", { name: "Fino a" });
+    await waitForAnimationsToEnd(page);
     const nine = dialog.locator('[data-day="2026-11-09"]');
     await expect(nine).toHaveAttribute("aria-disabled", "true");
     // A day that cannot be chosen: the click is forced past the check of

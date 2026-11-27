@@ -396,8 +396,13 @@ test.describe("campi e controlli", () => {
     await expect(time).toHaveAttribute("inputmode", "numeric");
     await expect(time).toHaveValue("17:00");
     for (const field of [date, time, page.getByTestId("campo-predefinito")]) {
-      // #503: --size-campo, the label sits inside the box.
-      await expect(field).toHaveCSS("height", "56px");
+      // #503: --size-campo, the label sits inside the box. F4c (#505): the
+      // date is a button whose text may wrap in a narrow pair, so it is the
+      // minimum height that holds for it.
+      await expect(field).toHaveCSS(
+        field === date ? "min-height" : "height",
+        "56px",
+      );
       await expect(field).toHaveCSS("border-top-left-radius", "12px");
     }
   });

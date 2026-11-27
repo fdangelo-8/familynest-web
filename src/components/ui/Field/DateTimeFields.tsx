@@ -160,7 +160,13 @@ export function DateField({
       const target = event.target as Node;
       if (boxRef.current?.contains(target)) return;
       if (triggerRef.current?.contains(target)) return;
-      closeBox(true);
+      closeBox(false);
+      // The focus goes back to the field, unless the tap landed on another
+      // control that took it (the browser moves it after this event).
+      window.setTimeout(() => {
+        const active = document.activeElement;
+        if (!active || active === document.body) triggerRef.current?.focus();
+      }, 0);
     };
     document.addEventListener("pointerdown", onPointerDown);
     return () => document.removeEventListener("pointerdown", onPointerDown);
