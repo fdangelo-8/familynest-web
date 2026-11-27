@@ -6632,7 +6632,6 @@ body {
 }
 .volti__voce {
   display: grid;
-  justify-items: center;
   align-content: start;
   gap: var(--space-1);
   width: 100%;
@@ -6649,13 +6648,20 @@ body {
   cursor: pointer;
 }
 .volti__voce .avatar {
+  justify-self: center;
   margin-bottom: var(--space-1);
 }
+/* Il testo occupa la colonna e va a capo: col testo grande un nome lungo non
+   esce dalla griglia (#313) */
 .volti__nome {
   display: block;
+  min-width: var(--space-0);
+  overflow-wrap: anywhere;
 }
 .volti__riga {
   display: block;
+  min-width: var(--space-0);
+  overflow-wrap: anywhere;
   font-size: var(--text-nota-size);
   line-height: var(--text-nota-line);
   font-weight: var(--weight-normale);
@@ -6666,6 +6672,7 @@ body {
   place-items: center;
   width: var(--size-avatar-xl);
   height: var(--size-avatar-xl);
+  justify-self: center;
   margin-bottom: var(--space-1);
   border: var(--border-medio) dashed var(--color-filo-2);
   border-radius: var(--radius-tondo);
@@ -6743,6 +6750,11 @@ body {
   width: calc(var(--size-icona-l) + var(--space-1));
   height: calc(var(--size-icona-l) + var(--space-1));
   margin-bottom: var(--space-2);
+}
+.tessera__titolo,
+.tessera__riga {
+  min-width: var(--space-0);
+  overflow-wrap: anywhere;
 }
 .tessera__titolo {
   font-size: var(--text-sottotitolo-size);
