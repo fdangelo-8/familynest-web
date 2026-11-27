@@ -8,38 +8,64 @@
    zero prima dei decimali: i valori non cambiano.
    ========================================================= */
 :root {
+  /* #634: valori del tema chiaro. Il tema scuro è nei due blocchi sotto
+     :root (attributo data-aspetto e preferenza del sistema), con gli stessi
+     nomi. Un nome per ruolo della tavolozza (docs/design/tavolozza.json). */
+  color-scheme: light;
+
   /* ---------- Colori: base ---------- */
   --color-carta: #ffffff; /* sfondo delle pagine: le pagine sono bianche */
-  --color-carta-2: #f4f6f4; /* fondi quieti: avvisi, scheletri, segnaposto foto */
+  --color-carta-2: #f4f6f4; /* fondi quieti: avvisi, segnaposto foto, barra laterale */
   --color-superficie: #ffffff; /* schede, campi, barre */
-  --color-fondo-app: #f5f6f4; /* fondo sotto Oggi e dietro la barra */
+  --color-fondo-app: #f5f6f4; /* superato (#634): nessun uso */
   --color-premuto: #ecefec; /* riga premuta, da bordo a bordo */
+  --color-scheletro: #dce2df; /* scheletri di caricamento */
   --color-scelta-tenue: #e2e9e5; /* voce scelta del selettore, scheda di scelta premuta */
-  --color-anello-scelta: #b5cbcb; /* anello decorativo attorno a una scelta */
-  --color-inchiostro: #10262a; /* testo principale, azione principale */
-  --color-inchiostro-2: #55686c; /* testo secondario sulle pagine bianche */
-  --color-inchiostro-2-fondo: #4a5f63; /* testo secondario sul fondo dell'app */
+  --color-anello-scelta: #b5cbcb; /* superato (#634): nessun uso */
+  --color-inchiostro: #10262a; /* testo principale */
+  --color-inchiostro-medio: #33474b; /* testo tra principale e secondario */
+  --color-inchiostro-2: #55686c; /* testo secondario */
+  --color-inchiostro-2-fondo: #4a5f63; /* superato (#634): nessun uso */
   --color-inchiostro-3: #8a989a; /* solo elementi non testuali (tacche, segni) */
-  --color-azione: #0f3d44; /* pulsante primario, voce scelta della barra */
-  --color-azione-premuto: #0a2d33; /* primario premuto e al passaggio del mouse */
+  --color-link: #0e5a66; /* collegamenti nel testo */
+  --color-pieno: #10262a; /* fondo dei controlli pieni: sopra va --color-latte */
+  --color-azione: #0f3d44; /* accento: passaggio del mouse dei pieni, voce scelta della barra */
+  --color-azione-premuto: #0a2d33; /* superato (#634): nessun uso */
+  --color-fuoco: #0f3d44; /* anello del fuoco da tastiera */
   --color-filo: #e4e8e5; /* bordi e divisori */
   --color-filo-2: #c3ccc9; /* bordi di tessere e schede a riposo */
-  --color-filo-tenue: #aeb9b7; /* solo decorazione (2,01:1) */
+  --color-filo-tenue: #aeb9b7; /* superato (#634): nessun uso */
   --color-filo-barra: rgba(16, 38, 42, 0.1);
-  --color-filo-campo: #7f9092; /* bordo dei campi a riposo (3,33:1) */
-  --color-corsia-vuota: #eef1ef; /* barra vuota delle corsie del calendario */
-  --color-notte: #1b1a17; /* blocchi scuri: porte, piano, onboarding */
+  --color-filo-campo: #869390; /* bordo dei campi a riposo (3,19:1 sul bianco) */
+  --color-corsia-vuota: #eef1ef; /* superato (#634): nessun uso */
+  --color-notte: #0b2a31; /* blocchi scuri e fondo di marca: porte, piano, onboarding */
   --color-notte-2: #2a2925; /* elementi sopra notte */
-  --color-latte: #f4f2ec; /* testo e superfici chiare su inchiostro e notte */
-  --color-latte-2: #b9b5ac; /* testo secondario su notte */
+  --color-latte: #ffffff; /* testo e segni sopra i fondi pieni e sopra notte */
+  --color-latte-2: #d5dedc; /* testo secondario sopra fumetto e notte, mai sopra pieno */
+  --color-barra: rgba(255, 255, 255, 0.52); /* barra di navigazione */
+  --color-cielo: #bbe1f4; /* splash: cielo */
+  --color-cielo-mezzo: #2a7f8e; /* splash: passaggio */
+  --color-segnaposto: #f1e9dd; /* fondo del segnaposto di una foto */
+  --color-segnaposto-testo: #5b5145;
+  --color-idea-1: #e4eedd; /* fondi delle schede idea */
+  --color-idea-2: #efe6f2;
+  --color-idea-3: #f6e4cf;
+  --color-scena-fondo: #dde9e4; /* fondo dietro la scena */
+  --color-logo-a: #0f3d44; /* logo sulla pagina */
+  --color-logo-b: #2f8f99;
+  --color-logo-a-notte: #f2f6f3; /* logo sul fondo di marca */
+  --color-logo-b-notte: #8fd0cb;
+  --color-fumetto: #10262a; /* toast e fumetto */
+  --color-assistente: #fce7e0; /* fondo di Chiedi */
 
   /* ---------- Colori: Liberi insieme ---------- */
-  --color-insieme: #fbeaab; /* fondo */
-  --color-insieme-bordo: #e0be52; /* bordo */
-  --color-insieme-testo: #4a3906; /* testo */
+  --color-insieme: #fcefc0; /* fondo */
+  --color-insieme-bordo: #a38009; /* bordo */
+  --color-insieme-testo: #4a4630; /* testo */
 
   /* ---------- Colori: adesso ---------- */
   --color-adesso: #f6c945; /* «adesso»: il giallo vuol dire solo questo */
+  --color-adesso-testo: #10262a; /* testo sopra «adesso» e sopra i fondi chiari fissi */
   --color-adesso-tinta: #fcefc0; /* fondo tenue dell'«adesso» */
 
   /* ---------- Colori: impegni «Occupato» (righe grigie) ---------- */
@@ -50,8 +76,15 @@
   --color-ok: #1b6b45;
   --color-avviso: #a15c07;
   --color-allerta: #b3261e;
+  --color-allerta-pieno: #b3261e; /* fondo dei punti e dei pulsanti rossi pieni */
   --color-allerta-fondo: #fceeea; /* fondo dell'avviso d'errore e del campo sbagliato */
-  --color-scaduto: #a8321f; /* scadenza passata */
+  --color-allerta-bordo: #e7b9ab; /* bordo dell'avviso d'errore, solo decorazione */
+  --color-scaduto: #a8321f; /* superato (#634): nessun uso */
+  --color-conferma: #2f8f99; /* segno di conferma */
+  --color-conferma-fondo: #cfe5e1;
+  --color-aiutante: #d5dbd8; /* fondo dell'aiutante */
+  --color-piano-icona-1: #ffffff; /* dischi dei Piani */
+  --color-piano-icona-2: #bfe5e1;
   --color-allerta-scuro: #a82a27; /* passaggio del mouse e premuto del bottone rosso pieno */
   --color-info: #3355cc;
   --color-bianco: #ffffff;
@@ -62,33 +95,40 @@
      Mancano le tinte di sabbia, azzurro, rosa e ardesia: usano il neutro. */
   --color-membro-corallo: #f2765c;
   --color-membro-corallo-tinta: #fdeae5;
-  --color-membro-corallo-corsia: #ef5839;
+  --color-membro-corallo-corsia: #d75e45;
   --color-membro-glicine: #b9a2ec;
   --color-membro-glicine-tinta: #f2ecfc;
-  --color-membro-glicine-corsia: #9978e3;
+  --color-membro-glicine-corsia: #8f78bf;
   --color-membro-menta: #8fd0a8;
   --color-membro-menta-tinta: #e7f5ec;
-  --color-membro-menta-corsia: #419a63;
+  --color-membro-menta-corsia: #54936e;
   --color-membro-blu: #3f6fe0;
   --color-membro-blu-tinta: #e5ecfc;
   --color-membro-blu-corsia: #3f6fe0;
   --color-membro-ambra: #e8a15c;
   --color-membro-ambra-tinta: #fceedd;
-  --color-membro-ambra-corsia: #ce741d;
+  --color-membro-ambra-corsia: #b9762e;
   --color-membro-sabbia: #d9b88f;
-  --color-membro-sabbia-corsia: #b5803d;
+  --color-membro-sabbia-tinta: #faf5ef;
+  --color-membro-sabbia-corsia: #a3845d;
   --color-membro-azzurro: #7cc7e0;
-  --color-membro-azzurro-corsia: #2c95b8;
+  --color-membro-azzurro-tinta: #edf7fb;
+  --color-membro-azzurro-corsia: #4792aa;
   --color-membro-rosa: #f0a3c0;
-  --color-membro-rosa-corsia: #e4588d;
+  --color-membro-rosa-tinta: #fdf2f6;
+  --color-membro-rosa-corsia: #bc7390;
   --color-membro-ardesia: #68778d; /* decisione di Francesco, 25/11 (Fable: #6b7a90) */
+  --color-membro-ardesia-tinta: #eaecef;
   --color-membro-ardesia-corsia: #68778d;
   --color-membro-cannella: #af8273;
   --color-membro-cannella-tinta: #f5ece8;
-  --color-membro-cannella-corsia: #ad7f70;
+  --color-membro-cannella-corsia: #a67a6b;
   --color-membro-neutro: #b4bfbc; /* chi non ha un colore (solo interfaccia) */
-  --color-membro-neutro-tinta: #f1f4f2;
-  --color-membro-neutro-corsia: #7c8f8a;
+  --color-membro-neutro-tinta: #eef1ef;
+  --color-membro-neutro-corsia: #55686c;
+  --color-nessuno: #b4bfbc; /* pallino e barretta di ciò che non è di nessuno: mai con un'iniziale */
+  --color-iniziale: #10262a; /* iniziale sul pallino scelto */
+  --color-iniziale-blu: #ffffff; /* iniziale sul pallino blu e ardesia */
 
   /* ---------- Colori: scena di Oggi ---------- */
   --color-scena-mattino-cielo: #bfe3f7;
@@ -111,8 +151,8 @@
   --color-marchio-icloud: #1c1c1e;
 
   /* ---------- Colori: trasparenze ---------- */
-  --color-velo: rgba(23, 24, 28, 0.3); /* sotto fogli e modali */
-  --color-ombra: rgba(16, 38, 42, 0.12);
+  --color-velo: rgba(16, 38, 42, 0.36); /* sotto fogli e modali */
+  --color-ombra: rgba(16, 38, 42, 0.08);
   --color-ombra-forte: rgba(16, 38, 42, 0.2);
   --color-ombra-adesivo: rgba(0, 0, 0, 0.25);
   --color-avatar-su-colore: rgba(
@@ -348,4 +388,171 @@
   --z-velo: 5;
   --z-foglio: 6;
   --z-toast: 7;
+}
+
+/* #634: tema scuro. Due blocchi identici (un test lo controlla): il primo con
+   l'attributo data-aspetto="scuro", il secondo con la preferenza del sistema
+   quando l'attributo non dice «chiaro». Solo CSS, senza script: niente lampo.
+   Dove un ruolo è «uguale nei due temi» il token non compare. Non si usa
+   light-dark(): manca su iOS prima della 17.5. */
+:root[data-aspetto="scuro"] {
+  color-scheme: dark;
+  --color-carta: #0f1819;
+  --color-carta-2: #172224;
+  --color-superficie: #1a2729;
+  --color-premuto: #263639;
+  --color-scheletro: #2b3a3c;
+  --color-scelta-tenue: #263639;
+  --color-inchiostro: #eaf2ee;
+  --color-inchiostro-medio: #c9d5d2;
+  --color-inchiostro-2: #a9c0bf;
+  --color-inchiostro-3: #84999a;
+  --color-link: #7fd3de;
+  --color-pieno: #1f7d8a;
+  --color-azione: #1f7d8a;
+  --color-azione-premuto: #1f7d8a;
+  --color-fuoco: #f2f7f5;
+  --color-filo: #2b3a3c;
+  --color-filo-2: #3a4f52;
+  --color-filo-barra: #2b3a3c;
+  --color-filo-campo: #7e9496;
+  --color-barra: rgba(30, 45, 48, 0.9);
+  --color-cielo: #12294a;
+  --color-cielo-mezzo: #0d2238;
+  --color-segnaposto: #2e2a22;
+  --color-segnaposto-testo: #d9cdb8;
+  --color-idea-1: #24332a;
+  --color-idea-2: #322a38;
+  --color-idea-3: #3a2f22;
+  --color-scena-fondo: #1d3536;
+  --color-logo-a: #f2f6f3;
+  --color-logo-b: #8fd0cb;
+  --color-fumetto: #2f4448;
+  --color-assistente: #3b2621;
+  --color-insieme: #3a3112;
+  --color-insieme-bordo: #e2b93b;
+  --color-insieme-testo: #f1e3a8;
+  --color-adesso-tinta: #3a3112;
+  --color-occupato-1: #172224;
+  --color-occupato-2: #263639;
+  --color-ok: #8fd0cb;
+  --color-avviso: #eaf2ee;
+  --color-allerta: #ff9d90;
+  --color-allerta-pieno: #c4483a;
+  --color-allerta-fondo: #3a1e1b;
+  --color-allerta-bordo: #7a3a32;
+  --color-allerta-scuro: #c4483a;
+  --color-info: #eaf2ee;
+  --color-conferma: #8fd0cb;
+  --color-conferma-fondo: #1f3f42;
+  --color-piano-icona-1: #10262a;
+  --color-piano-icona-2: #0e5a66;
+  --color-nessuno: #5e6f72;
+  --color-membro-corallo-corsia: #f2765c;
+  --color-membro-corallo-tinta: #452f29;
+  --color-membro-glicine-corsia: #b9a2ec;
+  --color-membro-glicine-tinta: #38394c;
+  --color-membro-menta-corsia: #8fd0a8;
+  --color-membro-menta-tinta: #2e443b;
+  --color-membro-blu-corsia: #4e7be2;
+  --color-membro-blu-tinta: #1b2d49;
+  --color-membro-ambra-corsia: #e8a15c;
+  --color-membro-ambra-tinta: #433929;
+  --color-membro-sabbia-corsia: #d9b88f;
+  --color-membro-sabbia-tinta: #1e2b2e;
+  --color-membro-azzurro-corsia: #7cc7e0;
+  --color-membro-azzurro-tinta: #1e2b2e;
+  --color-membro-rosa-corsia: #f0a3c0;
+  --color-membro-rosa-tinta: #1e2b2e;
+  --color-membro-ardesia-corsia: #68778d;
+  --color-membro-ardesia-tinta: #1e2b2e;
+  --color-membro-cannella-corsia: #af8273;
+  --color-membro-cannella-tinta: #35312f;
+  --color-membro-neutro-corsia: #a9c0bf;
+  --color-membro-neutro-tinta: #1e2b2e;
+  --color-velo: rgba(0, 0, 0, 0.62);
+  --color-ombra: rgba(0, 0, 0, 0.4);
+  --color-ombra-forte: rgba(0, 0, 0, 0.6);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-aspetto="chiaro"]) {
+    color-scheme: dark;
+    --color-carta: #0f1819;
+    --color-carta-2: #172224;
+    --color-superficie: #1a2729;
+    --color-premuto: #263639;
+    --color-scheletro: #2b3a3c;
+    --color-scelta-tenue: #263639;
+    --color-inchiostro: #eaf2ee;
+    --color-inchiostro-medio: #c9d5d2;
+    --color-inchiostro-2: #a9c0bf;
+    --color-inchiostro-3: #84999a;
+    --color-link: #7fd3de;
+    --color-pieno: #1f7d8a;
+    --color-azione: #1f7d8a;
+    --color-azione-premuto: #1f7d8a;
+    --color-fuoco: #f2f7f5;
+    --color-filo: #2b3a3c;
+    --color-filo-2: #3a4f52;
+    --color-filo-barra: #2b3a3c;
+    --color-filo-campo: #7e9496;
+    --color-barra: rgba(30, 45, 48, 0.9);
+    --color-cielo: #12294a;
+    --color-cielo-mezzo: #0d2238;
+    --color-segnaposto: #2e2a22;
+    --color-segnaposto-testo: #d9cdb8;
+    --color-idea-1: #24332a;
+    --color-idea-2: #322a38;
+    --color-idea-3: #3a2f22;
+    --color-scena-fondo: #1d3536;
+    --color-logo-a: #f2f6f3;
+    --color-logo-b: #8fd0cb;
+    --color-fumetto: #2f4448;
+    --color-assistente: #3b2621;
+    --color-insieme: #3a3112;
+    --color-insieme-bordo: #e2b93b;
+    --color-insieme-testo: #f1e3a8;
+    --color-adesso-tinta: #3a3112;
+    --color-occupato-1: #172224;
+    --color-occupato-2: #263639;
+    --color-ok: #8fd0cb;
+    --color-avviso: #eaf2ee;
+    --color-allerta: #ff9d90;
+    --color-allerta-pieno: #c4483a;
+    --color-allerta-fondo: #3a1e1b;
+    --color-allerta-bordo: #7a3a32;
+    --color-allerta-scuro: #c4483a;
+    --color-info: #eaf2ee;
+    --color-conferma: #8fd0cb;
+    --color-conferma-fondo: #1f3f42;
+    --color-piano-icona-1: #10262a;
+    --color-piano-icona-2: #0e5a66;
+    --color-nessuno: #5e6f72;
+    --color-membro-corallo-corsia: #f2765c;
+    --color-membro-corallo-tinta: #452f29;
+    --color-membro-glicine-corsia: #b9a2ec;
+    --color-membro-glicine-tinta: #38394c;
+    --color-membro-menta-corsia: #8fd0a8;
+    --color-membro-menta-tinta: #2e443b;
+    --color-membro-blu-corsia: #4e7be2;
+    --color-membro-blu-tinta: #1b2d49;
+    --color-membro-ambra-corsia: #e8a15c;
+    --color-membro-ambra-tinta: #433929;
+    --color-membro-sabbia-corsia: #d9b88f;
+    --color-membro-sabbia-tinta: #1e2b2e;
+    --color-membro-azzurro-corsia: #7cc7e0;
+    --color-membro-azzurro-tinta: #1e2b2e;
+    --color-membro-rosa-corsia: #f0a3c0;
+    --color-membro-rosa-tinta: #1e2b2e;
+    --color-membro-ardesia-corsia: #68778d;
+    --color-membro-ardesia-tinta: #1e2b2e;
+    --color-membro-cannella-corsia: #af8273;
+    --color-membro-cannella-tinta: #35312f;
+    --color-membro-neutro-corsia: #a9c0bf;
+    --color-membro-neutro-tinta: #1e2b2e;
+    --color-velo: rgba(0, 0, 0, 0.62);
+    --color-ombra: rgba(0, 0, 0, 0.4);
+    --color-ombra-forte: rgba(0, 0, 0, 0.6);
+  }
 }

@@ -600,6 +600,22 @@
       "chiaro": "#D5DBD8",
       "scuro": "#D5DBD8",
       "uguale_nei_due_temi": true
+    },
+    {
+      "gruppo": "Persone e corsie",
+      "nome": "--c-piano-icona-1",
+      "ruolo": "Icona sul disco di Plus (pagina «Piani», Passo 17)",
+      "chiaro": "#FFFFFF",
+      "scuro": "#10262A",
+      "uguale_nei_due_temi": false
+    },
+    {
+      "gruppo": "Persone e corsie",
+      "nome": "--c-piano-icona-2",
+      "ruolo": "Icona sul disco di Plus Max (pagina «Piani», Passo 17)",
+      "chiaro": "#BFE5E1",
+      "scuro": "#0E5A66",
+      "uguale_nei_due_temi": false
     }
   ],
   "persone": [

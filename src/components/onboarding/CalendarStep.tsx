@@ -10,7 +10,6 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import { clearLinkResult } from "@/app/onboarding/calendario/actions";
 import { Brand, Claim, Stickers } from "@/components/accesso/parts";
 import type { LinkResult } from "@/lib/calendar-sync/oauth";
 import { brandText, messages } from "@/lib/brand";
@@ -247,7 +246,11 @@ export function CalendarStep({
   // account the focus goes to the main button so the keyboard moves on.
   useEffect(() => {
     if (initialNotice === null) return;
-    void clearLinkResult();
+    // A route, not a server action: an action that changes a cookie makes
+    // Next render the page again and the title leaves the head (#590).
+    void fetch("/api/calendar-sync/link-result", { method: "POST" }).catch(
+      () => undefined,
+    );
     if (!isLinked(initialNotice)) return;
     for (const box of [mobileActions.current, desktopActions.current]) {
       const button = box?.querySelector("button");

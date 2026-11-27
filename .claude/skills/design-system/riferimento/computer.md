@@ -12,11 +12,11 @@ Testo completo e scorciatoie in `docs/design/computer/regole.md`. Le regole che 
 
 | Larghezza        | Disposizione                                                                                                                   |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| fino a 759 px    | Disegno per telefono (barra in basso). Il web da telefono usa le pagine dell'app: cambia solo ciò che è in `web-da-telefono/`. |
-| da 760 a 1099 px | Barra laterale a icone (72 px), contenuto a una colonna (tavola `oggi/` a 1040 px).                                            |
-| da 1100 px       | Barra laterale intera (248 px), contenuto a 12 colonne, canalina 24 px, margini 32 px. Tavole a 1280 px.                       |
+| fino a 899 px    | Disegno per telefono (barra in basso). Il web da telefono usa le pagine dell'app: cambia solo ciò che è in `web-da-telefono/`. |
+| da 900 a 1279 px | Barra laterale a icone (72 px), contenuto a una colonna (tavola `oggi/` a 1040 px).                                            |
+| da 1280 px       | Barra laterale intera (248 px), contenuto a 12 colonne, canalina 24 px, margini 32 px. Tavole a 1280 px.                       |
 | da 1440 px       | Contenuto fermo a 1200 px, terza colonna dove serve (Oggi). Oltre crescono solo i margini.                                     |
-| tablet           | Non disegnato: fuori perimetro.                                                                                                |
+| tablet           | Il tablet non ha pagine sue: sotto 900 px il telefono, da 900 px il computer; sotto 600 px di altezza sempre il telefono (D8). |
 
 - **Il testo non si allarga:** colonne di lettura di 720 px al massimo (Impostazioni 600, «Chiedi a …» 680, pagine senza account 680 o 960 su due colonne, pagamento 1000). Lo spazio in più diventa una seconda colonna, non righe più lunghe.
 - **Barra laterale** al posto della barra in basso: le stesse quattro voci (Oggi, Calendario, Casa, Spazi), sopra il marchio e la lente «Io · Nest», sotto il gruppo fisso «Di casa» (Spesa, Ricette, Animali), in fondo «Chiedi a Nest» e il profilo. Il + diventa un pulsante scritto in alto a destra, sempre nello stesso posto («Nuovo impegno», «Nuova ricetta»…).
@@ -96,7 +96,7 @@ Barra laterale che si stringe all'apertura del pannello 200 ms (`--durata-rapida
 
 ## Fuoco e mouse
 
-- **Anello di fuoco su computer:** `outline: var(--border-medio) solid var(--color-azione); outline-offset: var(--space-half)` (2 px, `#0F3D44`, 11,86:1 sul bianco, 11,01:1 sulla barra laterale); `--color-latte` o bianco sui fondi scuri. Sostituisce `--color-info` (domanda 4 di `telefono.md`): lo decide il lavoro `shared/*` per tutta l'app, non una pagina.
+- **Anello di fuoco su computer:** `outline: var(--border-medio) solid var(--color-fuoco); outline-offset: var(--space-half)` (2 px, `#0F3D44` sul chiaro, `#F2F7F5` nel tema scuro; 11,86:1 sul bianco, 11,01:1 sulla barra laterale); `--color-latte` o bianco sui fondi scuri. Ha sostituito `--color-info` (domanda 4 di `telefono.md`, risolta): il token è `--color-fuoco`, definito in `src/app/globals.css`.
 - Un solo elemento con il fuoco alla volta; l'errore di un campo non colora l'etichetta (correzione 6 del Passo 12).
 - Mouse sopra: `--color-riga-mouse` sulle righe, `--color-voce-mouse` sulle voci della barra, `--color-azione-mouse` sui pulsanti pieni, `--color-filo` sul quieto. Scelta come sul telefono.
 

@@ -12,11 +12,12 @@ import {
 // Everything runs on the design-system gallery (no data, no login), on the
 // pure functions of app-routes.ts and on static checks of the source files.
 // Colors (#196): ink = rgb(16, 38, 42), ink-2 = rgb(85, 104, 108),
-// night-2 = rgb(42, 41, 37), milk = rgb(244, 242, 236).
+// #634: the mouse over a full control is --color-azione = rgb(15, 61, 68)
+// and the text over it --color-latte = rgb(255, 255, 255).
 
 const INK = "rgb(16, 38, 42)";
-const NIGHT_2 = "rgb(42, 41, 37)";
-const MILK = "rgb(244, 242, 236)";
+const NIGHT_2 = "rgb(15, 61, 68)";
+const MILK = "rgb(255, 255, 255)";
 
 const tid = (page: Page, id: string) => page.getByTestId(id);
 
@@ -697,9 +698,16 @@ test.describe("Accessibilità e regole CSS", () => {
         // Approved difference (#313, text up to 200%): .selettore has
         // min-height instead of height, so a larger text does not overflow it.
         const enlargedText = rule.replace(";height:", ";min-height:");
+        // Approved difference (#634, dark theme): a full ground is
+        // --color-pieno, not --color-inchiostro (spec 634, §3 A).
+        const fullGround = rule.replace(
+          "background:var(--color-inchiostro)",
+          "background:var(--color-pieno)",
+        );
         return !(
           (rule.startsWith(".campo-rapido|") && copied.has(approved)) ||
-          (rule.startsWith(".selettore|") && copied.has(enlargedText))
+          (rule.startsWith(".selettore|") && copied.has(enlargedText)) ||
+          copied.has(fullGround)
         );
       });
     expect(missing).toEqual([]);

@@ -670,6 +670,7 @@ export function Gallery() {
     <main className={styles.pagina}>
       <h1 className="t-titolo-pagina">Design system</h1>
       <TypographySection />
+      <ThemeSection />
       <ButtonsSection />
       <FieldsSection />
       <ControlsSection />
@@ -786,6 +787,24 @@ function AccessParts() {
           <p className="t-titolo-scheda">{brandText(messages.brand.enter)}</p>
           <p className="t-corpo">{askNest()}</p>
           <p className="t-corpo">{nestEnergy()}</p>
+        </div>
+      </Example>
+    </Section>
+  );
+}
+
+// Dark theme (#634): one image per theme, the other one is hidden with CSS.
+function ThemeSection() {
+  return (
+    <Section id="tema" title="Tema">
+      <Example caption="solo-chiaro · solo-scuro">
+        <div className="colonna" data-testid="solo-tema">
+          <div className="solo-chiaro" data-testid="solo-chiaro">
+            <p className="t-corpo">Solo col tema chiaro</p>
+          </div>
+          <div className="solo-scuro" data-testid="solo-scuro">
+            <p className="t-corpo">Solo col tema scuro</p>
+          </div>
         </div>
       </Example>
     </Section>

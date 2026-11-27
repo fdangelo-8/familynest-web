@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { waitForAnimationsToEnd } from "../fixtures/animations";
 import {
   FULL_WEEK,
   SMALL_WEEK,
@@ -50,6 +51,9 @@ async function duplicatedIds(page: Page) {
 }
 
 async function expectClean(page: Page) {
+  // The lens button changes colour with a CSS transition: axe must not read
+  // the contrast halfway (#590).
+  await waitForAnimationsToEnd(page);
   expect(await violations(page)).toEqual([]);
   expect(await duplicatedIds(page)).toEqual([]);
 }
@@ -756,12 +760,14 @@ test("contrasto: testi principali e axe color-contrast", async ({
     }
 
     // The same, as axe measures it, on both lenses.
-    const run = async () =>
-      (
+    const run = async () => {
+      await waitForAnimationsToEnd(page);
+      return (
         await new AxeBuilder({ page }).withRules(["color-contrast"]).analyze()
       ).violations
         .filter((v) => v.impact === "serious" || v.impact === "critical")
         .map((v) => v.nodes.map((n) => n.target.join(" ")));
+    };
     expect(await run()).toEqual([]);
     await page
       .getByRole("group", { name: /Punto di vista/ })

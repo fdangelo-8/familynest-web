@@ -44,67 +44,78 @@
   --c: var(--color-membro-corallo);
   --c-tinta: var(--color-membro-corallo-tinta);
   --c-corsia: var(--color-membro-corallo-corsia);
-  --c-iniziale: var(--color-inchiostro);
+  --c-iniziale: var(--color-iniziale);
+  --c-spento: color-mix(in srgb, var(--c) 30%, var(--color-carta));
 }
 .membro-glicine {
   --c: var(--color-membro-glicine);
   --c-tinta: var(--color-membro-glicine-tinta);
   --c-corsia: var(--color-membro-glicine-corsia);
-  --c-iniziale: var(--color-inchiostro);
+  --c-iniziale: var(--color-iniziale);
+  --c-spento: color-mix(in srgb, var(--c) 30%, var(--color-carta));
 }
 .membro-salvia {
   --c: var(--color-membro-menta);
   --c-tinta: var(--color-membro-menta-tinta);
   --c-corsia: var(--color-membro-menta-corsia);
-  --c-iniziale: var(--color-inchiostro);
+  --c-iniziale: var(--color-iniziale);
+  --c-spento: color-mix(in srgb, var(--c) 30%, var(--color-carta));
 }
 .membro-cobalto {
   --c: var(--color-membro-blu);
   --c-tinta: var(--color-membro-blu-tinta);
   --c-corsia: var(--color-membro-blu-corsia);
-  --c-iniziale: var(--color-bianco);
+  --c-iniziale: var(--color-iniziale-blu);
+  --c-spento: color-mix(in srgb, var(--c) 30%, var(--color-carta));
 }
 .membro-zafferano {
   --c: var(--color-membro-ambra);
   --c-tinta: var(--color-membro-ambra-tinta);
   --c-corsia: var(--color-membro-ambra-corsia);
-  --c-iniziale: var(--color-inchiostro);
+  --c-iniziale: var(--color-iniziale);
+  --c-spento: color-mix(in srgb, var(--c) 30%, var(--color-carta));
 }
 .membro-lampone {
   --c: var(--color-membro-sabbia);
-  --c-tinta: var(--color-membro-neutro-tinta);
+  --c-tinta: var(--color-membro-sabbia-tinta);
   --c-corsia: var(--color-membro-sabbia-corsia);
-  --c-iniziale: var(--color-inchiostro);
+  --c-iniziale: var(--color-iniziale);
+  --c-spento: color-mix(in srgb, var(--c) 30%, var(--color-carta));
 }
 .membro-ceruleo {
   --c: var(--color-membro-azzurro);
-  --c-tinta: var(--color-membro-neutro-tinta);
+  --c-tinta: var(--color-membro-azzurro-tinta);
   --c-corsia: var(--color-membro-azzurro-corsia);
-  --c-iniziale: var(--color-inchiostro);
+  --c-iniziale: var(--color-iniziale);
+  --c-spento: color-mix(in srgb, var(--c) 30%, var(--color-carta));
 }
 .membro-peonia {
   --c: var(--color-membro-rosa);
-  --c-tinta: var(--color-membro-neutro-tinta);
+  --c-tinta: var(--color-membro-rosa-tinta);
   --c-corsia: var(--color-membro-rosa-corsia);
-  --c-iniziale: var(--color-inchiostro);
+  --c-iniziale: var(--color-iniziale);
+  --c-spento: color-mix(in srgb, var(--c) 30%, var(--color-carta));
 }
 .membro-basilico {
   --c: var(--color-membro-ardesia);
-  --c-tinta: var(--color-membro-neutro-tinta);
+  --c-tinta: var(--color-membro-ardesia-tinta);
   --c-corsia: var(--color-membro-ardesia-corsia);
-  --c-iniziale: var(--color-bianco);
+  --c-iniziale: var(--color-iniziale-blu);
+  --c-spento: color-mix(in srgb, var(--c) 30%, var(--color-carta));
 }
 .membro-cannella {
   --c: var(--color-membro-cannella);
   --c-tinta: var(--color-membro-cannella-tinta);
   --c-corsia: var(--color-membro-cannella-corsia);
-  --c-iniziale: var(--color-inchiostro);
+  --c-iniziale: var(--color-iniziale);
+  --c-spento: color-mix(in srgb, var(--c) 30%, var(--color-carta));
 }
 .membro-neutro {
   --c: var(--color-membro-neutro);
   --c-tinta: var(--color-membro-neutro-tinta);
   --c-corsia: var(--color-membro-neutro-corsia);
-  --c-iniziale: var(--color-inchiostro);
+  --c-iniziale: var(--color-iniziale);
+  --c-spento: color-mix(in srgb, var(--c) 30%, var(--color-carta));
 }
 .membro-insieme {
   --c-iniziale: var(--color-inchiostro);
@@ -270,7 +281,7 @@
   width: var(--size-pallino-urgente);
   height: var(--size-pallino-urgente);
   border-radius: var(--radius-tondo);
-  background: var(--color-allerta);
+  background: var(--color-allerta-pieno);
   box-shadow: 0 0 0 var(--space-half) var(--color-superficie);
 }
 .btn-icona--carta {
@@ -341,14 +352,14 @@
   width: var(--space-4);
   height: var(--space-half);
   border-radius: var(--radius-tondo);
-  background: var(--color-inchiostro);
+  background: var(--color-pieno);
 }
 
 .btn-aggiungi {
   min-height: var(--size-barra); /* #313 */
   border: 0;
   border-radius: var(--radius-l);
-  background: var(--color-inchiostro);
+  background: var(--color-pieno);
   color: var(--color-latte);
   display: inline-flex;
   align-items: center;
@@ -363,7 +374,7 @@
   height: var(--size-etichetta);
   border-radius: var(--radius-s);
   background: var(--color-latte);
-  color: var(--color-inchiostro);
+  color: var(--color-adesso-testo);
   display: grid;
   place-items: center;
 }
@@ -410,7 +421,7 @@
   color: var(--color-inchiostro-2);
 }
 .nav-alto__voce.is-attiva {
-  background: var(--color-inchiostro);
+  background: var(--color-pieno);
   color: var(--color-latte);
 }
 .nav-alto__azioni {
@@ -528,7 +539,7 @@
 }
 .selettore__voce[aria-pressed="true"],
 .selettore__voce[aria-selected="true"] {
-  background: var(--color-inchiostro);
+  background: var(--color-pieno);
   color: var(--color-latte);
 }
 .selettore__conteggio {
@@ -891,7 +902,7 @@
   cursor: pointer;
 }
 .puntina[aria-pressed="true"] {
-  background: var(--color-inchiostro);
+  background: var(--color-pieno);
   color: var(--color-latte);
 }
 .scheda-modulo--scura .puntina {
@@ -899,7 +910,7 @@
 }
 .scheda-modulo--scura .puntina[aria-pressed="true"] {
   background: var(--color-latte);
-  color: var(--color-inchiostro);
+  color: var(--color-adesso-testo);
 }
 
 /* Porta (blocco scuro che porta in un'altra parte dell'app) */
@@ -941,7 +952,7 @@
   height: var(--size-tocco);
   border-radius: var(--radius-m);
   background: var(--color-latte);
-  color: var(--color-inchiostro);
+  color: var(--color-adesso-testo);
   display: grid;
   place-items: center;
 }
@@ -1314,7 +1325,7 @@ button.riga-lista {
   width: var(--size-pallino);
   height: var(--size-pallino);
   border-radius: var(--radius-tondo);
-  background: var(--color-allerta);
+  background: var(--color-allerta-pieno);
 }
 
 .riga-regalo {
@@ -1534,12 +1545,12 @@ button.riga-lista {
   ); /* #313: sotto i 20 px, così al 100% resta alta 20 px */
 }
 .etichetta--scura {
-  background: var(--color-inchiostro);
+  background: var(--color-pieno);
   color: var(--color-latte);
 }
 .etichetta--allerta {
-  background: var(--color-allerta);
-  color: var(--color-bianco);
+  background: var(--color-allerta-pieno);
+  color: var(--color-latte);
 }
 .etichetta--insieme {
   background: var(--color-insieme);
@@ -1550,7 +1561,7 @@ button.riga-lista {
   width: var(--size-pallino-urgente);
   height: var(--size-pallino-urgente);
   border-radius: var(--radius-tondo);
-  background: var(--color-allerta);
+  background: var(--color-allerta-pieno);
   display: inline-block;
   flex: none;
 }
@@ -1599,7 +1610,7 @@ button.riga-lista {
   cursor: pointer;
 }
 .chip[aria-pressed="true"] {
-  background: var(--color-inchiostro);
+  background: var(--color-pieno);
   color: var(--color-latte);
   box-shadow: none;
 }
@@ -1663,8 +1674,8 @@ button.riga-lista {
   font-weight: var(--weight-semi);
 }
 .btn-primary {
-  background: var(--color-azione);
-  color: var(--color-bianco);
+  background: var(--color-pieno);
+  color: var(--color-latte);
 }
 .btn-secondary {
   background: var(--color-superficie);
@@ -1678,7 +1689,7 @@ button.riga-lista {
 }
 .btn-chiaro {
   background: var(--color-latte);
-  color: var(--color-inchiostro);
+  color: var(--color-adesso-testo);
 }
 .btn--pieno {
   width: 100%;
@@ -1711,7 +1722,7 @@ button.riga-lista {
   height: var(--size-bottone-icona);
   border-radius: var(--radius-s);
   background: var(--color-latte);
-  color: var(--color-inchiostro);
+  color: var(--color-adesso-testo);
   display: grid;
   place-items: center;
 }
@@ -1770,8 +1781,8 @@ button.riga-lista {
   min-height: var(--size-azione); /* #313 */
   border: 0;
   border-radius: var(--radius-pulsante);
-  background: var(--color-allerta);
-  color: var(--color-bianco);
+  background: var(--color-allerta-pieno);
+  color: var(--color-latte);
   font-size: var(--text-controllo-size);
   line-height: var(--text-controllo-line);
   font-weight: var(--weight-semi);
@@ -1923,7 +1934,7 @@ button.riga-lista {
   box-shadow: inset 0 0 0 var(--border-medio) var(--color-inchiostro);
 }
 .campo-rapido--attivo .campo-rapido__piu {
-  background: var(--color-inchiostro);
+  background: var(--color-pieno);
   color: var(--color-latte);
 }
 
@@ -1972,7 +1983,7 @@ button.riga-lista {
   padding: var(--space-0);
 }
 .casella[aria-checked="true"] {
-  background: var(--color-inchiostro);
+  background: var(--color-pieno);
   box-shadow: none;
 }
 .casella .icona {
@@ -1996,7 +2007,7 @@ button.riga-lista {
   padding: var(--space-0);
 }
 .tondo-spunta[aria-checked="true"] {
-  background: var(--color-inchiostro);
+  background: var(--color-pieno);
   box-shadow: none;
 }
 .tondo-spunta .icona {
@@ -2039,7 +2050,7 @@ button.riga-lista {
   transition: left var(--durata-rapida) var(--curva);
 }
 .toggle[aria-checked="true"] {
-  background: var(--color-inchiostro);
+  background: var(--color-pieno);
 }
 .toggle[aria-checked="true"]::after {
   left: calc(
@@ -2425,7 +2436,7 @@ button.riga-lista {
 }
 
 .skeleton {
-  background: var(--color-carta-2);
+  background: var(--color-scheletro);
   border-radius: var(--radius-s);
   animation: pulsa var(--durata-ampia) var(--curva) infinite alternate;
 }
@@ -2593,7 +2604,7 @@ button.riga-lista {
   font-size: var(--text-cella-size);
 }
 .striscia-giorni__giorno.is-oggi .striscia-giorni__numero {
-  background: var(--color-inchiostro);
+  background: var(--color-pieno);
   color: var(--color-latte);
 }
 .striscia-giorni__giorno.is-selezionato {
@@ -2680,7 +2691,7 @@ button.riga-lista {
   color: var(--color-allerta);
 }
 .griglia-mese__cella--oggi .griglia-mese__numero {
-  background: var(--color-inchiostro);
+  background: var(--color-pieno);
   color: var(--color-latte);
 }
 .griglia-mese__cella--selezionata {
@@ -2822,7 +2833,7 @@ button.riga-lista {
   left: calc(-1 * var(--space-1));
   right: var(--space-0);
   height: var(--space-half);
-  background: var(--color-allerta);
+  background: var(--color-allerta-pieno);
   z-index: var(--z-base);
 }
 .linea-adesso::before {
@@ -2833,7 +2844,7 @@ button.riga-lista {
   width: var(--space-2);
   height: var(--space-2);
   border-radius: var(--radius-tondo);
-  background: var(--color-allerta);
+  background: var(--color-allerta-pieno);
 }
 
 .griglia-settimana {
@@ -2869,7 +2880,7 @@ button.riga-lista {
   border-radius: var(--radius-l);
 }
 .griglia-settimana__giorno.is-oggi .griglia-settimana__numero {
-  background: var(--color-inchiostro);
+  background: var(--color-pieno);
   color: var(--color-latte);
   padding: var(--space-0) var(--space-2);
 }
@@ -2931,7 +2942,7 @@ button.riga-lista {
   padding: var(--space-0) var(--space-5) var(--space-0) var(--space-2);
   border-radius: var(--radius-l);
   background: var(--c);
-  color: var(--color-inchiostro);
+  color: var(--color-adesso-testo);
   font-family: var(--font-titoli);
   font-weight: var(--weight-medio);
   font-size: var(--text-titolo-scheda-size);
@@ -2963,7 +2974,7 @@ button.riga-lista {
   font-family: var(--font-testo);
   font-size: var(--text-controllo-size);
   font-weight: var(--weight-semi);
-  color: var(--color-inchiostro);
+  color: var(--color-adesso-testo);
 }
 .adesivo .avatar {
   background: var(--color-avatar-su-colore);
@@ -3002,7 +3013,7 @@ button.riga-lista {
   background: var(--color-filo-2);
 }
 .tacche-passi__tacca.is-fatta {
-  background: var(--color-inchiostro);
+  background: var(--color-pieno);
 }
 .passo-onboarding {
   flex: 1;
@@ -3113,7 +3124,7 @@ button.riga-lista {
   color: var(--color-latte);
 }
 .passo-partenza.is-fatto .passo-partenza__cerchio {
-  background: var(--color-inchiostro);
+  background: var(--color-pieno);
   box-shadow: none;
 }
 
@@ -3162,7 +3173,7 @@ button.riga-lista {
   width: var(--size-tocco);
   height: var(--size-tocco);
   border-radius: var(--radius-m);
-  background: var(--color-inchiostro);
+  background: var(--color-pieno);
   color: var(--color-latte);
   display: grid;
   place-items: center;
@@ -3817,7 +3828,7 @@ button.riga-lista {
   color: var(--color-inchiostro);
 }
 .tema-notte .avviso :focus-visible {
-  outline-color: var(--color-azione);
+  outline-color: var(--color-fuoco);
 }
 
 /* Link sottolineati dentro la frase legale (#11) */
@@ -3999,7 +4010,7 @@ main[tabindex="-1"]:focus {
   box-shadow: inset 0 0 0 var(--border-medio) var(--color-inchiostro);
 }
 .campo-rapido:focus-within .campo-rapido__piu {
-  background: var(--color-inchiostro);
+  background: var(--color-pieno);
   color: var(--color-latte);
 }
 
@@ -4019,11 +4030,11 @@ main[tabindex="-1"]:focus {
 }
 @media (hover: hover) {
   .strappo__lama:hover {
-    background: var(--color-notte-2);
+    background: var(--color-azione);
   }
 }
 .strappo__lama:active {
-  background: var(--color-notte-2);
+  background: var(--color-azione);
 }
 
 /* Disabilitato esteso a tutti i controlli */
@@ -4077,14 +4088,14 @@ main[tabindex="-1"]:focus {
     background: var(--color-allerta-scuro); /* #52 */
   }
   .btn-primary:hover:not(:disabled, [aria-disabled="true"]) {
-    background: var(--color-azione-premuto); /* #503 */
+    background: var(--color-azione); /* #634 */
   }
   .btn-aggiungi:hover:not(:disabled),
   .selettore:not(.selettore--carta)
     .selettore__voce[aria-pressed="true"]:hover:not(:disabled),
   .chip:not(.chip--persona)[aria-pressed="true"]:hover:not(:disabled),
   .nav-alto__voce.is-attiva:hover {
-    background: var(--color-notte-2);
+    background: var(--color-azione);
   }
   .btn-icona:hover:not(
       :disabled,
@@ -4133,10 +4144,10 @@ main[tabindex="-1"]:focus {
 
 /* Premuto (anche sul touch): stesso fondo del passaggio del mouse */
 .btn-primary:active:not(:disabled, [aria-disabled="true"]) {
-  background: var(--color-azione-premuto); /* #503 */
+  background: var(--color-azione); /* #634 */
 }
 .btn-aggiungi:active:not(:disabled) {
-  background: var(--color-notte-2);
+  background: var(--color-azione);
 }
 .btn-secondary:active:not(:disabled, [aria-disabled="true"]),
 .btn-quieto:active:not(:disabled, [aria-disabled="true"]),
@@ -4167,7 +4178,7 @@ main[tabindex="-1"]:focus {
 .selettore:not(.selettore--carta)
   .selettore__voce[aria-pressed="true"]:active:not(:disabled),
 .chip:not(.chip--persona)[aria-pressed="true"]:active:not(:disabled) {
-  background: var(--color-notte-2);
+  background: var(--color-azione);
 }
 .chip:active:not(:disabled, [aria-pressed="true"], .chip--statico) {
   background: var(--color-carta);
@@ -4843,7 +4854,7 @@ button.riga-lista {
 /* Anello di focus sulla scheda intera, anche su «Noi due» (sta fuori dalla
    scheda, sulla pagina chiara) */
 .scheda-modulo:has(> .scheda-modulo__link:focus-visible) {
-  outline: var(--border-medio) solid var(--color-azione);
+  outline: var(--border-medio) solid var(--color-fuoco);
   outline-offset: var(--space-half);
 }
 
@@ -4893,7 +4904,7 @@ button.riga-lista {
     background: var(--color-carta);
   }
   .puntina[aria-pressed="true"]:not(:disabled, [aria-disabled="true"]):hover {
-    background: var(--color-notte-2);
+    background: var(--color-azione);
   }
   .scheda-modulo--scura
     .puntina:not(
@@ -4912,7 +4923,7 @@ button.riga-lista {
   background: var(--color-carta);
 }
 .puntina[aria-pressed="true"]:not(:disabled, [aria-disabled="true"]):active {
-  background: var(--color-notte-2);
+  background: var(--color-azione);
 }
 .scheda-modulo--scura
   .puntina:not(
@@ -5108,17 +5119,17 @@ button.griglia-mese__cella--selezionata {
 }
 /* Puntina fissata (bottone icona premuto): pieno, come .puntina fissata */
 .btn-icona[aria-pressed="true"] {
-  background: var(--color-inchiostro);
+  background: var(--color-pieno);
   color: var(--color-latte);
   box-shadow: none;
 }
 @media (hover: hover) {
   .btn-icona[aria-pressed="true"]:hover:not(:disabled, [aria-disabled="true"]) {
-    background: var(--color-notte-2);
+    background: var(--color-azione);
   }
 }
 .btn-icona[aria-pressed="true"]:active:not(:disabled, [aria-disabled="true"]) {
-  background: var(--color-notte-2);
+  background: var(--color-azione);
 }
 
 /* Oggi (#30, richiesta condivisa 231): le due disposizioni stanno nel codice,
@@ -5184,7 +5195,7 @@ a.parola--insieme:active {
 /* 1. Anello di focus del campo di ricerca: il bordo di 2 px c'è sempre,
       senza anello il focus non si vedrebbe */
 .campo-ricerca:focus-within {
-  outline: var(--border-medio) solid var(--color-azione);
+  outline: var(--border-medio) solid var(--color-fuoco);
   outline-offset: var(--space-half);
 }
 
@@ -5892,7 +5903,8 @@ body {
       .selettore,
       .btn--piccolo,
       .btn-tenue,
-      .btn-link
+      .btn-link,
+      form
     ) {
     grid-column: -3 / -1;
     justify-self: start;
@@ -6196,11 +6208,11 @@ body {
 
 /* Messaggio: scuro, «Annulla» sottolineato e bianco */
 .toast {
-  background: var(--color-inchiostro);
-  color: var(--color-bianco);
+  background: var(--color-fumetto);
+  color: var(--color-latte);
 }
 .toast__azione {
-  color: var(--color-bianco);
+  color: var(--color-latte);
   font-weight: var(--weight-semi);
   text-decoration-thickness: var(--border-link);
   text-underline-offset: var(--space-link);
@@ -6385,8 +6397,40 @@ body {
 .toggle[aria-checked="true"] {
   box-shadow: none;
 }
+/* #634: l'adesivo «Liberi insieme» ha il fondo del tema (--color-insieme), non
+   un colore fisso: il testo segue il tema, non --color-adesso-testo */
+.adesivo--insieme,
+.adesivo--insieme .adesivo__nota {
+  color: var(--color-inchiostro);
+}
+/* #634: il pallino dell'interruttore acceso sta sopra il pieno: --color-latte */
+.toggle[aria-checked="true"]::after {
+  background: var(--color-latte);
+}
 @media (prefers-reduced-motion: reduce) {
   .toggle::after {
     transition: none;
+  }
+}
+
+/* Tema scuro (#634): scambio di un'immagine tra i due temi, solo CSS e senza
+   script. Il tema effettivo è lo stesso dei token di globals.css:
+   data-aspetto="scuro" o "chiaro" vincono; altrimenti segue il sistema.
+   Le classi stanno sul contenitore dell'immagine, che è decorativa
+   (aria-hidden); quella nascosta con display: none non si legge. */
+@media not all and (prefers-color-scheme: dark) {
+  :root:not([data-aspetto="scuro"]) .solo-scuro {
+    display: none;
+  }
+}
+:root[data-aspetto="chiaro"] .solo-scuro {
+  display: none;
+}
+:root[data-aspetto="scuro"] .solo-chiaro {
+  display: none;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-aspetto="chiaro"]) .solo-chiaro {
+    display: none;
   }
 }

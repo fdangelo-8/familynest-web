@@ -395,6 +395,11 @@ test.describe("limite di sei", () => {
         "aria-pressed",
         "true",
       );
+      // The puntina is optimistic: wait for the saved rows, not for the page.
+      await expectPinned(ctx, [
+        ...SIX.filter((name) => name !== "Passioni"),
+        "Progetti",
+      ]);
       expect(await ctx.rowsOfNest()).toHaveLength(6);
     });
   });
