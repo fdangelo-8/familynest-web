@@ -170,28 +170,28 @@ test.describe("avvisi nuovi", () => {
     await expect(newRows(page)).toHaveCount(8);
 
     await expect(textOf(rowOf(page, "ha accettato l'invito"))).toHaveText(
-      "Paolo ha accettato l'invito: ora avete lo stesso calendario e le stesse liste.",
+      "Nuova. Paolo ha accettato l'invito: ora avete lo stesso calendario e le stesse liste.",
     );
     await expect(textOf(rowOf(page, "Promemoria"))).toHaveText(
-      "Promemoria: Nuoto, domani alle 17:00.",
+      "Nuova. Promemoria: Nuoto, domani alle 17:00.",
     );
     await expect(textOf(rowOf(page, "Calcio"))).toHaveText(
-      "Tocca a te portare, domani alle 17:00: Calcio.",
+      "Nuova. Tocca a te portare, domani alle 17:00: Calcio.",
     );
     await expect(textOf(rowOf(page, "Tocca a te riprendere"))).toHaveText(
-      "Tocca a te riprendere, domani alle 18:00: Danza.",
+      "Nuova. Tocca a te riprendere, domani alle 18:00: Danza.",
     );
     await expect(textOf(rowOf(page, "Sei in due posti insieme"))).toHaveText(
-      "Domani, alla stessa ora: Pediatra e Dentista. Sei in due posti insieme.",
+      "Nuova. Domani, alla stessa ora: Pediatra e Dentista. Sei in due posti insieme.",
     );
     await expect(textOf(rowOf(page, "Riguarda Leo"))).toHaveText(
-      "Domani, alla stessa ora: Basket e Inglese. Riguarda Leo.",
+      "Nuova. Domani, alla stessa ora: Basket e Inglese. Riguarda Leo.",
     );
     await expect(textOf(rowOf(page, "ti chiede di portare"))).toHaveText(
-      "Paolo ti chiede di portare, domani alle 17:00: Judo.",
+      "Nuova. Paolo ti chiede di portare, domani alle 17:00: Judo.",
     );
     await expect(textOf(rowOf(page, "ti chiede di riprendere"))).toHaveText(
-      "Paolo ti chiede di riprendere, domani alle 18:00: Danza.",
+      "Nuova. Paolo ti chiede di riprendere, domani alle 18:00: Danza.",
     );
 
     // Opening the page reads them all, like the other kinds.
@@ -273,7 +273,7 @@ test.describe("avvisi nuovi", () => {
 
     const row = rowOf(page, "ti chiede di portare");
     await expect(textOf(row)).toHaveText(
-      "Paolo ti chiede di portare, domani alle 17:00: Nuoto.",
+      "Nuova. Paolo ti chiede di portare, domani alle 17:00: Nuoto.",
     );
     await expect(openLink(row)).toHaveCount(0);
     const link = row.getByRole("link", { name: "Vedi l'impegno", exact: true });
