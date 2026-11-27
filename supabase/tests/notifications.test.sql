@@ -43,8 +43,9 @@ select is_empty(
 select enum_has_labels(
   'public', 'notification_kind',
   array['todo_assigned', 'deadline_reminder', 'free_together', 'event_time_changed', 'shopping_added', 'gift_taken',
-        'member_joined', 'event_reminder', 'ride_reminder', 'overlap_tomorrow', 'ride_request'],
-  'the five kinds of notification of #39, gift_taken of #259 and the five of #511'
+        'member_joined', 'event_reminder', 'ride_reminder', 'overlap_tomorrow', 'ride_request',
+        'household_handed_over', 'data_export_ready'],
+  'the five kinds of notification of #39, gift_taken of #259, the five of #511 and the two of #513'
 );
 select enum_has_labels(
   'public', 'notification_job',
