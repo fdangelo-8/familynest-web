@@ -39,7 +39,7 @@ export const MAX_PINNED_SPACES = 6;
 export const SPACES: readonly SpaceDef[] = [
   {
     key: "meals",
-    href: "/esplora/a-tavola",
+    href: "/spazi/a-tavola",
     name: "A tavola",
     promise: "Cosa mangiamo questa settimana, senza pensarci ogni sera.",
     icon: "utensils",
@@ -53,7 +53,7 @@ export const SPACES: readonly SpaceDef[] = [
   },
   {
     key: "couple",
-    href: "/esplora/noi-due",
+    href: "/spazi/noi-due",
     name: "Noi due",
     promise: "Il vostro tempo, le vostre liste, le vostre date.",
     icon: "heart-handshake",
@@ -63,7 +63,7 @@ export const SPACES: readonly SpaceDef[] = [
   },
   {
     key: "wellbeing",
-    href: "/esplora/stare-bene",
+    href: "/spazi/stare-bene",
     name: "Stare bene",
     promise: "Prendersi cura di sé e degli altri.",
     icon: "leaf",
@@ -73,7 +73,7 @@ export const SPACES: readonly SpaceDef[] = [
   },
   {
     key: "together",
-    href: "/esplora/tempo-insieme",
+    href: "/spazi/tempo-insieme",
     name: "Tempo insieme",
     promise: "Il tempo libero che avete, usato bene.",
     icon: "sun",
@@ -83,7 +83,7 @@ export const SPACES: readonly SpaceDef[] = [
   },
   {
     key: "hobbies",
-    href: "/esplora/passioni",
+    href: "/spazi/passioni",
     name: "Passioni",
     promise: "Quello che ti piace fare, con il suo posto.",
     icon: "sparkles",
@@ -93,7 +93,7 @@ export const SPACES: readonly SpaceDef[] = [
   },
   {
     key: "chores",
-    href: "/esplora/casa-in-ordine",
+    href: "/spazi/casa-in-ordine",
     name: "Casa in ordine",
     promise: "Chi fa cosa, e niente sfugge.",
     icon: "sparkle",
@@ -103,7 +103,7 @@ export const SPACES: readonly SpaceDef[] = [
   },
   {
     key: "projects",
-    href: "/esplora/progetti",
+    href: "/spazi/progetti",
     name: "Progetti",
     promise: "Traslochi, lavori, grandi cambiamenti, un passo alla volta.",
     icon: "route",
@@ -113,7 +113,7 @@ export const SPACES: readonly SpaceDef[] = [
   },
   {
     key: "expenses",
-    href: "/esplora/conti-chiari",
+    href: "/spazi/conti-chiari",
     name: "Conti chiari",
     promise: "Chi ha pagato cosa, senza discussioni.",
     icon: "scale",
@@ -123,7 +123,7 @@ export const SPACES: readonly SpaceDef[] = [
   },
   {
     key: "children",
-    href: "/esplora/crescere",
+    href: "/spazi/crescere",
     name: "Crescere",
     promise: "Tutto sui vostri figli, in un posto solo.",
     icon: "sprout",
@@ -133,7 +133,7 @@ export const SPACES: readonly SpaceDef[] = [
   },
   {
     key: "pets",
-    href: "/esplora/zampe",
+    href: "/spazi/zampe",
     name: "Zampe",
     promise: "Per i vostri animali e per chi ha quattro zampe.",
     icon: "paw-print",
@@ -143,7 +143,7 @@ export const SPACES: readonly SpaceDef[] = [
   },
 ];
 
-/** The space of an address `/esplora/<slug>`; undefined if it is not one of the ten. */
+/** The space of an address `/spazi/<slug>`; undefined if it is not one of the ten. */
 export function getSpaceByHref(pathname: string): SpaceDef | undefined {
   return SPACES.find((space) => space.href === pathname);
 }

@@ -5,6 +5,7 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
+import { useShellLayout } from "@/lib/breakpoints";
 
 /** Exit animation length. Keep in sync with `--durata-rapida` (200 ms). */
 const EXIT_MS = 200;
@@ -26,12 +27,11 @@ export function useMediaQuery(query: string): boolean {
 }
 
 /**
- * True from 1024 px: the sheet becomes a centered modal. Sheets, calendars and
- * pages all use this one threshold; F5 (#506) moves the whole app together to
- * the one of D8 (900 px wide, 600 px tall).
+ * True with the computer shape (900 px wide and 600 px tall, D8): the sheet
+ * becomes a centered modal. The thresholds live in `@/lib/breakpoints`.
  */
 export function useIsDesktop(): boolean {
-  return useMediaQuery("(min-width: 1024px)");
+  return useShellLayout() !== "telefono";
 }
 
 /** Open dialogs, last one on top. Only the top one handles Escape and Tab. */

@@ -1026,7 +1026,7 @@ export function SpacesSection({
         title="I tuoi spazi"
         info={
           <Link
-            href="/esplora"
+            href="/spazi"
             className="sezione__info sezione__link"
             aria-label="Modifica i tuoi spazi"
           >
@@ -1050,7 +1050,7 @@ export function SpacesSection({
         ))}
         <li>
           <Link
-            href="/esplora"
+            href="/spazi"
             className="scheda scheda--tratteggiata scheda-spazio"
           >
             <span className="scheda-spazio__icona">

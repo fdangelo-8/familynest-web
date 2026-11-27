@@ -210,7 +210,7 @@ export default async function Page() {
           </section>
         </div>
         <div className="colonna">
-          <Link className="porta" href="/esplora">
+          <Link className="porta" href="/spazi">
             <span>
               <span className="porta__sopra">Esplora</span>
               <span className="porta__titolo">

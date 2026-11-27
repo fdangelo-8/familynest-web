@@ -1,73 +1,419 @@
 /**
- * Single source of truth for the navigation rules of the app frame:
- * active entries, bottom navigation visibility, top bar shape and
- * placeholder pages. Pure functions, no React.
+ * Single source of truth for the navigation rules of the app frame (F5 #506,
+ * §2 of docs/specifiche/506-guscio-navigazione.md): one explicit row per
+ * route, no generic prefixes (LEZIONI). Active entry, phone header, bottom
+ * navigation, title and action of the computer bar all come from the row.
+ * Pure functions, no React.
  */
 
 import type { IconName } from "@/components/ui/Icon/icon-paths";
 import { pageTitle, yourNest } from "@/lib/brand";
+import { it } from "@/lib/i18n/messages/it";
 import { SPACES } from "@/lib/spaces";
 
-export type NavItem = "oggi" | "calendario" | "casa";
+export type NavItem = "oggi" | "calendario" | "casa" | "spazi";
+/** An entry of the navigation: the four sections and, on a computer, the profile. */
+export type NavEntry = NavItem | "profilo";
 export type Viewport = "mobile" | "desktop";
 
 export const NAV_ITEMS: ReadonlyArray<{
   id: NavItem;
   label: string;
   href: string;
+  icon: IconName;
+  /** Message key of the single-letter shortcut (§8) */
+  shortcut: "keyToday" | "keyCalendar" | "keyHome" | "keySpaces";
 }> = [
-  { id: "oggi", label: "Oggi", href: "/oggi" },
-  { id: "calendario", label: "Calendario", href: "/calendario" },
-  { id: "casa", label: "Casa", href: "/casa/spesa" },
+  {
+    id: "oggi",
+    label: it.shell.today,
+    href: "/oggi",
+    icon: "sun",
+    shortcut: "keyToday",
+  },
+  {
+    id: "calendario",
+    label: it.shell.calendar,
+    href: "/calendario",
+    icon: "calendar",
+    shortcut: "keyCalendar",
+  },
+  {
+    id: "casa",
+    label: it.shell.home,
+    href: "/casa/spesa",
+    icon: "house",
+    shortcut: "keyHome",
+  },
+  {
+    id: "spazi",
+    label: it.shell.spaces,
+    href: "/spazi",
+    icon: "layout-grid",
+    shortcut: "keySpaces",
+  },
 ];
+
+/** Link of the profile entry of the sidebar. */
+export const PROFILE_HREF = "/nest";
 
 /** True when `pathname` is `base` or a sub-route of it. */
 export function matchesPrefix(pathname: string, base: string): boolean {
   return pathname === base || pathname.startsWith(`${base}/`);
 }
 
-function matchesAny(pathname: string, bases: readonly string[]): boolean {
-  return bases.some((base) => matchesPrefix(pathname, base));
+/** Shape of the header of the phone for a route (§4). */
+export type BarConfig =
+  | {
+      kind: "section";
+      /** The lens «Io · Nest» on the left */
+      lens: boolean;
+      /** Title of the section on the left (700, 30/36) */
+      title?: string;
+      /**
+       * The title is the h1 of the page (`h1`): only where the page does not
+       * write its own on the phone (Casa).
+       */
+      titleIsHeading?: boolean;
+    }
+  | {
+      kind: "detail";
+      fallback: string;
+      /** Title in the middle: a `p`, not a heading (the page has its own h1) */
+      title?: string;
+      /** The title is the page's h1 on the phone (Notifiche) */
+      titleIsHeading?: boolean;
+      /** Icon link on the right, instead of the page's own action */
+      link?: { href: string; icon: IconName; label: string };
+    }
+  /** No header: the page has its own (the search on the phone) */
+  | { kind: "none" };
+
+type Desktop = {
+  /** Title of the computer bar (700, 26/32); `null`: none */
+  title: string | null;
+  /** «Nuovo impegno» on the right */
+  newEvent?: boolean;
+};
+
+type RouteDef = {
+  /** Segments between slashes; `[name]` accepts one segment */
+  path: string;
+  /** Entry highlighted on the phone */
+  nav: NavItem | null;
+  /** Entry highlighted on a computer, when it is not the same */
+  navDesktop?: NavEntry | null;
+  phone: BarConfig | ((params: string[]) => BarConfig);
+  bottomNav: boolean;
+  desktop: Desktop;
+  /** The computer bar has the arrow «Indietro» (detail routes) */
+  back?: string | ((params: string[]) => string);
+  /** Extra check on the dynamic segments */
+  accepts?: (params: string[]) => boolean;
+};
+
+/** `/figli/<id>/lista-desideri` (#32): the id is a lowercase uuid. */
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+
+const SPACE_PATHS: readonly string[] = SPACES.map((space) => space.href);
+
+function section(
+  lens: boolean,
+  title?: string,
+  titleIsHeading?: boolean,
+): BarConfig {
+  return { kind: "section", lens, title, titleIsHeading };
 }
 
-// Only the pages that exist: new Casa pages must be added here (explicit
-// list, not a prefix).
-const CASA_ROUTES = ["/casa/spesa", "/casa/da-fare", "/casa/scadenze"];
+const SETTINGS_LINK = {
+  href: "/impostazioni#notifiche",
+  icon: "settings-2",
+  label: it.shell.notificationSettings,
+} as const;
 
-// The ten «In arrivo» pages of Esplora (#29): explicit list, not a prefix, so
-// that an address like /esplora/palestra is not highlighted.
-const SPACE_ROUTES: readonly string[] = SPACES.map((space) => space.href);
+const PROFILE_ROW = {
+  nav: "spazi",
+  navDesktop: "profilo",
+  bottomNav: false,
+} as const;
 
-/** `/esplora/<space>` for one of the ten spaces of the catalogue. */
+/** The list of routes of the app that exist (§2). */
+const ROUTES: readonly RouteDef[] = [
+  {
+    path: "/oggi",
+    nav: "oggi",
+    phone: section(true),
+    bottomNav: true,
+    desktop: { title: it.shell.today, newEvent: true },
+  },
+  {
+    path: "/aggiungi",
+    nav: "oggi",
+    phone: section(true),
+    bottomNav: true,
+    desktop: { title: it.shell.today, newEvent: true },
+  },
+  ...["/calendario", "/calendario/giorno", "/calendario/mese"].map(
+    (path): RouteDef => ({
+      path,
+      nav: "calendario",
+      phone: section(true, it.shell.calendar),
+      bottomNav: true,
+      desktop: { title: it.shell.calendar, newEvent: true },
+    }),
+  ),
+  {
+    path: "/impegni/[id]",
+    nav: "calendario",
+    phone: { kind: "detail", fallback: "/calendario" },
+    bottomNav: true,
+    desktop: { title: it.shell.calendar },
+    back: "/calendario",
+  },
+  // `/casa` only redirects to `/casa/spesa`
+  ...["/casa", "/casa/spesa", "/casa/da-fare", "/casa/scadenze"].map(
+    (path): RouteDef => ({
+      path,
+      nav: "casa",
+      phone: section(false, it.shell.home, true),
+      bottomNav: true,
+      desktop: { title: it.shell.home },
+    }),
+  ),
+  {
+    path: "/spazi",
+    nav: "spazi",
+    phone: section(false, it.shell.spaces),
+    bottomNav: true,
+    desktop: { title: it.shell.spaces },
+  },
+  {
+    path: "/spazi/[spazio]",
+    nav: "spazi",
+    phone: { kind: "detail", fallback: "/spazi" },
+    bottomNav: true,
+    desktop: { title: it.shell.spaces },
+    back: "/spazi",
+    accepts: ([space]) => SPACE_PATHS.includes(`/spazi/${space}`),
+  },
+  {
+    path: "/figli/[id]",
+    nav: "spazi",
+    phone: { kind: "detail", fallback: "/nest" },
+    bottomNav: true,
+    desktop: { title: it.shell.spaces },
+    back: "/nest",
+  },
+  {
+    path: "/figli/[id]/lista-desideri",
+    nav: "spazi",
+    // Only a well-formed id goes in the address of the fallback.
+    phone: ([id]) => ({
+      kind: "detail",
+      fallback: id && UUID.test(id) ? `/figli/${id}` : "/nest",
+    }),
+    bottomNav: true,
+    desktop: { title: it.shell.spaces },
+    back: ([id]) => (id && UUID.test(id) ? `/figli/${id}` : "/nest"),
+  },
+  {
+    path: "/notifiche",
+    nav: null,
+    // «Notifiche» is the h1 of the page on the phone, and the gear leads to
+    // the settings of the notifications.
+    phone: {
+      kind: "detail",
+      fallback: "/oggi",
+      title: it.shell.notifications,
+      titleIsHeading: true,
+      link: SETTINGS_LINK,
+    },
+    bottomNav: true,
+    desktop: { title: it.shell.notifications },
+    back: "/oggi",
+  },
+  // Search (#40): the field with «Annulla» is the bar.
+  {
+    path: "/ricerca",
+    nav: null,
+    phone: { kind: "none" },
+    bottomNav: false,
+    desktop: { title: null },
+  },
+  {
+    path: "/nest",
+    ...PROFILE_ROW,
+    phone: { kind: "detail", fallback: "/spazi" },
+    desktop: { title: yourNest() },
+    back: "/spazi",
+  },
+  {
+    path: "/profilo",
+    ...PROFILE_ROW,
+    phone: {
+      kind: "detail",
+      fallback: "/nest",
+      title: it.shell.profileTitle,
+    },
+    desktop: { title: it.shell.profileTitle },
+    back: "/nest",
+  },
+  {
+    path: "/impostazioni",
+    ...PROFILE_ROW,
+    phone: {
+      kind: "detail",
+      fallback: "/nest",
+      title: it.shell.settingsTitle,
+    },
+    desktop: { title: it.shell.settingsTitle },
+    back: "/nest",
+  },
+  {
+    path: "/calendari-collegati",
+    ...PROFILE_ROW,
+    phone: { kind: "detail", fallback: "/nest" },
+    desktop: { title: it.shell.linkedCalendarsTitle },
+    back: "/nest",
+  },
+  {
+    path: "/membri",
+    ...PROFILE_ROW,
+    phone: { kind: "detail", fallback: "/nest" },
+    desktop: { title: it.shell.membersTitle },
+    back: "/nest",
+  },
+  {
+    path: "/membri/[id]",
+    ...PROFILE_ROW,
+    phone: { kind: "detail", fallback: "/nest" },
+    desktop: { title: it.shell.membersTitle },
+    back: "/nest",
+  },
+];
+
+/** An address that is not on the list: the 404 inside the frame. */
+const UNKNOWN: RouteDef = {
+  path: "",
+  nav: null,
+  phone: { kind: "detail", fallback: "/oggi" },
+  bottomNav: true,
+  desktop: { title: null },
+  back: "/oggi",
+};
+
+const BASE = "https://app.invalid";
+
+/**
+ * The `pathname` of a raw address, or null when it is not a path of this app
+ * (no leading slash, another origin, `//`). Same normalisation as `isAppPath`
+ * (LEZIONI: `new URL(raw, base)`, then rules on the pathname).
+ */
+function normalize(raw: string): string | null {
+  if (!raw.startsWith("/") || raw.startsWith("//")) return null;
+  let url: URL;
+  try {
+    url = new URL(raw, BASE);
+  } catch {
+    return null;
+  }
+  if (url.origin !== BASE) return null;
+  const { pathname } = url;
+  return pathname.length > 1 && pathname.endsWith("/")
+    ? pathname.slice(0, -1)
+    : pathname;
+}
+
+type Match = { route: RouteDef; params: string[] };
+
+function matchRoute(pathname: string): Match | null {
+  const segments = pathname.split("/").slice(1);
+  for (const route of ROUTES) {
+    const pattern = route.path.split("/").slice(1);
+    if (pattern.length !== segments.length) continue;
+    const params: string[] = [];
+    const fits = pattern.every((part, index) => {
+      const segment = segments[index] ?? "";
+      if (part.startsWith("[")) {
+        if (segment === "") return false;
+        params.push(segment);
+        return true;
+      }
+      return part === segment;
+    });
+    if (fits && (route.accepts?.(params) ?? true)) return { route, params };
+  }
+  return null;
+}
+
+/** The route of `pathname`, or the 404 row. */
+function resolve(pathname: string): Match {
+  return (
+    matchRoute(normalize(pathname) ?? pathname) ?? {
+      route: UNKNOWN,
+      params: [],
+    }
+  );
+}
+
+/**
+ * True for an address that is a route of the app that exists: the rows of the
+ * list above (one segment for each `[name]`), with a final slash, a query or a
+ * fragment accepted. False for the redirects that are not rows (`/esplora`),
+ * for rows not yet on the list and for anything that is not a plain path.
+ */
+export function hasAppRoute(pathname: string): boolean {
+  const normalized = normalize(pathname);
+  return normalized !== null && matchRoute(normalized) !== null;
+}
+
+const PUBLIC_EXACT = ["/accesso", "/onboarding", "/privacy", "/termini"];
+const PUBLIC_PREFIX = ["/accesso", "/onboarding", "/invito"];
+const WISHLIST_PUBLIC = /^\/desideri\/[^/]+$/;
+
+/**
+ * True for the routes of the app and the public ones (`/accesso/*`,
+ * `/onboarding/*`, `/invito/*`, `/desideri/<code>`, `/privacy`, `/termini`):
+ * the native shell opens only these inside the app (§10).
+ */
+export function isAppPath(pathname: string): boolean {
+  const normalized = normalize(pathname);
+  if (normalized === null) return false;
+  if (matchRoute(normalized) !== null) return true;
+  if (PUBLIC_EXACT.includes(normalized)) return true;
+  if (PUBLIC_PREFIX.some((base) => matchesPrefix(normalized, base))) {
+    return true;
+  }
+  return WISHLIST_PUBLIC.test(normalized);
+}
+
+// The ten «In arrivo» pages of Spazi (#29): explicit list, not a prefix, so
+// that an address like /spazi/palestra is not highlighted.
+/** `/spazi/<space>` for one of the ten spaces of the catalogue. */
 export function isSpaceRoute(pathname: string): boolean {
-  return SPACE_ROUTES.includes(pathname);
+  return SPACE_PATHS.includes(pathname);
 }
+
+const CASA_ROUTES = ["/casa/spesa", "/casa/da-fare", "/casa/scadenze"];
 
 /** Known Casa pages only: an unknown address under /casa is a 404, not Casa. */
 export function isCasaRoute(pathname: string): boolean {
-  return matchesAny(pathname, CASA_ROUTES);
+  return CASA_ROUTES.includes(normalize(pathname) ?? pathname);
 }
 
-/** Entry highlighted in the bottom (mobile) or top (desktop) navigation. */
+/**
+ * Entry highlighted in the bottom navigation and, on a computer, in the
+ * sidebar. On a computer the pages of the Nest highlight the profile.
+ */
 export function getActiveNavItem(
   pathname: string,
   viewport: Viewport,
-): NavItem | null {
-  if (matchesAny(pathname, ["/calendario", "/impegni"])) return "calendario";
-  if (isCasaRoute(pathname)) return "casa";
-  if (matchesAny(pathname, ["/oggi", "/aggiungi"])) return "oggi";
-  if (viewport === "mobile") {
-    if (
-      pathname === "/esplora" ||
-      isSpaceRoute(pathname) ||
-      matchesAny(pathname, ["/figli", "/notifiche"])
-    ) {
-      return "oggi";
-    }
-  } else if (matchesPrefix(pathname, "/ricerca")) {
-    return "oggi";
+): NavEntry | null {
+  const { route } = resolve(pathname);
+  if (viewport === "desktop" && route.navDesktop !== undefined) {
+    return route.navDesktop;
   }
-  return null;
+  return route.nav;
 }
 
 /**
@@ -79,11 +425,14 @@ export function getActiveNavItem(
 export function getNavAriaCurrent(
   pathname: string,
   viewport: Viewport,
-  item: NavItem,
+  item: NavEntry,
 ): "page" | "true" | undefined {
   if (getActiveNavItem(pathname, viewport) !== item) return undefined;
-  const entry = NAV_ITEMS.find((candidate) => candidate.id === item);
-  return entry && pathname === entry.href ? "page" : "true";
+  const href =
+    item === "profilo"
+      ? PROFILE_HREF
+      : NAV_ITEMS.find((candidate) => candidate.id === item)?.href;
+  return normalize(pathname) === href ? "page" : "true";
 }
 
 const NO_TODAY_LINK_ON_ERROR = ["/oggi", "/onboarding"] as const;
@@ -94,21 +443,12 @@ const NO_TODAY_LINK_ON_ERROR = ["/oggi", "/onboarding"] as const;
  * for whoever is there).
  */
 export function hasTodayLinkOnError(pathname: string): boolean {
-  return !matchesAny(pathname, NO_TODAY_LINK_ON_ERROR);
+  return !NO_TODAY_LINK_ON_ERROR.some((base) => matchesPrefix(pathname, base));
 }
 
-const NO_BOTTOM_NAV = [
-  "/nest",
-  "/ricerca",
-  "/profilo",
-  "/calendari-collegati",
-  "/impostazioni",
-  "/membri",
-] as const;
-
-/** The bottom navigation is hidden on these routes (mockup). */
+/** The bottom navigation is hidden on the routes where the row says no. */
 export function hasBottomNav(pathname: string): boolean {
-  return !matchesAny(pathname, NO_BOTTOM_NAV);
+  return resolve(pathname).route.bottomNav;
 }
 
 export type SettingsItem =
@@ -125,102 +465,29 @@ export function getActiveSettingsItem(pathname: string): SettingsItem | null {
   return null;
 }
 
-export type BarConfig =
-  | {
-      kind: "section";
-      center: "lens" | "title";
-      /** Icon links on the right, in order */
-      actions: ReadonlyArray<"search" | "bell">;
-    }
-  | {
-      kind: "detail";
-      fallback: string;
-      /** Link «Cerca nel Nest» on the right, instead of the page's own action */
-      search?: boolean;
-      /** Title in the middle: a `p`, not a heading (the page has its own h1) */
-      title?: string;
-      /**
-       * The title is the page's h1 (`h1.barra__titolo`): below 1024 px it is
-       * the only visible h1, and the page does not write its own.
-       */
-      titleIsHeading?: boolean;
-      /** Icon link on the right, instead of the page's own action */
-      link?: { href: string; icon: IconName; label: string };
-    }
-  | { kind: "close"; href: string }
-  /** No top bar: the page has its own (the search on mobile) */
-  | { kind: "none" };
-
-/** `/figli/<id>/lista-desideri` (#32): the id is a lowercase uuid. */
-const WISHLIST_ROUTE =
-  /^\/figli\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\/lista-desideri\/?$/;
-
-/** Shape of the mobile top bar for a route. */
+/** Shape of the header of the phone for a route. */
 export function getBarConfig(pathname: string): BarConfig {
-  if (matchesAny(pathname, ["/oggi", "/aggiungi"])) {
-    return { kind: "section", center: "lens", actions: ["bell"] };
-  }
-  if (matchesPrefix(pathname, "/calendario")) {
-    return { kind: "section", center: "lens", actions: ["search", "bell"] };
-  }
-  if (isCasaRoute(pathname)) {
-    return { kind: "section", center: "title", actions: ["search", "bell"] };
-  }
-  if (matchesPrefix(pathname, "/nest")) {
-    return { kind: "close", href: "/oggi" };
-  }
-  // Search (#40): the field with «Annulla» is the bar.
-  if (matchesPrefix(pathname, "/ricerca")) {
-    return { kind: "none" };
-  }
-  // Notifiche (#39): «Notifiche» is the h1 of the page below 1024 px, and the
-  // gear leads to the settings of the notifications.
-  if (matchesPrefix(pathname, "/notifiche")) {
-    return {
-      kind: "detail",
-      fallback: "/oggi",
-      title: "Notifiche",
-      titleIsHeading: true,
-      link: {
-        href: "/impostazioni#notifiche",
-        icon: "settings-2",
-        label: "Impostazioni delle notifiche",
-      },
-    };
-  }
-  // «Il tuo profilo» (#38) and «Impostazioni» (#41) say where you are.
-  if (matchesPrefix(pathname, "/profilo")) {
-    return { kind: "detail", fallback: "/nest", title: "Il tuo profilo" };
-  }
-  if (matchesPrefix(pathname, "/impostazioni")) {
-    return { kind: "detail", fallback: "/nest", title: "Impostazioni" };
-  }
-  // «Lista desideri» (#32): «Indietro» falls back to the profile of the child
-  // (the page's own «+» is on the right). Only a well-formed id goes in the
-  // address of the fallback.
-  const wishlistChild = WISHLIST_ROUTE.exec(pathname)?.[1];
-  if (wishlistChild) {
-    return { kind: "detail", fallback: `/figli/${wishlistChild}` };
-  }
-  // «Profilo di un figlio» (#31) is under /figli: back to the Nest.
-  if (matchesAny(pathname, ["/calendari-collegati", "/membri", "/figli"])) {
-    return { kind: "detail", fallback: "/nest" };
-  }
-  // Esplora (#28): «Indietro» to the Nest, «Cerca nel Nest» on the right.
-  if (pathname === "/esplora") {
-    return { kind: "detail", fallback: "/nest", search: true };
-  }
-  // «In arrivo» of a space (#29): «Indietro» to Esplora, no search link: on
-  // the right there is the puntina (the page's own action).
-  if (isSpaceRoute(pathname)) {
-    return { kind: "detail", fallback: "/esplora" };
-  }
-  // «Indietro» of an event goes to the calendar when there is no previous
-  // page of the app (#19).
-  if (matchesPrefix(pathname, "/impegni")) {
-    return { kind: "detail", fallback: "/calendario" };
-  }
-  return { kind: "detail", fallback: "/oggi" };
+  const { route, params } = resolve(pathname);
+  return typeof route.phone === "function" ? route.phone(params) : route.phone;
+}
+
+export type DesktopBarConfig = {
+  title: string | null;
+  newEvent: boolean;
+  /** Fallback of the arrow «Indietro»; `null`: no arrow */
+  back: string | null;
+};
+
+/** Title, button and arrow of the computer bar for a route. */
+export function getDesktopBarConfig(pathname: string): DesktopBarConfig {
+  const { route, params } = resolve(pathname);
+  const back =
+    typeof route.back === "function" ? route.back(params) : route.back;
+  return {
+    title: route.desktop.title,
+    newEvent: route.desktop.newEvent === true,
+    back: back ?? null,
+  };
 }
 
 export type PlaceholderKey =

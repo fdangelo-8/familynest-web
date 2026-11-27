@@ -310,121 +310,618 @@
   padding-top: var(--space-3);
 }
 
-.nav-basso {
+/* =========================================================
+   GUSCIO DELL'APP (F5 #506)
+   Soglie di D8, scritte qui come in src/lib/breakpoints.ts (le variabili non
+   funzionano nelle media query): forma del telefono con
+   (max-width: 899px), (max-height: 599px); forma del computer da 900 px di
+   larghezza e 600 di altezza; barra laterale intera da 1280 px.
+   Prima il telefono: testata, barra in basso e disposizione a colonna.
+   ========================================================= */
+.guscio {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: var(--space-0);
+}
+.guscio__area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: var(--space-0);
+}
+.guscio__pannello,
+.barra-laterale,
+.barra-alto {
+  display: none;
+}
+/* L'area del contenuto è un contenitore: le pagine scelgono le colonne in base
+   alla larghezza che resta a loro, non a quella della finestra */
+#contenuto {
+  container: contenuto / inline-size;
+}
+
+/* Testata del telefono */
+.testata {
+  display: grid;
+  align-items: center;
+  column-gap: var(--space-2);
+  padding: calc(var(--space-2) + var(--area-sicura-alto))
+    max(var(--grid-margine-mobile), var(--area-sicura-destra)) var(--space-0)
+    max(var(--grid-margine-mobile), var(--area-sicura-sinistra));
+}
+.testata--sezione {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+.testata__sinistra {
+  display: flex;
+  align-items: center;
+  min-width: var(--space-0);
+  min-height: var(--size-barra-alta);
+}
+.testata__titolo {
+  font-size: var(--text-titolo-pagina-size);
+  line-height: var(--text-titolo-pagina-line);
+  letter-spacing: var(--text-titolo-pagina-tracking);
+  font-weight: var(--weight-pieno);
+}
+.testata__lente {
+  grid-column: 1 / -1;
+  padding-bottom: var(--space-2);
+}
+.testata .lente,
+.testata-raccolta .lente {
+  justify-self: start;
+  min-width: var(--space-0);
+}
+.testata__azioni {
+  display: flex;
+  align-items: center;
+  margin-right: calc(-1 * var(--space-2));
+}
+.testata--dettaglio {
   position: sticky;
-  bottom: var(--space-0);
+  top: var(--space-0);
+  z-index: var(--z-nav);
+  grid-template-columns: var(--size-tocco) minmax(0, 1fr) var(--size-tocco);
+  min-height: calc(var(--size-barra-alta) + var(--space-2));
+  background: var(--color-carta);
+}
+.testata__centro {
+  justify-self: center;
+  min-width: var(--space-0);
+}
+.testata__titolo-centro {
+  font-size: var(--text-sezione-size);
+  line-height: var(--text-sezione-line);
+  font-weight: var(--weight-forte);
+  text-align: center;
+}
+/* Barra raccolta: resta in cima quando la testata esce dallo schermo */
+.testata-raccolta {
+  position: fixed;
+  top: var(--space-0);
+  left: var(--space-0);
+  right: var(--space-0);
+  z-index: var(--z-nav);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-height: calc(var(--size-barra-alta) + var(--area-sicura-alto));
+  padding: var(--area-sicura-alto)
+    max(var(--grid-margine-mobile), var(--area-sicura-destra)) var(--space-0)
+    max(var(--grid-margine-mobile), var(--area-sicura-sinistra));
+  background: var(--color-carta);
+  box-shadow: 0 var(--border-sottile) 0 var(--color-filo-barra);
+}
+.testata-raccolta__titolo {
+  min-width: var(--space-0);
+  font-size: var(--text-titolo-barra-size);
+  line-height: var(--text-titolo-barra-line);
+  font-weight: var(--weight-pieno);
+}
+/* Icona nuda sul bianco: Cerca e Notifiche delle testate */
+.btn-icona--nudo {
+  width: var(--size-tocco);
+  height: var(--size-tocco);
+  background: transparent;
+  box-shadow: none;
+}
+
+/* Barra in basso del telefono: la capsula è fissa; il segnaposto in coda al
+   contenuto lascia 128 px liberi in fondo (24 sono già della pagina) */
+.barra-basso {
+  height: calc(2 * var(--space-16) - var(--space-6) + var(--area-sicura-basso));
+}
+.barra-basso__voci {
+  position: fixed;
+  left: max(var(--grid-margine-mobile), var(--area-sicura-sinistra));
+  right: max(var(--grid-margine-mobile), var(--area-sicura-destra));
+  bottom: calc(var(--space-2) + var(--area-sicura-basso));
   z-index: var(--z-nav);
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto; /* #313 */
-  gap: var(--space-2);
-  padding: var(--space-4) var(--grid-margine-mobile) var(--space-6);
-  background: linear-gradient(to top, var(--color-carta) 70%, transparent);
-  margin-top: auto;
-}
-.nav-basso__voci {
-  min-height: var(--size-barra); /* #313 */
-  border-radius: var(--radius-l);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  min-height: var(--size-barra);
+  border-radius: var(--radius-tondo);
   background: var(--color-superficie);
   box-shadow:
     inset 0 0 0 var(--border-sottile) var(--color-filo),
     var(--shadow-barra);
-  display: grid;
-  grid-template-columns: repeat(3, minmax(max-content, 1fr)); /* #313 */
 }
-.nav-basso__voce {
+.barra-basso__voce {
   display: grid;
   place-content: center;
   justify-items: center;
   gap: var(--space-1);
-  font-size: var(--text-micro-size);
-  line-height: var(--text-micro-line);
-  font-weight: var(--weight-semi);
-  color: var(--color-inchiostro-2);
-  position: relative;
+  min-width: var(--size-tocco);
+  min-height: var(--size-barra);
+  border-radius: var(--radius-tondo);
+  font-size: var(--text-etichetta-size);
+  line-height: var(--text-etichetta-line);
+  font-weight: var(--weight-normale);
+  color: var(--color-inchiostro-medio);
 }
-.nav-basso__voce.is-attiva {
+.barra-basso__voce.is-attiva {
+  font-weight: var(--weight-pieno);
   color: var(--color-inchiostro);
 }
-.nav-basso__voce.is-attiva::after {
-  content: "";
+/* Voce scelta: icona piena */
+.barra-basso__voce.is-attiva .icona {
+  fill: currentColor;
+}
+.barra-basso__icona,
+.voce-barra__icona {
+  position: relative;
+  display: inline-grid;
+}
+.barra-basso__punto,
+.voce-barra__punto {
   position: absolute;
-  bottom: var(--space-2);
-  width: var(--space-4);
-  height: var(--space-half);
+  top: calc(-1 * var(--space-half));
+  right: calc(-1 * var(--space-1));
+  width: var(--size-pallino-urgente);
+  height: var(--size-pallino-urgente);
   border-radius: var(--radius-tondo);
-  background: var(--color-pieno);
+  background: var(--color-allerta);
+  box-shadow: 0 0 0 var(--space-half) var(--color-superficie);
+}
+.barra-basso__voce:active {
+  background: var(--color-premuto);
 }
 
-.btn-aggiungi {
-  min-height: var(--size-barra); /* #313 */
-  border: 0;
-  border-radius: var(--radius-l);
-  background: var(--color-pieno);
-  color: var(--color-latte);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  font-size: var(--text-corpo-forte-size);
-  font-weight: var(--weight-pieno);
-  cursor: pointer;
+/* Barra laterale, barra in alto e pannello: la forma del computer */
+@media (min-width: 900px) and (min-height: 600px) {
+  .testata,
+  .testata-raccolta,
+  .barra-basso {
+    display: none;
+  }
+  .guscio {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: start;
+    min-height: 100dvh;
+  }
+  /* L'area del contenuto sta al massimo in 1200 px, al centro dello spazio a
+     destra della barra: senza media query, solo con il limite */
+  .guscio__area {
+    min-height: 100dvh;
+    width: 100%;
+    max-width: var(--size-contenuto-max);
+    margin-inline: auto;
+  }
+
+  .barra-laterale {
+    position: sticky;
+    top: var(--space-0);
+    align-self: start;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    width: var(--size-barra-laterale-icone);
+    height: 100dvh;
+    padding: calc(var(--space-6) + var(--area-sicura-alto)) var(--space-3)
+      calc(var(--space-6) + var(--area-sicura-basso))
+      calc(var(--space-3) + var(--area-sicura-sinistra));
+    overflow-y: auto;
+    background: var(--color-carta-2);
+    box-shadow: inset calc(-1 * var(--border-sottile)) 0 0 var(--color-filo);
+    transition: width var(--durata-rapida) var(--curva);
+  }
+  .barra-laterale__marchio {
+    display: grid;
+    place-items: center;
+    min-height: var(--size-controllo);
+    margin-bottom: var(--space-4);
+    font-family: var(--font-titoli);
+    font-size: var(--text-titolo-scheda-size);
+    letter-spacing: var(--text-titolo-scheda-tracking);
+    color: var(--color-inchiostro);
+  }
+  .barra-laterale__scritta,
+  .barra-laterale__lente,
+  .barra-laterale__titoletto {
+    display: none;
+  }
+  .barra-laterale__segno {
+    font-weight: var(--weight-pieno);
+  }
+  .barra-laterale__lente-icone {
+    display: grid;
+    justify-items: center;
+    margin-bottom: var(--space-4);
+  }
+  .barra-laterale__voci {
+    display: grid;
+    gap: var(--space-half);
+    justify-items: center;
+  }
+  .barra-laterale__fondo {
+    margin-top: auto;
+    display: grid;
+    justify-items: center;
+  }
+
+  /* Voce della barra: 44 di altezza e 48 di larghezza a icone */
+  .voce-barra {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+    width: var(--size-voce-icone);
+    min-height: var(--size-voce-icone);
+    padding: var(--space-0);
+    border: 0;
+    border-radius: var(--radius-m);
+    background: transparent;
+    font-size: var(--text-corpo-forte-size);
+    line-height: var(--text-corpo-forte-line);
+    font-weight: var(--weight-forte);
+    color: var(--color-inchiostro-medio);
+    cursor: pointer;
+  }
+  .voce-barra.is-attiva {
+    background: var(--color-superficie);
+    box-shadow: inset 0 0 0 var(--border-sottile) var(--color-filo);
+    color: var(--color-inchiostro);
+  }
+  /* A icone il nome resta nel link per i lettori di schermo */
+  .voce-barra__etichetta,
+  .barra-laterale__profilo-testi {
+    position: absolute;
+    width: var(--border-sottile);
+    height: var(--border-sottile);
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .barra-laterale__profilo {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    position: relative;
+    min-width: var(--size-voce-icone);
+    min-height: var(--size-voce-icone);
+    justify-content: center;
+    border-radius: var(--radius-m);
+  }
+  .barra-laterale__profilo[aria-current] {
+    background: var(--color-superficie);
+    box-shadow: inset 0 0 0 var(--border-sottile) var(--color-filo);
+  }
+  .barra-laterale__profilo-nome {
+    display: block;
+    font-size: var(--text-corpo-forte-size);
+    line-height: var(--text-corpo-forte-line);
+    font-weight: var(--weight-forte);
+    color: var(--color-inchiostro);
+  }
+  .barra-laterale__profilo-sotto {
+    display: block;
+    font-size: var(--text-nota-size);
+    line-height: var(--text-nota-line);
+    color: var(--color-inchiostro-2);
+  }
+  .barra-laterale__titoletto {
+    padding: var(--space-0) var(--space-3);
+    margin-top: var(--space-4);
+    font-size: var(--text-etichetta-size);
+    line-height: var(--text-etichetta-line);
+    font-weight: var(--weight-semi);
+    color: var(--color-inchiostro-2);
+  }
+  .quadrato-nest--statico {
+    cursor: pointer;
+    box-shadow: none;
+    background: transparent;
+  }
+
+  /* Fumetto delle icone */
+  .fumetto-ancora {
+    position: relative;
+    display: block;
+  }
+  .fumetto {
+    position: absolute;
+    top: 50%;
+    left: calc(100% + var(--space-2));
+    z-index: var(--z-toast);
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    width: max-content;
+    max-width: var(--size-fumetto);
+    min-height: calc(var(--size-controllo) - var(--space-half));
+    padding: var(--space-0) var(--space-3);
+    border-radius: calc(var(--radius-s) + var(--border-sottile));
+    background: var(--color-superficie);
+    box-shadow: var(--shadow-fumetto);
+    font-size: var(--text-nota-size);
+    line-height: var(--text-nota-line);
+    font-weight: var(--weight-semi);
+    color: var(--color-inchiostro);
+    pointer-events: none;
+  }
+
+  /* Barra in alto */
+  .barra-alto {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    min-height: var(--size-barra-alto);
+    padding: var(--space-0) var(--space-8);
+  }
+  .barra-alto__titolo {
+    flex: 1;
+    min-width: var(--space-0);
+    font-size: var(--text-titolo-computer-size);
+    line-height: var(--text-titolo-computer-line);
+    letter-spacing: var(--text-titolo-computer-tracking);
+    font-weight: var(--weight-pieno);
+  }
+  .barra-alto__azioni {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-left: auto;
+  }
+  .campo-cerca-barra {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex: 0 1 var(--size-ricerca);
+    min-width: calc(2 * var(--space-16) - var(--space-2));
+    min-height: var(--size-controllo);
+    padding: var(--space-0) var(--space-3);
+    border-radius: var(--radius-m);
+    background: var(--color-carta-2);
+    font-size: var(--text-corpo-size);
+    line-height: var(--text-corpo-line);
+    color: var(--color-inchiostro-2);
+  }
+  .campo-cerca-barra__testo {
+    flex: 1;
+    min-width: var(--space-0);
+  }
+  .pulsante-barra {
+    gap: var(--space-2);
+    padding-inline: var(--space-4);
+  }
+  .pulsante-barra .tasto {
+    background: transparent;
+    color: var(--color-latte);
+    box-shadow: inset 0 0 0 var(--border-sottile) var(--color-latte);
+  }
+
+  /* Pannello a destra: affianca il contenuto, che si stringe, senza velo */
+  .guscio--pannello .guscio__pannello {
+    display: block;
+    width: var(--size-pannello-stretto);
+  }
+  .guscio--pannello .barra-laterale {
+    width: var(--size-barra-laterale-icone);
+  }
+  .pannello {
+    position: sticky;
+    top: var(--space-0);
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    padding: var(--area-sicura-alto) var(--area-sicura-destra)
+      var(--area-sicura-basso) var(--space-0);
+    background: var(--color-superficie);
+    box-shadow: inset var(--border-sottile) 0 0 var(--color-filo);
+    animation: pannello-entra var(--durata-rapida) var(--curva);
+  }
+  .pannello__testata {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    flex: none;
+    min-height: var(--size-testata-pannello);
+    padding: var(--space-0) var(--space-5);
+    box-shadow: 0 var(--border-sottile) 0 var(--color-filo);
+  }
+  .pannello__titolo {
+    min-width: var(--space-0);
+    font-size: var(--text-pannello-size);
+    line-height: var(--text-pannello-line);
+    font-weight: var(--weight-pieno);
+  }
+  .pannello__corpo {
+    flex: 1;
+    min-height: var(--space-0);
+    overflow-y: auto;
+    padding: var(--space-5);
+  }
+  .pannello__piede {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    flex: none;
+    padding: var(--space-4) var(--space-5);
+    box-shadow: 0 calc(-1 * var(--border-sottile)) 0 var(--color-filo);
+  }
+  .pannello__piede-inizio,
+  .pannello__piede-fine {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  /* Con il dito i comandi piccoli salgono a 44 px (ultimo gesto, tablet) */
+  [data-gesto="tocco"] .campo-cerca-barra,
+  [data-gesto="tocco"] .pulsante-barra {
+    min-height: var(--size-tocco);
+  }
+  [data-gesto="tocco"] .barra-alto .btn-icona,
+  [data-gesto="tocco"] .pannello .btn-icona {
+    width: var(--size-tocco);
+    height: var(--size-tocco);
+  }
+  [data-gesto="tocco"] .pannello__piede .btn--piccolo {
+    min-height: var(--size-tocco);
+  }
 }
-.btn-aggiungi__piu {
-  width: var(--size-etichetta);
-  height: var(--size-etichetta);
-  border-radius: var(--radius-s);
-  background: var(--color-latte);
-  color: var(--color-adesso-testo);
-  display: grid;
+@keyframes pannello-entra {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* Da 1280 px, con il pannello chiuso: barra laterale intera e pannello largo */
+@media (min-width: 1280px) and (min-height: 600px) {
+  .guscio--pannello .guscio__pannello {
+    width: var(--size-pannello);
+  }
+  .guscio:not(.guscio--pannello) .barra-laterale {
+    width: var(--size-barra-laterale);
+  }
+  .guscio:not(.guscio--pannello) .barra-laterale__marchio {
+    place-items: center start;
+    padding-inline: var(--space-3);
+  }
+  .guscio:not(.guscio--pannello) .barra-laterale__segno,
+  .guscio:not(.guscio--pannello) .barra-laterale__lente-icone {
+    display: none;
+  }
+  .guscio:not(.guscio--pannello) .barra-laterale__scritta,
+  .guscio:not(.guscio--pannello) .barra-laterale__lente,
+  .guscio:not(.guscio--pannello) .barra-laterale__titoletto {
+    display: block;
+  }
+  .guscio:not(.guscio--pannello) .barra-laterale__lente .lente {
+    justify-self: stretch;
+    min-width: var(--space-0);
+  }
+  .guscio:not(.guscio--pannello) .barra-laterale__voci,
+  .guscio:not(.guscio--pannello) .barra-laterale__fondo {
+    justify-items: stretch;
+  }
+  .guscio:not(.guscio--pannello) .voce-barra,
+  .guscio:not(.guscio--pannello) .barra-laterale__profilo {
+    width: auto;
+    justify-content: flex-start;
+    padding-inline: var(--space-3);
+  }
+  .guscio:not(.guscio--pannello) .voce-barra {
+    min-height: var(--size-tocco);
+  }
+  .guscio:not(.guscio--pannello) .voce-barra__etichetta,
+  .guscio:not(.guscio--pannello) .barra-laterale__profilo-testi {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+  }
+  .guscio:not(.guscio--pannello) .fumetto {
+    display: none;
+  }
+}
+
+@media (min-width: 900px) and (min-height: 600px) and (hover: hover) {
+  .voce-barra,
+  .barra-laterale__profilo {
+    transition:
+      background var(--durata-rapida) var(--curva),
+      color var(--durata-rapida) var(--curva);
+  }
+  .voce-barra:not(.is-attiva):hover,
+  .barra-laterale__profilo:not([aria-current]):hover {
+    background: var(--color-premuto);
+    color: var(--color-inchiostro);
+  }
+}
+@media (min-width: 900px) and (min-height: 600px) {
+  .voce-barra:not(.is-attiva):active,
+  .barra-laterale__profilo:not([aria-current]):active {
+    background: var(--color-premuto);
+    color: var(--color-inchiostro);
+  }
+}
+
+/* Tasto disegnato accanto al comando: si vede con il mouse o dopo un tasto */
+.tasto {
+  display: inline-grid;
   place-items: center;
-}
-.btn-aggiungi--desktop {
-  min-height: var(--size-controllo); /* #313 */
-  border-radius: var(--radius-m);
-  padding: var(--space-0) var(--space-4) var(--space-0) var(--space-2);
-  font-size: var(--text-controllo-size);
-}
-
-.nav-alto {
-  height: var(--size-nav-desktop);
-  display: grid;
-  grid-template-columns: var(--size-menu-desktop) 1fr auto;
-  align-items: center;
-  padding: var(--space-0) var(--grid-margine-desktop);
-  border-bottom: var(--border-sottile) solid var(--color-filo);
-  background: var(--color-carta);
-}
-.nav-alto__logo {
-  font-family: var(--font-titoli);
-  font-weight: var(--weight-medio);
-  font-size: var(--text-titolo-scheda-size);
-  letter-spacing: var(--text-titolo-scheda-tracking);
-}
-.nav-alto__voci {
-  justify-self: center;
-  display: flex;
-  gap: var(--space-1);
-  height: var(--size-controllo);
-  padding: var(--space-1);
-  border-radius: var(--radius-m);
+  min-width: var(--space-6);
+  height: var(--space-6);
+  padding: var(--space-0) var(--space-1);
+  border-radius: var(--radius-xs);
   background: var(--color-superficie);
-  box-shadow: inset 0 0 0 var(--border-sottile) var(--color-filo);
-}
-.nav-alto__voce {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-0) var(--space-4);
-  border-radius: var(--radius-s);
-  font-size: var(--text-controllo-size);
+  box-shadow: inset 0 0 0 var(--border-sottile) var(--color-filo-2);
+  font-family: inherit;
+  font-size: var(--text-tasto-size);
+  line-height: var(--text-tasto-line);
   font-weight: var(--weight-semi);
   color: var(--color-inchiostro-2);
 }
-.nav-alto__voce.is-attiva {
-  background: var(--color-pieno);
-  color: var(--color-latte);
+.tasto--accanto {
+  display: none;
 }
-.nav-alto__azioni {
+[data-gesto="puntatore"] .tasto--accanto,
+[data-tastiera] .tasto--accanto {
+  display: inline-grid;
+}
+
+/* Finestra «Scorciatoie da tastiera» */
+.scorciatoie {
+  display: grid;
+  gap: var(--space-2);
+}
+.scorciatoie__riga {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--size-controllo);
+  font-size: var(--text-corpo-size);
+  line-height: var(--text-corpo-line);
+}
+.scorciatoie__riga .tasto {
+  flex: none;
+}
+.scorciatoie__interruttore {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  box-shadow: 0 calc(-1 * var(--border-sottile)) 0 var(--color-filo);
+  font-size: var(--text-corpo-size);
+  line-height: var(--text-corpo-line);
+}
+
+/* Azioni a destra dell'intestazione di una pagina da computer (Calendario) */
+.intestazione-desktop__azioni {
   display: flex;
   align-items: center;
   gap: var(--space-2);
@@ -3993,7 +4490,7 @@ button.riga-lista {
 .quadrato-nest:not(.quadrato-nest--notte),
 .btn--piccolo,
 .btn-tenue,
-.btn-aggiungi--desktop,
+.campo-cerca-barra,
 .btn-link,
 .btn-pericolo,
 .stato-vuoto__testo a,
@@ -4013,7 +4510,7 @@ button.riga-lista {
 .quadrato-nest:not(.quadrato-nest--notte)::before,
 .btn--piccolo::before,
 .btn-tenue::before,
-.btn-aggiungi--desktop::before,
+.campo-cerca-barra::before,
 .btn-link::before,
 .btn-pericolo::before,
 .stato-vuoto__testo a::before,
@@ -4055,8 +4552,8 @@ button.riga-lista {
    finche' non ha il focus. Sta dopo l'elenco dell'area di tocco: resta fixed. */
 .vai-al-contenuto {
   position: fixed;
-  top: calc(var(--space-3) + env(safe-area-inset-top));
-  left: max(var(--grid-margine-mobile), env(safe-area-inset-left));
+  top: calc(var(--space-3) + var(--area-sicura-alto));
+  left: max(var(--grid-margine-mobile), var(--area-sicura-sinistra));
   z-index: var(--z-toast);
 }
 .vai-al-contenuto:not(:focus) {
@@ -4068,41 +4565,8 @@ button.riga-lista {
   clip-path: inset(50%);
   white-space: nowrap;
 }
-@media (min-width: 768px) {
-  .vai-al-contenuto {
-    left: max(
-      var(--grid-margine-mobile),
-      calc(
-        (100% - var(--grid-colonna-stretta)) / 2 + var(--grid-margine-mobile)
-      )
-    );
-  }
-}
-@media (min-width: 1024px) {
-  .vai-al-contenuto {
-    top: calc((var(--size-nav-desktop) - var(--size-controllo)) / 2);
-    left: max(
-      var(--grid-margine-desktop),
-      calc((100% - var(--grid-contenuto-max)) / 2)
-    );
-  }
-}
 main[tabindex="-1"]:focus {
   outline: none;
-}
-
-/* Barra mobile con due azioni a destra (#67 punto 9): Cerca e Notifiche */
-.barra--due-azioni {
-  grid-template-columns: 1fr minmax(0, auto) 1fr;
-}
-.barra--due-azioni .lente {
-  min-width: 0;
-}
-.barra__azioni {
-  justify-self: end;
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
 }
 
 /* Conteggio leggibile sulle voci non scelte (#43 punto 18) */
@@ -4175,7 +4639,6 @@ main[tabindex="-1"]:focus {
 /* Passaggio del mouse */
 @media (hover: hover) {
   .btn-primary,
-  .btn-aggiungi,
   .btn-secondary,
   .btn-quieto,
   .btn-chiaro,
@@ -4198,11 +4661,9 @@ main[tabindex="-1"]:focus {
   .btn-primary:hover:not(:disabled, [aria-disabled="true"]) {
     background: var(--color-azione); /* #634 */
   }
-  .btn-aggiungi:hover:not(:disabled),
   .selettore:not(.selettore--carta)
     .selettore__voce[aria-pressed="true"]:hover:not(:disabled),
-  .chip[aria-pressed="true"]:hover:not(:disabled),
-  .nav-alto__voce.is-attiva:hover {
+  .chip[aria-pressed="true"]:hover:not(:disabled) {
     background: var(--color-azione);
   }
   .btn-icona:hover:not(
@@ -4243,9 +4704,7 @@ main[tabindex="-1"]:focus {
     .selettore__voce:hover:not([aria-pressed="true"], :disabled) {
     background: var(--color-carta);
   }
-  .selettore__voce:hover:not([aria-pressed="true"], :disabled),
-  .nav-basso__voce:hover,
-  .nav-alto__voce:hover:not(.is-attiva) {
+  .selettore__voce:hover:not([aria-pressed="true"], :disabled) {
     color: var(--color-inchiostro);
   }
 }
@@ -4253,9 +4712,6 @@ main[tabindex="-1"]:focus {
 /* Premuto (anche sul touch): stesso fondo del passaggio del mouse */
 .btn-primary:active:not(:disabled, [aria-disabled="true"]) {
   background: var(--color-azione); /* #634 */
-}
-.btn-aggiungi:active:not(:disabled) {
-  background: var(--color-azione);
 }
 .btn-secondary:active:not(:disabled, [aria-disabled="true"]),
 .btn-quieto:active:not(:disabled, [aria-disabled="true"]),
@@ -5855,21 +6311,12 @@ body {
   top: var(--space-0);
   z-index: var(--z-nav);
   background: var(--color-carta);
-  padding-top: calc(var(--space-3) + env(safe-area-inset-top));
-}
-.nav-alto {
-  position: sticky;
-  top: var(--space-0);
-  z-index: var(--z-nav);
-}
-.nav-basso {
-  padding-bottom: calc(var(--space-6) + env(safe-area-inset-bottom));
+  padding-top: calc(var(--space-3) + var(--area-sicura-alto));
 }
 .barra,
-.pagina,
-.nav-basso {
-  padding-left: max(var(--grid-margine-mobile), env(safe-area-inset-left));
-  padding-right: max(var(--grid-margine-mobile), env(safe-area-inset-right));
+.pagina {
+  padding-left: max(var(--grid-margine-mobile), var(--area-sicura-sinistra));
+  padding-right: max(var(--grid-margine-mobile), var(--area-sicura-destra));
 }
 .schermo-notte {
   padding-top: calc(var(--space-4) + env(safe-area-inset-top));
@@ -5899,14 +6346,9 @@ body {
   background: var(--color-carta-2);
   color: var(--color-inchiostro);
 }
-.nav-basso__voce:not(.is-attiva):active,
-.nav-alto__voce:not(.is-attiva):active {
-  color: var(--color-inchiostro);
-}
 
 /* ---------- Mobile e tablet (fino a 1023 px) ---------- */
 @media (max-width: 1023px) {
-  .nav-alto,
   .intestazione-desktop,
   .menu-laterale {
     display: none;
@@ -5923,8 +6365,7 @@ body {
 /* ---------- Tablet (da 768 px): colonna stretta centrata ---------- */
 @media (min-width: 768px) {
   .barra,
-  .pagina,
-  .nav-basso {
+  .pagina {
     width: 100%;
     max-width: var(--grid-colonna-stretta);
     margin-inline: auto;
@@ -5958,15 +6399,8 @@ body {
 
 /* ---------- Desktop (da 1024 px): regole .frame-desktop del mockup ---------- */
 @media (min-width: 1024px) {
-  .barra,
-  .nav-basso {
+  .barra {
     display: none;
-  }
-  .nav-alto {
-    padding-inline: max(
-      var(--grid-margine-desktop),
-      calc((100% - var(--grid-contenuto-max)) / 2)
-    );
   }
   .pagina-desktop {
     flex: 1;
@@ -6043,9 +6477,6 @@ body {
    niente fogli, menu o toast dentro. Le regole su classi esistenti (altezze,
    colonne, a capo) stanno nella regola stessa, con il commento #313.
    ========================================================= */
-.nav-basso {
-  container: barra / inline-size;
-}
 .riga-lista,
 .riga-regalo {
   container: riga / inline-size;
@@ -6055,30 +6486,6 @@ body {
    giorno, settimana e mese: involucro del SectionSwitcher, solo sotto 1024 px) */
 .contenitore-selettore {
   container: selettore / inline-size;
-}
-
-/* Barra in basso: la colonna di «Aggiungi» la decide il bottone, così la
-   query (che non può cambiare il contenitore stesso) la stringe. */
-.nav-basso .btn-aggiungi {
-  min-width: var(--size-cta-aggiungi);
-  padding-inline: var(--space-3);
-}
-
-@container barra (width < 13rem) {
-  .nav-basso .btn-aggiungi {
-    width: var(--size-barra);
-    min-width: var(--size-barra);
-    padding-inline: var(--space-0);
-  }
-  /* La parola resta per i lettori di schermo: stile di .visivamente-nascosto */
-  .btn-aggiungi__testo {
-    position: absolute;
-    width: var(--border-sottile);
-    height: var(--border-sottile);
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-  }
 }
 
 /* Selettore impilato (Casa, Aggiungi) */

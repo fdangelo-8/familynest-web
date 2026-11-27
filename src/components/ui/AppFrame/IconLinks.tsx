@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { MouseEvent } from "react";
+import { plural } from "@/lib/i18n";
 import { it } from "@/lib/i18n/messages/it";
 import { cx } from "../cx";
 import { Icon, type IconName } from "../Icon/Icon";
@@ -16,22 +17,25 @@ import { useOptionalNest } from "./NestProvider";
 export function NotificationsLink({
   newCount = 0,
   current = false,
+  bare = false,
 }: {
   newCount?: number;
   current?: boolean;
+  /** Bare on white, as in the headers of the phone (`.btn-icona--nudo`) */
+  bare?: boolean;
 }) {
   const label =
     newCount > 0
-      ? `Notifiche, ${newCount} ${newCount === 1 ? "nuova" : "nuove"}`
-      : "Notifiche";
+      ? plural(it.shell.notificationsNew, newCount)
+      : it.shell.notifications;
   return (
     <Link
       href="/notifiche"
-      className="btn-icona"
+      className={cx("btn-icona", bare && "btn-icona--nudo")}
       aria-label={label}
       aria-current={current ? "page" : undefined}
     >
-      <Icon name="bell" />
+      <Icon name="bell" size={bare ? "l" : "m"} />
       {newCount > 0 ? (
         <span className="btn-icona__punto" aria-hidden="true" />
       ) : null}
@@ -39,26 +43,15 @@ export function NotificationsLink({
   );
 }
 
-/**
- * Magnifier link to the search page. On desktop it also announces the
- * shortcut (`shortcut`: `aria-keyshortcuts`), because not every screen reader
- * reads «⌘» in the name.
- */
-export function SearchLink({
-  label = "Cerca nel Nest",
-  shortcut = false,
-}: {
-  label?: string;
-  shortcut?: boolean;
-}) {
+/** Magnifier link to the search page («Cerca»). */
+export function SearchLink({ bare = false }: { bare?: boolean }) {
   return (
     <Link
       href="/ricerca"
-      className="btn-icona"
-      aria-label={label}
-      aria-keyshortcuts={shortcut ? "Control+K Meta+K" : undefined}
+      className={cx("btn-icona", bare && "btn-icona--nudo")}
+      aria-label={it.shell.search}
     >
-      <Icon name="search" />
+      <Icon name="search" size={bare ? "l" : "m"} />
     </Link>
   );
 }

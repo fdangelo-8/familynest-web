@@ -446,7 +446,7 @@ function WeekContent({ nowMs }: { nowMs: number }) {
     <main id="contenuto" tabIndex={-1} className="pagina pagina-desktop">
       <div className="intestazione-desktop">
         {period}
-        <div className="nav-alto__azioni">
+        <div className="intestazione-desktop__azioni">
           <Lens />
           {switcher}
         </div>

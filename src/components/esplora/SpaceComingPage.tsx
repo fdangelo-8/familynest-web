@@ -203,7 +203,7 @@ export function SpaceComingPage({ spaceKey }: { spaceKey: SpaceKey }) {
       ) : null}
       <Button
         variant="link-secondario"
-        href="/esplora"
+        href="/spazi"
         className="spazio-arrivo__desktop"
       >
         <span aria-hidden="true">←</span> Esplora
