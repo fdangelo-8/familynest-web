@@ -198,8 +198,7 @@ test.describe("axe", () => {
     await expect(alert).toBeFocused();
     expect(
       await page.evaluate(
-        () =>
-          document.activeElement?.closest('[role="alertdialog"]') !== null,
+        () => document.activeElement?.closest('[role="alertdialog"]') !== null,
       ),
     ).toBe(true);
     expect(await seriousViolations(page)).toEqual([]);
