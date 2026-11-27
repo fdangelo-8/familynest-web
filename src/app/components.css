@@ -2005,24 +2005,23 @@ button.riga-lista {
 .casella[aria-checked="true"] .icona {
   opacity: 1;
 }
-/* Spunta neutra (F4b, #504): cerchio a filo da 24, pieno quando è fatta.
-   Area di tocco 44 con ::before. */
 .tondo-spunta {
-  width: var(--size-icona-l);
-  height: var(--size-icona-l);
+  width: var(--size-casella);
+  height: var(--size-casella);
   border-radius: var(--radius-tondo);
+  box-shadow: inset 0 0 0 var(--border-medio) var(--color-inchiostro-2);
   display: inline-grid;
   place-items: center;
   flex: none;
-  border: var(--border-medio) solid var(--color-filo-campo);
-  background: var(--color-superficie);
+  border: 0;
+  background: transparent;
   cursor: pointer;
   color: var(--color-latte);
   padding: var(--space-0);
 }
 .tondo-spunta[aria-checked="true"] {
   background: var(--color-pieno);
-  border-color: transparent; /* il fondo passa sotto il bordo */
+  box-shadow: none;
 }
 .tondo-spunta .icona {
   opacity: 0;
@@ -6541,6 +6540,22 @@ body {
 .scelta-campo {
   display: grid;
   gap: var(--space-2);
+}
+
+/* Spunta neutra: cerchio a filo da 24 (bordo --color-filo-campo, area di tocco
+   44 con ::before), --color-pieno con il segno --color-latte quando è fatta.
+   Le regole del mockup di .tondo-spunta restano com'erano più sopra; queste le
+   completano. */
+.tondo-spunta {
+  width: var(--size-icona-l);
+  height: var(--size-icona-l);
+  box-shadow: none;
+  border: var(--border-medio) solid var(--color-filo-campo);
+  background: var(--color-superficie);
+}
+.tondo-spunta[aria-checked="true"] {
+  background: var(--color-pieno);
+  border-color: transparent; /* il fondo passa sotto il bordo */
 }
 
 /* Schede e tessere di scelta: mouse e premuto. La scelta resta del suo fondo. */
