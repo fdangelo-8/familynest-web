@@ -45,7 +45,7 @@ import { Tile, TileGrid } from "@/components/ui/Tile/Tile";
 import { it } from "@/lib/i18n/messages/it";
 import { t } from "@/lib/i18n";
 import { memberInitials } from "@/lib/member-initials";
-import { askNest, brandText, messages, nestEnergy } from "@/lib/brand";
+import { askNest, BRAND, brandText, messages, nestEnergy } from "@/lib/brand";
 import { PHOTO_REDUCE_ERROR } from "@/lib/photo-field-texts";
 import { REPEAT_DAYS_ERROR } from "@/lib/repeat-options";
 import { PageError } from "@/components/ui/PageError/PageError";
@@ -955,7 +955,7 @@ function ChoicesPeopleSection() {
       </Example>
       <Example caption="FaceGrid · volti in griglia">
         <FaceGrid
-          label="Persone del Nest"
+          label={`Persone del ${BRAND.short}`}
           people={FACE_PEOPLE}
           onSelect={(id) => {
             const person = FACE_PEOPLE.find((p) => p.id === id);
@@ -977,7 +977,7 @@ function ChoicesPeopleSection() {
       </Example>
       <Example caption="FaceGrid · nessuna persona">
         <FaceGrid
-          label="Persone del Nest, nessuna"
+          label={`Persone del ${BRAND.short}, nessuna`}
           people={[]}
           onSelect={() => undefined}
           onAdd={() => undefined}
@@ -993,7 +993,7 @@ function ChoicesPeopleSection() {
           <span data-testid="ds-pila-sei">
             <AvatarStack people={stackSix} />
           </span>
-          <span data-testid="ds-biscotto-foto">
+          <span className={styles.avatarFoto} data-testid="ds-biscotto-foto">
             <Avatar
               name="Biscotto"
               color="zafferano"
@@ -1002,7 +1002,10 @@ function ChoicesPeopleSection() {
               ring
             />
           </span>
-          <span data-testid="ds-biscotto-senza-foto">
+          <span
+            className={styles.avatarFoto}
+            data-testid="ds-biscotto-senza-foto"
+          >
             <Avatar
               name="Biscotto"
               color="zafferano"
@@ -1058,7 +1061,7 @@ function ChoicesPeopleSection() {
         </TileGrid>
       </Example>
       <Example
-        caption="Tile · tessere del Nest (avatar, in attesa, 4 colonne)"
+        caption={`Tile · tessere del ${BRAND.short} (avatar, in attesa, 4 colonne)`}
         wide
       >
         <TileGrid columns={4} data-testid="ds-tessere-nest">
