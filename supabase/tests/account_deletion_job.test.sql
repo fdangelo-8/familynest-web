@@ -76,6 +76,12 @@ set local role authenticated;
 set local request.jwt.claims to '{"sub":"aaaaaaaa-0000-4000-8000-000000000001","role":"authenticated"}';
 select set_config('test.delete_on', public.request_account_deletion(false)::text, true);
 reset role;
+-- #658: run_account_job() refuses an instant in the future, so the request is moved 16 days
+-- back (delete_on = the day before yesterday) and every run below is at an instant in the past.
+update private.account_deletion_requests r
+set delete_on = r.delete_on - 16
+where r.user_id = 'aaaaaaaa-0000-4000-8000-000000000001';
+select set_config('test.delete_on', (current_setting('test.delete_on')::date - 16)::text, true);
 
 -- ---------------------------------------------------------------------------
 -- Schema and privileges
@@ -255,8 +261,13 @@ reset role;
 insert into public.household_members (household_id, kind, name, color, user_id, joined_at)
 values (current_setting('test.casa_ugo')::uuid, 'adult', 'Vera', 'cobalto', 'dddddddd-0000-4000-8000-000000000012', now());
 
+-- #658: their 14 days are moved back (delete_on = the day before yesterday), the job runs now.
+update private.account_deletion_requests r
+set delete_on = r.delete_on - 16
+where r.user_id in ('cccccccc-0000-4000-8000-000000000001', 'dddddddd-0000-4000-8000-000000000011');
+
 select is(
-  public.run_account_job('deletions', ((now() at time zone 'Europe/Rome')::date + 15 + time '00:30') at time zone 'Europe/Rome'),
+  public.run_account_job('deletions', now()),
   2,
   'the job deletes Chiara and Ugo'
 );
