@@ -296,12 +296,74 @@ const blocked = {
   "TMPDIR riassegnata alla cartella temporanea": [
     `TMPDIR=${tmpdir()}; npm test > $TMPDIR/fn-out.log`,
   ],
-  "TMP cambiata dentro bash -c": [`TMP=src bash -c "echo x > ${tmpFile}"`],
+  "TMP cambiata dentro bash -c": [`TMP=src bash -c 'echo x > $TMP/a.ts'`],
   "TMPDIR tolta, default nel repo": [
     'unset TMPDIR; echo x > "${TMPDIR-src}/a.ts"',
   ],
   "TMPDIR vuota, default nel repo": [
     'TMPDIR= ; echo x > "${TMPDIR:-src}/a.ts"',
+  ],
+  // #630: command name written with a backslash or with quotes.
+  "nome con barra iniziale": ["\\sed -i 's/a/b/' src/a.ts"],
+  "nome con barra in mezzo": ["s\\ed -i 's/a/b/' src/a.ts"],
+  "nome tra $'...'": ["$'sed' -i 's/a/b/' src/a.ts"],
+  "nome tra $'...' con escape": ["$'\\x73ed' -i 's/a/b/' src/a.ts"],
+  "nome tra virgolette spezzate": ["s''ed -i 's/a/b/' src/a.ts"],
+  "opzione con barra": ["sed -\\i 's/a/b/' src/a.ts"],
+  "tee con barra iniziale": ["echo x | \\tee src/a.ts"],
+  "tee con barra in mezzo": ["echo x | t\\ee src/a.ts"],
+  "tee tra $'...'": ["echo x | $'tee' src/a.ts"],
+  // #630: other forms of output redirection.
+  "redirezione >&file": ["echo x >&src/a.ts"],
+  "redirezione >& file": ["echo x >& src/a.ts"],
+  "redirezione <>": ["echo x <> src/a.ts"],
+  "redirezione 1<>": ["echo x 1<>src/a.ts"],
+  "redirezione attaccata dopo =": ["echo a=>src/a.ts"],
+  "redirezione attaccata dopo -": ["echo ->src/a.ts"],
+  "redirezione attaccata dopo -1": ["echo -1>src/a.ts"],
+  "tee dopo >&file": ["echo x | tee >&/dev/null src/a.ts"],
+  // #630: folder variables changed in the same command, with a file write.
+  "HOME assegnata": ["HOME=src; echo x > ~/a.ts"],
+  "HOME esportata": ["export HOME=src && echo x > $HOME/a.ts"],
+  "HOME tolta": ['unset HOME; echo x > "${HOME-src}/a.ts"'],
+  "eval su TMPDIR": ['eval "TMPDIR=src"; echo x > $TMPDIR/a.ts'],
+  "eval e scrittura attraverso ~": ["eval true; echo x > ~/a.ts"],
+  "declare -n": ["declare -n r=TMPDIR; r=src; echo x > $TMPDIR/a.ts"],
+  "typeset -n": ["typeset -n r=HOME; r=src; echo x > ~/a.ts"],
+  let: ["let TMPDIR=0; echo x > $TMPDIR/a.ts"],
+  "assegnazione in (( ))": ["(( TMPDIR = 0 )); echo x > $TMPDIR/a.ts"],
+  "env -u con sh -c": [`env -u TMPDIR sh -c 'echo x > "\${TMPDIR:-src}/a.ts"'`],
+  "env -i con bash -c": [`env -i bash -c 'echo x > "$HOME/a.ts"'`],
+  "eval scritto con barra": ['ev\\al "TMPDIR=src"; echo x > $TMPDIR/a.ts'],
+  // The constructs are blocked with any write, even when no variable is named.
+  "declare -n e scrittura su $TMPDIR": [
+    "declare -n r=x; echo x > $TMPDIR/a.ts",
+  ],
+  "let e scrittura su $HOME": ["let x=1; echo x > $HOME/a.ts"],
+  "(( = )) e scrittura su ${TMP}": ["(( x = 1 )); echo x > ${TMP}/a.ts"],
+  "env -i e scrittura su $HOME": [`env -i bash -c 'echo x > "$HOME/a.ts"'`],
+  "cd senza argomenti dopo eval": ["eval true; cd && echo x > a.ts"],
+  // #642 review, optional cases.
+  "variabile scritta come array": ["TMPDIR[0]=src; echo x > $TMPDIR/a.ts"],
+  "HOME scritta come array": ["HOME[0]=src; echo x > ~/a.ts"],
+  "env -u con l'opzione attaccata": ["env -uHOME sh -c 'cd && echo x > a.ts'"],
+  "exec -c": ["exec -c sh -c 'cd && echo x > a.ts'"],
+  ">& seguito da numero e lettere": ["echo x >&2src/a.ts"],
+  "barra e a capo nel nome del comando": ["se\\\nd -i s/a/b/ src/a.ts"],
+  "barra e a capo nel nome di tee": ["echo x | te\\\ne src/a.ts"],
+  // #642 review: escapes and quotes that the shell does not simply drop.
+  "= con barra non è un'assegnazione": ["S\\=.; echo x > ${S}src/a.ts"],
+  "= tra virgolette non è un'assegnazione": ["'S=.'; echo x > ${S}src/a.ts"],
+  "~ con barra è una cartella del repo": ["echo x > \\~/a.ts"],
+  "~ tra virgolette è una cartella del repo": ["echo x > '~'/a.ts"],
+  "cd in ~ con barra": ["cd \\~ && echo x > a.ts"],
+  "$ tra apici è letterale": ["echo x > '$TMPDIR'/a.ts"],
+  'tee tra $"..."': ['echo x | $"tee" src/a.ts'],
+  'sed tra $"..."': ['$"sed" -i s/a/b/ src/a.ts'],
+  "tee dopo --": ["echo x | tee -- -a.ts"],
+  "export con virgolette": ['export "TMPDIR=src"; echo x > $TMPDIR/a.ts'],
+  "${TMPDIR:=...} tra virgolette": [
+    'echo "${TMPDIR:=src}" >/dev/null; echo x > $TMPDIR/a.ts',
   ],
 };
 for (const [label, [command, agent]] of Object.entries(blocked))
@@ -333,6 +395,39 @@ const allowed = {
   "variabile da mktemp": ['out=$(mktemp) && npm test > "$out"'],
   "${TMPDIR:-/tmp}": ['npm test > "${TMPDIR:-/tmp}/fn-out.log"'],
   "tee con redirezione verso tmp": [`echo x | tee >/dev/null ${tmpFile}`],
+  // #630: still allowed.
+  "2>&1": ["npm run check 2>&1 | tail -5"],
+  ">&2": ["echo errore >&2"],
+  "echo x >/dev/null": ["echo x >/dev/null"],
+  "scrittura in /tmp": ["echo x > /tmp/fn-hooks-630.txt"],
+  "sed -n su src/a.ts": ["sed -n '1,5p' src/a.ts"],
+  "tee con >&2": [`echo x | tee >&2 ${tmpFile}`],
+  "barra su un carattere speciale": ["echo a\\>b"],
+  // #642 review: text the shell does not run does not count.
+  "heredoc tra virgolette con JavaScript": [
+    `cat > ${tmpFile}.mjs <<'EOF'\nlet n = 0;\nconst f = (a) => a + n;\nexport { f };\nEOF`,
+  ],
+  "heredoc tra virgolette con markdown": [
+    `cat > ${tmpFile}.md <<'EOF'\n# Note\nVietati eval, let, declare -n, export HOME=x e (( a = 1 )).\nEOF`,
+  ],
+  "testo tra apici a un comando che non è una shell": [
+    `printf '%s\\n' 'let x = (a) => a; eval' > ${tmpFile}`,
+  ],
+  // Writes to a path written in full are not blocked for the text they carry.
+  "heredoc con let verso tmp": [
+    `cat > ${tmpFile}.mjs <<'EOF'\nlet x = 1;\nEOF`,
+  ],
+  "heredoc con funzione freccia verso tmp": [
+    `cat > ${tmpFile}.mjs <<'EOF'\nconst big = (n) => n > 1;\nEOF`,
+  ],
+  "testo con eval verso tmp": [`echo "non usare eval" > ${tmpFile}`],
+  "grep di eval in /tmp": ['grep -rn "eval" src > /tmp/hits.txt'],
+  "eval e scrittura in tmp per intero": [`eval true; echo x > ${tmpFile}`],
+  "let e scrittura in tmp per intero": [`let x=1; echo x > ${tmpFile}`],
+  "env -i e scrittura in tmp per intero": [
+    `env -i bash -c 'echo x > ${tmpFile}'`,
+  ],
+  "2>&1 con fd a più cifre": ["npm test 2>&1 >&2"],
 };
 for (const [label, [command, agent]] of Object.entries(allowed))
   expect(label, B, bash(command, agent), false);

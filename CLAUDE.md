@@ -10,7 +10,7 @@ FamilyNest Web è un organizer familiare (calendario condiviso, profili dei figl
 
 ## Stack
 
-Next.js (App Router) · TypeScript strict · CSS proprio con variabili (niente Tailwind, niente librerie UI) · Supabase (progetto `yksosqvugiempsldejyt`, solo questo) · Playwright · Vercel.
+Next.js (App Router) · TypeScript strict · CSS proprio con variabili (niente Tailwind, niente librerie UI) · Supabase (progetto `yksosqvugiempsldejyt`, solo questo) · Playwright · Vercel · Capacitor per le app di iPhone e Android (strada A, decisione del 26/11).
 
 ## Regole che non si discutono
 
