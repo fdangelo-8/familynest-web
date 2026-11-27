@@ -1060,10 +1060,7 @@ function ChoicesPeopleSection() {
           />
         </TileGrid>
       </Example>
-      <Example
-        caption={`Tile · tessere del ${BRAND.short} (4 colonne)`}
-        wide
-      >
+      <Example caption={`Tile · tessere del ${BRAND.short} (4 colonne)`} wide>
         <TileGrid columns={4} data-testid="ds-tessere-nest">
           <Tile
             href="#"
