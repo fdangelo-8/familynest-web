@@ -51,6 +51,8 @@ Le lezioni unite in una regola di `LEZIONI.md` durante la compattazione sono nel
   > Imposta da: `eslint.config.mjs` (`.claude/worktrees/**`).
 - Script o file condivisi (`scripts/`, `.env.example`, `package.json`) affidati all'architetto dati → solo su `shared/*`.
   > Imposta da: `.claude/hooks/guard-files.mjs` (file condivisi e configurazione solo su `shared/*`).
+- Edit bloccato da un hook, aggirato con `sed -i` (tester, commit 710eabe, 3 righe corrette: resta errore) → solo Edit o Write; mai `sed -i`, script, `tee`, copie, nemmeno per annullare; altrimenti `BLOCCATO`. Dal 26/11 `sed -i`, `perl -i`, `ruby -i`, `awk -i inplace`, `ed`, `ex` e le redirezioni o `tee` verso file del repository sono bloccati su qualsiasi percorso, per tutti gli agenti (dopo tre casi del 25-26/11 su test e documentazione).
+  > Imposta da: `.claude/hooks/guard-bash.mjs` (#627, limiti in #630).
 - `git checkout` nella copia principale che cambia il branch agli altri → si lavora solo nel proprio worktree; per leggere un altro commit (revisore) usa `git show <ref>:<file>`.
   > Imposta da: ARCHITETTURA §5 (un git worktree per agente) e skill `flusso-git`.
 
