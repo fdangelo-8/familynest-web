@@ -514,7 +514,7 @@ test.describe("Aggiungi · isolamento tra Nest e campi data (F4c)", () => {
     const rows = await todosOf(casa, "Marco");
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({
-      title: "comprare il regalo",
+      title: "Comprare il regalo",
       due_date: null,
     });
   });
