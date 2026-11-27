@@ -15,6 +15,11 @@ Le lezioni unite in una regola di `LEZIONI.md` durante la compattazione sono nel
 - PR `db/*` con file fuori da `supabase/`, `src/types/database.ts` e `docs/` → guard rosso; i test e2e vanno nel branch della pagina.
   > Imposta da: `.github/workflows/guard.yml` (un branch `db/*` tocca solo quelle aree).
 
+## Sviluppo
+
+- «Nest» scritto a mano in un componente → `BRAND.short` o `BRAND` da `src/lib/brand.ts`.
+  > Imposta da: `tests/e2e/brand-static.spec.ts` (#502, controlli statici sul nome del prodotto).
+
 ## Processo
 
 - `gh issue …` e `gh pr …` falliscono con «GitHub GraphQL is not available» → usare `node scripts/agenti/gh.mjs`, che usa l'API REST.

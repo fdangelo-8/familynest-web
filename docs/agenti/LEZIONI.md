@@ -42,23 +42,21 @@ Una riga per lezione: `errore → regola`. Le lezioni già imposte da hook, CI, 
 - Stessa parte di interfaccia in due disposizioni con lo stesso `id` → un `id` per disposizione, con prefisso `m-` o `d-`.
 - «Vai al contenuto» con `next/link` che non sposta il focus → `<a href="#contenuto">` con `focus()` sul `main` (`tabIndex={-1}`).
 - CSS module o `<style>` in `(app)` → niente, né in `(app)` né nelle pagine; le classi di disposizione vanno in `components.css` via `richiesta-condivisa`.
-- Classe condivisa di `components.css` cambiata → cerca prima tutti gli usi nel repository (F4b e F4c hanno rotto `.scelta__radio`, `.dialogo__azioni`).
-- «Nest» scritto a mano in un componente → `BRAND.short` o `BRAND` da `src/lib/brand.ts`; lo blocca `brand-static`.
+- Classe, costante o variante di tipo unione condivisa cambiata o rinominata → prima cerca tutti gli usi in `src/`, `tests/` e PR aperte; aggiorna gli `switch` esaustivi nella stessa PR; per le costanti, nomi specifici (F4b e F4c hanno rotto `.scelta__radio`).
 - Dati personali letti o restituiti oltre il necessario → si legge e si restituisce solo ciò che la pagina mostra.
 - Lettura in più parti che su errore parziale dà `ok: true` con un pezzo mancante → `{ ok: false, reason }` e «Riprova».
 - Componente condiviso che riceve un elemento già pronto → il componente possiede avviso, azioni e caricamento; la pagina passa dati e callback.
 - `aria-current="page"` su tutte le pagine di una sezione → `"true"` per la sezione, `"page"` solo sull'indirizzo esatto (`getNavAriaCurrent`).
 - Costante di un modulo `"use client"` importata dal server → dal server solo `import type`.
 - Scorciatoia globale ignorata con il fuoco in un campo → la specifica dice da quali elementi vale; test da un elemento che non è un campo.
-- Costante generica in un modulo condiviso che collide → nomi specifici; rinomina o frase condivisa solo dopo ricerca degli usi in `src/`, `tests/` e PR aperte.
 - Errore di rete distinto dal `code` (presente solo con corpo JSON) → si decide dallo `status`: `0` è rete, il resto è server; il conflitto `23505` a parte.
 - `aria-pressed`, `aria-busy` messi sul DOM con un effect → prop del componente condiviso via `richiesta-condivisa`; ripiego: `useLayoutEffect` con issue citata.
 - Preferenza letta senza controllare `error` → controlla sempre; il predefinito è il più protettivo («Solo io») e la scelta è visibile prima del salvataggio.
 - Dati locali cancellati solo da «Esci» del profilo → si cancellano in ogni uscita e alla pagina di accesso, con una funzione in `src/lib/`.
 - Valore non approvato scritto nel codice o nei dati → resta vuoto finché approvato; un test lo verifica.
 - `VisuallyHidden` con spazi a inizio o fine → lo spazio lo mette la struttura; il test normalizza gli spazi.
-- Variante nuova di un tipo unione condiviso → cerca in `src/` e nelle PR aperte tutti gli `switch` esaustivi e aggiornali nella stessa PR.
 - Regex `[^>]*` o `[\s\S]*?` su HTML esterno: tempo quadratico → `indexOf` e tetti di lunghezza; dopo un tag saltato riparti dopo il `>`.
+- PR condivisa che toglie un accesso globale (es. il + della barra in basso) → verifica pagina per pagina e a ogni larghezza che ogni funzione ne abbia un altro; la specifica non dica «già presente» senza controllo (F5, #656, 3° giro).
 
 ## Processo
 
@@ -76,6 +74,7 @@ Una riga per lezione: `errore → regola`. Le lezioni già imposte da hook, CI, 
 - Cambio di un valore predefinito nel database (#612) che rompe test di file diversi → prima di aprire la PR cerca i valori vecchi in tutta `tests/`, riferimenti visivi compresi (#629).
 - PR condivisa e PR database dipendenti → unisci in sequenza e rilancia la suite della seconda (#629 prima di #612). Su `db/*` non si tocca `tests/`: se una migrazione cambia test esistenti, prima una `fix/` valida con entrambi i database (#646, #654).
 - Proposta di design approvata in ritardo, o stato «da decidere» → un'issue per ogni punto approvato, subito; prima dello stato rileggi i commenti di Francesco.
+- Check che blocca un comando (es. `source` delle variabili locali) → nessun aggiramento: né variabili in linea, né script, né comandi fuori repo. Strumento indicato o `BLOCCATO`; le prove dopo l'aggiramento non valgono (27/11, #656).
 
 ## Test
 
@@ -92,22 +91,20 @@ Una riga per lezione: `errore → regola`. Le lezioni già imposte da hook, CI, 
 - Due tester sullo stesso Supabase locale con seed diversi → un solo seed per sessione.
 - Test che leggono il branch o il diff con `origin/main` in checkout superficiale → `git fetch --deepen=N`; se il diff non si calcola il test fallisce, mai con un `return`.
 - Puntatore sopra un toast o un elemento (`onMouseEnter` ferma il conto) → `page.mouse.move(0, 0)` prima dello screenshot o di `clock.runFor`.
-- Area di tocco misurata con `boundingBox` → verifica con `elementFromPoint` nei punti dell'area.
+- `boundingBox` letto una volta su un elemento che React sostituisce → `expect.poll` finché stabile; area di tocco → `elementFromPoint` nei punti dell'area.
 - Fuoco su un campo con `outline: none` → controlla il contenitore `:focus-within`, se documentato.
 - Due `<main>` in streaming → aspetta l'h1, poi `getByRole("main")`.
 - Test di isolamento che cercano per nome → id fissi `SEED_HOME_A`/`SEED_HOME_B`; attendi il caricamento prima di verificare un'assenza.
 - Login su utenti condivisi in parallelo → ogni test crea e cancella il proprio utente nel `finally`.
 - axe `label-content-name-mismatch` → il nome accessibile comincia con il testo visibile; i dettagli in `aria-describedby`.
-- Clic o tasti prima dell'idratazione → `waitHydrated` (`tests/fixtures/esplora.ts`), mai attese a tempo; stati di caricamento e navigazione trattenuta con `tests/fixtures/held-navigation.ts`.
+- Clic o tasti prima dell'idratazione → `waitHydrated` (`tests/fixtures/esplora.ts`), mai attese a tempo; durante un'animazione o con `force: true` → `waitForAnimationsToEnd` (`tests/fixtures/animations.ts`); navigazione trattenuta con `tests/fixtures/held-navigation.ts`.
 - `page.route` finto → intercetta solo la richiesta da simulare (query dell'elenco, non prefetch né navigazione vera), rispondi subito 500 (il client riprova a 1, 2, 4 secondi) e `page.unrouteAll()` nel `finally`.
 - Pagina che passa da segnaposto a contenuto → la PR elenca i riferimenti visivi che cambiano; il tester visivo li rigenera.
-- Misure o clic durante un'animazione, o `force: true` → `waitForAnimationsToEnd` (`tests/fixtures/animations.ts`).
 - Didascalia nel font dei codici che va a capo → didascalie corte, su una riga.
 - Test con la data reale (anche pgTAP) → regex, `pauseAt` o periodo nel futuro; mai una data passata. Finestra del DB su `now()` (#587) → il test porta l'ora vera o una data relativa.
 - Fixture che scrivono con il ruolo amministrativo dove serve la sessione utente → la scrittura passa dalla sessione; il ruolo amministrativo solo per preparare, detto nel commento.
 - Privacy controllata solo sul DOM → registra le risposte di rete (documento, fetch, xhr) e cerca nomi, date e id.
 - Testo cercato in tutta la pagina con una palette aperta sopra → controlla solo la superficie in cui il test è aperto.
-- `boundingBox` letto una volta su un elemento che React sostituisce → `expect.poll` finché stabile.
 - Commenti CSS con «#numero» letti come colori → togli i commenti `/* … */` prima di cercare i colori.
 - Adulti con account nelle fixture → `joined_at` dall'orologio del test precede `created_at` del database: in `tests/fixtures/casa.ts` (riga ~329) risultano «creatori»; dai un `joined_at` successivo.
 
