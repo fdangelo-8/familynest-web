@@ -814,7 +814,17 @@ function diffAgainstMain(flags: string[], paths: string[] = []): string {
 }
 
 test.describe("diff della PR", () => {
-  test("CA-27: la PR non aggiunge test.skip né test.fixme", () => {
+  // The two tests share the git history (the first one may deepen the shallow
+  // clone): same worker, one after the other, and only on the desktop project
+  // (the diff does not depend on the viewport; two workers fetching at the
+  // same time would lock each other out).
+  test.describe.configure({ mode: "serial" });
+
+  test("CA-27: la PR non aggiunge test.skip né test.fixme", ({}, testInfo) => {
+    test.skip(
+      testInfo.project.name !== "desktop",
+      "il diff non dipende dal viewport: gira una volta sola",
+    );
     test.skip(!onTemaScuroBranch(), "vale solo sul branch di #634");
     // This file is left out: it quotes the patterns it looks for.
     const added = diffAgainstMain(
@@ -834,7 +844,11 @@ test.describe("diff della PR", () => {
     expect(forbidden).toEqual([]);
   });
 
-  test("CA-28: la PR tocca solo i file ammessi, niente supabase né pagine", () => {
+  test("CA-28: la PR tocca solo i file ammessi, niente supabase né pagine", ({}, testInfo) => {
+    test.skip(
+      testInfo.project.name !== "desktop",
+      "il diff non dipende dal viewport: gira una volta sola",
+    );
     test.skip(!onTemaScuroBranch(), "vale solo sul branch di #634");
     const files = diffAgainstMain(["--name-only"]).split("\n").filter(Boolean);
     expect(files.length).toBeGreaterThan(0);
