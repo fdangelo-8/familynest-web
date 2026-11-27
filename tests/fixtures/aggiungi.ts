@@ -137,10 +137,14 @@ export async function openAdd(
       name: /^(Buongiorno|Buon pomeriggio|Buonasera|Eccoti)/,
     }),
   ).toBeVisible({ timeout: 20_000 });
-  // F5 (#506): the «Aggiungi» of the bottom bar is gone and Oggi on a phone
-  // has no link to Add of its own until A1 (#534) draws its «+»: Add is opened
-  // by its address, which is the sheet over Oggi (#164), at every width.
-  await page.goto("/aggiungi");
+  // F5 (#506): the entry is «Nuovo impegno», the «+» of the page on a phone
+  // and the button of the top bar on a computer. Clicked until the page has
+  // been hydrated and the sheet opens.
+  const entry = page.getByRole("link", { name: "Nuovo impegno", exact: true });
+  await expect(async () => {
+    await entry.click();
+    await expect(dialogOf(page)).toBeVisible({ timeout: 2000 });
+  }).toPass();
   await expect(fieldOf(page)).toBeFocused();
 }
 

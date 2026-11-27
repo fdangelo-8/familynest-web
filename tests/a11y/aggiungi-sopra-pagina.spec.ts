@@ -19,7 +19,9 @@ function dialogOf(page: Page) {
   return page.getByRole("dialog", { name: "Aggiungi" });
 }
 
-function addLink(page: Page) {
+// The first visible link to Add: «Nuovo impegno» in the top bar of a computer,
+// the page's own link on a phone (the bottom bar has none since F5).
+function addEntry(page: Page) {
   return page.locator('a[href^="/aggiungi"]:visible').first();
 }
 
@@ -35,7 +37,7 @@ async function openFromLink(page: Page) {
   await expect(async () => {
     if (new URL(page.url()).pathname !== "/oggi") await page.goto("/oggi");
     await expect(page.getByRole("main")).toBeVisible();
-    await addLink(page).focus();
+    await addEntry(page).focus();
     await page.keyboard.press("Enter");
     await expect(dialogOf(page)).toBeVisible({ timeout: 2000 });
   }).toPass();
@@ -97,7 +99,7 @@ test.describe("Aggiungi sopra la pagina", () => {
     await openFromLink(page);
     await page.keyboard.press("Escape");
     await expect(dialogOf(page)).toHaveCount(0);
-    await expect(addLink(page)).toBeFocused();
+    await expect(addEntry(page)).toBeFocused();
   });
 
   test("fuoco: alla chiusura con «Chiudi» torna sul link «Aggiungi»", async ({
@@ -107,7 +109,7 @@ test.describe("Aggiungi sopra la pagina", () => {
     await openFromLink(page);
     await dialogOf(page).getByRole("button", { name: "Chiudi" }).click();
     await expect(dialogOf(page)).toHaveCount(0);
-    await expect(addLink(page)).toBeFocused();
+    await expect(addEntry(page)).toBeFocused();
   });
 
   test("fuoco: aperto direttamente, alla chiusura carica Oggi, primo Tab su «Vai al contenuto» (movimento ridotto)", async ({

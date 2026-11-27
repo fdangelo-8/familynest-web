@@ -10,7 +10,7 @@ import {
   expectNames,
   goneMessage,
   labelText,
-  openAddFromNav,
+  openAddFromToday,
   openDirect,
   pauseClock,
   secondBrowser,
@@ -34,7 +34,7 @@ test.describe("Aggiungi · Scadenza · creazione", () => {
     baseURL,
     casa,
   }) => {
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     const s = sheet(page);
     await s.field.fill(PHRASE);
 
@@ -61,7 +61,7 @@ test.describe("Aggiungi · Scadenza · creazione", () => {
     baseURL,
     casa,
   }) => {
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     const s = sheet(page);
     await s.type("Scadenza").click();
 
@@ -84,7 +84,7 @@ test.describe("Aggiungi · Scadenza · creazione", () => {
     baseURL,
     casa,
   }) => {
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     const s = sheet(page);
     await s.field.fill(PHRASE);
     await s.reminder("1 giorno").click();
@@ -124,7 +124,7 @@ test.describe("Aggiungi · Scadenza · creazione", () => {
     baseURL,
     casa,
   }) => {
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     const s = sheet(page);
     await s.field.fill("rinnovo carta d'identità di Sofia il 15 marzo");
 
@@ -147,7 +147,7 @@ test.describe("Aggiungi · Scadenza · creazione", () => {
     baseURL,
     casa,
   }) => {
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     const s = sheet(page);
     await s.field.fill("Laura deve pagare il bollo il 7 dicembre");
 
@@ -161,7 +161,7 @@ test.describe("Aggiungi · Scadenza · creazione", () => {
     baseURL,
     casa,
   }) => {
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     const s = sheet(page);
     await s.type("Scadenza").click();
 
@@ -191,7 +191,7 @@ test.describe("Aggiungi · Scadenza · creazione", () => {
     baseURL,
     casa,
   }) => {
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     const s = sheet(page);
     await s.type("Scadenza").click();
     await s.field.fill(PHRASE);
@@ -214,7 +214,7 @@ test.describe("Aggiungi · Scadenza · creazione", () => {
     baseURL,
     casa,
   }) => {
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     const s = sheet(page);
     await s.field.fill(PHRASE);
     await s.button("Aggiungi alle scadenze").click();
@@ -237,7 +237,7 @@ test.describe("Aggiungi · Scadenza · «Solo io»", () => {
     baseURL,
     casa,
   }) => {
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     const s = sheet(page);
     await s.field.fill("Laura deve pagare il bollo il 7 dicembre");
     await s.expectVoice(SHARED);
@@ -256,7 +256,7 @@ test.describe("Aggiungi · Scadenza · «Solo io»", () => {
     baseURL,
     bianchi,
   }, testInfo) => {
-    await openAddFromNav(page, baseURL, bianchi, "Paolo");
+    await openAddFromToday(page, baseURL, bianchi, "Paolo");
     const s = sheet(page);
     await s.field.fill("assicurazione della casa scade il 20 gennaio");
     await s.voice(PRIVATE).click();
@@ -308,7 +308,7 @@ test.describe("Aggiungi · Scadenza · anteprima", () => {
     baseURL,
     casa,
   }) => {
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     const s = sheet(page);
     await s.type("Scadenza").click();
 

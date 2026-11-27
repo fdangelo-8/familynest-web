@@ -67,7 +67,7 @@ Soglie uniche di D8 (risposta 214, `docs/design/tablet/decisioni.md`; tavole `do
 | `SettingsMenu` (menu laterale delle impostazioni)                                                           | resta dentro le pagine fino ad A17/A18                                                       |
 | classi `.nav-alto*`, `.nav-basso*`, `.btn-aggiungi*` in `components.css`                                    | si tolgono; nessun uso resta in `src/`                                                       |
 
-Le pagine non perdono l'ingresso ad Aggiungi: Oggi, Calendario (settimana, giorno, mese) e le tre pagine di Casa hanno già un link a `/aggiungi` nel contenuto.
+Ingresso ad Aggiungi (corretto nella PR di F5, #656): sul telefono la barra in basso non ha più il +, e non tutte le pagine hanno già un link a `/aggiungi` nel contenuto. Calendario (settimana) lo ha. Oggi non lo aveva sul telefono (il campo rapido c'era solo nella disposizione da computer): F5 aggiunge un +, un quadrato pieno da 44 (`.btn-icona--pieno`, nome accessibile «Nuovo impegno») a destra dell'inizio del blocco degli impegni di oggi, sotto i 1024 px; il titolo «La giornata», il «restano n impegni» e il giorno nell'indirizzo restano di A1 (#534). Le tre pagine di Casa aggiungono sul posto con il campo rapido e non aprono il foglio: nessun ingresso nuovo. Da computer c'è «Nuovo impegno» nella barra in alto, dove §2 lo prevede.
 
 ## §3 Barra in basso (forma del telefono: fino a 899 px, o alta meno di 600)
 

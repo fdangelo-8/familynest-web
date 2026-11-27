@@ -290,6 +290,23 @@
   width: var(--size-azione);
   height: var(--size-azione);
 }
+/* «+» quadrato pieno da 44: Oggi sul telefono (F5 #506, `og1-02`; misure di
+   A1, docs/specifiche/534-oggi-grafica.md §2). Stesso fondo del pulsante primo
+   piano premuto, `--color-azione`, a riposo e con il mouse. */
+.btn-icona--pieno {
+  width: var(--size-tocco);
+  height: var(--size-tocco);
+  border-radius: var(--radius-pulsante);
+  background: var(--color-azione);
+  box-shadow: var(--shadow-controllo);
+  color: var(--color-latte);
+}
+/* Il «+» sta a destra, dove A1 metterà il titolo della giornata a sinistra */
+.testa-giornata {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: var(--space-10);
+}
 .btn-icona--piccolo {
   width: var(--size-bottone-s);
   height: var(--size-bottone-s);
@@ -4702,7 +4719,8 @@ main[tabindex="-1"]:focus {
       :disabled,
       [aria-disabled="true"],
       .btn-icona--carta,
-      .btn-icona--piccolo
+      .btn-icona--piccolo,
+      .btn-icona--pieno
     ),
   .chip:hover:not(:disabled, [aria-pressed="true"], .chip--statico),
   .scelta:hover:not(:disabled, [aria-disabled="true"]) {
@@ -4754,7 +4772,8 @@ main[tabindex="-1"]:focus {
     :disabled,
     [aria-disabled="true"],
     .btn-icona--carta,
-    .btn-icona--piccolo
+    .btn-icona--piccolo,
+    .btn-icona--pieno
   ),
 .scelta:active:not(:disabled, [aria-disabled="true"]) {
   background: var(--color-carta);

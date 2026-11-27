@@ -3,7 +3,7 @@ import { expect, test } from "../fixtures/casa";
 import {
   expectPreview,
   labelText,
-  openAddFromNav,
+  openAddFromToday,
   openCasaPage,
   pauseClock,
   secondBrowser,
@@ -49,7 +49,7 @@ test.describe("Aggiungi · riconoscimento del tipo", () => {
     baseURL,
     casa,
   }) => {
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     await sheet(page).field.fill("latte, pane e 6 uova");
     await expectType(page, "Spesa");
   });
@@ -59,7 +59,7 @@ test.describe("Aggiungi · riconoscimento del tipo", () => {
     baseURL,
     casa,
   }) => {
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     const { field } = sheet(page);
     await field.fill("Laura deve chiamare la nonna entro venerdì");
     await expectType(page, "Da fare");
@@ -73,7 +73,7 @@ test.describe("Aggiungi · riconoscimento del tipo", () => {
     baseURL,
     casa,
   }) => {
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     const s = sheet(page);
     await s.field.fill("latte e pane");
     await expectType(page, "Spesa");
@@ -94,7 +94,7 @@ test.describe("Aggiungi · riconoscimento del tipo", () => {
     baseURL,
     casa,
   }) => {
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     const s = sheet(page);
     await s.type("Scadenza").click();
     await expectType(page, "Scadenza");
@@ -111,7 +111,7 @@ test.describe("Aggiungi · Spesa", () => {
     casa,
   }) => {
     await casa.shopping("Marco", ["Latte"]);
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     await sheet(page).field.fill("latte, pane e 6 uova");
 
     await expectPreview(page, [
@@ -129,7 +129,7 @@ test.describe("Aggiungi · Spesa", () => {
     bianchi,
   }) => {
     await bianchi.shopping("Giulia", ["Latte"]);
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     await sheet(page).field.fill("latte e pane");
 
     await expectPreview(page, [{ name: "Latte" }, { name: "Pane" }]);
@@ -142,7 +142,7 @@ test.describe("Aggiungi · Spesa", () => {
     casa,
   }) => {
     await casa.shopping("Marco", ["Latte"]);
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     await sheet(page).field.fill("latte, pane e 6 uova");
     await sheet(page).button("Aggiungi 2 cose").click();
 
@@ -175,7 +175,7 @@ test.describe("Aggiungi · Spesa", () => {
     baseURL,
     casa,
   }) => {
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     await sheet(page).field.fill("1 kg di mele, 2l latte, pane e Pane");
     await sheet(page).button("Aggiungi 3 cose").click();
 
@@ -204,7 +204,7 @@ test.describe("Aggiungi · Spesa", () => {
     casa,
   }) => {
     await casa.shopping("Marco", ["Latte", "Pane"]);
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     await sheet(page).field.fill("latte e pane");
 
     await expectPreview(page, [
@@ -221,7 +221,7 @@ test.describe("Aggiungi · Spesa", () => {
   }) => {
     await casa.shopping("Marco", ["Latte"]);
     await takeShopping(casa, "Marco", "Latte");
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     await sheet(page).field.fill("latte e caffè");
     await expectPreview(page, [{ name: "Latte" }, { name: "Caffè" }]);
     await sheet(page).button("Aggiungi 2 cose").click();
@@ -240,7 +240,7 @@ test.describe("Aggiungi · Spesa", () => {
     casa,
   }) => {
     await casa.shopping("Marco", ["Latte"]);
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     await sheet(page).field.fill("latte, pane e 6 uova");
     await sheet(page).button("Aggiungi 2 cose").click();
     const toast = toastWith(page, "2 cose aggiunte alla spesa.");
@@ -276,7 +276,7 @@ test.describe("Aggiungi · Spesa", () => {
       testInfo.project.use.viewport,
     );
     try {
-      await openAddFromNav(giulia.page, baseURL, bianchi, "Giulia");
+      await openAddFromToday(giulia.page, baseURL, bianchi, "Giulia");
       await sheet(giulia.page).field.fill("yogurt e mele");
       await sheet(giulia.page).button("Aggiungi 2 cose").click();
       await expect(
@@ -297,7 +297,7 @@ test.describe("Aggiungi · Spesa", () => {
     baseURL,
     casa,
   }) => {
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     const s = sheet(page);
     await s.type("Spesa").click();
     await s.field.fill(", e ,");
@@ -315,7 +315,7 @@ test.describe("Aggiungi · Spesa", () => {
     baseURL,
     casa,
   }) => {
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     const s = sheet(page);
     await s.type("Spesa").click();
     await s.field.fill("a".repeat(81));
@@ -332,7 +332,7 @@ test.describe("Aggiungi · Spesa", () => {
     baseURL,
     casa,
   }) => {
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     const s = sheet(page);
     await s.field.fill("spesa: latte e pane");
     await expectType(page, "Spesa");
@@ -359,7 +359,7 @@ test.describe("Aggiungi · Spesa", () => {
     baseURL,
     casa,
   }) => {
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     const s = sheet(page);
     await s.type("Spesa").click();
     // Stato vuoto: tipo scelto, nessun blocco, «Aggiungi» disabilitato.

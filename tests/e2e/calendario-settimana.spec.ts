@@ -560,27 +560,30 @@ test.describe("elenco mobile e striscia", () => {
     baseURL,
     bianchi,
   }) => {
+    // Enough rows before Friday for the list to scroll.
     for (const day of [TUE, WED, THU, FRI]) {
-      await createEvent(bianchi, "Giulia", {
-        title: `Impegno ${day}`,
-        day,
-        from: "09:00",
-        to: "10:00",
-      });
+      for (const hour of ["09", "11", "14"]) {
+        await createEvent(bianchi, "Giulia", {
+          title: `Impegno ${day} ${hour}`,
+          day,
+          from: `${hour}:00`,
+          to: `${hour}:30`,
+        });
+      }
     }
     await open(page, baseURL, bianchi);
     await tabs(page).nth(4).click();
     const head = page.locator(`[id="m-giorno-${FRI}"]`);
     await expect(head).toBeFocused();
+    // The page did scroll, so the collapsed bar is there (not a vacuous check).
     await expect
-      .poll(async () => {
-        const box = await head.boundingBox();
-        const bar = page.getByTestId("testata-raccolta");
-        const barBottom = (await bar.count())
-          ? ((await bar.boundingBox())?.height ?? 0)
-          : 0;
-        return box ? box.y - barBottom : -1;
-      })
+      .poll(() => page.evaluate(() => window.scrollY))
+      .toBeGreaterThan(0);
+    const bar = page.getByTestId("testata-raccolta");
+    await expect(bar).toBeVisible();
+    const barBottom = (await bar.boundingBox())!.height;
+    await expect
+      .poll(async () => ((await head.boundingBox())?.y ?? -1) - barBottom)
       .toBeGreaterThanOrEqual(0);
   });
 

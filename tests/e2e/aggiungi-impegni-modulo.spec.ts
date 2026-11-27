@@ -20,7 +20,9 @@ async function openAdd(page: Page) {
   await page.goto("/oggi");
   await expect(page.getByRole("main")).toBeVisible();
   await expect(async () => {
-    await page.locator('a[href^="/aggiungi"]:visible').first().click();
+    await page
+      .getByRole("link", { name: "Nuovo impegno", exact: true })
+      .click();
     await expect(addOf(page)).toBeVisible({ timeout: 2000 });
   }).toPass();
 }

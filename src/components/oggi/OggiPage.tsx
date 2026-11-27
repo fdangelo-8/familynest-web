@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState, type FocusEvent } from "react";
+import Link from "next/link";
 import { useNowMinute } from "@/components/calendario/useNowMinute";
+import { Icon } from "@/components/ui/Icon/Icon";
+import { it } from "@/lib/i18n/messages/it";
 import { useNest } from "@/components/ui/AppFrame/NestProvider";
 import { Lens, useLens } from "@/components/ui/Lens/Lens";
 import { PageError } from "@/components/ui/PageError/PageError";
@@ -383,6 +386,18 @@ function OggiContent({ nowMs }: { nowMs: number }) {
         {ready ? (
           <>
             {starterOrSummary("m-")}
+            {/* The way into Add on a phone, now that the bottom bar has no «+»
+                (F5 #506). The title «La giornata» and its meta come with A1
+                (#534), on the left of this square. */}
+            <div className="testa-giornata">
+              <Link
+                href="/aggiungi"
+                className="btn-icona btn-icona--pieno"
+                aria-label={it.shell.newEvent}
+              >
+                <Icon name="plus" size="l" />
+              </Link>
+            </div>
             {eventsBlock("m-", false)}
             {todoSection("m-")}
             {nestSection("m-", false)}

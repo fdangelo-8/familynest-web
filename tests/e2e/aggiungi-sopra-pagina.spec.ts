@@ -15,8 +15,11 @@ function dialogOf(page: Page) {
   return page.getByRole("dialog", { name: "Aggiungi" });
 }
 
-/** The only visible "Aggiungi" link: bottom navigation on mobile, top navigation on desktop. */
-function addLink(page: Page) {
+/**
+ * The first visible link to Add of the page: «Nuovo impegno» in the top bar of
+ * a computer, the page's own link on a phone (the bottom bar has none, F5).
+ */
+function addEntry(page: Page) {
   return page.locator('a[href^="/aggiungi"]:visible').first();
 }
 
@@ -54,7 +57,7 @@ async function openAddOverPage(page: Page, route: string) {
     await page.evaluate((value) => {
       (window as unknown as { __marker?: string }).__marker = value;
     }, MARKER);
-    await addLink(page).click();
+    await addEntry(page).click();
     await expect(dialogOf(page)).toBeVisible({ timeout: 2000 });
     const marker = await page.evaluate(
       () => (window as unknown as { __marker?: string }).__marker,
@@ -99,7 +102,7 @@ test.describe("Aggiungi sopra la pagina", () => {
     baseURL,
   }) => {
     await openPage(page, baseURL, "/calendario");
-    const link = addLink(page);
+    const link = addEntry(page);
     await openAddOverPage(page, "/calendario");
     await expect(page).toHaveURL(/\/aggiungi$/);
     await expect(dialogOf(page).getByText("scrivi come parli")).toBeVisible();

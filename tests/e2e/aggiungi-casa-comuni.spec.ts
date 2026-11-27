@@ -9,7 +9,7 @@ import {
   expectNobody,
   expectPreview,
   holdRpc,
-  openAddFromNav,
+  openAddFromToday,
   openCasaPage,
   openDirect,
   refuseRpc,
@@ -48,7 +48,7 @@ test.describe("Aggiungi · parti comuni", () => {
     casa,
   }) => {
     test.skip(isMobileProject(), "Caso a 1280 px: la modale");
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     const s = sheet(page);
     for (const phrase of PHRASES) {
       await s.field.fill(phrase);
@@ -65,7 +65,7 @@ test.describe("Aggiungi · parti comuni", () => {
     casa,
   }) => {
     test.skip(!isMobileProject(), "Caso a 390 px: il foglio dal basso");
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     const s = sheet(page);
     for (const phrase of PHRASES) {
       await s.field.fill(phrase);
@@ -80,7 +80,7 @@ test.describe("Aggiungi · parti comuni", () => {
     baseURL,
     casa,
   }) => {
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     const s = sheet(page);
     for (const type of ["Impegno", "Da fare", "Spesa", "Scadenza"] as const) {
       await s.type(type).click();
@@ -107,7 +107,7 @@ test.describe("Aggiungi · parti comuni", () => {
     baseURL,
     casa,
   }) => {
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     const s = sheet(page);
 
     await s.field.fill("latte e pane");
@@ -124,7 +124,7 @@ test.describe("Aggiungi · parti comuni", () => {
     baseURL,
     casa,
   }) => {
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     const s = sheet(page);
     await s.field.fill("Laura deve chiamare la nonna");
     const hold = await holdRpc(page, "create_todo");
@@ -151,7 +151,7 @@ test.describe("Aggiungi · parti comuni", () => {
     baseURL,
     casa,
   }) => {
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     const s = sheet(page);
     await s.field.fill("latte e pane");
     await refuseRpc(page, "add_shopping_items");
@@ -171,7 +171,7 @@ test.describe("Aggiungi · parti comuni", () => {
     baseURL,
     casa,
   }) => {
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     const s = sheet(page);
     await s.field.fill("Laura deve chiamare la nonna");
     await expect(s.person("Laura")).toHaveAttribute("aria-pressed", "true");
@@ -192,7 +192,7 @@ test.describe("Aggiungi · parti comuni", () => {
     baseURL,
     casa,
   }) => {
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     const s = sheet(page);
     await s.field.fill("bollo auto scade il 7 dicembre");
     await s.reminder("7 giorni").click();
@@ -247,7 +247,7 @@ test.describe("Aggiungi · parti comuni", () => {
     page.on("framenavigated", (frame) => {
       if (frame === page.mainFrame()) seen.push(frame.url());
     });
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     seen.push(page.url());
     const s = sheet(page);
     await s.field.fill("Laura deve chiamare la nonna entro venerdì");
@@ -317,7 +317,7 @@ test.describe("Aggiungi · testo d'esempio del campo", () => {
     baseURL,
     casa,
   }) => {
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     const s = sheet(page);
     await s.type("Scadenza").click();
     await expect(s.field).toHaveAttribute(
@@ -367,7 +367,7 @@ test.describe("Aggiungi · testo d'esempio del campo", () => {
     baseURL,
     casa,
   }) => {
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     const s = sheet(page);
 
     await expect(s.type("Impegno")).toHaveAttribute("aria-pressed", "true");
@@ -408,7 +408,7 @@ test.describe("Aggiungi · testo d'esempio del campo", () => {
     baseURL,
     casa,
   }) => {
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     const s = sheet(page);
     await s.type("Da fare").click();
     await s.field.fill("Laura deve chiamare la nonna");

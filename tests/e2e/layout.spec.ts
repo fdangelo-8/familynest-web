@@ -1198,8 +1198,17 @@ test.describe("computer", () => {
     );
     await page.keyboard.press("Escape");
     await expect(panel).toHaveCount(0);
-    // The panel did not call `history.back()`: the address is still the new one.
-    await page.waitForTimeout(300);
+    // The panel did not call `history.back()`. A `back()` makes the browser
+    // fire `popstate`: wait for the next two frames and the next task (where
+    // it would have run) and read the address, with no fixed delay.
+    await page.evaluate(
+      () =>
+        new Promise<void>((resolve) =>
+          requestAnimationFrame(() =>
+            requestAnimationFrame(() => setTimeout(resolve, 0)),
+          ),
+        ),
+    );
     expect(new URL(page.url()).searchParams.get("altra")).toBe("1");
   });
 
@@ -1475,6 +1484,30 @@ test.describe("computer", () => {
 
 test.describe("telefono: punto delle novità e ordine del Tab", () => {
   onlyOn("mobile");
+
+  test("su Oggi il «+» «Nuovo impegno» apre Aggiungi (390 px)", async ({
+    page,
+    baseURL,
+  }) => {
+    withUser("A");
+    await openReady(page, baseURL, "/oggi");
+    const entry = page.getByRole("link", {
+      name: "Nuovo impegno",
+      exact: true,
+    });
+    await expect(entry).toBeVisible();
+    await expect(entry).toHaveAttribute("href", "/aggiungi");
+    // a square of 44 px on the right, full (the design of `og1-02`)
+    const box = (await entry.boundingBox())!;
+    expect([Math.round(box.width), Math.round(box.height)]).toEqual([44, 44]);
+    await expect(async () => {
+      await entry.click();
+      await expect(page.getByRole("dialog", { name: "Aggiungi" })).toBeVisible({
+        timeout: 2000,
+      });
+    }).toPass();
+    await expect(page).toHaveURL(/\/aggiungi$/);
+  });
 
   test("CA-9: nell'app «Spazi» non ha il punto delle novità", async ({
     page,
