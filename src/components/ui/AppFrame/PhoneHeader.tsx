@@ -65,13 +65,17 @@ export function PhoneHeader() {
           ref={setHeader}
           inert={collapsed}
         >
-          <div className="testata__sinistra">{title}</div>
-          {controls}
-          {config.lens ? (
+          {/* DOM order is the order of Tab: title or lens, the lens of a
+              titled section, then «Cerca» and «Notifiche» */}
+          <div className="testata__sinistra">
+            {title ?? (config.lens ? <Lens /> : null)}
+          </div>
+          {title && config.lens ? (
             <div className="testata__lente">
               <Lens />
             </div>
           ) : null}
+          {controls}
         </header>
         {collapsed ? (
           <div className="testata-raccolta" data-testid="testata-raccolta">

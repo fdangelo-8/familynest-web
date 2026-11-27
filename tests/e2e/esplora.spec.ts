@@ -157,14 +157,14 @@ test.describe("struttura", () => {
     }
     await expect(linkOf(page, "A tavola")).toHaveAttribute(
       "href",
-      "/esplora/a-tavola",
+      "/spazi/a-tavola",
     );
     await expect(linkOf(page, "Casa in ordine")).toHaveAttribute(
       "href",
-      "/esplora/casa-in-ordine",
+      "/spazi/casa-in-ordine",
     );
     await linkOf(page, "A tavola").click();
-    await expect(page).toHaveURL(/\/esplora\/a-tavola$/);
+    await expect(page).toHaveURL(/\/spazi\/a-tavola$/);
   });
 
   test("CA-7: stato vuoto, 10 puntine non premuti fuori dai link e nessun toast", async ({
@@ -323,7 +323,10 @@ test.describe("caricamento ed errore", () => {
 // ------------------------------------------------------------ navigation, grid
 
 test.describe("navigazione e disposizione", () => {
-  test("CA-27: da /nest, su mobile: barra con Indietro e Cerca, navigazione in basso; Indietro torna a /nest", async ({
+  // F5 (#506): Spazi is a section of the bottom bar, not a detail page: its
+  // header has «Cerca» and «Notifiche», no «Indietro»; «Il tuo Nest» is the
+  // row at the bottom of the page.
+  test("CA-27: da /nest, su mobile: testata con Cerca e Notifiche, Spazi attiva nella barra in basso", async ({
     page,
     baseURL,
   }, testInfo) => {
@@ -334,32 +337,25 @@ test.describe("navigazione e disposizione", () => {
     const door = page.getByRole("link", { name: /Esplora.*Cosa può fare/ });
     await expect(door).toBeVisible();
     await door.click();
-    await expect(page).toHaveURL(/\/esplora$/);
+    await expect(page).toHaveURL(/\/spazi$/);
     await expect(cards(page)).toHaveCount(10, { timeout: 20_000 });
-    await expect(page.getByRole("link", { name: "Indietro" })).toBeVisible();
-    await expect(
-      page.getByRole("link", { name: "Cerca nel Nest" }),
-    ).toHaveAttribute("href", "/ricerca");
+    await expect(page.getByRole("link", { name: "Indietro" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Cerca" })).toHaveAttribute(
+      "href",
+      "/ricerca",
+    );
     const nav = page.getByRole("navigation", {
       name: "Navigazione principale",
     });
     await expect(nav).toBeVisible();
-    await expect(nav.getByRole("link", { name: "Oggi" })).toHaveAttribute(
+    await expect(nav.getByRole("link", { name: "Spazi" })).toHaveAttribute(
       "aria-current",
-      "true",
+      "page",
     );
-    await expect(
-      page
-        .getByRole("link", { name: "Aggiungi" })
-        .or(page.getByRole("button", { name: "Aggiungi" }))
-        .first(),
-    ).toBeVisible();
-    await waitHydrated(pins(page).first());
-    await page.getByRole("link", { name: "Indietro" }).click();
-    await expect(page).toHaveURL(/\/nest$/);
+    await expect(nav.getByRole("link")).toHaveCount(4);
   });
 
-  test("CA-28: su mobile, aperta direttamente, Indietro porta a /nest", async ({
+  test("CA-28: su mobile, la riga «Il tuo Nest» in fondo porta a /nest", async ({
     page,
     baseURL,
   }, testInfo) => {
@@ -367,7 +363,10 @@ test.describe("navigazione e disposizione", () => {
     test.skip(!usersConfigured("A"), skipReason("A"));
     await openAs(page, baseURL, "A", 10);
     await waitHydrated(pins(page).first());
-    await page.getByRole("link", { name: "Indietro" }).click();
+    await page
+      .getByRole("main")
+      .getByRole("link", { name: /^Il tuo Nest/ })
+      .click();
     await expect(page).toHaveURL(/\/nest$/);
   });
 
@@ -394,7 +393,7 @@ test.describe("navigazione e disposizione", () => {
       const nav = page.getByRole("navigation", {
         name: "Navigazione principale",
       });
-      await expect(nav.locator("[aria-current]")).toHaveCount(0);
+      await expect(nav.locator("[aria-current]")).toHaveText("Spazi");
       const title = await box(h1(page));
       const gridBox = await box(grid(page));
       expect(gridBox.x).toBeGreaterThan(title.x + title.width);

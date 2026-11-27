@@ -25,7 +25,8 @@ import {
 test.use({ locale: "it-IT", timezoneId: "Europe/Rome" });
 
 const MAIN_NAV = { name: "Navigazione principale" };
-const LENS_DESKTOP = "Cerca nel Nest (⌘K)";
+// The field «Cerca» of the computer bar (F5 #506); the shortcut is «/».
+const LENS_DESKTOP = "Cerca";
 
 test.describe("accesso e apertura", () => {
   test("CA-1: senza sessione /ricerca porta a /accesso", async ({ page }) => {
@@ -42,7 +43,7 @@ test.describe("accesso e apertura", () => {
     await nest.signIn(page, baseURL, "Marco");
     await page.goto("/calendario");
     const lens = page.getByRole("link", {
-      name: "Cerca nel Nest",
+      name: "Cerca",
       exact: true,
     });
     await waitHydrated(lens);
@@ -58,8 +59,8 @@ test.describe("accesso e apertura", () => {
       page.getByRole("heading", { level: 1, name: "Cerca nel Nest" }),
     ).toHaveCount(1);
     await expect(page.getByRole("navigation", MAIN_NAV)).toHaveCount(0);
-    await expect(page.locator("header.barra")).toHaveCount(0);
-    for (const name of ["Indietro", "Notifiche", "Cerca nel Nest"]) {
+    await expect(page.locator("header.testata")).toHaveCount(0);
+    for (const name of ["Indietro", "Notifiche", "Cerca"]) {
       await expect(
         page.getByRole("link", { name, exact: true }),
         name,
@@ -67,7 +68,7 @@ test.describe("accesso e apertura", () => {
     }
   });
 
-  test("CA-3: su mobile la lente c'è in Casa, Calendario mese ed Esplora; non in Oggi, Nest e dettaglio impegno", async ({
+  test("CA-3: su mobile la lente c'è in Oggi, Casa, Calendario mese e Spazi; non in Nest e dettaglio impegno", async ({
     page,
     baseURL,
     nest,
@@ -82,21 +83,22 @@ test.describe("accesso e apertura", () => {
     });
     await nest.signIn(page, baseURL, "Marco");
     const lens = page.getByRole("link", {
-      name: "Cerca nel Nest",
+      name: "Cerca",
       exact: true,
     });
-    const without = ["/oggi", "/nest", `/impegni/${eventId}`];
+    const without = ["/nest", `/impegni/${eventId}`];
     for (const path of without) {
       await page.goto(path);
       await expect(page.getByRole("main"), path).toBeVisible();
       await expect(lens, path).toHaveCount(0);
     }
     const withLens = [
+      "/oggi",
       "/casa/spesa",
       "/casa/da-fare",
       "/casa/scadenze",
       "/calendario/mese",
-      "/esplora",
+      "/spazi",
     ];
     for (const path of withLens) {
       await page.goto(path);
@@ -104,7 +106,7 @@ test.describe("accesso e apertura", () => {
     }
   });
 
-  test("CA-4: su desktop Control+K apre il dialogo modale con il fuoco nel campo e «Calendario» resta attivo", async ({
+  test("CA-4: su desktop «/» apre il dialogo modale con il fuoco nel campo e «Calendario» resta attivo", async ({
     page,
     baseURL,
     nest,
@@ -113,7 +115,7 @@ test.describe("accesso e apertura", () => {
     await nest.signIn(page, baseURL, "Marco");
     await page.goto("/calendario");
     await expect(async () => {
-      await page.keyboard.press("Control+k");
+      await page.keyboard.press("/");
       await expect(palette(page)).toBeVisible({ timeout: 1500 });
     }).toPass();
     await expect(palette(page)).toHaveAttribute("aria-modal", "true");
@@ -191,7 +193,7 @@ test.describe("accesso e apertura", () => {
     await nest.signIn(page, baseURL, "Marco");
     await page.goto("/casa/da-fare");
     const lens = page.getByRole("link", {
-      name: "Cerca nel Nest",
+      name: "Cerca",
       exact: true,
     });
     await waitHydrated(lens);

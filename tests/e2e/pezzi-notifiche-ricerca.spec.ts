@@ -733,6 +733,10 @@ test.describe("barra mobile (#39, #40)", () => {
       fallback: "/nest",
       title: "Impostazioni",
     });
-    expect(getBarConfig("/esplora")).toMatchObject({ search: true });
+    // F5 (#506): Esplora is Spazi, a section with «Cerca» and «Notifiche».
+    expect(getBarConfig("/spazi")).toMatchObject({
+      kind: "section",
+      title: "Spazi",
+    });
   });
 });

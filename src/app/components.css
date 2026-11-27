@@ -354,6 +354,8 @@
   grid-template-columns: minmax(0, 1fr) auto;
 }
 .testata__sinistra {
+  grid-column: 1;
+  grid-row: 1;
   display: flex;
   align-items: center;
   min-width: var(--space-0);
@@ -367,6 +369,7 @@
 }
 .testata__lente {
   grid-column: 1 / -1;
+  grid-row: 2;
   padding-bottom: var(--space-2);
 }
 .testata .lente,
@@ -375,6 +378,8 @@
   min-width: var(--space-0);
 }
 .testata__azioni {
+  grid-column: 2;
+  grid-row: 1;
   display: flex;
   align-items: center;
   margin-right: calc(-1 * var(--space-2));

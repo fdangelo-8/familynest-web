@@ -83,7 +83,7 @@ test.describe("percorso di Esplora e delle impostazioni", () => {
     // ---- Dal Nest a Esplora: le dieci voci, nessuna fissata
     await openNest(page);
     await page.getByRole("link", { name: /Esplora.*Cosa può fare/ }).click();
-    await expect(page).toHaveURL(/\/esplora$/);
+    await expect(page).toHaveURL(/\/spazi$/);
     await expect(cards(page)).toHaveCount(10, { timeout: 20_000 });
     await waitHydrated(pins(page).first());
     await expect(grid(page).locator('button[aria-pressed="true"]')).toHaveCount(
@@ -109,7 +109,7 @@ test.describe("percorso di Esplora e delle impostazioni", () => {
 
     // ---- La scheda di «A tavola»: «Avvisami quando è pronto»
     await linkOf(page, "A tavola").click();
-    await expect(page).toHaveURL(/\/esplora\/a-tavola$/);
+    await expect(page).toHaveURL(/\/spazi\/a-tavola$/);
     await expect(spaceTitle(page, "A tavola")).toBeVisible();
     const ask = askButton(page);
     await expect(ask).toBeVisible({ timeout: 20_000 });
@@ -139,14 +139,14 @@ test.describe("percorso di Esplora e delle impostazioni", () => {
     await expect(spaces).toBeVisible({ timeout: 20_000 });
     const meals = spaces.getByRole("link", { name: /A tavola/ });
     await expect(meals).toContainText("In arrivo");
-    await expect(meals).toHaveAttribute("href", "/esplora/a-tavola");
+    await expect(meals).toHaveAttribute("href", "/spazi/a-tavola");
     await expect(
       spaces.getByRole("link", { name: /Crescere/ }),
-    ).toHaveAttribute("href", "/esplora/crescere");
+    ).toHaveAttribute("href", "/spazi/crescere");
 
     // ---- Torno in Esplora da «Modifica» e tolgo «A tavola»
     await spaces.getByRole("link", { name: "Modifica i tuoi spazi" }).click();
-    await expect(page).toHaveURL(/\/esplora$/);
+    await expect(page).toHaveURL(/\/spazi$/);
     await expect(cards(page)).toHaveCount(10, { timeout: 20_000 });
     await waitHydrated(pins(page).first());
     await expect(pinRemove(page, "A tavola")).toHaveAttribute(
@@ -223,7 +223,7 @@ test.describe("percorso di Esplora e delle impostazioni", () => {
       await bianchi.signInContext(context, baseURL, "Giulia");
       const other = await context.newPage();
 
-      await other.goto("/esplora");
+      await other.goto("/spazi");
       await expect(cards(other)).toHaveCount(9, { timeout: 20_000 });
       await expect(card(other, "Zampe")).toHaveCount(0);
       await waitHydrated(pins(other).first());

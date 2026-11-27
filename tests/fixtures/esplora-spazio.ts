@@ -9,7 +9,7 @@ import type { SpaceKey } from "../../src/lib/spaces";
 //   - «Avvisami»: a button named "Avvisami quando è pronto"
 //     (`aria-pressed="false"`) or "Ti avvisiamo appena è pronto" (`true`);
 //   - the puntina of mobile: `header.barra button[aria-pressed]`;
-//   - the link of desktop: `a[href="/esplora"].spazio-arrivo__desktop`;
+//   - the link of desktop: `a[href="/spazi"].spazio-arrivo__desktop`;
 //   - the error of reading: `[role=alert].avviso--errore` with «Riprova»;
 //   - loading: `[aria-busy="true"]` with the hidden text "Caricamento in corso";
 //   - toast: `role="status"`.
@@ -29,7 +29,7 @@ export const interestToggle = (page: Page) =>
 
 /** The puntina of the top bar (mobile). */
 export const barPin = (page: Page) =>
-  page.locator("header.barra button[aria-pressed]");
+  page.locator("header.testata button[aria-pressed]");
 
 export const notFoundTitle = (page: Page) =>
   page.getByRole("heading", { level: 1, name: "Questa pagina non c’è" });
@@ -38,7 +38,7 @@ export const spaceTitle = (page: Page, name: string) =>
   page.getByRole("heading", { level: 1, name, exact: true });
 
 export const desktopLink = (page: Page) =>
-  page.locator('main a[href="/esplora"].spazio-arrivo__desktop');
+  page.locator('main a[href="/spazi"].spazio-arrivo__desktop');
 
 export const errorAlert = (page: Page) =>
   page.locator("[role=alert].avviso--errore");

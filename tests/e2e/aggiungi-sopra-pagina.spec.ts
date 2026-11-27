@@ -305,7 +305,7 @@ test.describe("Aggiungi sopra la pagina: altri casi", () => {
     await expectFirstTabOnSkipLink(page);
   });
 
-  test("con il foglio aperto, Ctrl+K porta alla ricerca e il foglio sparisce", async ({
+  test("con il foglio aperto, Ctrl+K e «/» non fanno nulla e il foglio resta", async ({
     page,
     baseURL,
   }, testInfo) => {
@@ -320,11 +320,13 @@ test.describe("Aggiungi sopra la pagina: altri casi", () => {
     await page.keyboard.press("Control+k");
     await expect(dialog).toBeVisible();
     await expect(page).toHaveURL(/\/aggiungi$/);
-    // Focus on a non-text element of the sheet: Ctrl+K opens the search.
+    // F5 (#506): Ctrl+K no longer opens the search, and with a dialog open
+    // the one-letter shortcuts («/») do nothing, even on a non-text element.
     await dialog.getByRole("button", { name: "Chiudi" }).focus();
     await page.keyboard.press("Control+k");
-    await expect(page).toHaveURL(/\/ricerca$/);
-    await expect(dialog).toHaveCount(0);
+    await page.keyboard.press("/");
+    await expect(dialog).toBeVisible();
+    await expect(page).toHaveURL(/\/aggiungi$/);
   });
 
   test("isolamento: l'utente del nucleo B apre Aggiungi sopra Oggi, la sua pagina", async ({

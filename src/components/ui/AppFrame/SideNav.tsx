@@ -161,7 +161,8 @@ export function SideNav({ spacesNews = false }: { spacesNews?: boolean }) {
             <span className="barra-laterale__profilo-testi">
               {me ? (
                 <span className="barra-laterale__profilo-nome">{me.name}</span>
-              ) : null}
+              ) : null}{" "}
+              {/* The space keeps the visible text inside the name (axe) */}
               <span className="barra-laterale__profilo-sotto">
                 {yourNest()}
               </span>

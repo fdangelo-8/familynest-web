@@ -13,7 +13,7 @@ import {
   type TestUserKey,
 } from "../fixtures/auth";
 import {
-  getActiveNavItem,
+  getDesktopBarConfig,
   getNavAriaCurrent,
   hasTodayLinkOnError,
   type NavItem,
@@ -332,7 +332,9 @@ test.describe("punto 7: aree di tocco", () => {
     expect(await touchFailures(page)).toEqual([]);
   });
 
-  test("CA-8: i bottoni della cornice restano 40x40 e le aree non si rubano il tocco", async ({
+  // F5 (#506): the icon controls of the phone header are bare and 44 px; on a
+  // computer the bell stays 40 px (44 with the finger, `data-gesto`).
+  test("CA-8: i bottoni della cornice hanno la misura del guscio e le aree non si rubano il tocco", async ({
     page,
     context,
     baseURL,
@@ -342,7 +344,7 @@ test.describe("punto 7: aree di tocco", () => {
     const sizes = await page.evaluate(() =>
       [
         ...document.querySelectorAll<HTMLElement>(
-          ".barra .btn-icona, .nav-alto .btn-icona, a.quadrato-nest:not(.quadrato-nest--notte)",
+          ".testata .btn-icona, .barra-alto .btn-icona",
         ),
       ]
         .filter((el) => el.checkVisibility())
@@ -352,12 +354,13 @@ test.describe("punto 7: aree di tocco", () => {
         }),
     );
     expect(sizes.length).toBeGreaterThanOrEqual(2);
-    for (const size of sizes) expect(size).toEqual([40, 40]);
+    const side = isDesktop(info) ? 40 : 44;
+    for (const size of sizes) expect(size).toEqual([side, side]);
 
     if (isDesktop(info)) {
-      const nav = page.locator("header.nav-alto");
-      const search = nav.getByRole("link", { name: /Cerca nel Nest/ });
-      const bell = nav.getByRole("link", { name: "Notifiche" });
+      const bar = page.getByTestId("barra-alto");
+      const search = bar.getByRole("link", { name: "Cerca" });
+      const bell = bar.getByRole("link", { name: "Notifiche" });
       const a = (await search.boundingBox())!;
       const b = (await bell.boundingBox())!;
       const midX = (a.x + a.width + b.x) / 2;
@@ -481,7 +484,7 @@ test.describe("punto 8: Vai al contenuto", () => {
     const inNavigation = await page.evaluate(
       () =>
         !!document.activeElement?.closest(
-          "header, nav, .barra, .nav-alto, .nav-basso",
+          "header, nav, .testata, .barra-alto, .barra-laterale, .barra-basso",
         ),
     );
     expect(inNavigation).toBe(false);
@@ -600,7 +603,7 @@ async function comesBefore(first: Locator, second: Locator) {
 }
 
 test.describe("punto 9: campanella in Calendario e Casa", () => {
-  test("CA-13: la barra di Calendario ha quadrato, lente, Cerca e Notifiche", async ({
+  test("CA-13: la testata di Calendario ha titolo, lente, Cerca e Notifiche", async ({
     page,
     context,
     baseURL,
@@ -608,18 +611,18 @@ test.describe("punto 9: campanella in Calendario e Casa", () => {
     onlyMobile(info);
     await loginAs("A", { context, baseURL });
     await openFrame(page, "/calendario");
-    const bar = page.locator("header.barra");
-    const square = bar.getByRole("link", { name: /^Apri / });
+    const bar = page.getByTestId("testata");
+    const title = bar.getByText("Calendario", { exact: true });
     const lens = bar.getByRole("group", {
       name: /Punto di vista/,
     });
-    const search = bar.getByRole("link", { name: "Cerca nel Nest" });
+    const search = bar.getByRole("link", { name: "Cerca" });
     const bell = bar.getByRole("link", { name: "Notifiche" });
-    await expect(square).toBeVisible();
+    await expect(title).toBeVisible();
     await expect(lens).toBeVisible();
     await expect(search).toHaveAttribute("href", "/ricerca");
     await expect(bell).toHaveAttribute("href", "/notifiche");
-    expect(await comesBefore(square, lens)).toBe(true);
+    expect(await comesBefore(title, lens)).toBe(true);
     expect(await comesBefore(lens, search)).toBe(true);
     expect(await comesBefore(search, bell)).toBe(true);
     await expect(async () => {
@@ -628,7 +631,7 @@ test.describe("punto 9: campanella in Calendario e Casa", () => {
     }).toPass();
   });
 
-  test("CA-14: la barra di Casa ha quadrato, h1 Casa, Cerca e Notifiche; Oggi non ha Cerca", async ({
+  test("CA-14: la testata di Casa ha h1 Casa, Cerca e Notifiche; Oggi ha la lente, Cerca e Notifiche", async ({
     page,
     context,
     baseURL,
@@ -636,28 +639,23 @@ test.describe("punto 9: campanella in Calendario e Casa", () => {
     onlyMobile(info);
     await loginAs("A", { context, baseURL });
     await openFrame(page, "/casa/spesa");
-    const bar = page.locator("header.barra");
-    const square = bar.getByRole("link", { name: /^Apri / });
+    const bar = page.getByTestId("testata");
     const title = bar.getByRole("heading", { level: 1, name: "Casa" });
-    const search = bar.getByRole("link", { name: "Cerca nel Nest" });
+    const search = bar.getByRole("link", { name: "Cerca" });
     const bell = bar.getByRole("link", { name: "Notifiche" });
     await expect(title).toBeVisible();
     await expect(search).toBeVisible();
     await expect(bell).toBeVisible();
-    expect(await comesBefore(square, title)).toBe(true);
     expect(await comesBefore(title, search)).toBe(true);
     expect(await comesBefore(search, bell)).toBe(true);
 
     await openFrame(page, "/oggi");
-    const today = page.locator("header.barra");
-    await expect(today.getByRole("link", { name: /^Apri / })).toBeVisible();
+    const today = page.getByTestId("testata");
     await expect(
       today.getByRole("group", { name: /Punto di vista/ }),
     ).toBeVisible();
+    await expect(today.getByRole("link", { name: "Cerca" })).toBeVisible();
     await expect(today.getByRole("link", { name: "Notifiche" })).toBeVisible();
-    await expect(
-      today.getByRole("link", { name: "Cerca nel Nest" }),
-    ).toHaveCount(0);
   });
 
   for (const route of ["/calendario", "/casa/spesa"]) {
@@ -670,16 +668,16 @@ test.describe("punto 9: campanella in Calendario e Casa", () => {
       await loginAs("A", { context, baseURL });
       await openFrame(page, route);
       const rects = await page.evaluate(() => {
-        const bar = document.querySelector("header.barra")!;
+        const bar = document.querySelector("header.testata")!;
         const pick = (el: Element | null) => {
           const r = el!.getBoundingClientRect();
           return { x: r.x, y: r.y, right: r.right, bottom: r.bottom };
         };
-        const centre =
-          bar.querySelector('[role="group"]') ?? bar.querySelector("h1");
+        const title = bar.querySelector(".testata__titolo");
+        const lens = bar.querySelector('[role="group"]');
         return [
-          pick(bar.querySelector("a.quadrato-nest")),
-          pick(centre),
+          pick(title),
+          ...(lens ? [pick(lens)] : []),
           pick(bar.querySelector('a[href="/ricerca"]')),
           pick(bar.querySelector('a[href="/notifiche"]')),
         ];
@@ -716,7 +714,7 @@ test.describe("punto 9: campanella in Calendario e Casa", () => {
       await loginAs("A", { context, baseURL });
       await openFrame(page, route);
       const bell = page
-        .locator("header.barra")
+        .getByTestId("testata")
         .getByRole("link", { name: "Notifiche", exact: true });
       await expect(bell).toHaveCount(1);
       await expect(bell).toHaveAttribute("aria-label", "Notifiche");
@@ -727,13 +725,15 @@ test.describe("punto 9: campanella in Calendario e Casa", () => {
 
 // --------------------------------------------------------------- Punto 10
 
+// F5 (#506): «Aggiungi» left the navigation; on a computer «Nuovo impegno» is
+// the button on the right of the top bar, where §2 says so (Oggi, Calendario).
 function visibleAdd(page: Page) {
-  return page.getByRole("link", { name: "Aggiungi", exact: true });
+  return page.getByRole("link", { name: "Nuovo impegno", exact: true });
 }
 
-test.describe("punto 10: Aggiungi su desktop", () => {
+test.describe("punto 10: «Nuovo impegno» su desktop", () => {
   for (const route of [...FRAME_ROUTES, "/oggi/pagina-che-non-esiste"]) {
-    test(`CA-17: ${route} ha Aggiungi nella navigazione in alto`, async ({
+    test(`CA-17: ${route} ha «Nuovo impegno» nella barra in alto solo dove la tabella lo prevede`, async ({
       page,
       context,
       baseURL,
@@ -741,11 +741,15 @@ test.describe("punto 10: Aggiungi su desktop", () => {
       onlyDesktop(info);
       await loginAs("A", { context, baseURL });
       await openFrame(page, route);
-      const inHeader = page
-        .locator("header.nav-alto")
-        .getByRole("link", { name: "Aggiungi", exact: true });
-      await expect(inHeader).toHaveAttribute("href", "/aggiungi");
-      await expect(visibleAdd(page)).toHaveCount(1);
+      const inBar = page
+        .getByTestId("barra-alto")
+        .getByRole("link", { name: "Nuovo impegno", exact: true });
+      if (getDesktopBarConfig(route).newEvent) {
+        await expect(inBar).toHaveAttribute("href", "/aggiungi");
+        await expect(visibleAdd(page)).toHaveCount(1);
+      } else {
+        await expect(inBar).toHaveCount(0);
+      }
     });
   }
 
@@ -757,36 +761,39 @@ test.describe("punto 10: Aggiungi su desktop", () => {
     onlyDesktop(info);
     await loginAs("A", { context, baseURL });
     await openFrame(page, "/oggi");
+    // Sidebar (lens, entries, «Di casa», profile), top bar, then the content.
     const expected = [
       "Vai al contenuto",
-      "FamilyNest",
+      "Io",
+      "Nest",
       "Oggi",
       "Calendario",
       "Casa",
-      "Aggiungi",
-      "Cerca nel Nest (⌘K)",
+      "Spazi",
+      "Spesa",
+      "Marco, Il tuo Nest",
+      "Cerca",
       "Notifiche",
-      "Apri Casa D'Angelo: membri, Esplora e impostazioni",
+      "Nuovo impegno",
     ];
     for (const name of expected) {
       await page.keyboard.press("Tab");
       const label = await focusedLabel(page);
-      expect(label.replace(/\s+/g, " ")).toBe(name);
+      expect(label.replace(/\s+/g, " ")).toContain(name);
     }
   });
 
-  test("CA-19: da Casa, Aggiungi porta a /aggiungi senza aria-current", async ({
+  test("CA-19: da Calendario, «Nuovo impegno» porta a /aggiungi senza aria-current", async ({
     page,
     context,
     baseURL,
   }, info) => {
     onlyDesktop(info);
     await loginAs("A", { context, baseURL });
-    await openFrame(page, "/casa/spesa");
-    const add = page.locator("header.nav-alto").getByRole("link", {
-      name: "Aggiungi",
-      exact: true,
-    });
+    await openFrame(page, "/calendario");
+    const add = page
+      .getByTestId("barra-alto")
+      .getByRole("link", { name: "Nuovo impegno", exact: true });
     await expect(add).not.toHaveAttribute("aria-current", /.*/);
     await expect(async () => {
       await add.click();
@@ -794,42 +801,32 @@ test.describe("punto 10: Aggiungi su desktop", () => {
     }).toPass();
     await expect(
       page
-        .locator("header.nav-alto")
-        .getByRole("link", { name: "Aggiungi", exact: true }),
+        .getByTestId("barra-alto")
+        .getByRole("link", { name: "Nuovo impegno", exact: true }),
     ).not.toHaveAttribute("aria-current", /.*/);
   });
 
-  test("CA-20: a 1023 px l'unico Aggiungi e' in basso, a 1024 px in alto", async ({
+  test("CA-20: a 899 px non c'è la barra in alto, a 900 px sì con «Nuovo impegno»", async ({
     page,
     context,
     baseURL,
   }, info) => {
     onlyDesktop(info);
     await loginAs("A", { context, baseURL });
-    await page.setViewportSize({ width: 1023, height: 800 });
+    await page.setViewportSize({ width: 899, height: 800 });
     await openFrame(page, "/oggi");
-    await expect(visibleAdd(page)).toHaveCount(1);
+    await expect(page.getByTestId("barra-alto")).toBeHidden();
+    await expect(visibleAdd(page)).toHaveCount(0);
     await expect(
       page
         .getByRole("navigation", { name: "Navigazione principale" })
-        .getByRole("link", { name: "Aggiungi", exact: true }),
-    ).toHaveCount(1);
-    await expect(
-      page.locator("header.nav-alto").getByRole("link", { name: "Aggiungi" }),
-    ).toHaveCount(0);
+        .getByRole("link"),
+    ).toHaveCount(4);
 
-    await page.setViewportSize({ width: 1024, height: 800 });
+    await page.setViewportSize({ width: 900, height: 800 });
     await expect(visibleAdd(page)).toHaveCount(1);
-    await expect(
-      page
-        .locator("header.nav-alto")
-        .getByRole("link", { name: "Aggiungi", exact: true }),
-    ).toBeVisible();
-    await expect(
-      page
-        .getByRole("navigation", { name: "Navigazione principale" })
-        .getByRole("link", { name: "Aggiungi" }),
-    ).toHaveCount(0);
+    await expect(page.getByTestId("barra-alto")).toBeVisible();
+    await expect(page.getByTestId("barra-basso")).toBeHidden();
   });
 });
 
@@ -899,7 +896,8 @@ test.describe("punto 11: aria-current", () => {
     });
   }
 
-  for (const route of ["/aggiungi", "/notifiche"]) {
+  // F5 (#506, §2): «Notifiche» has no entry lit any more (it was Oggi).
+  for (const route of ["/aggiungi"]) {
     test(`CA-21: su ${route} Oggi (mobile) e' evidenziato con aria-current=true`, async ({
       page,
       context,
@@ -916,7 +914,7 @@ test.describe("punto 11: aria-current", () => {
     });
   }
 
-  for (const route of ["/aggiungi", "/ricerca"]) {
+  for (const route of ["/aggiungi"]) {
     test(`CA-22: su ${route} Oggi (desktop) ha aria-current=true`, async ({
       page,
       context,
@@ -963,12 +961,13 @@ test.describe("punto 11: aria-current", () => {
       expect(value("/impegni/123", viewport, "calendario")).toBe("true");
       expect(value("/casa/da-fare", viewport, "casa")).toBe("true");
     }
-    expect(value("/esplora/a-tavola", "mobile", "oggi")).toBe("true");
-    expect(value("/figli/x", "mobile", "oggi")).toBe("true");
-    expect(getActiveNavItem("/esplora/a-tavola", "desktop")).toBeNull();
-    expect(getActiveNavItem("/figli/x", "desktop")).toBeNull();
+    // F5 (#506, §2): Spazi is the fourth entry; figli and spaces light it.
+    expect(value("/spazi/a-tavola", "mobile", "spazi")).toBe("true");
+    expect(value("/figli/x", "mobile", "spazi")).toBe("true");
+    expect(value("/spazi/a-tavola", "desktop", "spazi")).toBe("true");
+    expect(value("/figli/x", "desktop", "spazi")).toBe("true");
     for (const item of ["oggi", "calendario", "casa"] as const) {
-      expect(value("/esplora/a-tavola", "desktop", item)).toBeUndefined();
+      expect(value("/spazi/a-tavola", "desktop", item)).toBeUndefined();
       expect(value("/figli/x", "desktop", item)).toBeUndefined();
     }
     expect(value("/oggi", "mobile", "oggi")).toBe("page");
@@ -986,27 +985,33 @@ test.describe("punto 11: aria-current", () => {
       "/casa/scadenze",
       "/notifiche",
       "/ricerca",
-      "/esplora/x",
+      "/spazi",
+      "/spazi/a-tavola",
       "/figli/x",
       "/nest",
       "/profilo",
     ];
-    const items: NavItem[] = ["oggi", "calendario", "casa"];
+    const items: NavItem[] = ["oggi", "calendario", "casa", "spazi"];
     for (const route of routes) {
       for (const viewport of ["mobile", "desktop"] as const) {
         const given = items.filter((item) => value(route, viewport, item));
         expect(given.length, `${route} ${viewport}`).toBeLessThanOrEqual(1);
-        // "page" only for the three exact addresses.
+        // "page" only for the four exact addresses.
         for (const item of given) {
           if (value(route, viewport, item) === "page") {
-            expect(["/oggi", "/calendario", "/casa/spesa"]).toContain(route);
+            expect(["/oggi", "/calendario", "/casa/spesa", "/spazi"]).toContain(
+              route,
+            );
           }
         }
       }
     }
   });
 
-  test("CA-24: la voce Oggi ha lo stesso aspetto su /oggi e su /notifiche", async ({
+  // F5 (#506, §2): «Notifiche» lights no entry (it used to light Oggi), so
+  // Oggi on /notifiche looks like the entries that are not chosen: it is bold
+  // only on /oggi.
+  test("CA-24: la voce Oggi è in grassetto su /oggi e normale su /notifiche", async ({
     page,
     context,
     baseURL,
@@ -1018,26 +1023,13 @@ test.describe("punto 11: aria-current", () => {
       return page
         .getByRole("navigation", { name: "Navigazione principale" })
         .getByRole("link", { name: /Oggi/ })
-        .evaluate((el) => {
-          const s = getComputedStyle(el);
-          const after = getComputedStyle(el, "::after");
-          const inner = el.querySelector("span, svg");
-          const innerStyle = inner ? getComputedStyle(inner) : null;
-          return {
-            color: s.color,
-            background: s.backgroundColor,
-            weight: s.fontWeight,
-            afterContent: after.content,
-            afterBackground: after.backgroundColor,
-            afterWidth: after.width,
-            afterHeight: after.height,
-            innerColor: innerStyle?.color ?? null,
-          };
-        });
+        .evaluate((el) => ({
+          weight: getComputedStyle(el).fontWeight,
+          chosen: el.classList.contains("is-attiva"),
+        }));
     };
-    const onToday = await read("/oggi");
-    const onNotifications = await read("/notifiche");
-    expect(onNotifications).toEqual(onToday);
+    expect(await read("/oggi")).toEqual({ weight: "700", chosen: true });
+    expect(await read("/notifiche")).toEqual({ weight: "400", chosen: false });
   });
 });
 

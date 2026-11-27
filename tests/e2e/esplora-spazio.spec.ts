@@ -321,26 +321,20 @@ test.describe("navigazione e disposizione", () => {
     await signInAs(page.context(), baseURL as string, "A");
     await openEsplora(page, 10);
     await linkOf(page, "A tavola").click();
-    await expect(page).toHaveURL(/\/esplora\/a-tavola$/);
+    await expect(page).toHaveURL(/\/spazi\/a-tavola$/);
     await expect(spaceTitle(page, "A tavola")).toBeVisible();
     const nav = page.getByRole("navigation", {
       name: "Navigazione principale",
     });
     await expect(nav).toBeVisible();
-    await expect(nav.getByRole("link", { name: "Oggi" })).toHaveAttribute(
+    await expect(nav.getByRole("link", { name: "Spazi" })).toHaveAttribute(
       "aria-current",
       "true",
     );
-    await expect(
-      page
-        .getByRole("link", { name: "Aggiungi" })
-        .or(page.getByRole("button", { name: "Aggiungi" }))
-        .first(),
-    ).toBeVisible();
     const back = page.getByRole("link", { name: "Indietro" });
     await waitHydrated(back);
     await back.click();
-    await expect(page).toHaveURL(/\/esplora$/);
+    await expect(page).toHaveURL(/\/spazi$/);
     await expect(card(page, "A tavola")).toBeVisible();
   });
 
@@ -354,7 +348,7 @@ test.describe("navigazione e disposizione", () => {
     const back = page.getByRole("link", { name: "Indietro" });
     await waitHydrated(back);
     await back.click();
-    await expect(page).toHaveURL(/\/esplora$/);
+    await expect(page).toHaveURL(/\/spazi$/);
   });
 
   test("CA-28: il link «← Esplora» è su desktop, largo la colonna e centrato; su mobile non c'è", async ({
@@ -370,11 +364,11 @@ test.describe("navigazione e disposizione", () => {
     const nav = page.getByRole("navigation", {
       name: "Navigazione principale",
     });
-    await expect(nav.locator("[aria-current]")).toHaveCount(0);
+    await expect(nav.locator("[aria-current]")).toHaveText("Spazi");
     const link = desktopLink(page);
     await expect(link).toBeVisible();
     await expect(
-      page.getByRole("main").locator("a[href='/esplora']"),
+      page.getByRole("main").locator("a[href='/spazi']"),
     ).toHaveCount(1);
     await expect(link).toHaveAccessibleName("Esplora");
     await expect(link.locator("[aria-hidden='true']")).toHaveText("←");
@@ -397,7 +391,7 @@ test.describe("navigazione e disposizione", () => {
 
     await waitHydrated(link);
     await link.click();
-    await expect(page).toHaveURL(/\/esplora$/);
+    await expect(page).toHaveURL(/\/spazi$/);
   });
 
   test("CA-29: su mobile, in una pagina che non c'è nessuna voce in basso è evidenziata", async ({

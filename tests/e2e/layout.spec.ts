@@ -551,12 +551,14 @@ test.describe("controlli statici del codice", () => {
   });
 
   test("le soglie del guscio sono in un solo modulo e coincidono con il CSS", () => {
-    const module = readFileSync("src/lib/breakpoints.ts", "utf8");
-    expect(module).toContain("(max-width: 899px), (max-height: 599px)");
-    expect(module).toContain(
+    const breakpoints = readFileSync("src/lib/breakpoints.ts", "utf8");
+    expect(breakpoints).toContain("(max-width: 899px), (max-height: 599px)");
+    expect(breakpoints).toContain(
       "(min-width: 900px) and (max-width: 1279px) and (min-height: 600px)",
     );
-    expect(module).toContain("(min-width: 1280px) and (min-height: 600px)");
+    expect(breakpoints).toContain(
+      "(min-width: 1280px) and (min-height: 600px)",
+    );
     const css = readFileSync("src/app/components.css", "utf8");
     expect(css).toContain("@media (min-width: 900px) and (min-height: 600px)");
     expect(css).toContain("@media (min-width: 1280px) and (min-height: 600px)");
