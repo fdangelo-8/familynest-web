@@ -35,8 +35,10 @@ export type TileProps = {
 
 /**
  * Tile (`.tessera`): a link with a thin border, a bare icon (or the circle of
- * a person) at the top, a title and a line. The accessible name of the link
- * is «<title>, <line>».
+ * a person) at the top, a title and a line. The name of the link comes from
+ * its content, title first, then the line («Animali Biscotto e Miele»): an
+ * `aria-label` with a comma would not hold the visible text (axe
+ * label-content-name-mismatch).
  */
 export function Tile({
   href,
@@ -83,12 +85,7 @@ export function Tile({
     );
   }
   return (
-    <Link
-      href={href}
-      className={classes}
-      aria-label={line ? `${title}, ${line}` : undefined}
-      data-testid={testId}
-    >
+    <Link href={href} className={classes} data-testid={testId}>
       {content}
     </Link>
   );

@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { waitForAnimationsToEnd } from "../fixtures/animations";
 import { waitHydrated } from "../fixtures/esplora";
 
 // #504 (F4b): choices and people components, on the design-system gallery
@@ -179,7 +180,9 @@ test.describe("Pastiglie, persone, giorni e filtri", () => {
       expect(await css(chip, "border-top-left-radius")).toBe(
         await resolve(chip, "var(--radius-capsula)", "border-radius"),
       );
-      // The 44 px area, with elementFromPoint at its corners.
+      // The 44 px area, with elementFromPoint above and below the chip
+      // (the chip must be inside the window for the point to be hit).
+      await chip.scrollIntoViewIfNeeded();
       const hit = await chip.evaluate((el) => {
         const r = el.getBoundingClientRect();
         const cx = r.left + r.width / 2;
@@ -447,7 +450,7 @@ test.describe("Spunta, volti e pile", () => {
     const buttons = faces.getByRole("button");
     await expect(buttons).toHaveCount(6);
     await expect(
-      faces.getByRole("button", { name: "Laura, Invito da mandare" }),
+      faces.getByRole("button", { name: /^Laura\s+Invito da mandare$/ }),
     ).toBeVisible();
     if (info.project.name === "mobile") {
       const lefts = await faces
@@ -484,7 +487,10 @@ test.describe("Spunta, volti e pile", () => {
     page,
   }) => {
     const four = tid(page, "ds-pila-quattro");
-    await expect(four).toHaveAttribute("aria-hidden", "true");
+    await expect(four.locator(".pila-avatar")).toHaveAttribute(
+      "aria-hidden",
+      "true",
+    );
     const dots = four.locator(".avatar");
     await expect(dots).toHaveCount(4);
     const boxes = await dots.evaluateAll((nodes) =>
@@ -552,7 +558,7 @@ test.describe("Tessere ed etichetta", () => {
     const links = grid.getByRole("link");
     await expect(links).toHaveCount(4);
     await expect(
-      grid.getByRole("link", { name: "Animali, Biscotto e Miele" }),
+      grid.getByRole("link", { name: /^Animali\s+Biscotto e Miele$/ }),
     ).toBeVisible();
     const first = links.first();
     expect(await css(first, "border-top-width")).toBe("1px");
@@ -583,7 +589,7 @@ test.describe("Tessere ed etichetta", () => {
     const grid = tid(page, "ds-tessere-nest");
     await expect(grid.getByRole("link")).toHaveCount(4);
     await expect(
-      grid.getByRole("link", { name: "Laura, Adulta" }),
+      grid.getByRole("link", { name: /^Laura\s+Adulta$/ }),
     ).toBeVisible();
     const pending = tid(page, "ds-tessera-attesa");
     await expect(pending).toContainText("Invito mandato ieri");
@@ -664,6 +670,8 @@ test.describe("Tema scuro, colori e testo", () => {
       }`,
     });
     await page.mouse.move(0, 0);
+    // The fills change with a short transition: wait until it is over.
+    await waitForAnimationsToEnd(page);
     const chip = tid(page, "ds-pastiglie").getByRole("button").first();
     expect(await css(chip, "background-color")).toBe("rgb(1, 2, 3)");
     expect(await css(chip, "color")).toBe("rgb(4, 5, 6)");
@@ -740,12 +748,24 @@ test.describe("Testo al 200%", () => {
     await session.send("Page.setFontSizes", { fontSizes: { standard: 32 } });
     await page.goto("/design-system");
     await tid(page, "ds-giorni").scrollIntoViewIfNeeded();
-    const overflow = await page.evaluate(
-      () =>
-        document.documentElement.scrollWidth -
-        document.documentElement.clientWidth,
-    );
-    expect(overflow).toBeLessThanOrEqual(0);
+    // The section of this PR must not push the page sideways. (Other sections
+    // of the gallery are judged by their own tests: a line of filters that
+    // scrolls is a scroll container on purpose and is not counted.)
+    const wide = await page.evaluate(() => {
+      const width = document.documentElement.clientWidth;
+      const out: string[] = [];
+      for (const el of document.querySelectorAll<HTMLElement>(
+        "#scelte-persone *",
+      )) {
+        if (el.closest(".gruppo-chip--scorre")) continue;
+        const r = el.getBoundingClientRect();
+        if (r.width > 1 && r.right > width + 1) {
+          out.push(`${el.tagName}.${el.className} ${Math.round(r.right)}`);
+        }
+      }
+      return out;
+    });
+    expect(wide).toEqual([]);
     const columns = await tid(page, "ds-giorni")
       .locator(".scelta-giorni")
       .evaluate(

@@ -90,12 +90,15 @@ export function PersonPicker({
               )}
               aria-pressed={value.includes(person.id)}
               aria-label={person.name}
+              // The letters are drawn by CSS (`::after`, from this attribute),
+              // not written in the button: the name is the person's name and
+              // two letters («Mi») are not a piece of it (axe
+              // label-content-name-mismatch).
+              data-initials={
+                person.initials?.trim() || firstInitial(person.name)
+              }
               onClick={() => toggle(person.id)}
-            >
-              <span aria-hidden="true">
-                {person.initials?.trim() || firstInitial(person.name)}
-              </span>
-            </button>
+            />
           ))
         )}
       </div>

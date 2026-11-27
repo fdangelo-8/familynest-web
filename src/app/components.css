@@ -6598,6 +6598,9 @@ body {
   height: max(100%, var(--size-tocco));
   transform: translate(-50%, -50%);
 }
+.scelta-persone__pallino::after {
+  content: attr(data-initials);
+}
 .scelta-persone__pallino[aria-pressed="true"] {
   background: var(--c);
   color: var(--c-iniziale);

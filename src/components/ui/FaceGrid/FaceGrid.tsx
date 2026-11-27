@@ -55,9 +55,6 @@ export function FaceGrid({
           <button
             type="button"
             className="volti__voce"
-            aria-label={
-              person.line ? `${person.name}, ${person.line}` : undefined
-            }
             onClick={() => onSelect(person.id)}
           >
             <Avatar
