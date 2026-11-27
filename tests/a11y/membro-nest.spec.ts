@@ -223,18 +223,21 @@ test.describe("Un membro del Nest: stati con un utente usa e getta", () => {
     baseURL,
   }) => {
     test.skip(!throwawayConfigured(), throwawaySkipReason);
-    await withRita(async ({ user, ritaId }) => {
-      await user.signInContext(page.context(), baseURL as string);
-      await openMember(page, ritaId, "Rita");
-      await expect(roleSwitch(page)).toBeEnabled();
-      expect(await seriousViolations(page)).toEqual([]);
-      expect(await duplicateIds(page)).toEqual([]);
-      // Switching on and off keeps the switch reachable and named.
-      await roleSwitch(page).focus();
-      await page.keyboard.press("Space");
-      await expect(roleSwitch(page)).toHaveAttribute("aria-checked", "true");
-      expect(await focusIsVisible(page)).toBe(true);
-      await expect(h1(page)).toHaveText("Rita");
-    });
+    await withRita(
+      async ({ user, ritaId }) => {
+        await user.signInContext(page.context(), baseURL as string);
+        await openMember(page, ritaId, "Rita");
+        await expect(roleSwitch(page)).toBeEnabled();
+        expect(await seriousViolations(page)).toEqual([]);
+        expect(await duplicateIds(page)).toEqual([]);
+        // Switching on and off keeps the switch reachable and named.
+        await roleSwitch(page).focus();
+        await page.keyboard.press("Space");
+        await expect(roleSwitch(page)).toHaveAttribute("aria-checked", "true");
+        expect(await focusIsVisible(page)).toBe(true);
+        await expect(h1(page)).toHaveText("Rita");
+      },
+      { notCouple: true },
+    );
   });
 });

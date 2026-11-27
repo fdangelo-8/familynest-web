@@ -82,17 +82,17 @@ async function Calendar() {
 
   // The role is decided here, never by an address parameter: whoever is not
   // the creator of the Nest joined with an invitation (never the role).
-  const isAdmin = role === "creator";
+  const isCreator = role === "creator";
   const single = nest.data.household_type === "single";
   const hasAdultToInvite = members.data.some(
     (member) => member.kind === "adult" && member.user_id === null,
   );
-  const next = isAdmin
+  const next = isCreator
     ? !single && hasAdultToInvite
       ? INVITE_PATH
       : READY_PATH
     : "/oggi";
-  const steps = isAdmin
+  const steps = isCreator
     ? { current: 3, total: single ? 3 : 4 }
     : { current: 2, total: 3 };
 
@@ -128,7 +128,7 @@ async function Calendar() {
     <CalendarStep
       rows={rows}
       steps={steps}
-      backHref={isAdmin ? PEOPLE_PATH : null}
+      backHref={isCreator ? PEOPLE_PATH : null}
       next={next}
       notice={notice}
     />
