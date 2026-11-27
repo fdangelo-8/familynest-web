@@ -2102,6 +2102,16 @@ export type Database = {
         };
         Returns: undefined;
       };
+      add_household_member: {
+        Args: {
+          p_birth_date?: string;
+          p_color: Database["public"]["Enums"]["member_color"];
+          p_kind: Database["public"]["Enums"]["member_kind"];
+          p_name: string;
+          p_species?: Database["public"]["Enums"]["pet_species"];
+        };
+        Returns: string;
+      };
       add_shopping_items: {
         Args: { p_assignee_member_ids?: string[]; p_items: Json };
         Returns: string[];
@@ -2496,6 +2506,15 @@ export type Database = {
           title: string;
         }[];
       };
+      household_member_calendars: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          calendar_name: string;
+          member_id: string;
+          provider: Database["public"]["Enums"]["calendar_provider"];
+          visibility: Database["public"]["Enums"]["event_visibility"];
+        }[];
+      };
       invitation_preview: {
         Args: { p_token: string };
         Returns: {
@@ -2509,6 +2528,13 @@ export type Database = {
           message: string;
           status: Database["public"]["Enums"]["invitation_preview_status"];
         }[];
+      };
+      invite_adult: {
+        Args: {
+          p_color: Database["public"]["Enums"]["member_color"];
+          p_name: string;
+        };
+        Returns: string;
       };
       list_calendar_events: {
         Args: { p_from: string; p_to: string };
@@ -2632,6 +2658,10 @@ export type Database = {
         };
         Returns: undefined;
       };
+      record_invitation_mail: {
+        Args: { p_invitation_id: string };
+        Returns: undefined;
+      };
       register_push_subscription: {
         Args: {
           p_auth?: string;
@@ -2650,6 +2680,7 @@ export type Database = {
         Args: { p_space: Database["public"]["Enums"]["space_key"] };
         Returns: undefined;
       };
+      renew_invitation: { Args: { p_member_id: string }; Returns: undefined };
       request_ride: {
         Args: {
           p_event_id: string;
