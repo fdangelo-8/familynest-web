@@ -277,6 +277,104 @@ export async function insertNotification(
   return data.id as string;
 }
 
+export type NewAvviso =
+  | { kind: "member_joined"; recipient: string; actor: string }
+  | {
+      kind: "event_reminder";
+      recipient: string;
+      eventId: string;
+      occurrence: Day;
+    }
+  | {
+      kind: "ride_reminder";
+      recipient: string;
+      eventId: string;
+      occurrence: Day;
+      leg: "escort" | "pickup";
+    }
+  | {
+      kind: "overlap_tomorrow";
+      recipient: string;
+      eventId: string;
+      occurrence: Day;
+      otherEventId: string;
+      otherOccurrence: Day;
+      subject: string;
+    }
+  | {
+      kind: "ride_request";
+      recipient: string;
+      actor: string;
+      eventId: string;
+      occurrence: Day;
+      leg: "escort" | "pickup";
+    };
+
+/**
+ * Inserts a notification of the five kinds of #511 directly (administrative
+ * key, only to prepare), with the fields the check constraint of the database
+ * asks for each kind (the kinds and the columns come from the database of
+ * #612).
+ */
+export async function insertAvviso(
+  nest: CasaNest,
+  row: NewAvviso,
+  createdAt: Date = new Date(),
+): Promise<void> {
+  const common = {
+    household_id: nest.householdId,
+    recipient_member_id: memberId(nest, row.recipient),
+    kind: row.kind,
+    created_at: createdAt.toISOString(),
+  };
+  let fields: Record<string, string | number>;
+  switch (row.kind) {
+    case "member_joined":
+      fields = { actor_member_id: memberId(nest, row.actor) };
+      break;
+    case "event_reminder":
+      fields = { event_id: row.eventId, occurrence_date: row.occurrence };
+      break;
+    case "ride_reminder":
+      fields = {
+        event_id: row.eventId,
+        occurrence_date: row.occurrence,
+        ride_leg: row.leg,
+        days_before: 0,
+      };
+      break;
+    case "overlap_tomorrow": {
+      // The database wants the pair written once, in this order.
+      const first = { id: row.eventId, day: row.occurrence };
+      const second = { id: row.otherEventId, day: row.otherOccurrence };
+      const [a, b] =
+        `${first.id}${first.day}` < `${second.id}${second.day}`
+          ? [first, second]
+          : [second, first];
+      fields = {
+        event_id: a.id,
+        occurrence_date: a.day,
+        other_event_id: b.id,
+        other_occurrence_date: b.day,
+        subject_member_id: memberId(nest, row.subject),
+      };
+      break;
+    }
+    case "ride_request":
+      fields = {
+        actor_member_id: memberId(nest, row.actor),
+        event_id: row.eventId,
+        occurrence_date: row.occurrence,
+        ride_leg: row.leg,
+      };
+      break;
+  }
+  const { error } = await adminOf(nest)
+    .from("notifications")
+    .insert({ ...common, ...fields });
+  if (error) throw new Error("Avviso di prova non inserito");
+}
+
 /**
  * `who` assigns a thing to do to `to` (the trigger writes the notification
  * with the session of `who`), and the notification is moved to `when`.
