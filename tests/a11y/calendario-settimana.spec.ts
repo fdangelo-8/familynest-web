@@ -75,7 +75,7 @@ test.describe("axe", () => {
         .getByRole("button", { name: /Io$/ })
         .click();
       await expect(
-        page.getByRole("button", { name: /Io$/, pressed: true }),
+        page.getByRole("button", { name: /Io$/, pressed: true }).first(),
       ).toBeVisible();
       await expectClean(page);
     });
@@ -381,11 +381,18 @@ test("ordine del focus e nessuna trappola", async ({ page, baseURL }) => {
     expect(order.length).toBeGreaterThan(8);
 
     const index = (re: RegExp) => order.findIndex((name) => re.test(name));
+    // From 1280 px the sidebar has a lens before the page: the one of the
+    // page is the first «Io» after «Settimana successiva».
+    const afterNext = index(/Settimana successiva/);
     const mainOrder = [
-      /Settimana precedente/,
-      /Settimana successiva/,
-      isMobile(page) ? /^a:Giorno/ : /^button:.*Io$/,
-    ].map(index);
+      index(/Settimana precedente/),
+      afterNext,
+      isMobile(page)
+        ? index(/^a:Giorno/)
+        : order.findIndex(
+            (name, i) => i > afterNext && /^button:.*Io$/.test(name),
+          ),
+    ];
     expect(
       mainOrder.every((i) => i >= 0),
       JSON.stringify(order),
@@ -778,7 +785,7 @@ test("contrasto: testi principali e axe color-contrast", async ({
       .getByRole("button", { name: /Io$/ })
       .click();
     await expect(
-      page.getByRole("button", { name: /Io$/, pressed: true }),
+      page.getByRole("button", { name: /Io$/, pressed: true }).first(),
     ).toBeVisible();
     expect(await run()).toEqual([]);
   });
