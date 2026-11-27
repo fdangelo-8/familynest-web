@@ -838,7 +838,16 @@ for (const width of [390, 1280]) {
       expect(radio!.x).toBeGreaterThanOrEqual(title!.x + title!.width);
       // ...and on the same row: the tick and the title overlap vertically.
       expect(title!.y).toBeLessThan(radio!.y + radio!.height);
-      expect(radio!.y).toBeLessThan(title!.y + title!.height);
+      // The tick is centred on the text block (title and explanation), as in
+      // the new card: it sits beside it, not on a row of its own below.
+      const block = (await card
+        .locator(".scelta__titolo")
+        .locator("xpath=..")
+        .boundingBox())!;
+      expect(radio!.y).toBeGreaterThanOrEqual(block.y - 1);
+      expect(radio!.y + radio!.height).toBeLessThanOrEqual(
+        block.y + block.height + 1,
+      );
       // The tick is at the right edge of the card.
       const box = (await card.boundingBox())!;
       expect(radio!.x + radio!.width).toBeGreaterThan(box.x + box.width / 2);
