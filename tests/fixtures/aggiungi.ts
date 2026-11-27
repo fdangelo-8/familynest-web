@@ -138,7 +138,11 @@ export async function openAdd(
     }),
   ).toBeVisible({ timeout: 20_000 });
   await expect(async () => {
-    await page.locator('a[href^="/aggiungi"]:visible').first().click();
+    // The quick field of Oggi: the entry to Add that the page has at every width.
+    await page
+      .locator('a.campo-rapido[href="/aggiungi"]:visible')
+      .first()
+      .click();
     await expect(dialogOf(page)).toBeVisible({ timeout: 2000 });
   }).toPass();
   await expect(fieldOf(page)).toBeFocused();
