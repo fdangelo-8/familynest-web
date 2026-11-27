@@ -449,6 +449,9 @@ test.describe("Aggiungi · isolamento tra Nest e campi data (F4c)", () => {
   }) => {
     await openAddFromNav(page, baseURL, bianchi, "Paolo");
     const f = impegnoFields(page);
+    // The people of the Nest B must be loaded and visible before an absence
+    // is checked, or the test would pass even with a broken isolation.
+    await f.expectWho(["Tu"]);
     await pickDay(f.day, "2026-10-23");
     await typeTime(f.from, "17:00");
     const dialog = page.getByTestId("aggiungi-foglio");

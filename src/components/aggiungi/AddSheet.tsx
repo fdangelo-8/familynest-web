@@ -316,7 +316,6 @@ function eventFieldErrors(fields: EventFields): FieldErrors {
   return errors;
 }
 
-/** Moves the focus to a field of the sheet by its id (a group takes it on its pressed voice). */
 /**
  * The footer of the sheet is fixed (it sticks over the body), so the alert of
  * a failed save at the end of the body can be out of sight or under the
@@ -326,6 +325,7 @@ function showSaveAlert(element: HTMLDivElement | null): void {
   element?.scrollIntoView({ block: "center" });
 }
 
+/** Moves the focus to a field of the sheet by its id (a group takes it on its pressed voice). */
 function focusById(id: string): void {
   const element = document.getElementById(id);
   if (!element) return;
