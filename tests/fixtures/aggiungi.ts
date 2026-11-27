@@ -137,14 +137,10 @@ export async function openAdd(
       name: /^(Buongiorno|Buon pomeriggio|Buonasera|Eccoti)/,
     }),
   ).toBeVisible({ timeout: 20_000 });
-  await expect(async () => {
-    // The quick field of Oggi: the entry to Add that the page has at every width.
-    await page
-      .locator('a.campo-rapido[href="/aggiungi"]:visible')
-      .first()
-      .click();
-    await expect(dialogOf(page)).toBeVisible({ timeout: 2000 });
-  }).toPass();
+  // F5 (#506): the «Aggiungi» of the bottom bar is gone and Oggi on a phone
+  // has no link to Add of its own until A1 (#534) draws its «+»: Add is opened
+  // by its address, which is the sheet over Oggi (#164), at every width.
+  await page.goto("/aggiungi");
   await expect(fieldOf(page)).toBeFocused();
 }
 
