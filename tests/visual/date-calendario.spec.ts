@@ -53,7 +53,8 @@ test.describe("pagina Mese", () => {
 const CARTA = "rgb(255, 255, 255)";
 const CARTA_2 = "rgb(244, 246, 244)";
 const SUPERFICIE = "rgb(255, 255, 255)";
-const INSIEME = "rgb(251, 234, 171)";
+// #634: --color-insieme is #FCEFC0 in the light palette (was #FBEAAB).
+const INSIEME = "rgb(252, 239, 192)";
 const TRASPARENTE = "rgba(0, 0, 0, 0)";
 
 async function openHarness(page: Page) {
