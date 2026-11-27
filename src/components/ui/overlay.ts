@@ -30,8 +30,23 @@ export function useIsDesktop(): boolean {
   return useMediaQuery("(min-width: 1024px)");
 }
 
+/**
+ * True when the window is wide and tall enough for a centered modal instead of
+ * a bottom sheet: from 900 px wide and at least 600 px tall (decision D8).
+ * `useIsDesktop` stays at 1024 px for the layout of the pages until F5 (#506)
+ * moves them to the same threshold.
+ */
+export function useIsWindow(): boolean {
+  return useMediaQuery("(min-width: 900px) and (min-height: 600px)");
+}
+
 /** Open dialogs, last one on top. Only the top one handles Escape and Tab. */
 const overlayStack: symbol[] = [];
+
+/** True while a sheet or a dialog is open: a new one opens above it. */
+export function hasOpenOverlay(): boolean {
+  return overlayStack.length > 0;
+}
 
 function prefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -62,6 +77,34 @@ export function useAnimatedClose(onClose: () => void) {
 }
 
 /**
+ * A light layer, such as the calendar under a date field: while `active` it is
+ * the top of the stack, so Escape closes it and not the sheet it sits in.
+ */
+export function useEscapeLayer(active: boolean, onEscape: () => void) {
+  const onEscapeRef = useRef(onEscape);
+  useEffect(() => {
+    onEscapeRef.current = onEscape;
+  });
+  useEffect(() => {
+    if (!active) return;
+    const token = Symbol("layer");
+    overlayStack.push(token);
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (overlayStack[overlayStack.length - 1] !== token) return;
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      onEscapeRef.current();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      const index = overlayStack.indexOf(token);
+      if (index >= 0) overlayStack.splice(index, 1);
+    };
+  }, [active]);
+}
+
+/**
  * Dialog focus handling: moves focus inside on mount, keeps Tab inside,
  * handles Escape and gives focus back to the opener on unmount.
  */
@@ -85,10 +128,11 @@ export function useDialogFocus(
     const focusables = () =>
       Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE));
 
-    let target: HTMLElement | null | undefined;
-    if (initialFocus === "marked") {
-      target = container.querySelector<HTMLElement>("[data-autofocus]");
-    } else {
+    // An element marked `data-autofocus` always wins (the confirm button, the
+    // day of a calendar); otherwise the first field.
+    let target: HTMLElement | null | undefined =
+      container.querySelector<HTMLElement>("[data-autofocus]");
+    if (!target && initialFocus === "field") {
       target = container.querySelector<HTMLElement>(
         "input:not([disabled]),select:not([disabled]),textarea:not([disabled])",
       );

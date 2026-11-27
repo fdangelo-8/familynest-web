@@ -784,3 +784,77 @@ export function formatSchoolDays(days: readonly number[]): string {
       : `${names.slice(0, -1).join(", ")} e ${last}`;
   return capitalize(list);
 }
+
+/* ---------- Date and time fields (F4c, #505) ---------- */
+
+/** Today in Rome as `YYYY-MM-DD`, whatever the time zone of the device. */
+export function todayKeyInRome(now: Instant = new Date()): string {
+  return toDayKey(now);
+}
+
+/** An instant that is certainly inside the Rome day of `dayKey`. */
+function noonOf(dayKey: string): Date {
+  return fromFieldValues(dayKey, "12:00");
+}
+
+/**
+ * Value shown by a date field: `Mercoledì 18 novembre`; the year follows only
+ * when it differs from the one of `todayKey` (`Lunedì 4 gennaio 2027`).
+ */
+export function formatFieldDay(dayKey: string, todayKey: string): string {
+  const text = formatLongDay(noonOf(dayKey));
+  const year = dayKey.slice(0, 4);
+  return year === todayKey.slice(0, 4) ? text : `${text} ${year}`;
+}
+
+/** `Novembre`: the month of a day, capital initial. */
+export function formatMonthName(dayKey: string): string {
+  return capitalize(textPart(noonOf(dayKey), { month: "long" }, "month"));
+}
+
+/** `martedì 24 novembre 2026`: the full day, lower case, always with the year. */
+export function formatFullDay(dayKey: string): string {
+  return `${formatLongDay(noonOf(dayKey), { capitalized: false })} ${dayKey.slice(0, 4)}`;
+}
+
+/** `lun`: the short weekday of a day, lower case. */
+export function formatWeekdayShortLower(dayKey: string): string {
+  return formatShortWeekday(noonOf(dayKey)).toLocaleLowerCase(LOCALE);
+}
+
+/** `lunedì`: the weekday of a day in full, lower case. */
+export function formatWeekdayLower(dayKey: string): string {
+  return formatWeekday(noonOf(dayKey), { capitalized: false });
+}
+
+/**
+ * The day `months` months from `dayKey` with the same day number, or the last
+ * day of that month when it is shorter (31 March, one month back: 28 February).
+ */
+export function addMonthsToDayKey(dayKey: string, months: number): string {
+  const year = Number(dayKey.slice(0, 4));
+  const month = Number(dayKey.slice(5, 7)) - 1 + months;
+  const day = Number(dayKey.slice(8, 10));
+  const target = new Date(Date.UTC(year, month, 1));
+  const last = new Date(
+    Date.UTC(target.getUTCFullYear(), target.getUTCMonth() + 1, 0),
+  ).getUTCDate();
+  return `${target.getUTCFullYear()}-${pad(target.getUTCMonth() + 1)}-${pad(Math.min(day, last))}`;
+}
+
+const TIME_TEXT = /^(\d{1,2})(?:[:.]?(\d{2}))?$/;
+
+/**
+ * Reads what a person writes in a time field: `9`, `17`, `930`, `1730`, `9:30`,
+ * `17.30`, `17:30`, spaces at the sides. Returns `HH:MM` (24 h) or `null` when
+ * the text is not an hour from 00:00 to 23:59.
+ */
+export function parseTimeInput(text: string): string | null {
+  const match = TIME_TEXT.exec(text.trim());
+  if (!match) return null;
+  // «930» and «1730» split by themselves: the last two digits are the minutes.
+  const hours = Number(match[1]);
+  const minutes = match[2] === undefined ? 0 : Number(match[2]);
+  if (hours > 23 || minutes > 59) return null;
+  return `${pad(hours)}:${pad(minutes)}`;
+}

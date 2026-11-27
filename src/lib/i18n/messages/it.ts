@@ -111,4 +111,21 @@ export const it = {
       sun: { short: "Dom", full: "domenica" },
     },
   },
+  // Sheets, confirmations and date picker (F4c, #505). A group of its own, to
+  // keep away from the open notification work that also edits this file.
+  sheetsDates: {
+    connect: "Collega",
+    connected: "Collegato",
+    connectService: "Collega {service}",
+    retryService: "Riprova {service}",
+    serviceConnected: "{service} collegato",
+    connectFailed:
+      "Non siamo riusciti a collegare {service}. Riprova, oppure continua senza.",
+    previousMonth: "Mese precedente",
+    nextMonth: "Mese successivo",
+    today: "oggi",
+    timeInvalid: "Scrivi un'ora da 00:00 a 23:59, per esempio 17:30.",
+    actionFailed:
+      "Non siamo riusciti a completare l'azione. Controlla la connessione e riprova.",
+  },
 } satisfies MessageTree;

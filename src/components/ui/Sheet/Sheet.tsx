@@ -5,13 +5,31 @@ import {
   useEffect,
   useId,
   useRef,
+  useState,
   type PointerEvent,
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
+import { it } from "@/lib/i18n/messages/it";
 import { cx } from "../cx";
+import { Button } from "../Button/Button";
 import { IconButton } from "../IconButton/IconButton";
-import { useAnimatedClose, useDialogFocus, useIsDesktop } from "../overlay";
+import { Spinner } from "../Spinner/Spinner";
+import {
+  hasOpenOverlay,
+  useAnimatedClose,
+  useDialogFocus,
+  useIsWindow,
+} from "../overlay";
+
+/** The written action on the right of the head («Salva»). */
+export type SheetAction = {
+  label: string;
+  onClick: () => void;
+  /** Saving: the spinner takes the place of the label and the sheet cannot close */
+  busy?: boolean;
+  disabled?: boolean;
+};
 
 export type SheetProps = {
   open: boolean;
@@ -31,15 +49,22 @@ export type SheetProps = {
   ariaLabel?: string;
   /** Body content, same on mobile and desktop */
   children: ReactNode;
-  /** Actions at the bottom. Mobile: after the content. Desktop: `.modale__piede`. */
+  /**
+   * Fixed foot with a line above (`.foglio__piede`), for «Annulla» and the
+   * main action: use `SheetFooter`. Never together with `action`.
+   */
   footer?: ReactNode;
-  /** Desktop: the foot holds only the main button, kept on the right (`.modale__piede--fine`) */
+  /** Window: the foot holds only the main button, kept on the right (`.modale__piede--fine`) */
   footerEnd?: boolean;
-  /** Short line next to the close button in the head (`.foglio__info`), e.g. a hint and a `kbd` */
+  /** Written action on the right of the head (`.foglio__azione`), instead of a foot */
+  action?: SheetAction;
+  /** `start`: the title sits on the left after the X and wraps (long sentences) */
+  titleAlign?: "center" | "start";
+  /** Short line on the right of the head (`.foglio__info`), e.g. a hint and a `kbd` */
   info?: ReactNode;
-  /** Optional side column (`.modale__lato`) on desktop. Without it the modal is single (`.modale--singola`). */
+  /** Optional side column (`.modale__lato`) in the window. Without it the modal is single (`.modale--singola`). */
   side?: ReactNode;
-  /** Mobile only: the sheet reaches up to the bar (`.foglio--alto`) */
+  /** Phone only: the sheet reaches up to the safe area (`.foglio--alto`) */
   tall?: boolean;
   /** While true X, Esc, the veil and the drag do not close the sheet (saving in progress) */
   locked?: boolean;
@@ -55,8 +80,8 @@ export type SheetProps = {
 const DRAG_CLOSE_RATIO = 0.25;
 
 /**
- * Same content in two shapes: bottom sheet under 1024 px (`.foglio`),
- * centered modal from 1024 px (`.modale`).
+ * Same content in two shapes: bottom sheet (`.foglio`) and, from 900 px wide
+ * and 600 px tall, centered modal (`.modale`).
  */
 export function Sheet(props: SheetProps) {
   if (!props.open || typeof document === "undefined") return null;
@@ -71,20 +96,24 @@ function SheetContent({
   children,
   footer,
   footerEnd,
+  action,
+  titleAlign = "center",
   info,
   side,
   tall,
-  locked = false,
+  locked: lockedProp = false,
   closeRequested = false,
   "aria-describedby": describedBy,
   className,
   "data-testid": testId,
 }: SheetProps) {
-  const desktop = useIsDesktop();
+  const windowShape = useIsWindow();
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
   const dragStart = useRef<number | null>(null);
+  const [aboveSheet] = useState(hasOpenOverlay);
   const { closing, requestClose: startClose } = useAnimatedClose(onClose);
+  const locked = lockedProp || action?.busy === true;
   const lockedRef = useRef(locked);
   useEffect(() => {
     lockedRef.current = locked;
@@ -104,19 +133,10 @@ function SheetContent({
 
   useDialogFocus(dialogRef, { onEscape: requestClose, initialFocus: "field" });
 
-  const closeButton = (
-    <IconButton
-      icon="x"
-      small
-      aria-label="Chiudi"
-      aria-disabled={locked}
-      onClick={requestClose}
-      data-testid="sheet-chiudi"
-    />
-  );
-
-  const onHandleDown = (event: PointerEvent<HTMLDivElement>) => {
+  const onHeadDown = (event: PointerEvent<HTMLDivElement>) => {
     if (lockedRef.current) return;
+    // The X and the action keep their own tap: the drag starts elsewhere.
+    if ((event.target as HTMLElement).closest("button")) return;
     dragStart.current = event.clientY;
     event.currentTarget.setPointerCapture(event.pointerId);
     const dialog = dialogRef.current;
@@ -126,13 +146,13 @@ function SheetContent({
     }
   };
 
-  const onHandleMove = (event: PointerEvent<HTMLDivElement>) => {
+  const onHeadMove = (event: PointerEvent<HTMLDivElement>) => {
     if (dragStart.current === null) return;
     const delta = Math.max(0, event.clientY - dragStart.current);
     dialogRef.current?.style.setProperty("--trascinamento", `${delta}px`);
   };
 
-  const onHandleUp = (event: PointerEvent<HTMLDivElement>) => {
+  const onHeadUp = (event: PointerEvent<HTMLDivElement>) => {
     if (dragStart.current === null) return;
     const delta = Math.max(0, event.clientY - dragStart.current);
     dragStart.current = null;
@@ -151,22 +171,37 @@ function SheetContent({
     if (beyond) requestClose();
   };
 
+  const dragProps = windowShape
+    ? {}
+    : {
+        onPointerDown: onHeadDown,
+        onPointerMove: onHeadMove,
+        onPointerUp: onHeadUp,
+        onPointerCancel: onHeadUp,
+      };
+
   return (
     <>
       <div
-        className={cx("velo", closing && "is-uscita")}
+        className={cx(
+          "velo",
+          aboveSheet && "velo--sopra-foglio",
+          closing && "is-uscita",
+        )}
         onClick={requestClose}
         aria-hidden="true"
         data-testid="velo"
       />
-      {/* One tree for both shapes: crossing 1024 px only changes classes, so
-          the content (and what the user typed) is never remounted. */}
+      {/* One tree for both shapes: crossing the threshold only changes
+          classes, so the content (and what the user typed) is never remounted. */}
       <div
         ref={dialogRef}
         className={cx(
-          desktop ? "modale" : "foglio",
-          desktop && !side && "modale--singola",
-          !desktop && tall && "foglio--alto",
+          windowShape ? "modale" : "foglio",
+          windowShape && !side && "modale--singola",
+          !windowShape && tall && "foglio--alto",
+          !windowShape && Boolean(footer) && "foglio--con-piede",
+          titleAlign === "start" && "foglio--titolo-inizio",
           closing && "is-uscita",
           className,
         )}
@@ -177,35 +212,33 @@ function SheetContent({
         aria-describedby={describedBy}
         data-testid={testId}
       >
-        {desktop ? null : (
+        <div className={windowShape ? "modale__corpo" : "foglio__corpo"}>
           <div
-            className="foglio__maniglia"
-            onPointerDown={onHandleDown}
-            onPointerMove={onHandleMove}
-            onPointerUp={onHandleUp}
-            onPointerCancel={onHandleUp}
-            data-testid="sheet-maniglia"
-          />
-        )}
-        <div className={desktop ? "modale__corpo" : "foglio__corpo"}>
-          <div className="foglio__testa">
+            className="foglio__testa"
+            data-testid="sheet-testa"
+            {...dragProps}
+          >
+            <IconButton
+              icon="x"
+              aria-label={it.close}
+              aria-disabled={locked}
+              onClick={requestClose}
+              className="foglio__chiudi"
+              data-testid="sheet-chiudi"
+            />
+            {action ? <SheetActionButton action={action} /> : null}
             <h2 className="foglio__titolo" id={titleId}>
               {title}
             </h2>
-            {info ? (
-              <div className="foglio__testa-fine">
-                <span className="foglio__info">{info}</span>
-                {closeButton}
-              </div>
-            ) : (
-              closeButton
-            )}
+            {info && !action ? (
+              <span className="foglio__info">{info}</span>
+            ) : null}
           </div>
-          {children}
+          <div className="foglio__contenuto">{children}</div>
           {footer ? (
             <div
               className={
-                desktop
+                windowShape
                   ? cx("modale__piede", footerEnd && "modale__piede--fine")
                   : "foglio__piede"
               }
@@ -214,10 +247,77 @@ function SheetContent({
             </div>
           ) : null}
         </div>
-        {desktop && side ? (
+        {windowShape && side ? (
           <aside className="modale__lato">{side}</aside>
         ) : null}
       </div>
     </>
+  );
+}
+
+function SheetActionButton({ action }: { action: SheetAction }) {
+  const { label, onClick, busy = false, disabled = false } = action;
+  const inactive = busy || disabled;
+  return (
+    <button
+      type="button"
+      className={cx("btn-link", "foglio__azione", busy && "is-caricamento")}
+      aria-label={busy ? label : undefined}
+      aria-busy={busy || undefined}
+      aria-disabled={inactive || undefined}
+      onClick={inactive ? undefined : onClick}
+      data-testid="sheet-azione"
+    >
+      {busy ? (
+        <>
+          <span className="foglio__azione-testo" aria-hidden="true">
+            {label}
+          </span>
+          <Spinner />
+        </>
+      ) : (
+        label
+      )}
+    </button>
+  );
+}
+
+/**
+ * Content of the fixed foot of a sheet: «Annulla», written and underlined, on
+ * the left and the main action, full, on the right. Pass it as `footer`.
+ */
+export function SheetFooter({
+  onCancel,
+  cancelLabel = it.cancel,
+  action,
+}: {
+  onCancel: () => void;
+  cancelLabel?: string;
+  action: {
+    label: string;
+    onClick?: () => void;
+    /** `submit` with `form` sends a form that sits in the body of the sheet */
+    type?: "button" | "submit";
+    form?: string;
+    loading?: boolean;
+    inactive?: boolean;
+  };
+}) {
+  return (
+    <div className="foglio__piede-riga">
+      <Button variant="link" onClick={onCancel} data-testid="sheet-annulla">
+        {cancelLabel}
+      </Button>
+      <Button
+        type={action.type}
+        form={action.form}
+        loading={action.loading}
+        inactive={action.inactive}
+        onClick={action.onClick}
+        data-testid="sheet-azione-piede"
+      >
+        {action.label}
+      </Button>
+    </div>
   );
 }

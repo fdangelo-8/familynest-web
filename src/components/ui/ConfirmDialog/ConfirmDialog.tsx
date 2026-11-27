@@ -1,7 +1,9 @@
 "use client";
 
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { haptic } from "@/lib/haptic";
+import { it } from "@/lib/i18n/messages/it";
 import { cx } from "../cx";
 import { Alert } from "../Alert/Alert";
 import { Button } from "../Button/Button";
@@ -37,9 +39,6 @@ export type ConfirmDialogProps = {
   "data-testid"?: string;
 };
 
-const DEFAULT_ERROR =
-  "Non siamo riusciti a completare l'azione. Controlla la connessione e riprova.";
-
 export function ConfirmDialog(props: ConfirmDialogProps) {
   if (!props.open || typeof document === "undefined") return null;
   return createPortal(<ConfirmContent {...props} />, document.body);
@@ -50,7 +49,7 @@ function ConfirmContent({
   title,
   text,
   actions,
-  errorText = DEFAULT_ERROR,
+  errorText = it.sheetsDates.actionFailed,
   aboveSheet = false,
   className,
   "data-testid": testId,
@@ -58,6 +57,7 @@ function ConfirmContent({
   const titleId = useId();
   const textId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
+  const alertRef = useRef<HTMLDivElement>(null);
   const { closing, requestClose } = useAnimatedClose(onClose);
   // Label of the running async action, null when idle
   const [busy, setBusy] = useState<string | null>(null);
@@ -69,6 +69,17 @@ function ConfirmContent({
   };
 
   useDialogFocus(dialogRef, { onEscape: closeIfIdle, initialFocus: "marked" });
+
+  // The dialog asks for attention once, when it opens (F4c): on the web
+  // `haptic` does nothing, the native shell will vibrate.
+  useEffect(() => {
+    haptic("avviso");
+  }, []);
+
+  // After a failure the focus goes to the notice, which is announced.
+  useEffect(() => {
+    if (failed) alertRef.current?.focus();
+  }, [failed]);
 
   const run = (action: ConfirmAction) => {
     if (closing || busy !== null) return;
@@ -128,7 +139,12 @@ function ConfirmContent({
           {text}
         </p>
         {failed ? (
-          <Alert variant="errore" data-testid="dialogo-errore">
+          <Alert
+            variant="errore"
+            alertRef={alertRef}
+            tabIndex={-1}
+            data-testid="dialogo-errore"
+          >
             {errorText}
           </Alert>
         ) : null}
@@ -170,7 +186,7 @@ function CancelButton({
       onClick={inactive ? undefined : onClick}
       data-autofocus=""
     >
-      <span className="btn__testo">Annulla</span>
+      <span className="btn__testo">{it.cancel}</span>
     </button>
   );
 }
