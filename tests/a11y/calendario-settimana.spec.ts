@@ -71,6 +71,7 @@ test.describe("axe", () => {
 
       await page
         .getByRole("group", { name: /Punto di vista/ })
+        .first()
         .getByRole("button", { name: /Io$/ })
         .click();
       await expect(
@@ -516,12 +517,14 @@ test("aree di tocco di almeno 44 px (mobile)", async ({ page, baseURL }) => {
         "lente Io",
         page
           .getByRole("group", { name: /Punto di vista/ })
+          .first()
           .getByRole("button", { name: /Io$/ }),
       ],
       [
         "lente Nest",
         page
           .getByRole("group", { name: /Punto di vista/ })
+          .first()
           .getByRole("button", { name: /Nest$/ }),
       ],
     ];
@@ -771,6 +774,7 @@ test("contrasto: testi principali e axe color-contrast", async ({
     expect(await run()).toEqual([]);
     await page
       .getByRole("group", { name: /Punto di vista/ })
+      .first()
       .getByRole("button", { name: /Io$/ })
       .click();
     await expect(

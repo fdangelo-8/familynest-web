@@ -36,6 +36,7 @@ export async function setPreferences(
 export const lensButton = (page: Page, which: "Io" | "Nest") =>
   page
     .getByRole("group", { name: LENS_LABEL })
+    .first() // the sidebar lens comes first from 1280 px, same state
     .getByRole("button", { name: new RegExp(`${which}$`) });
 
 /** Clicks a lens button until the client is hydrated and the state changes. */

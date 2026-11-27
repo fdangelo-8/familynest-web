@@ -68,7 +68,9 @@ const SUN_H = "Domenica 25";
 // ------------------------------------------------------------------ locators
 
 const h1 = (page: Page) => page.getByRole("heading", { level: 1 });
-const lensGroup = (page: Page) => page.getByRole("group", { name: LENS });
+// From 1280 px the sidebar has a lens too, with the same state: the first.
+const lensGroup = (page: Page) =>
+  page.getByRole("group", { name: LENS }).first();
 const viewGroup = (page: Page) =>
   page.getByRole("group", { name: "Vista del calendario" });
 const nextWeek = (page: Page) =>
