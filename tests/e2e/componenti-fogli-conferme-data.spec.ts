@@ -1126,6 +1126,52 @@ test.describe("regole statiche", () => {
     );
   });
 
+  test("CA-39: componenti.md e registro.md descrivono ogni componente e prop, la galleria ha ogni esempio", () => {
+    const folder = join(ROOT, ".claude/skills/design-system/riferimento");
+    const docs = {
+      "componenti.md": readFileSync(join(folder, "componenti.md"), "utf8"),
+      "registro.md": readFileSync(join(folder, "registro.md"), "utf8"),
+    };
+    for (const [name, text] of Object.entries(docs)) {
+      for (const word of [
+        "Sheet",
+        "SheetFooter",
+        "ConfirmDialog",
+        "ConnectRow",
+        "ConnectList",
+        "DateField",
+        "MonthCalendar",
+        "TimeField",
+        "titleAlign",
+        "clearable",
+      ]) {
+        expect(text, `${name}: ${word}`).toContain(word);
+      }
+    }
+    const gallery = readFileSync(
+      join(ROOT, "src/app/design-system/Gallery.tsx"),
+      "utf8",
+    );
+    for (const id of [
+      "ds-foglio-azione",
+      "ds-foglio-piede",
+      "ds-foglio-lungo",
+      "ds-foglio-sopra",
+      "ds-foglio-titolo-inizio",
+      "ds-conferma",
+      "ds-conferma-errore",
+      "ds-collega",
+      "ds-data",
+      "ds-data-anno",
+      "ds-data-limiti",
+      "ds-data-vuota",
+      "ds-data-facoltativa",
+      "ds-ora",
+    ]) {
+      expect(gallery, id).toContain(`"${id}"`);
+    }
+  });
+
   test("CA-i18n: i testi dei componenti nuovi vengono da it.ts", () => {
     for (const [file, texts] of [
       [

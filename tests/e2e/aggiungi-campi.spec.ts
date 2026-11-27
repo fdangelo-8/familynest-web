@@ -495,6 +495,29 @@ test.describe("Aggiungi · isolamento tra Nest e campi data (F4c)", () => {
     await expect(page.getByTestId("calendario")).toBeVisible();
     await expect(clear).toHaveCount(0);
   });
+
+  test("CA-43: «Togli la data» su «Entro» salva la cosa da fare senza data", async ({
+    page,
+    baseURL,
+    casa,
+  }) => {
+    await openAddFromNav(page, baseURL, casa, "Marco");
+    const s = sheet(page);
+    await s.type("Da fare").click();
+    await s.field.fill("comprare il regalo");
+    await pickDay(s.date, "2026-10-27");
+    await s.date.click();
+    await page.getByTestId("calendario-togli").click();
+    await expectNoDay(s.date);
+    await s.button("Aggiungi ai da fare").click();
+    await expect(toastWith(page, "Aggiunto ai da fare:")).toBeVisible();
+    const rows = await todosOf(casa, "Marco");
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      title: "comprare il regalo",
+      due_date: null,
+    });
+  });
 });
 
 test.describe("Aggiungi · Da fare e Scadenza · «Chi se ne occupa» e visibilità", () => {

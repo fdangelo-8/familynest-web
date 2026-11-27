@@ -425,7 +425,7 @@ test.describe("MemberSheet: modifica", () => {
     await expect(page.getByTestId("membri-chiamate")).toHaveText("Chiamate: 0");
   });
 
-  test("la data si toglie con «Togli la data» e viene salvata come nulla", async ({
+  test("CA-43: la data si toglie con «Togli la data» e viene salvata come nulla", async ({
     page,
   }) => {
     const dialog = await openSheet(page, "Modifica Sofia");
