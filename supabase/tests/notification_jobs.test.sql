@@ -12,7 +12,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(67);
+select plan(69);
 
 delete from public.deadlines;
 
@@ -191,11 +191,19 @@ set local request.jwt.claims to '{"sub":"aaaaaaaa-0000-4000-8000-000000000001","
 select lives_ok($$ insert into public.shopping_items (name) values ('Sale') $$, 'Marco adds one thing (Laura has no account)');
 reset role;
 
+-- #511 part 2: «Spesa» is on by default now (question 3 of #511); Giulia and Paolo switch
+-- it off, as it was by default before.
+set local role authenticated;
+set local request.jwt.claims to '{"sub":"bbbbbbbb-0000-4000-8000-000000000001","role":"authenticated"}';
+select lives_ok($$ select public.set_notification_preference('shopping', false) $$, 'CA-20: Giulia switches «Spesa» off');
+set local request.jwt.claims to '{"sub":"bbbbbbbb-0000-4000-8000-000000000002","role":"authenticated"}';
+select lives_ok($$ select public.set_notification_preference('shopping', false) $$, 'CA-20: Paolo switches «Spesa» off');
+reset role;
 set local role service_role;
 select is(
   public.run_notification_job('shopping_digest', '22222222-2222-4222-8222-222222222222', now() + interval '1 minute'),
   0,
-  'CA-20: with «Spesa» off (the default) nobody is notified'
+  'CA-20: with «Spesa» off nobody is notified'
 );
 reset role;
 set local role authenticated;

@@ -26,19 +26,25 @@ select columns_are(
   array['id', 'household_id', 'member_id', 'events', 'assigned_todos', 'shopping',
         'free_together', 'morning_digest', 'created_at', 'updated_at',
         -- #511 part 1: how the phone rings.
-        'delivery_mode', 'evening_digest_time', 'quiet_hours', 'hide_content'],
+        'delivery_mode', 'evening_digest_time', 'quiet_hours', 'hide_content',
+        -- #511 part 2: the switches of cb1-45 and of the content of the morning digest.
+        'rides', 'event_reminders', 'deadlines', 'gifts', 'digest_events', 'digest_rides', 'digest_deadlines',
+        'digest_thanks', 'digest_shopping'],
   'notification_preferences has exactly the planned columns (choices only, nothing personal)'
 );
 select enum_has_labels(
   'public', 'notification_preference',
   array['events', 'assigned_todos', 'shopping', 'free_together', 'morning_digest',
         -- #511 part 1
-        'quiet_hours', 'hide_content'],
-  'the switches of the page, in order (five of #217, then the two of #511)'
+        'quiet_hours', 'hide_content',
+        -- #511 part 2
+        'rides', 'event_reminders', 'deadlines', 'gifts', 'digest_events', 'digest_rides', 'digest_deadlines',
+        'digest_thanks', 'digest_shopping'],
+  'the switches of the page, in order (five of #217, then the eleven of #511)'
 );
 select col_default_is('public', 'notification_preferences', 'events', 'true', '«Impegni e cambi d''orario» on by default');
 select col_default_is('public', 'notification_preferences', 'assigned_todos', 'true', '«Da fare assegnati a me» on by default');
-select col_default_is('public', 'notification_preferences', 'shopping', 'false', '«Spesa» off by default');
+select col_default_is('public', 'notification_preferences', 'shopping', 'true', '«Spesa» on by default (#511, question 3)');
 select col_default_is('public', 'notification_preferences', 'free_together', 'true', '«Liberi insieme» on by default');
 select col_default_is('public', 'notification_preferences', 'morning_digest', 'true', '«Sintesi del mattino» on by default');
 select ok(
@@ -75,8 +81,10 @@ select has_function(
 );
 select is(
   (select p.proargnames from pg_proc p where p.oid = 'public.get_notification_preferences()'::regprocedure),
-  array['events', 'assigned_todos', 'shopping', 'free_together', 'morning_digest']::text[],
-  'the read returns only the five choices (no id, member or household)'
+  array['events', 'assigned_todos', 'shopping', 'free_together', 'morning_digest', 'quiet_hours', 'hide_content',
+        'rides', 'event_reminders', 'deadlines', 'gifts', 'digest_events', 'digest_rides', 'digest_deadlines',
+        'digest_thanks', 'digest_shopping', 'delivery_mode', 'evening_digest_time']::text[],
+  'the read returns only the choices, the five of #217 first (no id, member or household)'
 );
 select ok(
   not exists (
@@ -148,9 +156,9 @@ set local request.method to 'POST';
 
 select is_empty($$ select 1 from public.notification_preferences $$, 'A starts without a row');
 select results_eq(
-  $$ select * from public.get_notification_preferences() $$,
-  $$ values (true, true, false, true, true) $$,
-  'A never chose: all on, «Spesa» off'
+  $$ select events, assigned_todos, shopping, free_together, morning_digest from public.get_notification_preferences() $$,
+  $$ values (true, true, true, true, true) $$,
+  'A never chose: all on (#511: «Spesa» on too)'
 );
 reset role;
 select is_empty(
@@ -171,7 +179,7 @@ select results_eq(
   'the first switch creates the row of A (household and member set by the database), with the defaults and «Spesa» on'
 );
 select results_eq(
-  $$ select * from public.get_notification_preferences() $$,
+  $$ select events, assigned_todos, shopping, free_together, morning_digest from public.get_notification_preferences() $$,
   $$ values (true, true, true, true, true) $$,
   'the read gives the saved choices'
 );
@@ -188,7 +196,7 @@ select lives_ok($$ select public.set_notification_preference('assigned_todos', f
 select lives_ok($$ select public.set_notification_preference('free_together', false) $$, 'CA-19: A switches «Liberi insieme» off');
 select lives_ok($$ select public.set_notification_preference('morning_digest', false) $$, 'CA-19: A switches «Sintesi» off');
 select results_eq(
-  $$ select * from public.get_notification_preferences() $$,
+  $$ select events, assigned_todos, shopping, free_together, morning_digest from public.get_notification_preferences() $$,
   $$ values (false, false, false, false, false) $$,
   'CA-19: all five off, each switch changed only its own choice'
 );
@@ -199,7 +207,7 @@ select results_eq(
 );
 select lives_ok($$ select public.set_notification_preference('events', true) $$, 'A switches «Impegni» on again');
 select results_eq(
-  $$ select * from public.get_notification_preferences() $$,
+  $$ select events, assigned_todos, shopping, free_together, morning_digest from public.get_notification_preferences() $$,
   $$ values (true, false, false, false, false) $$,
   'only «Impegni» changed'
 );
@@ -254,7 +262,7 @@ select lives_ok(
   'A changes a choice with a direct update'
 );
 select results_eq(
-  $$ select * from public.get_notification_preferences() $$,
+  $$ select events, assigned_todos, shopping, free_together, morning_digest from public.get_notification_preferences() $$,
   $$ values (true, false, false, false, true) $$,
   'the direct update changed only «Sintesi»'
 );
@@ -267,7 +275,7 @@ set local request.method to 'PUT';
 select throws_ok($$ select public.set_notification_preference('shopping', true) $$, 'P0001', 'use POST', 'set_notification_preference refuses PUT');
 set local request.method to 'GET';
 select results_eq(
-  $$ select * from public.get_notification_preferences() $$,
+  $$ select events, assigned_todos, shopping, free_together, morning_digest from public.get_notification_preferences() $$,
   $$ values (true, false, false, false, true) $$,
   'the read works with GET, and the refused calls changed nothing'
 );
@@ -280,8 +288,8 @@ set local request.jwt.claims to '{"sub":"bbbbbbbb-0000-4000-8000-000000000001","
 
 select is_empty($$ select 1 from public.notification_preferences $$, 'B reads 0 rows of A');
 select results_eq(
-  $$ select * from public.get_notification_preferences() $$,
-  $$ values (true, true, false, true, true) $$,
+  $$ select events, assigned_todos, shopping, free_together, morning_digest from public.get_notification_preferences() $$,
+  $$ values (true, true, true, true, true) $$,
   'B gets her own defaults, never the choices of A'
 );
 select results_eq(
@@ -313,8 +321,8 @@ set local request.jwt.claims to '{"sub":"bbbbbbbb-0000-4000-8000-000000000002","
 
 select is_empty($$ select 1 from public.notification_preferences $$, 'CA-4: B2 reads 0 rows of B (same household)');
 select results_eq(
-  $$ select * from public.get_notification_preferences() $$,
-  $$ values (true, true, false, true, true) $$,
+  $$ select events, assigned_todos, shopping, free_together, morning_digest from public.get_notification_preferences() $$,
+  $$ values (true, true, true, true, true) $$,
   'CA-20: for B2 «Liberi insieme» is still on after B switched it off'
 );
 select results_eq(
@@ -379,7 +387,7 @@ set local request.jwt.claims to '{"sub":"bbbbbbbb-0000-4000-8000-000000000002","
 select results_eq(
   $$ select p.member_id, p.events, p.assigned_todos, p.shopping, p.free_together, p.morning_digest
      from public.notification_preferences p $$,
-  $$ values ('b1000000-0000-4000-8000-000000000002'::uuid, true, false, false, true, true) $$,
+  $$ values ('b1000000-0000-4000-8000-000000000002'::uuid, true, false, true, true, true) $$,
   'read by B2, his row is unchanged after the attempts of the administrator'
 );
 
@@ -388,8 +396,8 @@ select results_eq(
   $$ select p.member_id, p.events, p.assigned_todos, p.shopping, p.free_together, p.morning_digest
      from public.notification_preferences p order by p.member_id $$,
   $$ values ('a1000000-0000-4000-8000-000000000001'::uuid, true, false, false, false, true),
-            ('b1000000-0000-4000-8000-000000000001'::uuid, true, true, false, false, true),
-            ('b1000000-0000-4000-8000-000000000002'::uuid, true, false, false, true, true) $$,
+            ('b1000000-0000-4000-8000-000000000001'::uuid, true, true, true, false, true),
+            ('b1000000-0000-4000-8000-000000000002'::uuid, true, false, true, true, true) $$,
   'the rows of A and B survived the attempts of the others'
 );
 
@@ -450,8 +458,8 @@ select lives_ok(
   'C creates a «Solo io» household'
 );
 select results_eq(
-  $$ select * from public.get_notification_preferences() $$,
-  $$ values (true, true, false, true, true) $$,
+  $$ select events, assigned_todos, shopping, free_together, morning_digest from public.get_notification_preferences() $$,
+  $$ values (true, true, true, true, true) $$,
   'C with a new household gets the defaults'
 );
 select lives_ok(
@@ -475,8 +483,8 @@ select lives_ok(
 );
 select is_empty($$ select 1 from public.notification_preferences $$, 'the row of C is gone');
 select results_eq(
-  $$ select * from public.get_notification_preferences() $$,
-  $$ values (true, true, false, true, true) $$,
+  $$ select events, assigned_todos, shopping, free_together, morning_digest from public.get_notification_preferences() $$,
+  $$ values (true, true, true, true, true) $$,
   'without a row C is back to the defaults'
 );
 select lives_ok($$ select public.set_notification_preference('morning_digest', false) $$, 'C switches «Sintesi» off');
@@ -497,8 +505,8 @@ set local role authenticated;
 set local request.jwt.claims to '{"sub":"dddddddd-0000-4000-8000-000000000001","role":"authenticated"}';
 select is_empty($$ select 1 from public.notification_preferences $$, 'D reads 0 rows of A (same household)');
 select results_eq(
-  $$ select * from public.get_notification_preferences() $$,
-  $$ values (true, true, false, true, true) $$,
+  $$ select events, assigned_todos, shopping, free_together, morning_digest from public.get_notification_preferences() $$,
+  $$ values (true, true, true, true, true) $$,
   'D (Laura) gets the defaults, not the choices of A'
 );
 select lives_ok($$ select public.set_notification_preference('shopping', true) $$, 'D (Laura) switches «Spesa» on');

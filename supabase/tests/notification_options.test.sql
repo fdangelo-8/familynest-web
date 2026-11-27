@@ -350,11 +350,11 @@ select results_eq(
             ('cccccccc-0000-4000-8000-000000000001'::uuid, '{1,2,3,4,5}') $$,
   'the digest days: each profile as its owner left it'
 );
--- get_notification_preferences() is unchanged in part 1 (the new columns come with part 2).
+-- get_notification_preferences() gives the new columns since part 2 (the five of #217 first).
 select is(
-  (select p.proargnames from pg_proc p where p.oid = 'public.get_notification_preferences()'::regprocedure),
+  (select p.proargnames[1:5] from pg_proc p where p.oid = 'public.get_notification_preferences()'::regprocedure),
   array['events', 'assigned_todos', 'shopping', 'free_together', 'morning_digest']::text[],
-  'get_notification_preferences() still returns the five choices of #217'
+  'get_notification_preferences() still returns the five choices of #217 first'
 );
 select throws_ok(
   $$ insert into public.notification_preferences (household_id, member_id, evening_digest_time)
