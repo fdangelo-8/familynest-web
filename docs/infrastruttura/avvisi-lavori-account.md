@@ -2,7 +2,7 @@
 
 Procedura operativa dell'agente `infrastruttura` (#660). Descrive il controllo dei lavori dell'account (#657, #659), chi riceve l'avviso e cosa fare quando arriva.
 
-**Stato:** proposta. Il controllo non è ancora costruito: i pezzi e chi li fa sono in fondo. Finché non c'è, nessuno si accorge da solo di un guasto di questi lavori.
+**Stato:** in costruzione. La parte del database è fatta (#663): il giro scrive come è andato e una funzione riassume i tre controlli. Mancano la rotta del server (`sviluppatore`) e il workflow di GitHub Actions (coordinatore, `admin/*`): i pezzi sono in fondo. Finché non ci sono, nessuno riceve l'avviso: un guasto di questi lavori si vede solo controllando a mano.
 
 ## Cosa si controlla
 
@@ -18,10 +18,10 @@ Il controllo guarda tre cose:
 
 Un errore singolo non fa scattare l'avviso: il giro dopo riprova da solo.
 
-## Come funziona (quando sarà costruito)
+## Come funziona
 
-1. Alla fine di ogni giro, il database scrive in una tabella privata quando ha girato, quanti errori ha avuto e se la chiave c'era.
-2. Una funzione del database riassume la tabella in tre risposte sì o no, una per controllo. Le soglie stanno solo lì.
+1. Alla fine di ogni giro, il database scrive nella tabella privata `private.account_job_runs` quando ha girato, quanti errori ha avuto e se la chiave c'era. Le righe oltre 30 giorni le cancella il giro stesso. Fatto (#663).
+2. La funzione `public.get_account_jobs_health()` riassume la tabella in tre risposte sì o no (`key_present`, `repeated_errors`, `not_running`), una per controllo. Le soglie stanno solo lì. La può chiamare solo la chiave amministrativa. Fatto (#663).
 3. Una rotta del server su Vercel, protetta da un segreto dedicato, chiama quella funzione con la chiave amministrativa e risponde «tutto bene» (200) o «qualcosa non va» (503), con il nome del controllo fallito.
 4. Un workflow di GitHub Actions chiama la rotta ogni ora, al minuto 37 (mezz'ora dopo il giro). Se la risposta non è 200, o la rotta non risponde, il workflow fallisce e apre una issue con etichetta `allarme`. Se una issue `allarme` è già aperta non ne apre un'altra.
 
@@ -60,12 +60,13 @@ Controlla le pagine di stato di Vercel e Supabase. Se sono verdi, il coordinator
 
 ## Pezzi da costruire
 
-| Pezzo                                                                                                   | Chi                                             | Dove                                   |
-| ------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | -------------------------------------- |
-| Tabella dei giri (pulizia oltre 30 giorni), scrittura a fine giro, funzione di riepilogo `service_role` | `architetto-dati`                               | branch `db/*`, con test pgTAP          |
-| Rotta del server protetta e lettura del segreto in `src/lib/env.ts`                                     | `sviluppatore`, con issue `richiesta-condivisa` | `src/app/api/`, `src/lib/env.ts`       |
-| Workflow orario ed etichetta `allarme`                                                                  | coordinatore                                    | branch `admin/*`, `.github/workflows/` |
-| Segreto del monitoraggio su Vercel e su GitHub; Watch del repository                                    | Francesco                                       | pannelli di Vercel e GitHub            |
+Fatto: tabella dei giri con pulizia oltre 30 giorni, scrittura a fine giro e funzione di riepilogo `public.get_account_jobs_health()` per la sola `service_role` (`architetto-dati`, #663, con test pgTAP).
+
+| Pezzo                                                                                                     | Chi                                             | Dove                                   |
+| --------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | -------------------------------------- |
+| Rotta del server protetta che chiama `get_account_jobs_health()`, lettura del segreto in `src/lib/env.ts` | `sviluppatore`, con issue `richiesta-condivisa` | `src/app/api/`, `src/lib/env.ts`       |
+| Workflow orario ed etichetta `allarme`                                                                    | coordinatore                                    | branch `admin/*`, `.github/workflows/` |
+| Segreto del monitoraggio su Vercel e su GitHub; Watch del repository                                      | Francesco                                       | pannelli di Vercel e GitHub            |
 
 Costo: nessuno. Il repository è pubblico, quindi i minuti di GitHub Actions sui runner standard sono gratuiti. Se il repository tornasse privato, il controllo orario userebbe circa 720 minuti al mese sui 2.000 del piano gratuito: in quel caso si passa a un controllo ogni 3 ore.
 
