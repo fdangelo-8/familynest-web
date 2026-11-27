@@ -790,9 +790,9 @@ for (const width of [390, 1280]) {
     page,
   }) => {
     await page.setViewportSize({ width, height: 900 });
-    await page.goto("/design-system");
     const disabled = tid(page, "scelta-direzione-disabilitata");
-    await waitHydrated(disabled);
+    await disabled.scrollIntoViewIfNeeded();
+    await expect(disabled).toBeVisible();
     // Same markup as ChoiceSheets, CalendarSheet and TargetSheet.
     await page.evaluate(() => {
       const host = document.querySelector(
