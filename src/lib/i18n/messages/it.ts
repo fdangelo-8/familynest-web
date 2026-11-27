@@ -100,6 +100,7 @@ export const it = {
     add: "Aggiungi",
     touched: "Hai toccato: {name}",
     more: "+{count}",
+    days: "Giorni",
     weekdays: {
       mon: { short: "Lun", full: "lunedì" },
       tue: { short: "Mar", full: "martedì" },

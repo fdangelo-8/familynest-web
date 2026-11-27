@@ -2106,10 +2106,13 @@ button.riga-lista {
   line-height: var(--text-nota-line);
   color: var(--color-inchiostro-2);
 }
-/* La spunta: cerchio pieno con il segno, solo sulla scelta. Sta sempre nella
-   terza colonna, qualunque sia il suo posto nel codice della pagina. */
-.scelta__radio {
+/* La spunta: cerchio pieno con il segno, solo sulla scelta. Nelle schede
+   esistenti (profilo, calendari collegati) è il primo elemento e resta dov'è;
+   nella scheda nuova (ultimo elemento) sta nella terza colonna. */
+.scelta > .scelta__radio:last-child {
   grid-column: 3;
+}
+.scelta__radio {
   width: var(--size-icona-l);
   height: var(--size-icona-l);
   border-radius: var(--radius-tondo);

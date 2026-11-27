@@ -44,7 +44,7 @@ export type WeekdayPickerProps = {
 export function WeekdayPicker({
   value,
   onChange,
-  label = "Giorni",
+  label = it.choicesPeople.days,
   error,
   disabled,
   firstChipRef,

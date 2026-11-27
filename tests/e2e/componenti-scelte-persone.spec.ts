@@ -782,3 +782,40 @@ test.describe("Testo al 200%", () => {
     expect(rows).toBeGreaterThan(1);
   });
 });
+
+// The existing choice cards (profile, linked calendars) have the tick as the
+// first child and an empty span last: tick and title must stay on one row.
+for (const width of [390, 1280]) {
+  test(`schede di scelta esistenti: spunta e titolo sulla stessa riga a ${width} px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/design-system");
+    const disabled = tid(page, "scelta-direzione-disabilitata");
+    await waitHydrated(disabled);
+    // Same markup as ChoiceSheets, CalendarSheet and TargetSheet.
+    await page.evaluate(() => {
+      const host = document.querySelector(
+        "[data-testid='scelta-direzione-disabilitata']",
+      )!.parentElement!;
+      const card = document.createElement("button");
+      card.className = "scelta";
+      card.setAttribute("role", "radio");
+      card.setAttribute("aria-checked", "true");
+      card.dataset.testid = "scelta-copia";
+      card.innerHTML =
+        '<span class="scelta__radio" aria-hidden="true"></span><span><span class="scelta__titolo">Titolo</span><span class="scelta__info">Spiegazione</span></span><span></span>';
+      host.appendChild(card);
+    });
+    for (const card of [disabled, tid(page, "scelta-copia")]) {
+      const radio = await card.locator(".scelta__radio").boundingBox();
+      const title = await card.locator(".scelta__titolo").boundingBox();
+      expect(radio).not.toBeNull();
+      expect(title).not.toBeNull();
+      expect(radio!.x).toBeLessThan(title!.x);
+      expect(Math.abs(radio!.y - title!.y)).toBeLessThan(
+        Math.max(radio!.height, title!.height),
+      );
+    }
+  });
+}

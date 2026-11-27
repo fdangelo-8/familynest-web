@@ -90,18 +90,60 @@ test("CA-27: i rapporti di contrasto di iniziali, pieni e spunte raggiungono il 
       if (ratio(token("--color-inchiostro"), soft) < 4.5)
         out.push(`${code}: iniziale su --c-spento`);
     }
-    if (ratio(token("--color-latte"), token("--color-pieno")) < 4.5)
-      out.push("latte su pieno");
-    if (ratio(token("--color-inchiostro"), token("--color-superficie")) < 4.5)
-      out.push("inchiostro su superficie");
-    if (ratio(token("--color-inchiostro"), token("--color-scelta-tenue")) < 4.5)
-      out.push("inchiostro su scelta-tenue");
-    if (ratio(token("--color-inchiostro"), token("--color-premuto")) < 4.5)
-      out.push("inchiostro su premuto");
-    if (ratio(token("--color-filo-campo"), token("--color-superficie")) < 3)
-      out.push("filo-campo su superficie");
-    if (ratio(token("--color-allerta"), token("--color-allerta-fondo")) < 4.5)
-      out.push("allerta su allerta-fondo");
+    // The same pairs in the light theme (root) and in the dark one
+    // (`.tema-notte`, where the tokens are redefined).
+    const dark = document.createElement("div");
+    dark.className = "tema-notte";
+    document.body.appendChild(dark);
+    const scopes: [string, CSSStyleDeclaration][] = [
+      ["chiaro", root],
+      ["buio", getComputedStyle(dark)],
+    ];
+    for (const [theme, styles] of scopes) {
+      const t = (name: string) => styles.getPropertyValue(name).trim();
+      const check = (label: string, a: string, b: string, min: number) => {
+        if (ratio(t(a), t(b)) < min) out.push(`${theme}: ${label}`);
+      };
+      check("latte su pieno", "--color-latte", "--color-pieno", 4.5);
+      check(
+        "inchiostro su superficie",
+        "--color-inchiostro",
+        "--color-superficie",
+        4.5,
+      );
+      check(
+        "inchiostro su scelta-tenue",
+        "--color-inchiostro",
+        "--color-scelta-tenue",
+        4.5,
+      );
+      check(
+        "inchiostro su premuto",
+        "--color-inchiostro",
+        "--color-premuto",
+        4.5,
+      );
+      check(
+        "filo-campo su superficie",
+        "--color-filo-campo",
+        "--color-superficie",
+        3,
+      );
+      check(
+        "allerta su allerta-fondo",
+        "--color-allerta",
+        "--color-allerta-fondo",
+        4.5,
+      );
+      // Ring of the chosen card (ink border) against the surface: non-text, 3:1.
+      check(
+        "anello inchiostro su superficie",
+        "--color-inchiostro",
+        "--color-superficie",
+        3,
+      );
+    }
+    dark.remove();
     return out;
   });
   expect(failures).toEqual([]);
