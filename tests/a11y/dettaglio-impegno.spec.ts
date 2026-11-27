@@ -59,6 +59,8 @@ async function openForm(page: Page) {
     page.getByRole("dialog", { name: "Modifica impegno" }),
   ).toBeVisible();
   await expect(page.getByLabel("Titolo")).toBeFocused();
+  // The sheet fades in (F4c): elements at reduced opacity are not measured.
+  await waitForAnimationsToEnd(page);
 }
 
 const saveButton = (page: Page) =>

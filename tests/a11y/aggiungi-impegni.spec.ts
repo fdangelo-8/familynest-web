@@ -5,6 +5,7 @@ import {
   installFakes,
   saveWithStoppedClock,
 } from "../fixtures/aggiungi-fake";
+import { waitForAnimationsToEnd } from "../fixtures/animations";
 import { hasTestUser } from "../fixtures/visual-login";
 import { signInAsCached } from "../fixtures/visual-login-cached";
 
@@ -268,7 +269,11 @@ test.describe("Aggiungi · Impegni: fuoco", () => {
   }) => {
     await installFakes(page);
     await open(page);
-    const stops = await tabStops(page);
+    // With the phrase read, the date button's name carries the day:
+    // «Giorno, <day>». The day itself is not written here.
+    const stops = (await tabStops(page)).map((name) =>
+      name.startsWith("Giorno, ") ? "Giorno" : name,
+    );
     expect(stops.slice(0, 9)).toEqual([
       "Chiudi",
       "Cosa vuoi aggiungere?",
@@ -419,6 +424,8 @@ test.describe("Aggiungi · Impegni: aree di tocco", () => {
 test.describe("Aggiungi · Impegni: contrasto", () => {
   /** Measures every text of the sheet (and the toast) against its background. */
   async function failing(page: Page) {
+    // The sheet and its fields fade and move in: measure the final colors.
+    await waitForAnimationsToEnd(page);
     return page.evaluate(() => {
       type Rgba = { r: number; g: number; b: number; a: number };
       const parse = (value: string): Rgba | null => {

@@ -71,7 +71,7 @@ function ConfirmContent({
   useDialogFocus(dialogRef, { onEscape: closeIfIdle, initialFocus: "marked" });
 
   // The dialog asks for attention once, when it opens (F4c): on the web
-  // `haptic` does nothing, the native shell will vibrate.
+  // `haptic` does nothing, the native shell will buzz the phone.
   useEffect(() => {
     haptic("avviso");
   }, []);

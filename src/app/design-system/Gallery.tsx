@@ -1322,11 +1322,11 @@ function SheetsDialogsDatesSection() {
           <ConfirmDialog
             open={confirmOpen}
             onClose={() => setConfirmOpen(false)}
-            title="Togliere Biscotto dal Nest?"
+            title={`Togliere Biscotto dal ${BRAND.short}?`}
             text="Spariscono il suo profilo e la foto. Scadenze e cose da fare restano, senza il suo nome."
             actions={[
               {
-                label: "Togli dal Nest",
+                label: `Togli dal ${BRAND.short}`,
                 variant: "pericolo-pieno",
                 onClick: () => setRemoved((n) => n + 1),
               },
@@ -1342,11 +1342,11 @@ function SheetsDialogsDatesSection() {
           <ConfirmDialog
             open={failingOpen}
             onClose={() => setFailingOpen(false)}
-            title="Togliere Biscotto dal Nest?"
+            title={`Togliere Biscotto dal ${BRAND.short}?`}
             text="Spariscono il suo profilo e la foto. Scadenze e cose da fare restano, senza il suo nome."
             actions={[
               {
-                label: "Togli dal Nest",
+                label: `Togli dal ${BRAND.short}`,
                 variant: "pericolo-pieno",
                 onClick: () => pause(300, true),
               },
