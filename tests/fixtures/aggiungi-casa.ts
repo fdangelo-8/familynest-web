@@ -217,8 +217,12 @@ export async function openDirect(
 /** Opens the edit sheet of a thing from its address (only the id travels). */
 export const editUrl = (id: string) => `/aggiungi?modifica=${id}`;
 
-/** Opens Aggiungi from the navigation (over Today) with the clock fixed. */
-export async function openAddFromNav(
+/**
+ * Opens Aggiungi over Today through its entry «Nuovo impegno» (the «+» of the
+ * page on a phone, the button of the top bar on a computer), with the clock
+ * fixed.
+ */
+export async function openAddFromToday(
   page: Page,
   baseURL: string | undefined,
   nest: CasaNest,

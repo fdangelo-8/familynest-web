@@ -2,9 +2,9 @@ import { expect, type Page } from "@playwright/test";
 import { waitHydrated } from "./esplora";
 
 // Helpers shared by the visual and accessibility tests of the «In arrivo»
-// page of a space (#29): /esplora/<spazio>.
+// page of a space (#29): /spazi/<spazio> (F5 #506).
 
-export const SPACE_PATH = (slug: string) => `/esplora/${slug}`;
+export const SPACE_PATH = (slug: string) => `/spazi/${slug}`;
 
 /** Requests of the interest of the member («Avvisami»). */
 export const INTEREST_READ = /\/rest\/v1\/space_interests(\?|$)/;
@@ -22,7 +22,7 @@ export const notifyButton = (page: Page) =>
 
 /** The pin of the bar (mobile only: on desktop there is none). */
 export const barPin = (page: Page) =>
-  page.locator(".barra button[aria-pressed]");
+  page.locator("header.testata button[aria-pressed]");
 
 /** The loading area (hidden text «Caricamento in corso», aria-busy). */
 export const busyArea = (page: Page) =>

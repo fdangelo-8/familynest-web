@@ -67,7 +67,9 @@ async function expectClean(page: Page) {
 }
 
 const lensGroup = (page: Page) =>
-  page.getByRole("group", { name: /Punto di vista/ });
+  page
+    .locator("header.testata, main")
+    .getByRole("group", { name: /Punto di vista/ });
 const lensIo = (page: Page) =>
   lensGroup(page)
     .getByRole("button", { name: /Io$/ })

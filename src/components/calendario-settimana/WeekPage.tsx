@@ -51,13 +51,20 @@ import { usePeriodData } from "@/components/calendario/usePeriodData";
 const EMPTY_MEMBERS: readonly Member[] = [];
 
 function barOffset(): number {
-  const bar = document.querySelector<HTMLElement>(".barra");
-  const space = parseFloat(
-    getComputedStyle(document.documentElement).getPropertyValue("--space-4"),
-  );
-  const height =
-    bar && getComputedStyle(bar).display !== "none" ? bar.offsetHeight : 0;
-  return height + (Number.isNaN(space) ? 0 : space);
+  // On the phone the header of the section scrolls away and the collapsed bar
+  // (56 px plus the safe area) stays on top: that is the bar to clear.
+  const root = getComputedStyle(document.documentElement);
+  const space = parseFloat(root.getPropertyValue("--space-4"));
+  const header = document.querySelector<HTMLElement>(".testata");
+  const onPhone = header && getComputedStyle(header).display !== "none";
+  const collapsed = document.querySelector<HTMLElement>(".testata-raccolta");
+  // Each part is checked on its own: a missing one counts as 0 and does not
+  // cancel the other.
+  const number = (value: number) => (Number.isNaN(value) ? 0 : value);
+  const bar = number(parseFloat(root.getPropertyValue("--size-barra-alta")));
+  const safe = number(parseFloat(root.getPropertyValue("--area-sicura-alto")));
+  const height = !onPhone ? 0 : collapsed ? collapsed.offsetHeight : bar + safe;
+  return number(height) + number(space);
 }
 
 /** Scrolls so the head of a day sits just under the fixed bar (no animation). */
@@ -446,7 +453,7 @@ function WeekContent({ nowMs }: { nowMs: number }) {
     <main id="contenuto" tabIndex={-1} className="pagina pagina-desktop">
       <div className="intestazione-desktop">
         {period}
-        <div className="nav-alto__azioni">
+        <div className="intestazione-desktop__azioni">
           <Lens />
           {switcher}
         </div>

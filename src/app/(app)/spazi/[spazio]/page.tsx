@@ -11,7 +11,7 @@ import {
 import { createClient } from "@/lib/supabase/server";
 
 function findSpace(slug: string) {
-  return getSpaceByHref(`/esplora/${slug}`);
+  return getSpaceByHref(`/spazi/${slug}`);
 }
 
 export async function generateMetadata({

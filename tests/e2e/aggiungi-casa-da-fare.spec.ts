@@ -8,7 +8,7 @@ import {
   expectNobody,
   idsOf,
   labelText,
-  openAddFromNav,
+  openAddFromToday,
   pauseClock,
   sheet,
   todosOf,
@@ -33,7 +33,7 @@ test.describe("Aggiungi · Da fare · creazione", () => {
     baseURL,
     casa,
   }) => {
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     const s = sheet(page);
     await s.field.fill(PHRASE);
 
@@ -52,7 +52,7 @@ test.describe("Aggiungi · Da fare · creazione", () => {
     baseURL,
     casa,
   }) => {
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     const s = sheet(page);
     await s.field.fill(PHRASE);
     await s.button("Dai a Laura").click();
@@ -78,7 +78,7 @@ test.describe("Aggiungi · Da fare · creazione", () => {
     baseURL,
     casa,
   }) => {
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     const s = sheet(page);
     await s.field.fill("comprare la cuffia per Sofia entro giovedì");
     await expect(labelText(page, /Per Sofia$/)).toBeVisible();
@@ -102,7 +102,7 @@ test.describe("Aggiungi · Da fare · creazione", () => {
     baseURL,
     casa,
   }) => {
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     const s = sheet(page);
     await s.type("Da fare").click();
     await s.field.fill("devo portare le scarpe dal calzolaio");
@@ -120,7 +120,7 @@ test.describe("Aggiungi · Da fare · creazione", () => {
     baseURL,
     casa,
   }) => {
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     const s = sheet(page);
     await s.field.fill("Laura deve chiamare la nonna");
     await expect(s.person("Laura")).toHaveAttribute("aria-pressed", "true");
@@ -146,7 +146,7 @@ test.describe("Aggiungi · Da fare · creazione", () => {
     baseURL,
     casa,
   }) => {
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     const s = sheet(page);
     await s.field.fill("Laura deve chiamare la nonna");
     await s.person("Sofia").click();
@@ -169,7 +169,7 @@ test.describe("Aggiungi · Da fare · creazione", () => {
     baseURL,
     bianchi,
   }) => {
-    await openAddFromNav(page, baseURL, bianchi, "Paolo");
+    await openAddFromToday(page, baseURL, bianchi, "Paolo");
     const s = sheet(page);
     await s.field.fill("prenotare il ristorante entro domani");
     await s.type("Da fare").click();
@@ -195,7 +195,7 @@ test.describe("Aggiungi · Da fare · creazione", () => {
     baseURL,
     casa,
   }) => {
-    await openAddFromNav(page, baseURL, casa, "Marco", { lens: "io" });
+    await openAddFromToday(page, baseURL, casa, "Marco", { lens: "io" });
     const s = sheet(page);
     for (const type of ["Da fare", "Scadenza"] as const) {
       await s.type(type).click();
@@ -214,7 +214,7 @@ test.describe("Aggiungi · Da fare · creazione", () => {
     baseURL,
     casa,
   }) => {
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     const s = sheet(page);
     await s.type("Da fare").click();
     await s.field.fill("Laura deve entro venerdì");
@@ -231,7 +231,7 @@ test.describe("Aggiungi · Da fare · creazione", () => {
     baseURL,
     casa,
   }) => {
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     const s = sheet(page);
     await s.type("Da fare").click();
     await s.field.fill("a".repeat(81));
@@ -246,7 +246,7 @@ test.describe("Aggiungi · Da fare · creazione", () => {
     baseURL,
     casa,
   }) => {
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     const s = sheet(page);
     await s.field.fill(PHRASE);
     await s.button("Dai a Laura").click();
@@ -270,7 +270,7 @@ test.describe("Aggiungi · Da fare · date riconosciute", () => {
     baseURL,
     casa,
   }) => {
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     const s = sheet(page);
     await s.type("Da fare").click();
 
@@ -298,7 +298,7 @@ test.describe("Aggiungi · Da fare · date riconosciute", () => {
     baseURL,
     casa,
   }) => {
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     const s = sheet(page);
     await s.type("Da fare").click();
     await s.field.fill("x entro 31/11");
@@ -322,7 +322,7 @@ test.describe("Aggiungi · Da fare · date riconosciute", () => {
     baseURL,
     casa,
   }) => {
-    await openAddFromNav(page, baseURL, casa, "Marco");
+    await openAddFromToday(page, baseURL, casa, "Marco");
     const s = sheet(page);
     await s.type("Da fare").click();
     await s.field.fill("Giulia deve chiamare la nonna");

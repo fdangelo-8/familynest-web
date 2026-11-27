@@ -113,7 +113,7 @@ function nextTuesday(): string {
 
 async function openAndCloseAdd(page: Page): Promise<void> {
   const dialog = page.getByRole("dialog", { name: "Aggiungi" });
-  const opener = page.getByRole("link", { name: "Aggiungi", exact: true });
+  const opener = page.locator('a[href^="/aggiungi"]:visible').first();
   await expect(async () => {
     if (!(await dialog.isVisible())) await opener.first().click();
     await expect(dialog).toBeVisible({ timeout: 3000 });

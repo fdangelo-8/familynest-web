@@ -230,10 +230,9 @@ test.describe("contenuto", () => {
       page.getByRole("heading", { name: "Chi c’è", level: 2 }),
     ).toBeVisible();
     await expect(count(page)).toHaveText("5");
-    await expect(page.getByRole("link", { name: "Chiudi" })).toBeVisible();
-    await expect(
-      page.getByRole("link", { name: /^Apri Casa D'Angelo/ }),
-    ).toHaveCount(0);
+    // F5 (#506): «Il tuo Nest» is a detail page, with «Indietro» (not «Chiudi»).
+    await expect(page.getByRole("link", { name: "Indietro" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Chiudi" })).toHaveCount(0);
     await expect(
       page.getByRole("navigation", { name: "Navigazione principale" }),
     ).toHaveCount(0);
@@ -391,7 +390,7 @@ test.describe("contenuto", () => {
     await signInSeeded(page, baseURL, "A");
     await page.goto("/nest");
     const porta = page.getByRole("link", { name: /Esplora.*Cosa può fare/ });
-    await expect(porta).toHaveAttribute("href", "/esplora");
+    await expect(porta).toHaveAttribute("href", "/spazi");
     const expected = [
       ["Calendari collegati", "/calendari-collegati"],
       ["Profili dei figli", "/figli/a1000000-0000-4000-8000-000000000003"],
@@ -431,7 +430,7 @@ test.describe("contenuto", () => {
       await expect(page.locator("main")).not.toContainText(absent);
     }
     await porta.click();
-    await expect(page).toHaveURL(/\/esplora$/);
+    await expect(page).toHaveURL(/\/spazi$/);
     // real page since #28: see tests/e2e/esplora.spec.ts
     await expect(page.getByRole("heading", { level: 1 })).toHaveAccessibleName(
       "Cosa può fare la vostra casa",
@@ -501,16 +500,15 @@ test.describe("contenuto", () => {
     await expect(nav).toBeVisible();
     // TODO(#17): the names of the three links are taken from the navigation
     // labels ("Oggi", "Calendario", "Casa"); the spec gives no other names.
-    for (const name of ["Oggi", "Calendario", "Casa"]) {
+    for (const name of ["Oggi", "Calendario", "Casa", "Spazi"]) {
       const link = nav.getByRole("link", { name });
       await expect(link).toBeVisible();
       await expect(link).not.toHaveAttribute("aria-current", /.+/);
     }
+    // On a computer the pages of the Nest light the profile of the sidebar.
     await expect(
-      page.getByRole("link", {
-        name: "Apri Casa D'Angelo: membri, Esplora e impostazioni",
-      }),
-    ).toBeVisible();
+      page.getByRole("link", { name: "Marco, Il tuo Nest" }),
+    ).toHaveAttribute("aria-current", "page");
     await expect(page.getByRole("link", { name: "Chiudi" })).toHaveCount(0);
     await expect(
       page.getByRole("navigation", { name: "Impostazioni" }),
@@ -555,27 +553,31 @@ test.describe("chiudi", () => {
     test.skip(!usersConfigured("A"), skipReason("A"));
   });
 
-  test("CA-12: dal Nest «Chiudi» torna alla pagina di partenza", async ({
+  // F5 (#506): the entrance is the row «Il tuo Nest» of Spazi (phone) and the
+  // profile of the sidebar (computer); the way out is «Indietro».
+  test("CA-12: dal Nest «Indietro» torna alla pagina precedente", async ({
     page,
     baseURL,
   }) => {
     await signInSeeded(page, baseURL, "A");
-    await page.goto("/casa/spesa");
-    // TODO(#17): the Nest square on /casa/spesa is the link "Apri Casa D'Angelo: ...".
-    await page.getByRole("link", { name: /^Apri Casa D'Angelo/ }).click();
+    await page.goto("/spazi");
+    await page
+      .getByRole("main")
+      .getByRole("link", { name: /^Il tuo Nest/ })
+      .click();
     await expect(page).toHaveURL(/\/nest$/);
-    await page.getByRole("link", { name: "Chiudi" }).click();
-    await expect(page).toHaveURL(/\/casa\/spesa$/);
+    await page.getByRole("link", { name: "Indietro" }).click();
+    await expect(page).toHaveURL(/\/spazi$/);
   });
 
-  test("CA-13: /nest aperto direttamente, «Chiudi» porta a /oggi", async ({
+  test("CA-13: /nest aperto direttamente, «Indietro» porta a /spazi", async ({
     page,
     baseURL,
   }) => {
     await signInSeeded(page, baseURL, "A");
     await page.goto("/nest");
-    await page.getByRole("link", { name: "Chiudi" }).click();
-    await expect(page).toHaveURL(/\/oggi$/);
+    await page.getByRole("link", { name: "Indietro" }).click();
+    await expect(page).toHaveURL(/\/spazi$/);
   });
 
   // Entry from the bottom (#104): on mobile the main enters with

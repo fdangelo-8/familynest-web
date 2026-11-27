@@ -62,9 +62,10 @@ test.describe("nome accessibile del blocco «Occupato» in DesktopWeek (#231)", 
     // Neither the title nor the place reach the page.
     await expect(page.getByText("Riunione segreta")).toHaveCount(0);
     await expect(page.getByText("Ufficio Nord")).toHaveCount(0);
-    // Sanity: the lens switch of the page is the one we set.
+    // Sanity: the lens switch of the page (inside `main`, not the one of the
+    // sidebar) is there.
     await expect(
-      page.getByRole("group", { name: LENS_LABEL }).first(),
+      page.getByRole("main").getByRole("group", { name: LENS_LABEL }),
     ).toBeVisible();
   });
 

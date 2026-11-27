@@ -387,12 +387,13 @@ test.describe("/esplora e «Chiudi» di /nest (utente A)", () => {
     }
   });
 
-  test("/nest: «Chiudi» da 44 px e con l'anello di fuoco (mobile)", async ({
+  // F5 (#506): «Il tuo Nest» is a detail page, with «Indietro» instead of «Chiudi».
+  test("/nest: «Indietro» da 44 px e con l'anello di fuoco (mobile)", async ({
     page,
   }, testInfo) => {
     test.skip(testInfo.project.name !== "mobile", "solo a 390 px");
     await page.goto("/nest");
-    const close = page.getByRole("link", { name: "Chiudi" });
+    const close = page.getByRole("link", { name: "Indietro" });
     await expect(close).toBeVisible();
     expect(await hasTouchArea(close)).toBe(true);
     await close.focus();

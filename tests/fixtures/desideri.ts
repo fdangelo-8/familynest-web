@@ -452,7 +452,7 @@ export const wishH1 = (name: string) => `I desideri di ${name}`;
 /** The «+» of the bar (390) or, for the empty state, the button of the page. */
 export const addTrigger = (page: Page): Locator =>
   page
-    .locator(".barra, main")
+    .locator(".testata, .barra-alto, main")
     .getByRole("button", { name: "Aggiungi un'idea", exact: true })
     .first();
 /** The button inside `main` (head at 1280, empty state at both sizes). */
@@ -462,7 +462,7 @@ export const mainAdd = (page: Page): Locator =>
     .getByRole("button", { name: "Aggiungi un'idea", exact: true });
 export const barAdd = (page: Page): Locator =>
   page
-    .locator(".barra")
+    .locator(".testata, .barra-alto")
     .getByRole("button", { name: "Aggiungi un'idea", exact: true });
 
 export const addDialog = (page: Page): Locator =>

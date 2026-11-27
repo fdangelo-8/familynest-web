@@ -195,7 +195,7 @@ test.describe("/nest (utente A)", () => {
   test("#85: /nest su mobile con la X «Chiudi»", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "mobile", "la X esiste solo su mobile");
     await page.goto("/nest");
-    await expect(page.getByRole("link", { name: "Chiudi" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Indietro" })).toBeVisible();
     await page.evaluate(() => document.fonts.ready);
     await page.mouse.move(0, 0);
     // Top bar only: the rest of /nest belongs to #17 and has its own references.

@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import { buildSecurityHeaders } from "./src/lib/security-headers";
+import { SPACES } from "./src/lib/spaces";
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -39,6 +40,19 @@ const nextConfig: NextConfig = {
       afterFiles: [],
       fallback: [],
     };
+  },
+  // «Esplora» became «Spazi» (F5 #506): permanent redirects (308) for the
+  // page and for the ten spaces of the catalogue. Any other `/esplora/...`
+  // stays a 404 inside the frame.
+  async redirects() {
+    return [
+      { source: "/esplora", destination: "/spazi", permanent: true },
+      ...SPACES.map((space) => ({
+        source: space.href.replace("/spazi/", "/esplora/"),
+        destination: space.href,
+        permanent: true,
+      })),
+    ];
   },
   async headers() {
     return [

@@ -176,8 +176,11 @@ export const todoRow = (page: Page, title: string) =>
     has: page.getByRole("checkbox", { name: `Segna come fatto: ${title}` }),
   });
 
+// From 1280 px there are two lenses with the same state: the one of the
+// sidebar and the one of the page. The subject of the criteria is the one of
+// the page: in the header on the phone, inside `main` on a computer.
 export const lensGroup = (page: Page) =>
-  page.getByRole("group", { name: LENS });
+  page.locator("header.testata, main").getByRole("group", { name: LENS });
 
 export const lensButton = (page: Page, which: "Io" | "Nest") =>
   lensGroup(page).getByRole("button", { name: new RegExp(`${which}$`) });

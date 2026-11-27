@@ -113,20 +113,44 @@ async function scrollDown(page: Page): Promise<number> {
 }
 
 /**
+ * Asks the app router for Add, as a link of the app would do. For the pages
+ * that have no entry of their own to the sheet since F5 (the bottom bar lost
+ * its «+»): day with events and detail of an event on a phone shape.
+ */
+async function openAddByRouter(page: Page): Promise<void> {
+  await page.evaluate(() =>
+    (
+      window as unknown as {
+        next: { router: { push: (href: string) => void } };
+      }
+    ).next.router.push("/aggiungi"),
+  );
+}
+
+/**
  * Opens Add with the opener, closes it with Esc and checks that the page
- * below is the same: scroll, focus on the opener, mark, no skeleton.
+ * below is the same: scroll, focus on the opener, mark, no skeleton. Without
+ * an opener (`null`) Add is asked of the app router and the focus is not
+ * checked.
  */
 async function openAndEscape(
   page: Page,
-  opener: Locator,
+  opener: Locator | null,
   scroll: number,
   onBelow?: () => Promise<void>,
 ): Promise<void> {
-  await waitHydrated(opener);
-  await opener.focus();
+  if (opener) {
+    await waitHydrated(opener);
+    await opener.focus();
+  } else {
+    await waitHydrated(page.getByRole("main"));
+  }
   await watchFlashes(page);
   await expect(async () => {
-    if (!(await addDialog(page).isVisible())) await opener.click();
+    if (!(await addDialog(page).isVisible())) {
+      if (opener) await opener.click();
+      else await openAddByRouter(page);
+    }
     await expect(addDialog(page)).toBeVisible({ timeout: 3000 });
   }).toPass({ timeout: 30_000 });
   await onBelow?.();
@@ -140,7 +164,7 @@ async function openAndEscape(
     page.getByRole("main").getByRole("heading", { level: 1 }),
   ).toHaveAttribute(PROBE, "same");
   expect(await page.evaluate(() => window.scrollY)).toBe(scroll);
-  await expect(opener).toBeFocused();
+  if (opener) await expect(opener).toBeFocused();
 }
 
 test("sopra la pagina (Oggi): aprire Aggiungi e chiudere con Esc non riparte la pagina", async ({
@@ -157,12 +181,16 @@ test("sopra la pagina (Oggi): aprire Aggiungi e chiudere con Esc non riparte la 
     timeout: 20_000,
   });
   await markNode(page);
-  const scroll = await scrollDown(page);
-  // On the phone the quick field sits under the floating bar once scrolled:
-  // the opener is the «Aggiungi» of the bar.
+  await scrollDown(page);
+  // On the phone the opener is the «+» «Nuovo impegno» of the page (F5); on a
+  // computer the quick field.
   const opener = isMobileProject()
-    ? page.getByRole("link", { name: "Aggiungi", exact: true })
+    ? page.getByRole("link", { name: "Nuovo impegno", exact: true })
     : page.getByRole("main").locator("a.campo-rapido");
+  // The «+» sits in the page: it is brought into view first, so that the
+  // focus on it does not scroll the page later.
+  await opener.scrollIntoViewIfNeeded();
+  const scroll = await page.evaluate(() => window.scrollY);
   await openAndEscape(page, opener, scroll);
 });
 
@@ -221,8 +249,8 @@ test("sopra la pagina (Calendario giorno, con impegni): aprire Aggiungi e chiude
   });
   await markNode(page);
   const scroll = await scrollDown(page);
-  const opener = page.getByRole("link", { name: "Aggiungi", exact: true });
-  await openAndEscape(page, opener, scroll);
+  // No entry of its own to the sheet on this page: the router opens it.
+  await openAndEscape(page, null, scroll);
 });
 
 test("sopra la pagina (dettaglio impegno): dopo un salvataggio, aprire e chiudere Aggiungi mostra i dati nuovi", async ({
@@ -255,13 +283,13 @@ test("sopra la pagina (dettaglio impegno): dopo un salvataggio, aprire e chiuder
   await expect(h1(page, newTitle)).toBeVisible();
   await expect(page).toHaveURL(new RegExp(`giorno=${newDay}`));
 
-  // 2. Open Add from the navigation and close it.
-  const opener = page.getByRole("link", { name: "Aggiungi", exact: true });
-  await waitHydrated(opener);
+  // 2. Open Add over the page and close it (the detail has no entry of its own
+  // to the sheet: the router opens it, as a link of the app would).
+  await waitHydrated(page.getByRole("main"));
   await markNode(page);
   await watchFlashes(page);
   await expect(async () => {
-    if (!(await addDialog(page).isVisible())) await opener.click();
+    if (!(await addDialog(page).isVisible())) await openAddByRouter(page);
     await expect(addDialog(page)).toBeVisible({ timeout: 3000 });
   }).toPass({ timeout: 30_000 });
   // With the sheet still open, nothing «gone» or loading shows below.

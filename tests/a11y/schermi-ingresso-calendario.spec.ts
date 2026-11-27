@@ -1339,11 +1339,7 @@ const scenes: Scene[] = [
           open: async (p) => {
             const dialog = p.getByRole("dialog", { name: "Aggiungi" });
             await expect(async () => {
-              await p
-                .getByRole("link", { name: "Aggiungi", exact: true })
-                .locator("visible=true")
-                .first()
-                .click();
+              await p.locator('a[href^="/aggiungi"]:visible').first().click();
               await expect(dialog).toBeVisible({ timeout: 2000 });
             }).toPass({ timeout: 20_000 });
             return dialog;

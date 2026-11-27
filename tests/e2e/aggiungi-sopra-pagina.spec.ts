@@ -15,9 +15,12 @@ function dialogOf(page: Page) {
   return page.getByRole("dialog", { name: "Aggiungi" });
 }
 
-/** The only visible "Aggiungi" link: bottom navigation on mobile, top navigation on desktop. */
-function addLink(page: Page) {
-  return page.getByRole("link", { name: "Aggiungi", exact: true });
+/**
+ * The first visible link to Add of the page: «Nuovo impegno» in the top bar of
+ * a computer, the page's own link on a phone (the bottom bar has none, F5).
+ */
+function addEntry(page: Page) {
+  return page.locator('a[href^="/aggiungi"]:visible').first();
 }
 
 async function openPage(
@@ -54,7 +57,7 @@ async function openAddOverPage(page: Page, route: string) {
     await page.evaluate((value) => {
       (window as unknown as { __marker?: string }).__marker = value;
     }, MARKER);
-    await addLink(page).click();
+    await addEntry(page).click();
     await expect(dialogOf(page)).toBeVisible({ timeout: 2000 });
     const marker = await page.evaluate(
       () => (window as unknown as { __marker?: string }).__marker,
@@ -99,7 +102,7 @@ test.describe("Aggiungi sopra la pagina", () => {
     baseURL,
   }) => {
     await openPage(page, baseURL, "/calendario");
-    const link = addLink(page);
+    const link = addEntry(page);
     await openAddOverPage(page, "/calendario");
     await expect(page).toHaveURL(/\/aggiungi$/);
     await expect(dialogOf(page).getByText("scrivi come parli")).toBeVisible();
@@ -130,9 +133,9 @@ test.describe("Aggiungi sopra la pagina", () => {
     await expect(active).toHaveText("Calendario");
     await expect(active).toHaveAttribute("aria-current", "page");
     if (testInfo.project.name === "mobile") {
-      // the mobile bar of Calendario keeps "Cerca nel Nest"
+      // the mobile header of Calendario keeps «Cerca»
       await expect(
-        page.getByRole("link", { name: /^Cerca nel Nest/ }),
+        page.getByRole("link", { name: "Cerca", exact: true }),
       ).toHaveCount(1);
     }
   });
@@ -237,8 +240,11 @@ test.describe("Tasto N", () => {
       name: /^(Aggiungi alla spesa…|Cosa manca in casa\?)$/,
     });
     await expect(field).toBeVisible();
-    await openWithN(page);
-    await closeWithEscape(page, /\/casa\/spesa$/);
+    // F5 (#506, §8): «n» presses «Nuovo impegno» where the top bar has it;
+    // Casa has none, so «n» does nothing there.
+    await page.keyboard.press("n");
+    await expect(dialogOf(page)).toHaveCount(0);
+    await expect(page).toHaveURL(/\/casa\/spesa$/);
     await field.click();
     await expect(field).toBeFocused();
     expect(await shortcutTakesN(page, ":focus")).toBe(false);
@@ -305,7 +311,7 @@ test.describe("Aggiungi sopra la pagina: altri casi", () => {
     await expectFirstTabOnSkipLink(page);
   });
 
-  test("con il foglio aperto, Ctrl+K porta alla ricerca e il foglio sparisce", async ({
+  test("con il foglio aperto, Ctrl+K e «/» non fanno nulla e il foglio resta", async ({
     page,
     baseURL,
   }, testInfo) => {
@@ -320,11 +326,13 @@ test.describe("Aggiungi sopra la pagina: altri casi", () => {
     await page.keyboard.press("Control+k");
     await expect(dialog).toBeVisible();
     await expect(page).toHaveURL(/\/aggiungi$/);
-    // Focus on a non-text element of the sheet: Ctrl+K opens the search.
+    // F5 (#506): Ctrl+K no longer opens the search, and with a dialog open
+    // the one-letter shortcuts («/») do nothing, even on a non-text element.
     await dialog.getByRole("button", { name: "Chiudi" }).focus();
     await page.keyboard.press("Control+k");
-    await expect(page).toHaveURL(/\/ricerca$/);
-    await expect(dialog).toHaveCount(0);
+    await page.keyboard.press("/");
+    await expect(dialog).toBeVisible();
+    await expect(page).toHaveURL(/\/aggiungi$/);
   });
 
   test("isolamento: l'utente del nucleo B apre Aggiungi sopra Oggi, la sua pagina", async ({

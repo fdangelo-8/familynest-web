@@ -157,3 +157,21 @@
 .tinta--corsia {
   background: var(--c-corsia);
 }
+
+/* Riquadro del guscio (F5): la barra in basso è fissa, la transform la tiene
+   dentro il riquadro; da computer la barra reale è nascosta, qui si mostra */
+.guscioProva {
+  position: relative;
+  transform: translateZ(0);
+  height: calc(var(--size-barra) + 2 * var(--space-6));
+  max-width: calc(
+    var(--size-pannello) - 2 * var(--space-6) + var(--size-controllo)
+  );
+  overflow: hidden;
+  background: var(--color-carta-2);
+  border-radius: var(--radius-l);
+}
+.guscioProva :global(.barra-basso) {
+  display: block;
+  height: 100%;
+}

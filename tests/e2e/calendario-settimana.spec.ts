@@ -68,7 +68,10 @@ const SUN_H = "Domenica 25";
 // ------------------------------------------------------------------ locators
 
 const h1 = (page: Page) => page.getByRole("heading", { level: 1 });
-const lensGroup = (page: Page) => page.getByRole("group", { name: LENS });
+// The lens of the page (phone header, or inside `main`); from 1280 px the
+// sidebar has another one, checked by the test of the two lenses.
+const lensGroup = (page: Page) =>
+  page.locator("header.testata, main").getByRole("group", { name: LENS });
 const viewGroup = (page: Page) =>
   page.getByRole("group", { name: "Vista del calendario" });
 const nextWeek = (page: Page) =>
@@ -399,11 +402,10 @@ test.describe("struttura", () => {
       await expect(page.getByText("Mar, oggi")).toBeVisible();
       const main = page.getByRole("main");
       await expect(main.getByRole("group", { name: LENS })).toBeVisible();
-      // Decision of 31/10: no «Aggiungi» in the page header, only the one of
-      // the navigation at the top.
+      // Decision of 31/10: no «Aggiungi» in the page header, only the button
+      // of the top bar, which is «Nuovo impegno» since F5 (#506).
       await expect(main.getByRole("link", { name: "Aggiungi" })).toHaveCount(0);
-      // The only visible «Aggiungi» is the one of the top bar (#67).
-      const add = page.getByRole("link", { name: "Aggiungi" });
+      const add = page.getByRole("link", { name: "Nuovo impegno" });
       await expect(add).toHaveCount(1);
       await expect(add).toHaveAttribute("href", "/aggiungi");
     },
@@ -549,6 +551,40 @@ test.describe("elenco mobile e striscia", () => {
     );
     await thursday.click();
     await expect(page).toHaveURL(new RegExp(`/impegni/${id}\\?giorno=${THU}$`));
+  });
+
+  // F5 (#506, `barOffset`): the tap on a day scrolls the list so that the head
+  // of the day sits under the collapsed bar of the phone, not behind it.
+  test("la testa del giorno scelto nella striscia non resta sotto la barra raccolta", async ({
+    page,
+    baseURL,
+    bianchi,
+  }) => {
+    // Enough rows before Friday for the list to scroll.
+    for (const day of [TUE, WED, THU, FRI]) {
+      for (const hour of ["09", "11", "14"]) {
+        await createEvent(bianchi, "Giulia", {
+          title: `Impegno ${day} ${hour}`,
+          day,
+          from: `${hour}:00`,
+          to: `${hour}:30`,
+        });
+      }
+    }
+    await open(page, baseURL, bianchi);
+    await tabs(page).nth(4).click();
+    const head = page.locator(`[id="m-giorno-${FRI}"]`);
+    await expect(head).toBeFocused();
+    // The page did scroll, so the collapsed bar is there (not a vacuous check).
+    await expect
+      .poll(() => page.evaluate(() => window.scrollY))
+      .toBeGreaterThan(0);
+    const bar = page.getByTestId("testata-raccolta");
+    await expect(bar).toBeVisible();
+    const barBottom = (await bar.boundingBox())!.height;
+    await expect
+      .poll(async () => ((await head.boundingBox())?.y ?? -1) - barBottom)
+      .toBeGreaterThanOrEqual(0);
   });
 
   test("CA-9: i numeri della striscia e delle teste contano gli impegni, con al massimo 4 punti", async ({

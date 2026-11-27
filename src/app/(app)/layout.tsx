@@ -1,14 +1,15 @@
 import { Suspense } from "react";
-import { AddShortcut } from "@/components/ui/AppFrame/AddShortcut";
-import { AppBar } from "@/components/ui/AppFrame/AppBar";
 import { BarActionProvider } from "@/components/ui/AppFrame/BarAction";
 import { BottomNav } from "@/components/ui/AppFrame/BottomNav";
+import { DesktopBar } from "@/components/ui/AppFrame/DesktopBar";
 import { FrameError } from "@/components/ui/AppFrame/FrameError";
 import { NestProvider } from "@/components/ui/AppFrame/NestProvider";
 import { NotificationCountProvider } from "@/components/ui/AppFrame/NotificationCount";
+import { PhoneHeader } from "@/components/ui/AppFrame/PhoneHeader";
+import { Shell } from "@/components/ui/AppFrame/Shell";
+import { ShortcutsProvider } from "@/components/ui/AppFrame/Shortcuts";
+import { SideNav } from "@/components/ui/AppFrame/SideNav";
 import { SkipLink } from "@/components/ui/AppFrame/SkipLink";
-import { SearchShortcut } from "@/components/ui/AppFrame/SearchShortcut";
-import { TopNav } from "@/components/ui/AppFrame/TopNav";
 import { requireNest } from "@/lib/nest-frame";
 
 // The layout is NOT a guard for page content: every page that reads data
@@ -35,14 +36,16 @@ async function AppFrame({
     >
       <NotificationCountProvider initialCount={frame.unreadNotifications}>
         <BarActionProvider>
-          <SkipLink />
-          <SearchShortcut />
-          <AddShortcut />
-          <AppBar />
-          <TopNav />
-          {frame.failed ? <FrameError /> : children}
-          <BottomNav />
-          {frame.failed ? null : modal}
+          <ShortcutsProvider>
+            <SkipLink />
+            <Shell sidebar={<SideNav />}>
+              <PhoneHeader />
+              <DesktopBar />
+              {frame.failed ? <FrameError /> : children}
+              <BottomNav />
+            </Shell>
+            {frame.failed ? null : modal}
+          </ShortcutsProvider>
         </BarActionProvider>
       </NotificationCountProvider>
     </NestProvider>

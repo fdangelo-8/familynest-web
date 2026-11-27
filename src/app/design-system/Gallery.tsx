@@ -65,6 +65,7 @@ import { Tag } from "@/components/ui/Tag/Tag";
 import { Toggle } from "@/components/ui/Toggle/Toggle";
 import { useToast } from "@/components/ui/Toast/ToastProvider";
 import { VisuallyHidden } from "@/components/ui/VisuallyHidden/VisuallyHidden";
+import { ShellDemo } from "./ShellDemo";
 import styles from "./gallery.module.css";
 
 function Section({
@@ -1508,7 +1509,9 @@ export function Gallery() {
   const passwordField = useQueryFlag("campo-password");
   const splitUnico = useQueryFlag("split-unico");
   const offlineView = useQueryFlag("avviso-offline");
+  const shellDemo = useQueryFlag("guscio");
   if (offlineView) return <OfflineNoticeView />;
+  if (shellDemo) return <ShellDemo />;
   return (
     <main className={styles.pagina}>
       <h1 className="t-titolo-pagina">Design system</h1>

@@ -460,10 +460,13 @@ test.describe("Rotte di Casa e segnaposto", () => {
     for (const path of ["/casa/da-fare", "/casa/scadenze"]) {
       expect(getActiveNavItem(path, "mobile"), path).toBe("casa");
       expect(getActiveNavItem(path, "desktop"), path).toBe("casa");
-      expect(getBarConfig(path), path).toEqual({
+      // F5 (#506, §4): section header with the title «Casa» (its h1 on the
+      // phone), no lens; «Cerca» and «Notifiche» are always drawn.
+      expect(getBarConfig(path), path).toMatchObject({
         kind: "section",
-        center: "title",
-        actions: ["search", "bell"],
+        title: "Casa",
+        titleIsHeading: true,
+        lens: false,
       });
       expect(hasBottomNav(path), path).toBe(true);
     }

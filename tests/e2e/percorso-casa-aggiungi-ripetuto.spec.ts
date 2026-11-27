@@ -17,8 +17,25 @@ import { showColumn } from "../fixtures/percorso-casa";
 
 test.use({ locale: "it-IT", timezoneId: "Europe/Rome" });
 
+/**
+ * Opens Add over the current page. On Oggi the entry is «Nuovo impegno» (the
+ * «+» of the page on a phone, the button of the top bar on a computer). The
+ * pages of Casa have no entry to the sheet of their own (the quick field adds
+ * in place): there the app router is asked, as a link of the app would do.
+ */
 async function openAddFromBar(page: Page): Promise<void> {
-  await page.getByRole("link", { name: "Aggiungi", exact: true }).click();
+  const entry = page.getByRole("link", { name: "Nuovo impegno", exact: true });
+  if (await entry.isVisible()) {
+    await entry.click();
+  } else {
+    await page.evaluate(() =>
+      (
+        window as unknown as {
+          next: { router: { push: (href: string) => void } };
+        }
+      ).next.router.push("/aggiungi"),
+    );
+  }
   await waitForSheet(page, "add");
 }
 
@@ -53,7 +70,9 @@ test.describe("Aggiungi più volte di seguito", () => {
       page.getByRole("heading", { level: 1, name: greeting }),
     ).toBeVisible({ timeout: 20_000 });
     await expect(async () => {
-      await page.getByRole("link", { name: "Aggiungi", exact: true }).click();
+      await page
+        .getByRole("link", { name: "Nuovo impegno", exact: true })
+        .click();
       await expect(dialogOf(page)).toBeVisible({ timeout: 2000 });
     }).toPass();
     await waitForSheet(page, "add");
@@ -81,7 +100,9 @@ test.describe("Aggiungi più volte di seguito", () => {
       page.getByRole("heading", { level: 1, name: greeting }),
     ).toBeVisible({ timeout: 20_000 });
     await expect(async () => {
-      await page.getByRole("link", { name: "Aggiungi", exact: true }).click();
+      await page
+        .getByRole("link", { name: "Nuovo impegno", exact: true })
+        .click();
       await expect(dialogOf(page)).toBeVisible({ timeout: 2000 });
     }).toPass();
     await waitForSheet(page, "add");

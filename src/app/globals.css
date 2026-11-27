@@ -335,6 +335,31 @@
   --size-cta-aggiungi: 128px; /* larghezza del bottone Aggiungi in basso */
   --size-pannello-desktop: 320px;
   --size-menu-desktop: 280px;
+  /* Guscio nuovo (F5 #506, computer.md e D8) */
+  --size-barra-laterale: 248px; /* barra laterale intera */
+  --size-barra-laterale-icone: 72px; /* barra laterale a icone */
+  --size-voce-icone: 48px; /* voce quadrata della barra a icone */
+  --size-barra-alto: 72px; /* barra in alto da computer */
+  --size-pannello: 420px; /* pannello a destra da 1280 px */
+  --size-pannello-stretto: 380px; /* pannello a destra da 900 a 1279 px */
+  --size-testata-pannello: 64px;
+  --size-fumetto: 300px;
+  --size-ricerca: 280px; /* campo Cerca della barra in alto */
+  --size-contenuto-max: 1200px; /* area del contenuto da computer */
+  --size-colonna-tablet: 640px; /* colonna di liste e moduli sotto i 900 px */
+  --shadow-fumetto:
+    0 0 0 1px var(--color-filo), 0 12px 32px rgba(16, 38, 42, 0.18);
+  --text-titolo-computer-size: 1.625rem; /* 26px: titolo della barra in alto */
+  --text-titolo-computer-line: 2rem; /* 32px */
+  --text-titolo-computer-tracking: -0.4px;
+  --text-pannello-size: 1.125rem; /* 18px: testata del pannello */
+  --text-pannello-line: 1.5rem; /* 24px */
+  --text-tasto-size: 0.71875rem; /* 11,5px: tasto disegnato kbd */
+  --text-tasto-line: 1rem;
+  --area-sicura-alto: env(safe-area-inset-top, 0px);
+  --area-sicura-basso: env(safe-area-inset-bottom, 0px);
+  --area-sicura-sinistra: env(safe-area-inset-left, 0px);
+  --area-sicura-destra: env(safe-area-inset-right, 0px);
   --size-modale: 880px;
   --size-dialogo: 400px;
   --size-maniglia-l: 40px;

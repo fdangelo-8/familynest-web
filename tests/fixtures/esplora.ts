@@ -17,7 +17,8 @@ import { createThrowawayUser, type ThrowawayUser } from "./throwaway-user";
 //   - loading: a container `[aria-busy="true"]` with the hidden text
 //     "Caricamento in corso" and 6 `.skeleton--scheda`.
 
-export const PATH = "/esplora";
+// «Esplora» became «Spazi» in F5 (#506): `/esplora` redirects here.
+export const PATH = "/spazi";
 
 /** Catalogue order (CA-4). */
 export const CATALOGUE = SPACES.map((space) => space.name);

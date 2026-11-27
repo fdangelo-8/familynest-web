@@ -37,8 +37,8 @@ test.describe("catalogo degli spazi", () => {
       "children",
       "pets",
     ]);
-    expect(SPACES[0]?.href).toBe("/esplora/a-tavola");
-    expect(SPACES[5]?.href).toBe("/esplora/casa-in-ordine");
+    expect(SPACES[0]?.href).toBe("/spazi/a-tavola");
+    expect(SPACES[5]?.href).toBe("/spazi/casa-in-ordine");
     expect(SPACES.filter((s) => s.wide).map((s) => s.name)).toEqual([
       "A tavola",
       "Progetti",
@@ -110,11 +110,10 @@ test.describe("catalogo degli spazi", () => {
     ).toBe(1);
   });
 
-  test("barra di Esplora: Indietro verso /nest e link di ricerca", () => {
-    expect(getBarConfig("/esplora")).toEqual({
-      kind: "detail",
-      fallback: "/nest",
-      search: true,
+  test("testata di Spazi: titolo di sezione, senza Indietro", () => {
+    expect(getBarConfig("/spazi")).toMatchObject({
+      kind: "section",
+      title: "Spazi",
     });
   });
 });

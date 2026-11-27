@@ -291,14 +291,15 @@ test.describe("contenuto dello stato normale", () => {
 
       const nav = mainNav(page);
       await expect(nav).toBeVisible();
+      // F5 (#506, §2): the pages of the children light Spazi.
       await expect(
-        nav.getByRole("link", { name: "Oggi", exact: true }),
+        nav.getByRole("link", { name: "Spazi", exact: true }),
       ).toHaveAttribute("aria-current", "true");
       await expect(nav.locator("[aria-current]")).toHaveCount(1);
     });
   });
 
-  test("CA-8: a 1280 px navigazione alta senza voce attiva, niente «Indietro», bottone «Modifica il profilo» nella testa", async ({
+  test("CA-8: a 1280 px barra laterale con Spazi attiva, «Indietro» nella barra in alto, bottone «Modifica il profilo» nella testa", async ({
     page,
     baseURL,
   }) => {
@@ -310,8 +311,8 @@ test.describe("contenuto dello stato normale", () => {
 
       const nav = mainNav(page);
       await expect(nav).toBeVisible();
-      await expect(nav.locator("[aria-current]")).toHaveCount(0);
-      await expect(backLink(page)).toHaveCount(0);
+      await expect(nav.locator("[aria-current]")).toHaveText("Spazi");
+      await expect(backLink(page)).toHaveCount(1);
       await expect(h1(page)).toHaveCount(1);
 
       const button = pencil(page, "Mia");

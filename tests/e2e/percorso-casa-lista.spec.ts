@@ -86,11 +86,21 @@ async function reloadCasa(page: Page): Promise<void> {
   await expect(page.locator('[aria-busy="true"]')).toHaveCount(0);
 }
 
-/** Opens the sheet of Aggiungi from the navigation, wherever the person is. */
+/**
+ * Opens the sheet of Aggiungi over the page of Casa. The pages of Casa have no
+ * entry to the sheet of their own since F5 (the bottom bar lost its «+», the
+ * quick field adds in place): the app router is asked, as a link would do.
+ */
 async function openAddFromHere(page: Page): Promise<void> {
   await reloadCasa(page);
   await expect(async () => {
-    await page.getByRole("link", { name: "Aggiungi", exact: true }).click();
+    await page.evaluate(() =>
+      (
+        window as unknown as {
+          next: { router: { push: (href: string) => void } };
+        }
+      ).next.router.push("/aggiungi"),
+    );
     await expect(dialogOf(page)).toBeVisible({ timeout: 2000 });
   }).toPass();
   await waitForSheet(page, "add");

@@ -2,16 +2,16 @@
 
 import { useEffect, type ReactNode } from "react";
 import { useIsDesktop } from "@/components/ui/overlay";
+import { getShellLayout } from "@/lib/breakpoints";
 import { markSearchFromApp } from "./from-app";
 import { SearchPage } from "./SearchPage";
 import { SearchPalette } from "./SearchPalette";
 
-const DESKTOP_QUERY = "(min-width: 1024px)";
-
 /**
- * The page at `/ricerca` (typed address, reload, link): under 1024 px it is
- * the search page; from 1024 px the page below is Today and the palette
- * (from the `@modal` slot) is over it. `today` comes from the server.
+ * The page at `/ricerca` (typed address, reload, link): with the phone shape
+ * it is the search page; with the computer shape (`@/lib/breakpoints`) the
+ * page below is Today and the palette (from the `@modal` slot) is over it.
+ * `today` comes from the server.
  */
 export function SearchPageSwitch({ today }: { today: ReactNode }) {
   const desktop = useIsDesktop();
@@ -37,7 +37,7 @@ export function SearchOverlay({ direct }: { direct: boolean }) {
   useEffect(() => {
     // The real width, not the first render's: the hook says «mobile» until
     // the page is hydrated.
-    if (direct || window.matchMedia(DESKTOP_QUERY).matches) return;
+    if (direct || getShellLayout() !== "telefono") return;
     markSearchFromApp();
     window.location.replace("/ricerca");
   }, [direct, desktop]);

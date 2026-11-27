@@ -137,8 +137,12 @@ export async function openAdd(
       name: /^(Buongiorno|Buon pomeriggio|Buonasera|Eccoti)/,
     }),
   ).toBeVisible({ timeout: 20_000 });
+  // F5 (#506): the entry is «Nuovo impegno», the «+» of the page on a phone
+  // and the button of the top bar on a computer. Clicked until the page has
+  // been hydrated and the sheet opens.
+  const entry = page.getByRole("link", { name: "Nuovo impegno", exact: true });
   await expect(async () => {
-    await page.getByRole("link", { name: "Aggiungi", exact: true }).click();
+    await entry.click();
     await expect(dialogOf(page)).toBeVisible({ timeout: 2000 });
   }).toPass();
   await expect(fieldOf(page)).toBeFocused();

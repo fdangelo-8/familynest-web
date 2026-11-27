@@ -54,12 +54,14 @@ test.describe("barra di dettaglio con titolo (#41, #38)", () => {
     });
   });
 
-  test("AppBar scrive il titolo come p.barra__titolo, mai come heading", () => {
+  test("la testata scrive il titolo di una pagina di dettaglio come p, mai come heading (tranne Notifiche)", () => {
     const source = readFileSync(
-      "src/components/ui/AppFrame/AppBar.tsx",
+      "src/components/ui/AppFrame/PhoneHeader.tsx",
       "utf8",
     );
-    expect(source).toContain('<p className="barra__titolo">{config.title}</p>');
+    expect(source).toContain(
+      '<p className="testata__titolo-centro">{config.title}</p>',
+    );
   });
 });
 
@@ -72,39 +74,34 @@ test.describe("barra e navigazione di /figli e /esplora/<spazio> (#31, #29)", ()
     expect(hasBottomNav("/figli/abc")).toBe(true);
   });
 
-  test("/esplora/<spazio>: Indietro a /esplora, senza «Cerca nel Nest»", () => {
+  test("/spazi/<spazio>: Indietro a /spazi", () => {
     for (const space of SPACES) {
       const config = getBarConfig(space.href);
       expect(config, space.href).toEqual({
         kind: "detail",
-        fallback: "/esplora",
+        fallback: "/spazi",
       });
     }
-    expect(getBarConfig("/esplora")).toEqual({
-      kind: "detail",
-      fallback: "/nest",
-      search: true,
-    });
   });
 
-  test("«Oggi» evidenziata solo per /esplora e i dieci indirizzi", () => {
-    for (const path of ["/esplora", ...SPACES.map((space) => space.href)]) {
-      expect(getActiveNavItem(path, "mobile"), path).toBe("oggi");
-      expect(getActiveNavItem(path, "desktop"), path).toBeNull();
+  test("«Spazi» evidenziata solo per /spazi e i dieci indirizzi", () => {
+    for (const path of ["/spazi", ...SPACES.map((space) => space.href)]) {
+      expect(getActiveNavItem(path, "mobile"), path).toBe("spazi");
+      expect(getActiveNavItem(path, "desktop"), path).toBe("spazi");
     }
-    expect(getNavAriaCurrent("/esplora/a-tavola", "mobile", "oggi")).toBe(
+    expect(getNavAriaCurrent("/spazi/a-tavola", "mobile", "spazi")).toBe(
       "true",
     );
     for (const path of [
-      "/esplora/palestra",
-      "/esplora/a-tavola/altro",
-      "/esplora/",
-      "/esploraxyz",
+      "/spazi/palestra",
+      "/spazi/a-tavola/altro",
+      "/spazix",
+      "/esplora/a-tavola",
     ]) {
       expect(getActiveNavItem(path, "mobile"), path).toBeNull();
     }
-    expect(isSpaceRoute("/esplora/zampe")).toBe(true);
-    expect(isSpaceRoute("/esplora")).toBe(false);
+    expect(isSpaceRoute("/spazi/zampe")).toBe(true);
+    expect(isSpaceRoute("/spazi")).toBe(false);
   });
 });
 
@@ -129,9 +126,9 @@ test.describe("catalogo degli spazi: righe di «In arrivo» (#29, CA-4)", () => 
   });
 
   test("getSpaceByHref trova solo i dieci indirizzi", () => {
-    expect(getSpaceByHref("/esplora/noi-due")?.key).toBe("couple");
-    expect(getSpaceByHref("/esplora/altro")).toBeUndefined();
-    expect(getSpaceByHref("/esplora")).toBeUndefined();
+    expect(getSpaceByHref("/spazi/noi-due")?.key).toBe("couple");
+    expect(getSpaceByHref("/spazi/altro")).toBeUndefined();
+    expect(getSpaceByHref("/spazi")).toBeUndefined();
   });
 });
 

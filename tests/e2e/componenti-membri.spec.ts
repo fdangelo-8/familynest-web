@@ -28,8 +28,12 @@ test.describe("formatAge", () => {
 });
 
 test.describe("barra di Il tuo Nest", () => {
-  test("la X del Nest ha ancora /oggi come ripiego", () => {
-    expect(getBarConfig("/nest")).toEqual({ kind: "close", href: "/oggi" });
+  // F5 (#506, §2): «Il tuo Nest» is a detail page, «Indietro» falls back to Spazi.
+  test("«Indietro» del Nest ha /spazi come ripiego", () => {
+    expect(getBarConfig("/nest")).toEqual({
+      kind: "detail",
+      fallback: "/spazi",
+    });
   });
 });
 

@@ -70,11 +70,14 @@ test.describe("axe", () => {
       await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
 
       await page
+        .locator("header.testata, main")
         .getByRole("group", { name: /Punto di vista/ })
         .getByRole("button", { name: /Io$/ })
         .click();
       await expect(
-        page.getByRole("button", { name: /Io$/, pressed: true }),
+        page
+          .locator("header.testata, main")
+          .getByRole("button", { name: /Io$/, pressed: true }),
       ).toBeVisible();
       await expectClean(page);
     });
@@ -380,11 +383,18 @@ test("ordine del focus e nessuna trappola", async ({ page, baseURL }) => {
     expect(order.length).toBeGreaterThan(8);
 
     const index = (re: RegExp) => order.findIndex((name) => re.test(name));
+    // From 1280 px the sidebar has a lens before the page: the one of the
+    // page is the first «Io» after «Settimana successiva».
+    const afterNext = index(/Settimana successiva/);
     const mainOrder = [
-      /Settimana precedente/,
-      /Settimana successiva/,
-      isMobile(page) ? /^a:Giorno/ : /^button:.*Io$/,
-    ].map(index);
+      index(/Settimana precedente/),
+      afterNext,
+      isMobile(page)
+        ? index(/^a:Giorno/)
+        : order.findIndex(
+            (name, i) => i > afterNext && /^button:.*Io$/.test(name),
+          ),
+    ];
     expect(
       mainOrder.every((i) => i >= 0),
       JSON.stringify(order),
@@ -515,12 +525,14 @@ test("aree di tocco di almeno 44 px (mobile)", async ({ page, baseURL }) => {
       [
         "lente Io",
         page
+          .locator("header.testata, main")
           .getByRole("group", { name: /Punto di vista/ })
           .getByRole("button", { name: /Io$/ }),
       ],
       [
         "lente Nest",
         page
+          .locator("header.testata, main")
           .getByRole("group", { name: /Punto di vista/ })
           .getByRole("button", { name: /Nest$/ }),
       ],
@@ -770,11 +782,14 @@ test("contrasto: testi principali e axe color-contrast", async ({
     };
     expect(await run()).toEqual([]);
     await page
+      .locator("header.testata, main")
       .getByRole("group", { name: /Punto di vista/ })
       .getByRole("button", { name: /Io$/ })
       .click();
     await expect(
-      page.getByRole("button", { name: /Io$/, pressed: true }),
+      page
+        .locator("header.testata, main")
+        .getByRole("button", { name: /Io$/, pressed: true }),
     ).toBeVisible();
     expect(await run()).toEqual([]);
   });

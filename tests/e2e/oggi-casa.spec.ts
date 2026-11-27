@@ -231,13 +231,13 @@ test.describe("i tuoi spazi", () => {
       await expect(spaces).toBeVisible();
       const meals = spaces.getByRole("link", { name: /A tavola/ });
       await expect(meals).toContainText("In arrivo");
-      await expect(meals).toHaveAttribute("href", "/esplora/a-tavola");
+      await expect(meals).toHaveAttribute("href", "/spazi/a-tavola");
       const explore = spaces.getByRole("link", { name: /Esplora/ });
       await expect(explore).toContainText("Altri 5 spazi");
-      await expect(explore).toHaveAttribute("href", "/esplora");
+      await expect(explore).toHaveAttribute("href", "/spazi");
       const edit = spaces.getByRole("link", { name: "Modifica i tuoi spazi" });
       await expect(edit).toHaveText("Modifica");
-      await expect(edit).toHaveAttribute("href", "/esplora");
+      await expect(edit).toHaveAttribute("href", "/spazi");
     });
 
     const other = await browser.newContext({

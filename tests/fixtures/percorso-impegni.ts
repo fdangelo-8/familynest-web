@@ -76,7 +76,9 @@ const savedToast = (page: Page) =>
 async function openAddSheet(page: Page) {
   await openToday(page);
   await expect(async () => {
-    await page.getByRole("link", { name: "Aggiungi", exact: true }).click();
+    await page
+      .getByRole("link", { name: "Nuovo impegno", exact: true })
+      .click();
     await expect(addDialog(page)).toBeVisible({ timeout: 2000 });
   }).toPass();
   await expect(phraseField(page)).toBeFocused();

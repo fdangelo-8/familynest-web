@@ -4,7 +4,10 @@ import Link from "next/link";
 import { useRef, type Ref } from "react";
 import { Avatar } from "@/components/ui/Avatar/Avatar";
 import { Icon } from "@/components/ui/Icon/Icon";
+import { List, ListRow } from "@/components/ui/List/List";
 import { PageError } from "@/components/ui/PageError/PageError";
+import { yourNest } from "@/lib/brand";
+import { it } from "@/lib/i18n/messages/it";
 import { Skeleton, SkeletonGroup } from "@/components/ui/Skeleton/Skeleton";
 import { getPinLabel } from "@/lib/pin-texts";
 import {
@@ -145,6 +148,16 @@ export function EsploraPage() {
           ) : null}
         </div>
       </div>
+      {/* The square of the Nest left the header (F5): this is its entrance */}
+      <List flush>
+        <ListRow
+          href="/nest"
+          icon="house"
+          title={yourNest()}
+          text={it.shell.yourNestHint}
+          arrow
+        />
+      </List>
     </main>
   );
 }

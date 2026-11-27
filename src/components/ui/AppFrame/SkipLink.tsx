@@ -1,5 +1,7 @@
 "use client";
 
+import { it } from "@/lib/i18n/messages/it";
+
 /**
  * "Vai al contenuto": first element reachable with Tab. Hidden until it has
  * the focus; moves the focus to the page's <main> (`id="contenuto"`).
@@ -13,7 +15,7 @@ export function SkipLink() {
       className="vai-al-contenuto btn-primary btn--piccolo"
       onClick={() => document.getElementById("contenuto")?.focus()}
     >
-      Vai al contenuto
+      {it.shell.skipToContent}
     </a>
   );
 }

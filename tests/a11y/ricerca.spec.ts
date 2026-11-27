@@ -163,7 +163,7 @@ test.describe("struttura", () => {
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(
       "Cerca nel Nest",
     );
-    expect(await page.locator("header.barra").count()).toBe(0);
+    expect(await page.locator("header.testata").count()).toBe(0);
     await expect(page.locator("nav:visible")).toHaveCount(0);
     await expect(page.getByRole("search")).toBeVisible();
     await expect(

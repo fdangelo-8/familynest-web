@@ -83,6 +83,16 @@ test.describe("token e base", () => {
           (_, ref: string) => tokens[ref]!,
         );
       }
+      // The areas of the safe zone are `env(safe-area-inset-…, 0px)` (F5,
+      // #506): the browser reports the value of the environment, `0px` on a
+      // screen without a notch. The source must still be the `env()` of §10.
+      if (name.startsWith("--area-sicura-")) {
+        expect(source.replace(/\s/g, ""), name).toMatch(
+          /^env\(safe-area-inset-(top|bottom|left|right),0px\)$/,
+        );
+        expect(normalize(actual[name]!), name).toBe("0px");
+        continue;
+      }
       const wanted = normalize(source);
       expect(normalize(actual[name]!), name).toBe(wanted);
     }
@@ -263,20 +273,27 @@ test.describe("token e base", () => {
       return [...names];
     });
     const foundSet = new Set(found);
-    const missing = [...wanted].filter((name) => !foundSet.has(name));
+    // Approved differences: the navigation of the old frame (`.nav-basso*`,
+    // `.btn-aggiungi*`, `.nav-alto*`) was replaced by the new frame in F5
+    // (#506, §2 of docs/specifiche/506-guscio-navigazione.md).
+    const REPLACED_IN_F5 = /^(nav-basso|nav-alto|btn-aggiungi)(__|--|$)/;
+    const missing = [...wanted].filter(
+      (name) => !foundSet.has(name) && !REPLACED_IN_F5.test(name),
+    );
     expect(missing).toEqual([]);
     expect(found.filter((name) => name.startsWith("mock-"))).toEqual([]);
   });
 });
 
 test.describe("icone", () => {
-  test("CA-12: uno sprite con 80 simboli, senza stethoscope", async ({
+  // 81: «layout-grid» (the four squares of Spazi) joined the 80 of the mockup in F5.
+  test("CA-12: uno sprite con 81 simboli, senza stethoscope", async ({
     page,
   }) => {
     await expect(
       page.locator('svg.sprite-icone[aria-hidden="true"]'),
     ).toHaveCount(1);
-    await expect(page.locator("svg.sprite-icone symbol")).toHaveCount(80);
+    await expect(page.locator("svg.sprite-icone symbol")).toHaveCount(81);
     await expect(page.locator("#i-stethoscope")).toHaveCount(0);
     await expect(page.locator("#i-calendar")).toHaveCount(1);
   });

@@ -196,7 +196,7 @@ test.describe("puntina e disposizione", () => {
     test.skip(!isMobile(testInfo.project.name), "Caso a 390 px");
     await signInAs(page.context(), baseURL as string, "A");
     await openSpace(page, "A tavola");
-    const bar = page.locator("header.barra");
+    const bar = page.locator("header.testata");
     await expect(bar.getByRole("link", { name: "Indietro" })).toBeVisible();
     await expect(barPin(page)).toHaveCount(1);
     await expect(barPin(page)).toHaveAttribute("aria-pressed", "false");
@@ -204,9 +204,28 @@ test.describe("puntina e disposizione", () => {
       bar.getByRole("button", { name: "Fissa A tavola in Oggi", exact: true }),
     ).toBeVisible();
     await expect(
-      page.getByRole("link", { name: "Cerca nel Nest" }),
+      page.getByRole("link", { name: "Cerca", exact: true }),
     ).toHaveCount(0);
     await expect(toast(page)).toHaveCount(0);
+  });
+
+  test("«Annulla» dopo aver fissato lo spazio riporta il fuoco sulla puntina della testata", async ({
+    page,
+    baseURL,
+  }, testInfo) => {
+    test.skip(!isMobile(testInfo.project.name), "Caso a 390 px");
+    await signInAs(page.context(), baseURL as string, "A");
+    await openSpace(page, "A tavola");
+    await waitHydrated(barPin(page));
+    await expect(async () => {
+      await barPin(page).click();
+      await expect(barPin(page)).toHaveAttribute("aria-pressed", "true", {
+        timeout: 1500,
+      });
+    }).toPass();
+    await toast(page).getByRole("button", { name: "Annulla" }).click();
+    await expect(barPin(page)).toHaveAttribute("aria-pressed", "false");
+    await expect(barPin(page)).toBeFocused();
   });
 
   test("CA-23: su desktop non c'è nessuna puntina", async ({
@@ -321,26 +340,20 @@ test.describe("navigazione e disposizione", () => {
     await signInAs(page.context(), baseURL as string, "A");
     await openEsplora(page, 10);
     await linkOf(page, "A tavola").click();
-    await expect(page).toHaveURL(/\/esplora\/a-tavola$/);
+    await expect(page).toHaveURL(/\/spazi\/a-tavola$/);
     await expect(spaceTitle(page, "A tavola")).toBeVisible();
     const nav = page.getByRole("navigation", {
       name: "Navigazione principale",
     });
     await expect(nav).toBeVisible();
-    await expect(nav.getByRole("link", { name: "Oggi" })).toHaveAttribute(
+    await expect(nav.getByRole("link", { name: "Spazi" })).toHaveAttribute(
       "aria-current",
       "true",
     );
-    await expect(
-      page
-        .getByRole("link", { name: "Aggiungi" })
-        .or(page.getByRole("button", { name: "Aggiungi" }))
-        .first(),
-    ).toBeVisible();
     const back = page.getByRole("link", { name: "Indietro" });
     await waitHydrated(back);
     await back.click();
-    await expect(page).toHaveURL(/\/esplora$/);
+    await expect(page).toHaveURL(/\/spazi$/);
     await expect(card(page, "A tavola")).toBeVisible();
   });
 
@@ -354,7 +367,7 @@ test.describe("navigazione e disposizione", () => {
     const back = page.getByRole("link", { name: "Indietro" });
     await waitHydrated(back);
     await back.click();
-    await expect(page).toHaveURL(/\/esplora$/);
+    await expect(page).toHaveURL(/\/spazi$/);
   });
 
   test("CA-28: il link «← Esplora» è su desktop, largo la colonna e centrato; su mobile non c'è", async ({
@@ -370,11 +383,11 @@ test.describe("navigazione e disposizione", () => {
     const nav = page.getByRole("navigation", {
       name: "Navigazione principale",
     });
-    await expect(nav.locator("[aria-current]")).toHaveCount(0);
+    await expect(nav.locator("[aria-current]")).toHaveText("Spazi");
     const link = desktopLink(page);
     await expect(link).toBeVisible();
     await expect(
-      page.getByRole("main").locator("a[href='/esplora']"),
+      page.getByRole("main").locator("a[href='/spazi']"),
     ).toHaveCount(1);
     await expect(link).toHaveAccessibleName("Esplora");
     await expect(link.locator("[aria-hidden='true']")).toHaveText("←");
@@ -397,7 +410,7 @@ test.describe("navigazione e disposizione", () => {
 
     await waitHydrated(link);
     await link.click();
-    await expect(page).toHaveURL(/\/esplora$/);
+    await expect(page).toHaveURL(/\/spazi$/);
   });
 
   test("CA-29: su mobile, in una pagina che non c'è nessuna voce in basso è evidenziata", async ({
