@@ -15,8 +15,10 @@ import { useFramePathname } from "./useFramePathname";
  * where the route has it, «Nuovo impegno». Drawn only with the computer shape
  * (CSS). The title is a `p`: the pages write their own h1.
  */
-export function DesktopBar() {
-  const pathname = useFramePathname();
+export function DesktopBar({ pathname: given }: { pathname?: string }) {
+  const framePathname = useFramePathname();
+  // `pathname` is for the gallery, which shows the bar of a route.
+  const pathname = given ?? framePathname;
   const config = getDesktopBarConfig(pathname);
   const { count } = useNotificationCount();
 
@@ -39,6 +41,7 @@ export function DesktopBar() {
           </kbd>
         </Link>
         <NotificationsLink
+          bare
           newCount={count}
           current={pathname === "/notifiche"}
         />

@@ -21,8 +21,10 @@ import { useFramePathname } from "./useFramePathname";
  * out of the screen, a white bar of 56 px with the same controls stays on top
  * (`og1-03`); back at the top it goes away.
  */
-export function PhoneHeader() {
-  const pathname = useFramePathname();
+export function PhoneHeader({ pathname: given }: { pathname?: string }) {
+  const framePathname = useFramePathname();
+  // `pathname` is for the gallery, which shows the header of a route.
+  const pathname = given ?? framePathname;
   const config = getBarConfig(pathname);
   const { count } = useNotificationCount();
   const [header, setHeader] = useState<HTMLElement | null>(null);

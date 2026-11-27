@@ -10,7 +10,8 @@ import {
 } from "@/lib/app-routes";
 import { BRAND, brandText, yourNest } from "@/lib/brand";
 import { it } from "@/lib/i18n/messages/it";
-import { Avatar } from "../Avatar/Avatar";
+import { memberColorClass } from "@/lib/member-colors";
+import type { NestSelf } from "@/lib/nest-types";
 import { Brand } from "../Brand/Brand";
 import { Icon, type IconName } from "../Icon/Icon";
 import { Lens, useLens } from "../Lens/Lens";
@@ -34,6 +35,20 @@ const HOME_SHORTCUTS: ReadonlyArray<{
   { href: "/animali", label: it.shell.animals, icon: "paw-print" },
 ];
 
+/**
+ * The dot in the colour of the person (§5: «pallino»), without the initial:
+ * the name of the link is written in `aria-label`, and a letter inside would
+ * be visible text that the name does not contain (axe).
+ */
+function PersonDot({ color }: { color: NestSelf["color"] }) {
+  return (
+    <span
+      className={cx("avatar", "avatar--m", memberColorClass(color))}
+      aria-hidden="true"
+    />
+  );
+}
+
 /** The lens as one dot, in the narrow bar: a click goes to the other choice. */
 function LensDot() {
   const { me, members } = useNest();
@@ -50,7 +65,7 @@ function LensDot() {
         onClick={() => setLens(next)}
       >
         {lens === "io" && me ? (
-          <Avatar name={me.name} color={me.color} size="m" nameShown />
+          <PersonDot color={me.color} />
         ) : first ? (
           <span className="quadrato-nest quadrato-nest--statico">
             {members.slice(0, 4).map((member, index) => (
@@ -74,8 +89,16 @@ function LensDot() {
  * clipped in the narrow bar, so the accessible name is always the full one.
  * «Chiedi a Nest» is not drawn until B15 (#386) is merged (`ASSISTANT_AVAILABLE`).
  */
-export function SideNav({ spacesNews = false }: { spacesNews?: boolean }) {
-  const pathname = useFramePathname();
+export function SideNav({
+  spacesNews = false,
+  pathname: given,
+}: {
+  spacesNews?: boolean;
+  /** For the gallery, which shows the bar on a route */
+  pathname?: string;
+}) {
+  const framePathname = useFramePathname();
+  const pathname = given ?? framePathname;
   const { me } = useNest();
   const active = getActiveNavItem(pathname, "desktop");
   const homeShortcuts = HOME_SHORTCUTS.filter((entry) =>
@@ -155,9 +178,7 @@ export function SideNav({ spacesNews = false }: { spacesNews?: boolean }) {
                 : yourNest()
             }
           >
-            {me ? (
-              <Avatar name={me.name} color={me.color} size="m" nameShown />
-            ) : null}
+            {me ? <PersonDot color={me.color} /> : null}
             <span className="barra-laterale__profilo-testi">
               {me ? (
                 <span className="barra-laterale__profilo-nome">{me.name}</span>

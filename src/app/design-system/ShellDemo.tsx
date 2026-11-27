@@ -1,8 +1,12 @@
 "use client";
 
-import { useRef, useState, type ReactNode } from "react";
+import { useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { BarActionProvider } from "@/components/ui/AppFrame/BarAction";
 import { BottomNavView } from "@/components/ui/AppFrame/BottomNav";
+import { DesktopBar } from "@/components/ui/AppFrame/DesktopBar";
 import { NestProvider } from "@/components/ui/AppFrame/NestProvider";
+import { NotificationCountProvider } from "@/components/ui/AppFrame/NotificationCount";
+import { PhoneHeader } from "@/components/ui/AppFrame/PhoneHeader";
 import { Shell } from "@/components/ui/AppFrame/Shell";
 import { SideNav } from "@/components/ui/AppFrame/SideNav";
 import { Button } from "@/components/ui/Button/Button";
@@ -17,6 +21,12 @@ import styles from "./gallery.module.css";
  * the content: the sidebar goes to icons and the content gets narrower.
  */
 export function ShellDemo() {
+  // `?guscio=1&rotta=/calendario` shows the bars as they are on that route.
+  const route = useSyncExternalStore(
+    subscribeNever,
+    () => new URLSearchParams(window.location.search).get("rotta") ?? "/spazi",
+    () => "/spazi",
+  );
   return (
     <NestProvider
       nestName={null}
@@ -29,21 +39,33 @@ export function ShellDemo() {
       startLens="io"
       defaultVisibility="household"
     >
-      <Shell sidebar={<SideNav />}>
-        <main
-          id="contenuto"
-          tabIndex={-1}
-          className={styles.pagina}
-          data-testid="guscio-contenuto"
-        >
-          <h1 className="t-titolo-pagina">Guscio</h1>
-          <BottomBarExamples />
-          <PanelExample />
-          <TooltipExample />
-        </main>
-      </Shell>
+      <NotificationCountProvider initialCount={2}>
+        <BarActionProvider>
+          <Shell sidebar={<SideNav pathname={route} />}>
+            <PhoneHeader pathname={route} />
+            <DesktopBar pathname={route} />
+            <main
+              id="contenuto"
+              tabIndex={-1}
+              className={styles.pagina}
+              data-testid="guscio-contenuto"
+            >
+              <h1 className="t-titolo-pagina">Guscio</h1>
+              <BottomBarExamples />
+              <PanelExample />
+              <TooltipExample />
+            </main>
+            <BottomNavView pathname={route} />
+          </Shell>
+        </BarActionProvider>
+      </NotificationCountProvider>
     </NestProvider>
   );
+}
+
+// The address never changes while the page is open.
+function subscribeNever() {
+  return () => {};
 }
 
 function Frame({

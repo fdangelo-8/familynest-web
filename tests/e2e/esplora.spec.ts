@@ -94,7 +94,7 @@ test.describe("struttura", () => {
     baseURL,
   }) => {
     await openAs(page, baseURL, "A", 10);
-    await expect(page).toHaveTitle("FamilyNest · Esplora");
+    await expect(page).toHaveTitle("FamilyNest · Spazi");
     await expect(h1(page)).toHaveCount(1);
     await expect(h1(page)).toHaveAccessibleName("Cosa può fare la vostra casa");
     await expect(
