@@ -73,13 +73,14 @@ test.describe("Spunta tonda", () => {
     await expect(tondo).toHaveClass(/(^|\s)tondo-spunta(\s|$)/);
     await expect(tondo).not.toHaveClass(/(^|\s)casella(\s|$)/);
     const box = await tondo.boundingBox();
-    expect(box?.width).toBeCloseTo(22, 0);
-    expect(box?.height).toBeCloseTo(22, 0);
+    // F4b (#504): the neutral tick is a 24 px circle (it was 22 px).
+    expect(box?.width).toBeCloseTo(24, 0);
+    expect(box?.height).toBeCloseTo(24, 0);
     const radius = await css(tondo, "border-top-left-radius");
     const radiusPx = radius.endsWith("%")
-      ? (parseFloat(radius) / 100) * 22
+      ? (parseFloat(radius) / 100) * 24
       : parseFloat(radius);
-    expect(radiusPx).toBeGreaterThanOrEqual(11);
+    expect(radiusPx).toBeGreaterThanOrEqual(12);
     expect(await css(tondo.locator(".icona"), "opacity")).toBe("0");
   });
 
@@ -717,13 +718,13 @@ test.describe("Accessibilità e regole CSS", () => {
 // ------------------------------------------------------------------ 8. Touch areas
 
 test.describe("Aree di tocco", () => {
-  test("CA-35: il tondo resta 22 x 22 e ha un ::before invisibile di 44 px", async ({
+  test("CA-35: il tondo è 24 x 24 (F4b, #504) e ha un ::before invisibile di 44 px", async ({
     page,
   }) => {
     const tondo = tid(page, "tondo-vuoto");
     const box = await tondo.boundingBox();
-    expect(box?.width).toBeCloseTo(22, 0);
-    expect(box?.height).toBeCloseTo(22, 0);
+    expect(box?.width).toBeCloseTo(24, 0);
+    expect(box?.height).toBeCloseTo(24, 0);
     expect(await css(tondo, "position")).toBe("relative");
     expect(await css(tondo, "content", "::before")).toMatch(/^(""|"")$/);
     expect(await css(tondo, "position", "::before")).toBe("absolute");
@@ -861,12 +862,12 @@ test.describe("Aree di tocco", () => {
     }
   });
 
-  test("CA-41: l'aspetto non cambia a nessuna larghezza (tondo 22 px, voci 32 px)", async ({
+  test("CA-41: l'aspetto non cambia a nessuna larghezza (tondo 24 px dal F4b, voci 32 px)", async ({
     page,
   }) => {
     const tondo = await tid(page, "tondo-vuoto").boundingBox();
-    expect(tondo?.width).toBeCloseTo(22, 0);
-    expect(tondo?.height).toBeCloseTo(22, 0);
+    expect(tondo?.width).toBeCloseTo(24, 0);
+    expect(tondo?.height).toBeCloseTo(24, 0);
     const voci = tid(page, "selettore-link").locator(".selettore__voce");
     for (let i = 0; i < 3; i += 1) {
       expect((await voci.nth(i).boundingBox())?.height).toBeCloseTo(32, 0);
