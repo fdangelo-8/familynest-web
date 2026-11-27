@@ -5998,7 +5998,8 @@ body {
       .selettore,
       .btn--piccolo,
       .btn-tenue,
-      .btn-link
+      .btn-link,
+      form
     ) {
     grid-column: -3 / -1;
     justify-self: start;
