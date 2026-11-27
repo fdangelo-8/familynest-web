@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { formatAge } from "../../src/lib/datetime";
 import { getBarConfig } from "../../src/lib/app-routes";
+import { pickDay } from "../fixtures/campi-data-ora";
 
 // Shared part of #85: ColorChoice, formatAge, MemberSheet, "Esplora" placeholder.
 
@@ -141,12 +142,12 @@ test.describe("MemberSheet", () => {
     page,
   }) => {
     const dialog = await openSheet(page, "Aggiungi una persona o un animale");
-    await dialog.getByLabel("Data di nascita").fill("2020-04-02");
+    await pickDay(dialog.getByLabel("Data di nascita"), "2020-04-02");
     await dialog.getByRole("button", { name: "Adulto" }).click();
     await expect(dialog.getByLabel("Data di nascita")).toHaveCount(0);
     await dialog.getByRole("button", { name: "Figlio o figlia" }).click();
-    await expect(dialog.getByLabel("Data di nascita")).toHaveValue(
-      "2020-04-02",
+    await expect(dialog.getByLabel("Data di nascita")).toHaveAccessibleName(
+      "Data di nascita, Giovedì 2 aprile 2020",
     );
   });
 
@@ -165,25 +166,26 @@ test.describe("MemberSheet", () => {
     await expect(page.getByTestId("membri-chiamate")).toHaveText("Chiamate: 0");
   });
 
-  test("data nel futuro: errore e nessun salvataggio", async ({ page }) => {
+  // F4c (#505): the calendar of the date field does not let a day after today
+  // be chosen (`max`), so a future date can no longer reach the form: the test
+  // that wrote one by hand now checks that the calendar refuses it.
+  test("data nel futuro: il calendario non la lascia scegliere", async ({
+    page,
+  }) => {
     const dialog = await openSheet(page, "Aggiungi una persona o un animale");
     await dialog.getByLabel("Nome").fill("Sofia");
-    await dialog.getByLabel("Data di nascita").evaluate((input) => {
-      const element = input as HTMLInputElement;
-      element.removeAttribute("max");
-      const setter = Object.getOwnPropertyDescriptor(
-        HTMLInputElement.prototype,
-        "value",
-      )!.set!;
-      setter.call(element, "2099-01-01");
-      element.dispatchEvent(new Event("input", { bubbles: true }));
-    });
-    await dialog.getByRole("button", { name: "Aggiungi Sofia" }).click();
+    await dialog.getByLabel("Data di nascita").click();
+    const calendar = page.getByTestId("calendario");
     await expect(
-      dialog.getByText(
-        "Questa data è nel futuro: scegli un giorno fino a oggi.",
-      ),
-    ).toBeVisible();
+      calendar.getByRole("button", { name: "Mese successivo" }),
+    ).toHaveAttribute("aria-disabled", "true");
+    await page.keyboard.press("PageDown");
+    await page.keyboard.press("Shift+PageDown");
+    // Nothing after today: the focused day is still today.
+    await expect(
+      calendar.locator('[role="gridcell"][aria-current="date"]'),
+    ).toBeFocused();
+    await page.keyboard.press("Escape");
     await expect(page.getByTestId("membri-chiamate")).toHaveText("Chiamate: 0");
   });
 
@@ -192,7 +194,7 @@ test.describe("MemberSheet", () => {
   }) => {
     const dialog = await openSheet(page, "Aggiungi una persona o un animale");
     await dialog.getByLabel("Nome").fill("  Sofia  ");
-    await dialog.getByLabel("Data di nascita").fill("2016-12-14");
+    await pickDay(dialog.getByLabel("Data di nascita"), "2016-12-14");
     await dialog.getByRole("radio", { name: "Blu" }).click();
     await dialog.getByRole("button", { name: "Aggiungi Sofia" }).click();
     await expect(page.getByRole("dialog")).toHaveCount(0);
@@ -212,7 +214,7 @@ test.describe("MemberSheet", () => {
   test("Adulto: la data non viene mandata", async ({ page }) => {
     const dialog = await openSheet(page, "Aggiungi una persona o un animale");
     await dialog.getByLabel("Nome").fill("Laura");
-    await dialog.getByLabel("Data di nascita").fill("2016-12-14");
+    await pickDay(dialog.getByLabel("Data di nascita"), "2016-12-14");
     await dialog.getByRole("button", { name: "Adulto" }).click();
     await dialog.getByRole("button", { name: "Aggiungi Laura" }).click();
     await expect(page.getByRole("dialog")).toHaveCount(0);
@@ -319,8 +321,8 @@ test.describe("MemberSheet", () => {
     const dialog = await openSheet(page, "Modifica Sofia");
     await expect(dialog).toHaveAccessibleName("Modifica Sofia");
     await expect(dialog.getByLabel("Nome")).toHaveValue("Sofia");
-    await expect(dialog.getByLabel("Data di nascita")).toHaveValue(
-      "2016-12-14",
+    await expect(dialog.getByLabel("Data di nascita")).toHaveAccessibleName(
+      "Data di nascita, Mercoledì 14 dicembre 2016",
     );
     const child = dialog.getByRole("button", { name: "Figlio o figlia" });
     await expect(child).toHaveAttribute("aria-pressed", "true");

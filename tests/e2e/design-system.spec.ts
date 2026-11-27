@@ -388,9 +388,12 @@ test.describe("campi e controlli", () => {
   test("CA-19: data e ora", async ({ page }) => {
     const date = page.getByTestId("campo-data");
     const time = page.getByTestId("campo-ora");
-    await expect(date).toHaveAttribute("type", "date");
-    await expect(time).toHaveAttribute("type", "time");
-    await expect(date).toHaveValue("2026-10-20");
+    // F4c (#505): the date is a button that opens a calendar and the time a
+    // text field with the numeric keypad, never the native controls.
+    await expect(date).toHaveAttribute("aria-haspopup", "dialog");
+    await expect(date).toHaveText(/Martedì 20 ottobre/);
+    await expect(time).toHaveAttribute("type", "text");
+    await expect(time).toHaveAttribute("inputmode", "numeric");
     await expect(time).toHaveValue("17:00");
     for (const field of [date, time, page.getByTestId("campo-predefinito")]) {
       // #503: --size-campo, the label sits inside the box.

@@ -22,26 +22,27 @@ const MONTHS = [
 
 /**
  * Chooses `dayKey` (`YYYY-MM-DD`) in a date field: opens the calendar from
- * `field` (the button of the field, found by label), goes to the month with the
- * arrows and taps the day. One tap chooses it and closes the calendar.
+ * `field` (the button of the field, found by label), goes to the month with
+ * Page up and Page down (a year at a time with Shift) and taps the day. One tap
+ * chooses it and closes the calendar.
  */
 export async function pickDay(field: Locator, dayKey: string): Promise<void> {
   const page = field.page();
   await field.click();
-  const cell = page.locator(`[role="gridcell"][data-day="${dayKey}"]`);
-  const grid = page.getByRole("grid");
+  const calendar = page.getByTestId("calendario");
+  const grid = calendar.getByRole("grid");
+  await grid.waitFor();
+  const cell = calendar.locator(`[role="gridcell"][data-day="${dayKey}"]`);
   const [year, month] = dayKey.split("-").map(Number) as [number, number];
-  for (let step = 0; step < 120; step += 1) {
+  const wanted = year * 12 + (month - 1);
+  for (let step = 0; step < 150; step += 1) {
     if ((await cell.count()) > 0) break;
     const name = (await grid.getAttribute("aria-label")) ?? "";
     const [shownMonth = "", shownYear = "0"] = name.toLowerCase().split(" ");
     const shown = Number(shownYear) * 12 + MONTHS.indexOf(shownMonth);
-    const wanted = year * 12 + (month - 1);
-    await page
-      .getByRole("button", {
-        name: wanted > shown ? "Mese successivo" : "Mese precedente",
-      })
-      .click();
+    const far = Math.abs(wanted - shown) >= 12;
+    const key = wanted > shown ? "PageDown" : "PageUp";
+    await page.keyboard.press(far ? `Shift+${key}` : key);
   }
   await cell.click();
 }

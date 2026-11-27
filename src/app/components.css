@@ -4583,6 +4583,11 @@ div.blocco-orario {
 .foglio--titolo-inizio .foglio__info {
   align-self: start;
 }
+/* Nessuna maniglia (F4c): la classe resta definita perché il mockup la ha,
+   ma il foglio non la disegna */
+.foglio__maniglia {
+  display: none;
+}
 /* La X è un'area di 44 px senza riquadro: il segno è quello di sempre */
 .foglio__chiudi {
   background: transparent;

@@ -368,6 +368,8 @@ test.describe("Dialogo di conferma", () => {
       name: "Togliere Biscotto dal Nest?",
     });
     await expect(dialog).toBeVisible();
+    // The pointer is away: no hover colour on the buttons.
+    await page.mouse.move(0, 0);
     await expect(dialog).toHaveAccessibleDescription(
       "Spariscono il suo profilo e la foto. Scadenze e cose da fare restano, senza il suo nome.",
     );
@@ -441,8 +443,16 @@ test.describe("Riga «Collega»", () => {
     const outlook = rows.getByRole("button", { name: "Collega Outlook" });
     for (const pill of [google, outlook]) {
       expect((await box(pill)).height).toBeGreaterThanOrEqual(36);
+      // The browser draws a border in whole pixels: compare with a probe.
       expect(await css(pill, "border-top-width")).toBe(
-        await resolve(pill, "var(--border-medio)", "width"),
+        await pill.evaluate((el) => {
+          const probe = document.createElement("span");
+          probe.style.setProperty("border", "var(--border-medio) solid");
+          el.appendChild(probe);
+          const width = getComputedStyle(probe).borderTopWidth;
+          probe.remove();
+          return width;
+        }),
       );
       expect(await css(pill, "border-top-color")).toBe(
         await resolve(pill, "var(--color-inchiostro)", "color"),
@@ -628,7 +638,9 @@ test.describe("Selettore di data, telefono", () => {
     const dialog = page.getByRole("dialog", { name: "Fino a" });
     const nine = dialog.locator('[data-day="2026-11-09"]');
     await expect(nine).toHaveAttribute("aria-disabled", "true");
-    await nine.click();
+    // A day that cannot be chosen: the click is forced past the check of
+    // Playwright, which waits for an enabled element.
+    await nine.click({ force: true });
     await expect(dialog).toBeVisible();
     await expect(tid(page, "ds-data-limiti-stato")).toHaveText(
       "Valore: 2026-11-24",

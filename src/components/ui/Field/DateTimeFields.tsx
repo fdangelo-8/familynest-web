@@ -24,7 +24,10 @@ import { Sheet } from "../Sheet/Sheet";
 import type { TextFieldProps } from "./Field";
 import { FieldShell, useFieldIds } from "./FieldShell";
 
-export type DateFieldProps = Omit<TextFieldProps, "type" | "multiline">;
+export type DateFieldProps = Omit<TextFieldProps, "type" | "multiline"> & {
+  /** Goes to the button (date) or to the input (time) */
+  "data-testid"?: string;
+};
 
 /** Space kept between the calendar box and the edge of the window, in px. */
 const EDGE = 8;
@@ -73,6 +76,7 @@ export function DateField({
   name,
   disabled,
   readOnly,
+  "data-testid": testId,
 }: DateFieldProps) {
   const controlled = value !== undefined;
   const [inner, setInner] = useState(
@@ -137,11 +141,16 @@ export function DateField({
       );
     };
     place();
+    // The box follows the field when the page or a modal scrolls.
     window.addEventListener("resize", place);
-    return () => window.removeEventListener("resize", place);
+    window.addEventListener("scroll", place, true);
+    return () => {
+      window.removeEventListener("resize", place);
+      window.removeEventListener("scroll", place, true);
+    };
   }, [open, windowShape]);
 
-  // The focus goes to the day; a tap outside closes; so does any scroll.
+  // The focus goes to the day; a tap outside closes.
   useEffect(() => {
     if (!open || !windowShape) return;
     boxRef.current
@@ -153,16 +162,8 @@ export function DateField({
       if (triggerRef.current?.contains(target)) return;
       closeBox(true);
     };
-    const onScroll = (event: Event) => {
-      if (boxRef.current?.contains(event.target as Node)) return;
-      closeBox(false);
-    };
     document.addEventListener("pointerdown", onPointerDown);
-    window.addEventListener("scroll", onScroll, true);
-    return () => {
-      document.removeEventListener("pointerdown", onPointerDown);
-      window.removeEventListener("scroll", onScroll, true);
-    };
+    return () => document.removeEventListener("pointerdown", onPointerDown);
   }, [open, windowShape]);
 
   const openCalendar = () => {
@@ -219,6 +220,7 @@ export function DateField({
         disabled={disabled}
         aria-disabled={readOnly || undefined}
         onClick={openCalendar}
+        data-testid={testId}
         {...described}
       >
         <span className="campo__valore">{text}</span>
@@ -241,6 +243,7 @@ export function DateField({
                 max={max === undefined ? undefined : String(max)}
                 onSelect={choose}
                 markInitialFocus
+                data-testid="calendario"
               />
             </div>,
             document.body,
@@ -260,6 +263,7 @@ export function DateField({
           max={max === undefined ? undefined : String(max)}
           onSelect={choose}
           markInitialFocus
+          data-testid="calendario"
         />
       </Sheet>
     </FieldShell>
@@ -290,6 +294,7 @@ export function TimeField({
   required,
   disabled,
   readOnly,
+  "data-testid": testId,
 }: DateFieldProps) {
   const controlled = value !== undefined;
   const [inner, setInner] = useState(
@@ -364,6 +369,7 @@ export function TimeField({
         required={required}
         disabled={disabled}
         readOnly={readOnly}
+        data-testid={testId}
         onChange={(event) => {
           setText(event.target.value);
           if (unreadable) setUnreadable(false);
