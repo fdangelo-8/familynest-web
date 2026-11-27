@@ -58,8 +58,9 @@ export function Panel({
 
     // One entry of the history: «back» of the browser closes the panel and
     // leaves the page (the address does not change).
+    const token = Math.random().toString(36).slice(2);
     window.history.pushState(
-      { ...(window.history.state as object | null), panel: true },
+      { ...(window.history.state as object | null), panel: token },
       "",
       window.location.href,
     );
@@ -77,6 +78,13 @@ export function Panel({
       window.removeEventListener("popstate", onPopState);
       setPanelOpen?.(false);
       // Closed by Esc, «Chiudi» or the parent: take our entry off the history.
+      // Only if that entry is still the current one: if the person went to
+      // another page in the meantime, going back would leave that page.
+      const stillCurrent =
+        (window.history.state as { panel?: string } | null)?.panel === token;
+      if (historyEntry.current && !stillCurrent) {
+        historyEntry.current = false;
+      }
       if (historyEntry.current) {
         historyEntry.current = false;
         ownBacks += 1;

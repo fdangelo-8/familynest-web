@@ -648,10 +648,13 @@
     position: relative;
     display: block;
   }
+  /* Il fumetto sta nel body, fuori dalla barra che scorre: la posizione la
+     scrive il componente (--fumetto-x: bordo destro del comando, --fumetto-y:
+     il suo centro) */
   .fumetto {
-    position: absolute;
-    top: 50%;
-    left: calc(100% + var(--space-2));
+    position: fixed;
+    top: var(--fumetto-y);
+    left: calc(var(--fumetto-x) + var(--space-2));
     z-index: var(--z-toast);
     transform: translateY(-50%);
     display: flex;
@@ -685,6 +688,15 @@
     line-height: var(--text-titolo-computer-line);
     letter-spacing: var(--text-titolo-computer-tracking);
     font-weight: var(--weight-pieno);
+  }
+  /* Tra 900 e 1023 px il titolo è l'h1 (le pagine nascondono il proprio sotto
+     1024 px); da 1024 px c'è un p e l'h1 è quello della pagina */
+  .barra-alto__titolo--largo,
+  .barra-alto__azione-stretta .barra__vuoto {
+    display: none;
+  }
+  .barra-alto__azione-stretta {
+    display: contents;
   }
   .barra-alto__azioni {
     display: flex;
@@ -853,9 +865,6 @@
     overflow: visible;
     clip-path: none;
   }
-  .guscio:not(.guscio--pannello) .fumetto {
-    display: none;
-  }
 }
 
 @media (min-width: 900px) and (min-height: 600px) and (hover: hover) {
@@ -876,6 +885,18 @@
   .barra-laterale__profilo:not([aria-current]):active {
     background: var(--color-premuto);
     color: var(--color-inchiostro);
+  }
+}
+
+/* Da 1024 px le pagine disegnano il proprio h1 e i propri pulsanti: la barra
+   in alto tiene il titolo come p e non ripete l'azione della pagina */
+@media (min-width: 1024px) and (min-height: 600px) {
+  .barra-alto__titolo--stretto,
+  .barra-alto__azione-stretta {
+    display: none;
+  }
+  .barra-alto__titolo--largo {
+    display: block;
   }
 }
 

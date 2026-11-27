@@ -207,6 +207,34 @@ test.describe("pagine dell'app (utente A)", () => {
     }
   });
 
+  // CA-40 at 1040 px (barra a icone): the pages still draw their phone layout
+  // between 900 and 1023 px, here the computer layout starts at 1024.
+  for (const route of APP_ROUTES) {
+    test(`${route}: a 1040 px axe, un solo h1 e un solo main`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 1040, height: 800 });
+      await page.goto(route);
+      await expect(page.getByRole("main")).toBeVisible();
+      await expect(page.locator("h1:visible")).toHaveCount(1);
+      await expect(page.locator("main")).toHaveCount(1);
+      await expect(
+        page.getByRole("navigation", { name: "Navigazione principale" }),
+      ).toHaveCount(1);
+      await expectNoBlocking(page);
+    });
+  }
+
+  // Between 900 and 1023 px the h1 of Casa and Notifiche is the title of the bar.
+  for (const route of ["/casa/spesa", "/notifiche"]) {
+    test(`${route}: a 960 px c'è un solo h1 visibile`, async ({ page }) => {
+      await page.setViewportSize({ width: 960, height: 800 });
+      await page.goto(route);
+      await expect(page.getByRole("main")).toBeVisible();
+      await expect(page.locator("h1:visible")).toHaveCount(1);
+    });
+  }
+
   test("ordine del focus e anello visibile", async ({ page }, testInfo) => {
     await page.goto("/oggi");
     await expect(page.getByRole("main")).toBeVisible();

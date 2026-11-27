@@ -51,13 +51,22 @@ import { usePeriodData } from "@/components/calendario/usePeriodData";
 const EMPTY_MEMBERS: readonly Member[] = [];
 
 function barOffset(): number {
-  const bar = document.querySelector<HTMLElement>(".barra");
-  const space = parseFloat(
-    getComputedStyle(document.documentElement).getPropertyValue("--space-4"),
+  // On the phone the header of the section scrolls away and the collapsed bar
+  // (56 px plus the safe area) stays on top: that is the bar to clear.
+  const root = getComputedStyle(document.documentElement);
+  const space = parseFloat(root.getPropertyValue("--space-4"));
+  const header = document.querySelector<HTMLElement>(".testata");
+  const onPhone = header && getComputedStyle(header).display !== "none";
+  const collapsed = document.querySelector<HTMLElement>(".testata-raccolta");
+  const height = !onPhone
+    ? 0
+    : collapsed
+      ? collapsed.offsetHeight
+      : parseFloat(root.getPropertyValue("--size-barra-alta")) +
+        parseFloat(root.getPropertyValue("--area-sicura-alto") || "0");
+  return (
+    (Number.isNaN(height) ? 0 : height) + (Number.isNaN(space) ? 0 : space)
   );
-  const height =
-    bar && getComputedStyle(bar).display !== "none" ? bar.offsetHeight : 0;
-  return height + (Number.isNaN(space) ? 0 : space);
 }
 
 /** Scrolls so the head of a day sits just under the fixed bar (no animation). */

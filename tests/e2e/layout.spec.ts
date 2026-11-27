@@ -738,12 +738,12 @@ test.describe("sessione con utenti", () => {
 test.describe("telefono", () => {
   onlyOn("mobile");
 
-  test("CA-1: a 759 px la barra in basso, a 760 niente barra in basso e barra laterale a icone", async ({
+  test("CA-1: a 899 px la barra in basso, a 900 niente barra in basso e barra laterale a icone", async ({
     page,
     baseURL,
   }) => {
     withUser("A");
-    await page.setViewportSize({ width: 759, height: 900 });
+    await page.setViewportSize({ width: 899, height: 900 });
     await openReady(page, baseURL, "/oggi");
     await expect(mainNav(page)).toBeVisible();
     await expect(page.getByTestId("barra-basso")).toBeVisible();
@@ -1084,10 +1084,27 @@ test.describe("computer", () => {
           sidebar(page).getByRole("link", { name, exact: true }),
         ).toBeFocused({ timeout: 500 });
       }).toPass();
-      await expect(sidebar(page).locator(".fumetto")).toHaveText(name);
+      const balloon = page.locator(".fumetto");
+      await expect(balloon).toHaveText(name);
+      // Not clipped by the scrolling sidebar: inside the window and on top
+      // of whatever is under its centre.
+      const box = (await balloon.boundingBox())!;
+      const links = (await sidebar(page).boundingBox())!;
+      expect(box.x, name).toBeGreaterThanOrEqual(links.x + links.width);
+      expect(box.x + box.width, name).toBeLessThanOrEqual(1040);
+      // It is a child of the body, so no scrolling ancestor can clip it.
+      expect(
+        await balloon.evaluate((el) => el.parentElement === document.body),
+        name,
+      ).toBe(true);
+      // And the whole width of the text is drawn: the box is as wide as the text.
+      expect(
+        await balloon.evaluate((el) => el.scrollWidth <= el.clientWidth + 1),
+        name,
+      ).toBe(true);
     }
     await page.keyboard.press("Escape");
-    await expect(sidebar(page).locator(".fumetto")).toHaveCount(0);
+    await expect(page.locator(".fumetto")).toHaveCount(0);
     await expect(
       sidebar(page).getByRole("link", { name: "Spesa", exact: true }),
     ).toBeFocused();
@@ -1366,6 +1383,143 @@ test.describe("computer", () => {
         ),
         route,
       ).toEqual([]);
+    }
+  });
+});
+
+test.describe("telefono: punto delle novità e ordine del Tab", () => {
+  onlyOn("mobile");
+
+  test("CA-9: nell'app «Spazi» non ha il punto delle novità", async ({
+    page,
+    baseURL,
+  }) => {
+    withUser("A");
+    await openReady(page, baseURL, "/oggi");
+    const spaces = mainNav(page).getByRole("link", {
+      name: "Spazi",
+      exact: true,
+    });
+    await expect(spaces).toBeVisible();
+    await expect(spaces.locator(".barra-basso__punto")).toHaveCount(0);
+    await expect(
+      mainNav(page).getByRole("link", { name: "Spazi, ci sono novità" }),
+    ).toHaveCount(0);
+  });
+
+  test("CA-37: ordine del Tab: Vai al contenuto, testata, contenuto, barra in basso", async ({
+    page,
+    baseURL,
+  }) => {
+    withUser("A");
+    await openReady(page, baseURL, "/calendario");
+    // Order of the document, which is the order of Tab (no `tabindex` above 0).
+    const order = await page.evaluate(() => {
+      const nodes = Array.from(
+        document.querySelectorAll<HTMLElement>(
+          "a[href], button, input, select, textarea",
+        ),
+      ).filter((el) => el.getClientRects().length > 0);
+      const where = (el: HTMLElement) =>
+        el.closest(".vai-al-contenuto")
+          ? "skip"
+          : el.closest("header.testata, .testata-raccolta")
+            ? "testata"
+            : el.closest("main")
+              ? "contenuto"
+              : el.closest(".barra-basso")
+                ? "basso"
+                : "altro";
+      const seq: string[] = [];
+      for (const el of nodes) {
+        const part = where(el);
+        if (seq[seq.length - 1] !== part) seq.push(part);
+      }
+      const bottom = nodes
+        .filter((el) => el.closest(".barra-basso"))
+        .map((el) => el.textContent?.trim());
+      return { seq, bottom };
+    });
+    expect(order.seq).toEqual(["skip", "testata", "contenuto", "basso"]);
+    expect(order.bottom).toEqual(["Oggi", "Calendario", "Casa", "Spazi"]);
+  });
+});
+
+test.describe("galleria del guscio (esempio con novità e pannello)", () => {
+  test("CA-9: l'esempio «con novità» ha il punto e il nome «Spazi, ci sono novità»", async ({
+    page,
+  }) => {
+    await page.goto("/design-system?guscio=1");
+    const spaces = page.getByRole("link", { name: "Spazi, ci sono novità" });
+    await expect(spaces).toBeVisible();
+    await expect(spaces.locator(".barra-basso__punto")).toHaveCount(1);
+  });
+
+  for (const [viewport, content] of [
+    [1280, 788],
+    [1440, 948],
+  ] as const) {
+    test(`CA-25: a ${viewport} px il pannello è largo 420, la barra 72 e il contenuto ${content}`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: viewport, height: 900 });
+      await page.goto("/design-system?guscio=1");
+      const open = page.getByTestId("pannello-apri");
+      await waitHydrated(open);
+      await open.click();
+      const panel = page.getByTestId("pannello-prova");
+      await expect(panel).toBeVisible();
+      // the sidebar goes to icons and the panel stops entering
+      await expect
+        .poll(() => width(page, "barra-laterale"), { timeout: 3000 })
+        .toBe(72);
+      expect(await width(page, "pannello-prova")).toBe(420);
+      const main = await page.getByTestId("guscio-contenuto").boundingBox();
+      expect(Math.abs(main!.width - content)).toBeLessThanOrEqual(1);
+    });
+  }
+
+  test("CA-26: Esc chiude il pannello e il fuoco torna al pulsante; «indietro» lo chiude senza lasciare la galleria", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto("/design-system?guscio=1");
+    const open = page.getByTestId("pannello-apri");
+    await waitHydrated(open);
+    await open.focus();
+    await page.keyboard.press("Enter");
+    const panel = page.getByTestId("pannello-prova");
+    await expect(panel).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(panel).toHaveCount(0);
+    await expect(open).toBeFocused();
+
+    await open.click();
+    await expect(panel).toBeVisible();
+    await page.goBack();
+    await expect(panel).toHaveCount(0);
+    expect(new URL(page.url()).pathname).toBe("/design-system");
+    expect(new URL(page.url()).search).toBe("?guscio=1");
+  });
+
+  test("CA-27: con movimento ridotto barra laterale e pannello non hanno transizione", async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto("/design-system?guscio=1");
+    const open = page.getByTestId("pannello-apri");
+    await waitHydrated(open);
+    await open.click();
+    const panel = page.getByTestId("pannello-prova");
+    await expect(panel).toBeVisible();
+    for (const id of ["barra-laterale", "pannello-prova"]) {
+      expect(
+        await page
+          .getByTestId(id)
+          .evaluate((el) => getComputedStyle(el).transitionDuration),
+        id,
+      ).toBe("0s");
     }
   });
 });

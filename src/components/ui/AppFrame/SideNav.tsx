@@ -8,6 +8,7 @@ import {
   hasAppRoute,
   PROFILE_HREF,
 } from "@/lib/app-routes";
+import { useShellLayout } from "@/lib/breakpoints";
 import { BRAND, brandText, yourNest } from "@/lib/brand";
 import { it } from "@/lib/i18n/messages/it";
 import { memberColorClass } from "@/lib/member-colors";
@@ -18,6 +19,7 @@ import { Lens, useLens } from "../Lens/Lens";
 import { Tooltip } from "../Tooltip/Tooltip";
 import { cx } from "../cx";
 import { useNest } from "./NestProvider";
+import { useShell } from "./Shell";
 import { useFramePathname } from "./useFramePathname";
 
 /** The shortcuts of «Di casa»: Ricette and Animali only when their route exists (§5). */
@@ -100,6 +102,10 @@ export function SideNav({
   const framePathname = useFramePathname();
   const pathname = given ?? framePathname;
   const { me } = useNest();
+  // The names are written in the bar when it is full: no balloon then.
+  const layout = useShellLayout();
+  const shell = useShell();
+  const full = layout === "intera" && !shell?.panelOpen;
   const active = getActiveNavItem(pathname, "desktop");
   const homeShortcuts = HOME_SHORTCUTS.filter((entry) =>
     hasAppRoute(entry.href),
@@ -131,7 +137,7 @@ export function SideNav({
         {NAV_ITEMS.map((item) => {
           const news = item.id === "spazi" && spacesNews;
           return (
-            <Tooltip key={item.id} label={item.label}>
+            <Tooltip key={item.id} label={item.label} suppressed={full}>
               <Link
                 href={item.href}
                 className={cx("voce-barra", active === item.id && "is-attiva")}
@@ -155,7 +161,7 @@ export function SideNav({
       <p className="barra-laterale__titoletto">{it.shell.groupHome}</p>
       <nav className="barra-laterale__voci" aria-label={it.shell.homeNav}>
         {homeShortcuts.map((entry) => (
-          <Tooltip key={entry.href} label={entry.label}>
+          <Tooltip key={entry.href} label={entry.label} suppressed={full}>
             <Link href={entry.href} className="voce-barra">
               <span className="voce-barra__icona">
                 <Icon name={entry.icon} />
@@ -167,7 +173,7 @@ export function SideNav({
       </nav>
 
       <div className="barra-laterale__fondo">
-        <Tooltip label={me ? me.name : yourNest()}>
+        <Tooltip label={me ? me.name : yourNest()} suppressed={full}>
           <Link
             href={PROFILE_HREF}
             className="barra-laterale__profilo"

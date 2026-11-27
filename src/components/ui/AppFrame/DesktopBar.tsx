@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { getDesktopBarConfig } from "@/lib/app-routes";
+import { getBarConfig, getDesktopBarConfig } from "@/lib/app-routes";
 import { it } from "@/lib/i18n/messages/it";
 import { Icon } from "../Icon/Icon";
-import { BackLink, NotificationsLink } from "./IconLinks";
+import { BarActionSlot } from "./BarAction";
+import { BackLink, BarIconLink, NotificationsLink } from "./IconLinks";
 import { useNotificationCount } from "./NotificationCount";
 import { useFramePathname } from "./useFramePathname";
 
@@ -20,12 +21,25 @@ export function DesktopBar({ pathname: given }: { pathname?: string }) {
   // `pathname` is for the gallery, which shows the bar of a route.
   const pathname = given ?? framePathname;
   const config = getDesktopBarConfig(pathname);
+  const phone = getBarConfig(pathname);
   const { count } = useNotificationCount();
 
   return (
     <div className="barra-alto" data-testid="barra-alto">
       {config.back ? <BackLink fallback={config.back} /> : null}
-      {config.title ? (
+      {config.title && phone.kind !== "none" && phone.titleIsHeading ? (
+        <>
+          {/* Where the h1 of the page is in the phone header (Casa, Notifiche)
+              the page hides its own below 1024 px: the bar carries it there,
+              and from 1024 px a `p` takes its place. */}
+          <h1 className="barra-alto__titolo barra-alto__titolo--stretto">
+            {config.title}
+          </h1>
+          <p className="barra-alto__titolo barra-alto__titolo--largo">
+            {config.title}
+          </p>
+        </>
+      ) : config.title ? (
         <p className="barra-alto__titolo">{config.title}</p>
       ) : null}
       <div className="barra-alto__azioni">
@@ -45,6 +59,14 @@ export function DesktopBar({ pathname: given }: { pathname?: string }) {
           newCount={count}
           current={pathname === "/notifiche"}
         />
+        {phone.kind === "detail" ? (
+          // Between 900 and 1023 px the pages still draw their phone layout,
+          // whose action lives in the bar (pin, «Modifica il profilo»,
+          // «Aggiungi un'idea»). From 1024 px the page has its own button.
+          <span className="barra-alto__azione-stretta">
+            {phone.link ? <BarIconLink {...phone.link} /> : <BarActionSlot />}
+          </span>
+        ) : null}
         {config.newEvent ? (
           <Link
             href="/aggiungi"

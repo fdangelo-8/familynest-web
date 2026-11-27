@@ -13,6 +13,8 @@ import { cx } from "../cx";
 type ShellContextValue = {
   /** The element of the grid where the panel is drawn (a portal target) */
   panelSlot: HTMLElement | null;
+  /** A panel is open: the sidebar is narrow whatever the window */
+  panelOpen: boolean;
   /** The panel tells the shell it is open: the sidebar goes to icons */
   setPanelOpen: (open: boolean) => void;
 };
@@ -40,8 +42,8 @@ export function Shell({
   const [panelOpen, setPanelOpen] = useState(false);
   const setOpen = useCallback((open: boolean) => setPanelOpen(open), []);
   const value = useMemo(
-    () => ({ panelSlot, setPanelOpen: setOpen }),
-    [panelSlot, setOpen],
+    () => ({ panelSlot, panelOpen, setPanelOpen: setOpen }),
+    [panelSlot, panelOpen, setOpen],
   );
 
   return (

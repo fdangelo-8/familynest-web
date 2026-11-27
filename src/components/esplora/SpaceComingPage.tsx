@@ -52,9 +52,14 @@ export function SpaceComingPage({ spaceKey }: { spaceKey: SpaceKey }) {
   useEffect(() => {
     const map = buttonRefs.current;
     map.set(spaceKey, {
+      // The phone header, or the bar of the computer between 900 and 1023 px.
       focus: () =>
-        document
-          .querySelector<HTMLElement>(".barra button[aria-pressed]")
+        Array.from(
+          document.querySelectorAll<HTMLElement>(
+            ".testata button[aria-pressed], .barra-alto button[aria-pressed]",
+          ),
+        )
+          .find((button) => button.getClientRects().length > 0)
           ?.focus(),
     });
     return () => {
