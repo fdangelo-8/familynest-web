@@ -46,7 +46,9 @@ Misure dalle PNG (780 px, divise per 2).
 - **Tessere `.dk-tl`:** `grid-template-columns: repeat(auto-fill, minmax(var(--size-tessera-min), 1fr))`, `gap: var(--space-4)`, `min-height` 112, raggio 18 (canvas `D-AC1:221–228`). A 1280 (968 px di contenuto) e a 1440 (1200) le quattro tessere stanno in una fila.
 - **Righe `.dk-li`** nella colonna di lettura (720), allineate a sinistra, `min-height` 56, raggio 14, mouse sopra `--color-riga-mouse`. «Il tuo Nest» in fondo come sul telefono.
 - Niente pannello a destra: ogni voce apre la sua pagina.
-- 760–1099: barra a icone, le tessere vanno a due per fila (`auto-fill` con 220 di minimo lo fa da solo).
+- 900–1279 px (alta almeno 600; tablet in orizzontale): barra a icone, le tessere quante ne stanno (`auto-fill` con 220 di minimo lo fa da solo: quattro a 1194, tre a 1024). Soglie di D8 (risposta 214); il 760–1099 di prima è superato.
+- Sotto i 900 px, o con la finestra alta meno di 600: la disposizione del telefono. Sul tablet in verticale (768–834 px) nella colonna di 640 px al centro, tessere a due per fila (506 §1; `docs/design/tablet/altre-pagine/04-spazi-chiaro.png`, `14-spazi-chiaro.png`).
+- Tocco: tessere, righe e «Il tuo Nest» hanno l'area di almeno 44 × 44 px su tutti i formati (risposta 217; righe 56 e tessere 112 la superano già).
 
 ### Web da telefono
 

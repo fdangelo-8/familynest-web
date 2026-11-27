@@ -59,7 +59,7 @@ Gruppo a parte sotto «Chi c'è», con titolo «In attesa» (computer: con il nu
 | visto da chi non organizza                         | «Invito in attesa» **(default)**             | nessuna                              |
 
 - «mandato oggi» / «ieri» / «il 12 novembre» (anno solo se diverso), dal `created_at` dell'invito a Roma.
-- «vale ancora N giorni» con N = giorni interi arrotondati per eccesso fino a `expires_at`; N = 1 → «vale ancora 1 giorno».
+- «vale ancora N giorni» con N = **giorni di calendario a Roma** tra oggi e il giorno di `expires_at` (come `expiryLead` della pagina dell'invito e `formatValidity` di #618, C3); N = 1 → «vale ancora 1 giorno»; nel giorno della scadenza «vale fino a oggi alle HH:MM»; scaduto → riga «Invito scaduto». Così la tavola torna: invito di 7 giorni mandato ieri → «mandato ieri · vale ancora 6 giorni». Il cambio d'ora non cambia N. La regola di prima («24 ore arrotondate per eccesso») è superata (analisi di #618, decisione 3).
 - Sotto le azioni, solo per chi organizza: «Finché <nome> non entra non vede niente. Il suo colore, <colore con articolo>, è già tenuto da parte.» Articoli: il corallo, il glicine, la menta, il blu, il rosa, l'azzurro, la sabbia, l'ardesia, l'ambra, la cannella.
 
 ### Righe in fondo (telefono, non nello stato «solo tu»)
@@ -77,6 +77,8 @@ Stato «solo tu» (`cb1-15`): riquadro con l'icona delle persone, «Per ora ci s
 Altri stati: dopo le righe, «Invita una persona» (solo chi organizza) e «Aggiungi un figlio o un animale»; posizione e livello li conferma il designer (le tavole sono tagliate a 844 px) **(default)**.
 
 ### Computer (1280, `01`, `02`)
+
+Soglie di D8 (`docs/design/tablet/decisioni.md`, risposta 214): in questo file «telefono» vale per la finestra fino a 899 px **o** alta meno di 600 px; «computer» da 900 px e alta almeno 600, con la barra a icone da 900 a 1279 px e quella intera da 1280. Tablet: in verticale (768–834 px) le righe del telefono in una colonna di 640 px al centro (`docs/design/tablet/verticale/14`); in orizzontale (1024–1194 px) le tessere del computer, sempre quattro per riga (`docs/design/tablet/orizzontale/05`; `TileGrid columns={4}` di 504 §2). Con il dito ogni comando ha l'area di 44 × 44 px, compreso il + di «Animali» e i pulsanti sotto la tessera in attesa (risposta 217).
 
 - Barra in alto: «Il tuo Nest» con la riga del Nest accanto, Cerca, campanella, e «Invita una persona» (livello 1, solo chi organizza).
 - «Chi c'è <n>» (titolo come `02` e come il telefono **(default)**; `01` dice «Persone»): tessere, quattro per riga, pallino grande, nome, riga sotto come sul telefono. Clic: stessa destinazione.
@@ -129,6 +131,7 @@ Dopo la creazione la finestra si chiude solo con «Manda l'invito»; con «Copia
 - «Il tuo messaggio»: area di testo già scritta «Ciao <nome>, ti invito in casa nostra su <NomeApp>: calendario, spesa e cose da fare in un posto solo. Entra da qui:» (nome dell'app da F3), modificabile, massimo 280 caratteri; sotto il testo il segno non modificabile «link dell'invito». Il messaggio **non si salva** (non va in `invitations.message`).
 - Righe: «WhatsApp» → `https://wa.me/?text=<messaggio + spazio + link>`; «Messaggi» → `sms:?&body=<messaggio + spazio + link>`; «Mail» (solo con la mail accesa) → mostra il campo «La sua mail» e «Manda» **(default)**; «Copia il link» → copia solo il link, avviso «Link copiato. Mandalo a <nome> dove preferisci.»; «Mostra il codice da inquadrare» / «Se è qui accanto a te» → vista del codice.
 - Dopo WhatsApp, Messaggi, Mail e Copia il foglio si chiude e `/nest` mostra la persona in «In attesa» **(default)**. X chiude: l'invito resta.
+- La pagina `/invito/<token>`, come tutte le pagine senza account, **segue il tema del sistema** (`data-aspetto="sistema"`: chiara o scura secondo il telefono o il computer; D7 e tavola dell'accesso al buio `computer/accesso-profilo-impostazioni-p12-16/03-accesso-scuro`; decisione 3 di #623). Il codice QR resta scuro su bianco anche al buio (decisione 4 di #618).
 - Link = `<origine dell'app>/invito/<token>`. Il token non va mai in log, analytics, indirizzi della pagina, né a chi non organizza.
 
 ### Codice da inquadrare

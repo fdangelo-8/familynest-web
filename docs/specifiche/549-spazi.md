@@ -65,7 +65,9 @@ Ordine fisso del design (`cb1-28`). La colonna «Si vede quando» vale **insieme
 
 Nomi di animali e figli: uniti con la funzione unica (`joinNames`, «Biscotto e Miele», «A, B e C»). Nessun troncamento: la riga sotto va a capo.
 
-## §5 Computer (da 760 px)
+## §5 Computer (da 900 px e alta almeno 600)
+
+Soglie di D8 (risposta 214, `docs/design/tablet/decisioni.md`): barra a icone da 900 a 1279 px, intera da 1280; sotto i 900 px o con la finestra alta meno di 600 vale il telefono (sul tablet in verticale nella colonna di 640 px, 506 §1). Il «da 760 px» di prima è superato.
 
 Spazi su computer non è disegnato (risposta 183 aperta): vale il telefono adattato con `regole.md` §2.
 

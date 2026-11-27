@@ -48,7 +48,9 @@ Regola comune delle righe «che portano a una pagina di un'altra issue»: la rig
 - Spariscono rispetto a oggi: il nome del Nest come `h1` (decisione «senza nome», nota di `cb1-43`), l'elenco «Chi c'è» (ora in «Il tuo Nest», A13 #546), le notifiche dentro la pagina, il menu laterale `SettingsMenu`.
 - «Chi vive qui» conta tutti i membri per `kind` (`adult`, `child`, `pet`), con o senza account.
 
-**Computer (da 760 px):** titolo «Impostazioni» nella barra in alto. A sinistra la lista delle voci (icona, nome, riga sotto): Aspetto, (Sfondo di Oggi: nascosta), Notifiche («Riepilogo alle 19:00»), Privacy («Chi vede che cosa»), Account e privacy (se esiste), Novità (se esiste), Proposte (se esiste), Aiuto e contatti (nascosta, domanda 8), Crediti foto (se esiste, B13c #568), Informazioni («Versione …»). Voce scelta: fondo grigio (`05`), `aria-current="page"`. A destra una colonna di 600 px con il contenuto della rotta. Frecce su e giù spostano il fuoco tra le voci della lista, Invio la apre, Tab entra nel contenuto (`regole.md` §10).
+**Tablet in verticale (fino a 899 px):** la pagina del telefono in una colonna di 640 px al centro, barra in alto larga quanto la finestra (`docs/design/tablet/verticale/13`).
+
+**Computer (da 900 px e alta almeno 600, soglie di D8; il 760 di prima è superato):** titolo «Impostazioni» nella barra in alto. A sinistra la lista delle voci (icona, nome, riga sotto): Aspetto, (Sfondo di Oggi: nascosta), Notifiche («Riepilogo alle 19:00»), Privacy («Chi vede che cosa»), Account e privacy (se esiste), Novità (se esiste), Proposte (se esiste), Aiuto e contatti (nascosta, domanda 8), Crediti foto (se esiste, B13c #568), Informazioni («Versione …»). Voce scelta: fondo grigio (`05`), `aria-current="page"`. A destra una colonna di 600 px con il contenuto della rotta. Frecce su e giù spostano il fuoco tra le voci della lista, Invio la apre, Tab entra nel contenuto (`regole.md` §10).
 
 ## §3 Foglio «Chi organizza»
 
@@ -68,9 +70,10 @@ Regola comune delle righe «che portano a una pagina di un'altra issue»: la rig
 
 - La scheda scelta ha bordo d'inchiostro, fondo più scuro e spunta (Componenti 2.0, «Scelte a schede» A). Valore iniziale «Come il telefono» (`system`).
 - Toccare una scheda salva subito `profiles.appearance` (**da creare**, §9) e applica la scelta senza ricaricare. Errore: torna la scelta di prima e compare l'avviso «Non siamo riusciti a salvare la scelta. Controlla la connessione e riprova.» (testo di oggi del profilo).
-- Applicazione: il guscio dell'area `(app)` mette sull'elemento `html` l'attributo `data-aspetto` = `chiaro` | `scuro` | `sistema` letto dal profilo sul server (nessun lampo al caricamento) e `color-scheme` coerente. Le pagine pubbliche (accesso, invito, desideri pubblici, informativa, termini) restano chiare.
-- La tavolozza scura non esiste ancora (risposta 128: tema scuro dopo il lancio): vedi domanda 1.
-- «Telefono» o «computer» nei testi: sotto i 760 px «telefono», da 760 px «computer» (soglia del guscio di F5).
+- Applicazione: l'elemento `html` ha l'attributo `data-aspetto` = `chiaro` | `scuro` | `sistema` e `color-scheme` coerente, scritti dal server senza lampo al caricamento (dal layout radice con il cookie `familynest_aspetto`, copia di `profiles.appearance` riallineata dal layout di `(app)`: decisione 1 di #623).
+- **Le pagine senza account seguono il tema del sistema** (`data-aspetto="sistema"`): accesso, primo avvio prima dell'account, invito, lista dei desideri aperta da link, informativa, termini. D7 dice che il tema scuro c'è su tutti i formati e la tavola dell'accesso al buio (`computer/accesso-profilo-impostazioni-p12-16/03-accesso-scuro`, tablet `orizzontale-comandi-44-px/09-…-scuro`, `verticale/04-accesso-scuro`) è approvata. Restano chiare solo le mail. La riga di prima («le pagine pubbliche restano chiare») è superata (decisione 3 di #623).
+- La tavolozza scura c'è (D7: tema scuro al lancio, 73 ruoli in `docs/design/tavolozza.md`, più i 2 del Passo 17), ma nessuna specifica di F4b, F4c o F5 la porta nei token: arriva con un lavoro condiviso a parte, che userà il gancio `data-aspetto` (domanda 1).
+- «Telefono» o «computer» nei testi segue la forma della finestra (soglie di D8, 506 §1): con la forma del telefono (fino a 899 px, o alta meno di 600) «telefono», anche sul tablet in verticale (tavola `docs/design/tablet/verticale/13`: «Come il telefono»); con la forma del computer (da 900 px e alta almeno 600) «computer». Il testo cambia se la finestra cambia forma (rotazione del tablet).
 
 ## §5 Notifiche (`cb1-45`; computer `05`)
 

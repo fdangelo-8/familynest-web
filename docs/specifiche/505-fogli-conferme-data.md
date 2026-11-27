@@ -33,7 +33,13 @@ Compatibilità: nessun file di pagina cambia. `Sheet` tiene `title`, `ariaLabel`
 | Chiusura          | X, Esc, tocco sul velo e trascinamento verso il basso dalla testata oltre il 25% (D-5, domanda 3); con `onBack` tornano indietro come oggi; con `locked` niente                                                                                                                                                        |
 | Fuoco             | come oggi (`initialFocus: "field"`): primo campo, altrimenti il titolo; resta dentro; alla chiusura torna a chi l'ha aperto                                                                                                                                                                                            |
 | Fogli sopra fogli | il secondo apre il suo velo sopra il primo (`.velo--sopra-foglio`); Esc chiude solo quello sopra                                                                                                                                                                                                                       |
-| Da 1024 px        | stesso contenuto in una modale centrata (meccanica di oggi); testata uguale (X a sinistra, titolo al centro, azione a destra). Larghezza e punto di passaggio restano quelli di oggi finché F5 (#506) non porta `--size-finestra` e i punti di `computer.md` (domanda 7)                                               |
+| Da 900 px         | stesso contenuto in una modale centrata (meccanica di oggi); testata uguale (X a sinistra, titolo al centro, azione a destra). Larghezza e punto di passaggio: vedi sotto, «Soglie di D8» (domanda 7)                                                                                                                  |
+
+**Soglie di D8 (aggiunta del 27/11; risposte 207, 214 e 217 in `docs/design/tablet/decisioni.md`).**
+
+- **Punto di passaggio:** `useIsDesktop()` è vero con `(min-width: 900px) and (min-height: 600px)` e falso con la finestra fino a 899 px **o** alta meno di 600: a 899 × 844 e a 1280 × 560 si apre il foglio dal basso, a 900 × 844 e a 1280 × 800 la modale (CA-21 di #618). Il valore 1024 di prima è superato. F5 (#506 §1) sposta poi la condizione in `src/lib/breakpoints.ts` senza cambiarla. La larghezza della modale resta quella di oggi finché F5 non porta `--size-finestra`.
+- **Tablet in verticale** (fino a 899 px, finestra più larga di 640 px più i margini): foglio dal basso largo al massimo 640 px, centrato, con il velo ai lati (tavole `docs/design/tablet/verticale/09`, `10`). Movimento come la riga «Movimento»: la nota della tavola dice 240 ms, resta il token `--durata-normale`. Ruotando il tablet il foglio diventa finestra (o pannello, per il dettaglio) con quello che si era scritto, e viceversa (506 §1, «Rotazione»).
+- **Tocco:** X, azione scritta, «Annulla» e azione del piede hanno l'area di 44 × 44 px su tutti i formati, anche nella modale da computer; col dito sul tablet in orizzontale «Annulla» e «Salva» sono alti 44 anche nel disegno (`orizzontale-comandi-44-px/11`).
 
 ## §3 Dialogo di conferma
 
@@ -63,7 +69,7 @@ Solo lettura: niente «In due direzioni». Il nome del servizio è l'unico dato 
 
 **Campo.** Ha l'aspetto del campo di F4a con l'etichetta dentro; è un `button` con `aria-haspopup="dialog"` e nome «<etichetta>, <valore>» («Giorno, Mercoledì 18 novembre»), o solo l'etichetta se è vuoto. Valore mostrato con `formatFieldDay`: giorno della settimana con l'iniziale maiuscola, numero, mese («Mercoledì 18 novembre»); l'anno solo se diverso da quello di oggi a Roma («Lunedì 4 gennaio 2027»). Il valore nel codice è `AAAA-MM-GG`, un giorno di calendario a Roma (come oggi). Mai `<input type="date">`.
 
-**Dove si apre.** Sotto 1024 px: un `Sheet` di §2 con titolo = etichetta del campo, senza piede né azione. Da 1024 px: un riquadro sotto il campo, allineato a sinistra (sopra se sotto non c'è posto), largo 22,5rem, fondo `--color-superficie`, raggio `--radius-l`, `--shadow-menu`, `padding: var(--space-4)`; `role="dialog"` con nome = etichetta; si chiude con Esc o con un clic fuori.
+**Dove si apre.** Con la forma del telefono (fino a 899 px, o alta meno di 600: soglie di D8, come `useIsDesktop()` di §2; il 1024 di prima è superato): un `Sheet` di §2 con titolo = etichetta del campo, senza piede né azione. Con la forma del computer (da 900 px e alta almeno 600): un riquadro sotto il campo, allineato a sinistra (sopra se sotto non c'è posto), largo 22,5rem, fondo `--color-superficie`, raggio `--radius-l`, `--shadow-menu`, `padding: var(--space-4)`; `role="dialog"` con nome = etichetta; si chiude con Esc o con un clic fuori.
 
 **Calendario.** Come la griglia del mese di `ap1-23`, senza segni né filtro persone:
 
