@@ -188,6 +188,12 @@ test.describe("percorso di Esplora e delle impostazioni", () => {
       "aria-checked",
       String(shoppingStart),
     );
+    // Giulia lives in another house: her «Spesa» is read BEFORE Marco's tap,
+    // so the isolation check below can compare it after.
+    const giuliaShoppingBefore = await startingOf(
+      bianchi.users["Giulia"]!.client,
+      "shopping",
+    );
     await shopping.click();
     await expect(shopping).toHaveAttribute(
       "aria-checked",
@@ -236,12 +242,17 @@ test.describe("percorso di Esplora e delle impostazioni", () => {
       await other.goto("/impostazioni");
       await expect(h1(other)).toHaveText("Casa Bianchi");
       await waitHydrated(switchOf(other, "Spesa"));
-      // Marco's choice does not reach her: she keeps what the database gave
-      // her (read as Giulia, so it is the value she started with).
+      // Marco's tap does not reach her: she still has the value read before
+      // his click, and the database still holds it now.
       await expect(switchOf(other, "Spesa")).toHaveAttribute(
         "aria-checked",
-        String(await startingOf(bianchi.users["Giulia"]!.client, "shopping")),
+        String(giuliaShoppingBefore),
       );
+      const giuliaShoppingAfter = await startingOf(
+        bianchi.users["Giulia"]!.client,
+        "shopping",
+      );
+      expect(giuliaShoppingAfter).toBe(giuliaShoppingBefore);
       const html = await (await other.request.get("/impostazioni")).text();
       for (const forbidden of [
         /Casa D(?:'|&#x27;|&#39;|\\u0027)Angelo/,
