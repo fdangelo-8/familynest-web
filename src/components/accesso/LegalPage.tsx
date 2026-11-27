@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
 import { Icon, type IconName } from "@/components/ui/Icon/Icon";
+import { BRAND } from "@/lib/brand";
 
 /**
  * Text-only legal page (terms, privacy), without the app frame. Until
@@ -24,7 +25,7 @@ export function LegalPage({
         </Link>
       </div>
       <div className="intestazione">
-        <p className="intestazione__sopra">FamilyNest</p>
+        <p className="intestazione__sopra">{BRAND.full}</p>
         <h1 className="intestazione__titolo t-titolo-pagina">{title}</h1>
       </div>
       <EmptyState

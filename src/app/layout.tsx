@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Figtree } from "next/font/google";
 import { IconSprite } from "@/components/ui/Icon/IconSprite";
 import { ToastProvider } from "@/components/ui/Toast/ToastProvider";
+import { BRAND, brandDescription, pageTitle } from "@/lib/brand";
 import { getLocale } from "@/lib/i18n";
 import "./globals.css";
 import "./components.css";
@@ -21,8 +22,9 @@ const figtree = Figtree({
 });
 
 export const metadata: Metadata = {
-  title: "FamilyNest",
-  description: "FamilyNest — l'organizer per la tua famiglia",
+  title: pageTitle(),
+  applicationName: BRAND.full,
+  description: brandDescription(),
 };
 
 // viewport-fit=cover lets the bars use the safe areas of phones.

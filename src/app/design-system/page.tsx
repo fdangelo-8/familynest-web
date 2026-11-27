@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import { BRAND } from "@/lib/brand";
 import { notFound } from "next/navigation";
 import { Gallery } from "./Gallery";
 
 export const metadata: Metadata = {
-  title: "Design system · FamilyNest",
+  title: `Design system · ${BRAND.full}`,
   robots: "noindex",
 };
 

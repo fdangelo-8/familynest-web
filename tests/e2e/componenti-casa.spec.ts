@@ -12,11 +12,12 @@ import {
 // Everything runs on the design-system gallery (no data, no login), on the
 // pure functions of app-routes.ts and on static checks of the source files.
 // Colors (#196): ink = rgb(16, 38, 42), ink-2 = rgb(85, 104, 108),
-// night-2 = rgb(42, 41, 37), milk = rgb(244, 242, 236).
+// #634: the mouse over a full control is --color-azione = rgb(15, 61, 68)
+// and the text over it --color-latte = rgb(255, 255, 255).
 
 const INK = "rgb(16, 38, 42)";
-const NIGHT_2 = "rgb(42, 41, 37)";
-const MILK = "rgb(244, 242, 236)";
+const NIGHT_2 = "rgb(15, 61, 68)";
+const MILK = "rgb(255, 255, 255)";
 
 const tid = (page: Page, id: string) => page.getByTestId(id);
 
@@ -72,13 +73,14 @@ test.describe("Spunta tonda", () => {
     await expect(tondo).toHaveClass(/(^|\s)tondo-spunta(\s|$)/);
     await expect(tondo).not.toHaveClass(/(^|\s)casella(\s|$)/);
     const box = await tondo.boundingBox();
-    expect(box?.width).toBeCloseTo(22, 0);
-    expect(box?.height).toBeCloseTo(22, 0);
+    // F4b (#504): the neutral tick is a 24 px circle (it was 22 px).
+    expect(box?.width).toBeCloseTo(24, 0);
+    expect(box?.height).toBeCloseTo(24, 0);
     const radius = await css(tondo, "border-top-left-radius");
     const radiusPx = radius.endsWith("%")
-      ? (parseFloat(radius) / 100) * 22
+      ? (parseFloat(radius) / 100) * 24
       : parseFloat(radius);
-    expect(radiusPx).toBeGreaterThanOrEqual(11);
+    expect(radiusPx).toBeGreaterThanOrEqual(12);
     expect(await css(tondo.locator(".icona"), "opacity")).toBe("0");
   });
 
@@ -390,7 +392,12 @@ test.describe("Toast con grassetto all'inizio e icona a scelta", () => {
     const contatore = tid(page, "toast-annullato");
     await expect(contatore).toHaveText("Annullato: 0");
     await tid(page, "toast-mostra-inizio").click();
-    await page.getByRole("button", { name: "Annulla" }).click();
+    // #503 (F4a), CA-31: la galleria ha ora altri «Annulla» (esempi 1 e 2),
+    // quindi il pulsante si cerca dentro il messaggio.
+    await page
+      .getByTestId("toast")
+      .getByRole("button", { name: "Annulla" })
+      .click();
     await expect(page.getByTestId("toast")).toHaveCount(0);
     await expect(contatore).toHaveText("Annullato: 1");
   });
@@ -411,12 +418,15 @@ test.describe("Toast con grassetto all'inizio e icona a scelta", () => {
     await expect(toast.getByRole("button", { name: "Annulla" })).toHaveCount(0);
   });
 
-  test("CA-22: il toast esistente mantiene icona check e grassetto finale", async ({
+  test("CA-22: il toast esistente mantiene il grassetto finale; senza icon non ha più la spunta", async ({
     page,
   }) => {
     await tid(page, "toast-mostra").click();
     const toast = page.getByTestId("toast");
-    await expect(toast.locator("svg use")).toHaveAttribute("href", /#i-check$/);
+    // #503 (F4a), CA-16 e domanda 7: senza `icon` il messaggio non mostra
+    // nessuna icona (prima mostrava la spunta).
+    await expect(toast).toBeVisible();
+    await expect(toast.locator("svg")).toHaveCount(0);
     const testo = toast.locator(".toast__testo");
     await expect(testo).toHaveText("Fatto: Chiamare il commercialista");
     expect(await testo.evaluate((el) => el.lastElementChild?.tagName)).toBe(
@@ -490,7 +500,9 @@ test.describe("Rotte di Casa e segnaposto", () => {
       const file = `src/app/(app)/casa/${dir}/page.tsx`;
       expect(existsSync(file), file).toBe(true);
       const source = readFileSync(file, "utf8");
-      expect(source, file).toContain(`title: "FamilyNest · Casa · ${label}"`);
+      expect(source, file).toContain('import { pageTitle } from "@/lib/brand"');
+      expect(source, file).toContain(`title: pageTitle("Casa", "${label}")`);
+      expect(source, file).not.toContain('title: "FamilyNest');
       expect(source, file).toContain(
         'import { CasaPage } from "@/components/casa/CasaPage"',
       );
@@ -687,9 +699,16 @@ test.describe("Accessibilità e regole CSS", () => {
         // Approved difference (#313, text up to 200%): .selettore has
         // min-height instead of height, so a larger text does not overflow it.
         const enlargedText = rule.replace(";height:", ";min-height:");
+        // Approved difference (#634, dark theme): a full ground is
+        // --color-pieno, not --color-inchiostro (spec 634, §3 A).
+        const fullGround = rule.replace(
+          "background:var(--color-inchiostro)",
+          "background:var(--color-pieno)",
+        );
         return !(
           (rule.startsWith(".campo-rapido|") && copied.has(approved)) ||
-          (rule.startsWith(".selettore|") && copied.has(enlargedText))
+          (rule.startsWith(".selettore|") && copied.has(enlargedText)) ||
+          copied.has(fullGround)
         );
       });
     expect(missing).toEqual([]);
@@ -699,13 +718,13 @@ test.describe("Accessibilità e regole CSS", () => {
 // ------------------------------------------------------------------ 8. Touch areas
 
 test.describe("Aree di tocco", () => {
-  test("CA-35: il tondo resta 22 x 22 e ha un ::before invisibile di 44 px", async ({
+  test("CA-35: il tondo è 24 x 24 (F4b, #504) e ha un ::before invisibile di 44 px", async ({
     page,
   }) => {
     const tondo = tid(page, "tondo-vuoto");
     const box = await tondo.boundingBox();
-    expect(box?.width).toBeCloseTo(22, 0);
-    expect(box?.height).toBeCloseTo(22, 0);
+    expect(box?.width).toBeCloseTo(24, 0);
+    expect(box?.height).toBeCloseTo(24, 0);
     expect(await css(tondo, "position")).toBe("relative");
     expect(await css(tondo, "content", "::before")).toMatch(/^(""|"")$/);
     expect(await css(tondo, "position", "::before")).toBe("absolute");
@@ -843,12 +862,12 @@ test.describe("Aree di tocco", () => {
     }
   });
 
-  test("CA-41: l'aspetto non cambia a nessuna larghezza (tondo 22 px, voci 32 px)", async ({
+  test("CA-41: l'aspetto non cambia a nessuna larghezza (tondo 24 px dal F4b, voci 32 px)", async ({
     page,
   }) => {
     const tondo = await tid(page, "tondo-vuoto").boundingBox();
-    expect(tondo?.width).toBeCloseTo(22, 0);
-    expect(tondo?.height).toBeCloseTo(22, 0);
+    expect(tondo?.width).toBeCloseTo(24, 0);
+    expect(tondo?.height).toBeCloseTo(24, 0);
     const voci = tid(page, "selettore-link").locator(".selettore__voce");
     for (let i = 0; i < 3; i += 1) {
       expect((await voci.nth(i).boundingBox())?.height).toBeCloseTo(32, 0);

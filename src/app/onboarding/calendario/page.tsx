@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageTitle } from "@/lib/brand";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
@@ -19,7 +20,7 @@ import { LINK_RESULT_COOKIE, parseLinkResult } from "@/lib/calendar-sync/oauth";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
-  title: "FamilyNest · Porta qui il tuo calendario",
+  title: pageTitle("Porta qui il tuo calendario"),
 };
 
 /**

@@ -44,67 +44,78 @@
   --c: var(--color-membro-corallo);
   --c-tinta: var(--color-membro-corallo-tinta);
   --c-corsia: var(--color-membro-corallo-corsia);
-  --c-iniziale: var(--color-inchiostro);
+  --c-iniziale: var(--color-iniziale);
+  --c-spento: color-mix(in srgb, var(--c) 30%, var(--color-carta));
 }
 .membro-glicine {
   --c: var(--color-membro-glicine);
   --c-tinta: var(--color-membro-glicine-tinta);
   --c-corsia: var(--color-membro-glicine-corsia);
-  --c-iniziale: var(--color-inchiostro);
+  --c-iniziale: var(--color-iniziale);
+  --c-spento: color-mix(in srgb, var(--c) 30%, var(--color-carta));
 }
 .membro-salvia {
   --c: var(--color-membro-menta);
   --c-tinta: var(--color-membro-menta-tinta);
   --c-corsia: var(--color-membro-menta-corsia);
-  --c-iniziale: var(--color-inchiostro);
+  --c-iniziale: var(--color-iniziale);
+  --c-spento: color-mix(in srgb, var(--c) 30%, var(--color-carta));
 }
 .membro-cobalto {
   --c: var(--color-membro-blu);
   --c-tinta: var(--color-membro-blu-tinta);
   --c-corsia: var(--color-membro-blu-corsia);
-  --c-iniziale: var(--color-bianco);
+  --c-iniziale: var(--color-iniziale-blu);
+  --c-spento: color-mix(in srgb, var(--c) 30%, var(--color-carta));
 }
 .membro-zafferano {
   --c: var(--color-membro-ambra);
   --c-tinta: var(--color-membro-ambra-tinta);
   --c-corsia: var(--color-membro-ambra-corsia);
-  --c-iniziale: var(--color-inchiostro);
+  --c-iniziale: var(--color-iniziale);
+  --c-spento: color-mix(in srgb, var(--c) 30%, var(--color-carta));
 }
 .membro-lampone {
   --c: var(--color-membro-sabbia);
-  --c-tinta: var(--color-membro-neutro-tinta);
+  --c-tinta: var(--color-membro-sabbia-tinta);
   --c-corsia: var(--color-membro-sabbia-corsia);
-  --c-iniziale: var(--color-inchiostro);
+  --c-iniziale: var(--color-iniziale);
+  --c-spento: color-mix(in srgb, var(--c) 30%, var(--color-carta));
 }
 .membro-ceruleo {
   --c: var(--color-membro-azzurro);
-  --c-tinta: var(--color-membro-neutro-tinta);
+  --c-tinta: var(--color-membro-azzurro-tinta);
   --c-corsia: var(--color-membro-azzurro-corsia);
-  --c-iniziale: var(--color-inchiostro);
+  --c-iniziale: var(--color-iniziale);
+  --c-spento: color-mix(in srgb, var(--c) 30%, var(--color-carta));
 }
 .membro-peonia {
   --c: var(--color-membro-rosa);
-  --c-tinta: var(--color-membro-neutro-tinta);
+  --c-tinta: var(--color-membro-rosa-tinta);
   --c-corsia: var(--color-membro-rosa-corsia);
-  --c-iniziale: var(--color-inchiostro);
+  --c-iniziale: var(--color-iniziale);
+  --c-spento: color-mix(in srgb, var(--c) 30%, var(--color-carta));
 }
 .membro-basilico {
   --c: var(--color-membro-ardesia);
-  --c-tinta: var(--color-membro-neutro-tinta);
+  --c-tinta: var(--color-membro-ardesia-tinta);
   --c-corsia: var(--color-membro-ardesia-corsia);
-  --c-iniziale: var(--color-bianco);
+  --c-iniziale: var(--color-iniziale-blu);
+  --c-spento: color-mix(in srgb, var(--c) 30%, var(--color-carta));
 }
 .membro-cannella {
   --c: var(--color-membro-cannella);
   --c-tinta: var(--color-membro-cannella-tinta);
   --c-corsia: var(--color-membro-cannella-corsia);
-  --c-iniziale: var(--color-inchiostro);
+  --c-iniziale: var(--color-iniziale);
+  --c-spento: color-mix(in srgb, var(--c) 30%, var(--color-carta));
 }
 .membro-neutro {
   --c: var(--color-membro-neutro);
   --c-tinta: var(--color-membro-neutro-tinta);
   --c-corsia: var(--color-membro-neutro-corsia);
-  --c-iniziale: var(--color-inchiostro);
+  --c-iniziale: var(--color-iniziale);
+  --c-spento: color-mix(in srgb, var(--c) 30%, var(--color-carta));
 }
 .membro-insieme {
   --c-iniziale: var(--color-inchiostro);
@@ -270,7 +281,7 @@
   width: var(--size-pallino-urgente);
   height: var(--size-pallino-urgente);
   border-radius: var(--radius-tondo);
-  background: var(--color-allerta);
+  background: var(--color-allerta-pieno);
   box-shadow: 0 0 0 var(--space-half) var(--color-superficie);
 }
 .btn-icona--carta {
@@ -341,14 +352,14 @@
   width: var(--space-4);
   height: var(--space-half);
   border-radius: var(--radius-tondo);
-  background: var(--color-inchiostro);
+  background: var(--color-pieno);
 }
 
 .btn-aggiungi {
   min-height: var(--size-barra); /* #313 */
   border: 0;
   border-radius: var(--radius-l);
-  background: var(--color-inchiostro);
+  background: var(--color-pieno);
   color: var(--color-latte);
   display: inline-flex;
   align-items: center;
@@ -363,7 +374,7 @@
   height: var(--size-etichetta);
   border-radius: var(--radius-s);
   background: var(--color-latte);
-  color: var(--color-inchiostro);
+  color: var(--color-adesso-testo);
   display: grid;
   place-items: center;
 }
@@ -410,7 +421,7 @@
   color: var(--color-inchiostro-2);
 }
 .nav-alto__voce.is-attiva {
-  background: var(--color-inchiostro);
+  background: var(--color-pieno);
   color: var(--color-latte);
 }
 .nav-alto__azioni {
@@ -528,7 +539,7 @@
 }
 .selettore__voce[aria-pressed="true"],
 .selettore__voce[aria-selected="true"] {
-  background: var(--color-inchiostro);
+  background: var(--color-pieno);
   color: var(--color-latte);
 }
 .selettore__conteggio {
@@ -725,7 +736,7 @@
   min-height: var(--size-controllo); /* #313 */
   border: 0;
   border-radius: var(--radius-m);
-  background: var(--color-carta);
+  background: var(--color-carta-2); /* #503 */
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -891,7 +902,7 @@
   cursor: pointer;
 }
 .puntina[aria-pressed="true"] {
-  background: var(--color-inchiostro);
+  background: var(--color-pieno);
   color: var(--color-latte);
 }
 .scheda-modulo--scura .puntina {
@@ -899,7 +910,7 @@
 }
 .scheda-modulo--scura .puntina[aria-pressed="true"] {
   background: var(--color-latte);
-  color: var(--color-inchiostro);
+  color: var(--color-adesso-testo);
 }
 
 /* Porta (blocco scuro che porta in un'altra parte dell'app) */
@@ -941,7 +952,7 @@
   height: var(--size-tocco);
   border-radius: var(--radius-m);
   background: var(--color-latte);
-  color: var(--color-inchiostro);
+  color: var(--color-adesso-testo);
   display: grid;
   place-items: center;
 }
@@ -1195,11 +1206,12 @@ button.riga-lista {
   color: var(--color-inchiostro-2);
   display: inline-flex;
 }
+/* F4b (#504, domanda 1): il fatto si attenua e non si barra; il pallino della
+   persona e la riga sotto restano come sono. Il «preso» della Spesa
+   (.riga-lista--preso) resta barrato (domanda 6). */
 .riga-lista--fatto .riga-lista__titolo {
   color: var(--color-inchiostro-2);
-  text-decoration: line-through;
-  text-decoration-thickness: var(--border-medio);
-  font-weight: var(--weight-medio);
+  text-decoration: none;
 }
 .riga-lista--cliccabile {
   cursor: pointer;
@@ -1314,7 +1326,7 @@ button.riga-lista {
   width: var(--size-pallino);
   height: var(--size-pallino);
   border-radius: var(--radius-tondo);
-  background: var(--color-allerta);
+  background: var(--color-allerta-pieno);
 }
 
 .riga-regalo {
@@ -1534,12 +1546,19 @@ button.riga-lista {
   ); /* #313: sotto i 20 px, così al 100% resta alta 20 px */
 }
 .etichetta--scura {
-  background: var(--color-inchiostro);
+  background: var(--color-pieno);
   color: var(--color-latte);
 }
+/* «Da verificare» (F4b #504, richiesta da A2): rosso su rosso tenue, 600 12/16,
+   alta 24. Prima era un rosso pieno, senza uso nelle pagine. */
 .etichetta--allerta {
-  background: var(--color-allerta);
-  color: var(--color-bianco);
+  min-height: var(--size-etichetta);
+  border-radius: var(--radius-xs);
+  background: var(--color-allerta-fondo);
+  color: var(--color-allerta);
+  font-size: var(--text-tag-size);
+  line-height: var(--text-tag-line);
+  font-weight: var(--weight-semi);
 }
 .etichetta--insieme {
   background: var(--color-insieme);
@@ -1550,7 +1569,7 @@ button.riga-lista {
   width: var(--size-pallino-urgente);
   height: var(--size-pallino-urgente);
   border-radius: var(--radius-tondo);
-  background: var(--color-allerta);
+  background: var(--color-allerta-pieno);
   display: inline-block;
   flex: none;
 }
@@ -1583,42 +1602,47 @@ button.riga-lista {
 .gruppo-chip--scorre .chip {
   flex-shrink: 0; /* #313 */
 }
+/* Pastiglia (F4b, #504): alta 40 (area di tocco 44 con ::before), capsula,
+   bordo sottile; scelta = --color-pieno con --color-latte. */
 .chip {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  min-height: var(--size-chip); /* #313 */
-  padding: var(--space-0) var(--space-3);
-  border-radius: var(--radius-m);
+  min-height: var(--size-pastiglia); /* #313 */
+  padding: var(--space-0) var(--space-4);
+  border-radius: var(--radius-capsula);
   background: var(--color-superficie);
-  box-shadow: inset 0 0 0 var(--border-sottile) var(--color-filo);
-  border: 0;
-  font-size: var(--text-nota-size);
-  font-weight: var(--weight-forte);
+  border: var(--border-sottile) solid var(--color-filo-2);
+  font-size: var(--text-controllo-size);
+  font-weight: var(--weight-semi);
   color: var(--color-inchiostro);
   cursor: pointer;
 }
 .chip[aria-pressed="true"] {
-  background: var(--color-inchiostro);
+  background: var(--color-pieno);
+  border-color: transparent; /* il fondo passa sotto il bordo: stesso colore, anche al mouse */
   color: var(--color-latte);
-  box-shadow: none;
 }
 .chip--persona {
-  padding-left: var(--space-1);
+  padding-inline-start: var(--space-1);
 }
-.chip--persona[aria-pressed="true"] {
-  background: var(--color-superficie);
-  color: var(--color-inchiostro);
-  box-shadow: inset 0 0 0 var(--border-medio) var(--color-inchiostro);
+/* Il pallino della persona tiene il suo colore e la sua iniziale anche nella
+   pastiglia scelta, con un anello chiaro per staccarsi dal pieno. */
+.chip--persona[aria-pressed="true"] .avatar {
+  box-shadow: 0 0 0 var(--border-medio) var(--color-latte);
 }
 .chip--statico {
   background: var(--color-carta);
-  box-shadow: none;
+  border-color: transparent;
   cursor: default;
 }
 .chip__conteggio {
-  font-weight: var(--weight-semi);
-  opacity: var(--opacity-passato);
+  font-weight: var(--weight-normale);
+  color: var(--color-inchiostro-2);
+  opacity: 1;
+}
+.chip[aria-pressed="true"] .chip__conteggio {
+  color: var(--color-latte);
 }
 .chip__valore {
   font-family: var(--font-titoli);
@@ -1637,6 +1661,7 @@ button.riga-lista {
    ========================================================= */
 .btn-primary,
 .btn-secondary,
+.btn-quieto,
 .btn-chiaro {
   min-height: var(--size-azione); /* #313 */
   border: 0;
@@ -1652,18 +1677,32 @@ button.riga-lista {
   max-width: 100%; /* #313 */
   text-align: center;
 }
+/* Componenti 2.0 (#503): tre livelli di pulsante, raggio 14, 16/22 a 600 */
+.btn-primary,
+.btn-secondary,
+.btn-quieto {
+  border-radius: var(--radius-pulsante);
+  font-size: var(--text-controllo-size);
+  line-height: var(--text-controllo-line);
+  font-weight: var(--weight-semi);
+}
 .btn-primary {
-  background: var(--color-inchiostro);
+  background: var(--color-pieno);
   color: var(--color-latte);
 }
 .btn-secondary {
   background: var(--color-superficie);
   color: var(--color-inchiostro);
-  box-shadow: inset 0 0 0 var(--border-sottile) var(--color-filo-2);
+  /* Il filo da 1 px è interno: non cambia la misura e resta un anello visibile */
+  box-shadow: inset 0 0 0 var(--border-sottile) var(--color-inchiostro);
+}
+.btn-quieto {
+  background: var(--color-carta-2);
+  color: var(--color-inchiostro);
 }
 .btn-chiaro {
   background: var(--color-latte);
-  color: var(--color-inchiostro);
+  color: var(--color-adesso-testo);
 }
 .btn--pieno {
   width: 100%;
@@ -1676,6 +1715,7 @@ button.riga-lista {
 }
 .btn-primary:disabled,
 .btn-secondary:disabled,
+.btn-quieto:disabled,
 .btn-chiaro:disabled,
 .btn-primary[aria-disabled="true"] {
   opacity: var(--opacity-disabilitato);
@@ -1695,7 +1735,7 @@ button.riga-lista {
   height: var(--size-bottone-icona);
   border-radius: var(--radius-s);
   background: var(--color-latte);
-  color: var(--color-inchiostro);
+  color: var(--color-adesso-testo);
   display: grid;
   place-items: center;
 }
@@ -1725,8 +1765,8 @@ button.riga-lista {
   font-weight: var(--weight-forte);
   color: inherit;
   text-decoration: underline;
-  text-underline-offset: var(--space-1);
-  text-decoration-thickness: var(--border-medio);
+  text-underline-offset: var(--space-link);
+  text-decoration-thickness: var(--border-link);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -1745,18 +1785,20 @@ button.riga-lista {
   font-weight: var(--weight-forte);
   color: var(--color-allerta);
   text-decoration: underline;
-  text-underline-offset: var(--space-1);
+  text-underline-offset: var(--space-link);
+  text-decoration-thickness: var(--border-link);
   cursor: pointer;
   justify-self: center;
 }
 .btn-pericolo-pieno {
   min-height: var(--size-azione); /* #313 */
   border: 0;
-  border-radius: var(--radius-m);
-  background: var(--color-allerta);
-  color: var(--color-bianco);
-  font-size: var(--text-corpo-forte-size);
-  font-weight: var(--weight-pieno);
+  border-radius: var(--radius-pulsante);
+  background: var(--color-allerta-pieno);
+  color: var(--color-latte);
+  font-size: var(--text-controllo-size);
+  line-height: var(--text-controllo-line);
+  font-weight: var(--weight-semi);
   padding: var(--space-0) var(--space-5);
   cursor: pointer;
 }
@@ -1905,7 +1947,7 @@ button.riga-lista {
   box-shadow: inset 0 0 0 var(--border-medio) var(--color-inchiostro);
 }
 .campo-rapido--attivo .campo-rapido__piu {
-  background: var(--color-inchiostro);
+  background: var(--color-pieno);
   color: var(--color-latte);
 }
 
@@ -1954,7 +1996,7 @@ button.riga-lista {
   padding: var(--space-0);
 }
 .casella[aria-checked="true"] {
-  background: var(--color-inchiostro);
+  background: var(--color-pieno);
   box-shadow: none;
 }
 .casella .icona {
@@ -1978,7 +2020,7 @@ button.riga-lista {
   padding: var(--space-0);
 }
 .tondo-spunta[aria-checked="true"] {
-  background: var(--color-inchiostro);
+  background: var(--color-pieno);
   box-shadow: none;
 }
 .tondo-spunta .icona {
@@ -2021,7 +2063,7 @@ button.riga-lista {
   transition: left var(--durata-rapida) var(--curva);
 }
 .toggle[aria-checked="true"] {
-  background: var(--color-inchiostro);
+  background: var(--color-pieno);
 }
 .toggle[aria-checked="true"]::after {
   left: calc(
@@ -2033,17 +2075,20 @@ button.riga-lista {
   opacity: var(--opacity-disabilitato);
 }
 
+/* Scelte a schede (A) e tessere (B), F4b #504. A riposo bordo sottile grigio;
+   scelta = bordo di inchiostro più spesso, fondo appena più scuro e spunta in
+   cerchio pieno (si capisce anche senza colore). Il bordo cambia di spessore
+   e il padding compensa la differenza: niente si sposta. */
 .scelta {
   display: grid;
-  grid-template-columns: auto 1fr var(--size-casella);
+  grid-template-columns: auto minmax(0, 1fr) var(--size-icona-l);
   gap: var(--space-4);
   align-items: center;
   min-height: var(--size-scelta);
-  padding: var(--space-3) var(--space-4);
+  padding: calc(var(--space-4) - var(--border-sottile));
   border-radius: var(--radius-l);
   background: var(--color-superficie);
-  box-shadow: inset 0 0 0 var(--border-sottile) var(--color-filo);
-  border: 0;
+  border: var(--border-sottile) solid var(--color-filo-2);
   text-align: left;
   cursor: pointer;
   width: 100%;
@@ -2051,29 +2096,94 @@ button.riga-lista {
 }
 .scelta__titolo {
   display: block;
-  font-size: var(--text-sezione-size);
-  font-weight: var(--weight-forte);
+  font-size: var(--text-controllo-size);
+  line-height: var(--text-controllo-line);
+  font-weight: var(--weight-semi);
 }
 .scelta__info {
+  display: block;
   font-size: var(--text-nota-size);
+  line-height: var(--text-nota-line);
   color: var(--color-inchiostro-2);
 }
+/* La spunta: cerchio pieno con il segno, solo sulla scelta, sempre a destra
+   (spec. 504 §2). Nella scheda nuova è l'ultimo elemento; nelle schede
+   esistenti (profilo, calendari collegati) è il primo e va a destra con
+   order, sulla riga del titolo. */
+.scelta > .scelta__radio:last-child {
+  grid-column: 3;
+}
+.scelta > .scelta__radio:first-child {
+  order: 1;
+  grid-column: 3;
+  grid-row: 1;
+}
 .scelta__radio {
-  width: var(--size-casella);
-  height: var(--size-casella);
+  width: var(--size-icona-l);
+  height: var(--size-icona-l);
   border-radius: var(--radius-tondo);
-  box-shadow: inset 0 0 0 var(--border-medio) var(--color-filo-2);
+  background: var(--color-pieno);
+  display: grid;
+  place-items: center;
+  visibility: hidden;
+}
+.scelta__radio::after {
+  content: "";
+  width: var(--size-icona-s);
+  height: var(--size-icona-s);
+  background: var(--color-latte);
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E")
+    center / 100% 100% no-repeat;
+}
+.scelta[aria-checked="true"],
+.tessera-scelta[aria-checked="true"] {
+  border-width: var(--border-medio);
+  border-color: var(--color-inchiostro);
+  background: var(--color-scelta-tenue);
 }
 .scelta[aria-checked="true"] {
-  box-shadow: inset 0 0 0 var(--border-medio) var(--color-inchiostro);
+  padding: calc(var(--space-4) - var(--border-medio));
 }
-.scelta[aria-checked="true"] .scelta__radio {
-  box-shadow: inset 0 0 0 var(--size-radio-pieno) var(--color-inchiostro);
+.scelta[aria-checked="true"] .scelta__radio,
+.tessera-scelta[aria-checked="true"] .scelta__radio {
+  visibility: visible;
 }
 .gruppo-scelte {
   display: grid;
-  gap: var(--space-2);
+  gap: var(--space-3);
   align-content: start;
+}
+/* Tessere (B): griglia da due, icona e una parola; la spunta in alto a destra. */
+.tessere-scelta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+.tessera-scelta {
+  position: relative;
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: var(--space-3);
+  min-height: var(--size-scelta);
+  padding: calc(var(--space-4) - var(--border-sottile));
+  border-radius: var(--radius-l);
+  background: var(--color-superficie);
+  border: var(--border-sottile) solid var(--color-filo-2);
+  text-align: left;
+  cursor: pointer;
+  color: var(--color-inchiostro);
+  font-size: var(--text-controllo-size);
+  line-height: var(--text-controllo-line);
+  font-weight: var(--weight-semi);
+}
+.tessera-scelta[aria-checked="true"] {
+  padding: calc(var(--space-4) - var(--border-medio));
+}
+.tessera-scelta .scelta__radio {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
 }
 .cerchi-membri {
   display: flex;
@@ -2407,7 +2517,7 @@ button.riga-lista {
 }
 
 .skeleton {
-  background: var(--color-carta-2);
+  background: var(--color-scheletro);
   border-radius: var(--radius-s);
   animation: pulsa var(--durata-ampia) var(--curva) infinite alternate;
 }
@@ -2575,7 +2685,7 @@ button.riga-lista {
   font-size: var(--text-cella-size);
 }
 .striscia-giorni__giorno.is-oggi .striscia-giorni__numero {
-  background: var(--color-inchiostro);
+  background: var(--color-pieno);
   color: var(--color-latte);
 }
 .striscia-giorni__giorno.is-selezionato {
@@ -2662,7 +2772,7 @@ button.riga-lista {
   color: var(--color-allerta);
 }
 .griglia-mese__cella--oggi .griglia-mese__numero {
-  background: var(--color-inchiostro);
+  background: var(--color-pieno);
   color: var(--color-latte);
 }
 .griglia-mese__cella--selezionata {
@@ -2804,7 +2914,7 @@ button.riga-lista {
   left: calc(-1 * var(--space-1));
   right: var(--space-0);
   height: var(--space-half);
-  background: var(--color-allerta);
+  background: var(--color-allerta-pieno);
   z-index: var(--z-base);
 }
 .linea-adesso::before {
@@ -2815,7 +2925,7 @@ button.riga-lista {
   width: var(--space-2);
   height: var(--space-2);
   border-radius: var(--radius-tondo);
-  background: var(--color-allerta);
+  background: var(--color-allerta-pieno);
 }
 
 .griglia-settimana {
@@ -2851,7 +2961,7 @@ button.riga-lista {
   border-radius: var(--radius-l);
 }
 .griglia-settimana__giorno.is-oggi .griglia-settimana__numero {
-  background: var(--color-inchiostro);
+  background: var(--color-pieno);
   color: var(--color-latte);
   padding: var(--space-0) var(--space-2);
 }
@@ -2889,6 +2999,16 @@ button.riga-lista {
   font-size: var(--text-titolo-scheda-size);
   letter-spacing: var(--text-titolo-scheda-tracking);
 }
+/* #502 · Il marchio scritto: «family» 400 e «nest» 700, nel colore intorno */
+.marchio--scritta {
+  gap: 0;
+}
+.marchio__famiglia {
+  font-weight: var(--weight-normale);
+}
+.marchio__nido {
+  font-weight: var(--weight-pieno);
+}
 .adesivi {
   display: flex;
   flex-direction: column;
@@ -2903,7 +3023,7 @@ button.riga-lista {
   padding: var(--space-0) var(--space-5) var(--space-0) var(--space-2);
   border-radius: var(--radius-l);
   background: var(--c);
-  color: var(--color-inchiostro);
+  color: var(--color-adesso-testo);
   font-family: var(--font-titoli);
   font-weight: var(--weight-medio);
   font-size: var(--text-titolo-scheda-size);
@@ -2935,7 +3055,7 @@ button.riga-lista {
   font-family: var(--font-testo);
   font-size: var(--text-controllo-size);
   font-weight: var(--weight-semi);
-  color: var(--color-inchiostro);
+  color: var(--color-adesso-testo);
 }
 .adesivo .avatar {
   background: var(--color-avatar-su-colore);
@@ -2974,7 +3094,7 @@ button.riga-lista {
   background: var(--color-filo-2);
 }
 .tacche-passi__tacca.is-fatta {
-  background: var(--color-inchiostro);
+  background: var(--color-pieno);
 }
 .passo-onboarding {
   flex: 1;
@@ -3085,7 +3205,7 @@ button.riga-lista {
   color: var(--color-latte);
 }
 .passo-partenza.is-fatto .passo-partenza__cerchio {
-  background: var(--color-inchiostro);
+  background: var(--color-pieno);
   box-shadow: none;
 }
 
@@ -3134,7 +3254,7 @@ button.riga-lista {
   width: var(--size-tocco);
   height: var(--size-tocco);
   border-radius: var(--radius-m);
-  background: var(--color-inchiostro);
+  background: var(--color-pieno);
   color: var(--color-latte);
   display: grid;
   place-items: center;
@@ -3789,7 +3909,7 @@ button.riga-lista {
   color: var(--color-inchiostro);
 }
 .tema-notte .avviso :focus-visible {
-  outline-color: var(--color-info);
+  outline-color: var(--color-fuoco);
 }
 
 /* Link sottolineati dentro la frase legale (#11) */
@@ -3971,7 +4091,7 @@ main[tabindex="-1"]:focus {
   box-shadow: inset 0 0 0 var(--border-medio) var(--color-inchiostro);
 }
 .campo-rapido:focus-within .campo-rapido__piu {
-  background: var(--color-inchiostro);
+  background: var(--color-pieno);
   color: var(--color-latte);
 }
 
@@ -3991,11 +4111,11 @@ main[tabindex="-1"]:focus {
 }
 @media (hover: hover) {
   .strappo__lama:hover {
-    background: var(--color-notte-2);
+    background: var(--color-azione);
   }
 }
 .strappo__lama:active {
-  background: var(--color-notte-2);
+  background: var(--color-azione);
 }
 
 /* Disabilitato esteso a tutti i controlli */
@@ -4006,6 +4126,7 @@ main[tabindex="-1"]:focus {
 .selettore__voce:disabled,
 .scelta:disabled,
 .scelta[aria-disabled="true"],
+.tessera-scelta:disabled,
 .btn-icona:disabled,
 .btn-tenue:disabled,
 .btn-tratteggiato:disabled,
@@ -4013,6 +4134,7 @@ main[tabindex="-1"]:focus {
 .btn-pericolo:disabled,
 .btn-pericolo-pieno:disabled,
 .btn-secondary[aria-disabled="true"],
+.btn-quieto[aria-disabled="true"],
 .btn-chiaro[aria-disabled="true"],
 .btn-tenue[aria-disabled="true"],
 .btn-link[aria-disabled="true"] {
@@ -4029,6 +4151,7 @@ main[tabindex="-1"]:focus {
   .btn-primary,
   .btn-aggiungi,
   .btn-secondary,
+  .btn-quieto,
   .btn-chiaro,
   .btn-tenue,
   .btn-icona,
@@ -4046,15 +4169,16 @@ main[tabindex="-1"]:focus {
   .btn-pericolo-pieno:hover:not(:disabled, [aria-disabled="true"]) {
     background: var(--color-allerta-scuro); /* #52 */
   }
-  .btn-primary:hover:not(:disabled, [aria-disabled="true"]),
+  .btn-primary:hover:not(:disabled, [aria-disabled="true"]) {
+    background: var(--color-azione); /* #634 */
+  }
   .btn-aggiungi:hover:not(:disabled),
   .selettore:not(.selettore--carta)
     .selettore__voce[aria-pressed="true"]:hover:not(:disabled),
-  .chip:not(.chip--persona)[aria-pressed="true"]:hover:not(:disabled),
+  .chip[aria-pressed="true"]:hover:not(:disabled),
   .nav-alto__voce.is-attiva:hover {
-    background: var(--color-notte-2);
+    background: var(--color-azione);
   }
-  .btn-secondary:hover:not(:disabled, [aria-disabled="true"]),
   .btn-icona:hover:not(
       :disabled,
       [aria-disabled="true"],
@@ -4065,7 +4189,14 @@ main[tabindex="-1"]:focus {
   .scelta:hover:not(:disabled, [aria-disabled="true"]) {
     background: var(--color-carta);
   }
-  .btn-tenue:hover:not(:disabled, [aria-disabled="true"]),
+  /* #503: a filo con il mouse prende il fondo quieto, il quieto il filo */
+  .btn-secondary:hover:not(:disabled, [aria-disabled="true"]) {
+    background: var(--color-carta-2);
+  }
+  .btn-quieto:hover:not(:disabled, [aria-disabled="true"]),
+  .btn-tenue:hover:not(:disabled, [aria-disabled="true"]) {
+    background: var(--color-filo);
+  }
   .chip__togli:hover:not(:disabled),
   .btn-icona--carta:hover:not(:disabled),
   .btn-icona--piccolo:hover:not(:disabled) {
@@ -4094,11 +4225,17 @@ main[tabindex="-1"]:focus {
 }
 
 /* Premuto (anche sul touch): stesso fondo del passaggio del mouse */
-.btn-primary:active:not(:disabled, [aria-disabled="true"]),
+.btn-primary:active:not(:disabled, [aria-disabled="true"]) {
+  background: var(--color-azione); /* #634 */
+}
 .btn-aggiungi:active:not(:disabled) {
-  background: var(--color-notte-2);
+  background: var(--color-azione);
 }
 .btn-secondary:active:not(:disabled, [aria-disabled="true"]),
+.btn-quieto:active:not(:disabled, [aria-disabled="true"]),
+.btn-tenue:active:not(:disabled, [aria-disabled="true"]) {
+  background: var(--color-premuto); /* #503 */
+}
 .btn-icona:active:not(
     :disabled,
     [aria-disabled="true"],
@@ -4108,7 +4245,6 @@ main[tabindex="-1"]:focus {
 .scelta:active:not(:disabled, [aria-disabled="true"]) {
   background: var(--color-carta);
 }
-.btn-tenue:active:not(:disabled, [aria-disabled="true"]),
 .chip__togli:active:not(:disabled),
 .btn-icona--carta:active:not(:disabled),
 .btn-icona--piccolo:active:not(:disabled),
@@ -4123,8 +4259,8 @@ main[tabindex="-1"]:focus {
 }
 .selettore:not(.selettore--carta)
   .selettore__voce[aria-pressed="true"]:active:not(:disabled),
-.chip:not(.chip--persona)[aria-pressed="true"]:active:not(:disabled) {
-  background: var(--color-notte-2);
+.chip[aria-pressed="true"]:active:not(:disabled) {
+  background: var(--color-azione);
 }
 .chip:active:not(:disabled, [aria-pressed="true"], .chip--statico) {
   background: var(--color-carta);
@@ -4395,6 +4531,17 @@ div.blocco-orario {
 .gruppo-chip--scorre {
   padding: var(--space-1);
   margin: calc(-1 * var(--space-1));
+  /* F4b: una pastiglia che riceve il fuoco si ferma prima della sfumatura */
+  scroll-padding-inline: var(--space-12);
+}
+/* F4b: finché c'è altro a destra l'ultima pastiglia sfuma (ChipScroll). La
+   maschera usa solo l'alfa: il colore non conta. */
+.gruppo-chip--sfuma {
+  mask-image: linear-gradient(
+    to right,
+    var(--color-inchiostro) calc(100% - var(--space-12)),
+    transparent
+  );
 }
 
 /* Chip dell'intestazione desktop: vanno a capo invece di scorrere */
@@ -4800,7 +4947,7 @@ button.riga-lista {
 /* Anello di focus sulla scheda intera, anche su «Noi due» (sta fuori dalla
    scheda, sulla pagina chiara) */
 .scheda-modulo:has(> .scheda-modulo__link:focus-visible) {
-  outline: var(--border-medio) solid var(--color-info);
+  outline: var(--border-medio) solid var(--color-fuoco);
   outline-offset: var(--space-half);
 }
 
@@ -4850,7 +4997,7 @@ button.riga-lista {
     background: var(--color-carta);
   }
   .puntina[aria-pressed="true"]:not(:disabled, [aria-disabled="true"]):hover {
-    background: var(--color-notte-2);
+    background: var(--color-azione);
   }
   .scheda-modulo--scura
     .puntina:not(
@@ -4869,7 +5016,7 @@ button.riga-lista {
   background: var(--color-carta);
 }
 .puntina[aria-pressed="true"]:not(:disabled, [aria-disabled="true"]):active {
-  background: var(--color-notte-2);
+  background: var(--color-azione);
 }
 .scheda-modulo--scura
   .puntina:not(
@@ -5065,17 +5212,17 @@ button.griglia-mese__cella--selezionata {
 }
 /* Puntina fissata (bottone icona premuto): pieno, come .puntina fissata */
 .btn-icona[aria-pressed="true"] {
-  background: var(--color-inchiostro);
+  background: var(--color-pieno);
   color: var(--color-latte);
   box-shadow: none;
 }
 @media (hover: hover) {
   .btn-icona[aria-pressed="true"]:hover:not(:disabled, [aria-disabled="true"]) {
-    background: var(--color-notte-2);
+    background: var(--color-azione);
   }
 }
 .btn-icona[aria-pressed="true"]:active:not(:disabled, [aria-disabled="true"]) {
-  background: var(--color-notte-2);
+  background: var(--color-azione);
 }
 
 /* Oggi (#30, richiesta condivisa 231): le due disposizioni stanno nel codice,
@@ -5141,7 +5288,7 @@ a.parola--insieme:active {
 /* 1. Anello di focus del campo di ricerca: il bordo di 2 px c'è sempre,
       senza anello il focus non si vedrebbe */
 .campo-ricerca:focus-within {
-  outline: var(--border-medio) solid var(--color-info);
+  outline: var(--border-medio) solid var(--color-fuoco);
   outline-offset: var(--space-half);
 }
 
@@ -5533,14 +5680,22 @@ a.riga-regalo__titolo::before {
 }
 
 /* #460 · Animali: «Giorni», sette chip da lunedì in una griglia */
+/* F4b (#504): sette tondi da 44 su una riga; scelto = --color-pieno con
+   --color-latte (la pastiglia scelta). */
 .scelta-giorni {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: var(--space-2) var(--space-1);
+  grid-template-columns: repeat(7, minmax(var(--size-tocco), 1fr));
+  justify-items: center;
+  gap: var(--space-2) var(--space-0);
 }
 .scelta-giorni .chip {
   justify-content: center;
+  min-width: var(--size-tocco);
+  min-height: var(--size-tocco);
+  aspect-ratio: 1;
+  border-radius: var(--radius-tondo);
   padding-inline: var(--space-0);
+  font-weight: var(--weight-normale);
 }
 
 /* #460 · Animali: l'elenco del turno è un ol, senza rientro né numeri del browser */
@@ -5815,7 +5970,10 @@ body {
     white-space: normal;
     min-height: calc(var(--size-controllo) - 2 * var(--space-1));
   }
-  /* #460 · «Giorni»: quattro colonne invece di sette */
+}
+/* #460 · «Giorni»: quattro colonne invece di sette quando i sette tondi da 44
+   non ci stanno più (7 × 44 = 308 px = 19,25 rem; F4b #504, prima 17 rem) */
+@container selettore (width < 19.25rem) {
   .scelta-giorni {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
@@ -5849,7 +6007,8 @@ body {
       .selettore,
       .btn--piccolo,
       .btn-tenue,
-      .btn-link
+      .btn-link,
+      form
     ) {
     grid-column: -3 / -1;
     justify-self: start;
@@ -5886,5 +6045,791 @@ body {
     margin-block-start: calc(
       (var(--text-controllo-line) - var(--size-icona-m)) / 2
     );
+  }
+}
+
+/* =========================================================
+   COMPONENTI 2.0 DI BASE (F4a, #503)
+   Regole dopo tutte le altre, sulle stesse classi: a parità di
+   specificità vincono queste.
+   ========================================================= */
+
+/* Campi: l'etichetta sta dentro la scatola. Vuoto e senza fuoco, occupa il
+   posto del valore alla sua misura; pieno o con il fuoco, sale in alto e
+   diventa piccola. Il bordo è un filo interno: col fuoco passa a 2 px senza
+   spostare il contenuto. */
+.campo__scatola {
+  position: relative;
+  min-height: var(--size-campo);
+  border-radius: var(--radius-m);
+  background: var(--color-superficie);
+  box-shadow: inset 0 0 0 var(--border-sottile) var(--color-filo-campo);
+}
+.campo__scatola:focus-within {
+  box-shadow: inset 0 0 0 var(--space-half) var(--color-inchiostro);
+}
+.campo--errore .campo__scatola {
+  background: var(--color-allerta-fondo);
+  box-shadow: inset 0 0 0 var(--border-medio) var(--color-allerta);
+}
+.campo--errore .campo__scatola:focus-within {
+  box-shadow: inset 0 0 0 var(--space-half) var(--color-allerta);
+}
+.campo__scatola:has(.campo__input:disabled) {
+  opacity: var(--opacity-disabilitato);
+}
+.campo__scatola .campo__input {
+  display: block;
+  height: auto;
+  min-height: var(--size-campo);
+  border-radius: inherit;
+  background: transparent;
+  /* Lo stesso filo della scatola: il campo che ha il fuoco lo porta anche lui */
+  box-shadow: inset 0 0 0 var(--border-sottile) var(--color-filo-campo);
+  padding: calc(var(--space-2) + var(--text-etichetta-line)) var(--space-4)
+    var(--space-2);
+  font-size: var(--text-controllo-size);
+  line-height: var(--text-controllo-line);
+}
+.campo__scatola .campo__input:focus {
+  box-shadow: inset 0 0 0 var(--space-half) var(--color-inchiostro);
+}
+.campo--errore .campo__scatola .campo__input {
+  box-shadow: inset 0 0 0 var(--border-medio) var(--color-allerta);
+}
+.campo--errore .campo__scatola .campo__input:focus {
+  box-shadow: inset 0 0 0 var(--space-half) var(--color-allerta);
+}
+.campo__scatola .campo__input:disabled {
+  opacity: 1;
+}
+.campo__scatola textarea.campo__input {
+  min-height: calc(var(--size-riga-alta) + var(--space-4));
+}
+.campo__scatola.campo-password .campo__input {
+  padding-right: calc(var(--size-tocco) + var(--space-2));
+}
+.campo__scatola .campo__input:-webkit-autofill {
+  box-shadow:
+    inset 0 0 0 var(--border-sottile) var(--color-filo-campo),
+    inset 0 0 0 var(--size-riga-alta) var(--color-superficie);
+}
+.campo__scatola .campo__input:-webkit-autofill:focus {
+  box-shadow:
+    inset 0 0 0 var(--space-half) var(--color-inchiostro),
+    inset 0 0 0 var(--size-riga-alta) var(--color-superficie);
+}
+.campo--errore .campo__scatola .campo__input:-webkit-autofill {
+  box-shadow:
+    inset 0 0 0 var(--border-medio) var(--color-allerta),
+    inset 0 0 0 var(--size-riga-alta) var(--color-allerta-fondo);
+}
+.campo--errore .campo__scatola .campo__input:-webkit-autofill:focus {
+  box-shadow:
+    inset 0 0 0 var(--space-half) var(--color-allerta),
+    inset 0 0 0 var(--size-riga-alta) var(--color-allerta-fondo);
+}
+.campo__scatola > .campo__etichetta {
+  position: absolute;
+  top: var(--space-2);
+  inset-inline: var(--space-4);
+  margin: 0;
+  pointer-events: none;
+  font-size: var(--text-etichetta-size);
+  line-height: var(--text-etichetta-line);
+  font-weight: var(--weight-normale);
+  color: var(--color-inchiostro-2);
+  transition:
+    top var(--durata-rapida) var(--curva),
+    font-size var(--durata-rapida) var(--curva),
+    line-height var(--durata-rapida) var(--curva);
+}
+.campo:not(.campo--alto)
+  .campo__input:placeholder-shown:not(:focus)
+  ~ .campo__etichetta {
+  top: calc((var(--size-campo) - var(--text-controllo-line)) / 2);
+  font-size: var(--text-controllo-size);
+  line-height: var(--text-controllo-line);
+}
+.campo__errore {
+  font-weight: var(--weight-normale);
+}
+@media (prefers-reduced-motion: reduce) {
+  .campo__scatola > .campo__etichetta {
+    transition: none;
+  }
+}
+
+/* Campi uniti: una sola scatola, un filo tra i campi */
+.campo-gruppo {
+  display: grid;
+  gap: var(--space-2);
+}
+.campo-unito {
+  overflow: hidden;
+  border: var(--border-sottile) solid var(--color-filo-campo);
+  border-radius: var(--radius-m);
+  background: var(--color-superficie);
+}
+.campo-unito > * + * {
+  border-top: var(--border-sottile) solid var(--color-filo-campo);
+}
+.campo-unito--colonne,
+.campo-unito__colonne {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.campo-unito--colonne > * + *,
+.campo-unito__colonne > * + * {
+  border-top: 0;
+  border-left: var(--border-sottile) solid var(--color-filo-campo);
+}
+.campo--unito .campo__scatola {
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.campo--unito .campo__scatola:focus-within {
+  box-shadow: inset 0 0 0 var(--space-half) var(--color-inchiostro);
+}
+.campo--unito.campo--errore .campo__scatola {
+  background: var(--color-allerta-fondo);
+  box-shadow: inset 0 0 0 var(--border-medio) var(--color-allerta);
+}
+.campo--unito.campo--errore .campo__scatola:focus-within {
+  box-shadow: inset 0 0 0 var(--space-half) var(--color-allerta);
+}
+.campo--unito .campo__scatola .campo__input {
+  box-shadow: none;
+}
+.campo--unito .campo__scatola .campo__input:focus {
+  box-shadow: inset 0 0 0 var(--space-half) var(--color-inchiostro);
+}
+.campo--unito.campo--errore .campo__scatola .campo__input {
+  box-shadow: inset 0 0 0 var(--border-medio) var(--color-allerta);
+}
+.campo--unito.campo--errore .campo__scatola .campo__input:focus {
+  box-shadow: inset 0 0 0 var(--space-half) var(--color-allerta);
+}
+
+/* Avvisi: fondo grigio chiaro e icona nuda; errore e senza rete hanno il
+   fondo rosato e l'icona rossa. Il testo resta inchiostro. */
+.avviso {
+  border-radius: var(--radius-m);
+  background: var(--color-carta-2);
+  box-shadow: none;
+}
+.avviso--errore,
+.avviso--offline {
+  background: var(--color-allerta-fondo);
+  box-shadow: none;
+}
+.avviso--info > .icona,
+.avviso--avviso > .icona {
+  color: var(--color-inchiostro);
+}
+.avviso--errore > .icona,
+.avviso--offline > .icona {
+  color: var(--color-allerta);
+}
+.avviso--offline {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-nav);
+}
+
+/* Errore di pagina: icona nuda, titolo 21/27 a 700, tutto a sinistra */
+.errore-pagina {
+  justify-items: start;
+  text-align: start;
+}
+.errore-pagina__icona {
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  display: block;
+}
+.errore-pagina__titolo {
+  font-weight: var(--weight-pieno);
+  font-size: var(--text-titolo-sezione-size);
+  line-height: var(--text-titolo-sezione-line);
+  letter-spacing: var(--text-titolo-sezione-tracking);
+}
+
+/* Vuoto «box»: tutto il riquadro è il pulsante o il link */
+.stato-vuoto-box {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: center;
+  width: 100%;
+  min-height: var(--size-scelta);
+  padding: var(--space-4);
+  border: var(--border-sottile) solid var(--color-filo-2);
+  border-radius: var(--radius-l);
+  background: transparent;
+  color: var(--color-inchiostro);
+  font: inherit;
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+}
+/* Anche gli angoli, che il raggio toglierebbe alla zona di tocco */
+.stato-vuoto-box::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+.stato-vuoto-box__piu {
+  display: grid;
+  place-items: center;
+  width: var(--size-controllo);
+  height: var(--size-controllo);
+  border: var(--border-sottile) solid var(--color-inchiostro);
+  border-radius: var(--radius-tondo);
+}
+.stato-vuoto-box__testo {
+  display: grid;
+  gap: var(--space-half);
+}
+.stato-vuoto-box:active {
+  background: var(--color-premuto);
+}
+@media (hover: hover) {
+  .stato-vuoto-box {
+    transition: background-color var(--durata-rapida) var(--curva);
+  }
+  .stato-vuoto-box:hover {
+    background: var(--color-carta-2);
+  }
+  .stato-vuoto-box:active {
+    background: var(--color-premuto);
+  }
+}
+
+/* Messaggio: scuro, «Annulla» sottolineato e bianco */
+.toast {
+  background: var(--color-fumetto);
+  color: var(--color-latte);
+}
+.toast__azione {
+  color: var(--color-latte);
+  font-weight: var(--weight-semi);
+  text-decoration-thickness: var(--border-link);
+  text-underline-offset: var(--space-link);
+}
+
+/* Freccia indietro D: nuda, 44 x 44, freccia con l'asta a 24 px. Sopra una
+   foto o una scena sta in un disco bianco di 40 px con l'ombra del disco. */
+.btn-freccia {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: var(--size-tocco);
+  height: var(--size-tocco);
+  border: 0;
+  border-radius: var(--radius-tondo);
+  background: transparent;
+  color: var(--color-inchiostro);
+  cursor: pointer;
+}
+.btn-freccia--disco {
+  width: var(--size-controllo);
+  height: var(--size-controllo);
+  background: var(--color-superficie);
+  box-shadow: var(--shadow-disco);
+}
+/* Area di tocco quadrata: gli angoli di un controllo tondo non riceverebbero i tocchi */
+.btn-freccia::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--size-tocco);
+  height: var(--size-tocco);
+  transform: translate(-50%, -50%);
+}
+@media (hover: hover) {
+  .btn-freccia {
+    transition: background-color var(--durata-rapida) var(--curva);
+  }
+  .btn-freccia:hover {
+    background: var(--color-carta-2);
+  }
+  .btn-freccia--disco:hover {
+    background: var(--color-carta-2);
+  }
+}
+.btn-freccia:active {
+  background: var(--color-premuto);
+}
+
+/* Righe 2.0: a filo, titolo e riga sotto, icona nuda, valore e freccia B.
+   Premuta, il fondo scuro va da bordo a bordo della riga. */
+.lista--flush {
+  background: transparent;
+  box-shadow: none;
+}
+.lista--flush > li + li {
+  box-shadow: none;
+  border-top: var(--border-sottile) solid var(--color-filo);
+}
+.riga-lista--2 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: var(--size-riga-alta);
+  padding-block: var(--space-riga);
+  background: transparent;
+  box-shadow: none;
+  text-align: start;
+}
+.riga-lista--2 .riga-lista__testo {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.riga-lista--2 .riga-lista__titolo {
+  font-size: var(--text-corpo-forte-size);
+  line-height: var(--text-corpo-forte-line);
+  font-weight: var(--weight-normale);
+}
+.riga-lista--2.riga-lista--cliccabile .riga-lista__titolo {
+  font-weight: var(--weight-semi);
+}
+.riga-lista--2 .riga-lista__icona {
+  flex: none;
+  color: var(--color-inchiostro);
+}
+.riga-lista--2 .riga-lista__valore {
+  flex: none;
+}
+.riga-lista--2 .riga-lista__freccia {
+  flex: none;
+  color: var(--color-inchiostro-3);
+}
+.riga-lista__piu {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--size-icona-l);
+  height: var(--size-icona-l);
+  border: var(--border-sottile) solid var(--color-inchiostro);
+  border-radius: var(--radius-tondo);
+  color: var(--color-inchiostro);
+}
+.riga-lista--pericolo .riga-lista__titolo,
+.riga-lista--pericolo .riga-lista__icona {
+  color: var(--color-allerta);
+}
+.lista .riga-lista--2.riga-lista--cliccabile:active:not(:disabled) {
+  background: var(--color-premuto);
+}
+@media (hover: hover) {
+  .lista .riga-lista--2.riga-lista--cliccabile:hover:not(:disabled) {
+    background: var(--color-carta-2);
+  }
+  .lista .riga-lista--2.riga-lista--cliccabile:active:not(:disabled) {
+    background: var(--color-premuto);
+  }
+}
+/* Riga a due livelli su fondo notte: icona e + chiari, fondi scuri anche
+   al passaggio del mouse e al tocco */
+.riga-lista--2.riga-lista--notte .riga-lista__icona,
+.riga-lista--2.riga-lista--notte .riga-lista__freccia {
+  color: var(--color-latte-2);
+}
+.riga-lista--2.riga-lista--notte .riga-lista__piu {
+  border-color: var(--color-latte);
+  color: var(--color-latte);
+}
+.lista
+  .riga-lista--2.riga-lista--notte.riga-lista--cliccabile:not(
+    :disabled
+  ):active {
+  background: var(--color-notte-2);
+}
+@media (hover: hover) {
+  .lista
+    .riga-lista--2.riga-lista--notte.riga-lista--cliccabile:not(
+      :disabled
+    ):hover,
+  .lista
+    .riga-lista--2.riga-lista--notte.riga-lista--cliccabile:not(
+      :disabled
+    ):active {
+    background: var(--color-notte-2);
+    color: var(--color-latte);
+  }
+}
+
+/* «Dato che si cambia»: etichetta sopra, valore sotto, «Modifica» a destra */
+.riga-dato {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: var(--size-riga-alta);
+  padding: var(--space-riga) var(--space-4);
+}
+.riga-dato__testo {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: grid;
+}
+.riga-dato__etichetta {
+  font-size: var(--text-etichetta-size);
+  line-height: var(--text-etichetta-line);
+  color: var(--color-inchiostro-2);
+}
+.riga-dato__valore {
+  font-size: var(--text-controllo-size);
+  line-height: var(--text-controllo-line);
+  color: var(--color-inchiostro);
+}
+
+/* Interruttore: acceso pieno di inchiostro, spento con il bordo del campo
+   (il pallino bianco sul binario grigio non arrivava a 3:1) */
+.toggle {
+  box-shadow: inset 0 0 0 var(--border-sottile) var(--color-filo-campo);
+}
+.toggle::after {
+  background: var(--color-superficie);
+}
+.toggle[aria-checked="true"] {
+  box-shadow: none;
+}
+/* #634: l'adesivo «Liberi insieme» ha il fondo del tema (--color-insieme), non
+   un colore fisso: il testo segue il tema, non --color-adesso-testo */
+.adesivo--insieme,
+.adesivo--insieme .adesivo__nota {
+  color: var(--color-inchiostro);
+}
+/* #634: il pallino dell'interruttore acceso sta sopra il pieno: --color-latte */
+.toggle[aria-checked="true"]::after {
+  background: var(--color-latte);
+}
+@media (prefers-reduced-motion: reduce) {
+  .toggle::after {
+    transition: none;
+  }
+}
+
+/* Tema scuro (#634): scambio di un'immagine tra i due temi, solo CSS e senza
+   script. Il tema effettivo è lo stesso dei token di globals.css:
+   data-aspetto="scuro" o "chiaro" vincono; altrimenti segue il sistema.
+   Le classi stanno sul contenitore dell'immagine, che è decorativa
+   (aria-hidden); quella nascosta con display: none non si legge. */
+@media not all and (prefers-color-scheme: dark) {
+  :root:not([data-aspetto="scuro"]) .solo-scuro {
+    display: none;
+  }
+}
+:root[data-aspetto="chiaro"] .solo-scuro {
+  display: none;
+}
+:root[data-aspetto="scuro"] .solo-chiaro {
+  display: none;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-aspetto="chiaro"]) .solo-chiaro {
+    display: none;
+  }
+}
+
+/* =========================================================
+   COMPONENTI 2.0 · SCELTE E PERSONE (F4b, #504)
+   Solo ruoli della tavolozza e variabili della persona: al buio cambiano da
+   soli. Le regole delle pastiglie, dei giorni, della spunta, delle schede e
+   dell'etichetta «allerta» stanno sopra, accanto alle loro classi.
+   ========================================================= */
+
+/* Gruppo di scelta con il testo d'errore sotto */
+.scelta-campo {
+  display: grid;
+  gap: var(--space-2);
+}
+
+/* Spunta neutra: cerchio a filo da 24 (bordo --color-filo-campo, area di tocco
+   44 con ::before), --color-pieno con il segno --color-latte quando è fatta.
+   Le regole del mockup di .tondo-spunta restano com'erano più sopra; queste le
+   completano. */
+.tondo-spunta {
+  width: var(--size-icona-l);
+  height: var(--size-icona-l);
+  box-shadow: none;
+  border: var(--border-medio) solid var(--color-filo-campo);
+  background: var(--color-superficie);
+}
+.tondo-spunta[aria-checked="true"] {
+  background: var(--color-pieno);
+  border-color: transparent; /* il fondo passa sotto il bordo */
+}
+
+/* Schede e tessere di scelta: mouse e premuto. La scelta resta del suo fondo. */
+.scelta[aria-checked="true"]:active:not(:disabled, [aria-disabled="true"]),
+.tessera-scelta[aria-checked="true"]:active:not(:disabled) {
+  background: var(--color-scelta-tenue);
+}
+.tessera-scelta:active:not(:disabled, [aria-checked="true"]) {
+  background: var(--color-premuto);
+}
+@media (hover: hover) {
+  .tessera-scelta {
+    transition: background var(--durata-rapida) var(--curva);
+  }
+  .scelta[aria-checked="true"]:hover:not(:disabled, [aria-disabled="true"]),
+  .tessera-scelta[aria-checked="true"]:hover:not(:disabled) {
+    background: var(--color-scelta-tenue);
+  }
+  .tessera-scelta:hover:not(:disabled, [aria-checked="true"]) {
+    background: var(--color-carta);
+  }
+}
+
+/* «Per chi»: fila di pallini da 36 in aree da 44, passo 46; va a capo, mai
+   scorre. Scelto = colore pieno con il suo anello di inchiostro. */
+.scelta-persone {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--space-2) + var(--space-half));
+}
+.scelta-persone__pallino {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: var(--size-avatar-scelta);
+  height: var(--size-avatar-scelta);
+  padding: var(--space-0);
+  border: 0;
+  border-radius: var(--radius-tondo);
+  background: var(--c-spento);
+  color: var(--color-inchiostro);
+  font-family: var(--font-titoli);
+  font-size: var(--text-avatar-m-size);
+  font-weight: var(--weight-semi);
+  line-height: 1;
+  cursor: pointer;
+}
+.scelta-persone__pallino::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max(100%, var(--size-tocco));
+  height: max(100%, var(--size-tocco));
+  transform: translate(-50%, -50%);
+}
+.scelta-persone__pallino::after {
+  content: attr(data-initials);
+}
+.scelta-persone__pallino[aria-pressed="true"] {
+  background: var(--c);
+  color: var(--c-iniziale);
+  outline: var(--border-medio) solid var(--color-inchiostro);
+  outline-offset: var(--space-half);
+}
+/* Il fuoco da tastiera si vede anche sul pallino scelto: anello più staccato */
+.scelta-persone__pallino:focus-visible {
+  outline-color: var(--color-fuoco);
+  outline-offset: var(--space-1);
+}
+.scelta-persone__pallino:disabled {
+  opacity: var(--opacity-disabilitato);
+  cursor: not-allowed;
+}
+.scelta-persone .skeleton--cerchio {
+  width: var(--size-avatar-scelta);
+  height: var(--size-avatar-scelta);
+}
+
+/* Volti in griglia: pallini da 72, nome e una riga; «Aggiungi» tratteggiato */
+.volti {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-6) var(--space-2);
+  margin: var(--space-0);
+  padding: var(--space-0);
+  list-style: none;
+}
+.volti__voce {
+  display: grid;
+  align-content: start;
+  gap: var(--space-1);
+  width: 100%;
+  min-height: var(--size-tocco);
+  padding: var(--space-2);
+  border: 0;
+  border-radius: var(--radius-l);
+  background: transparent;
+  color: var(--color-inchiostro);
+  font-size: var(--text-controllo-size);
+  line-height: var(--text-controllo-line);
+  font-weight: var(--weight-semi);
+  text-align: center;
+  cursor: pointer;
+}
+.volti__voce .avatar {
+  justify-self: center;
+  margin-bottom: var(--space-1);
+}
+/* Il testo occupa la colonna e va a capo: col testo grande un nome lungo non
+   esce dalla griglia (#313) */
+.volti__nome {
+  display: block;
+  min-width: var(--space-0);
+  overflow-wrap: anywhere;
+}
+.volti__riga {
+  display: block;
+  min-width: var(--space-0);
+  overflow-wrap: anywhere;
+  font-size: var(--text-nota-size);
+  line-height: var(--text-nota-line);
+  font-weight: var(--weight-normale);
+  color: var(--color-inchiostro-2);
+}
+.volti__aggiungi {
+  display: grid;
+  place-items: center;
+  width: var(--size-avatar-xl);
+  height: var(--size-avatar-xl);
+  justify-self: center;
+  margin-bottom: var(--space-1);
+  border: var(--border-medio) dashed var(--color-filo-2);
+  border-radius: var(--radius-tondo);
+  color: var(--color-inchiostro);
+}
+.volti__voce:active:not(:disabled) {
+  background: var(--color-premuto);
+}
+@media (hover: hover) {
+  .volti__voce {
+    transition: background var(--durata-rapida) var(--curva);
+  }
+  .volti__voce:hover:not(:disabled) {
+    background: var(--color-premuto);
+  }
+}
+
+/* Foto di un animale: filo del suo colore attorno, staccato di --border-medio */
+.avatar--filo {
+  outline: var(--border-medio) solid var(--c);
+  outline-offset: var(--border-medio);
+}
+
+/* Pila di avatar: pallini da 28 sovrapposti di 8, anello chiaro */
+.pila-avatar {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+}
+.pila-avatar .avatar {
+  width: var(--size-avatar-pila);
+  height: var(--size-avatar-pila);
+  font-size: var(--text-avatar-s-size);
+  box-shadow: 0 0 0 var(--border-medio) var(--color-superficie);
+}
+.pila-avatar .avatar + .avatar {
+  margin-inline-start: calc(-1 * var(--space-2));
+}
+
+/* Tessere di Spazi e del Nest: collegamento con bordo sottile, icona nuda in
+   alto, titolo e una riga. Due colonne sotto 900 px o con la finestra bassa
+   (D8); da 900 px colonne larghe almeno 220 px. */
+.tessere {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin: var(--space-0);
+  padding: var(--space-0);
+  list-style: none;
+}
+@media (min-width: 900px) and (min-height: 600px) {
+  .tessere {
+    grid-template-columns: repeat(auto-fill, minmax(13.75rem, 1fr));
+    gap: var(--space-4);
+  }
+  .tessere--quattro {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.tessera {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: var(--space-1);
+  min-width: var(--space-0);
+  padding: calc(var(--space-4) - var(--border-sottile));
+  border: var(--border-sottile) solid var(--color-filo-2);
+  border-radius: var(--radius-l);
+  background: var(--color-superficie);
+  color: var(--color-inchiostro);
+  text-decoration: none;
+  text-align: left;
+}
+.tessera .icona {
+  width: calc(var(--size-icona-l) + var(--space-1));
+  height: calc(var(--size-icona-l) + var(--space-1));
+  margin-bottom: var(--space-2);
+}
+.tessera__titolo,
+.tessera__riga {
+  min-width: var(--space-0);
+  overflow-wrap: anywhere;
+}
+.tessera__titolo {
+  font-size: var(--text-sottotitolo-size);
+  line-height: var(--text-sottotitolo-line);
+  font-weight: var(--weight-semi);
+}
+.tessera__riga {
+  font-size: var(--text-corpo-size);
+  line-height: var(--text-corpo-line);
+  color: var(--color-inchiostro-2);
+}
+.tessera:active {
+  background: var(--color-premuto);
+}
+@media (hover: hover) {
+  a.tessera {
+    transition: background var(--durata-rapida) var(--curva);
+  }
+  a.tessera:hover {
+    background: var(--color-premuto);
+  }
+}
+/* Tessera di una persona del Nest: pallino da 56 al posto dell'icona */
+.tessera--persona .avatar {
+  width: var(--size-avatar-tessera);
+  height: var(--size-avatar-tessera);
+  margin-bottom: var(--space-2);
+  font-size: var(--text-titolo-sezione-size);
+}
+.tessera--persona .tessera__titolo {
+  font-size: var(--text-controllo-size);
+  line-height: var(--text-controllo-line);
+}
+.tessera--persona .tessera__riga {
+  font-size: var(--text-nota-size);
+  line-height: var(--text-nota-line);
+}
+/* In attesa: non è un collegamento, bordo tratteggiato e fondo quieto */
+.tessera--attesa {
+  border-style: dashed;
+  border-color: var(--color-filo-campo);
+  background: var(--color-carta-2);
+}
+.tessera--attesa:active {
+  background: var(--color-carta-2);
+}
+@media (prefers-reduced-motion: reduce) {
+  .tessera-scelta,
+  .volti__voce,
+  a.tessera {
+    transition: none;
   }
 }

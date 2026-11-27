@@ -250,18 +250,23 @@ test.describe("punto 7: aree di tocco", () => {
     expect(data.shadow).toBe("none");
   });
 
-  test("CA-5: Tenue e Riprova piccolo restano alti 40 con area 44", async ({
+  test("CA-5: Tenue resta alto 40 con area 44; Riprova di PageError è di misura normale (52)", async ({
     page,
   }, info) => {
     onlyMobile(info);
     await page.goto("/design-system");
+    // #503 (F4a), §1 e §3: «tenue» ha altezza invariata; il «Riprova» di
+    // PageError è un secondario di misura normale (52), non più piccolo.
     const targets = [
-      page.getByTestId("btn-tenue-predefinito"),
-      page
-        .getByTestId("errore-pagina")
-        .getByRole("button", { name: "Riprova" }),
+      { target: page.getByTestId("btn-tenue-predefinito"), height: 40 },
+      {
+        target: page
+          .getByTestId("errore-pagina")
+          .getByRole("button", { name: "Riprova" }),
+        height: 52,
+      },
     ];
-    for (const target of targets) {
+    for (const { target, height } of targets) {
       await target.scrollIntoViewIfNeeded();
       const data = await target.evaluate((el) => {
         const r = el.getBoundingClientRect();
@@ -277,7 +282,7 @@ test.describe("punto 7: aree di tocco", () => {
           down: hit(cx, cy + 21),
         };
       });
-      expect(data.height).toBeCloseTo(40, 0);
+      expect(data.height).toBeCloseTo(height, 0);
       expect(data.up).toBe(true);
       expect(data.down).toBe(true);
     }

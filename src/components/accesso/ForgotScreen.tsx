@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/Button/Button";
 import { useToast } from "@/components/ui/Toast/ToastProvider";
+import { brandRich, messages } from "@/lib/brand";
 import { createClient } from "@/lib/supabase/client";
 import { AuthLayout, Intro, ToAccessLink, ToAccessRow } from "./AuthLayout";
 import { callbackUrl, isRateLimit, seconds, validateEmail } from "./fields";
@@ -122,8 +123,11 @@ export function ForgotScreen() {
             title="Ti abbiamo scritto"
             titleRef={titleRef}
           >
-            Se <b className={styles.address}>{email}</b> è la mail di un account
-            FamilyNest, ti è arrivato un link per scegliere una nuova password.
+            {brandRich(
+              messages.accesso.forgotSent,
+              { b: (children) => <b className={styles.address}>{children}</b> },
+              { email },
+            )}
           </Intro>
         }
         body={<HintList rows={ROWS} />}

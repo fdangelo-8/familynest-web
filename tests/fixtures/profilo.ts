@@ -219,6 +219,39 @@ export async function profileOf(userId: string): Promise<ProfileRow | null> {
   return data as ProfileRow | null;
 }
 
+/**
+ * The morning digest time the database holds for a user, written as the page
+ * writes it («7:15»). The tests read it instead of writing the default fixed,
+ * so they do not depend on it (it changed with DB-2 part 2, #612).
+ */
+export async function savedDigestTime(userId: string): Promise<string> {
+  const row = await profileOf(userId);
+  const match = /^(\d{2}):(\d{2})/.exec(row?.morning_digest_time ?? "");
+  if (!match) throw new Error("Orario della sintesi non letto dal profilo");
+  return `${Number(match[1])}:${match[2]}`;
+}
+
+/** The times the digest sheet offers: every quarter hour, 6:00 to 10:00. */
+export const QUARTER_HOUR_TIMES = [
+  "6:00",
+  "6:15",
+  "6:30",
+  "6:45",
+  "7:00",
+  "7:15",
+  "7:30",
+  "7:45",
+  "8:00",
+  "8:15",
+  "8:30",
+  "8:45",
+  "9:00",
+  "9:15",
+  "9:30",
+  "9:45",
+  "10:00",
+];
+
 export async function authUserExists(userId: string): Promise<boolean> {
   const { data, error } = await adminClient().auth.admin.getUserById(userId);
   return !error && !!data.user;

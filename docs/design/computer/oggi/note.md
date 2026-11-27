@@ -118,3 +118,9 @@ Nota della stessa tavola nel Passo 10 («Oggi · la ricerca»), corretta sul pos
 Sotto i 1100 px
 
 La barra laterale diventa a icone e il contenuto torna a una colonna. Ogni icona ha il suo nome per gli screen reader e nel fumetto al passaggio del mouse.
+
+## Tavole sostituite dai Passi 12–16
+
+La versione più recente ha preso il posto di queste tavole (26/11/2026); la vecchia resta nella storia git. La nota qui sopra resta valida dove la tavola nuova non dice altro.
+
+- `01-oggi-1280-px.png` → `docs/design/computer/oggi-p12-16/01-oggi-il-viaggio-del-calcio-chiaro.png`

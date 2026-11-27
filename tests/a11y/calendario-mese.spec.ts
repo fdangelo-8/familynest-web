@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { waitForAnimationsToEnd } from "../fixtures/animations";
 import {
   CROWD_EVENTS,
   MONTH_EVENTS,
@@ -52,6 +53,9 @@ async function duplicatedIds(page: Page) {
 }
 
 async function expectClean(page: Page) {
+  // The lens button changes colour with a CSS transition: axe must not read
+  // the contrast halfway (#590).
+  await waitForAnimationsToEnd(page);
   expect(await violations(page)).toEqual([]);
   expect(await duplicatedIds(page)).toEqual([]);
 }
@@ -308,7 +312,9 @@ test.describe("tastiera", () => {
       const ring = await found!.evaluate((el) => {
         const s = getComputedStyle(el);
         const probe = document.createElement("span");
-        probe.style.color = "var(--color-info)";
+        // #503 (F4a), requisito 8 e CA-25: l'anello di fuoco globale passa da
+        // --color-info a --color-azione.
+        probe.style.color = "var(--color-azione)";
         document.body.appendChild(probe);
         const info = getComputedStyle(probe).color;
         probe.remove();

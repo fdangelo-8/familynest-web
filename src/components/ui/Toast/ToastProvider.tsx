@@ -10,6 +10,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { it } from "@/lib/i18n/messages/it";
 import { cx } from "../cx";
 import { Icon, type IconName } from "../Icon/Icon";
 
@@ -20,7 +21,7 @@ export type ToastOptions = {
   text: string;
   /** Optional bold part shown before the text, for example "3 cose" */
   lead?: string;
-  /** Icon before the text: absent = check, `null` = no icon */
+  /** Icon before the text: absent or `null` = no icon (Components 2.0) */
   icon?: IconName | null;
   /** Optional bold part shown after the text, for example the name of the item */
   emphasis?: string;
@@ -138,7 +139,7 @@ function ToastView({
       onBlur={resume}
       data-testid="toast"
     >
-      {toast.icon === null ? null : <Icon name={toast.icon ?? "check"} />}
+      {toast.icon ? <Icon name={toast.icon} /> : null}
       <span className="toast__testo">
         {toast.lead ? (
           <>
@@ -163,7 +164,7 @@ function ToastView({
             onHide(id);
           }}
         >
-          Annulla
+          {it.cancel}
         </button>
       ) : null}
     </div>

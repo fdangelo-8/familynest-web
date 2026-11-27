@@ -61,6 +61,24 @@ async function focusRingVisible(page: Page) {
   });
 }
 
+/**
+ * Strict ring of a keyboard focus (#504): the element matches `:focus-visible`
+ * and has a solid outline. A box-shadow is not a proof (`.scelta` has one as
+ * its border even without focus).
+ */
+async function keyboardFocusRing(page: Page) {
+  return page.evaluate(() => {
+    const el = document.activeElement as HTMLElement | null;
+    if (!el || el === document.body) return false;
+    const s = getComputedStyle(el);
+    return (
+      el.matches(":focus-visible") &&
+      s.outlineStyle !== "none" &&
+      parseFloat(s.outlineWidth) > 0
+    );
+  });
+}
+
 const focusedName = (page: Page) =>
   page.evaluate(() => {
     const el = document.activeElement as HTMLElement | null;
@@ -341,7 +359,14 @@ test.describe("fogli e dialoghi", () => {
   }) => {
     await withUser(page, async (ctx) => {
       await linkBoth(page, ctx);
-      const sheet = await openCalendarSheet(page, "Lavoro");
+      // Opened from the keyboard: after a mouse click the browser does not
+      // apply :focus-visible, so the ring is checked only on this path.
+      await calendarTitle(page, "Lavoro").focus();
+      await page.keyboard.press("Enter");
+      const sheet = page.getByRole("dialog", {
+        name: "Impostazioni del calendario Lavoro",
+      });
+      await expect(sheet).toBeVisible();
       // The name of the dialog is not the title (CA-3, CA-17).
       await expect(sheet).toHaveAccessibleName(
         "Impostazioni del calendario Lavoro",
@@ -361,7 +386,7 @@ test.describe("fogli e dialoghi", () => {
         name: /^Entrata e uscita/,
       });
       await expect(direction).toBeFocused();
-      expect(await focusRingVisible(page)).toBe(true);
+      expect(await keyboardFocusRing(page)).toBe(true);
 
       // No trap and no way out: Tab and Shift+Tab stay inside the dialog.
       for (let i = 0; i < 14; i += 1) {

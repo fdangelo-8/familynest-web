@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageTitle } from "@/lib/brand";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
@@ -15,7 +16,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   // No names: the title stays in the browser history.
-  title: "FamilyNest · Invito",
+  title: pageTitle("Invito"),
   robots: { index: false },
 };
 

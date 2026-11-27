@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageTitle } from "@/lib/brand";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { OnboardingError } from "@/components/onboarding/OnboardingError";
@@ -9,7 +10,7 @@ import { requireUser } from "@/lib/auth/require-user";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
-  title: "FamilyNest · Chi vive con te?",
+  title: pageTitle("Chi vive con te?"),
 };
 
 type SearchParams = Promise<{ cambia?: string | string[] }>;

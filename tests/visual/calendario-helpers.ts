@@ -89,7 +89,50 @@ export async function openStep(
   // gap. So first the hydration, then the title: the check that follows is the
   // one that counts.
   await hydrated(page);
+  await linkResultCleared(page);
   await expect(page).toHaveTitle("FamilyNest · Porta qui il tuo calendario");
+  await titleStays(page);
+}
+
+/**
+ * Waits for the end of the call to the route `/api/calendar-sync/link-result`
+ * (#590). After the hydration, the effect of CalendarStep.tsx:246-254 calls it
+ * when the page was opened with a result cookie (a notice, or the return from
+ * the provider), and so does CalendarsView.tsx. The route only deletes the
+ * cookie: it does not redraw the page, so the <title> (metadata,
+ * page.tsx:22-23) stays in the <head>. Before, a server action did it and the
+ * redraw made the title leave the head for a moment. Here the poll waits for
+ * the cookie to be gone, so the check on the title starts after the call. With
+ * no cookie it returns at once.
+ */
+async function linkResultCleared(page: Page) {
+  await expect
+    .poll(async () =>
+      (await page.context().cookies()).some(
+        (cookie) => cookie.name === "fn-calendar-link" && cookie.value !== "",
+      ),
+    )
+    .toBe(false);
+}
+
+/**
+ * The second net, after the action: waits until the title has been there for
+ * 30 frames in a row, counted in the page (no fixed wait), so that the axe
+ * check that follows is not the one that falls in the gap (run 45662068376).
+ */
+async function titleStays(page: Page) {
+  await page.evaluate(
+    () =>
+      new Promise<void>((done) => {
+        let frames = 0;
+        const step = () => {
+          frames = document.title === "" ? 0 : frames + 1;
+          if (frames >= 30) done();
+          else requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+      }),
+  );
 }
 
 /** The answer cookie the route leaves when the user comes back. */
@@ -139,7 +182,9 @@ export async function linkAccount(
   // A new page load: the title leaves the <head> again while React takes the
   // page over (see openStep). Axe's «document-title» must not run in that gap.
   await hydrated(page);
+  await linkResultCleared(page);
   await expect(page).toHaveTitle("FamilyNest · Porta qui il tuo calendario");
+  await titleStays(page);
 }
 
 /** Forgets what the fake knows about the user. Call it in the `finally`. */

@@ -402,10 +402,11 @@ test.describe("CSS nuovo nel blocco del designer (#221)", () => {
   test("la puntina premuta vince sul passaggio del mouse di .btn-icona", () => {
     const normalized = designerBlock.replace(/\s+/g, " ");
     expect(normalized).toContain(
-      '.btn-icona[aria-pressed="true"]:hover:not(:disabled, [aria-disabled="true"]) { background: var(--color-notte-2); }',
+      // #634: the mouse over a full control is --color-azione, not notte-2.
+      '.btn-icona[aria-pressed="true"]:hover:not(:disabled, [aria-disabled="true"]) { background: var(--color-azione); }',
     );
     expect(normalized).toContain(
-      '.btn-icona[aria-pressed="true"]:active:not(:disabled, [aria-disabled="true"]) { background: var(--color-notte-2); }',
+      '.btn-icona[aria-pressed="true"]:active:not(:disabled, [aria-disabled="true"]) { background: var(--color-azione); }',
     );
   });
 });

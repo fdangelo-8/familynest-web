@@ -47,6 +47,8 @@ test.describe("sintesi del mattino", () => {
       to: "17:00",
       members: ["Giulia"],
     });
+    // The time is fixed here, so the test does not depend on the default (07:15, #612).
+    await setMorningTime(nest, "Giulia", "07:30");
     await open(page, baseURL, nest, "Giulia", { time: at(0, "07:30") });
 
     const region = digest(page, "Il tuo martedì");
@@ -79,6 +81,8 @@ test.describe("sintesi del mattino", () => {
     const viewport = page.viewportSize();
     const region = (p: typeof page) => digest(p, "Il tuo martedì");
 
+    // The time is fixed here, so the test does not depend on the default (07:15, #612).
+    await setMorningTime(nest, "Giulia", "07:30");
     await withPageAt(
       browser,
       viewport,
@@ -309,6 +313,7 @@ test.describe("sintesi del mattino", () => {
     baseURL,
     solo,
   }) => {
+    await setMorningTime(solo, "Rita", "07:30");
     await open(page, baseURL, solo, "Rita", { time: at(5, "07:30") });
 
     const region = digest(page, "La tua domenica");

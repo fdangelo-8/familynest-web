@@ -3,13 +3,14 @@
 import { useRef, useState } from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog/ConfirmDialog";
 import { Button } from "@/components/ui/Button/Button";
+import { brandText, messages } from "@/lib/brand";
 import { getLeaveDialogCopy } from "@/lib/leave-dialog";
 import { clearLens } from "@/lib/lens";
 import { clearAllRecentSearches } from "@/lib/recent-searches";
 import type { DeletionOutlook } from "./model";
 
 const SIGN_OUT_TEXT = {
-  title: "Uscire da FamilyNest?",
+  title: brandText(messages.profilo.signOutTitle),
   text: "Su questo dispositivo dovrai accedere di nuovo. Le tue cose restano nel Nest.",
   error:
     "Non siamo riusciti a farti uscire. Controlla la connessione e riprova.",

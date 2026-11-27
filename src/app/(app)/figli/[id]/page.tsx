@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageTitle } from "@/lib/brand";
 import { notFound } from "next/navigation";
 import { ChildError } from "@/components/figli/ChildError";
 import { ChildPage } from "@/components/figli/ChildPage";
@@ -7,7 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   // The name of the child is not in the title: the title ends up in the history.
-  title: "FamilyNest · Profilo di un figlio",
+  title: pageTitle("Profilo di un figlio"),
 };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

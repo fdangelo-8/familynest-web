@@ -579,14 +579,17 @@ async function focusRing(page: Page) {
       return "contorno";
     }
     // Fields have no outline: an inner ring at :focus, as in the mockup.
-    if (/inset/.test(own.boxShadow) && /1\.5px/.test(own.boxShadow)) {
+    // #503 (F4a), CA-6: with the focus the field border is 2 px (before 1.5 px).
+    if (/inset/.test(own.boxShadow) && /(1\.5|2)px/.test(own.boxShadow)) {
       return "interno";
     }
     // The ring of a field can sit on its box (the select inside .campo__select-box).
-    const box = el.closest(".campo__select-box, .campo__input");
+    const box = el.closest(
+      ".campo__select-box, .campo__input, .campo__scatola",
+    );
     if (box) {
       const s = getComputedStyle(box);
-      if (/inset/.test(s.boxShadow) && /1\.5px/.test(s.boxShadow)) {
+      if (/inset/.test(s.boxShadow) && /(1\.5|2)px/.test(s.boxShadow)) {
         return "interno";
       }
       if (s.outlineStyle !== "none" && parseFloat(s.outlineWidth) > 0) {

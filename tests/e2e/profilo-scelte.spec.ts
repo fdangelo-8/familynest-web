@@ -14,6 +14,7 @@ import {
   COLOR_TAKEN_ERROR,
   PREFERENCE_NETWORK_ERROR,
   PREFERENCE_SERVER_ERROR,
+  QUARTER_HOUR_TIMES,
   alertWith,
   breakWrites,
   colorGroup,
@@ -24,6 +25,7 @@ import {
   needsThrowaway,
   openProfile,
   profileOf,
+  savedDigestTime,
   sheetOf,
   valueOf,
   waitHydrated,
@@ -217,42 +219,37 @@ test.describe("Come usi l'app: scelte", () => {
     });
   });
 
-  test("CA-16: «Sintesi del mattino» ha nove orari come chip, «7:30» scelto; «8:30» si salva", async ({
+  // The time chosen at the start is the one the database holds (read from it):
+  // the page must show it, and it must be one of the quarter-hour times.
+  test("CA-16: «Sintesi del mattino» ha diciassette orari a quarti d'ora come chip, quello salvato è scelto; un altro si salva", async ({
     page,
     baseURL,
   }) => {
     needsThrowaway();
     await withMemberNest(async ({ user }) => {
+      const saved = await savedDigestTime(user.id);
+      expect(QUARTER_HOUR_TIMES).toContain(saved);
+      const target = saved === "8:30" ? "9:00" : "8:30";
       await user.signInContext(page.context(), baseURL as string);
       await openProfile(page);
       await valueOf(page, "Sintesi del mattino").click();
       const sheet = sheetOf(page, "Sintesi del mattino");
       await expect(sheet).toBeVisible();
       const chips = sheet.getByRole("button", { name: /^\d{1,2}:\d{2}$/ });
-      await expect(chips).toHaveText([
-        "6:00",
-        "6:30",
-        "7:00",
-        "7:30",
-        "8:00",
-        "8:30",
-        "9:00",
-        "9:30",
-        "10:00",
-      ]);
+      await expect(chips).toHaveText(QUARTER_HOUR_TIMES);
       const pressed = await chips.evaluateAll((els) =>
         els
           .filter((el) => el.getAttribute("aria-pressed") === "true")
           .map((el) => el.textContent),
       );
-      expect(pressed).toEqual(["7:30"]);
+      expect(pressed).toEqual([saved]);
 
-      await chips.filter({ hasText: /^8:30$/ }).click();
+      await chips.filter({ hasText: new RegExp(`^${target}$`) }).click();
       await expect(sheet).toBeHidden();
-      await expect(valueOf(page, "Sintesi del mattino")).toHaveText("8:30");
+      await expect(valueOf(page, "Sintesi del mattino")).toHaveText(target);
       await expect
         .poll(async () => (await profileOf(user.id))?.morning_digest_time)
-        .toMatch(/^08:30/);
+        .toMatch(new RegExp(`^0${target}`));
     });
   });
 
@@ -337,6 +334,7 @@ test.describe("Come usi l'app: scelte", () => {
   }) => {
     needsThrowaway();
     await withMemberNest(async ({ user }) => {
+      const saved = await savedDigestTime(user.id);
       await user.signInContext(page.context(), baseURL as string);
       await breakWrites(page, "profiles", "network");
       await openProfile(page);
@@ -348,8 +346,9 @@ test.describe("Come usi l'app: scelte", () => {
       await expect(alertWith(page, PREFERENCE_NETWORK_ERROR)).toHaveText(
         PREFERENCE_NETWORK_ERROR,
       );
-      await expect(valueOf(page, "Sintesi del mattino")).toHaveText("7:30");
-      expect((await profileOf(user.id))?.morning_digest_time).toMatch(/^07:30/);
+      // The failed save leaves the value the database already held.
+      await expect(valueOf(page, "Sintesi del mattino")).toHaveText(saved);
+      expect(await savedDigestTime(user.id)).toBe(saved);
     });
   });
 });

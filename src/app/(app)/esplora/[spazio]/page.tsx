@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageTitle } from "@/lib/brand";
 import { notFound } from "next/navigation";
 import { SpaceComingPage } from "@/components/esplora/SpaceComingPage";
 import { requireNest } from "@/lib/nest-frame";
@@ -19,7 +20,7 @@ export async function generateMetadata({
   params: Promise<{ spazio: string }>;
 }): Promise<Metadata> {
   const space = findSpace((await params).spazio);
-  return { title: space ? `FamilyNest · ${space.name}` : "FamilyNest" };
+  return { title: space ? pageTitle(space.name) : pageTitle() };
 }
 
 /** Counts of the Nest members by kind; null if they cannot be read. */

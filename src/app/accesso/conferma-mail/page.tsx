@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageTitle } from "@/lib/brand";
 import { redirect } from "next/navigation";
 import { ConfirmLinkScreen } from "@/components/accesso/ConfirmLinkScreen";
 import { readCurrentAccount } from "@/lib/auth/current-account";
@@ -8,7 +9,7 @@ import { safeNextPath } from "@/lib/auth/safe-next";
 // rewrites that address here, the person never sees this one). Reading the
 // page does not use the link: only the button does (POST /auth/confirm).
 export const metadata: Metadata = {
-  title: "FamilyNest · Conferma dell'indirizzo",
+  title: pageTitle("Conferma dell'indirizzo"),
   robots: { index: false, follow: false },
   // Other sites never learn the address of the link.
   referrer: "same-origin",

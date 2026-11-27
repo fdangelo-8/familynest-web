@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageTitle } from "@/lib/brand";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { InviteSkeleton } from "@/components/onboarding/InviteSkeleton";
@@ -13,7 +14,7 @@ import { formatLongDay, formatTime, toDayKey } from "@/lib/datetime";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
-  title: "FamilyNest · Invito",
+  title: pageTitle("Invito"),
 };
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;

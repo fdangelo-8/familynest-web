@@ -29,6 +29,7 @@ import {
 } from "../ColorChoice/ColorChoice";
 import { DateField, TextField } from "../Field/Field";
 import { Icon } from "../Icon/Icon";
+import { brandText, messages } from "@/lib/brand";
 import { useIsDesktop } from "../overlay";
 import { SegmentedControl } from "../SegmentedControl/SegmentedControl";
 import { Sheet } from "../Sheet/Sheet";
@@ -287,7 +288,7 @@ function MemberSheetOpen({
 
   const kindHelp =
     editing && member.hasAccount
-      ? "Chi usa FamilyNest con il suo account è sempre un adulto."
+      ? brandText(messages.memberSheet.accountIsAdult)
       : undefined;
 
   const colorDescribedBy = [colorHelpId, colorError ? colorErrorId : null]

@@ -1,6 +1,6 @@
 # Design system · computer e web da telefono (Fable, approvato il 25/11/2026)
 
-Fonte: `docs/design/computer/` (149 PNG, `LEGGIMI.md`, `regole.md`, `tokens-computer.md`, `splash.md`, `decisioni.md`). Passi 10 e 11 del secondo canvas, approvati da Francesco il 25/11/2026 (decisione D5 in `docs/mockup/DECISIONI.md`). **Le correzioni del Passo 12 arriveranno dopo** (elenco in `docs/design/computer/LEGGIMI.md`, «In attesa del Passo 12»): fino ad allora valgono quelle correzioni scritte, non le tavole che contraddicono.
+Fonte: `docs/design/computer/` (149 PNG, `LEGGIMI.md`, `regole.md`, `tokens-computer.md`, `splash.md`, `decisioni.md`). Passi 10 e 11 del secondo canvas, approvati da Francesco il 25/11/2026 (decisione D5 in `docs/mockup/DECISIONI.md`). **Le correzioni del Passo 12 e i Passi 13–16 sono arrivati il 26/11/2026** (D7): tavole in `docs/design/computer/*-p12-16/` (e, per il web da telefono, in `docs/design/telefono/*-p12-16/`), guida in `docs/design/passi-12-16/LEGGIMI.md`. **I colori di questo file sono superati dalla tavolozza comune** in `token.md`, «Tavolozza comune dei Passi 12–16», uguale per telefono e computer: barrette, pallino, bordo dei campi `#869390` (anche nel campo di ricerca), «Di casa» nella barra laterale `#55686C` (5,4 : 1), numeri dei giorni fuori mese `#5F7073` (4,9 : 1), tema scuro. Sulla stessa tavolozza Biscotto e Miele tornano agli stessi valori del telefono. Respiro dello splash lungo: 100 ms. Regola dell'altezza (risposta 208): sotto 600 px di altezza della finestra si usa sempre la forma del telefono, anche sul computer e nel web da telefono.
 
 Questo file aggiunge a `telefono.md` solo ciò che cambia su computer. Tutto il resto (colori, persone, tipografia, raggi, ombre, movimento, Componenti 2.0) vale come sul telefono. Stessi testi, stessi dati di prova, stessi nomi di classe del design system.
 
@@ -12,11 +12,11 @@ Testo completo e scorciatoie in `docs/design/computer/regole.md`. Le regole che 
 
 | Larghezza        | Disposizione                                                                                                                   |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| fino a 759 px    | Disegno per telefono (barra in basso). Il web da telefono usa le pagine dell'app: cambia solo ciò che è in `web-da-telefono/`. |
-| da 760 a 1099 px | Barra laterale a icone (72 px), contenuto a una colonna (tavola `oggi/` a 1040 px).                                            |
-| da 1100 px       | Barra laterale intera (248 px), contenuto a 12 colonne, canalina 24 px, margini 32 px. Tavole a 1280 px.                       |
+| fino a 899 px    | Disegno per telefono (barra in basso). Il web da telefono usa le pagine dell'app: cambia solo ciò che è in `web-da-telefono/`. |
+| da 900 a 1279 px | Barra laterale a icone (72 px), contenuto a una colonna (tavola `oggi/` a 1040 px).                                            |
+| da 1280 px       | Barra laterale intera (248 px), contenuto a 12 colonne, canalina 24 px, margini 32 px. Tavole a 1280 px.                       |
 | da 1440 px       | Contenuto fermo a 1200 px, terza colonna dove serve (Oggi). Oltre crescono solo i margini.                                     |
-| tablet           | Non disegnato: fuori perimetro.                                                                                                |
+| tablet           | Il tablet non ha pagine sue: sotto 900 px il telefono, da 900 px il computer; sotto 600 px di altezza sempre il telefono (D8). |
 
 - **Il testo non si allarga:** colonne di lettura di 720 px al massimo (Impostazioni 600, «Chiedi a …» 680, pagine senza account 680 o 960 su due colonne, pagamento 1000). Lo spazio in più diventa una seconda colonna, non righe più lunghe.
 - **Barra laterale** al posto della barra in basso: le stesse quattro voci (Oggi, Calendario, Casa, Spazi), sopra il marchio e la lente «Io · Nest», sotto il gruppo fisso «Di casa» (Spesa, Ricette, Animali), in fondo «Chiedi a Nest» e il profilo. Il + diventa un pulsante scritto in alto a destra, sempre nello stesso posto («Nuovo impegno», «Nuova ricetta»…).
@@ -96,7 +96,7 @@ Barra laterale che si stringe all'apertura del pannello 200 ms (`--durata-rapida
 
 ## Fuoco e mouse
 
-- **Anello di fuoco su computer:** `outline: var(--border-medio) solid var(--color-azione); outline-offset: var(--space-half)` (2 px, `#0F3D44`, 11,86:1 sul bianco, 11,01:1 sulla barra laterale); `--color-latte` o bianco sui fondi scuri. Sostituisce `--color-info` (domanda 4 di `telefono.md`): lo decide il lavoro `shared/*` per tutta l'app, non una pagina.
+- **Anello di fuoco su computer:** `outline: var(--border-medio) solid var(--color-fuoco); outline-offset: var(--space-half)` (2 px, `#0F3D44` sul chiaro, `#F2F7F5` nel tema scuro; 11,86:1 sul bianco, 11,01:1 sulla barra laterale); `--color-latte` o bianco sui fondi scuri. Ha sostituito `--color-info` (domanda 4 di `telefono.md`, risolta): il token è `--color-fuoco`, definito in `src/app/globals.css`.
 - Un solo elemento con il fuoco alla volta; l'errore di un campo non colora l'etichetta (correzione 6 del Passo 12).
 - Mouse sopra: `--color-riga-mouse` sulle righe, `--color-voce-mouse` sulle voci della barra, `--color-azione-mouse` sui pulsanti pieni, `--color-filo` sul quieto. Scelta come sul telefono.
 

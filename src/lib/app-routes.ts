@@ -5,6 +5,7 @@
  */
 
 import type { IconName } from "@/components/ui/Icon/icon-paths";
+import { pageTitle, yourNest } from "@/lib/brand";
 import { SPACES } from "@/lib/spaces";
 
 export type NavItem = "oggi" | "calendario" | "casa";
@@ -268,21 +269,21 @@ const COMING = "Stiamo preparando questa pagina.";
 export const PLACEHOLDERS: Record<PlaceholderKey, PlaceholderDef> = {
   oggi: {
     title: "Oggi",
-    browserTitle: "FamilyNest · Oggi",
+    browserTitle: pageTitle("Oggi"),
     icon: "house",
     text: `Qui vedrai la giornata di casa: il prossimo impegno, la spesa e le cose da fare. ${COMING}`,
     backToToday: false,
   },
   aggiungi: {
     title: "Aggiungi",
-    browserTitle: "FamilyNest · Aggiungi",
+    browserTitle: pageTitle("Aggiungi"),
     icon: "plus",
     text: `Da qui aggiungerai impegni, spesa, cose da fare e scadenze. ${COMING}`,
     backToToday: true,
   },
   calendario: {
     title: "Calendario",
-    browserTitle: "FamilyNest · Calendario",
+    browserTitle: pageTitle("Calendario"),
     icon: "calendar",
     text: `Qui vedrai gli impegni di tutta la casa, per giorno, settimana e mese. ${COMING}`,
     backToToday: true,
@@ -290,91 +291,91 @@ export const PLACEHOLDERS: Record<PlaceholderKey, PlaceholderDef> = {
   // Until #26 (Giorno), #27 (Mese) and #19 (Dettaglio impegno) are built.
   "calendario-giorno": {
     title: "Calendario",
-    browserTitle: "FamilyNest · Calendario",
+    browserTitle: pageTitle("Calendario"),
     icon: "calendar",
     text: `Qui vedrai gli impegni di un giorno, ora per ora. ${COMING}`,
     backToToday: true,
   },
   "calendario-mese": {
     title: "Calendario",
-    browserTitle: "FamilyNest · Calendario",
+    browserTitle: pageTitle("Calendario"),
     icon: "calendar",
     text: `Qui vedrai gli impegni del mese, giorno per giorno. ${COMING}`,
     backToToday: true,
   },
   impegno: {
     title: "Impegno",
-    browserTitle: "FamilyNest · Impegno",
+    browserTitle: pageTitle("Impegno"),
     icon: "calendar",
     text: `Qui vedrai i dettagli di un impegno. ${COMING}`,
     backToToday: true,
   },
   casa: {
     title: "Casa",
-    browserTitle: "FamilyNest · Casa · Spesa",
+    browserTitle: pageTitle("Casa", "Spesa"),
     icon: "shopping-basket",
     text: `Qui ci saranno la spesa, le cose da fare e le scadenze di casa. ${COMING}`,
     backToToday: true,
   },
   "casa-da-fare": {
     title: "Casa",
-    browserTitle: "FamilyNest · Casa · Da fare",
+    browserTitle: pageTitle("Casa", "Da fare"),
     icon: "square-check",
     text: `Qui ci saranno le cose da fare della casa. ${COMING}`,
     backToToday: true,
   },
   "casa-scadenze": {
     title: "Casa",
-    browserTitle: "FamilyNest · Casa · Scadenze",
+    browserTitle: pageTitle("Casa", "Scadenze"),
     icon: "file-clock",
     text: `Qui ci saranno le scadenze della casa. ${COMING}`,
     backToToday: true,
   },
   nest: {
-    title: "Il tuo Nest",
-    browserTitle: "FamilyNest · Il tuo Nest",
+    title: yourNest(),
+    browserTitle: pageTitle(yourNest()),
     icon: "users",
     text: `Qui troverai le persone di casa, Esplora e le impostazioni. ${COMING}`,
     backToToday: true,
   },
   notifiche: {
     title: "Notifiche",
-    browserTitle: "FamilyNest · Notifiche",
+    browserTitle: pageTitle("Notifiche"),
     icon: "bell",
     text: `Qui vedrai cosa è cambiato in casa e la sintesi del mattino. ${COMING}`,
     backToToday: true,
   },
   ricerca: {
     title: "Ricerca",
-    browserTitle: "FamilyNest · Ricerca",
+    browserTitle: pageTitle("Ricerca"),
     icon: "search",
     text: `Da qui cercherai impegni, spesa, cose da fare e scadenze. ${COMING}`,
     backToToday: true,
   },
   profilo: {
     title: "Il tuo profilo",
-    browserTitle: "FamilyNest · Il tuo profilo",
+    browserTitle: pageTitle("Il tuo profilo"),
     icon: "user-round",
     text: `Qui sceglierai il tuo nome, il tuo colore e cosa vedere all'apertura. ${COMING}`,
     backToToday: true,
   },
   "calendari-collegati": {
     title: "Calendari collegati",
-    browserTitle: "FamilyNest · Calendari collegati",
+    browserTitle: pageTitle("Calendari collegati"),
     icon: "calendar-arrow-down",
     text: `Da qui collegherai Outlook, Google e iCloud al calendario di casa. ${COMING}`,
     backToToday: true,
   },
   impostazioni: {
     title: "Impostazioni della casa",
-    browserTitle: "FamilyNest · Impostazioni della casa",
+    browserTitle: pageTitle("Impostazioni della casa"),
     icon: "house",
     text: `Qui sceglierai il nome della casa e le notifiche. ${COMING}`,
     backToToday: true,
   },
   membri: {
     title: "Chi c’è",
-    browserTitle: "FamilyNest · Chi c’è",
+    browserTitle: pageTitle("Chi c’è"),
     icon: "users",
     text: `Qui vedrai chi c'è nel Nest e potrai invitare qualcuno. ${COMING}`,
     backToToday: true,

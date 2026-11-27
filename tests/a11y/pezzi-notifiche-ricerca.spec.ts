@@ -153,9 +153,10 @@ test.describe("galleria: esempi nuovi", () => {
         color: s.outlineColor,
       };
     });
-    const info = await page.evaluate(() => {
+    // F4a (#503): the focus ring is --color-azione, no longer --color-info.
+    const azione = await page.evaluate(() => {
       const probe = document.createElement("i");
-      probe.style.backgroundColor = "var(--color-info)";
+      probe.style.backgroundColor = "var(--color-azione)";
       document.body.append(probe);
       const c = getComputedStyle(probe).backgroundColor;
       probe.remove();
@@ -165,7 +166,7 @@ test.describe("galleria: esempi nuovi", () => {
     // --border-medio is 1.5px; Chromium snaps outline widths to whole pixels.
     expect(parseFloat(ring.width)).toBeGreaterThanOrEqual(1);
     expect(ring.offset).toBe("2px");
-    expect(ring.color).toBe(info);
+    expect(ring.color).toBe(azione);
   });
 
   test("#40 P1: il numero dei chip non scelti è a piena opacità", async ({
@@ -181,12 +182,21 @@ test.describe("galleria: esempi nuovi", () => {
         own: getComputedStyle(n).opacity,
         chip: getComputedStyle(el).opacity,
         color: getComputedStyle(n).color,
-        chipColor: getComputedStyle(el).color,
+        // #504 (F4b): the count of a pill is 400 in --color-inchiostro-2
+        // (before it had the colour of the pill).
+        expected: (() => {
+          const probe = document.createElement("span");
+          probe.style.color = "var(--color-inchiostro-2)";
+          el.appendChild(probe);
+          const color = getComputedStyle(probe).color;
+          probe.remove();
+          return color;
+        })(),
       };
     });
     expect(o.own).toBe("1");
     expect(o.chip).toBe("1");
-    expect(o.color).toBe(o.chipColor);
+    expect(o.color).toBe(o.expected);
   });
 
   test("#40: la palette scorre solo nel mezzo, il piede resta visibile", async ({

@@ -88,6 +88,16 @@ test("vuoto con la sintesi sopra", async ({ page }) => {
 
 test("caricamento", async ({ page }) => {
   await open(page, { list: "slow" }, false);
+  // The document is streamed: right after `load` the content can still sit in
+  // a hidden staging container, and `toContainText` also reads hidden text.
+  // Wait until a skeleton is really painted, or a cold run shoots a blank
+  // page (#590, same as casa #196).
+  await expect(
+    page
+      .locator('[aria-busy="true"] .skeleton')
+      .filter({ visible: true })
+      .first(),
+  ).toBeVisible();
   await expect(page.locator('[aria-busy="true"]').first()).toContainText(
     "Caricamento in corso",
   );

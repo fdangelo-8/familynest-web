@@ -307,3 +307,9 @@ Vibrazione: una, decisa, quando il tempo finisce.
 
 Scrivi una ricetta
 È l'unico modo per aggiungere una ricetta di casa: titolo, tempo, persone, ingredienti e passi, con una foto vostra se volete. «Importare da un link» non c'è più (tolto nel Passo 8, per i diritti d'autore su foto e testi dei siti di terzi). La versione completa, con la foto, gli errori e la scheda salvata, è nel Passo 6 · Ricette, riga 3.
+
+## Tavole sostituite dai Passi 12–16
+
+La versione più recente ha preso il posto di queste tavole (26/11/2026); la vecchia resta nella storia git. La nota qui sopra resta valida dove la tavola nuova non dice altro.
+
+- `rc1-14-una-ricetta-vostra-senza-foto.png` → `docs/design/telefono/ricette-pasti-riepilogo-chiedi-p12-16/07-una-ricetta-senza-foto-telefono-chiaro.png`

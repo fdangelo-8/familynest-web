@@ -12,7 +12,6 @@ import {
   useTransition,
   type ReactNode,
 } from "react";
-import { clearLinkResult } from "@/app/(app)/calendari-collegati/actions";
 import { Alert } from "@/components/ui/Alert/Alert";
 import { Button } from "@/components/ui/Button/Button";
 import { cx } from "@/components/ui/cx";
@@ -20,6 +19,7 @@ import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
 import { Icon } from "@/components/ui/Icon/Icon";
 import { useToast } from "@/components/ui/Toast/ToastProvider";
 import { Toggle } from "@/components/ui/Toggle/Toggle";
+import { brandRich, brandText, messages } from "@/lib/brand";
 import { CalendarSheet } from "./CalendarSheet";
 import { ConnectForm } from "./ConnectForm";
 import { ConnectSheet } from "./ConnectSheet";
@@ -243,7 +243,11 @@ export function CalendarsView({
   useEffect(() => {
     if (!notice || shown.current) return;
     shown.current = true;
-    void clearLinkResult().catch(() => undefined);
+    // A route, not a server action: an action that changes a cookie makes
+    // Next render the page again and the title leaves the head (#590).
+    void fetch("/api/calendar-sync/link-result", { method: "POST" }).catch(
+      () => undefined,
+    );
     if (notice.result === "already_linked" || notice.result === "relinked") {
       if (alreadyLinkedEmail) {
         showToast({
@@ -452,17 +456,15 @@ export function CalendarsView({
       case "admin_approval":
         return (
           <Alert variant="errore" action={retry}>
-            Il tuo account di lavoro non permette di collegare app esterne a
-            Outlook. Chiedi a chi gestisce gli account in ufficio di approvare
-            FamilyNest, oppure collega un altro calendario.
+            {brandText(messages.calendariCollegati.adminApproval, {
+              name: "Outlook",
+            })}
           </Alert>
         );
       case "not_configured":
         return (
           <Alert variant="errore">
-            Per ora non è possibile collegare Google o Outlook: il servizio non
-            è ancora attivo su FamilyNest. Intanto puoi aggiungere gli impegni a
-            mano.
+            {brandText(messages.calendariCollegati.notConfigured)}
           </Alert>
         );
       case "limit":
@@ -496,7 +498,7 @@ export function CalendarsView({
           Calendari collegati
         </h1>
         <p className="intestazione__sotto">
-          Scegli quali calendari portare in FamilyNest e cosa vedono gli altri.
+          {brandText(messages.calendariCollegati.intro)}
         </p>
       </div>
 
@@ -561,9 +563,9 @@ export function CalendarsView({
         ))}
       {unlinked === "outlook" ? (
         <Alert variant="info">
-          FamilyNest non può più usare il tuo account <b>Outlook</b>. Se vuoi,
-          togli il permesso anche dalla pagina Microsoft delle app con accesso
-          al tuo account.
+          {brandRich(messages.calendariCollegati.outlookUnlinked, {
+            b: (children) => <b>{children}</b>,
+          })}
           <br />
           <a
             className="btn-link"

@@ -25,6 +25,11 @@ export function AvatarPhoto({
   return (
     // eslint-disable-next-line @next/next/no-img-element -- a small avatar from a signed or local address: no optimisation needed
     <img
+      // A photo that failed before the page was hydrated has already fired its
+      // `error`: nobody was listening, so look at it when React takes over.
+      ref={(node) => {
+        if (node && node.complete && node.naturalWidth === 0) setFailed(true);
+      }}
       className="avatar__foto"
       src={src}
       alt=""

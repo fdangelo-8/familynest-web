@@ -11,10 +11,12 @@ test.beforeEach(async ({ page }) => {
 // #196: the reference of the tokens is the exact copy of the :root of the app.
 // docs/mockup/tokens.css stays as an archive and is no longer compared.
 function tokensFromReference(): Record<string, string> {
-  const css = readFileSync("docs/agenti/design/token.css", "utf8").replace(
+  // #634: the file has the light :root first, then the two dark blocks.
+  const whole = readFileSync("docs/agenti/design/token.css", "utf8").replace(
     /\/\*[\s\S]*?\*\//g,
     "",
   );
+  const css = whole.slice(0, whole.indexOf("\n}\n"));
   const tokens: Record<string, string> = {};
   for (const match of css.matchAll(/(--[a-z0-9-]+)\s*:\s*([^;]+);/g)) {
     tokens[match[1]!] = match[2]!;
@@ -108,7 +110,10 @@ test.describe("token e base", () => {
       }
       return [...found];
     });
-    const extra = declared.filter((name) => !names.includes(name));
+    // #634: the CSS minifier turns `color-scheme` into two helper properties.
+    const extra = declared.filter(
+      (name) => !names.includes(name) && !name.startsWith("--lightningcss-"),
+    );
     expect(extra.sort()).toEqual([]);
   });
 
@@ -206,7 +211,8 @@ test.describe("token e base", () => {
     await expect(target).toHaveCSS("outline-style", "solid");
     // Chrome rounds 1.5px down to a whole device pixel at 1x.
     await expect(target).toHaveCSS("outline-width", /^1(\.5)?px$/);
-    await expect(target).toHaveCSS("outline-color", "rgb(51, 85, 204)");
+    // #503 (computer.md, question 6): the global ring is --color-azione.
+    await expect(target).toHaveCSS("outline-color", "rgb(15, 61, 68)");
     await expect(target).toHaveCSS("outline-offset", "2px");
   });
 
@@ -387,7 +393,8 @@ test.describe("campi e controlli", () => {
     await expect(date).toHaveValue("2026-10-20");
     await expect(time).toHaveValue("17:00");
     for (const field of [date, time, page.getByTestId("campo-predefinito")]) {
-      await expect(field).toHaveCSS("height", "52px");
+      // #503: --size-campo, the label sits inside the box.
+      await expect(field).toHaveCSS("height", "56px");
       await expect(field).toHaveCSS("border-top-left-radius", "12px");
     }
   });
@@ -443,7 +450,8 @@ test.describe("campi e controlli", () => {
       );
     }
     await chips.nth(0).hover();
-    await expect(chips.nth(0)).toHaveCSS("background-color", "rgb(42, 41, 37)");
+    // #634: the mouse over a full control is --color-azione.
+    await expect(chips.nth(0)).toHaveCSS("background-color", "rgb(15, 61, 68)");
     const statico = page.getByTestId("chip-statico");
     expect(await statico.evaluate((node) => node.tagName)).not.toBe("BUTTON");
     await expect(statico).not.toHaveAttribute("aria-pressed", /.*/);
@@ -750,14 +758,36 @@ test.describe("CA-11: stessi stili del mockup", () => {
     // Height follows the wrapping of the sample text (line-height is checked).
     { id: "t-display", selector: ".t-display", skip: ["height"] },
     { id: "icona", selector: "svg.icona" },
-    { id: "btn-primary", selector: ".btn-primary", inlinePaddingOnly: true },
+    // #503 (Componenti 2.0, decision of 24/11/2026): primary, secondary,
+    // tenue, the fields, the notices and the toast take the form of Fable;
+    // the properties listed in `skip` are the approved differences.
+    {
+      id: "btn-primary",
+      selector: ".btn-primary",
+      inlinePaddingOnly: true,
+      skip: [
+        "background-color",
+        "color",
+        "border",
+        "border-top-left-radius",
+        "font-size",
+        "font-weight",
+      ],
+    },
     {
       id: "btn-secondary",
       selector: ".btn-secondary",
       inlinePaddingOnly: true,
+      skip: [
+        "border",
+        "box-shadow",
+        "border-top-left-radius",
+        "font-size",
+        "font-weight",
+      ],
     },
     { id: "btn-chiaro", selector: ".btn-chiaro", inlinePaddingOnly: true },
-    { id: "btn-tenue", selector: ".btn-tenue" },
+    { id: "btn-tenue", selector: ".btn-tenue", skip: ["background-color"] },
     {
       id: "btn-tratteggiato",
       selector: ".btn-tratteggiato",
@@ -767,7 +797,13 @@ test.describe("CA-11: stessi stili del mockup", () => {
     // gallery shows it on paper: the secondary link is on paper in both.
     { id: "btn-link", selector: ".btn-link--secondario" },
     { id: "btn-pericolo", selector: ".btn-pericolo" },
-    { id: "btn-pericolo-pieno", selector: ".btn-pericolo-pieno" },
+    {
+      id: "btn-pericolo-pieno",
+      selector: ".btn-pericolo-pieno",
+      // #503, §1 of docs/specifiche/503-componenti-base.md: same measures as
+      // the primary (radius 14, 16 px, weight 600): approved differences.
+      skip: ["border-top-left-radius", "font-size", "font-weight"],
+    },
     { id: "btn-icona", selector: ".btn-icona" },
     // The mockup shows the spinner only on the dark frame, the gallery on
     // paper: the inherited text color is context, not the component.
@@ -777,13 +813,39 @@ test.describe("CA-11: stessi stili del mockup", () => {
     {
       id: "campo",
       selector: ".campo__input",
-      // #196: --color-filo-campo #7F9092 and --color-filo-2 #C3CCC9.
-      shadowColor: { ours: "rgb(127,144,146)", mock: "rgb(195,204,201)" },
+      // #634: --color-filo-campo #869390 and --color-filo-2 #C3CCC9.
+      shadowColor: { ours: "rgb(134,147,144)", mock: "rgb(195,204,201)" },
+      // #503: the label sits inside the box (56 px, 16/22 value, the box
+      // draws the white background).
+      skip: [
+        "height",
+        "padding",
+        "font-size",
+        "line-height",
+        "background-color",
+      ],
     },
     { id: "casella", selector: ".casella" },
-    { id: "toggle", selector: ".toggle" },
+    // #503: the off switch has the border of the field around it.
+    { id: "toggle", selector: ".toggle", skip: ["box-shadow"] },
     { id: "selettore", selector: ".selettore" },
-    { id: "chip", selector: ".chip--statico" },
+    // #504 (F4b, decision of 24/11/2026): the pill is 40 px high, a capsule,
+    // with a thin border and the text at 16/22 600; the properties listed in
+    // `skip` are the approved differences.
+    {
+      id: "chip",
+      selector: ".chip--statico",
+      skip: [
+        "height",
+        "padding",
+        "border-top-left-radius",
+        "font-size",
+        "font-weight",
+        "line-height",
+        "border",
+        "box-shadow",
+      ],
+    },
     { id: "avatar", selector: '.avatar:not([class*="avatar--"])' },
     { id: "etichetta", selector: ".etichetta" },
     // The first .scheda of the mockup is a list container (no padding): the
@@ -796,19 +858,38 @@ test.describe("CA-11: stessi stili del mockup", () => {
     { id: "stato-vuoto", selector: ".stato-vuoto__titolo", skip: ["height"] },
     // The first skeletons of the mockup are on the dark frame: the large one
     // is on paper in both.
-    { id: "skeleton", selector: ".skeleton--grande" },
+    // #634: the skeleton takes --color-scheletro (#DCE2DF), not carta-2: at
+    // night carta-2 on the page would be invisible.
+    {
+      id: "skeleton",
+      selector: ".skeleton--grande",
+      skip: ["background-color"],
+    },
     // One per variant; the height depends on how the text wraps.
     // The mockup shows the error one on the dark frame: the inherited text
     // color (and the border color that follows it) is context there.
+    // #503: notices have a grey or pink background, radius 12 and no ring.
     {
       id: "avviso",
       selector: ".avviso--errore",
-      skip: ["height", "color", "border"],
+      skip: [
+        "height",
+        "color",
+        "border",
+        "background-color",
+        "border-top-left-radius",
+        "box-shadow",
+      ],
     },
     ...[".avviso--avviso", ".avviso--info", ".avviso--ok"].map((selector) => ({
       id: "avviso",
       selector,
-      skip: ["height"],
+      skip: [
+        "height",
+        "background-color",
+        "border-top-left-radius",
+        "box-shadow",
+      ],
     })),
     { id: "errore-pagina", selector: ".errore-pagina", skip: ["height"] },
   ];
@@ -992,7 +1073,15 @@ test.describe("CA-11: stessi stili del mockup", () => {
     await compare(
       page,
       390,
-      [{ id: "toast", selector: ".toast", ours: ".toast", skip: ["height"] }],
+      [
+        {
+          id: "toast",
+          selector: ".toast",
+          ours: ".toast",
+          // #503: the message is --color-inchiostro with white text.
+          skip: ["height", "background-color", "color", "border"],
+        },
+      ],
       async () => {
         await page.getByTestId("toast-mostra-altro").click();
         await expect(page.locator(".toast")).toBeVisible();
@@ -1208,19 +1297,18 @@ test.describe("correzioni approvate (#52)", () => {
 
   // ---- Punto 2: bordo dei campi ----
 
-  test("CA-1 (#52): --color-filo-campo vale #7F9092 con contrasto >= 3:1", async ({
+  test("CA-1 (#52): --color-filo-campo vale #869390 con contrasto >= 3:1", async ({
     page,
   }) => {
-    // #196: the value moved from #82858B to #7F9092 (3,33:1 on white, 3,07:1
-    // on the quiet grey).
-    expect(await rootToken(page, "--color-filo-campo")).toBe("#7f9092");
-    expect(contrast("#7F9092", "#FFFFFF")).toBeGreaterThanOrEqual(3);
-    expect(contrast("#7F9092", "#F4F6F4")).toBeGreaterThanOrEqual(3);
-    expectRatio("#7F9092", "#FFFFFF", 3.33);
-    expectRatio("#7F9092", "#F4F6F4", 3.07);
+    // #634: the value follows the palette, #869390 (3,19:1 on white). On the
+    // quiet grey it is 2,93: no field sits on that ground (spec 634, §7).
+    expect(await rootToken(page, "--color-filo-campo")).toBe("#869390");
+    expect(contrast("#869390", "#FFFFFF")).toBeGreaterThanOrEqual(3);
+    expectRatio("#869390", "#FFFFFF", 3.19);
+    expectRatio("#869390", "#F4F6F4", 2.93);
   });
 
-  test("CA-2 (#52): il campo vuoto ha il bordo a riposo #7F9092", async ({
+  test("CA-2 (#52): il campo vuoto ha il bordo a riposo #869390", async ({
     page,
   }) => {
     const input = page.locator("#campo .campo__input").first();
@@ -1231,16 +1319,16 @@ test.describe("correzioni approvate (#52)", () => {
       await style(page, "#campo .campo__input", "box-shadow"),
     );
     expect(value.width).toBe(1);
-    sameColor(value.color, "#7f9092");
+    sameColor(value.color, "#869390");
   });
 
-  test("CA-3 (#52): il campo rapido ha il bordo a riposo #7F9092", async ({
+  test("CA-3 (#52): il campo rapido ha il bordo a riposo #869390", async ({
     page,
   }) => {
     await addQuickField(page);
     const value = shadow(await style(page, "#campo-rapido-test", "box-shadow"));
     expect(value.width).toBe(1);
-    sameColor(value.color, "#7f9092");
+    sameColor(value.color, "#869390");
   });
 
   test("CA-4 (#52): il focus con Tab mostra l'anello inchiostro", async ({
@@ -1295,7 +1383,9 @@ test.describe("correzioni approvate (#52)", () => {
         const s = getComputedStyle(el);
         return `${s.boxShadow} | ${s.borderTopColor}`;
       });
-    expect(secondary).toContain("rgb(195, 204, 201)");
+    // #503: the secondary button has a 1 px --color-inchiostro border now;
+    // --color-filo-2 stays on the dashed button and the off switch.
+    expect(secondary).toContain("rgb(16, 38, 42)");
     const dashed = await page
       .locator("#btn-tratteggiato .btn-tratteggiato")
       .first()
@@ -1361,7 +1451,7 @@ test.describe("correzioni approvate (#52)", () => {
     sameColor((await read(0)).color, "#b3261e");
     sameColor((await read(1)).color, "#55686c");
     const today = await read(2);
-    sameColor(today.color, "#f4f2ec");
+    sameColor(today.color, "#ffffff"); // #634: --color-latte
     sameColor(today.background, "#10262a");
     sameColor((await read(3)).color, "#10262a");
   });

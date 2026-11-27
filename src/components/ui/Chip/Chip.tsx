@@ -1,6 +1,7 @@
 import type { ReactNode, Ref } from "react";
 import { cx } from "../cx";
 import { Icon, type IconName } from "../Icon/Icon";
+import { ChipScroll } from "./ChipScroll";
 
 export type ChipProps = {
   children: ReactNode;
@@ -97,7 +98,10 @@ export type ChipGroupProps = {
   /** `id` of the hint or the error of the group */
   "aria-describedby"?: string;
   children: ReactNode;
-  /** Single scrolling line (`.gruppo-chip--scorre`) */
+  /**
+   * Single line that scrolls sideways (`.gruppo-chip--scorre`). The last chip
+   * fades while there is more on the right; the component does it by itself.
+   */
   scroll?: boolean;
   className?: string;
   "data-testid"?: string;
@@ -112,13 +116,26 @@ export function ChipGroup({
   "aria-describedby": describedBy,
   "data-testid": testId,
 }: ChipGroupProps) {
+  if (scroll) {
+    return (
+      <ChipScroll
+        aria-label={ariaLabel}
+        aria-labelledby={labelledBy}
+        aria-describedby={describedBy}
+        className={className}
+        data-testid={testId}
+      >
+        {children}
+      </ChipScroll>
+    );
+  }
   return (
     <div
       role="group"
       aria-label={ariaLabel}
       aria-labelledby={labelledBy}
       aria-describedby={describedBy}
-      className={cx("gruppo-chip", scroll && "gruppo-chip--scorre", className)}
+      className={cx("gruppo-chip", className)}
       data-testid={testId}
     >
       {children}

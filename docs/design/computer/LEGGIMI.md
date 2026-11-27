@@ -1,6 +1,6 @@
 # Design per computer e web da telefono · passaggio al progetto
 
-Approvato da Francesco il **25/11/2026** (Passi 10 e 11) come fonte di verità per computer e web da telefono, accanto a `docs/design/telefono/` (decisione D5 in `docs/mockup/DECISIONI.md`). Le correzioni del Passo 12 arriveranno dopo: vedi «In attesa del Passo 12». Regole d'uso e token per l'app: skill `design-system`, `.claude/skills/design-system/riferimento/computer.md`.
+Approvato da Francesco il **25/11/2026** (Passi 10 e 11) come fonte di verità per computer e web da telefono, accanto a `docs/design/telefono/` (decisione D5 in `docs/mockup/DECISIONI.md`). **Dal 26/11/2026 i Passi 12–16 (tema scuro compreso) completano e correggono questo passaggio** (D7): tavole nelle cartelle `*-p12-16/`, guida in `docs/design/passi-12-16/LEGGIMI.md`, colori in `docs/design/tavolozza.md`, che vince su `tokens-computer.md` dove è diversa. Regole d'uso e token per l'app: skill `design-system`, `.claude/skills/design-system/riferimento/computer.md`.
 
 Estratto il 25/11/2026 dal secondo canvas di Fable «FamilyNest: computer e web da telefono» (https://claude.ai/artifact/PVgH6JrYhzhkPXu6js4Ktc, versione 1795605754-95ff): Passo 10 e Passo 11, approvati da Francesco. Completa il passaggio del telefono in `docs/design/telefono/` e ne segue la struttura.
 
@@ -37,29 +37,13 @@ Altri file:
 - `splash.md`: lo splash finale con la dissolvenza in tre tempi, i tempi esatti dal CSS e la versione con movimento ridotto.
 - `decisioni.md`: tabella di copertura (colonne computer e web da telefono, con la cartella di ogni funzione) e domande 170–183 con le risposte.
 
-## In attesa del Passo 12
+## Passi 12–16
 
-Il Passo 12 è stato chiesto a Fable il 25/11/2026 e non è ancora nel canvas. Quando arriva, questi punti cambiano le tavole di questo passaggio: fino ad allora valgono le correzioni e le risposte scritte qui, non le tavole.
-
-**Correzioni (sezione 1 del messaggio a Fable)**
-
-1. Barrette colorate degli impegni nelle corsie e nel calendario: contrasto almeno 3:1 sul fondo (decisione di Francesco del 25/11). Oggi ci arrivano Tommaso (3,9) e Miele (3,5); Marco (2,4), Biscotto (2,2), Laura (1,9) e Sofia (1,6) no. Una versione più scura dello stesso colore solo per la barretta; pallino e fondo restano. Vale per telefono e computer: i valori di `tokens-computer.md` cambieranno.
-2. In «Il tuo …» Laura compare come invito in attesa ma altrove vive in casa: per l'invito in attesa un'altra persona di prova.
-3. «La prossima» scadenza (Biscotto): si conta dal giorno in cui è stata fatta, e la riga lo dice (per esempio «tra un mese da oggi»).
-4. Lista dei desideri: «Body da danza, 8 anni» rivela l'età di Sofia; diventa una taglia in centimetri («taglia 134»).
-5. Web da telefono: disegnare il caso con la barra del browser in basso (molti Android e Safari).
-6. Errore di accesso: il messaggio resta, ma l'etichetta «Password» non diventa rossa; il fuoco può restare sulla password senza colorarla.
-7. Indice: colonna «Che cosa c'è» più larga.
-8. Chiama su computer: accanto a «Copia il numero» anche il link per chiamare.
-
-**Risposte 177–183 da applicare** (testo completo in `decisioni.md`): striscia per sabato e domenica con il pannello aperto (177); «Mi» anche sul telefono (178); «Cena fuori» ovunque (179); casella «Questo telefono non è solo mio» nell'accesso dal browser (180); nessuna mail a chi prenota (181); link dell'aiutante spegnibile e rinnovato a ogni rinnovo (182); pagine mancanti nel Passo 12 (183).
-
-**Pagine che mancano su computer (sezione 3 del messaggio)**, a 1280 e 1440 px, con il pannello dove serve: Spazi (le prime quattro a tessere, Esplora dentro), Contatti, Documenti, Conti, Luoghi, Novità, Proposte, Sfondi, la lista dei desideri dentro l'app, la gestione degli aiutanti (nonni e babysitter), la settimana tipo dei figli, la sintesi del mattino, i Turni; gamification e Tempo insieme se c'è spazio. Stati pieno, vuoto, errore, caricamento dove servono. Fino ad allora, per queste pagine vale il disegno per telefono adattato con `regole.md`.
+Le correzioni del Passo 12 (barrette, persona di prova dell'invito, «La prossima», taglia nella lista dei desideri, barra del browser in basso, errore di accesso senza rosso, «Chiama»), le risposte 177–211, le pagine che mancavano su computer e il tema scuro sono arrivati con i Passi 12–16: tavole in `docs/design/computer/*-p12-16/` e `docs/design/telefono/*-p12-16/`, guida in `docs/design/passi-12-16/LEGGIMI.md`. Le tavole di questo passaggio che hanno una versione nuova sono state tolte (elenco nella guida e in fondo al `note.md` di ogni cartella); per le altre, i colori sono quelli di `docs/design/tavolozza.md`.
 
 ## Cosa è escluso
 
-- **Tema scuro**: non ancora disegnato; viene dopo il Passo 12, per telefono e computer.
-- **Tablet**: per ultimo, dopo il tema scuro.
+- **Tablet**: arriva con il Passo 17.
 - Restano esclusi come nel telefono: Routine (in attesa), «trillo» (ex Citofona, da ristudiare), logo (segnaposto).
 - La pagina «Indice» del canvas non è salvata come immagine: il suo contenuto è in `decisioni.md` e qui sopra.
 - Le tre tavole animate dello splash («in movimento») non sono salvate come immagine: i tempi sono in `splash.md`.
@@ -80,6 +64,6 @@ Il Passo 12 è stato chiesto a Fable il 25/11/2026 e non è ancora nel canvas. Q
 - Le note sono il testo che Fable ha scritto sotto ogni tavola; il nome dal componente unico è ricomposto nella riga (per esempio «Il tuo Nest»).
 - La tabella di copertura non è nel secondo canvas: viene dall'indice del primo, già estratto in `docs/design/telefono/decisioni-fable.md`.
 
-## Da chiarire con Fable
+## Chiarito con Fable
 
-- **Il «respiro» dello splash lungo.** La nota di Fable parla di «un respiro di un decimo di secondo» (100 ms) tra lo schiarimento del fondo e l'uscita verso Oggi; nel CSS del canvas il respiro va da 2,45 s a 2,50 s, cioè 50 ms (`splash.md`, tabella dei tempi). I due valori non coincidono: va chiarito con Fable quale vale. Chi sviluppa lo splash non lo sceglie da sé: scrive la domanda nella issue.
+- **Il «respiro» dello splash lungo** (Passo 12): vale la nota, **100 ms**. Il fondo comincia a schiarirsi a 1,95 s, arriva al colore del cielo a 2,40, resta solo il cielo per un decimo di secondo, Oggi emerge da 2,50 a 2,90; durata 2,9 s. La tabella dei tempi di `splash.md` (respiro da 2,45 a 2,50 s) è superata su questo punto (`docs/design/passi-12-16/decisioni.md`).

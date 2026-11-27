@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import { pageTitle } from "@/lib/brand";
 import { Suspense } from "react";
 
 export const metadata: Metadata = {
-  title: "FamilyNest · Accesso",
+  title: pageTitle("Accesso"),
 };
 
 // Shared by /accesso, /accesso/mail, /accesso/password-dimenticata,

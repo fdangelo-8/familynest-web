@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Alert } from "@/components/ui/Alert/Alert";
 import { Button } from "@/components/ui/Button/Button";
+import { brandText, messages } from "@/lib/brand";
 import { AuthLayout, Intro } from "./AuthLayout";
 import styles from "./accesso.module.css";
 
@@ -24,7 +25,7 @@ const COPY = {
     action: "/auth/confirm",
     eyebrow: "Registrazione",
     title: "Conferma il tuo indirizzo",
-    lead: "Tocca il bottone per confermare la mail ed entrare in FamilyNest.",
+    lead: brandText(messages.accesso.confirmLead),
     button: "Conferma l'indirizzo",
     busy: "Conferma in corso",
     // Between the address and the end of the sentence.

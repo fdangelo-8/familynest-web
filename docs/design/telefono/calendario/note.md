@@ -138,3 +138,9 @@ Note di Fable sul canvas accanto alla tavola:
 
 Vuoto
 Con un filtro acceso il vuoto dice per chi è libero il giorno, e che cosa hanno gli altri.
+
+## Tavole sostituite dai Passi 12–16
+
+La versione più recente ha preso il posto di queste tavole (26/11/2026); la vecchia resta nella storia git. La nota qui sopra resta valida dove la tavola nuova non dice altro.
+
+- `giorno-insieme.png` → `docs/design/telefono/calendario-p12-16/14-il-giorno-telefono-chiaro.png`

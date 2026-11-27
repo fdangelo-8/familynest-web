@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/accesso/LegalPage";
+import { brandText, messages, pageTitle } from "@/lib/brand";
 
 export const metadata: Metadata = {
-  title: "FamilyNest · Informativa sulla privacy",
+  title: pageTitle("Informativa sulla privacy"),
 };
 
 // Visible to everyone, with or without a session.
@@ -11,7 +12,7 @@ export default function PrivacyPage() {
     <LegalPage
       title="Informativa sulla privacy"
       icon="shield"
-      soonText="Qui leggerai quali dati raccoglie FamilyNest, perché e come li proteggiamo. Stiamo preparando questa pagina."
+      soonText={brandText(messages.accesso.privacySoon)}
     />
   );
 }

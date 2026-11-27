@@ -18,6 +18,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog/ConfirmDialog";
 import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
 import {
   DateField,
+  FieldGroup,
   FieldPair,
   SelectField,
   TextField,
@@ -26,7 +27,8 @@ import {
 import { Icon } from "@/components/ui/Icon/Icon";
 import { ColorChoice } from "@/components/ui/ColorChoice/ColorChoice";
 import { IconButton } from "@/components/ui/IconButton/IconButton";
-import { List, ListRow } from "@/components/ui/List/List";
+import { BackLink } from "@/components/ui/AppFrame/IconLinks";
+import { List, ListRow, ValueRow } from "@/components/ui/List/List";
 import { PasswordField } from "@/components/ui/PasswordField/PasswordField";
 import { PhotoField } from "@/components/ui/PhotoField/PhotoField";
 import { RepeatField } from "@/components/ui/RepeatField/RepeatField";
@@ -35,6 +37,15 @@ import {
   type TurnPerson,
 } from "@/components/ui/TurnPeople/TurnPeople";
 import { WeekdayPicker } from "@/components/ui/WeekdayPicker/WeekdayPicker";
+import { AvatarStack } from "@/components/ui/AvatarStack/AvatarStack";
+import { ChoiceGroup } from "@/components/ui/ChoiceGroup/ChoiceGroup";
+import { FaceGrid } from "@/components/ui/FaceGrid/FaceGrid";
+import { PersonPicker } from "@/components/ui/PersonPicker/PersonPicker";
+import { Tile, TileGrid } from "@/components/ui/Tile/Tile";
+import { it } from "@/lib/i18n/messages/it";
+import { t } from "@/lib/i18n";
+import { memberInitials } from "@/lib/member-initials";
+import { askNest, BRAND, brandText, messages, nestEnergy } from "@/lib/brand";
 import { PHOTO_REDUCE_ERROR } from "@/lib/photo-field-texts";
 import { REPEAT_DAYS_ERROR } from "@/lib/repeat-options";
 import { PageError } from "@/components/ui/PageError/PageError";
@@ -341,20 +352,777 @@ function AnimalParts() {
   );
 }
 
+// #503 (F4a): the basic components 2.0, one example for every new prop, with
+// the texts of the boards of Fable (docs/specifiche/503-componenti-base.md §7).
+function BaseComponentsSection() {
+  const toast = useToast();
+  const [retries, setRetries] = useState(0);
+  const [boxClicks, setBoxClicks] = useState(0);
+  const [undone, setUndone] = useState(0);
+  const [edits, setEdits] = useState(0);
+  const [reminderClicks, setReminderClicks] = useState(0);
+  const [doNotDisturb, setDoNotDisturb] = useState(true);
+  const [shopping, setShopping] = useState(false);
+  const [invited, setInvited] = useState(0);
+  const [added, setAdded] = useState(0);
+  const [removed, setRemoved] = useState(0);
+  const [mail, setMail] = useState("");
+  const [password, setPassword] = useState("");
+  return (
+    <Section id="base-2" title="Componenti di base 2.0 (#503)">
+      <Example caption="1 · Pulsanti · quattro livelli" wide>
+        <div className={styles.riga} data-testid="base-pulsanti">
+          <Button>Salva</Button>
+          <Button variant="secondary" icon="rotate-cw">
+            Usa di nuovo
+          </Button>
+          <Button variant="quieto" icon="shopping-basket">
+            Metti in spesa
+          </Button>
+          <Button variant="link">Annulla</Button>
+          <Button variant="pericolo">Elimina la lista</Button>
+        </div>
+      </Example>
+      <Example caption="2 · Piede della pagina">
+        <div className={styles.piede} data-testid="base-piede">
+          <Button variant="link">Annulla</Button>
+          <Button>Salva</Button>
+        </div>
+      </Example>
+      <Example caption="3 · Campi · vuoto, pieno, a fuoco">
+        <div className="colonna" data-testid="base-campi">
+          <TextField label="Nome" id="base-nome-vuoto" />
+          <TextField
+            label="Nome"
+            id="base-nome-pieno"
+            defaultValue="Sofia"
+            autoComplete="off"
+          />
+          <TextField
+            label="Nome"
+            id="base-nome-fuoco"
+            defaultValue="Sofi"
+            autoComplete="off"
+          />
+        </div>
+      </Example>
+      <Example caption="4 · Campi · errore e aiuto">
+        <div className="colonna" data-testid="base-campi-errore">
+          <TextField
+            label="Telefono"
+            id="base-telefono"
+            type="tel"
+            defaultValue="02 48"
+            error="Il numero è troppo corto: controlla le cifre."
+          />
+          <TextField
+            label="Nota"
+            id="base-nota"
+            multiline
+            help="Niente dati di salute delle persone."
+          />
+        </div>
+      </Example>
+      <Example caption="5 · Campi uniti">
+        <div className="colonna" data-testid="base-campi-uniti">
+          <FieldGroup>
+            <TextField
+              label="La tua mail"
+              id="base-mail"
+              type="email"
+              value={mail}
+              onChange={(event) => setMail(event.target.value)}
+            />
+            <PasswordField
+              label="Password"
+              id="base-password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+            />
+          </FieldGroup>
+          <FieldGroup>
+            <TextField
+              label="Numero della carta"
+              id="base-carta"
+              inputMode="numeric"
+            />
+            <FieldGroup columns>
+              <TextField label="Scadenza" id="base-scadenza" />
+              <TextField label="Codice" id="base-codice" />
+            </FieldGroup>
+          </FieldGroup>
+        </div>
+      </Example>
+      <Example caption="6 · Avvisi">
+        <div className="colonna" data-testid="base-avvisi">
+          <Alert variant="info" data-testid="base-avviso-info">
+            Sofia non ha un account: il suo profilo lo tenete voi adulti.
+          </Alert>
+          <Alert variant="offline" data-testid="base-avviso-offline">
+            Vedi le cose aggiornate alle 19:05; le modifiche partiranno appena
+            torna la connessione.
+          </Alert>
+        </div>
+      </Example>
+      <Example caption="7 · Vuoto · tutto il riquadro">
+        <div data-testid="base-vuoto-box">
+          <EmptyState
+            variant="box"
+            title="Nuova scadenza"
+            text="Antiparassitario, vaccino, visita: ve li ricordiamo noi."
+            onClick={() => setBoxClicks((n) => n + 1)}
+          />
+          <p className={styles.contatore} data-testid="base-vuoto-conteggio">
+            Aperto: {boxClicks}
+          </p>
+        </div>
+      </Example>
+      <Example caption="8 · Errore di pagina">
+        <div data-testid="base-errore-pagina">
+          <PageError
+            title="Questa pagina non si è caricata"
+            text="Controlla la connessione e riprova."
+            onRetry={() => setRetries((n) => n + 1)}
+          />
+          <p className={styles.contatore} data-testid="base-errore-conteggio">
+            Riprova: {retries}
+          </p>
+        </div>
+      </Example>
+      <Example caption="9 · Messaggio">
+        <div className={styles.riga}>
+          <Button
+            variant="secondary"
+            data-testid="base-messaggio-mostra"
+            onClick={() =>
+              toast.showToast({
+                text: "Fatto:",
+                emphasis: "Passeggiata della sera",
+                onUndo: () => setUndone((n) => n + 1),
+              })
+            }
+          >
+            Mostra il messaggio
+          </Button>
+          <span
+            className={styles.contatore}
+            data-testid="base-messaggio-conteggio"
+          >
+            Annullato: {undone}
+          </span>
+        </div>
+      </Example>
+      <Example caption="10 · Freccia indietro" wide>
+        <div className="colonna" data-testid="base-freccia">
+          <div className={styles.barraFreccia}>
+            <BackLink fallback="/design-system" />
+            <Button
+              variant="link"
+              onClick={() => setEdits((n) => n + 1)}
+              data-testid="base-freccia-modifica"
+            >
+              Modifica
+            </Button>
+          </div>
+          <p className={styles.contatore}>Modifica: {edits}</p>
+          <div className={styles.mediaSegnaposto}>
+            <BackLink fallback="/design-system" onMedia />
+          </div>
+        </div>
+      </Example>
+      <Example caption="11 · Righe che portano altrove">
+        <div data-testid="base-righe">
+          <List flush>
+            <ListRow
+              href="/design-system"
+              icon="settings"
+              title="Impostazioni"
+              text="Tema, notifiche, privacy"
+              arrow
+            />
+            <ListRow
+              href="/design-system"
+              icon="calendar"
+              title="Calendari collegati"
+              text="Google e Outlook"
+              arrow
+            />
+            <ListRow
+              href="/design-system"
+              icon="user-round"
+              title="Il tuo profilo"
+              text="I tuoi dati e il tuo account"
+              arrow
+            />
+          </List>
+        </div>
+      </Example>
+      <Example caption="12 · Dati che si cambiano">
+        <List flush>
+          <ValueRow
+            label="Nome"
+            value="Marco"
+            onEdit={() => setEdits((n) => n + 1)}
+          />
+          <ValueRow
+            label="Mail"
+            value="marco.bianchi@esempio.it"
+            onEdit={() => setEdits((n) => n + 1)}
+          />
+          <ValueRow
+            label="Compleanno"
+            value="18 settembre"
+            onEdit={() => setEdits((n) => n + 1)}
+          />
+        </List>
+      </Example>
+      <Example caption="13 · Scelte veloci e interruttori">
+        <div data-testid="base-interruttori">
+          <List flush>
+            <ListRow
+              onClick={() => setReminderClicks((n) => n + 1)}
+              title="Promemoria prima di un impegno"
+              value="Un'ora prima"
+              arrow
+            />
+            <ListRow
+              title="Non disturbare"
+              text="Dalle 22:00 alle 7:00"
+              trailing={
+                <Toggle
+                  checked={doNotDisturb}
+                  onChange={setDoNotDisturb}
+                  aria-label="Non disturbare"
+                />
+              }
+            />
+            <ListRow
+              title="Cose aggiunte alla spesa"
+              trailing={
+                <Toggle
+                  checked={shopping}
+                  onChange={setShopping}
+                  aria-label="Cose aggiunte alla spesa"
+                />
+              }
+            />
+          </List>
+          <p className={styles.contatore}>Scelte: {reminderClicks}</p>
+        </div>
+      </Example>
+      <Example caption="14 · Azioni dentro un elenco">
+        <div data-testid="base-azioni">
+          <List flush>
+            <ListRow
+              onClick={() => setInvited((n) => n + 1)}
+              icon="user-plus"
+              title="Invita una persona"
+              text="Riceve un link ed entra"
+              arrow
+            />
+            <ListRow
+              onClick={() => setAdded((n) => n + 1)}
+              add
+              title="Aggiungi un figlio o un animale"
+            />
+            <ListRow
+              onClick={() => setRemoved((n) => n + 1)}
+              tone="danger"
+              icon="log-out"
+              title="Togli Laura dal Nest"
+            />
+          </List>
+          <p className={styles.contatore}>
+            Invitati: {invited} · Aggiunti: {added} · Tolti: {removed}
+          </p>
+        </div>
+      </Example>
+    </Section>
+  );
+}
+
+// CA-13 (#503): view with the offline notice at the top and more than 800 px of
+// content under it, to try the notice while the page scrolls. Shown only with
+// ?avviso-offline=1.
+function OfflineNoticeView() {
+  return (
+    <>
+      <Alert variant="offline" data-testid="base-avviso-offline-alto">
+        Vedi le cose aggiornate alle 19:05; le modifiche partiranno appena torna
+        la connessione.
+      </Alert>
+      <main className={styles.pagina}>
+        <h1 className="t-titolo-pagina">Design system</h1>
+        <div data-testid="base-avviso-offline-contenuto">
+          {Array.from({ length: 150 }, (_, i) => (
+            <p className="t-corpo" key={i}>
+              Riga di prova {i + 1}: il contenuto continua sotto l&apos;avviso
+              per provare lo scorrimento della pagina.
+            </p>
+          ))}
+        </div>
+      </main>
+    </>
+  );
+}
+
+// F4b (#504): choices and people. Fixed data, the same for tests and visual
+// references (`docs/specifiche/504-componenti-scelte-persone.md` §6).
+const CHOICE_COHABITANTS = [
+  {
+    value: "coppia",
+    title: "In coppia",
+    line: "Voi due, sotto lo stesso tetto",
+    icon: "heart",
+  },
+  {
+    value: "famiglia",
+    title: "In famiglia, con figli",
+    line: "Con i profili dei figli, la scuola e la lista dei desideri",
+    icon: "house",
+  },
+] as const;
+
+const CHOICE_TILES = [
+  { value: "coppia", title: "In coppia", icon: "heart" },
+  { value: "famiglia", title: "In famiglia", icon: "house" },
+  { value: "solo", title: "Per conto mio", icon: "user-round" },
+  { value: "coinquilini", title: "Con coinquilini", icon: "users" },
+] as const;
+
+const NEST_MEMBERS = [
+  { id: "marco", name: "Marco", color: "pomodoro", at: "2026-11-01" },
+  { id: "laura", name: "Laura", color: "glicine", at: "2026-11-01T01:00" },
+  { id: "sofia", name: "Sofia", color: "salvia", at: "2026-11-01T02:00" },
+  { id: "tommaso", name: "Tommaso", color: "cobalto", at: "2026-11-01T03:00" },
+  {
+    id: "biscotto",
+    name: "Biscotto",
+    color: "zafferano",
+    at: "2026-11-01T04:00",
+  },
+  { id: "miele", name: "Miele", color: "cannella", at: "2026-11-02" },
+] as const;
+
+const NEST_INITIALS = memberInitials(
+  NEST_MEMBERS.map((member) => ({
+    id: member.id,
+    householdId: "gallery",
+    name: member.name,
+    createdAt: member.at,
+  })),
+);
+
+const GALLERY_PEOPLE = NEST_MEMBERS.map((member) => ({
+  id: member.id,
+  name: member.name,
+  color: member.color,
+  initials: NEST_INITIALS.get(member.id),
+}));
+
+const TEN_NAMES = [
+  "Marco",
+  "Laura",
+  "Sofia",
+  "Tommaso",
+  "Biscotto",
+  "Rita",
+  "Paolo",
+  "Giulia",
+  "Anna",
+  "Miele",
+] as const;
+
+const TEN_PEOPLE = MEMBER_COLOR_CODES.map((color, index) => ({
+  id: `dieci-${color}`,
+  name: TEN_NAMES[index] ?? color,
+  color,
+}));
+
+const FACE_LINES: Record<string, string> = {
+  marco: "Tu",
+  laura: "Invito da mandare",
+  sofia: "9 anni",
+  tommaso: "6 anni",
+  biscotto: "Cane",
+};
+
+const FACE_PEOPLE = GALLERY_PEOPLE.filter(
+  (person) => person.id !== "miele",
+).map((person) => ({
+  ...person,
+  line: FACE_LINES[person.id],
+  photoSrc: person.id === "biscotto" ? ANIMAL_SAMPLE_PHOTO : undefined,
+}));
+
+const FILTERS = [
+  { id: "tutto", label: "Tutto", count: 9 },
+  { id: "impegni", label: "Impegni", count: 5 },
+  { id: "da-fare", label: "Da fare", count: 2 },
+  { id: "spesa", label: "Spesa", count: 0 },
+  { id: "scadenze", label: "Scadenze", count: 1 },
+  { id: "animali", label: "Animali", count: 3 },
+] as const;
+
+function ChoicesPeopleSection() {
+  const [household, setHousehold] = useState<string | null>("famiglia");
+  const [tile, setTile] = useState<string | null>("famiglia");
+  const [kinds, setKinds] = useState<string[]>(["compleanno"]);
+  const [people, setPeople] = useState<string[]>(["sofia", "biscotto"]);
+  const [forWhom, setForWhom] = useState<string[]>(["tommaso"]);
+  const [forWhomTen, setForWhomTen] = useState<string[]>([]);
+  const [days, setDays] = useState<number[]>([1, 3, 5]);
+  const [filter, setFilter] = useState<string>("tutto");
+  const [food, setFood] = useState(false);
+  const [walk, setWalk] = useState(true);
+  const [touched, setTouched] = useState("");
+
+  const toggleIn = (
+    list: readonly string[],
+    value: string,
+    set: (next: string[]) => void,
+  ) =>
+    set(
+      list.includes(value) ? list.filter((v) => v !== value) : [...list, value],
+    );
+
+  const stackFour = GALLERY_PEOPLE.slice(0, 4);
+  const stackSix = [...stackFour, GALLERY_PEOPLE[4]!, GALLERY_PEOPLE[5]!];
+
+  return (
+    <Section id="scelte-persone" title="Scelte e persone (F4b, #504)">
+      <Example caption="ChoiceGroup · schede (A)">
+        <ChoiceGroup
+          label="Chi vive con te?"
+          value={household}
+          onChange={setHousehold}
+          options={CHOICE_COHABITANTS}
+          data-testid="ds-scelte-schede"
+        />
+      </Example>
+      <Example caption="ChoiceGroup · schede · errore">
+        <ChoiceGroup
+          label="Chi vive con te?"
+          value={null}
+          onChange={() => undefined}
+          options={CHOICE_COHABITANTS}
+          error={it.choicesPeople.chooseOne}
+          data-testid="ds-scelte-schede-errore"
+        />
+      </Example>
+      <Example caption="ChoiceGroup · tessere (B)">
+        <ChoiceGroup
+          label="Con chi vivi?"
+          variant="tiles"
+          value={tile}
+          onChange={setTile}
+          options={CHOICE_TILES}
+          data-testid="ds-scelte-tessere"
+        />
+      </Example>
+      <Example caption="Chip · pastiglie (C)">
+        <ChipGroup aria-label="Che cosa festeggiate" data-testid="ds-pastiglie">
+          {(
+            [
+              ["compleanno", "Compleanno"],
+              ["anniversario", "Anniversario"],
+              ["onomastico", "Onomastico"],
+              ["altro", "Altro"],
+            ] as const
+          ).map(([id, label]) => (
+            <Chip
+              key={id}
+              pressed={kinds.includes(id)}
+              onClick={() => toggleIn(kinds, id, setKinds)}
+            >
+              {label}
+            </Chip>
+          ))}
+        </ChipGroup>
+      </Example>
+      <Example caption="Chip · pastiglie delle persone">
+        <ChipGroup aria-label="Per chi" data-testid="ds-pastiglie-persone">
+          {GALLERY_PEOPLE.filter((p) =>
+            ["sofia", "tommaso", "biscotto"].includes(p.id),
+          ).map((person) => (
+            <Chip
+              key={person.id}
+              person
+              pressed={people.includes(person.id)}
+              onClick={() => toggleIn(people, person.id, setPeople)}
+              leading={
+                <Avatar
+                  name={person.name}
+                  color={person.color}
+                  initials={person.initials}
+                  nameShown
+                />
+              }
+            >
+              {person.name}
+            </Chip>
+          ))}
+          <Chip
+            icon="users"
+            pressed={people.includes("tutta")}
+            onClick={() => toggleIn(people, "tutta", setPeople)}
+          >
+            Tutta la casa
+          </Chip>
+        </ChipGroup>
+      </Example>
+      <Example caption="PersonPicker · «Per chi»">
+        <PersonPicker
+          label="Per chi"
+          people={GALLERY_PEOPLE}
+          value={forWhom}
+          onChange={setForWhom}
+          data-testid="ds-per-chi"
+        />
+      </Example>
+      <Example caption="PersonPicker · dieci persone, a capo">
+        <PersonPicker
+          label="Per chi, dieci persone"
+          people={TEN_PEOPLE}
+          value={forWhomTen}
+          onChange={setForWhomTen}
+          data-testid="ds-per-chi-dieci"
+        />
+      </Example>
+      <Example caption="PersonPicker · caricamento">
+        <PersonPicker
+          label="Per chi, in caricamento"
+          people={[]}
+          value={[]}
+          onChange={() => undefined}
+          loading
+          data-testid="ds-per-chi-caricamento"
+        />
+      </Example>
+      <Example caption="WeekdayPicker · giorni">
+        <WeekdayPicker
+          value={days}
+          onChange={setDays}
+          data-testid="ds-giorni"
+        />
+      </Example>
+      <Example caption="ChipGroup scroll · filtri che scorrono" wide>
+        <ChipGroup scroll aria-label="Filtri" data-testid="ds-filtri">
+          {FILTERS.map((item) => (
+            <Chip
+              key={item.id}
+              pressed={filter === item.id}
+              count={item.count}
+              onClick={() => setFilter(item.id)}
+            >
+              {item.label}
+            </Chip>
+          ))}
+        </ChipGroup>
+      </Example>
+      <Example caption="Spunta neutra · riga fatta">
+        <List className="scheda" data-testid="ds-spunta">
+          <ListRow>
+            <Checkbox
+              variant="round"
+              checked={food}
+              onChange={setFood}
+              aria-label="Segna come fatto: Cibo di Biscotto"
+            />
+            <span className="riga-lista__testo">
+              <span className="riga-lista__titolo">Cibo di Biscotto</span>
+              <span className="riga-lista__info">Sera · tocca a Laura</span>
+            </span>
+            <Avatar name="Laura" color="glicine" dot nameShown />
+          </ListRow>
+          <ListRow modifier={walk ? "riga-lista--fatto" : undefined}>
+            <Checkbox
+              variant="round"
+              checked={walk}
+              onChange={setWalk}
+              aria-label="Segna come fatto: Passeggiata del mattino"
+            />
+            <span className="riga-lista__testo">
+              <span className="riga-lista__titolo">
+                Passeggiata del mattino
+              </span>
+              <span className="riga-lista__info">Fatto da te alle 7:42</span>
+            </span>
+            <Avatar name="Marco" color="pomodoro" dot nameShown />
+          </ListRow>
+        </List>
+      </Example>
+      <Example caption="FaceGrid · volti in griglia">
+        <FaceGrid
+          label={`Persone del ${BRAND.short}`}
+          people={FACE_PEOPLE}
+          onSelect={(id) => {
+            const person = FACE_PEOPLE.find((p) => p.id === id);
+            if (person) {
+              setTouched(t(it.choicesPeople.touched, { name: person.name }));
+            }
+          }}
+          onAdd={() => undefined}
+          data-testid="ds-volti"
+        />
+        <p
+          className="t-nota"
+          role="status"
+          aria-live="polite"
+          data-testid="ds-volti-stato"
+        >
+          {touched}
+        </p>
+      </Example>
+      <Example caption="FaceGrid · nessuna persona">
+        <FaceGrid
+          label={`Persone del ${BRAND.short}, nessuna`}
+          people={[]}
+          onSelect={() => undefined}
+          onAdd={() => undefined}
+          data-testid="ds-volti-vuoto"
+        />
+      </Example>
+      <Example caption="AvatarStack · foto e due lettere">
+        <div className={styles.riga} data-testid="ds-foto-e-pila">
+          <span data-testid="ds-pila-quattro">
+            <AvatarStack people={stackFour} />
+          </span>
+          <span>Tutti e quattro</span>
+          <span data-testid="ds-pila-sei">
+            <AvatarStack people={stackSix} />
+          </span>
+          <span className={styles.avatarFoto} data-testid="ds-biscotto-foto">
+            <Avatar
+              name="Biscotto"
+              color="zafferano"
+              size="xl"
+              photoSrc={ANIMAL_SAMPLE_PHOTO}
+              ring
+            />
+          </span>
+          <span
+            className={styles.avatarFoto}
+            data-testid="ds-biscotto-senza-foto"
+          >
+            <Avatar
+              name="Biscotto"
+              color="zafferano"
+              size="xl"
+              photoSrc={BROKEN_PHOTO}
+              ring
+            />
+          </span>
+          <span data-testid="ds-miele-s">
+            <Avatar name="Miele" color="cannella" initials="Mi" />
+          </span>
+          <span data-testid="ds-miele-m">
+            <Avatar name="Miele" color="cannella" initials="Mi" size="m" />
+          </span>
+          <span data-testid="ds-miele-l">
+            <Avatar name="Miele" color="cannella" initials="Mi" size="l" />
+          </span>
+          <span data-testid="ds-miele-xl">
+            <Avatar name="Miele" color="cannella" initials="Mi" size="xl" />
+          </span>
+        </div>
+      </Example>
+      <Example caption="Avatar neutro · aiutante">
+        <div className={styles.riga} data-testid="ds-aiutante">
+          <Avatar name="Anna" color="neutro" size="s" />
+          <Avatar name="Anna" color="neutro" size="m" />
+          <Avatar name="Anna" color="neutro" size="l" />
+          <Avatar name="Anna" color="neutro" size="xl" />
+          <span>nonna Anna</span>
+        </div>
+      </Example>
+      <Example caption="Tile · tessere di Spazi">
+        <TileGrid data-testid="ds-tessere-spazi">
+          <Tile
+            href="#"
+            icon="paw-print"
+            title="Animali"
+            line="Biscotto e Miele"
+          />
+          <Tile href="#" icon="book-open" title="Ricette" line="8 vostre" />
+          <Tile
+            href="#"
+            icon="utensils"
+            title="Pasti"
+            line="Stasera: pasta al pesto"
+          />
+          <Tile
+            href="#"
+            icon="repeat"
+            title="Liste da riusare"
+            line="4 liste"
+          />
+        </TileGrid>
+      </Example>
+      <Example caption={`Tile · tessere del ${BRAND.short} (4 colonne)`} wide>
+        <TileGrid columns={4} data-testid="ds-tessere-nest">
+          <Tile
+            href="#"
+            avatar={{ name: "Marco", color: "pomodoro" }}
+            title="Marco"
+            line="Tu"
+          />
+          <Tile
+            href="#"
+            avatar={{ name: "Laura", color: "glicine" }}
+            title="Laura"
+            line="Adulta"
+          />
+          <Tile
+            href="#"
+            avatar={{ name: "Sofia", color: "salvia" }}
+            title="Sofia"
+            line="9 anni"
+          />
+          <Tile
+            href="#"
+            avatar={{ name: "Tommaso", color: "cobalto" }}
+            title="Tommaso"
+            line="6 anni"
+          />
+          <Tile
+            variant="pending"
+            avatar={{ name: "Giorgia", color: "peonia" }}
+            title="Giorgia"
+            line="Invito mandato ieri · vale ancora 6 giorni"
+            data-testid="ds-tessera-attesa"
+          />
+        </TileGrid>
+      </Example>
+      <Example caption="Tag · allerta">
+        <Tag variant="allerta" data-testid="ds-tag-allerta">
+          Da verificare
+        </Tag>
+      </Example>
+    </Section>
+  );
+}
+
 export function Gallery() {
   const rowCards = useQueryFlag("righe-scheda");
   const pageParts = useQueryFlag("pezzi-pagine");
   const passwordField = useQueryFlag("campo-password");
   const splitUnico = useQueryFlag("split-unico");
+  const offlineView = useQueryFlag("avviso-offline");
+  if (offlineView) return <OfflineNoticeView />;
   return (
     <main className={styles.pagina}>
       <h1 className="t-titolo-pagina">Design system</h1>
       <TypographySection />
+      <ThemeSection />
       <ButtonsSection />
       <FieldsSection />
       <ControlsSection />
       <PeopleSection />
+      <ChoicesPeopleSection />
       <ListSection rowCards={rowCards} />
+      <BaseComponentsSection />
       <OverlaysSection />
       <StatesSection />
       <DayViewSection />
@@ -398,7 +1166,7 @@ function AccessParts() {
               <div className="intestazione">
                 <p className="intestazione__sopra">Benvenuto</p>
                 <h3 className="intestazione__titolo t-titolo-pagina">
-                  Entra in FamilyNest
+                  {brandText(messages.brand.enter)}
                 </h3>
                 <p className="intestazione__sotto">
                   Il calendario, la spesa e le cose da fare di chi vive con te,
@@ -454,6 +1222,34 @@ function AccessParts() {
             <div className="split-onboarding__legale">
               <LegalLine className="t-nota t-secondario" />
             </div>
+          </div>
+        </div>
+      </Example>
+      <Example caption="Il nome · Brand · brand.enter · brand.askNest · brand.nestEnergy (#502)">
+        <div className="colonna" data-testid="il-nome">
+          <div className="tema-notte">
+            <Brand />
+          </div>
+          <p className="t-titolo-scheda">{brandText(messages.brand.enter)}</p>
+          <p className="t-corpo">{askNest()}</p>
+          <p className="t-corpo">{nestEnergy()}</p>
+        </div>
+      </Example>
+    </Section>
+  );
+}
+
+// Dark theme (#634): one image per theme, the other one is hidden with CSS.
+function ThemeSection() {
+  return (
+    <Section id="tema" title="Tema">
+      <Example caption="solo-chiaro · solo-scuro">
+        <div className="colonna" data-testid="solo-tema">
+          <div className="solo-chiaro" data-testid="solo-chiaro">
+            <p className="t-corpo">Solo col tema chiaro</p>
+          </div>
+          <div className="solo-scuro" data-testid="solo-scuro">
+            <p className="t-corpo">Solo col tema scuro</p>
           </div>
         </div>
       </Example>
@@ -2399,8 +3195,9 @@ function LinkedCalendarParts() {
               <span>
                 <span className="scelta__titolo">Entrata e uscita</span>
                 <span className="scelta__info">
-                  Quello che crei su Outlook arriva qui, e puoi mandare su
-                  Outlook gli impegni di FamilyNest.
+                  {brandText(messages.calendariCollegati.directionBoth, {
+                    provider: "Outlook",
+                  })}
                 </span>
               </span>
               <span />
@@ -2416,7 +3213,10 @@ function LinkedCalendarParts() {
               <span>
                 <span className="scelta__titolo">Solo in entrata</span>
                 <span className="scelta__info">
-                  Vedi i tuoi impegni, ma FamilyNest non scrive su Outlook.
+                  {brandText(messages.calendariCollegati.directionIncoming, {
+                    work: "",
+                    provider: "Outlook",
+                  })}
                 </span>
               </span>
               <span />
@@ -2639,7 +3439,7 @@ function WishlistParts() {
                 <span className="quadrato-nest__punto membro-salvia" />
                 <span className="quadrato-nest__punto membro-cobalto" />
               </span>
-              Lista creata con FamilyNest
+              {brandText(messages.brand.createdWith)}
             </p>
           </div>
         </div>

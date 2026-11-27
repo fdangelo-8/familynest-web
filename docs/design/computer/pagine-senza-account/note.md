@@ -160,3 +160,13 @@ Alla scadenza la pagina si chiude da sola e non mostra più niente della casa. U
 Su computer
 
 Due colonne: gli impegni a sinistra, i numeri a destra. Dal computer non si chiama: al posto di «Chiama» c'è il numero, da leggere.
+
+## Tavole sostituite dai Passi 12–16
+
+La versione più recente ha preso il posto di queste tavole (26/11/2026); la vecchia resta nella storia git. La nota qui sopra resta valida dove la tavola nuova non dice altro.
+
+- `05-computer-la-lista.png` → `docs/design/computer/web-da-telefono-e-senza-account-p12-16/p17-01-la-lista-dal-link-chiaro.png` (Passo 17, senza «N. 33»)
+- `01-telefono-la-lista.png` → `docs/design/telefono/web-da-telefono-e-senza-account-p12-16/p17-01-la-lista-dal-link-web-chiaro.png` (Passo 17, senza «N. 33»)
+- `04-telefono-link-spento.png` → `docs/design/telefono/web-da-telefono-e-senza-account-p12-16/04-aiutante-link-spento-o-scaduto-web-chiaro.png`
+
+Dal Passo 17 (risposta 212): la nota di questa cartella secondo cui la taglia «134» si vede è superata. Taglia e numero di scarpe stanno nel campo «Solo per noi», mai mostrato dal link; i prezzi si vedono come «circa» (`docs/design/tablet/decisioni.md`).
