@@ -1,5 +1,7 @@
 # #333 · Aggiungi: campi a mano, niente «Esempi», niente «La porta», visibilità a due voci, più persone in «Chi se ne occupa»
 
+> **Nota del 27/11/2026 (D8).** Requisito chiuso, scritto con la soglia di allora (1024 px). Per il lavoro nuovo valgono le soglie uniche di D8: 900 e 1280 px, sotto i 600 px di altezza la forma del telefono (`docs/specifiche/506-guscio-navigazione.md` §1).
+
 Dettagli del requisito della issue #333 (analista, 06/11/2026). Nella issue ci sono regole e CA; qui le analisi lunghe, da leggere solo se serve.
 
 Fonti: decisioni di Francesco del 06/11 (corpo e commento della #333), requisiti di #20, #22, #171, #335 (modifica della Spesa), codice in `src/components/aggiungi/` e `src/components/evento-modulo/`, schema in `supabase/migrations/`.

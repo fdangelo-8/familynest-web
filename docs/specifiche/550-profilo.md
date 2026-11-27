@@ -4,7 +4,9 @@ Dettagli del requisito della issue #550 (analista, 26/11/2026). Nella issue ci s
 
 Fonti: `docs/design/telefono/profilo/profilo.png` (Passo 5, risposta 88: «Profilo senza "Accesso"»); `docs/design/computer/il-tuo-impostazioni-notifiche/04-il-tuo-profilo.png` (Passo 11); `docs/design/computer/regole.md`; requisito di F5 #506 (rotta `/profilo`: dettaglio, ripiego `/nest`, titolo «Il tuo profilo» sul computer); DB-2 #511; codice attuale in `src/app/(app)/profilo/` e `src/components/profilo/`.
 
-## §1 Telefono (sotto i 760 px)
+## §1 Telefono (fino a 899 px, o finestra alta meno di 600)
+
+Soglie di D8 (risposta 214, `docs/design/tablet/decisioni.md`; il 760 di prima è superato). Sul tablet in verticale (768–834 px) la pagina del telefono sta in una colonna di 640 px al centro, con la testata larga quanto la finestra (506 §1). Ogni comando ha l'area di almeno 44 × 44 px su tutti i formati (risposta 217).
 
 Testata di dettaglio di F5: freccia indietro (ripiego `/nest`). Poi tre blocchi separati da un filo (nota di Fable: «i tuoi dati, le tue impostazioni, uscire»).
 
@@ -45,7 +47,9 @@ Testata di dettaglio di F5: freccia indietro (ripiego `/nest`). Poi tre blocchi 
 | «I tuoi dati»                                      | «Esporta i miei dati», stesso comportamento                                            |
 | menu laterale delle impostazioni (`SettingsMenu`)  | non c'è più su `/profilo`                                                              |
 
-## §2 Computer (da 760 px)
+## §2 Computer (da 900 px e alta almeno 600)
+
+Barra a icone da 900 a 1279 px (tablet in orizzontale), intera da 1280.
 
 Come `04-il-tuo-profilo` (Passo 11). Titolo nella barra in alto «Il tuo profilo» (F5). Due colonne (si passa a una colonna se il contenuto è sotto i 900 px, regola unica del pannello, F5 §1):
 

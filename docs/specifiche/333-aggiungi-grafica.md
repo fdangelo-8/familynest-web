@@ -1,5 +1,7 @@
 # #333 · Aggiungi: campi per tipo · specifica grafica completa
 
+> **Nota del 27/11/2026 (D8).** Questa specifica è chiusa e descrive il codice di allora, con la soglia a 1024 px. Per il lavoro nuovo (A2 #535) valgono le soglie uniche di D8: 900 e 1280 px di larghezza, sotto i 600 px di altezza la forma del telefono, tocco di almeno 44 px su tutti i formati (`docs/specifiche/506-guscio-navigazione.md` §1, `505-fogli-conferme-data.md` §2).
+
 Designer, 06/11/2026. Ricostruisce la sezione «Specifica grafica» della issue #333, sovrascritta per errore nel corpo della issue, e la confronta con l'implementazione della PR #357 (`feat/aggiungi-nuovo`). Il requisito resta quello dell'analista (issue #333 e `docs/specifiche/333-aggiungi.md`): qui solo aspetto, testi, stati e accessibilità.
 
 **Fonti:** decisioni di Francesco del 06/11 (corpo e commenti della #333: niente «Esempi», campi visibili per tipo, via «chi la porta», visibilità con voci sempre visibili, «Chi se ne occupa» multiplo; tre voci per Impegno, due per gli altri; anteprima della giornata tolta con la colonna degli esempi), mockup `docs/mockup/10-aggiungi.html` per tutto ciò che non cambia, skill `design-system`.

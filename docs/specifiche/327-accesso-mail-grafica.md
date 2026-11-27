@@ -2,6 +2,8 @@
 
 Designer, 06/11/2026. Il riassunto sta nella sezione **Specifica grafica** della issue #327; qui ci sono stati, testi, CSS e accessibilità per intero.
 
+> **Nota del 27/11/2026 (D8).** Questa specifica è chiusa e descrive il codice di allora, con le soglie a 768 e 1024 px. Per il lavoro nuovo valgono le soglie uniche di D8 (900 e 1280 px di larghezza, sotto i 600 px di altezza la forma del telefono, tocco di almeno 44 px su tutti i formati; `docs/specifiche/506-guscio-navigazione.md` §1). Sul tablet l'accesso è quello del telefono in verticale e quello del computer a due metà in orizzontale (`docs/design/tablet/verticale/04`, `orizzontale-comandi-44-px/09`, `10`), e segue il tema del sistema (551 §4).
+
 Decisione di Francesco del 06/11 (issue #327): mail e password al posto del link magico. Sostituisce la specifica di M1, M2 e M3 della #11 (le schermate «Usa la mail»), non il mockup `01-accesso`, che resta com'è. Allineata al requisito dell'analista e alle decisioni del coordinatore su D2–D6 (commento del 06/11 nella #327).
 
 **Fonti:** `01-accesso`, specifica della #11 (M1, M2, M3, mail), `07-invito-benvenuto` (errore su notte), `08-invito-colore` (passo chiaro con campo), skill `design-system`. Tutto quello che segue è **[ricavato]** (non disegnato nel mockup). **[nuovo]** = componente o classe nuova, definita nella skill (`riferimento/componenti.md`, «Campo password e regole»). `[D: chiave]` = testo citato nei criteri di accettazione.
