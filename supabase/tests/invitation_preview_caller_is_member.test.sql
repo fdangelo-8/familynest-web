@@ -64,8 +64,10 @@ select is_empty(
        -- The public wish list (#259, decision D2): the only other functions for anon.
        and p.oid not in ('public.get_public_wishlist(text, text)'::regprocedure,
                          'public.get_public_wishlist_photo(text, uuid)'::regprocedure,
-                         'public.reserve_public_wishlist_item(text, uuid, text, text)'::regprocedure) $$,
-  'the preview and the public wish list are still the only functions anon can execute'
+                         'public.reserve_public_wishlist_item(text, uuid, text, text)'::regprocedure)
+       -- The current versions of terms and privacy notice (#513, CA-29): not personal data.
+       and p.oid <> 'public.get_legal_versions()'::regprocedure $$,
+  'the preview, the public wish list and the legal versions are still the only functions anon can execute'
 );
 
 -- ---------------------------------------------------------------------------
