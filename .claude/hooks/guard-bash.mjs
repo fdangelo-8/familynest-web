@@ -205,7 +205,9 @@ const REDIRECT = /(?<![<>&])(?:\d+|&)?(?:>\||>>?|<>)(?:&(?![\d-]))?(?![&(>])/g;
 const REDIRECT_OP = /^(?:\d+|&)?(?:>\||>>?|<<<|<<-?|<>|<)&?/;
 const SHELL_BEFORE =
   /(?:^|[\s;&|(])(?:(?:ba|da|k|z)?sh|eval|su|watch|ssh)\b[^;&|\n]*$/;
-const SIMPLE_WORD = /^[\w./=+:@%,~-]*$/;
+// Quotes are dropped around these words. Not ~ or =: quoted, they are no
+// longer a tilde expansion or an assignment.
+const SIMPLE_WORD = /^[\w./+:@%,-]*$/;
 // System temp folders; a temp variable must point inside one of them.
 const TEMP_ROOTS = [
   "/tmp",
@@ -229,6 +231,10 @@ const DIR_TOUCH = [
   String.raw`\(\((?:[^)]|\)(?!\)))*?(?<![=!<>])=(?!=)`,
   String.raw`\benv\b[^;&|\n]*\s(?:-[a-zA-Z]*[iu]|--unset|--ignore-environment|-)(?=[\s=]|$)`,
 ].map((p) => new RegExp(p));
+const DIR_NAME = new RegExp(String.raw`\b${DIR_NAMES}\b`);
+const DIR_DEFAULT_ASSIGN = new RegExp(String.raw`\$\{${DIR_NAMES}:?=`);
+const SETTER_BEFORE =
+  /\b(?:unset|export|declare|typeset|readonly|local|read|for|printf|mapfile|readarray|let|env|eval)\b[^;&|\n]*$/;
 // $TMPDIR, ${TMPDIR} and ${TMPDIR:-default} (also with -, := and =).
 const TEMP_VAR =
   /^\$(?:\{(TMPDIR|TMP|TEMP|RUNNER_TEMP)(?:(:?)[-=]([^}]*))?\}|(TMPDIR|TMP|TEMP|RUNNER_TEMP)\b)/;
@@ -270,13 +276,19 @@ function scan(src) {
   while (i < src.length) {
     const c = src[i];
     if (c === "\\") {
-      // An escaped word character is just that character (\sed is sed).
-      if (/[\w./+:@%,~=-]/.test(src[i + 1] ?? "")) put(src[i + 1]);
+      // An escaped word character is just that character (\sed is sed). Not
+      // ~ (no tilde expansion once escaped) nor = (no longer an assignment).
+      if (/[\w./+:@%,-]/.test(src[i + 1] ?? "")) put(src[i + 1]);
       else {
         const pair = src.slice(i, i + 2);
         put(c + "\0".repeat(pair.length - 1), pair);
       }
       i += 2;
+      continue;
+    }
+    // Locale quoting $"..." is a double-quoted string: drop the $.
+    if (c === "$" && src[i + 1] === '"') {
+      i++;
       continue;
     }
     // ANSI-C quoting $'...': decoded, then treated like any quoted text.
@@ -394,19 +406,27 @@ function innerCommands({ strings, heredocs }) {
   return inner;
 }
 
-/** One shell word starting at `i`, with quotes removed. */
+/**
+ * One shell word starting at `i`, with quotes removed. A leading ~ that is
+ * quoted or escaped, or a leading $ in single quotes or escaped, is literal:
+ * the word gets a ./ prefix so that it is not expanded later.
+ */
 function readWord(s, i) {
   while (s[i] === " " || s[i] === "\t") i++;
   let word = "";
+  let literal = false;
   for (; i < s.length; i++) {
     const c = s[i];
     if (/[\s;&|()<>]/.test(c)) break;
     if (c === "\\") {
+      if (!word && /[~$]/.test(s[i + 1] ?? "")) literal = true;
       word += s[++i] ?? "";
       continue;
     }
     if (c === "'" || c === '"') {
       let j = i + 1;
+      if (!word && (s[j] === "~" || (c === "'" && s[j] === "$")))
+        literal = true;
       while (j < s.length && s[j] !== c) {
         if (c === '"' && s[j] === "\\") j++;
         word += s[j] ?? "";
@@ -417,7 +437,7 @@ function readWord(s, i) {
     }
     word += c;
   }
-  return { word, end: i };
+  return { word: literal ? `./${word}` : word, end: i };
 }
 
 /** True for a path inside a system temp folder (the scratchpad is in /tmp). */
@@ -437,8 +457,9 @@ function resolveTarget(word, cwd, vars = {}) {
   w = w.replace(TEMP_VAR, (_, name, colon, fallback, bare) => {
     const value = process.env[name || bare];
     if (fallback === undefined) {
-      const used = value || os.tmpdir();
-      return isTempDir(used) ? used : "$untrusted";
+      // Empty or unset expands to nothing, as in the shell ($TMPDIR/x is /x).
+      if (!value) return "";
+      return isTempDir(value) ? value : "$untrusted";
     }
     if (value && !isTempDir(value)) return "$untrusted";
     if (!isTempDir(fallback)) return "$untrusted";
@@ -516,6 +537,7 @@ function redirectTarget(masked, plain, cwd, tempTouched) {
   }
   for (const m of masked.matchAll(TEE)) {
     let at = m.index + m[0].length;
+    let noMoreOptions = false;
     for (;;) {
       while (plain[at] === " " || plain[at] === "\t") at++;
       // A redirection among the arguments (tee >/dev/null file): skip it and
@@ -530,7 +552,10 @@ function redirectTarget(masked, plain, cwd, tempTouched) {
       const { word, end } = readWord(plain, at);
       if (end === at) break;
       at = end;
-      if (!word.startsWith("-") && writes(word, m.index)) return word;
+      // After -- every argument is a file, even one starting with -.
+      if ((noMoreOptions || !word.startsWith("-")) && writes(word, m.index))
+        return word;
+      if (word === "--") noMoreOptions = true;
     }
   }
   return null;
@@ -560,8 +585,17 @@ function shellEdit(command, cwd, tempTouched, depth = 0) {
  */
 function touchesDirVars(text, depth = 0) {
   const parsed = scan(text);
-  if (DIR_TOUCH.some((re) => re.test(text) || re.test(parsed.plain)))
-    return true;
+  // The command itself, outside quotes and heredoc bodies.
+  if (DIR_TOUCH.some((re) => re.test(parsed.masked))) return true;
+  for (const s of parsed.strings) {
+    // A quoted argument of a builtin that sets variables (export "TMPDIR=...").
+    if (DIR_NAME.test(s.text) && SETTER_BEFORE.test(s.before)) return true;
+    // ${TMPDIR:=...} still assigns inside double quotes.
+    if (s.double && DIR_DEFAULT_ASSIGN.test(s.text)) return true;
+  }
+  for (const h of parsed.heredocs)
+    if (!h.quoted && DIR_DEFAULT_ASSIGN.test(h.text)) return true;
+  // Text run by a nested shell, and command substitutions.
   return (
     depth < 3 && innerCommands(parsed).some((t) => touchesDirVars(t, depth + 1))
   );

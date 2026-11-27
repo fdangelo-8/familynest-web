@@ -340,6 +340,20 @@ const blocked = {
   "let con scrittura in tmp": [`let x=1; echo x > ${tmpFile}`],
   "(( = )) con scrittura in tmp": [`(( x = 1 )); echo x > ${tmpFile}`],
   "env -i con scrittura in tmp": [`env -i bash -c 'echo x > ${tmpFile}'`],
+  // #642 review: escapes and quotes that the shell does not simply drop.
+  "= con barra non è un'assegnazione": ["S\\=.; echo x > ${S}src/a.ts"],
+  "= tra virgolette non è un'assegnazione": ["'S=.'; echo x > ${S}src/a.ts"],
+  "~ con barra è una cartella del repo": ["echo x > \\~/a.ts"],
+  "~ tra virgolette è una cartella del repo": ["echo x > '~'/a.ts"],
+  "cd in ~ con barra": ["cd \\~ && echo x > a.ts"],
+  "$ tra apici è letterale": ["echo x > '$TMPDIR'/a.ts"],
+  'tee tra $"..."': ['echo x | $"tee" src/a.ts'],
+  'sed tra $"..."': ['$"sed" -i s/a/b/ src/a.ts'],
+  "tee dopo --": ["echo x | tee -- -a.ts"],
+  "export con virgolette": ['export "TMPDIR=src"; echo x > $TMPDIR/a.ts'],
+  "${TMPDIR:=...} tra virgolette": [
+    'echo "${TMPDIR:=src}" >/dev/null; echo x > $TMPDIR/a.ts',
+  ],
 };
 for (const [label, [command, agent]] of Object.entries(blocked))
   expect(label, B, bash(command, agent), true);
@@ -378,6 +392,16 @@ const allowed = {
   "sed -n su src/a.ts": ["sed -n '1,5p' src/a.ts"],
   "tee con >&2": [`echo x | tee >&2 ${tmpFile}`],
   "barra su un carattere speciale": ["echo a\\>b"],
+  // #642 review: text the shell does not run does not count.
+  "heredoc tra virgolette con JavaScript": [
+    `cat > ${tmpFile}.mjs <<'EOF'\nlet n = 0;\nconst f = (a) => a + n;\nexport { f };\nEOF`,
+  ],
+  "heredoc tra virgolette con markdown": [
+    `cat > ${tmpFile}.md <<'EOF'\n# Note\nVietati eval, let, declare -n, export HOME=x e (( a = 1 )).\nEOF`,
+  ],
+  "testo tra apici a un comando che non è una shell": [
+    `printf '%s\\n' 'let x = (a) => a; eval' > ${tmpFile}`,
+  ],
 };
 for (const [label, [command, agent]] of Object.entries(allowed))
   expect(label, B, bash(command, agent), false);
