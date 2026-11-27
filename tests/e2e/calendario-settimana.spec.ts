@@ -399,11 +399,10 @@ test.describe("struttura", () => {
       await expect(page.getByText("Mar, oggi")).toBeVisible();
       const main = page.getByRole("main");
       await expect(main.getByRole("group", { name: LENS })).toBeVisible();
-      // Decision of 31/10: no «Aggiungi» in the page header, only the one of
-      // the navigation at the top.
+      // Decision of 31/10: no «Aggiungi» in the page header, only the button
+      // of the top bar, which is «Nuovo impegno» since F5 (#506).
       await expect(main.getByRole("link", { name: "Aggiungi" })).toHaveCount(0);
-      // The only visible «Aggiungi» is the one of the top bar (#67).
-      const add = page.getByRole("link", { name: "Aggiungi" });
+      const add = page.getByRole("link", { name: "Nuovo impegno" });
       await expect(add).toHaveCount(1);
       await expect(add).toHaveAttribute("href", "/aggiungi");
     },

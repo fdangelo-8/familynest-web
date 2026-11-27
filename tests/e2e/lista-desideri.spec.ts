@@ -292,8 +292,9 @@ test.describe("contenuto dello stato normale", () => {
       await expect(add).toHaveAttribute("aria-haspopup", "dialog");
 
       const nav = mainNav(page);
+      // F5 (#506, §2): the lists of wishes light Spazi.
       await expect(
-        nav.getByRole("link", { name: "Oggi", exact: true }),
+        nav.getByRole("link", { name: "Spazi", exact: true }),
       ).toHaveAttribute("aria-current", "true");
       await expect(nav.locator("[aria-current]")).toHaveCount(1);
     });
@@ -419,8 +420,9 @@ test.describe("contenuto dello stato normale", () => {
       });
       const nav = mainNav(page);
       await expect(nav).toBeVisible();
-      await expect(nav.locator("[aria-current]")).toHaveCount(0);
-      await expect(backLink(page)).toHaveCount(0);
+      await expect(nav.locator("[aria-current]")).toHaveText("Spazi");
+      // The arrow lives in the top bar of the computer (§6)
+      await expect(backLink(page)).toHaveCount(1);
       await expect(h1(page)).toHaveCount(1);
       const add = page.getByRole("button", {
         name: "Aggiungi un'idea",
