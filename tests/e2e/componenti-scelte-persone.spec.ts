@@ -814,9 +814,10 @@ for (const width of [390, 1280]) {
       expect(radio).not.toBeNull();
       expect(title).not.toBeNull();
       expect(radio!.x).toBeLessThan(title!.x);
-      expect(Math.abs(radio!.y - title!.y)).toBeLessThan(
-        Math.max(radio!.height, title!.height),
-      );
+      // Same row: the tick and the title overlap vertically (on a second row
+      // the title would start below the tick) and the tick is on the left.
+      expect(title!.y).toBeLessThan(radio!.y + radio!.height);
+      expect(radio!.x + radio!.width).toBeLessThanOrEqual(title!.x);
     }
   });
 }
