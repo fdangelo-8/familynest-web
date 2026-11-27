@@ -105,7 +105,7 @@ Movimento: da intera a icone in 200 ms (`--durata-rapida`, `--curva`); con movim
 Alta 72 px, margini orizzontali 32 px, nell'area del contenuto (non sopra la barra laterale). Da sinistra:
 
 - freccia indietro sulle rotte «dettaglio» di §2, poi il titolo di §2 (700 · 26/32);
-- a destra: campo «Cerca» (280 px, minimo 120, alto 40, raggio 12, fondo `--color-quieto`, `kbd` «/»); campanella «Notifiche»; pulsante pieno «Nuovo impegno» (+) dove §2 lo prevede, verso `/aggiungi`. Una pagina può sostituirlo con il proprio pulsante (stesso posto: «Nuova ricetta» ecc.) con lo stesso meccanismo di `BarAction`.
+- a destra: campo «Cerca» (280 px, minimo 120, alto 40, raggio 12, fondo `--color-carta-2` (ruolo `basso`, #634), `kbd` «/»); campanella «Notifiche»; pulsante pieno «Nuovo impegno» (+) dove §2 lo prevede, verso `/aggiungi`. Una pagina può sostituirlo con il proprio pulsante (stesso posto: «Nuova ricetta» ecc.) con lo stesso meccanismo di `BarAction`.
 - **Campo «Cerca» in F5 (default):** è l'ingresso alla ricerca di oggi. Clic, Invio o «/» aprono `/ricerca` come oggi su computer (dialogo sopra la pagina) con il fuoco nel campo della ricerca. Il campo che si allarga a 400 px con i risultati nel fumetto è di A11 (#544). Nessun testo cercato va nell'indirizzo.
 - **Campanella:** porta a `/notifiche` **(default)**; il pannello degli avvisi è di A10 (#543).
 
@@ -144,8 +144,8 @@ Un solo gestore nel guscio (sostituisce `AddShortcut` e `SearchShortcut`).
 - **Computer:** «Vai al contenuto» → barra laterale (lente, Oggi, Calendario, Casa, Spazi, voci «Di casa», Chiedi se c'è, profilo) → barra in alto (indietro se c'è, Cerca, Notifiche, pulsante) → contenuto → pannello. Il marchio non riceve il fuoco.
 - **Telefono:** «Vai al contenuto» → testata → contenuto → barra in basso (Oggi, Calendario, Casa, Spazi). È l'ordine del DOM di oggi.
 - «Vai al contenuto» resta il primo elemento: `<a href="#contenuto">` che sposta il fuoco sul `main` (LEZIONI).
-- Anello di fuoco su tutti i comandi del guscio: `outline: var(--border-medio) solid var(--color-azione); outline-offset: var(--space-half)` (2 px, `#0F3D44`), `--color-latte` sui fondi scuri; solo con `:focus-visible`; mai tolto. Se F4a lo ha già reso globale, F5 non aggiunge nulla.
-- Mouse sopra, solo dentro `@media (hover: hover)`: voce della barra `--color-voce-mouse`, pulsante pieno `--color-azione-mouse` (domanda nella issue), campo Cerca invariato. Niente movimenti né ombre che compaiono.
+- Anello di fuoco su tutti i comandi del guscio: `outline: var(--border-medio) solid var(--color-fuoco); outline-offset: var(--space-half)` (2 px; `#0F3D44` in chiaro, `#F2F7F5` al buio), `--color-latte` sul fondo di marca (`--color-notte`) e sul fumetto; solo con `:focus-visible`; mai tolto. Lo rende globale #634 (634 §3 E): F5 non aggiunge nulla.
+- Mouse sopra, solo dentro `@media (hover: hover)`: voce della barra `--color-premuto`, pulsante pieno `--color-azione` (634 §3 C: in chiaro #10262A → #0F3D44, al buio non cambia; `--color-azione-mouse` non nasce), campo Cerca invariato. Niente movimenti né ombre che compaiono.
 - Cambiando pagina con la barra, il fuoco va sull'h1 della pagina nuova (comportamento attuale delle pagine con `tabIndex={-1}` sull'h1): F5 non lo cambia.
 
 ## §10 Predisposizione per le app negli store (N0 #591, N1)
@@ -178,5 +178,22 @@ Formati di D8 per `layout.spec.ts` (a11y e e2e): 390 × 844, 768 × 1024 (tablet
 
 - Componenti in `src/components/ui/AppFrame/`: barra in basso nuova, testata del telefono con forma raccolta, `SideNav`, `DesktopBar`, gestore delle scorciatoie con registro, finestra «Scorciatoie da tastiera»; in `src/components/ui/`: `Panel`, fumetto delle icone (`Tooltip`). Ognuno con esempio nella galleria e voce in `componenti.md` e `registro.md` (LEZIONI).
 - `src/lib/app-routes.ts` riscritto (tabella di §2, `isAppPath`), `src/lib/breakpoints.ts`, interruttore `ASSISTANT_AVAILABLE`.
-- Token nuovi di `computer.md` usati dal guscio: `--size-barra-laterale`, `--size-barra-laterale-icone`, `--size-barra-alto`, `--size-pannello`, `--size-fumetto`, `--size-ricerca`, `--size-contenuto-max`, `--size-pannello-stretto` (380 px) e `--size-colonna-tablet` (640 px) di D8, `--shadow-fumetto`, `--color-velo-finestra`, `--color-barra-laterale`, `--color-quieto`, `--color-lente`, `--color-voce-mouse`, `--color-voce`, `--color-chiedi-*` (solo definiti: Chiedi è nascosto); le quattro `--area-sicura-*`.
+- Token nuovi di `computer.md` usati dal guscio: `--size-barra-laterale`, `--size-barra-laterale-icone`, `--size-barra-alto`, `--size-pannello`, `--size-fumetto`, `--size-ricerca`, `--size-contenuto-max`, `--size-pannello-stretto` (380 px) e `--size-colonna-tablet` (640 px) di D8, `--shadow-fumetto`; le quattro `--area-sicura-*`.
+- **Colori: nessun token nuovo (#634, 27/11).** I 10 colori di `computer.md` (Passo 11) sono diventati ruoli della tavolozza nel Passo 14, con il valore scuro: F5 usa i token di `docs/specifiche/634-tema-scuro.md` §1, già nel codice con #634.
+
+  | Colore di `computer.md`             | Valore del Passo 11  | Token da usare             | Chiaro · scuro                                |
+  | ----------------------------------- | -------------------- | -------------------------- | --------------------------------------------- |
+  | `--color-velo-finestra`             | `rgba(16,38,42,.36)` | `--color-velo`             | `rgba(16,38,42,.36)` · `rgba(0,0,0,.62)`      |
+  | `--color-barra-laterale`            | `#F5F7F5`            | `--color-carta-2`          | `#F4F6F4` · `#172224`                         |
+  | `--color-quieto` (campo Cerca)      | `#F1F3F1`            | `--color-carta-2`          | `#F4F6F4` · `#172224`                         |
+  | `--color-lente` (capsula Io · Nest) | `#E6EAE7`            | `--color-premuto`          | `#ECEFEC` · `#263639`                         |
+  | `--color-voce-mouse`                | `#E9EDEA`            | `--color-premuto`          | `#ECEFEC` · `#263639`                         |
+  | `--color-voce`                      | `#33474B`            | `--color-inchiostro-medio` | `#33474B` · `#C9D5D2`                         |
+  | `--color-azione-mouse`              | `#0A2E34`            | `--color-azione`           | `#0F3D44` · `#1F7D8A` (634 §3 C)              |
+  | Chiedi: fondo                       | `#FCE7E0`            | `--color-assistente`       | `#FCE7E0` · `#3B2621`                         |
+  | Chiedi: icona e filo scelto         | `#C2452D`            | `--color-allerta`          | `#B3261E` · `#FF9D90` (5,49 · 7,05 sul fondo) |
+  | Chiedi: filo del tasto              | `#E7B9AB`            | `--color-allerta-bordo`    | `#E7B9AB` · `#7A3A32`                         |
+
+  La barra laterale e il campo Cerca hanno lo stesso fondo (`basso`), ma non si toccano: il campo sta nella barra in alto, bianca. In chiaro nessun campo con il filo `--color-filo-campo` va sopra la barra laterale (2,93 : 1, 634 §7). Chiedi resta nascosto: i suoi token esistono già, non si definisce nulla.
+
 - Nessuna tabella, colonna o policy nuova: niente `richiesta-db`.
