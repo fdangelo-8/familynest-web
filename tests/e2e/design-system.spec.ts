@@ -557,14 +557,15 @@ test.describe("sovrapposizioni", () => {
     await expect(opener).toBeFocused();
   });
 
-  test("CA-30: il foglio si chiude trascinando la maniglia", async ({
+  test("CA-30: il foglio si chiude trascinando la testata", async ({
     page,
   }) => {
     test.skip((page.viewportSize()?.width ?? 0) >= 1024, "solo mobile");
     const opener = page.getByRole("button", { name: "Apri foglio" });
     const dialog = page.getByRole("dialog", { name: "Aggiungi" });
     const drag = async (distance: number) => {
-      const handle = page.getByTestId("sheet-maniglia");
+      // F4c (#505): no visible handle, the drag starts from the head.
+      const handle = page.getByTestId("sheet-testa");
       const box = (await handle.boundingBox())!;
       const x = box.x + box.width / 2;
       const y = box.y + box.height / 2;
@@ -1016,7 +1017,9 @@ test.describe("CA-11: stessi stili del mockup", () => {
           id: "foglio",
           selector: ".foglio",
           ours: ".foglio",
-          skip: ["height"],
+          // F4c (#505): the sheet has no padding of its own (the head, the
+          // body and the foot have theirs) and no handle: approved difference.
+          skip: ["height", "padding"],
         },
       ],
       async () => {

@@ -5,6 +5,7 @@ import {
   useLayoutEffect,
   useRef,
   useState,
+  useSyncExternalStore,
   type ChangeEvent,
   type FocusEvent,
   type KeyboardEvent,
@@ -27,6 +28,11 @@ export type DateFieldProps = Omit<TextFieldProps, "type" | "multiline">;
 
 /** Space kept between the calendar box and the edge of the window, in px. */
 const EDGE = 8;
+
+// The clock never needs to be watched: the day is read when the field draws.
+function subscribeNever() {
+  return () => {};
+}
 
 /**
  * The event of a value chosen by the component: `target.value` and
@@ -87,7 +93,14 @@ export function DateField({
   const boxRef = useRef<HTMLDivElement>(null);
   const inactive = Boolean(disabled || readOnly);
 
-  const text = shownDay ? formatFieldDay(shownDay, todayKeyInRome()) : "";
+  // «Today» is read in the browser only: the server has no clock to show, so
+  // the first paint has no year and the right text follows at once.
+  const today = useSyncExternalStore(
+    subscribeNever,
+    () => todayKeyInRome(),
+    () => null,
+  );
+  const text = shownDay ? formatFieldDay(shownDay, today ?? shownDay) : "";
   const accessibleName = text ? `${label}, ${text}` : label;
 
   const closeBox = (returnFocus: boolean) => {

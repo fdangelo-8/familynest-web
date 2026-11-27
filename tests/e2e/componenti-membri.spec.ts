@@ -413,7 +413,8 @@ test.describe("MemberSheet: correzioni della revisione", () => {
     await expect(
       dialog.getByRole("button", { name: "Aggiungi Rita" }),
     ).toHaveAttribute("aria-busy", "true");
-    const handle = (await page.getByTestId("sheet-maniglia").boundingBox())!;
+    // F4c (#505): no visible handle, the drag starts from the head.
+    const handle = (await page.getByTestId("sheet-testa").boundingBox())!;
     const x = handle.x + handle.width / 2;
     const y = handle.y + handle.height / 2;
     await page.mouse.move(x, y);
