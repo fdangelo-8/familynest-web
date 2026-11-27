@@ -60,7 +60,7 @@ import {
 } from "@/components/ui/ConnectRow/ConnectRow";
 import { Skeleton, SkeletonGroup } from "@/components/ui/Skeleton/Skeleton";
 import { Spinner } from "@/components/ui/Spinner/Spinner";
-import { toDateFieldValue } from "@/lib/datetime";
+import { todayKeyInRome } from "@/lib/datetime";
 import { Tag } from "@/components/ui/Tag/Tag";
 import { Toggle } from "@/components/ui/Toggle/Toggle";
 import { useToast } from "@/components/ui/Toast/ToastProvider";
@@ -1143,6 +1143,12 @@ function SheetsDialogsDatesSection() {
   const [dayLimits, setDayLimits] = useState("2026-11-24");
   const [dayEmpty, setDayEmpty] = useState("");
   const [dayOptional, setDayOptional] = useState("2017-05-14");
+  // «Today» is read in the browser only (the server has no clock to show)
+  const todayInRome = useSyncExternalStore(
+    () => () => {},
+    () => todayKeyInRome(),
+    () => undefined,
+  );
   const [timeDay, setTimeDay] = useState("2026-11-18");
   const [from, setFrom] = useState("16:00");
   const [lastTime, setLastTime] = useState("16:00");
@@ -1444,7 +1450,7 @@ function SheetsDialogsDatesSection() {
           <DateField
             label="Data di nascita"
             value={dayOptional}
-            max={toDateFieldValue(new Date())}
+            max={todayInRome}
             clearable
             onChange={(event) => setDayOptional(event.target.value)}
           />
