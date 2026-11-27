@@ -12,7 +12,6 @@ import {
   useTransition,
   type ReactNode,
 } from "react";
-import { clearLinkResult } from "@/app/(app)/calendari-collegati/actions";
 import { Alert } from "@/components/ui/Alert/Alert";
 import { Button } from "@/components/ui/Button/Button";
 import { cx } from "@/components/ui/cx";
@@ -244,7 +243,11 @@ export function CalendarsView({
   useEffect(() => {
     if (!notice || shown.current) return;
     shown.current = true;
-    void clearLinkResult().catch(() => undefined);
+    // A route, not a server action: an action that changes a cookie makes
+    // Next render the page again and the title leaves the head (#590).
+    void fetch("/api/calendar-sync/link-result", { method: "POST" }).catch(
+      () => undefined,
+    );
     if (notice.result === "already_linked" || notice.result === "relinked") {
       if (alreadyLinkedEmail) {
         showToast({
