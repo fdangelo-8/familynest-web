@@ -12,11 +12,12 @@ import {
 // Everything runs on the design-system gallery (no data, no login), on the
 // pure functions of app-routes.ts and on static checks of the source files.
 // Colors (#196): ink = rgb(16, 38, 42), ink-2 = rgb(85, 104, 108),
-// night-2 = rgb(42, 41, 37), milk = rgb(244, 242, 236).
+// #634: the mouse over a full control is --color-azione = rgb(15, 61, 68)
+// and the text over it --color-latte = rgb(255, 255, 255).
 
 const INK = "rgb(16, 38, 42)";
-const NIGHT_2 = "rgb(42, 41, 37)";
-const MILK = "rgb(244, 242, 236)";
+const NIGHT_2 = "rgb(15, 61, 68)";
+const MILK = "rgb(255, 255, 255)";
 
 const tid = (page: Page, id: string) => page.getByTestId(id);
 

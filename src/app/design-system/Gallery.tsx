@@ -788,6 +788,16 @@ function AccessParts() {
           <p className="t-corpo">{nestEnergy()}</p>
         </div>
       </Example>
+      <Example caption="Tema · solo-chiaro · solo-scuro (#634)">
+        <div className="colonna" data-testid="solo-tema">
+          <div className="solo-chiaro" data-testid="solo-chiaro">
+            <p className="t-corpo">Solo col tema chiaro</p>
+          </div>
+          <div className="solo-scuro" data-testid="solo-scuro">
+            <p className="t-corpo">Solo col tema scuro</p>
+          </div>
+        </div>
+      </Example>
     </Section>
   );
 }

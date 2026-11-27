@@ -127,10 +127,12 @@ test.describe("token", () => {
   test("CA-9: i token di :root coincidono con docs/agenti/design/token.css", async ({
     page,
   }) => {
-    const css = readFileSync("docs/agenti/design/token.css", "utf8").replace(
+    // #634: the file has the light :root first, then the two dark blocks.
+    const whole = readFileSync("docs/agenti/design/token.css", "utf8").replace(
       /\/\*[\s\S]*?\*\//g,
       "",
     );
+    const css = whole.slice(0, whole.indexOf("\n}\n"));
     const tokens: Record<string, string> = {};
     for (const match of css.matchAll(/(--[a-z0-9-]+)\s*:\s*([^;]+);/g)) {
       tokens[match[1]!] = match[2]!;
@@ -223,7 +225,8 @@ test.describe("token", () => {
       "--color-anello-scelta": "#B5CBCB",
       "--color-filo": "#E4E8E5",
       "--color-filo-2": "#C3CCC9",
-      "--color-filo-campo": "#7F9092",
+      // #634: the light values follow docs/design/tavolozza.json.
+      "--color-filo-campo": "#869390",
       "--color-filo-tenue": "#AEB9B7",
       "--color-filo-barra": "rgba(16, 38, 42, 0.1)",
       "--color-corsia-vuota": "#EEF1EF",
@@ -233,10 +236,10 @@ test.describe("token", () => {
       "--color-ok": "#1B6B45",
       "--color-adesso": "#F6C945",
       "--color-adesso-tinta": "#FCEFC0",
-      "--color-insieme": "#FBEAAB",
-      "--color-insieme-testo": "#4A3906",
-      "--color-insieme-bordo": "#E0BE52",
-      "--color-ombra": "rgba(16, 38, 42, 0.12)",
+      "--color-insieme": "#FCEFC0",
+      "--color-insieme-testo": "#4A4630",
+      "--color-insieme-bordo": "#A38009",
+      "--color-ombra": "rgba(16, 38, 42, 0.08)",
       "--color-ombra-forte": "rgba(16, 38, 42, 0.2)",
       // §4 scene of Oggi
       "--color-scena-mattino-cielo": "#BFE3F7",
@@ -255,33 +258,37 @@ test.describe("token", () => {
       // §5 colours of the people
       "--color-membro-corallo": "#F2765C",
       "--color-membro-corallo-tinta": "#FDEAE5",
-      "--color-membro-corallo-corsia": "#EF5839",
+      "--color-membro-corallo-corsia": "#D75E45",
       "--color-membro-glicine": "#B9A2EC",
       "--color-membro-glicine-tinta": "#F2ECFC",
-      "--color-membro-glicine-corsia": "#9978E3",
+      "--color-membro-glicine-corsia": "#8F78BF",
       "--color-membro-menta": "#8FD0A8",
       "--color-membro-menta-tinta": "#E7F5EC",
-      "--color-membro-menta-corsia": "#419A63",
+      "--color-membro-menta-corsia": "#54936E",
       "--color-membro-blu": "#3F6FE0",
       "--color-membro-blu-tinta": "#E5ECFC",
       "--color-membro-blu-corsia": "#3F6FE0",
       "--color-membro-ambra": "#E8A15C",
       "--color-membro-ambra-tinta": "#FCEEDD",
-      "--color-membro-ambra-corsia": "#CE741D",
+      "--color-membro-ambra-corsia": "#B9762E",
       "--color-membro-sabbia": "#D9B88F",
-      "--color-membro-sabbia-corsia": "#B5803D",
+      "--color-membro-sabbia-tinta": "#FAF5EF",
+      "--color-membro-sabbia-corsia": "#A3845D",
       "--color-membro-azzurro": "#7CC7E0",
-      "--color-membro-azzurro-corsia": "#2C95B8",
+      "--color-membro-azzurro-tinta": "#EDF7FB",
+      "--color-membro-azzurro-corsia": "#4792AA",
       "--color-membro-rosa": "#F0A3C0",
-      "--color-membro-rosa-corsia": "#E4588D",
+      "--color-membro-rosa-tinta": "#FDF2F6",
+      "--color-membro-rosa-corsia": "#BC7390",
       "--color-membro-ardesia": "#68778D",
+      "--color-membro-ardesia-tinta": "#EAECEF",
       "--color-membro-ardesia-corsia": "#68778D",
       "--color-membro-cannella": "#AF8273",
       "--color-membro-cannella-tinta": "#F5ECE8",
-      "--color-membro-cannella-corsia": "#AD7F70",
+      "--color-membro-cannella-corsia": "#A67A6B",
       "--color-membro-neutro": "#B4BFBC",
-      "--color-membro-neutro-tinta": "#F1F4F2",
-      "--color-membro-neutro-corsia": "#7C8F8A",
+      "--color-membro-neutro-tinta": "#EEF1EF",
+      "--color-membro-neutro-corsia": "#55686C",
       // §6 sizes, radii, shadows, motion, links
       "--grid-margine-mobile": "24px",
       "--size-etichetta": "24px",
@@ -320,9 +327,8 @@ test.describe("token", () => {
     }
   });
 
-  test("CA-11: i token spariti non esistono e le tinte mancanti non sono inventate", async ({
-    page,
-  }) => {
+  // #634: the four missing shades now exist (tavolozza, Passo 12).
+  test("CA-11: i token spariti non esistono", async ({ page }) => {
     const gone = [
       "--color-membro-pomodoro",
       "--color-membro-salvia",
@@ -334,10 +340,6 @@ test.describe("token", () => {
       "--color-membro-basilico",
       "--font-parkinsans",
       "--font-host-grotesk",
-      "--color-membro-sabbia-tinta",
-      "--color-membro-azzurro-tinta",
-      "--color-membro-rosa-tinta",
-      "--color-membro-ardesia-tinta",
     ];
     const values = await rootValues(page, gone);
     for (const name of gone) expect(values[name], name).toBe("");
@@ -401,8 +403,8 @@ test.describe("token", () => {
       ["--color-inchiostro", "--color-adesso", 4.5],
       ["--color-inchiostro", "--color-adesso-tinta", 4.5],
       ["--color-filo-campo", "--color-superficie", 3],
-      ["--color-filo-campo", "--color-carta-2", 3],
-      ["--color-filo-campo", "--color-fondo-app", 3],
+      // #634 (domanda 3): in light the field border is 2,93 on carta-2 and no
+      // field sits on that ground, so the pairs on carta-2 and fondo-app go.
       ["--color-info", "--color-carta", 3],
       ["--color-info", "--color-carta-2", 3],
       ["--color-info", "--color-fondo-app", 3],
@@ -489,19 +491,19 @@ test.describe("colori delle persone", () => {
     }
   });
 
-  test("CA-18 (valore mancante): lampone, ceruleo, peonia e basilico usano la tinta del neutro", async ({
+  // #634: the four shades that used the neutral one have their own tint.
+  test("CA-18: lampone, ceruleo, peonia e basilico hanno la propria tinta", async ({
     page,
   }) => {
-    const names = ["lampone", "ceruleo", "peonia", "basilico"];
-    const vars = await memberVars(page, [...names, "neutro"]);
-    const neutral = (await rootValues(page, ["--color-membro-neutro-tinta"]))[
-      "--color-membro-neutro-tinta"
-    ]!;
-    expect(normalize(neutral)).toBe("#f1f4f2");
-    for (const name of names) {
-      expect(normalize(vars[name]!["--c-tinta"]!), name).toBe(
-        normalize(neutral),
-      );
+    const tints: Record<string, string> = {
+      lampone: "#faf5ef",
+      ceruleo: "#edf7fb",
+      peonia: "#fdf2f6",
+      basilico: "#eaecef",
+    };
+    const vars = await memberVars(page, Object.keys(tints));
+    for (const [name, tint] of Object.entries(tints)) {
+      expect(normalize(vars[name]!["--c-tinta"]!), name).toBe(tint);
     }
   });
 
