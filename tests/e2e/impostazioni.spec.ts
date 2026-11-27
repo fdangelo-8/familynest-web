@@ -7,7 +7,6 @@ import { signInAs, skipReason, usersConfigured } from "../fixtures/auth";
 import { SEED_HOME_A } from "../fixtures/invito";
 import {
   BLOCKED_NOTE,
-  DEFAULT_STATES,
   LAST_ADULT_LEAVE_TEXT,
   LEAVE_NETWORK_ERROR,
   NORMAL_LEAVE_TEXT,
@@ -27,7 +26,10 @@ import {
   peopleSection,
   prefsOf,
   saveAlert,
+  seededClient,
   settingsNav,
+  startingOf,
+  startingStates,
   switchOf,
   switchStates,
   waitHydrated,
@@ -429,8 +431,10 @@ test.describe("contenuto", () => {
     ).toBeVisible();
     await expect(notificationsSection(page)).toHaveAttribute("id", "notifiche");
     await expect(notificationsSection(page).getByRole("switch")).toHaveCount(5);
+    // The starting values are the ones the database gives A.
+    const starting = await startingStates(await seededClient("A"));
     expect(await switchStates(page)).toEqual(
-      NOTIFICATIONS.map((n, i) => [n.title, DEFAULT_STATES[i]]),
+      NOTIFICATIONS.map((n, i) => [n.title, starting[i]]),
     );
     await expect(notificationsSection(page)).toContainText(
       "Raggruppate, una volta al giorno",
@@ -507,8 +511,9 @@ test.describe("contenuto", () => {
       await expectPeople(page, [
         { title: "Ilaria, tu", info: null, tag: "Amministratore" },
       ]);
+      // No saved choice: the switches show what the database gives by default.
       expect((await switchStates(page)).map((s) => s[1])).toEqual(
-        DEFAULT_STATES,
+        await startingStates(user.client),
       );
       expect(await prefsOf(adminMemberId)).toBeNull();
     });
@@ -566,42 +571,44 @@ test.describe("contenuto", () => {
 // ------------------------------------------------------------- notifiche
 
 test.describe("notifiche", () => {
-  // «Spesa» starts on (DB of #511, PR #612): it is turned off, then on again.
-  test("CA-18: «Spesa» si spegne e si riaccende, e la scelta resta dopo il ricaricamento", async ({
+  // The starting value of «Spesa» is read from the database (it depends on
+  // its defaults): the switch is flipped, then flipped back.
+  test("CA-18: «Spesa» cambia valore e torna com'era, e la scelta resta dopo il ricaricamento", async ({
     page,
     baseURL,
   }) => {
     onlyMobile();
     needsThrowaway();
     await withMemberNest(async ({ user, nest, adminMemberId }) => {
+      const start = await startingOf(user.client, "shopping");
       await user.signInContext(page.context(), baseURL as string);
       await openSettings(page, nest);
       const spesa = switchOf(page, "Spesa");
-      await expect(spesa).toHaveAttribute("aria-checked", "true");
+      await expect(spesa).toHaveAttribute("aria-checked", String(start));
 
       await spesa.click();
-      await expect(spesa).toHaveAttribute("aria-checked", "false");
+      await expect(spesa).toHaveAttribute("aria-checked", String(!start));
       await expect
         .poll(async () => (await prefsOf(adminMemberId))?.shopping)
-        .toBe(false);
+        .toBe(!start);
       await openSettings(page, nest);
       await expect(switchOf(page, "Spesa")).toHaveAttribute(
         "aria-checked",
-        "false",
+        String(!start),
       );
 
       await switchOf(page, "Spesa").click();
       await expect(switchOf(page, "Spesa")).toHaveAttribute(
         "aria-checked",
-        "true",
+        String(start),
       );
       await expect
         .poll(async () => (await prefsOf(adminMemberId))?.shopping)
-        .toBe(true);
+        .toBe(start);
       await openSettings(page, nest);
       await expect(switchOf(page, "Spesa")).toHaveAttribute(
         "aria-checked",
-        "true",
+        String(start),
       );
     });
   });
@@ -613,6 +620,7 @@ test.describe("notifiche", () => {
     onlyMobile();
     needsThrowaway();
     await withMemberNest(async ({ user, nest, adminMemberId }) => {
+      const shoppingStart = await startingOf(user.client, "shopping");
       await user.signInContext(page.context(), baseURL as string);
       await openSettings(page, nest);
       const four = NOTIFICATIONS.filter((n) => n.column !== "shopping");
@@ -627,11 +635,11 @@ test.describe("notifiche", () => {
           .toBe(false);
       }
       await openSettings(page, nest);
-      // «Spesa» was not touched: it stays on, the default of #511 (PR #612).
+      // «Spesa» was not touched: it keeps the value the database gave it.
       expect((await switchStates(page)).map((s) => s[1])).toEqual([
         "false",
         "false",
-        "true",
+        String(shoppingStart),
         "false",
         "false",
       ]);
@@ -639,7 +647,7 @@ test.describe("notifiche", () => {
       expect(row).toEqual({
         events: false,
         assigned_todos: false,
-        shopping: true,
+        shopping: shoppingStart,
         free_together: false,
         morning_digest: false,
       });
@@ -717,13 +725,14 @@ test.describe("notifiche", () => {
       await openSettings(page, nest);
       const spesa = switchOf(page, "Spesa");
 
-      // «Spesa» starts on (PR #612): the one request turns it off.
+      // The one request flips «Spesa», whatever value the database starts with.
+      const before = await startingOf(user.client, "shopping");
       await spesa.click();
       await spesa.click();
       await expect
         .poll(async () => (await prefsOf(adminMemberId))?.shopping)
-        .toBe(false);
-      await expect(spesa).toHaveAttribute("aria-checked", "false");
+        .toBe(!before);
+      await expect(spesa).toHaveAttribute("aria-checked", String(!before));
       await expect(spesa.locator("xpath=ancestor::li[1]")).not.toHaveAttribute(
         "aria-busy",
         "true",
@@ -753,7 +762,7 @@ test.describe("notifiche", () => {
     ).toBeInViewport();
   });
 
-  test("CA-36 (tastiera): Tab porta il fuoco su «Spesa» e Spazio la spegne", async ({
+  test("CA-36 (tastiera): Tab porta il fuoco su «Spesa» e Spazio ne cambia il valore", async ({
     page,
     baseURL,
   }) => {
@@ -766,13 +775,14 @@ test.describe("notifiche", () => {
       await page.keyboard.press("Tab");
       const spesa = switchOf(page, "Spesa");
       await expect(spesa).toBeFocused();
-      // «Spesa» starts on (PR #612): Space turns it off.
+      // Space flips «Spesa», whatever value the database starts with.
+      const before = await startingOf(user.client, "shopping");
       await page.keyboard.press("Space");
-      await expect(spesa).toHaveAttribute("aria-checked", "false");
+      await expect(spesa).toHaveAttribute("aria-checked", String(!before));
       await expect(spesa).toBeFocused();
       await expect
         .poll(async () => (await prefsOf(adminMemberId))?.shopping)
-        .toBe(false);
+        .toBe(!before);
     });
   });
 });
@@ -1183,11 +1193,12 @@ test.describe("sicurezza e privacy", () => {
       });
       await user.signInContext(page.context(), baseURL as string);
       await openSettings(page, nest);
-      // «Spesa» starts on (PR #612): the tap turns it off.
+      // The tap flips «Spesa», whatever value the database starts with.
+      const shoppingBefore = await startingOf(user.client, "shopping");
       await switchOf(page, "Spesa").click();
       await expect
         .poll(async () => (await prefsOf(adminMemberId))?.shopping)
-        .toBe(false);
+        .toBe(!shoppingBefore);
       await leaveButton(page, nest).click();
       await dialog(page)
         .getByRole("button", { name: "Esci e cancella la casa" })

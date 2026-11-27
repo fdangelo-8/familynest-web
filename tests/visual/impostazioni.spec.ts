@@ -178,8 +178,8 @@ test.describe("con un utente usa e getta", () => {
     await expect(alert).toContainText(
       "Non siamo riusciti a cambiare la notifica «Spesa». Controlla la connessione e riprova.",
     );
-    // «Spesa» starts on (PR #612): the failed save leaves it on.
-    await expect(toggle).toHaveAttribute("aria-checked", "true");
+    // «Spesa» was set off by `userWithNest`: the failed save leaves it off.
+    await expect(toggle).toHaveAttribute("aria-checked", "false");
     await shoot(page, "impostazioni-interruttore-rete.png");
   });
 

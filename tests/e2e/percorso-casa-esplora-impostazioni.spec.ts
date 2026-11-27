@@ -23,6 +23,7 @@ import { NOT_FOUND, h1 } from "../fixtures/figlio";
 import {
   notificationsSection,
   peopleSection,
+  startingOf,
   switchOf,
 } from "../fixtures/impostazioni-ca";
 import { contextLike, goTo } from "../fixtures/percorso-casa";
@@ -181,10 +182,17 @@ test.describe("percorso di Esplora e delle impostazioni", () => {
     ).toHaveText(["Marco, tu", "Laura", "Sofia", "Tommaso", "Biscotto"]);
     const shopping = switchOf(page, "Spesa");
     await waitHydrated(shopping);
-    // «Spesa» starts on (database of #511, PR #612): the tap turns it off.
-    await expect(shopping).toHaveAttribute("aria-checked", "true");
+    // The tap flips «Spesa»: the starting value is read from the database.
+    const shoppingStart = await startingOf(marco.client, "shopping");
+    await expect(shopping).toHaveAttribute(
+      "aria-checked",
+      String(shoppingStart),
+    );
     await shopping.click();
-    await expect(shopping).toHaveAttribute("aria-checked", "false");
+    await expect(shopping).toHaveAttribute(
+      "aria-checked",
+      String(!shoppingStart),
+    );
     const savedChoice = async () => {
       const { data } = await marco.admin
         .from("notification_preferences")
@@ -193,13 +201,13 @@ test.describe("percorso di Esplora e delle impostazioni", () => {
         .maybeSingle();
       return data?.shopping ?? null;
     };
-    await expect.poll(savedChoice).toBe(false);
+    await expect.poll(savedChoice).toBe(!shoppingStart);
     await page.reload();
     await expect(h1(page)).toHaveText(NEST);
     await waitHydrated(switchOf(page, "Spesa"));
     await expect(switchOf(page, "Spesa")).toHaveAttribute(
       "aria-checked",
-      "false",
+      String(!shoppingStart),
     );
     await expect(notificationsSection(page).getByRole("switch")).toHaveCount(5);
 
@@ -228,10 +236,11 @@ test.describe("percorso di Esplora e delle impostazioni", () => {
       await other.goto("/impostazioni");
       await expect(h1(other)).toHaveText("Casa Bianchi");
       await waitHydrated(switchOf(other, "Spesa"));
-      // Marco's choice (off) does not reach her: she keeps the default (on).
+      // Marco's choice does not reach her: she keeps what the database gave
+      // her (read as Giulia, so it is the value she started with).
       await expect(switchOf(other, "Spesa")).toHaveAttribute(
         "aria-checked",
-        "true",
+        String(await startingOf(bianchi.users["Giulia"]!.client, "shopping")),
       );
       const html = await (await other.request.get("/impostazioni")).text();
       for (const forbidden of [

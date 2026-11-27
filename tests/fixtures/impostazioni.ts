@@ -60,6 +60,16 @@ export async function userWithNest(
     await user.remove();
     throw new Error("Nest di prova non creato");
   }
+  // The starting state is set here, so the references do not depend on the
+  // database defaults (they changed with DB-2 part 2, #612): «Spesa» off.
+  const { error: preferenceError } = await user.client.rpc(
+    "set_notification_preference",
+    { p_preference: "shopping", p_enabled: false },
+  );
+  if (preferenceError) {
+    await user.remove();
+    throw new Error("Preferenza di prova non impostata");
+  }
   await user.signInContext(page.context(), baseURL());
   return user;
 }
