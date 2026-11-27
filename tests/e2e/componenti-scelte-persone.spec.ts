@@ -703,6 +703,26 @@ test.describe("Tema scuro, colori e testo", () => {
     );
   });
 
+  test("CA-i18n: l'etichetta «Giorni» di WeekdayPicker viene da choicesPeople.days", async ({
+    page,
+  }) => {
+    const source = readFileSync(
+      "src/components/ui/WeekdayPicker/WeekdayPicker.tsx",
+      "utf8",
+    ).replace(/\/\*[\s\S]*?\*\//g, "");
+    expect(source).toContain("it.choicesPeople.days");
+    expect(source).not.toContain('"Giorni"');
+    const messages = readFileSync("src/lib/i18n/messages/it.ts", "utf8");
+    expect(messages).toMatch(/days:\s*"Giorni"/);
+    // And the rendered group carries that label.
+    await expect(
+      tid(page, "ds-giorni").locator(".campo__etichetta"),
+    ).toHaveText("Giorni");
+    await expect(
+      tid(page, "ds-giorni").locator(".scelta-giorni"),
+    ).toHaveAccessibleName("Giorni");
+  });
+
   test("CA-i18n: i testi dei componenti nuovi vengono da it.ts", () => {
     for (const file of [
       "src/components/ui/ChoiceGroup/ChoiceGroup.tsx",
@@ -784,9 +804,10 @@ test.describe("Testo al 200%", () => {
 });
 
 // The existing choice cards (profile, linked calendars) have the tick as the
-// first child and an empty span last: tick and title must stay on one row.
+// first child and an empty span last: the tick must go to the right, on the
+// row of the title.
 for (const width of [390, 1280]) {
-  test(`schede di scelta esistenti: spunta e titolo sulla stessa riga a ${width} px`, async ({
+  test(`schede di scelta esistenti: spunta a destra, sulla riga del titolo, a ${width} px`, async ({
     page,
   }) => {
     await page.setViewportSize({ width, height: 900 });
@@ -813,11 +834,14 @@ for (const width of [390, 1280]) {
       const title = await card.locator(".scelta__titolo").boundingBox();
       expect(radio).not.toBeNull();
       expect(title).not.toBeNull();
-      expect(radio!.x).toBeLessThan(title!.x);
-      // Same row: the tick and the title overlap vertically (on a second row
-      // the title would start below the tick) and the tick is on the left.
+      // Spec 504 §2: the tick is on the right, after the title...
+      expect(radio!.x).toBeGreaterThanOrEqual(title!.x + title!.width);
+      // ...and on the same row: the tick and the title overlap vertically.
       expect(title!.y).toBeLessThan(radio!.y + radio!.height);
-      expect(radio!.x + radio!.width).toBeLessThanOrEqual(title!.x);
+      expect(radio!.y).toBeLessThan(title!.y + title!.height);
+      // The tick is at the right edge of the card.
+      const box = (await card.boundingBox())!;
+      expect(radio!.x + radio!.width).toBeGreaterThan(box.x + box.width / 2);
     }
   });
 }

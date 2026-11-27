@@ -1,5 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 // #504 (F4b): choices and people components in the gallery. Runs on mobile
 // (390) and desktop (1280): axe on the section and on the whole page, the
@@ -35,9 +35,52 @@ test("CA-32: tutta la galleria non ha violazioni serious o critical", async ({
   expect(serious(results.violations)).toEqual([]);
 });
 
-test("CA-27: i rapporti di contrasto di iniziali, pieni e spunte raggiungono il minimo", async ({
+// The theme is set with data-aspetto on the root, which redefines the tokens
+// (`.tema-notte` does not): the pairs are measured in each theme.
+for (const aspetto of ["chiaro", "scuro"] as const) {
+  test(`CA-27: i rapporti di contrasto di iniziali, pieni e spunte raggiungono il minimo (${aspetto})`, async ({
+    page,
+  }) => {
+    await page.emulateMedia({
+      colorScheme: aspetto === "scuro" ? "dark" : "light",
+    });
+    await page.evaluate((value) => {
+      document.documentElement.setAttribute("data-aspetto", value);
+    }, aspetto);
+    // The theme really changed: the fill of the full controls differs.
+    const pieno = await page.evaluate(() =>
+      getComputedStyle(document.documentElement)
+        .getPropertyValue("--color-pieno")
+        .trim()
+        .toLowerCase(),
+    );
+    expect(pieno).toBe(aspetto === "scuro" ? "#1f7d8a" : "#10262a");
+    await checkContrast(page);
+  });
+}
+
+test("CA-27: i valori al buio sono diversi da quelli chiari", async ({
   page,
 }) => {
+  const read = async (aspetto: string) => {
+    await page.evaluate((value) => {
+      document.documentElement.setAttribute("data-aspetto", value);
+    }, aspetto);
+    return page.evaluate(() => {
+      const root = getComputedStyle(document.documentElement);
+      return ["--color-pieno", "--color-superficie", "--color-inchiostro"].map(
+        (name) => root.getPropertyValue(name).trim(),
+      );
+    });
+  };
+  const light = await read("chiaro");
+  const dark = await read("scuro");
+  for (let i = 0; i < light.length; i += 1) {
+    expect(dark[i]).not.toBe(light[i]);
+  }
+});
+
+async function checkContrast(page: Page) {
   const failures = await page.evaluate(() => {
     const canvas = document.createElement("canvas");
     canvas.width = canvas.height = 1;
@@ -90,19 +133,10 @@ test("CA-27: i rapporti di contrasto di iniziali, pieni e spunte raggiungono il 
       if (ratio(token("--color-inchiostro"), soft) < 4.5)
         out.push(`${code}: iniziale su --c-spento`);
     }
-    // The same pairs in the light theme (root) and in the dark one
-    // (`.tema-notte`, where the tokens are redefined).
-    const dark = document.createElement("div");
-    dark.className = "tema-notte";
-    document.body.appendChild(dark);
-    const scopes: [string, CSSStyleDeclaration][] = [
-      ["chiaro", root],
-      ["buio", getComputedStyle(dark)],
-    ];
-    for (const [theme, styles] of scopes) {
-      const t = (name: string) => styles.getPropertyValue(name).trim();
+    {
+      const t = (name: string) => root.getPropertyValue(name).trim();
       const check = (label: string, a: string, b: string, min: number) => {
-        if (ratio(t(a), t(b)) < min) out.push(`${theme}: ${label}`);
+        if (ratio(t(a), t(b)) < min) out.push(label);
       };
       check("latte su pieno", "--color-latte", "--color-pieno", 4.5);
       check(
@@ -143,11 +177,10 @@ test("CA-27: i rapporti di contrasto di iniziali, pieni e spunte raggiungono il 
         3,
       );
     }
-    dark.remove();
     return out;
   });
   expect(failures).toEqual([]);
-});
+}
 
 test("tastiera: le schede sono un solo gruppo con una fermata; Spazio sceglie", async ({
   page,
