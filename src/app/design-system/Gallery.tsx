@@ -37,7 +37,15 @@ import {
   type TurnPerson,
 } from "@/components/ui/TurnPeople/TurnPeople";
 import { WeekdayPicker } from "@/components/ui/WeekdayPicker/WeekdayPicker";
-import { askNest, brandText, messages, nestEnergy } from "@/lib/brand";
+import { AvatarStack } from "@/components/ui/AvatarStack/AvatarStack";
+import { ChoiceGroup } from "@/components/ui/ChoiceGroup/ChoiceGroup";
+import { FaceGrid } from "@/components/ui/FaceGrid/FaceGrid";
+import { PersonPicker } from "@/components/ui/PersonPicker/PersonPicker";
+import { Tile, TileGrid } from "@/components/ui/Tile/Tile";
+import { it } from "@/lib/i18n/messages/it";
+import { t } from "@/lib/i18n";
+import { memberInitials } from "@/lib/member-initials";
+import { askNest, BRAND, brandText, messages, nestEnergy } from "@/lib/brand";
 import { PHOTO_REDUCE_ERROR } from "@/lib/photo-field-texts";
 import { REPEAT_DAYS_ERROR } from "@/lib/repeat-options";
 import { PageError } from "@/components/ui/PageError/PageError";
@@ -659,6 +667,443 @@ function OfflineNoticeView() {
   );
 }
 
+// F4b (#504): choices and people. Fixed data, the same for tests and visual
+// references (`docs/specifiche/504-componenti-scelte-persone.md` §6).
+const CHOICE_COHABITANTS = [
+  {
+    value: "coppia",
+    title: "In coppia",
+    line: "Voi due, sotto lo stesso tetto",
+    icon: "heart",
+  },
+  {
+    value: "famiglia",
+    title: "In famiglia, con figli",
+    line: "Con i profili dei figli, la scuola e la lista dei desideri",
+    icon: "house",
+  },
+] as const;
+
+const CHOICE_TILES = [
+  { value: "coppia", title: "In coppia", icon: "heart" },
+  { value: "famiglia", title: "In famiglia", icon: "house" },
+  { value: "solo", title: "Per conto mio", icon: "user-round" },
+  { value: "coinquilini", title: "Con coinquilini", icon: "users" },
+] as const;
+
+const NEST_MEMBERS = [
+  { id: "marco", name: "Marco", color: "pomodoro", at: "2026-11-01" },
+  { id: "laura", name: "Laura", color: "glicine", at: "2026-11-01T01:00" },
+  { id: "sofia", name: "Sofia", color: "salvia", at: "2026-11-01T02:00" },
+  { id: "tommaso", name: "Tommaso", color: "cobalto", at: "2026-11-01T03:00" },
+  {
+    id: "biscotto",
+    name: "Biscotto",
+    color: "zafferano",
+    at: "2026-11-01T04:00",
+  },
+  { id: "miele", name: "Miele", color: "cannella", at: "2026-11-02" },
+] as const;
+
+const NEST_INITIALS = memberInitials(
+  NEST_MEMBERS.map((member) => ({
+    id: member.id,
+    householdId: "gallery",
+    name: member.name,
+    createdAt: member.at,
+  })),
+);
+
+const GALLERY_PEOPLE = NEST_MEMBERS.map((member) => ({
+  id: member.id,
+  name: member.name,
+  color: member.color,
+  initials: NEST_INITIALS.get(member.id),
+}));
+
+const TEN_NAMES = [
+  "Marco",
+  "Laura",
+  "Sofia",
+  "Tommaso",
+  "Biscotto",
+  "Rita",
+  "Paolo",
+  "Giulia",
+  "Anna",
+  "Miele",
+] as const;
+
+const TEN_PEOPLE = MEMBER_COLOR_CODES.map((color, index) => ({
+  id: `dieci-${color}`,
+  name: TEN_NAMES[index] ?? color,
+  color,
+}));
+
+const FACE_LINES: Record<string, string> = {
+  marco: "Tu",
+  laura: "Invito da mandare",
+  sofia: "9 anni",
+  tommaso: "6 anni",
+  biscotto: "Cane",
+};
+
+const FACE_PEOPLE = GALLERY_PEOPLE.filter(
+  (person) => person.id !== "miele",
+).map((person) => ({
+  ...person,
+  line: FACE_LINES[person.id],
+  photoSrc: person.id === "biscotto" ? ANIMAL_SAMPLE_PHOTO : undefined,
+}));
+
+const FILTERS = [
+  { id: "tutto", label: "Tutto", count: 9 },
+  { id: "impegni", label: "Impegni", count: 5 },
+  { id: "da-fare", label: "Da fare", count: 2 },
+  { id: "spesa", label: "Spesa", count: 0 },
+  { id: "scadenze", label: "Scadenze", count: 1 },
+  { id: "animali", label: "Animali", count: 3 },
+] as const;
+
+function ChoicesPeopleSection() {
+  const [household, setHousehold] = useState<string | null>("famiglia");
+  const [tile, setTile] = useState<string | null>("famiglia");
+  const [kinds, setKinds] = useState<string[]>(["compleanno"]);
+  const [people, setPeople] = useState<string[]>(["sofia", "biscotto"]);
+  const [forWhom, setForWhom] = useState<string[]>(["tommaso"]);
+  const [forWhomTen, setForWhomTen] = useState<string[]>([]);
+  const [days, setDays] = useState<number[]>([1, 3, 5]);
+  const [filter, setFilter] = useState<string>("tutto");
+  const [food, setFood] = useState(false);
+  const [walk, setWalk] = useState(true);
+  const [touched, setTouched] = useState("");
+
+  const toggleIn = (
+    list: readonly string[],
+    value: string,
+    set: (next: string[]) => void,
+  ) =>
+    set(
+      list.includes(value) ? list.filter((v) => v !== value) : [...list, value],
+    );
+
+  const stackFour = GALLERY_PEOPLE.slice(0, 4);
+  const stackSix = [...stackFour, GALLERY_PEOPLE[4]!, GALLERY_PEOPLE[5]!];
+
+  return (
+    <Section id="scelte-persone" title="Scelte e persone (F4b, #504)">
+      <Example caption="ChoiceGroup · schede (A)">
+        <ChoiceGroup
+          label="Chi vive con te?"
+          value={household}
+          onChange={setHousehold}
+          options={CHOICE_COHABITANTS}
+          data-testid="ds-scelte-schede"
+        />
+      </Example>
+      <Example caption="ChoiceGroup · schede · errore">
+        <ChoiceGroup
+          label="Chi vive con te?"
+          value={null}
+          onChange={() => undefined}
+          options={CHOICE_COHABITANTS}
+          error={it.choicesPeople.chooseOne}
+          data-testid="ds-scelte-schede-errore"
+        />
+      </Example>
+      <Example caption="ChoiceGroup · tessere (B)">
+        <ChoiceGroup
+          label="Con chi vivi?"
+          variant="tiles"
+          value={tile}
+          onChange={setTile}
+          options={CHOICE_TILES}
+          data-testid="ds-scelte-tessere"
+        />
+      </Example>
+      <Example caption="Chip · pastiglie (C)">
+        <ChipGroup aria-label="Che cosa festeggiate" data-testid="ds-pastiglie">
+          {(
+            [
+              ["compleanno", "Compleanno"],
+              ["anniversario", "Anniversario"],
+              ["onomastico", "Onomastico"],
+              ["altro", "Altro"],
+            ] as const
+          ).map(([id, label]) => (
+            <Chip
+              key={id}
+              pressed={kinds.includes(id)}
+              onClick={() => toggleIn(kinds, id, setKinds)}
+            >
+              {label}
+            </Chip>
+          ))}
+        </ChipGroup>
+      </Example>
+      <Example caption="Chip · pastiglie delle persone">
+        <ChipGroup aria-label="Per chi" data-testid="ds-pastiglie-persone">
+          {GALLERY_PEOPLE.filter((p) =>
+            ["sofia", "tommaso", "biscotto"].includes(p.id),
+          ).map((person) => (
+            <Chip
+              key={person.id}
+              person
+              pressed={people.includes(person.id)}
+              onClick={() => toggleIn(people, person.id, setPeople)}
+              leading={
+                <Avatar
+                  name={person.name}
+                  color={person.color}
+                  initials={person.initials}
+                  nameShown
+                />
+              }
+            >
+              {person.name}
+            </Chip>
+          ))}
+          <Chip
+            icon="users"
+            pressed={people.includes("tutta")}
+            onClick={() => toggleIn(people, "tutta", setPeople)}
+          >
+            Tutta la casa
+          </Chip>
+        </ChipGroup>
+      </Example>
+      <Example caption="PersonPicker · «Per chi»">
+        <PersonPicker
+          label="Per chi"
+          people={GALLERY_PEOPLE}
+          value={forWhom}
+          onChange={setForWhom}
+          data-testid="ds-per-chi"
+        />
+      </Example>
+      <Example caption="PersonPicker · dieci persone, a capo">
+        <PersonPicker
+          label="Per chi, dieci persone"
+          people={TEN_PEOPLE}
+          value={forWhomTen}
+          onChange={setForWhomTen}
+          data-testid="ds-per-chi-dieci"
+        />
+      </Example>
+      <Example caption="PersonPicker · caricamento">
+        <PersonPicker
+          label="Per chi, in caricamento"
+          people={[]}
+          value={[]}
+          onChange={() => undefined}
+          loading
+          data-testid="ds-per-chi-caricamento"
+        />
+      </Example>
+      <Example caption="WeekdayPicker · giorni">
+        <WeekdayPicker
+          value={days}
+          onChange={setDays}
+          data-testid="ds-giorni"
+        />
+      </Example>
+      <Example caption="ChipGroup scroll · filtri che scorrono" wide>
+        <ChipGroup scroll aria-label="Filtri" data-testid="ds-filtri">
+          {FILTERS.map((item) => (
+            <Chip
+              key={item.id}
+              pressed={filter === item.id}
+              count={item.count}
+              onClick={() => setFilter(item.id)}
+            >
+              {item.label}
+            </Chip>
+          ))}
+        </ChipGroup>
+      </Example>
+      <Example caption="Spunta neutra · riga fatta">
+        <List className="scheda" data-testid="ds-spunta">
+          <ListRow>
+            <Checkbox
+              variant="round"
+              checked={food}
+              onChange={setFood}
+              aria-label="Segna come fatto: Cibo di Biscotto"
+            />
+            <span className="riga-lista__testo">
+              <span className="riga-lista__titolo">Cibo di Biscotto</span>
+              <span className="riga-lista__info">Sera · tocca a Laura</span>
+            </span>
+            <Avatar name="Laura" color="glicine" dot nameShown />
+          </ListRow>
+          <ListRow modifier={walk ? "riga-lista--fatto" : undefined}>
+            <Checkbox
+              variant="round"
+              checked={walk}
+              onChange={setWalk}
+              aria-label="Segna come fatto: Passeggiata del mattino"
+            />
+            <span className="riga-lista__testo">
+              <span className="riga-lista__titolo">
+                Passeggiata del mattino
+              </span>
+              <span className="riga-lista__info">Fatto da te alle 7:42</span>
+            </span>
+            <Avatar name="Marco" color="pomodoro" dot nameShown />
+          </ListRow>
+        </List>
+      </Example>
+      <Example caption="FaceGrid · volti in griglia">
+        <FaceGrid
+          label={`Persone del ${BRAND.short}`}
+          people={FACE_PEOPLE}
+          onSelect={(id) => {
+            const person = FACE_PEOPLE.find((p) => p.id === id);
+            if (person) {
+              setTouched(t(it.choicesPeople.touched, { name: person.name }));
+            }
+          }}
+          onAdd={() => undefined}
+          data-testid="ds-volti"
+        />
+        <p
+          className="t-nota"
+          role="status"
+          aria-live="polite"
+          data-testid="ds-volti-stato"
+        >
+          {touched}
+        </p>
+      </Example>
+      <Example caption="FaceGrid · nessuna persona">
+        <FaceGrid
+          label={`Persone del ${BRAND.short}, nessuna`}
+          people={[]}
+          onSelect={() => undefined}
+          onAdd={() => undefined}
+          data-testid="ds-volti-vuoto"
+        />
+      </Example>
+      <Example caption="AvatarStack · foto e due lettere">
+        <div className={styles.riga} data-testid="ds-foto-e-pila">
+          <span data-testid="ds-pila-quattro">
+            <AvatarStack people={stackFour} />
+          </span>
+          <span>Tutti e quattro</span>
+          <span data-testid="ds-pila-sei">
+            <AvatarStack people={stackSix} />
+          </span>
+          <span className={styles.avatarFoto} data-testid="ds-biscotto-foto">
+            <Avatar
+              name="Biscotto"
+              color="zafferano"
+              size="xl"
+              photoSrc={ANIMAL_SAMPLE_PHOTO}
+              ring
+            />
+          </span>
+          <span
+            className={styles.avatarFoto}
+            data-testid="ds-biscotto-senza-foto"
+          >
+            <Avatar
+              name="Biscotto"
+              color="zafferano"
+              size="xl"
+              photoSrc={BROKEN_PHOTO}
+              ring
+            />
+          </span>
+          <span data-testid="ds-miele-s">
+            <Avatar name="Miele" color="cannella" initials="Mi" />
+          </span>
+          <span data-testid="ds-miele-m">
+            <Avatar name="Miele" color="cannella" initials="Mi" size="m" />
+          </span>
+          <span data-testid="ds-miele-l">
+            <Avatar name="Miele" color="cannella" initials="Mi" size="l" />
+          </span>
+          <span data-testid="ds-miele-xl">
+            <Avatar name="Miele" color="cannella" initials="Mi" size="xl" />
+          </span>
+        </div>
+      </Example>
+      <Example caption="Avatar neutro · aiutante">
+        <div className={styles.riga} data-testid="ds-aiutante">
+          <Avatar name="Anna" color="neutro" size="s" />
+          <Avatar name="Anna" color="neutro" size="m" />
+          <Avatar name="Anna" color="neutro" size="l" />
+          <Avatar name="Anna" color="neutro" size="xl" />
+          <span>nonna Anna</span>
+        </div>
+      </Example>
+      <Example caption="Tile · tessere di Spazi">
+        <TileGrid data-testid="ds-tessere-spazi">
+          <Tile
+            href="#"
+            icon="paw-print"
+            title="Animali"
+            line="Biscotto e Miele"
+          />
+          <Tile href="#" icon="book-open" title="Ricette" line="8 vostre" />
+          <Tile
+            href="#"
+            icon="utensils"
+            title="Pasti"
+            line="Stasera: pasta al pesto"
+          />
+          <Tile
+            href="#"
+            icon="repeat"
+            title="Liste da riusare"
+            line="4 liste"
+          />
+        </TileGrid>
+      </Example>
+      <Example caption={`Tile · tessere del ${BRAND.short} (4 colonne)`} wide>
+        <TileGrid columns={4} data-testid="ds-tessere-nest">
+          <Tile
+            href="#"
+            avatar={{ name: "Marco", color: "pomodoro" }}
+            title="Marco"
+            line="Tu"
+          />
+          <Tile
+            href="#"
+            avatar={{ name: "Laura", color: "glicine" }}
+            title="Laura"
+            line="Adulta"
+          />
+          <Tile
+            href="#"
+            avatar={{ name: "Sofia", color: "salvia" }}
+            title="Sofia"
+            line="9 anni"
+          />
+          <Tile
+            href="#"
+            avatar={{ name: "Tommaso", color: "cobalto" }}
+            title="Tommaso"
+            line="6 anni"
+          />
+          <Tile
+            variant="pending"
+            avatar={{ name: "Giorgia", color: "peonia" }}
+            title="Giorgia"
+            line="Invito mandato ieri · vale ancora 6 giorni"
+            data-testid="ds-tessera-attesa"
+          />
+        </TileGrid>
+      </Example>
+      <Example caption="Tag · allerta">
+        <Tag variant="allerta" data-testid="ds-tag-allerta">
+          Da verificare
+        </Tag>
+      </Example>
+    </Section>
+  );
+}
+
 export function Gallery() {
   const rowCards = useQueryFlag("righe-scheda");
   const pageParts = useQueryFlag("pezzi-pagine");
@@ -675,6 +1120,7 @@ export function Gallery() {
       <FieldsSection />
       <ControlsSection />
       <PeopleSection />
+      <ChoicesPeopleSection />
       <ListSection rowCards={rowCards} />
       <BaseComponentsSection />
       <OverlaysSection />
