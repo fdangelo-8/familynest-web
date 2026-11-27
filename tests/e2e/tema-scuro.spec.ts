@@ -9,6 +9,7 @@ import {
   rgbOf,
   rootValues,
   setAspetto,
+  settleTheme,
   tokenOfRole,
 } from "../fixtures/tema";
 
@@ -332,6 +333,14 @@ test.describe("riempimenti", () => {
     page,
   }) => {
     await setAspetto(page, "scuro");
+    // A chip of the plain group, pressed (the pointer must not hover it).
+    await page
+      .getByTestId("chip-predefinito")
+      .getByRole("button")
+      .first()
+      .click();
+    await page.mouse.move(0, 0);
+    await settleTheme(page);
     const read = (selector: string) =>
       page
         .locator(selector)
@@ -343,7 +352,7 @@ test.describe("riempimenti", () => {
     for (const selector of [
       ".btn-primary",
       '.toggle[aria-checked="true"]',
-      '.chip[aria-pressed="true"]',
+      '.chip:not(.chip--persona)[aria-pressed="true"]',
       '.casella[aria-checked="true"]',
     ]) {
       const value = await read(selector);

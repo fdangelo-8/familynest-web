@@ -207,10 +207,11 @@ test.describe("galleria · Componenti di base 2.0", () => {
       "font-weight",
       "font-size",
     ]);
+    // #634: the full ground is --color-pieno, the text over it --color-latte.
     expect(s["background-color"]).toBe(
-      await resolve(page, "color", "--color-azione"),
+      await resolve(page, "color", "--color-pieno"),
     );
-    expect(s.color).toBe(await resolve(page, "color", "--color-bianco"));
+    expect(s.color).toBe(await resolve(page, "color", "--color-latte"));
     expect(parseFloat(s.height!)).toBeGreaterThanOrEqual(52);
     expect(s["border-top-left-radius"]).toBe("14px");
     expect(s["font-weight"]).toBe("600");
@@ -998,7 +999,7 @@ test.describe("galleria · Componenti di base 2.0", () => {
     expect(parseFloat(ring["outline-width"]!)).toBeGreaterThanOrEqual(1);
     expect(parseFloat(ring["outline-width"]!)).toBeLessThanOrEqual(1.5);
     expect(ring["outline-color"]).toBe(
-      await resolve(page, "color", "--color-azione"),
+      await resolve(page, "color", "--color-fuoco"),
     );
     expect(ring["outline-offset"]).toBe(
       await resolve(page, "width", "--space-half"),
@@ -1144,7 +1145,7 @@ test.describe("galleria · Componenti di base 2.0", () => {
     ]);
 
     // Anello di fuoco.
-    const ring = await resolve(page, "color", "--color-azione");
+    const ring = await resolve(page, "color", "--color-fuoco");
     ratios.push(["anello su superficie", contrast(ring, surface), 3]);
     ratios.push(["anello su carta-2", contrast(ring, paper2), 3]);
 
