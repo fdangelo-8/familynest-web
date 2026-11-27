@@ -2418,6 +2418,14 @@ export type Database = {
           next_admin_member_id: string;
         }[];
       };
+      get_account_jobs_health: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          key_present: boolean;
+          not_running: boolean;
+          repeated_errors: boolean;
+        }[];
+      };
       get_event_calendar_link: {
         Args: { p_event_id: string };
         Returns: {
