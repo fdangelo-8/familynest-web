@@ -235,7 +235,7 @@ test.describe("MemberSheet: aggiunta, regole dei campi", () => {
       calendar.getByRole("button", { name: "Mese successivo" }),
     ).toHaveAttribute("aria-disabled", "true");
     // A tap on a day after today does not close the calendar and chooses nothing
-    await tomorrow.click({ force: true });
+    await tomorrow.dispatchEvent("click");
     await expect(calendar).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(calendar).toHaveCount(0);

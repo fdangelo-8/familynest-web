@@ -703,7 +703,7 @@ test.describe("errori del foglio", () => {
       if ((await cell.count()) > 0) {
         // Tomorrow is in the grid: it is greyed out and a tap does nothing.
         await expect(cell).toHaveAttribute("aria-disabled", "true");
-        await cell.click({ force: true });
+        await cell.dispatchEvent("click");
         await expect(calendar).toBeVisible();
       } else {
         // Tomorrow is in the next month, and that month cannot be reached.

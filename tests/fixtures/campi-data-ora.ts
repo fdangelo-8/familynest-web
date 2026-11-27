@@ -79,16 +79,31 @@ export async function pickDay(field: Locator, dayKey: string): Promise<void> {
   const cell = calendar.locator(`[role="gridcell"][data-day="${dayKey}"]`);
   const [year, month] = dayKey.split("-").map(Number) as [number, number];
   const wanted = year * 12 + (month - 1);
-  for (let step = 0; step < 150; step += 1) {
-    if ((await cell.count()) > 0) break;
+  const shownMonths = async () => {
     const name = (await grid.getAttribute("aria-label")) ?? "";
     const [shownMonth = "", shownYear = "0"] = name.toLowerCase().split(" ");
-    const shown = Number(shownYear) * 12 + MONTHS.indexOf(shownMonth);
-    const far = Math.abs(wanted - shown) >= 12;
-    const key = wanted > shown ? "PageDown" : "PageUp";
-    await page.keyboard.press(far ? `Shift+${key}` : key);
+    return Number(shownYear) * 12 + MONTHS.indexOf(shownMonth);
+  };
+  // The keys are pressed in one go (a year at a time, then the months), then
+  // the grid is checked: a far day (2101) must not take a round trip per key.
+  if ((await cell.count()) === 0) {
+    const gap = wanted - (await shownMonths());
+    const key = gap > 0 ? "PageDown" : "PageUp";
+    for (let step = 0; step < Math.trunc(Math.abs(gap) / 12); step += 1) {
+      await page.keyboard.press(`Shift+${key}`);
+    }
+    for (let step = 0; step < Math.abs(gap) % 12; step += 1) {
+      await page.keyboard.press(key);
+    }
+  }
+  // Safety net: one month at a time until the day is in the grid
+  for (let step = 0; step < 24 && (await cell.count()) === 0; step += 1) {
+    const gap = wanted - (await shownMonths());
+    await page.keyboard.press(gap > 0 ? "PageDown" : "PageUp");
   }
   await cell.click();
+  // The calendar (a sheet on the phone) is gone before the test goes on.
+  await calendar.waitFor({ state: "hidden" });
 }
 
 /**

@@ -263,7 +263,7 @@ test.describe("Aggiungi · Impegno · campi", () => {
     expect(await eventsOf(casa)).toHaveLength(0);
 
     await pickDay(f.day, "2026-10-23");
-    await f.from.fill("16:00");
+    await typeTime(f.from, "16:00");
     await s.button("Metti in venerdì 23").click();
     await expect(f.to).toHaveAccessibleDescription("Scegli l'ora di fine.");
     await expect(f.to).toBeFocused();
@@ -451,7 +451,7 @@ test.describe("Aggiungi · isolamento tra Nest e campi data (F4c)", () => {
     const f = impegnoFields(page);
     await pickDay(f.day, "2026-10-23");
     await typeTime(f.from, "17:00");
-    const dialog = page.getByRole("dialog");
+    const dialog = page.getByTestId("aggiungi-foglio");
     await expect(dialog).toBeVisible();
     for (const nameOfA of ["Marco", "Laura", "Sofia", "Tommaso", "Biscotto"]) {
       await expect(dialog.getByText(nameOfA, { exact: false })).toHaveCount(0);

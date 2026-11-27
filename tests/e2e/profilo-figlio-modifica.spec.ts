@@ -542,7 +542,7 @@ test.describe("errori di compilazione", () => {
         .getByTestId("calendario")
         .locator('[role="gridcell"][data-day="2026-10-21"]');
       await expect(tomorrow).toHaveAttribute("aria-disabled", "true");
-      await tomorrow.click({ force: true });
+      await tomorrow.dispatchEvent("click");
       await expect(page.getByTestId("calendario")).toBeVisible();
       await page.keyboard.press("Escape");
       await expect(page.getByTestId("calendario")).toHaveCount(0);
