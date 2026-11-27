@@ -182,12 +182,21 @@ test.describe("galleria: esempi nuovi", () => {
         own: getComputedStyle(n).opacity,
         chip: getComputedStyle(el).opacity,
         color: getComputedStyle(n).color,
-        chipColor: getComputedStyle(el).color,
+        // #504 (F4b): the count of a pill is 400 in --color-inchiostro-2
+        // (before it had the colour of the pill).
+        expected: (() => {
+          const probe = document.createElement("span");
+          probe.style.color = "var(--color-inchiostro-2)";
+          el.appendChild(probe);
+          const color = getComputedStyle(probe).color;
+          probe.remove();
+          return color;
+        })(),
       };
     });
     expect(o.own).toBe("1");
     expect(o.chip).toBe("1");
-    expect(o.color).toBe(o.chipColor);
+    expect(o.color).toBe(o.expected);
   });
 
   test("#40: la palette scorre solo nel mezzo, il piede resta visibile", async ({

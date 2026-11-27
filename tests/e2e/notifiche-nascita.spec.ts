@@ -625,7 +625,9 @@ test.describe("spesa raggruppata", () => {
     // 24 hours before the instant it is given, so it runs a minute from now.
     const evening = new Date(Date.now() + 60_000);
 
-    // «Spesa» is off by default: nobody is told.
+    // The default of «Spesa» does not matter: Giulia's choice is set
+    // explicitly, first off (nobody is told), then on.
+    await setPreference(nest, "Giulia", "shopping", false);
     expect(await runJob(nest, "shopping_digest", evening)).toBe(0);
     expect(await notificationRows(nest)).toHaveLength(0);
 

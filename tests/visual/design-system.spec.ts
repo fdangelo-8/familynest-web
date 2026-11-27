@@ -16,6 +16,14 @@ test.beforeEach(async ({ page }) => {
   await page.goto("/design-system");
   await page.evaluate(() => document.fonts.ready);
   await expect(page.locator("h1")).toHaveText("Design system");
+  // Photos settle after the first paint: the sample ones decode, the broken
+  // one is dropped for its initial (F4b #504). Wait until every <img> left is
+  // a loaded one, so no screenshot sees the page between the two states.
+  await page.waitForFunction(() =>
+    Array.from(document.images).every(
+      (img) => img.complete && img.naturalWidth > 0,
+    ),
+  );
 });
 
 test("CA-48: galleria intera, senza scorrimento orizzontale", async ({

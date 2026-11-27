@@ -56,6 +56,13 @@
   align-items: center;
 }
 
+/* Wrapper of an avatar whose photo may fail: as a flex box it has no line box,
+   so the photo and the initial give the same height (no baseline gap of the
+   inline avatar that would move the page when the photo falls back). */
+.avatarFoto {
+  display: flex;
+}
+
 .notte {
   padding: var(--space-5);
   border-radius: var(--radius-l);

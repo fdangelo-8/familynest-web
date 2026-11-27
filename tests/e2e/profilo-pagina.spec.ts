@@ -16,11 +16,14 @@ import {
   needsThrowaway,
   needsUsers,
   profileOf,
+  QUARTER_HOUR_TIMES,
   rowOf,
+  savedDigestTime,
   subtitle,
   valueOf,
   withMemberNest,
 } from "../fixtures/profilo";
+import { seededClient } from "../fixtures/impostazioni-ca";
 import { createThrowawayUser } from "../fixtures/throwaway-user";
 
 // "Il tuo profilo" (#38, /profilo): access, frame, head, colours as they are
@@ -245,16 +248,21 @@ test.describe("testa e colore, come si leggono", () => {
 // --------------------------------------------------------- Come usi l'app
 
 test.describe("Come usi l'app, come si legge", () => {
-  test("CA-14: senza scelte fatte le righe dicono Io, 7:30, Occupato e Nessuno collegato", async ({
+  // The digest time is the one saved in the database for A (read from it): it
+  // must be one of the quarter-hour times the sheet offers.
+  test("CA-14: senza scelte fatte le righe dicono Io, l'orario salvato, Occupato e Nessuno collegato", async ({
     page,
     baseURL,
   }) => {
     needsUsers("A");
+    const { data: me } = await (await seededClient("A")).auth.getUser();
+    const saved = await savedDigestTime(me.user!.id);
+    expect(QUARTER_HOUR_TIMES).toContain(saved);
     await signInAs(page.context(), baseURL as string, "A");
     await page.goto(PATH);
     await expect(h1(page)).toBeVisible();
     await expect(valueOf(page, "All'apertura")).toHaveText("Io");
-    await expect(valueOf(page, "Sintesi del mattino")).toHaveText("7:30");
+    await expect(valueOf(page, "Sintesi del mattino")).toHaveText(saved);
     await expect(valueOf(page, "Visibilità predefinita")).toHaveText(
       "Occupato",
     );

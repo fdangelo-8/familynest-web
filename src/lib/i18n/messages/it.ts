@@ -81,6 +81,24 @@ export const it = {
     request:
       "{app} chiede di leggere i tuoi calendari e di scrivere i loro impegni.",
   },
+  // Rows of the Notifiche page for the avvisi of #511 (`<b>` = bold).
+  notifiche: {
+    memberJoined:
+      "<b>{name}</b> ha accettato l'invito: ora avete lo stesso calendario e le stesse liste.",
+    open: "Apri",
+    openEvent: "Vedi l'impegno",
+    eventReminder: "Promemoria: <b>{title}</b>, {day} alle {time}.",
+    rideEscort: "Tocca a te portare, {day} alle {time}: <b>{title}</b>.",
+    ridePickup: "Tocca a te riprendere, {day} alle {time}: <b>{title}</b>.",
+    overlapMine:
+      "{day}, alla stessa ora: <b>{first}</b> e <b>{second}</b>. Sei in due posti insieme.",
+    overlapOther:
+      "{day}, alla stessa ora: <b>{first}</b> e <b>{second}</b>. Riguarda {name}.",
+    rideRequestEscort:
+      "<b>{name}</b> ti chiede di portare, {day} alle {time}: <b>{title}</b>.",
+    rideRequestPickup:
+      "<b>{name}</b> ti chiede di riprendere, {day} alle {time}: <b>{title}</b>.",
+  },
   memberColors: {
     pomodoro: "Corallo",
     glicine: "Glicine",
@@ -92,5 +110,23 @@ export const it = {
     peonia: "Rosa",
     basilico: "Ardesia",
     cannella: "Cannella",
+  },
+  // Choices and people components (F4b, #504). A group of its own, to keep
+  // away from the open notification work that also edits this file.
+  choicesPeople: {
+    chooseOne: "Scegli una risposta.",
+    add: "Aggiungi",
+    touched: "Hai toccato: {name}",
+    more: "+{count}",
+    days: "Giorni",
+    weekdays: {
+      mon: { short: "Lun", full: "lunedì" },
+      tue: { short: "Mar", full: "martedì" },
+      wed: { short: "Mer", full: "mercoledì" },
+      thu: { short: "Gio", full: "giovedì" },
+      fri: { short: "Ven", full: "venerdì" },
+      sat: { short: "Sab", full: "sabato" },
+      sun: { short: "Dom", full: "domenica" },
+    },
   },
 } satisfies MessageTree;
