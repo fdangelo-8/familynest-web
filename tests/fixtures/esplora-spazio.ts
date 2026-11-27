@@ -8,7 +8,8 @@ import type { SpaceKey } from "../../src/lib/spaces";
 // Selectors used (from the page, the PR and the comments of the coordinator):
 //   - «Avvisami»: a button named "Avvisami quando è pronto"
 //     (`aria-pressed="false"`) or "Ti avvisiamo appena è pronto" (`true`);
-//   - the puntina of mobile: `header.barra button[aria-pressed]`;
+//   - the puntina of mobile: `header.testata button[aria-pressed]` (F5: the
+//     phone header; between 900 and 1023 px it sits in the bar of the computer);
 //   - the link of desktop: `a[href="/spazi"].spazio-arrivo__desktop`;
 //   - the error of reading: `[role=alert].avviso--errore` with «Riprova»;
 //   - loading: `[aria-busy="true"]` with the hidden text "Caricamento in corso";

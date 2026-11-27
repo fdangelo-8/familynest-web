@@ -68,9 +68,10 @@ const SUN_H = "Domenica 25";
 // ------------------------------------------------------------------ locators
 
 const h1 = (page: Page) => page.getByRole("heading", { level: 1 });
-// From 1280 px the sidebar has a lens too, with the same state: the first.
+// The lens of the page (phone header, or inside `main`); from 1280 px the
+// sidebar has another one, checked by the test of the two lenses.
 const lensGroup = (page: Page) =>
-  page.getByRole("group", { name: LENS }).first();
+  page.locator("header.testata, main").getByRole("group", { name: LENS });
 const viewGroup = (page: Page) =>
   page.getByRole("group", { name: "Vista del calendario" });
 const nextWeek = (page: Page) =>
@@ -550,6 +551,37 @@ test.describe("elenco mobile e striscia", () => {
     );
     await thursday.click();
     await expect(page).toHaveURL(new RegExp(`/impegni/${id}\\?giorno=${THU}$`));
+  });
+
+  // F5 (#506, `barOffset`): the tap on a day scrolls the list so that the head
+  // of the day sits under the collapsed bar of the phone, not behind it.
+  test("la testa del giorno scelto nella striscia non resta sotto la barra raccolta", async ({
+    page,
+    baseURL,
+    bianchi,
+  }) => {
+    for (const day of [TUE, WED, THU, FRI]) {
+      await createEvent(bianchi, "Giulia", {
+        title: `Impegno ${day}`,
+        day,
+        from: "09:00",
+        to: "10:00",
+      });
+    }
+    await open(page, baseURL, bianchi);
+    await tabs(page).nth(4).click();
+    const head = page.locator(`[id="m-giorno-${FRI}"]`);
+    await expect(head).toBeFocused();
+    await expect
+      .poll(async () => {
+        const box = await head.boundingBox();
+        const bar = page.getByTestId("testata-raccolta");
+        const barBottom = (await bar.count())
+          ? ((await bar.boundingBox())?.height ?? 0)
+          : 0;
+        return box ? box.y - barBottom : -1;
+      })
+      .toBeGreaterThanOrEqual(0);
   });
 
   test("CA-9: i numeri della striscia e delle teste contano gli impegni, con al massimo 4 punti", async ({

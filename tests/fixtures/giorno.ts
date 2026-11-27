@@ -63,7 +63,8 @@ export const dayPath = (day: Day) => `${PATH}?giorno=${day}`;
 
 export const h1 = (page: Page) => page.getByRole("heading", { level: 1 });
 export const lensGroup = (page: Page) =>
-  page.getByRole("group", { name: LENS }).first(); // sidebar lens first (1280)
+  // the lens of the page: in the phone header, or inside `main` (not the sidebar one)
+  page.locator("header.testata, main").getByRole("group", { name: LENS });
 export const viewGroup = (page: Page) =>
   page.getByRole("group", { name: "Vista del calendario" });
 export const nextDay = (page: Page) =>

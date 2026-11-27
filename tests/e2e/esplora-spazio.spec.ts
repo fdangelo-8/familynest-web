@@ -209,6 +209,25 @@ test.describe("puntina e disposizione", () => {
     await expect(toast(page)).toHaveCount(0);
   });
 
+  test("«Annulla» dopo aver fissato lo spazio riporta il fuoco sulla puntina della testata", async ({
+    page,
+    baseURL,
+  }, testInfo) => {
+    test.skip(!isMobile(testInfo.project.name), "Caso a 390 px");
+    await signInAs(page.context(), baseURL as string, "A");
+    await openSpace(page, "A tavola");
+    await waitHydrated(barPin(page));
+    await expect(async () => {
+      await barPin(page).click();
+      await expect(barPin(page)).toHaveAttribute("aria-pressed", "true", {
+        timeout: 1500,
+      });
+    }).toPass();
+    await toast(page).getByRole("button", { name: "Annulla" }).click();
+    await expect(barPin(page)).toHaveAttribute("aria-pressed", "false");
+    await expect(barPin(page)).toBeFocused();
+  });
+
   test("CA-23: su desktop non c'è nessuna puntina", async ({
     page,
     baseURL,

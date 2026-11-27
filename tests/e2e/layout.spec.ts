@@ -1140,6 +1140,89 @@ test.describe("computer", () => {
     await expect(nest).toHaveAttribute("aria-pressed", "true");
   });
 
+  test("le due lenti (barra laterale e pagina) restano allineate: cambiarne una cambia l'altra", async ({
+    page,
+    baseURL,
+  }) => {
+    withUser("A");
+    await openReady(page, baseURL, "/calendario");
+    const side = sidebar(page).getByRole("group", { name: LENS });
+    const own = page.getByRole("main").getByRole("group", { name: LENS });
+    await expect(side).toBeVisible();
+    await expect(own).toBeVisible();
+    const choose = async (from: typeof side, which: "Io" | "Nest") => {
+      const button = from.getByRole("button", {
+        name: new RegExp(`${which}$`),
+      });
+      await expect(async () => {
+        await button.click();
+        await expect(button).toHaveAttribute("aria-pressed", "true", {
+          timeout: 1000,
+        });
+      }).toPass();
+    };
+    await choose(own, "Nest");
+    await expect(side.getByRole("button", { name: /Nest$/ })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await expect(side.getByRole("button", { name: /Io$/ })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
+    await choose(side, "Io");
+    await expect(own.getByRole("button", { name: /Io$/ })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await expect(own.getByRole("button", { name: /Nest$/ })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
+  });
+
+  test("con il pannello aperto e la pagina cambiata, chiuderlo non torna indietro", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto("/design-system?guscio=1");
+    const open = page.getByTestId("pannello-apri");
+    await waitHydrated(open);
+    await open.click();
+    const panel = page.getByTestId("pannello-prova");
+    await expect(panel).toBeVisible();
+    // The person goes to another page of the app while the panel is open: a
+    // new entry of the history, which is not the one of the panel.
+    await page.evaluate(() =>
+      window.history.pushState({}, "", "/design-system?guscio=1&altra=1"),
+    );
+    await page.keyboard.press("Escape");
+    await expect(panel).toHaveCount(0);
+    // The panel did not call `history.back()`: the address is still the new one.
+    await page.waitForTimeout(300);
+    expect(new URL(page.url()).searchParams.get("altra")).toBe("1");
+  });
+
+  test("a 960 px una pagina di dettaglio ha l'azione nella barra in alto", async ({
+    page,
+    baseURL,
+  }) => {
+    withUser("A");
+    await page.setViewportSize({ width: 960, height: 800 });
+    await openAs(page, baseURL, "A", "/spazi/a-tavola");
+    const bar = page.getByTestId("barra-alto");
+    await expect(bar).toBeVisible();
+    // The pin of the space sits in the bar between 900 and 1023 px...
+    await expect(
+      bar.getByRole("button", { name: "Fissa A tavola in Oggi" }),
+    ).toBeVisible();
+    // ...and from 1024 px the page has no pin and the bar does not repeat it.
+    await page.setViewportSize({ width: 1040, height: 800 });
+    await expect(
+      bar.getByRole("button", { name: "Fissa A tavola in Oggi" }),
+    ).toHaveCount(0);
+  });
+
   test("CA-23: la barra in alto di Oggi, Calendario, Casa e Spazi", async ({
     page,
     baseURL,

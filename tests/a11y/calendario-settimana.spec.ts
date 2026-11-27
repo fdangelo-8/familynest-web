@@ -70,12 +70,14 @@ test.describe("axe", () => {
       await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
 
       await page
+        .locator("header.testata, main")
         .getByRole("group", { name: /Punto di vista/ })
-        .first()
         .getByRole("button", { name: /Io$/ })
         .click();
       await expect(
-        page.getByRole("button", { name: /Io$/, pressed: true }).first(),
+        page
+          .locator("header.testata, main")
+          .getByRole("button", { name: /Io$/, pressed: true }),
       ).toBeVisible();
       await expectClean(page);
     });
@@ -523,15 +525,15 @@ test("aree di tocco di almeno 44 px (mobile)", async ({ page, baseURL }) => {
       [
         "lente Io",
         page
+          .locator("header.testata, main")
           .getByRole("group", { name: /Punto di vista/ })
-          .first()
           .getByRole("button", { name: /Io$/ }),
       ],
       [
         "lente Nest",
         page
+          .locator("header.testata, main")
           .getByRole("group", { name: /Punto di vista/ })
-          .first()
           .getByRole("button", { name: /Nest$/ }),
       ],
     ];
@@ -780,12 +782,14 @@ test("contrasto: testi principali e axe color-contrast", async ({
     };
     expect(await run()).toEqual([]);
     await page
+      .locator("header.testata, main")
       .getByRole("group", { name: /Punto di vista/ })
-      .first()
       .getByRole("button", { name: /Io$/ })
       .click();
     await expect(
-      page.getByRole("button", { name: /Io$/, pressed: true }).first(),
+      page
+        .locator("header.testata, main")
+        .getByRole("button", { name: /Io$/, pressed: true }),
     ).toBeVisible();
     expect(await run()).toEqual([]);
   });

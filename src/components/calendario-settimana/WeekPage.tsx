@@ -58,15 +58,13 @@ function barOffset(): number {
   const header = document.querySelector<HTMLElement>(".testata");
   const onPhone = header && getComputedStyle(header).display !== "none";
   const collapsed = document.querySelector<HTMLElement>(".testata-raccolta");
-  const height = !onPhone
-    ? 0
-    : collapsed
-      ? collapsed.offsetHeight
-      : parseFloat(root.getPropertyValue("--size-barra-alta")) +
-        parseFloat(root.getPropertyValue("--area-sicura-alto") || "0");
-  return (
-    (Number.isNaN(height) ? 0 : height) + (Number.isNaN(space) ? 0 : space)
-  );
+  // Each part is checked on its own: a missing one counts as 0 and does not
+  // cancel the other.
+  const number = (value: number) => (Number.isNaN(value) ? 0 : value);
+  const bar = number(parseFloat(root.getPropertyValue("--size-barra-alta")));
+  const safe = number(parseFloat(root.getPropertyValue("--area-sicura-alto")));
+  const height = !onPhone ? 0 : collapsed ? collapsed.offsetHeight : bar + safe;
+  return number(height) + number(space);
 }
 
 /** Scrolls so the head of a day sits just under the fixed bar (no animation). */
