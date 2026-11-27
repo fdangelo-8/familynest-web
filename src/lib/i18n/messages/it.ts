@@ -111,4 +111,22 @@ export const it = {
     basilico: "Ardesia",
     cannella: "Cannella",
   },
+  // Choices and people components (F4b, #504). A group of its own, to keep
+  // away from the open notification work that also edits this file.
+  choicesPeople: {
+    chooseOne: "Scegli una risposta.",
+    add: "Aggiungi",
+    touched: "Hai toccato: {name}",
+    more: "+{count}",
+    days: "Giorni",
+    weekdays: {
+      mon: { short: "Lun", full: "lunedì" },
+      tue: { short: "Mar", full: "martedì" },
+      wed: { short: "Mer", full: "mercoledì" },
+      thu: { short: "Gio", full: "giovedì" },
+      fri: { short: "Ven", full: "venerdì" },
+      sat: { short: "Sab", full: "sabato" },
+      sun: { short: "Dom", full: "domenica" },
+    },
+  },
 } satisfies MessageTree;

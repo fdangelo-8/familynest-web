@@ -325,6 +325,10 @@
   --size-avatar-m: 32px;
   --size-avatar-l: 44px;
   --size-avatar-xl: 72px;
+  --size-pastiglia: 40px; /* pastiglie (F4b) */
+  --size-avatar-scelta: 36px; /* pallino di «Per chi» (F4b) */
+  --size-avatar-pila: 28px; /* pallino della pila di avatar (F4b) */
+  --size-avatar-tessera: 56px; /* pallino della tessera del Nest (F4b) */
   --size-quadrato-nest: 40px;
   --size-colonna-ora: 48px; /* colonna dell'orario nelle righe */
   --size-colonna-giorni: 72px; /* colonna dei giorni nelle scadenze */

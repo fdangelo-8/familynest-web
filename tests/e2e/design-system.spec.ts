@@ -829,7 +829,23 @@ test.describe("CA-11: stessi stili del mockup", () => {
     // #503: the off switch has the border of the field around it.
     { id: "toggle", selector: ".toggle", skip: ["box-shadow"] },
     { id: "selettore", selector: ".selettore" },
-    { id: "chip", selector: ".chip--statico" },
+    // #504 (F4b, decision of 24/11/2026): the pill is 40 px high, a capsule,
+    // with a thin border and the text at 16/22 600; the properties listed in
+    // `skip` are the approved differences.
+    {
+      id: "chip",
+      selector: ".chip--statico",
+      skip: [
+        "height",
+        "padding",
+        "border-top-left-radius",
+        "font-size",
+        "font-weight",
+        "line-height",
+        "border",
+        "box-shadow",
+      ],
+    },
     { id: "avatar", selector: '.avatar:not([class*="avatar--"])' },
     { id: "etichetta", selector: ".etichetta" },
     // The first .scheda of the mockup is a list container (no padding): the

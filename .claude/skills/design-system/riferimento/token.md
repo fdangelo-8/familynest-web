@@ -341,6 +341,10 @@ Pagine ed elenchi senza ombre. L'ombra «card» del canvas di Fable (`0 1px 2px,
 | `--size-avatar-m`              | `32px`   |                                                                                 |
 | `--size-avatar-l`              | `44px`   |                                                                                 |
 | `--size-avatar-xl`             | `72px`   |                                                                                 |
+| `--size-pastiglia`             | `40px`   | pastiglia (F4b, #504), area di tocco 44                                         |
+| `--size-avatar-scelta`         | `36px`   | pallino di «Per chi» (F4b), area di tocco 44                                    |
+| `--size-avatar-pila`           | `28px`   | pallino della pila di avatar (F4b)                                              |
+| `--size-avatar-tessera`        | `56px`   | pallino della tessera del Nest (F4b)                                            |
 | `--size-quadrato-nest`         | `40px`   |                                                                                 |
 | `--size-colonna-ora`           | `48px`   | colonna dell'orario nelle righe                                                 |
 | `--size-colonna-giorni`        | `72px`   | colonna dei giorni nelle scadenze                                               |

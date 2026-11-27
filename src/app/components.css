@@ -1206,11 +1206,12 @@ button.riga-lista {
   color: var(--color-inchiostro-2);
   display: inline-flex;
 }
+/* F4b (#504, domanda 1): il fatto si attenua e non si barra; il pallino della
+   persona e la riga sotto restano come sono. Il «preso» della Spesa
+   (.riga-lista--preso) resta barrato (domanda 6). */
 .riga-lista--fatto .riga-lista__titolo {
   color: var(--color-inchiostro-2);
-  text-decoration: line-through;
-  text-decoration-thickness: var(--border-medio);
-  font-weight: var(--weight-medio);
+  text-decoration: none;
 }
 .riga-lista--cliccabile {
   cursor: pointer;
@@ -1548,9 +1549,16 @@ button.riga-lista {
   background: var(--color-pieno);
   color: var(--color-latte);
 }
+/* «Da verificare» (F4b #504, richiesta da A2): rosso su rosso tenue, 600 12/16,
+   alta 24. Prima era un rosso pieno, senza uso nelle pagine. */
 .etichetta--allerta {
-  background: var(--color-allerta-pieno);
-  color: var(--color-latte);
+  min-height: var(--size-etichetta);
+  border-radius: var(--radius-xs);
+  background: var(--color-allerta-fondo);
+  color: var(--color-allerta);
+  font-size: var(--text-tag-size);
+  line-height: var(--text-tag-line);
+  font-weight: var(--weight-semi);
 }
 .etichetta--insieme {
   background: var(--color-insieme);
@@ -1594,42 +1602,47 @@ button.riga-lista {
 .gruppo-chip--scorre .chip {
   flex-shrink: 0; /* #313 */
 }
+/* Pastiglia (F4b, #504): alta 40 (area di tocco 44 con ::before), capsula,
+   bordo sottile; scelta = --color-pieno con --color-latte. */
 .chip {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  min-height: var(--size-chip); /* #313 */
-  padding: var(--space-0) var(--space-3);
-  border-radius: var(--radius-m);
+  min-height: var(--size-pastiglia); /* #313 */
+  padding: var(--space-0) var(--space-4);
+  border-radius: var(--radius-capsula);
   background: var(--color-superficie);
-  box-shadow: inset 0 0 0 var(--border-sottile) var(--color-filo);
-  border: 0;
-  font-size: var(--text-nota-size);
-  font-weight: var(--weight-forte);
+  border: var(--border-sottile) solid var(--color-filo-2);
+  font-size: var(--text-controllo-size);
+  font-weight: var(--weight-semi);
   color: var(--color-inchiostro);
   cursor: pointer;
 }
 .chip[aria-pressed="true"] {
   background: var(--color-pieno);
+  border-color: transparent; /* il fondo passa sotto il bordo: stesso colore, anche al mouse */
   color: var(--color-latte);
-  box-shadow: none;
 }
 .chip--persona {
-  padding-left: var(--space-1);
+  padding-inline-start: var(--space-1);
 }
-.chip--persona[aria-pressed="true"] {
-  background: var(--color-superficie);
-  color: var(--color-inchiostro);
-  box-shadow: inset 0 0 0 var(--border-medio) var(--color-inchiostro);
+/* Il pallino della persona tiene il suo colore e la sua iniziale anche nella
+   pastiglia scelta, con un anello chiaro per staccarsi dal pieno. */
+.chip--persona[aria-pressed="true"] .avatar {
+  box-shadow: 0 0 0 var(--border-medio) var(--color-latte);
 }
 .chip--statico {
   background: var(--color-carta);
-  box-shadow: none;
+  border-color: transparent;
   cursor: default;
 }
 .chip__conteggio {
-  font-weight: var(--weight-semi);
-  opacity: var(--opacity-passato);
+  font-weight: var(--weight-normale);
+  color: var(--color-inchiostro-2);
+  opacity: 1;
+}
+.chip[aria-pressed="true"] .chip__conteggio {
+  color: var(--color-latte);
 }
 .chip__valore {
   font-family: var(--font-titoli);
@@ -2062,17 +2075,20 @@ button.riga-lista {
   opacity: var(--opacity-disabilitato);
 }
 
+/* Scelte a schede (A) e tessere (B), F4b #504. A riposo bordo sottile grigio;
+   scelta = bordo di inchiostro più spesso, fondo appena più scuro e spunta in
+   cerchio pieno (si capisce anche senza colore). Il bordo cambia di spessore
+   e il padding compensa la differenza: niente si sposta. */
 .scelta {
   display: grid;
-  grid-template-columns: auto 1fr var(--size-casella);
+  grid-template-columns: auto minmax(0, 1fr) var(--size-icona-l);
   gap: var(--space-4);
   align-items: center;
   min-height: var(--size-scelta);
-  padding: var(--space-3) var(--space-4);
+  padding: calc(var(--space-4) - var(--border-sottile));
   border-radius: var(--radius-l);
   background: var(--color-superficie);
-  box-shadow: inset 0 0 0 var(--border-sottile) var(--color-filo);
-  border: 0;
+  border: var(--border-sottile) solid var(--color-filo-2);
   text-align: left;
   cursor: pointer;
   width: 100%;
@@ -2080,29 +2096,94 @@ button.riga-lista {
 }
 .scelta__titolo {
   display: block;
-  font-size: var(--text-sezione-size);
-  font-weight: var(--weight-forte);
+  font-size: var(--text-controllo-size);
+  line-height: var(--text-controllo-line);
+  font-weight: var(--weight-semi);
 }
 .scelta__info {
+  display: block;
   font-size: var(--text-nota-size);
+  line-height: var(--text-nota-line);
   color: var(--color-inchiostro-2);
 }
+/* La spunta: cerchio pieno con il segno, solo sulla scelta, sempre a destra
+   (spec. 504 §2). Nella scheda nuova è l'ultimo elemento; nelle schede
+   esistenti (profilo, calendari collegati) è il primo e va a destra con
+   order, sulla riga del titolo. */
+.scelta > .scelta__radio:last-child {
+  grid-column: 3;
+}
+.scelta > .scelta__radio:first-child {
+  order: 1;
+  grid-column: 3;
+  grid-row: 1;
+}
 .scelta__radio {
-  width: var(--size-casella);
-  height: var(--size-casella);
+  width: var(--size-icona-l);
+  height: var(--size-icona-l);
   border-radius: var(--radius-tondo);
-  box-shadow: inset 0 0 0 var(--border-medio) var(--color-filo-2);
+  background: var(--color-pieno);
+  display: grid;
+  place-items: center;
+  visibility: hidden;
+}
+.scelta__radio::after {
+  content: "";
+  width: var(--size-icona-s);
+  height: var(--size-icona-s);
+  background: var(--color-latte);
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E")
+    center / 100% 100% no-repeat;
+}
+.scelta[aria-checked="true"],
+.tessera-scelta[aria-checked="true"] {
+  border-width: var(--border-medio);
+  border-color: var(--color-inchiostro);
+  background: var(--color-scelta-tenue);
 }
 .scelta[aria-checked="true"] {
-  box-shadow: inset 0 0 0 var(--border-medio) var(--color-inchiostro);
+  padding: calc(var(--space-4) - var(--border-medio));
 }
-.scelta[aria-checked="true"] .scelta__radio {
-  box-shadow: inset 0 0 0 var(--size-radio-pieno) var(--color-inchiostro);
+.scelta[aria-checked="true"] .scelta__radio,
+.tessera-scelta[aria-checked="true"] .scelta__radio {
+  visibility: visible;
 }
 .gruppo-scelte {
   display: grid;
-  gap: var(--space-2);
+  gap: var(--space-3);
   align-content: start;
+}
+/* Tessere (B): griglia da due, icona e una parola; la spunta in alto a destra. */
+.tessere-scelta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+.tessera-scelta {
+  position: relative;
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: var(--space-3);
+  min-height: var(--size-scelta);
+  padding: calc(var(--space-4) - var(--border-sottile));
+  border-radius: var(--radius-l);
+  background: var(--color-superficie);
+  border: var(--border-sottile) solid var(--color-filo-2);
+  text-align: left;
+  cursor: pointer;
+  color: var(--color-inchiostro);
+  font-size: var(--text-controllo-size);
+  line-height: var(--text-controllo-line);
+  font-weight: var(--weight-semi);
+}
+.tessera-scelta[aria-checked="true"] {
+  padding: calc(var(--space-4) - var(--border-medio));
+}
+.tessera-scelta .scelta__radio {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
 }
 .cerchi-membri {
   display: flex;
@@ -4045,6 +4126,7 @@ main[tabindex="-1"]:focus {
 .selettore__voce:disabled,
 .scelta:disabled,
 .scelta[aria-disabled="true"],
+.tessera-scelta:disabled,
 .btn-icona:disabled,
 .btn-tenue:disabled,
 .btn-tratteggiato:disabled,
@@ -4093,7 +4175,7 @@ main[tabindex="-1"]:focus {
   .btn-aggiungi:hover:not(:disabled),
   .selettore:not(.selettore--carta)
     .selettore__voce[aria-pressed="true"]:hover:not(:disabled),
-  .chip:not(.chip--persona)[aria-pressed="true"]:hover:not(:disabled),
+  .chip[aria-pressed="true"]:hover:not(:disabled),
   .nav-alto__voce.is-attiva:hover {
     background: var(--color-azione);
   }
@@ -4177,7 +4259,7 @@ main[tabindex="-1"]:focus {
 }
 .selettore:not(.selettore--carta)
   .selettore__voce[aria-pressed="true"]:active:not(:disabled),
-.chip:not(.chip--persona)[aria-pressed="true"]:active:not(:disabled) {
+.chip[aria-pressed="true"]:active:not(:disabled) {
   background: var(--color-azione);
 }
 .chip:active:not(:disabled, [aria-pressed="true"], .chip--statico) {
@@ -4449,6 +4531,17 @@ div.blocco-orario {
 .gruppo-chip--scorre {
   padding: var(--space-1);
   margin: calc(-1 * var(--space-1));
+  /* F4b: una pastiglia che riceve il fuoco si ferma prima della sfumatura */
+  scroll-padding-inline: var(--space-12);
+}
+/* F4b: finché c'è altro a destra l'ultima pastiglia sfuma (ChipScroll). La
+   maschera usa solo l'alfa: il colore non conta. */
+.gruppo-chip--sfuma {
+  mask-image: linear-gradient(
+    to right,
+    var(--color-inchiostro) calc(100% - var(--space-12)),
+    transparent
+  );
 }
 
 /* Chip dell'intestazione desktop: vanno a capo invece di scorrere */
@@ -5587,14 +5680,22 @@ a.riga-regalo__titolo::before {
 }
 
 /* #460 · Animali: «Giorni», sette chip da lunedì in una griglia */
+/* F4b (#504): sette tondi da 44 su una riga; scelto = --color-pieno con
+   --color-latte (la pastiglia scelta). */
 .scelta-giorni {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: var(--space-2) var(--space-1);
+  grid-template-columns: repeat(7, minmax(var(--size-tocco), 1fr));
+  justify-items: center;
+  gap: var(--space-2) var(--space-0);
 }
 .scelta-giorni .chip {
   justify-content: center;
+  min-width: var(--size-tocco);
+  min-height: var(--size-tocco);
+  aspect-ratio: 1;
+  border-radius: var(--radius-tondo);
   padding-inline: var(--space-0);
+  font-weight: var(--weight-normale);
 }
 
 /* #460 · Animali: l'elenco del turno è un ol, senza rientro né numeri del browser */
@@ -5869,7 +5970,10 @@ body {
     white-space: normal;
     min-height: calc(var(--size-controllo) - 2 * var(--space-1));
   }
-  /* #460 · «Giorni»: quattro colonne invece di sette */
+}
+/* #460 · «Giorni»: quattro colonne invece di sette quando i sette tondi da 44
+   non ci stanno più (7 × 44 = 308 px = 19,25 rem; F4b #504, prima 17 rem) */
+@container selettore (width < 19.25rem) {
   .scelta-giorni {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
@@ -6432,5 +6536,300 @@ body {
 @media (prefers-color-scheme: dark) {
   :root:not([data-aspetto="chiaro"]) .solo-chiaro {
     display: none;
+  }
+}
+
+/* =========================================================
+   COMPONENTI 2.0 · SCELTE E PERSONE (F4b, #504)
+   Solo ruoli della tavolozza e variabili della persona: al buio cambiano da
+   soli. Le regole delle pastiglie, dei giorni, della spunta, delle schede e
+   dell'etichetta «allerta» stanno sopra, accanto alle loro classi.
+   ========================================================= */
+
+/* Gruppo di scelta con il testo d'errore sotto */
+.scelta-campo {
+  display: grid;
+  gap: var(--space-2);
+}
+
+/* Spunta neutra: cerchio a filo da 24 (bordo --color-filo-campo, area di tocco
+   44 con ::before), --color-pieno con il segno --color-latte quando è fatta.
+   Le regole del mockup di .tondo-spunta restano com'erano più sopra; queste le
+   completano. */
+.tondo-spunta {
+  width: var(--size-icona-l);
+  height: var(--size-icona-l);
+  box-shadow: none;
+  border: var(--border-medio) solid var(--color-filo-campo);
+  background: var(--color-superficie);
+}
+.tondo-spunta[aria-checked="true"] {
+  background: var(--color-pieno);
+  border-color: transparent; /* il fondo passa sotto il bordo */
+}
+
+/* Schede e tessere di scelta: mouse e premuto. La scelta resta del suo fondo. */
+.scelta[aria-checked="true"]:active:not(:disabled, [aria-disabled="true"]),
+.tessera-scelta[aria-checked="true"]:active:not(:disabled) {
+  background: var(--color-scelta-tenue);
+}
+.tessera-scelta:active:not(:disabled, [aria-checked="true"]) {
+  background: var(--color-premuto);
+}
+@media (hover: hover) {
+  .tessera-scelta {
+    transition: background var(--durata-rapida) var(--curva);
+  }
+  .scelta[aria-checked="true"]:hover:not(:disabled, [aria-disabled="true"]),
+  .tessera-scelta[aria-checked="true"]:hover:not(:disabled) {
+    background: var(--color-scelta-tenue);
+  }
+  .tessera-scelta:hover:not(:disabled, [aria-checked="true"]) {
+    background: var(--color-carta);
+  }
+}
+
+/* «Per chi»: fila di pallini da 36 in aree da 44, passo 46; va a capo, mai
+   scorre. Scelto = colore pieno con il suo anello di inchiostro. */
+.scelta-persone {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--space-2) + var(--space-half));
+}
+.scelta-persone__pallino {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: var(--size-avatar-scelta);
+  height: var(--size-avatar-scelta);
+  padding: var(--space-0);
+  border: 0;
+  border-radius: var(--radius-tondo);
+  background: var(--c-spento);
+  color: var(--color-inchiostro);
+  font-family: var(--font-titoli);
+  font-size: var(--text-avatar-m-size);
+  font-weight: var(--weight-semi);
+  line-height: 1;
+  cursor: pointer;
+}
+.scelta-persone__pallino::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max(100%, var(--size-tocco));
+  height: max(100%, var(--size-tocco));
+  transform: translate(-50%, -50%);
+}
+.scelta-persone__pallino::after {
+  content: attr(data-initials);
+}
+.scelta-persone__pallino[aria-pressed="true"] {
+  background: var(--c);
+  color: var(--c-iniziale);
+  outline: var(--border-medio) solid var(--color-inchiostro);
+  outline-offset: var(--space-half);
+}
+/* Il fuoco da tastiera si vede anche sul pallino scelto: anello più staccato */
+.scelta-persone__pallino:focus-visible {
+  outline-color: var(--color-fuoco);
+  outline-offset: var(--space-1);
+}
+.scelta-persone__pallino:disabled {
+  opacity: var(--opacity-disabilitato);
+  cursor: not-allowed;
+}
+.scelta-persone .skeleton--cerchio {
+  width: var(--size-avatar-scelta);
+  height: var(--size-avatar-scelta);
+}
+
+/* Volti in griglia: pallini da 72, nome e una riga; «Aggiungi» tratteggiato */
+.volti {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-6) var(--space-2);
+  margin: var(--space-0);
+  padding: var(--space-0);
+  list-style: none;
+}
+.volti__voce {
+  display: grid;
+  align-content: start;
+  gap: var(--space-1);
+  width: 100%;
+  min-height: var(--size-tocco);
+  padding: var(--space-2);
+  border: 0;
+  border-radius: var(--radius-l);
+  background: transparent;
+  color: var(--color-inchiostro);
+  font-size: var(--text-controllo-size);
+  line-height: var(--text-controllo-line);
+  font-weight: var(--weight-semi);
+  text-align: center;
+  cursor: pointer;
+}
+.volti__voce .avatar {
+  justify-self: center;
+  margin-bottom: var(--space-1);
+}
+/* Il testo occupa la colonna e va a capo: col testo grande un nome lungo non
+   esce dalla griglia (#313) */
+.volti__nome {
+  display: block;
+  min-width: var(--space-0);
+  overflow-wrap: anywhere;
+}
+.volti__riga {
+  display: block;
+  min-width: var(--space-0);
+  overflow-wrap: anywhere;
+  font-size: var(--text-nota-size);
+  line-height: var(--text-nota-line);
+  font-weight: var(--weight-normale);
+  color: var(--color-inchiostro-2);
+}
+.volti__aggiungi {
+  display: grid;
+  place-items: center;
+  width: var(--size-avatar-xl);
+  height: var(--size-avatar-xl);
+  justify-self: center;
+  margin-bottom: var(--space-1);
+  border: var(--border-medio) dashed var(--color-filo-2);
+  border-radius: var(--radius-tondo);
+  color: var(--color-inchiostro);
+}
+.volti__voce:active:not(:disabled) {
+  background: var(--color-premuto);
+}
+@media (hover: hover) {
+  .volti__voce {
+    transition: background var(--durata-rapida) var(--curva);
+  }
+  .volti__voce:hover:not(:disabled) {
+    background: var(--color-premuto);
+  }
+}
+
+/* Foto di un animale: filo del suo colore attorno, staccato di --border-medio */
+.avatar--filo {
+  outline: var(--border-medio) solid var(--c);
+  outline-offset: var(--border-medio);
+}
+
+/* Pila di avatar: pallini da 28 sovrapposti di 8, anello chiaro */
+.pila-avatar {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+}
+.pila-avatar .avatar {
+  width: var(--size-avatar-pila);
+  height: var(--size-avatar-pila);
+  font-size: var(--text-avatar-s-size);
+  box-shadow: 0 0 0 var(--border-medio) var(--color-superficie);
+}
+.pila-avatar .avatar + .avatar {
+  margin-inline-start: calc(-1 * var(--space-2));
+}
+
+/* Tessere di Spazi e del Nest: collegamento con bordo sottile, icona nuda in
+   alto, titolo e una riga. Due colonne sotto 900 px o con la finestra bassa
+   (D8); da 900 px colonne larghe almeno 220 px. */
+.tessere {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin: var(--space-0);
+  padding: var(--space-0);
+  list-style: none;
+}
+@media (min-width: 900px) and (min-height: 600px) {
+  .tessere {
+    grid-template-columns: repeat(auto-fill, minmax(13.75rem, 1fr));
+    gap: var(--space-4);
+  }
+  .tessere--quattro {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.tessera {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: var(--space-1);
+  min-width: var(--space-0);
+  padding: calc(var(--space-4) - var(--border-sottile));
+  border: var(--border-sottile) solid var(--color-filo-2);
+  border-radius: var(--radius-l);
+  background: var(--color-superficie);
+  color: var(--color-inchiostro);
+  text-decoration: none;
+  text-align: left;
+}
+.tessera .icona {
+  width: calc(var(--size-icona-l) + var(--space-1));
+  height: calc(var(--size-icona-l) + var(--space-1));
+  margin-bottom: var(--space-2);
+}
+.tessera__titolo,
+.tessera__riga {
+  min-width: var(--space-0);
+  overflow-wrap: anywhere;
+}
+.tessera__titolo {
+  font-size: var(--text-sottotitolo-size);
+  line-height: var(--text-sottotitolo-line);
+  font-weight: var(--weight-semi);
+}
+.tessera__riga {
+  font-size: var(--text-corpo-size);
+  line-height: var(--text-corpo-line);
+  color: var(--color-inchiostro-2);
+}
+.tessera:active {
+  background: var(--color-premuto);
+}
+@media (hover: hover) {
+  a.tessera {
+    transition: background var(--durata-rapida) var(--curva);
+  }
+  a.tessera:hover {
+    background: var(--color-premuto);
+  }
+}
+/* Tessera di una persona del Nest: pallino da 56 al posto dell'icona */
+.tessera--persona .avatar {
+  width: var(--size-avatar-tessera);
+  height: var(--size-avatar-tessera);
+  margin-bottom: var(--space-2);
+  font-size: var(--text-titolo-sezione-size);
+}
+.tessera--persona .tessera__titolo {
+  font-size: var(--text-controllo-size);
+  line-height: var(--text-controllo-line);
+}
+.tessera--persona .tessera__riga {
+  font-size: var(--text-nota-size);
+  line-height: var(--text-nota-line);
+}
+/* In attesa: non è un collegamento, bordo tratteggiato e fondo quieto */
+.tessera--attesa {
+  border-style: dashed;
+  border-color: var(--color-filo-campo);
+  background: var(--color-carta-2);
+}
+.tessera--attesa:active {
+  background: var(--color-carta-2);
+}
+@media (prefers-reduced-motion: reduce) {
+  .tessera-scelta,
+  .volti__voce,
+  a.tessera {
+    transition: none;
   }
 }
