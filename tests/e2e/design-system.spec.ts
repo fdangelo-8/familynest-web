@@ -270,13 +270,14 @@ test.describe("token e base", () => {
 });
 
 test.describe("icone", () => {
-  test("CA-12: uno sprite con 80 simboli, senza stethoscope", async ({
+  // 81: «layout-grid» (the four squares of Spazi) joined the 80 of the mockup in F5.
+  test("CA-12: uno sprite con 81 simboli, senza stethoscope", async ({
     page,
   }) => {
     await expect(
       page.locator('svg.sprite-icone[aria-hidden="true"]'),
     ).toHaveCount(1);
-    await expect(page.locator("svg.sprite-icone symbol")).toHaveCount(80);
+    await expect(page.locator("svg.sprite-icone symbol")).toHaveCount(81);
     await expect(page.locator("#i-stethoscope")).toHaveCount(0);
     await expect(page.locator("#i-calendar")).toHaveCount(1);
   });
