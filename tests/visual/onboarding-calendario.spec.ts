@@ -218,6 +218,10 @@ test.describe("onboarding · calendario", () => {
         await expect(
           page.getByText("Caricamento in corso").first(),
         ).toBeAttached();
+        // Attached is not painted (#590): wait for a skeleton on screen.
+        await expect(
+          page.locator(".skeleton").filter({ visible: true }).first(),
+        ).toBeVisible();
         await page.mouse.move(0, 0);
         await shot(page, "caricamento");
       } finally {

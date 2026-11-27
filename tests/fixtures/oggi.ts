@@ -253,6 +253,16 @@ export async function reopen(page: Page, path = "/oggi"): Promise<void> {
   await page.clock.resume();
   await page.goto(path);
   await expect(h1(page)).toBeVisible({ timeout: 20_000 });
+  // The title is there with the first paint; the sections read their data
+  // only once React has taken over. «No busy» before that is not «loaded»
+  // (#590): wait for the hydration, then for the end of the loading.
+  await expect
+    .poll(() =>
+      h1(page).evaluate((node) =>
+        Object.keys(node).some((key) => key.startsWith("__reactFiber$")),
+      ),
+    )
+    .toBe(true);
   await expect(busy(page)).toHaveCount(0);
   const now = await page.evaluate(() => Date.now());
   await page.clock.pauseAt(now + 1000);

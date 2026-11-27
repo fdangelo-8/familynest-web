@@ -180,11 +180,15 @@ test.describe("le mie cose", () => {
     await expect.poll(() => doneAtOf(casa, commercialista)).toBeNull();
 
     await reopen(page);
+    // The list is read again after the reload: wait for it (the count in the
+    // head of the section) before looking for the box (#590).
+    await expect(info(sec(page, "Le mie cose"))).toHaveText("2 da fare", {
+      timeout: 20_000,
+    });
     await expect(tick(page, COMMERCIALISTA)).toHaveAttribute(
       "aria-checked",
       "false",
     );
-    await expect(info(sec(page, "Le mie cose"))).toHaveText("2 da fare");
   });
 
   test("CA-22: «Annulla» dopo che la spunta è già nel database: la riga non sparisce mai, il conteggio è giusto e il fuoco è sulla casella", async ({

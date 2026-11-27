@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { waitForAnimationsToEnd } from "../fixtures/animations";
 import {
   CROWD_EVENTS,
   MONTH_EVENTS,
@@ -52,6 +53,9 @@ async function duplicatedIds(page: Page) {
 }
 
 async function expectClean(page: Page) {
+  // The lens button changes colour with a CSS transition: axe must not read
+  // the contrast halfway (#590).
+  await waitForAnimationsToEnd(page);
   expect(await violations(page)).toEqual([]);
   expect(await duplicatedIds(page)).toEqual([]);
 }
