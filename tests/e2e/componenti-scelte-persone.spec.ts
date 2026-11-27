@@ -790,6 +790,7 @@ for (const width of [390, 1280]) {
     page,
   }) => {
     await page.setViewportSize({ width, height: 900 });
+    await page.goto("/design-system?pezzi-pagine=1");
     const disabled = tid(page, "scelta-direzione-disabilitata");
     await disabled.scrollIntoViewIfNeeded();
     await expect(disabled).toBeVisible();
