@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { pageTitle } from "@/lib/brand";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
+import { nestSetupRole } from "@/components/onboarding/nest-setup";
 import { OnboardingError } from "@/components/onboarding/OnboardingError";
 import { PeopleSkeleton } from "@/components/onboarding/PeopleSkeleton";
 import { PeopleStep, type Person } from "@/components/onboarding/PeopleStep";
@@ -37,7 +38,7 @@ async function People() {
   // Signed in but no Nest yet: back to step 1.
   if (!household.data) redirect("/onboarding");
 
-  const [nest, members] = await Promise.all([
+  const [nest, members, role] = await Promise.all([
     supabase
       .from("households")
       .select("household_type")
@@ -45,16 +46,18 @@ async function People() {
       .maybeSingle(),
     supabase
       .from("household_members")
-      .select("id, name, color, kind, birth_date, user_id, is_admin")
+      .select("id, name, color, kind, birth_date, user_id")
       .eq("household_id", household.data)
       .order("created_at", { ascending: true })
       .order("id", { ascending: true }),
+    nestSetupRole(supabase, userId, household.data),
   ]);
-  if (nest.error || members.error || !nest.data) return <OnboardingError />;
+  if (nest.error || members.error || role === "error" || !nest.data) {
+    return <OnboardingError />;
+  }
 
-  // Only the administrator sets up the Nest.
-  const me = members.data.find((member) => member.user_id === userId);
-  if (!me?.is_admin) redirect("/oggi");
+  // Only the creator of the Nest sets it up.
+  if (role !== "creator") redirect("/oggi");
 
   // Account ids and emails never reach the browser: only these flags.
   const people: Person[] = members.data.map((member) => ({

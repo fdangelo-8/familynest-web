@@ -424,24 +424,27 @@ test.describe("contenuto", () => {
   }) => {
     onlyMobile();
     needsThrowaway();
-    await withRita(async ({ user, addPet, u2 }) => {
-      const birthDate = yearsAgo(3);
-      const fido = await addPet("Fido", "lampone", birthDate);
-      expect(formatAge(birthDate)).toBe("3 anni");
+    await withRita(
+      async ({ user, addPet, u2 }) => {
+        const birthDate = yearsAgo(3);
+        const fido = await addPet("Fido", "lampone", birthDate);
+        expect(formatAge(birthDate)).toBe("3 anni");
 
-      // Not an administrator (Rita): the age text only, never the date.
-      await u2.signInContext(page.context(), baseURL as string);
-      await openMember(page, fido, "Fido");
-      await expect(subtitle(page)).toHaveText("Animale · 3 anni");
-      const viewer = await htmlOf(page, memberPath(fido));
-      expect(viewer.text).not.toContain(birthDate);
+        // Not an administrator (Rita): the age text only, never the date.
+        await u2.signInContext(page.context(), baseURL as string);
+        await openMember(page, fido, "Fido");
+        await expect(subtitle(page)).toHaveText("Animale · 3 anni");
+        const viewer = await htmlOf(page, memberPath(fido));
+        expect(viewer.text).not.toContain(birthDate);
 
-      // Administrator: the date may reach the browser (edit sheet only).
-      await page.context().clearCookies();
-      await user.signInContext(page.context(), baseURL as string);
-      await openMember(page, fido, "Fido");
-      await expect(subtitle(page)).toHaveText("Animale · 3 anni");
-    });
+        // Administrator: the date may reach the browser (edit sheet only).
+        await page.context().clearCookies();
+        await user.signInContext(page.context(), baseURL as string);
+        await openMember(page, fido, "Fido");
+        await expect(subtitle(page)).toHaveText("Animale · 3 anni");
+      },
+      { notCouple: true },
+    );
   });
 });
 
@@ -677,26 +680,29 @@ test.describe("ruolo", () => {
   }) => {
     onlyMobile();
     needsThrowaway();
-    await withRita(async ({ user, ritaId }) => {
-      await user.signInContext(page.context(), baseURL as string);
-      await openMember(page, ritaId, "Rita");
-      const toggle = roleSwitch(page);
-      await expect(toggle).toBeEnabled();
-      await expect(toggle).toHaveAttribute("aria-checked", "false");
-      await toggle.click();
-      await expect(toggle).toHaveAttribute("aria-checked", "true");
-      await expect
-        .poll(async () => (await memberById(ritaId))?.is_admin)
-        .toBe(true);
-      await page.reload();
-      await expect(h1(page)).toHaveText("Rita");
-      await expect(roleSwitch(page)).toHaveAttribute("aria-checked", "true");
-      await roleSwitch(page).click();
-      await expect(roleSwitch(page)).toHaveAttribute("aria-checked", "false");
-      await expect
-        .poll(async () => (await memberById(ritaId))?.is_admin)
-        .toBe(false);
-    });
+    await withRita(
+      async ({ user, ritaId }) => {
+        await user.signInContext(page.context(), baseURL as string);
+        await openMember(page, ritaId, "Rita");
+        const toggle = roleSwitch(page);
+        await expect(toggle).toBeEnabled();
+        await expect(toggle).toHaveAttribute("aria-checked", "false");
+        await toggle.click();
+        await expect(toggle).toHaveAttribute("aria-checked", "true");
+        await expect
+          .poll(async () => (await memberById(ritaId))?.is_admin)
+          .toBe(true);
+        await page.reload();
+        await expect(h1(page)).toHaveText("Rita");
+        await expect(roleSwitch(page)).toHaveAttribute("aria-checked", "true");
+        await roleSwitch(page).click();
+        await expect(roleSwitch(page)).toHaveAttribute("aria-checked", "false");
+        await expect
+          .poll(async () => (await memberById(ritaId))?.is_admin)
+          .toBe(false);
+      },
+      { notCouple: true },
+    );
   });
 
   test("CA-26: rete interrotta, lo switch torna indietro e compare l'errore", async ({
@@ -705,20 +711,23 @@ test.describe("ruolo", () => {
   }) => {
     onlyMobile();
     needsThrowaway();
-    await withRita(async ({ user, ritaId }) => {
-      await user.signInContext(page.context(), baseURL as string);
-      await openMember(page, ritaId, "Rita");
-      await cutServerActions(page);
-      await roleSwitch(page).click();
-      await expect(
-        page.getByRole("alert").filter({
-          hasText:
-            "Non siamo riusciti a cambiare il ruolo. Controlla la connessione e riprova.",
-        }),
-      ).toBeVisible();
-      await expect(roleSwitch(page)).toHaveAttribute("aria-checked", "false");
-      expect((await memberById(ritaId))?.is_admin).toBe(false);
-    });
+    await withRita(
+      async ({ user, ritaId }) => {
+        await user.signInContext(page.context(), baseURL as string);
+        await openMember(page, ritaId, "Rita");
+        await cutServerActions(page);
+        await roleSwitch(page).click();
+        await expect(
+          page.getByRole("alert").filter({
+            hasText:
+              "Non siamo riusciti a cambiare il ruolo. Controlla la connessione e riprova.",
+          }),
+        ).toBeVisible();
+        await expect(roleSwitch(page)).toHaveAttribute("aria-checked", "false");
+        expect((await memberById(ritaId))?.is_admin).toBe(false);
+      },
+      { notCouple: true },
+    );
   });
 
   test("CA-27: Rita non amministratrice non vede ruolo né «Togli» e il database la ferma", async ({
@@ -727,20 +736,23 @@ test.describe("ruolo", () => {
   }) => {
     onlyMobile();
     needsThrowaway();
-    await withRita(async ({ u2, ritaId, adminMemberId }) => {
-      await u2.signInContext(page.context(), baseURL as string);
-      await openMember(page, adminMemberId, "Ilaria");
-      await expect(subtitle(page)).toHaveText("Adulto");
-      await expect(page.getByRole("switch")).toHaveCount(0);
-      await expect(removeButton(page, "Ilaria")).toHaveCount(0);
+    await withRita(
+      async ({ u2, ritaId, adminMemberId }) => {
+        await u2.signInContext(page.context(), baseURL as string);
+        await openMember(page, adminMemberId, "Ilaria");
+        await expect(subtitle(page)).toHaveText("Adulto");
+        await expect(page.getByRole("switch")).toHaveCount(0);
+        await expect(removeButton(page, "Ilaria")).toHaveCount(0);
 
-      const { error } = await u2.client
-        .from("household_members")
-        .update({ is_admin: true })
-        .eq("id", ritaId);
-      expect(error).not.toBeNull();
-      expect((await memberById(ritaId))?.is_admin).toBe(false);
-    });
+        const { error } = await u2.client
+          .from("household_members")
+          .update({ is_admin: true })
+          .eq("id", ritaId);
+        expect(error).not.toBeNull();
+        expect((await memberById(ritaId))?.is_admin).toBe(false);
+      },
+      { notCouple: true },
+    );
   });
 });
 
@@ -824,50 +836,53 @@ test.describe("togli dal Nest", () => {
   }) => {
     onlyMobile();
     needsThrowaway();
-    await withRita(async ({ user, u2, ritaId }) => {
-      const stamp = randomId().slice(0, 8);
-      const privateTitle = `Solo mia ${stamp}`;
-      const sharedTitle = `Di tutti ${stamp}`;
-      for (const [title, isPrivate] of [
-        [privateTitle, true],
-        [sharedTitle, false],
-      ] as const) {
-        const { error } = await u2.client
+    await withRita(
+      async ({ user, u2, ritaId }) => {
+        const stamp = randomId().slice(0, 8);
+        const privateTitle = `Solo mia ${stamp}`;
+        const sharedTitle = `Di tutti ${stamp}`;
+        for (const [title, isPrivate] of [
+          [privateTitle, true],
+          [sharedTitle, false],
+        ] as const) {
+          const { error } = await u2.client
+            .from("todos")
+            .insert({ title, is_private: isPrivate });
+          expect(error, `Cosa da fare non creata: ${title}`).toBeNull();
+        }
+
+        await user.signInContext(page.context(), baseURL as string);
+        await openMember(page, ritaId, "Rita");
+        await removeButton(page, "Rita").click();
+        await page
+          .getByRole("alertdialog")
+          .getByRole("button", { name: "Togli Rita", exact: true })
+          .click();
+        await expect(page).toHaveURL(/\/nest$/);
+        expect(await memberById(ritaId)).toBeNull();
+
+        const admin = adminClient();
+        const found = await admin
           .from("todos")
-          .insert({ title, is_private: isPrivate });
-        expect(error, `Cosa da fare non creata: ${title}`).toBeNull();
-      }
+          .select("title, created_by_member_id")
+          .in("title", [privateTitle, sharedTitle]);
+        expect(found.error).toBeNull();
+        expect(found.data).toEqual([
+          { title: sharedTitle, created_by_member_id: null },
+        ]);
 
-      await user.signInContext(page.context(), baseURL as string);
-      await openMember(page, ritaId, "Rita");
-      await removeButton(page, "Rita").click();
-      await page
-        .getByRole("alertdialog")
-        .getByRole("button", { name: "Togli Rita", exact: true })
-        .click();
-      await expect(page).toHaveURL(/\/nest$/);
-      expect(await memberById(ritaId)).toBeNull();
-
-      const admin = adminClient();
-      const found = await admin
-        .from("todos")
-        .select("title, created_by_member_id")
-        .in("title", [privateTitle, sharedTitle]);
-      expect(found.error).toBeNull();
-      expect(found.data).toEqual([
-        { title: sharedTitle, created_by_member_id: null },
-      ]);
-
-      const context = await browser.newContext({ baseURL });
-      try {
-        await u2.signInContext(context, baseURL as string);
-        const other = await context.newPage();
-        await other.goto("/oggi");
-        await expect(other).toHaveURL(/\/onboarding/);
-      } finally {
-        await context.close();
-      }
-    });
+        const context = await browser.newContext({ baseURL });
+        try {
+          await u2.signInContext(context, baseURL as string);
+          const other = await context.newPage();
+          await other.goto("/oggi");
+          await expect(other).toHaveURL(/\/onboarding/);
+        } finally {
+          await context.close();
+        }
+      },
+      { notCouple: true },
+    );
   });
 
   test("CA-31: togliere un animale, testo del dialogo e rimozione", async ({

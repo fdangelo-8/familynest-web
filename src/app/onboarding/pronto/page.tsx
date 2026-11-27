@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { pageTitle } from "@/lib/brand";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
+import { nestSetupRole } from "@/components/onboarding/nest-setup";
 import { OnboardingError } from "@/components/onboarding/OnboardingError";
 import { ReadyLoading, ReadyScreen } from "@/components/onboarding/ReadyScreen";
 import { requireUser } from "@/lib/auth/require-user";
@@ -96,7 +97,7 @@ async function Ready() {
   // Signed in but no Nest yet: back to step 1.
   if (!household.data) redirect("/onboarding");
 
-  const [nest, members, invitations, imported] = await Promise.all([
+  const [nest, members, invitations, imported, role] = await Promise.all([
     supabase
       .from("households")
       .select("name")
@@ -104,7 +105,7 @@ async function Ready() {
       .maybeSingle(),
     supabase
       .from("household_members")
-      .select("id, name, color, kind, user_id, is_admin")
+      .select("id, name, color, kind, user_id")
       .eq("household_id", household.data)
       .order("created_at", { ascending: true })
       .order("id", { ascending: true }),
@@ -114,14 +115,20 @@ async function Ready() {
       .eq("household_id", household.data)
       .eq("status", "pending"),
     importedLine(supabase),
+    nestSetupRole(supabase, userId, household.data),
   ]);
-  if (nest.error || members.error || invitations.error || !nest.data) {
+  if (
+    nest.error ||
+    members.error ||
+    invitations.error ||
+    role === "error" ||
+    !nest.data
+  ) {
     return <OnboardingError />;
   }
 
-  // Only the administrator sets up the Nest.
-  const me = members.data.find((member) => member.user_id === userId);
-  if (!me?.is_admin) redirect("/oggi");
+  // Only the creator of the Nest sets it up.
+  if (role !== "creator") redirect("/oggi");
 
   // An invitation counts while it is pending and not expired.
   const invited = new Set(

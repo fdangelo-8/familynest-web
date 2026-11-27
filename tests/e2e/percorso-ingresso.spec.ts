@@ -200,12 +200,11 @@ test("percorso completo: accesso, onboarding, invito, Nest, uscita e cancellazio
     await joinWithLink(page, link);
     const joined = await marco.admin
       .from("household_members")
-      .select("id, user_id, color, is_admin, household_id")
+      .select("id, user_id, color, household_id")
       .eq("user_id", marco.id)
       .single();
     expect(joined.data).toMatchObject({
       color: "peonia",
-      is_admin: false,
       household_id: householdId,
     });
     const invitation = await marco.admin

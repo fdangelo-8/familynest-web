@@ -946,17 +946,22 @@ test.describe("esci dalla casa: conferma", () => {
   }) => {
     onlyMobile();
     needsThrowaway();
-    await withRita(async ({ user, nest, adminMemberId, ritaId }) => {
-      await user.signInContext(page.context(), baseURL as string);
-      await openSettings(page, nest);
-      const button = leaveButton(page, nest);
-      await expect(button).toBeDisabled();
-      await expect(page.getByText(BLOCKED_NOTE, { exact: true })).toBeVisible();
-      await expect(button).toHaveAccessibleDescription(BLOCKED_NOTE);
-      await expect(dialog(page)).toHaveCount(0);
-      expect(await memberById(adminMemberId)).not.toBeNull();
-      expect((await memberById(ritaId))?.is_admin).toBe(false);
-    });
+    await withRita(
+      async ({ user, nest, adminMemberId, ritaId }) => {
+        await user.signInContext(page.context(), baseURL as string);
+        await openSettings(page, nest);
+        const button = leaveButton(page, nest);
+        await expect(button).toBeDisabled();
+        await expect(
+          page.getByText(BLOCKED_NOTE, { exact: true }),
+        ).toBeVisible();
+        await expect(button).toHaveAccessibleDescription(BLOCKED_NOTE);
+        await expect(dialog(page)).toHaveCount(0);
+        expect(await memberById(adminMemberId)).not.toBeNull();
+        expect((await memberById(ritaId))?.is_admin).toBe(false);
+      },
+      { notCouple: true },
+    );
   });
 
   test("CA-29 (caso c): l'ultimo adulto con account cancella la casa con tutti i dati", async ({
@@ -1094,25 +1099,28 @@ test.describe("esci dalla casa: conferma", () => {
   }) => {
     onlyMobile();
     needsThrowaway();
-    await withRita(async ({ user, nest, ritaId, u2 }) => {
-      await u2.signInContext(page.context(), baseURL as string);
-      await openSettings(page, nest);
-      await leaveButton(page, nest).click();
-      await expect(dialog(page)).toBeVisible();
+    await withRita(
+      async ({ user, nest, ritaId, u2 }) => {
+        await u2.signInContext(page.context(), baseURL as string);
+        await openSettings(page, nest);
+        await leaveButton(page, nest).click();
+        await expect(dialog(page)).toBeVisible();
 
-      // Meanwhile U removes Rita from the Nest.
-      const removed = await user.client
-        .from("household_members")
-        .delete()
-        .eq("id", ritaId);
-      expect(removed.error).toBeNull();
-      expect(await memberById(ritaId)).toBeNull();
+        // Meanwhile U removes Rita from the Nest.
+        const removed = await user.client
+          .from("household_members")
+          .delete()
+          .eq("id", ritaId);
+        expect(removed.error).toBeNull();
+        expect(await memberById(ritaId)).toBeNull();
 
-      await dialog(page)
-        .getByRole("button", { name: "Esci dalla casa" })
-        .click();
-      await expect(page).toHaveURL(/\/onboarding/);
-    });
+        await dialog(page)
+          .getByRole("button", { name: "Esci dalla casa" })
+          .click();
+        await expect(page).toHaveURL(/\/onboarding/);
+      },
+      { notCouple: true },
+    );
   });
 });
 
