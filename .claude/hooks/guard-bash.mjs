@@ -196,10 +196,13 @@ const IN_PLACE = [
 const CD = new RegExp(String.raw`${AT_CMD}(?:cd|pushd)(?=\s|$)`, "g");
 const TEE = new RegExp(String.raw`${AT_CMD}tee(?=\s|$)`, "g");
 const ASSIGN = /(?:^|[\n;&|(]|\bexport|\blocal)\s*([A-Za-z_]\w*)=/g;
-// `>|` before `>`, or `>|` would be read as `>` followed by a pipe.
-const REDIRECT = /(?<![<>=&\-\d])(?:\d+|&)?(?:>\||>>?)(?![&(>])/g;
+// Output redirections: >, >>, >| (before >, or it reads as > and a pipe), <>
+// (read-write), each with an optional fd or &, and >&word when word is not an
+// fd. Outside quotes a > is a redirection even when attached to a word (a=>f).
+// 2>&1, >&2 and >&- only duplicate or close a descriptor and do not match.
+const REDIRECT = /(?<![<>&])(?:\d+|&)?(?:>\||>>?|<>)(?:&(?![\d-]))?(?![&(>])/g;
 // A redirection operator inside a command's arguments (to skip it with its target).
-const REDIRECT_OP = /^(?:\d+|&)?(?:>\||>>?|<<<|<<-?|<>|<)(&(?=[\d-]))?/;
+const REDIRECT_OP = /^(?:\d+|&)?(?:>\||>>?|<<<|<<-?|<>|<)&?/;
 const SHELL_BEFORE =
   /(?:^|[\s;&|(])(?:(?:ba|da|k|z)?sh|eval|su|watch|ssh)\b[^;&|\n]*$/;
 const SIMPLE_WORD = /^[\w./=+:@%,~-]*$/;
@@ -211,14 +214,41 @@ const TEMP_ROOTS = [
   "/var/folders",
   "/private/var/folders",
 ];
-// The command assigns, exports, reads into or unsets a temp variable.
-const TEMP_NAMES = String.raw`(?:TMPDIR|TMP|TEMP|RUNNER_TEMP)`;
-const TEMP_TOUCH = new RegExp(
-  String.raw`\b${TEMP_NAMES}\+?=|\$\{${TEMP_NAMES}:?=|\b(?:unset|export|declare|typeset|readonly|local|read|for|printf\s+-v|mapfile|readarray)\b[^;&|\n]*\b${TEMP_NAMES}\b`,
-);
+// The command may change a folder variable (temp folders or HOME): it assigns,
+// exports, reads into or unsets one, or uses a construct that can change any
+// variable indirectly (eval, namerefs, let, arithmetic assignment, env -u/-i).
+// Together with a file write the command is blocked: strict on purpose.
+const DIR_NAMES = String.raw`(?:TMPDIR|TMP|TEMP|RUNNER_TEMP|HOME)`;
+const DIR_TOUCH = [
+  String.raw`\b${DIR_NAMES}\+?=`,
+  String.raw`\$\{${DIR_NAMES}:?=`,
+  String.raw`\b(?:unset|export|declare|typeset|readonly|local|read|for|printf\s+-v|mapfile|readarray)\b[^;&|\n]*\b${DIR_NAMES}\b`,
+  String.raw`\beval\b`,
+  String.raw`\b(?:declare|typeset|local)\b(?:\s+[-+]\w+)*\s+-\w*n`,
+  String.raw`(?:^|[\s;&|(\x60])let\s`,
+  String.raw`\(\((?:[^)]|\)(?!\)))*?(?<![=!<>])=(?!=)`,
+  String.raw`\benv\b[^;&|\n]*\s(?:-[a-zA-Z]*[iu]|--unset|--ignore-environment|-)(?=[\s=]|$)`,
+].map((p) => new RegExp(p));
 // $TMPDIR, ${TMPDIR} and ${TMPDIR:-default} (also with -, := and =).
 const TEMP_VAR =
   /^\$(?:\{(TMPDIR|TMP|TEMP|RUNNER_TEMP)(?:(:?)[-=]([^}]*))?\}|(TMPDIR|TMP|TEMP|RUNNER_TEMP)\b)/;
+
+const ANSI_C = { n: "\n", t: "\t", r: "\r", a: "\x07", b: "\b", e: "\x1b" };
+Object.assign(ANSI_C, { E: "\x1b", f: "\f", v: "\v" });
+
+/** Text of a $'...' string, with its backslash escapes decoded. */
+function decodeAnsiC(raw) {
+  return raw.replace(
+    /\\(?:x([0-9a-fA-F]{1,2})|u([0-9a-fA-F]{1,4})|U([0-9a-fA-F]{1,8})|([0-7]{1,3})|c(.)|(.))/gs,
+    (_, x, u, U, oct, ctl, ch) => {
+      const hex = x ?? u ?? U;
+      if (hex) return String.fromCodePoint(Number.parseInt(hex, 16) % 0x110000);
+      if (oct) return String.fromCharCode(Number.parseInt(oct, 8) & 0xff);
+      if (ctl) return String.fromCharCode(ctl.charCodeAt(0) & 0x1f);
+      return ANSI_C[ch] ?? ch;
+    },
+  );
+}
 
 /**
  * Masks quoted text and heredoc bodies so that only real shell syntax is
@@ -240,9 +270,28 @@ function scan(src) {
   while (i < src.length) {
     const c = src[i];
     if (c === "\\") {
-      const pair = src.slice(i, i + 2);
-      put(c + "\0".repeat(pair.length - 1), pair);
+      // An escaped word character is just that character (\sed is sed).
+      if (/[\w./+:@%,~=-]/.test(src[i + 1] ?? "")) put(src[i + 1]);
+      else {
+        const pair = src.slice(i, i + 2);
+        put(c + "\0".repeat(pair.length - 1), pair);
+      }
       i += 2;
+      continue;
+    }
+    // ANSI-C quoting $'...': decoded, then treated like any quoted text.
+    if (c === "$" && src[i + 1] === "'") {
+      let j = i + 2;
+      while (j < src.length && src[j] !== "'") j += src[j] === "\\" ? 2 : 1;
+      const raw = src.slice(i + 2, j);
+      const text = decodeAnsiC(raw);
+      if (SIMPLE_WORD.test(text)) put(text);
+      else {
+        strings.push({ text, double: false, before: masked });
+        const close = j < src.length ? "'" : "";
+        put(`$'${"\0".repeat(raw.length)}${close}`, `$'${raw}${close}`);
+      }
+      i = j + 1;
       continue;
     }
     if (src.startsWith("<<", i) && src[i + 2] !== "<") {
@@ -414,8 +463,8 @@ function isRepoFile(word, cwd, vars) {
 
 /**
  * First repository file written by a redirection or by tee, if any. With
- * `tempTouched` (the command sets or unsets a temp variable) every file
- * written counts, temp folders included.
+ * `tempTouched` (the command may change a folder variable, see DIR_TOUCH)
+ * every file written counts, temp folders included.
  */
 function redirectTarget(masked, plain, cwd, tempTouched) {
   // Variables assigned in the same command (S=/tmp/x, out=$(mktemp)) and cd
@@ -473,8 +522,8 @@ function redirectTarget(masked, plain, cwd, tempTouched) {
       // its target, checked by the loop above, and keep reading tee's files.
       const op = REDIRECT_OP.exec(masked.slice(at));
       if (op && /[<>]/.test(op[0])) {
-        at += op[0].length;
-        if (!op[1]) at = readWord(plain, at).end;
+        // Skip the target (or the fd of 2>&1) together with the operator.
+        at = readWord(plain, at + op[0].length).end;
         continue;
       }
       if (at >= plain.length || /[;&|()\n]/.test(plain[at])) break;
@@ -493,7 +542,7 @@ function shellEdit(command, cwd, tempTouched, depth = 0) {
   if (IN_PLACE.some((re) => re.test(parsed.masked))) return EDIT_ONLY;
   const target = redirectTarget(parsed.masked, parsed.plain, cwd, tempTouched);
   if (target && tempTouched)
-    return `${EDIT_ONLY} Il comando cambia TMPDIR, TMP, TEMP o RUNNER_TEMP e scrive un file (qui: ${target}): scrivi il percorso temporaneo per esteso, senza cambiare quelle variabili.`;
+    return `${EDIT_ONLY} Il comando scrive un file (qui: ${target}) e può cambiare una variabile di cartella (TMPDIR, TMP, TEMP, RUNNER_TEMP o HOME, anche con eval, let, declare -n, assegnazioni aritmetiche o env -u/-i): scrivi il percorso temporaneo per esteso, senza quei costrutti.`;
   if (target)
     return `${EDIT_ONLY} Redirezioni e tee verso file del repository sono vietate (qui: ${target}); restano permesse verso la cartella temporanea, lo scratchpad e /dev/null.`;
   if (depth >= 3) return null;
@@ -504,11 +553,24 @@ function shellEdit(command, cwd, tempTouched, depth = 0) {
   return null;
 }
 
-// Decided on the whole command text, nested commands and quotes included.
+/**
+ * True when the command may change a folder variable. Checked on the raw text
+ * (quotes included), on the text with escapes and simple quotes removed, and
+ * on the commands nested in it (sh -c, $(...), heredocs for a shell).
+ */
+function touchesDirVars(text, depth = 0) {
+  const parsed = scan(text);
+  if (DIR_TOUCH.some((re) => re.test(text) || re.test(parsed.plain)))
+    return true;
+  return (
+    depth < 3 && innerCommands(parsed).some((t) => touchesDirVars(t, depth + 1))
+  );
+}
+
 const shellEditReason = shellEdit(
   cmd,
   input.cwd || process.cwd(),
-  TEMP_TOUCH.test(cmd),
+  touchesDirVars(cmd),
 );
 if (shellEditReason) block(`${shellEditReason}\nComando: ${cmd.slice(0, 300)}`);
 
