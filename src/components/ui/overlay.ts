@@ -25,19 +25,13 @@ export function useMediaQuery(query: string): boolean {
   );
 }
 
-/** True from 1024 px: the sheet becomes a centered modal. */
+/**
+ * True from 1024 px: the sheet becomes a centered modal. Sheets, calendars and
+ * pages all use this one threshold; F5 (#506) moves the whole app together to
+ * the one of D8 (900 px wide, 600 px tall).
+ */
 export function useIsDesktop(): boolean {
   return useMediaQuery("(min-width: 1024px)");
-}
-
-/**
- * True when the window is wide and tall enough for a centered modal instead of
- * a bottom sheet: from 900 px wide and at least 600 px tall (decision D8).
- * `useIsDesktop` stays at 1024 px for the layout of the pages until F5 (#506)
- * moves them to the same threshold.
- */
-export function useIsWindow(): boolean {
-  return useMediaQuery("(min-width: 900px) and (min-height: 600px)");
 }
 
 /** Open dialogs, last one on top. Only the top one handles Escape and Tab. */
@@ -46,10 +40,6 @@ const overlayStack: symbol[] = [];
 /** True while a sheet or a dialog is open: a new one opens above it. */
 export function hasOpenOverlay(): boolean {
   return overlayStack.length > 0;
-}
-
-function prefersReducedMotion(): boolean {
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
 /**
@@ -65,10 +55,7 @@ export function useAnimatedClose(onClose: () => void) {
 
   useEffect(() => {
     if (!closing) return;
-    const id = window.setTimeout(
-      () => onCloseRef.current(),
-      prefersReducedMotion() ? 0 : EXIT_MS,
-    );
+    const id = window.setTimeout(() => onCloseRef.current(), EXIT_MS);
     return () => window.clearTimeout(id);
   }, [closing]);
 

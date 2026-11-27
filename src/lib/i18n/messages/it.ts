@@ -124,6 +124,7 @@ export const it = {
     previousMonth: "Mese precedente",
     nextMonth: "Mese successivo",
     today: "oggi",
+    clearDate: "Togli la data",
     timeInvalid: "Scrivi un'ora da 00:00 a 23:59, per esempio 17:30.",
     actionFailed:
       "Non siamo riusciti a completare l'azione. Controlla la connessione e riprova.",

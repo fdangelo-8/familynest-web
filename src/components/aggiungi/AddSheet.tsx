@@ -1878,6 +1878,7 @@ export function AddSheet({
       id={dateId}
       label={type === "scadenza" ? "Scade il" : "Entro"}
       value={dueDate}
+      clearable={type === "da-fare"}
       readOnly={saving}
       help={
         dateManual === undefined && phraseDate !== null

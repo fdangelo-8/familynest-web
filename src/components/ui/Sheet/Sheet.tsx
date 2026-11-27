@@ -19,7 +19,7 @@ import {
   hasOpenOverlay,
   useAnimatedClose,
   useDialogFocus,
-  useIsWindow,
+  useIsDesktop,
 } from "../overlay";
 
 /** The written action on the right of the head («Salva»). */
@@ -80,8 +80,8 @@ export type SheetProps = {
 const DRAG_CLOSE_RATIO = 0.25;
 
 /**
- * Same content in two shapes: bottom sheet (`.foglio`) and, from 900 px wide
- * and 600 px tall, centered modal (`.modale`).
+ * Same content in two shapes: bottom sheet (`.foglio`) and, from 1024 px
+ * wide (the same threshold as the pages), centered modal (`.modale`).
  */
 export function Sheet(props: SheetProps) {
   if (!props.open || typeof document === "undefined") return null;
@@ -107,7 +107,7 @@ function SheetContent({
   className,
   "data-testid": testId,
 }: SheetProps) {
-  const windowShape = useIsWindow();
+  const windowShape = useIsDesktop();
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
   const dragStart = useRef<number | null>(null);

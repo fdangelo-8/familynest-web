@@ -60,6 +60,7 @@ import {
 } from "@/components/ui/ConnectRow/ConnectRow";
 import { Skeleton, SkeletonGroup } from "@/components/ui/Skeleton/Skeleton";
 import { Spinner } from "@/components/ui/Spinner/Spinner";
+import { toDateFieldValue } from "@/lib/datetime";
 import { Tag } from "@/components/ui/Tag/Tag";
 import { Toggle } from "@/components/ui/Toggle/Toggle";
 import { useToast } from "@/components/ui/Toast/ToastProvider";
@@ -1141,6 +1142,7 @@ function SheetsDialogsDatesSection() {
   const [dayYear, setDayYear] = useState("2027-01-04");
   const [dayLimits, setDayLimits] = useState("2026-11-24");
   const [dayEmpty, setDayEmpty] = useState("");
+  const [dayOptional, setDayOptional] = useState("2017-05-14");
   const [timeDay, setTimeDay] = useState("2026-11-18");
   const [from, setFrom] = useState("16:00");
   const [lastTime, setLastTime] = useState("16:00");
@@ -1434,6 +1436,25 @@ function SheetsDialogsDatesSection() {
             data-testid="ds-data-vuota-stato"
           >
             Valore: {dayEmpty}
+          </p>
+        </div>
+      </Example>
+      <Example caption="DateField · facoltativo, con «Togli la data»">
+        <div data-testid="ds-data-facoltativa">
+          <DateField
+            label="Data di nascita"
+            value={dayOptional}
+            max={toDateFieldValue(new Date())}
+            clearable
+            onChange={(event) => setDayOptional(event.target.value)}
+          />
+          <p
+            className="t-nota t-secondario"
+            role="status"
+            aria-live="polite"
+            data-testid="ds-data-facoltativa-stato"
+          >
+            Valore: {dayOptional}
           </p>
         </div>
       </Example>

@@ -4892,12 +4892,6 @@ button.riga-lista {
   }
 }
 
-/* Testa del foglio con informazione e X a destra (#20, #164) */
-.foglio__testa-fine {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-3);
-}
 /* Etichette riconosciute ancora vuote: la regione live resta nel DOM ma non occupa il gap (#20, #164) */
 .gruppo-chip[aria-live]:empty {
   position: absolute;
@@ -7100,6 +7094,12 @@ body {
   background: var(--color-superficie);
   border-radius: var(--radius-l);
   box-shadow: var(--shadow-menu);
+}
+/* «Togli la data», sotto la griglia, a sinistra (solo con `clearable`) */
+.calendario-scelta__togli {
+  display: flex;
+  width: fit-content;
+  margin-top: var(--space-4);
 }
 .calendario-scelta {
   display: grid;

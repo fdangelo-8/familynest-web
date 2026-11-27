@@ -19,7 +19,8 @@ import {
 } from "@/lib/datetime";
 import { it } from "@/lib/i18n/messages/it";
 import { MonthCalendar } from "../MonthCalendar/MonthCalendar";
-import { useEscapeLayer, useIsWindow } from "../overlay";
+import { Button } from "../Button/Button";
+import { useEscapeLayer, useIsDesktop } from "../overlay";
 import { Sheet } from "../Sheet/Sheet";
 import type { TextFieldProps } from "./Field";
 import { FieldShell, useFieldIds } from "./FieldShell";
@@ -27,6 +28,12 @@ import { FieldShell, useFieldIds } from "./FieldShell";
 export type DateFieldProps = Omit<TextFieldProps, "type" | "multiline"> & {
   /** Goes to the button (date) or to the input (time) */
   "data-testid"?: string;
+  /**
+   * Date only. The field may stay empty: with a value, the calendar shows
+   * «Togli la data» under the grid. The page passes it only where the column
+   * accepts an empty value; it is never worked out from `required`.
+   */
+  clearable?: boolean;
 };
 
 /** Space kept between the calendar box and the edge of the window, in px. */
@@ -76,6 +83,7 @@ export function DateField({
   name,
   disabled,
   readOnly,
+  clearable = false,
   "data-testid": testId,
 }: DateFieldProps) {
   const controlled = value !== undefined;
@@ -90,7 +98,7 @@ export function DateField({
     error,
     groupErrorId,
   );
-  const windowShape = useIsWindow();
+  const windowShape = useIsDesktop();
   const [open, setOpen] = useState(false);
   const [closing, setClosing] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -186,6 +194,27 @@ export function DateField({
     else setClosing(true);
   };
 
+  // «Togli la data»: the value becomes empty once, the calendar closes and the
+  // focus goes back to the field.
+  const clear = () => {
+    if (!controlled) setInner("");
+    onChange?.(valueEvent("", name));
+    if (windowShape) closeBox(true);
+    else setClosing(true);
+  };
+
+  const clearButton =
+    clearable && shownDay !== "" && !inactive ? (
+      <Button
+        variant="link-secondario"
+        className="calendario-scelta__togli"
+        onClick={clear}
+        data-testid="calendario-togli"
+      >
+        {it.sheetsDates.clearDate}
+      </Button>
+    ) : null;
+
   // Tab leaves the box: the focus goes back to the field and the keystroke
   // carries it to the next one.
   const onBoxKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -237,6 +266,7 @@ export function DateField({
               ref={boxRef}
               className="calendario-riquadro"
               role="dialog"
+              aria-modal="true"
               aria-label={label}
               onBlur={onBoxBlur}
               onKeyDown={onBoxKeyDown}
@@ -251,6 +281,7 @@ export function DateField({
                 markInitialFocus
                 data-testid="calendario"
               />
+              {clearButton}
             </div>,
             document.body,
           )
@@ -271,6 +302,7 @@ export function DateField({
           markInitialFocus
           data-testid="calendario"
         />
+        {clearButton}
       </Sheet>
     </FieldShell>
   );
