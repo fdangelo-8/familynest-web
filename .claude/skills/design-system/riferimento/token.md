@@ -383,6 +383,20 @@ Pagine ed elenchi senza ombre. L'ombra «card» del canvas di Fable (`0 1px 2px,
 
 Tutte le misure qui sopra restano in px anche dopo la #313: con il testo grande non crescono (barra, avatar, icone, interruttore, casella restano come nel mockup); a crescere sono il testo e le altezze minime dei controlli che lo contengono (`min-height`, vedi `componenti.md`, «Testo ingrandito»).
 
+### Token del guscio misurati dal designer (F5, #506, 27/11/2026)
+
+Misurati sulle tavole di Fable (dettagli e fonti in `docs/specifiche/506-guscio-navigazione-grafica.md`). **Proposti, non ancora nel codice:** li porta la PR `shared/*` di F5 (o la sua correzione) in `src/app/globals.css` e in `docs/agenti/design/token.css`, insieme.
+
+| Variabile                | Valore                                                                                     | Uso                                                                                          |
+| ------------------------ | ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| `--grid-margine-capsula` | `14px`                                                                                     | margini ai lati e in basso della capsula della barra in basso (con `max()` sull'area sicura) |
+| `--shadow-capsula`       | `0 0 0 var(--border-sottile) var(--color-filo-barra), 0 8px 24px var(--color-ombra-forte)` | filo esterno e ombra della capsula e del disco dell'assistente                               |
+| `--blur-barra`           | `8px`                                                                                      | `backdrop-filter` della capsula sopra `--color-barra` (stima per confronto)                  |
+| `--border-fuoco`         | `2px`                                                                                      | anello del fuoco (`:focus-visible`) e anello interno del campo con il fuoco                  |
+| `--size-marchio-segno`   | `18px`                                                                                     | segno del marchio (segnaposto 5A) nella barra laterale                                       |
+
+La capsula usa anche token che esistono già: `--size-barra` (64, altezza), `--radius-capsula` (28) e `--color-barra` (fondo traslucido). `--border-medio` resta 1,5 px: è il tratto delle icone e il filo dei campi, non l'anello.
+
 ### Misure minime che seguono il testo (**aggiunte**, #313)
 
 In rem: con il testo normale valgono i px a destra, con il testo grande crescono e fanno scattare le disposizioni a una colonna. Non sono nel vecchio mockup; dopo F2 il test dei token le trova in `docs/agenti/design/token.css` come tutte le altre.
