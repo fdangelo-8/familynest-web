@@ -157,11 +157,10 @@ test.describe("accesso e apertura", () => {
     test.skip(isMobile(), "La palette c'è solo su desktop (1280 px)");
     await openSearch(page, baseURL, nest);
     await expect(palette(page)).toBeVisible();
+    // F5 (#506, §2): the row of `/ricerca` lights no entry (it used to light Oggi).
     await expect(
-      page
-        .getByRole("navigation", MAIN_NAV)
-        .getByRole("link", { name: "Oggi" }),
-    ).toHaveAttribute("aria-current", /^(page|true)$/);
+      page.getByRole("navigation", MAIN_NAV).locator("[aria-current]"),
+    ).toHaveCount(0);
     await page.keyboard.press("Escape");
     await expect(palette(page)).toHaveCount(0);
     await expect(page).toHaveURL(/\/oggi$/);

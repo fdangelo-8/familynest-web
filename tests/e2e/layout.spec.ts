@@ -717,11 +717,18 @@ test.describe("sessione con utenti", () => {
     withUser("A");
     for (const route of ["/oggi", "/calendario", "/casa/spesa", "/spazi"]) {
       await openAs(page, baseURL, "A", route);
-      const style = await page.locator("main#contenuto").evaluate((el) => {
-        const s = getComputedStyle(el);
-        return { type: s.containerType, name: s.containerName };
-      });
-      expect(style, route).toEqual({ type: "inline-size", name: "contenuto" });
+      // The <main> can be swapped (loading shell -> page): read it again until
+      // the one that stays is measured (a detached node has no styles).
+      await expect
+        .poll(
+          () =>
+            page.locator("main#contenuto").evaluate((el) => {
+              const s = getComputedStyle(el);
+              return { type: s.containerType, name: s.containerName };
+            }),
+          { message: route },
+        )
+        .toEqual({ type: "inline-size", name: "contenuto" });
     }
   });
 });

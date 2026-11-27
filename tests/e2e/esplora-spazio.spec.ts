@@ -196,7 +196,7 @@ test.describe("puntina e disposizione", () => {
     test.skip(!isMobile(testInfo.project.name), "Caso a 390 px");
     await signInAs(page.context(), baseURL as string, "A");
     await openSpace(page, "A tavola");
-    const bar = page.locator("header.barra");
+    const bar = page.locator("header.testata");
     await expect(bar.getByRole("link", { name: "Indietro" })).toBeVisible();
     await expect(barPin(page)).toHaveCount(1);
     await expect(barPin(page)).toHaveAttribute("aria-pressed", "false");

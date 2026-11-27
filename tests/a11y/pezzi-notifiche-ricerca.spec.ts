@@ -292,7 +292,7 @@ test.describe("/ricerca a 390 px (utente A)", () => {
     await expect(page.getByRole("link", { name: "Torna a Oggi" })).toHaveCount(
       0,
     );
-    expect(await page.locator(".barra").count()).toBe(0);
+    expect(await page.locator(".testata").count()).toBe(0);
     await expect(page.locator("h1:visible")).toHaveCount(1);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(
       "Cerca nel Nest",
