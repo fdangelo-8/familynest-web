@@ -2428,6 +2428,10 @@ button.riga-lista {
 .dialogo__azioni {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-2);
+}
+/* Dentro il dialogo di conferma i bottoni stanno a 12 px (k3-03) */
+.dialogo .dialogo__azioni {
   gap: var(--space-3);
 }
 
