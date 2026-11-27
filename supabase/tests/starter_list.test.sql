@@ -364,6 +364,14 @@ select lives_ok(
   $$ select public.accept_invitation_with_color(current_setting('test.ugo_token'), 'basilico') $$,
   'E accepts the invitation of Ugo'
 );
+-- #617 R5: Casa Neri is now «in coppia» (only C and E), so E entered organising too. The
+-- checks below are about an adult who does not organise: the role is taken away here, as
+-- the owner (test preparation only).
+reset role;
+update public.household_members set is_admin = false
+where user_id = 'eeeeeeee-0000-4000-8000-000000000001';
+set local role authenticated;
+set local request.jwt.claims to '{"sub":"eeeeeeee-0000-4000-8000-000000000001","role":"authenticated"}';
 select throws_ok(
   $$ select public.complete_starter_list() $$,
   '42501',
