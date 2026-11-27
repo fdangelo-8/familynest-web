@@ -83,7 +83,7 @@ export function SideNav({ spacesNews = false }: { spacesNews?: boolean }) {
   );
 
   return (
-    <div className="barra-laterale">
+    <div className="barra-laterale" data-testid="barra-laterale">
       <div className="barra-laterale__marchio">
         <span className="barra-laterale__scritta">
           <Brand />

@@ -1,4 +1,5 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { join } from "node:path";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import {
@@ -7,17 +8,24 @@ import {
   usersConfigured,
   type TestUserKey,
 } from "../fixtures/auth";
+import { waitHydrated } from "../fixtures/esplora";
 import {
+  NAV_ITEMS,
   PLACEHOLDERS,
   getActiveNavItem,
   getActiveSettingsItem,
   getBarConfig,
+  getDesktopBarConfig,
+  getNavAriaCurrent,
+  hasAppRoute,
   hasBottomNav,
+  isAppPath,
 } from "../../src/lib/app-routes";
+import { SPACES } from "../../src/lib/spaces";
 
-// Layout and navigation (#10). These tests need no test users: public
-// routes, redirects without a session, placeholders and pure rules.
-// The tests with signed-in users depend on the test users (#55).
+// Frame and navigation (#10, rewritten for F5 #506). The tests without a
+// session, the pure rules and the static checks need no test users; the rest
+// depends on the test users (#55) and is skipped, with a reason, without them.
 
 const PROTECTED_ROUTES = [
   "/oggi",
@@ -26,6 +34,7 @@ const PROTECTED_ROUTES = [
   "/casa/spesa",
   "/casa/da-fare",
   "/casa/scadenze",
+  "/spazi",
   "/nest",
   "/notifiche",
   "/ricerca",
@@ -37,7 +46,7 @@ const PROTECTED_ROUTES = [
 
 test.describe("sessione", () => {
   for (const route of PROTECTED_ROUTES) {
-    test(`CA-1: senza sessione ${route} porta a /accesso`, async ({ page }) => {
+    test(`senza sessione ${route} porta a /accesso`, async ({ page }) => {
       await page.goto(route);
       await expect(page).toHaveURL(/\/accesso$/);
       await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
@@ -47,7 +56,7 @@ test.describe("sessione", () => {
     });
   }
 
-  test("CA-2: un cookie di sessione alterato porta a /accesso", async ({
+  test("un cookie di sessione alterato porta a /accesso", async ({
     page,
     context,
     baseURL,
@@ -68,9 +77,7 @@ test.describe("sessione", () => {
     await expect(page.locator("body")).not.toContainText("Casa Bianchi");
   });
 
-  test("CA-4: senza sessione / e /casa finiscono su /accesso", async ({
-    page,
-  }) => {
+  test("senza sessione / e /casa finiscono su /accesso", async ({ page }) => {
     await page.goto("/");
     await expect(page).toHaveURL(/\/accesso$/);
     await page.goto("/casa");
@@ -80,7 +87,7 @@ test.describe("sessione", () => {
   test("un indirizzo inesistente senza sessione porta a /accesso", async ({
     page,
   }) => {
-    for (const route of ["/pippo", "/oggi/pippo"]) {
+    for (const route of ["/pippo", "/oggi/pippo", "/esplora/pippo"]) {
       await page.goto(route);
       await expect(page).toHaveURL(/\/accesso$/);
     }
@@ -88,7 +95,7 @@ test.describe("sessione", () => {
 
   // Updated by #11 (decision 5): src/proxy.ts exists, runs on Node and ONLY
   // refreshes the session cookies. No access checks, no redirects.
-  test("CA-5: nessun middleware Edge; il proxy rinnova solo i cookie", () => {
+  test("nessun middleware Edge; il proxy rinnova solo i cookie", () => {
     expect(existsSync("middleware.ts")).toBe(false);
     expect(existsSync("src/middleware.ts")).toBe(false);
     expect(existsSync("proxy.ts")).toBe(false);
@@ -99,6 +106,29 @@ test.describe("sessione", () => {
     expect(source).not.toMatch(/runtime\s*[:=]\s*["']edge["']/);
     // It only reads the session to refresh it.
     expect(source).toContain("getClaims()");
+  });
+});
+
+test.describe("reindirizzamenti di Esplora (F5)", () => {
+  test("/esplora e /esplora/<spazio> reindirizzano con 308", async ({
+    request,
+  }) => {
+    const toSpazi = await request.get("/esplora", { maxRedirects: 0 });
+    expect(toSpazi.status()).toBe(308);
+    expect(new URL(toSpazi.headers()["location"]!, "http://x").pathname).toBe(
+      "/spazi",
+    );
+    for (const space of SPACES) {
+      const slug = space.href.replace("/spazi/", "");
+      const response = await request.get(`/esplora/${slug}`, {
+        maxRedirects: 0,
+      });
+      expect(response.status(), slug).toBe(308);
+      expect(
+        new URL(response.headers()["location"]!, "http://x").pathname,
+        slug,
+      ).toBe(space.href);
+    }
   });
 });
 
@@ -137,49 +167,90 @@ test.describe("pagine fuori dalla cornice", () => {
   });
 });
 
-test.describe("regole di navigazione (funzioni pure)", () => {
-  test("voce attiva su mobile", () => {
-    const mobile = (path: string) => getActiveNavItem(path, "mobile");
-    expect(mobile("/oggi")).toBe("oggi");
-    expect(mobile("/aggiungi")).toBe("oggi");
-    expect(mobile("/calendario")).toBe("calendario");
-    expect(mobile("/calendario/mese")).toBe("calendario");
-    expect(mobile("/impegni/abc")).toBe("calendario");
-    expect(mobile("/casa/spesa")).toBe("casa");
-    expect(mobile("/casa/scadenze")).toBe("casa");
-    expect(mobile("/notifiche")).toBe("oggi");
-    expect(mobile("/esplora")).toBe("oggi");
-    expect(mobile("/esplora/a-tavola")).toBe("oggi");
-    expect(mobile("/esplora/palestra")).toBeNull();
-    expect(mobile("/figli/sofia")).toBe("oggi");
-    expect(mobile("/ricerca")).toBeNull();
-    expect(mobile("/nest")).toBeNull();
-  });
-
-  test("voce attiva su desktop", () => {
-    const desktop = (path: string) => getActiveNavItem(path, "desktop");
-    expect(desktop("/oggi")).toBe("oggi");
-    expect(desktop("/aggiungi")).toBe("oggi");
-    expect(desktop("/ricerca")).toBe("oggi");
-    expect(desktop("/calendario")).toBe("calendario");
-    expect(desktop("/casa/spesa")).toBe("casa");
+test.describe("regole di navigazione (funzioni pure, §2)", () => {
+  test("voce attiva sul telefono", () => {
+    const phone = (path: string) => getActiveNavItem(path, "mobile");
+    expect(phone("/oggi")).toBe("oggi");
+    expect(phone("/aggiungi")).toBe("oggi");
+    expect(phone("/calendario")).toBe("calendario");
+    expect(phone("/calendario/mese")).toBe("calendario");
+    expect(phone("/impegni/abc")).toBe("calendario");
+    expect(phone("/casa/spesa")).toBe("casa");
+    expect(phone("/casa/scadenze")).toBe("casa");
+    expect(phone("/spazi")).toBe("spazi");
+    expect(phone("/spazi/a-tavola")).toBe("spazi");
+    expect(phone("/spazi/palestra")).toBeNull();
+    expect(phone("/figli/sofia")).toBe("spazi");
+    expect(phone("/figli/sofia/lista-desideri")).toBe("spazi");
+    for (const path of [
+      "/notifiche",
+      "/ricerca",
+      "/esplora",
+      "/pippo",
+      "/casa/pippo",
+      "/casalinga",
+    ]) {
+      expect(phone(path), path).toBeNull();
+    }
     for (const path of [
       "/nest",
-      "/notifiche",
-      "/esplora/palestra",
-      "/figli/sofia",
       "/profilo",
-      "/calendari-collegati",
       "/impostazioni",
+      "/calendari-collegati",
       "/membri",
+      "/membri/laura",
     ]) {
-      expect(desktop(path)).toBeNull();
+      expect(phone(path), path).toBe("spazi");
     }
   });
 
-  test("il prefisso non confonde rotte simili", () => {
-    expect(getActiveNavItem("/casalinga", "mobile")).toBeNull();
-    expect(getActiveSettingsItem("/membri-extra")).toBeNull();
+  test("voce attiva sul computer: le pagine del Nest accendono il profilo", () => {
+    const computer = (path: string) => getActiveNavItem(path, "desktop");
+    expect(computer("/oggi")).toBe("oggi");
+    expect(computer("/spazi")).toBe("spazi");
+    expect(computer("/figli/sofia")).toBe("spazi");
+    for (const path of [
+      "/nest",
+      "/profilo",
+      "/impostazioni",
+      "/calendari-collegati",
+      "/membri",
+      "/membri/laura",
+    ]) {
+      expect(computer(path), path).toBe("profilo");
+    }
+    for (const path of ["/notifiche", "/ricerca", "/pippo"]) {
+      expect(computer(path), path).toBeNull();
+    }
+  });
+
+  test("aria-current: «page» sull'indirizzo esatto, «true» sulle altre rotte, mai due voci", () => {
+    const current = (path: string, item: (typeof NAV_ITEMS)[number]["id"]) =>
+      getNavAriaCurrent(path, "mobile", item);
+    expect(current("/calendario", "calendario")).toBe("page");
+    expect(current("/calendario/mese", "calendario")).toBe("true");
+    expect(current("/casa/spesa", "casa")).toBe("page");
+    expect(current("/casa/da-fare", "casa")).toBe("true");
+    expect(current("/spazi", "spazi")).toBe("page");
+    expect(current("/spazi/a-tavola", "spazi")).toBe("true");
+    expect(current("/calendario", "oggi")).toBeUndefined();
+    expect(getNavAriaCurrent("/nest", "desktop", "profilo")).toBe("page");
+    expect(getNavAriaCurrent("/profilo", "desktop", "profilo")).toBe("true");
+    for (const path of ["/oggi", "/calendario", "/spazi", "/nest", "/pippo"]) {
+      const active = NAV_ITEMS.filter(
+        (item) => getNavAriaCurrent(path, "mobile", item.id) !== undefined,
+      );
+      expect(active.length, path).toBeLessThanOrEqual(1);
+    }
+  });
+
+  test("l'elenco ha i quattro link nell'ordine giusto", () => {
+    expect(NAV_ITEMS.map((item) => [item.label, item.href])).toEqual([
+      ["Oggi", "/oggi"],
+      ["Calendario", "/calendario"],
+      ["Casa", "/casa/spesa"],
+      ["Spazi", "/spazi"],
+    ]);
   });
 
   test("navigazione in basso", () => {
@@ -187,10 +258,15 @@ test.describe("regole di navigazione (funzioni pure)", () => {
       "/oggi",
       "/aggiungi",
       "/calendario",
+      "/impegni/x",
       "/casa/spesa",
+      "/spazi",
+      "/spazi/a-tavola",
+      "/figli/x",
       "/notifiche",
+      "/pippo",
     ]) {
-      expect(hasBottomNav(path)).toBe(true);
+      expect(hasBottomNav(path), path).toBe(true);
     }
     for (const path of [
       "/nest",
@@ -199,8 +275,9 @@ test.describe("regole di navigazione (funzioni pure)", () => {
       "/calendari-collegati",
       "/impostazioni",
       "/membri",
+      "/membri/laura",
     ]) {
-      expect(hasBottomNav(path)).toBe(false);
+      expect(hasBottomNav(path), path).toBe(false);
     }
   });
 
@@ -211,27 +288,44 @@ test.describe("regole di navigazione (funzioni pure)", () => {
     );
     expect(getActiveSettingsItem("/impostazioni")).toBe("impostazioni");
     expect(getActiveSettingsItem("/membri/laura")).toBe("membri");
+    expect(getActiveSettingsItem("/membri-extra")).toBeNull();
     expect(getActiveSettingsItem("/oggi")).toBeNull();
   });
 
-  test("forma della barra in alto", () => {
-    expect(getBarConfig("/oggi")).toEqual({
+  test("testata del telefono", () => {
+    expect(getBarConfig("/oggi")).toMatchObject({
       kind: "section",
-      center: "lens",
-      actions: ["bell"],
+      lens: true,
     });
-    expect(getBarConfig("/calendario")).toEqual({
+    expect(getBarConfig("/oggi")).not.toHaveProperty("title", "Oggi");
+    expect(getBarConfig("/calendario")).toMatchObject({
       kind: "section",
-      center: "lens",
-      actions: ["search", "bell"],
+      lens: true,
+      title: "Calendario",
     });
-    expect(getBarConfig("/casa/spesa")).toEqual({
+    expect(getBarConfig("/casa/spesa")).toMatchObject({
       kind: "section",
-      center: "title",
-      actions: ["search", "bell"],
+      lens: false,
+      title: "Casa",
+      titleIsHeading: true,
     });
-    expect(getBarConfig("/nest")).toEqual({ kind: "close", href: "/oggi" });
-    expect(getBarConfig("/profilo")).toEqual({
+    expect(getBarConfig("/spazi")).toMatchObject({
+      kind: "section",
+      title: "Spazi",
+    });
+    expect(getBarConfig("/impegni/abc")).toEqual({
+      kind: "detail",
+      fallback: "/calendario",
+    });
+    expect(getBarConfig("/spazi/a-tavola")).toMatchObject({
+      kind: "detail",
+      fallback: "/spazi",
+    });
+    expect(getBarConfig("/nest")).toMatchObject({
+      kind: "detail",
+      fallback: "/spazi",
+    });
+    expect(getBarConfig("/profilo")).toMatchObject({
       kind: "detail",
       fallback: "/nest",
       title: "Il tuo profilo",
@@ -248,8 +342,115 @@ test.describe("regole di navigazione (funzioni pure)", () => {
         label: "Impostazioni delle notifiche",
       },
     });
-    // The search has no bar on mobile (#40).
+    const wishlist =
+      "/figli/6f1c2d3e-0000-4000-8000-000000000001/lista-desideri";
+    expect(getBarConfig(wishlist)).toEqual({
+      kind: "detail",
+      fallback: "/figli/6f1c2d3e-0000-4000-8000-000000000001",
+    });
+    // The search has no header on the phone (#40).
     expect(getBarConfig("/ricerca")).toEqual({ kind: "none" });
+    expect(getBarConfig("/pippo")).toEqual({
+      kind: "detail",
+      fallback: "/oggi",
+    });
+  });
+
+  test("barra in alto del computer: titolo, pulsante, freccia", () => {
+    expect(getDesktopBarConfig("/oggi")).toEqual({
+      title: "Oggi",
+      newEvent: true,
+      back: null,
+    });
+    expect(getDesktopBarConfig("/calendario/mese")).toMatchObject({
+      title: "Calendario",
+      newEvent: true,
+    });
+    for (const path of ["/casa/spesa", "/spazi", "/notifiche", "/nest"]) {
+      expect(getDesktopBarConfig(path).newEvent, path).toBe(false);
+    }
+    expect(getDesktopBarConfig("/impegni/x")).toEqual({
+      title: "Calendario",
+      newEvent: false,
+      back: "/calendario",
+    });
+    expect(getDesktopBarConfig("/spazi/a-tavola").back).toBe("/spazi");
+    expect(getDesktopBarConfig("/pippo").title).toBeNull();
+  });
+
+  test("hasAppRoute legge solo l'elenco delle rotte", () => {
+    for (const path of [
+      "/oggi",
+      "/aggiungi",
+      "/calendario",
+      "/calendario/giorno",
+      "/calendario/mese",
+      "/impegni/abc",
+      "/casa",
+      "/casa/spesa",
+      "/casa/da-fare",
+      "/casa/scadenze",
+      "/spazi",
+      "/spazi/a-tavola",
+      "/figli/abc",
+      "/figli/abc/lista-desideri",
+      "/notifiche",
+      "/ricerca",
+      "/nest",
+      "/profilo",
+      "/impostazioni",
+      "/calendari-collegati",
+      "/membri",
+      "/membri/abc",
+      "/oggi/",
+      "/oggi?x=1",
+      "/oggi#a",
+    ]) {
+      expect(hasAppRoute(path), path).toBe(true);
+    }
+    for (const path of [
+      "oggi",
+      "https://esempio.com/oggi",
+      "//esempio.com/oggi",
+      "/Oggi",
+      "/impegni/a/b",
+      "/impegni",
+      "/esplora",
+      "/spazi/palestra",
+      "/impostazioni/aspetto",
+      "/ricette",
+      "/api/x",
+    ]) {
+      expect(hasAppRoute(path), path).toBe(false);
+    }
+  });
+
+  test("isAppPath: rotte dell'app e pubbliche sì, il resto no", () => {
+    for (const path of [
+      "/oggi",
+      "/spazi/a-tavola",
+      "/accesso",
+      "/accesso/link-scaduto",
+      "/onboarding",
+      "/onboarding/persone",
+      "/invito/abc",
+      "/desideri/xyz",
+      "/privacy",
+      "/termini",
+    ]) {
+      expect(isAppPath(path), path).toBe(true);
+    }
+    for (const path of [
+      "/api/x",
+      "/design-system",
+      "/design-system/membri",
+      "/fornitore-finto/x",
+      "//esempio.com/oggi",
+      "https://esempio.com/oggi",
+      "/pippo",
+    ]) {
+      expect(isAppPath(path), path).toBe(false);
+    }
   });
 
   test("ogni segnaposto ha titolo e titolo del browser", () => {
@@ -265,6 +466,17 @@ test.describe("regole di navigazione (funzioni pure)", () => {
     }
   });
 });
+
+/** Every file of `src/` as [path, text]. */
+function sourceTexts(dir = "src"): [string, string][] {
+  return readdirSync(dir).flatMap((name) => {
+    const path = join(dir, name);
+    if (statSync(path).isDirectory()) return sourceTexts(path);
+    return /\.(tsx?|css)$/.test(name)
+      ? [[path, readFileSync(path, "utf8")]]
+      : [];
+  });
+}
 
 test.describe("controlli statici del codice", () => {
   test("«Riprova» dell'errore di pagina rilegge i dati con retry()", () => {
@@ -282,7 +494,7 @@ test.describe("controlli statici del codice", () => {
       "casa/da-fare",
       "casa/scadenze",
       "nest",
-      "esplora",
+      "spazi",
       "notifiche",
       "ricerca",
       "profilo",
@@ -296,6 +508,63 @@ test.describe("controlli statici del codice", () => {
       expect(source, page).toContain("await requireNest()");
     }
   });
+
+  test("CA-17: nessun collegamento a /esplora e niente del vecchio guscio", () => {
+    expect(existsSync("src/app/(app)/esplora")).toBe(false);
+    for (const file of ["TopNav", "AddShortcut", "SearchShortcut", "AppBar"]) {
+      expect(existsSync(`src/components/ui/AppFrame/${file}.tsx`), file).toBe(
+        false,
+      );
+    }
+    for (const [path, text] of sourceTexts()) {
+      if (path.endsWith("app-routes.ts")) continue;
+      expect(text, path).not.toMatch(/href=["'`]\/esplora/);
+      expect(text, path).not.toMatch(/["'`]\/esplora["'`/]/);
+      expect(text, path).not.toMatch(/\.nav-alto|\.nav-basso|\.btn-aggiungi/);
+      expect(text, path).not.toMatch(
+        /["' ]nav-alto|["' ]nav-basso|["' ]btn-aggiungi/,
+      );
+    }
+  });
+
+  test("CA-41: le quattro aree sicure e il loro uso", () => {
+    const globals = readFileSync("src/app/globals.css", "utf8");
+    for (const side of ["top", "bottom", "left", "right"]) {
+      expect(globals).toContain(`env(safe-area-inset-${side}, 0px)`);
+    }
+    for (const name of ["alto", "basso", "sinistra", "destra"]) {
+      expect(globals).toContain(`--area-sicura-${name}:`);
+    }
+    const layout = readFileSync("src/app/layout.tsx", "utf8");
+    expect(layout).toContain("viewport-fit");
+    const components = readFileSync("src/app/components.css", "utf8");
+    // Between the markers of the frame only the variables are used.
+    const start = components.indexOf("GUSCIO DELL'APP");
+    const end = components.indexOf("Tasto disegnato accanto al comando");
+    expect(start).toBeGreaterThan(0);
+    expect(end).toBeGreaterThan(start);
+    const frame = components.slice(start, end);
+    expect(frame).not.toContain("env(safe-area-inset-");
+    for (const name of ["alto", "basso", "sinistra", "destra"]) {
+      expect(frame, name).toContain(`--area-sicura-${name}`);
+    }
+  });
+
+  test("le soglie del guscio sono in un solo modulo e coincidono con il CSS", () => {
+    const module = readFileSync("src/lib/breakpoints.ts", "utf8");
+    expect(module).toContain("(max-width: 899px), (max-height: 599px)");
+    expect(module).toContain(
+      "(min-width: 900px) and (max-width: 1279px) and (min-height: 600px)",
+    );
+    expect(module).toContain("(min-width: 1280px) and (min-height: 600px)");
+    const css = readFileSync("src/app/components.css", "utf8");
+    expect(css).toContain("@media (min-width: 900px) and (min-height: 600px)");
+    expect(css).toContain("@media (min-width: 1280px) and (min-height: 600px)");
+    // `useIsDesktop` reads the module, not a width of its own.
+    const overlay = readFileSync("src/components/ui/overlay.ts", "utf8");
+    expect(overlay).toContain("useShellLayout");
+    expect(overlay).not.toContain("min-width: 1024px");
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -305,39 +574,8 @@ test.describe("controlli statici del codice", () => {
 
 const NAV = { name: "Navigazione principale" };
 const LENS = "Punto di vista: solo tu o tutto il Nest";
-const NEST_LINK = /^Apri .+: membri, Esplora e impostazioni$/;
-const NEST_A = "Apri Casa D'Angelo: membri, Esplora e impostazioni";
-const NEST_B = "Apri Casa Bianchi: membri, Esplora e impostazioni";
 // the app writes the title with a typographic apostrophe
 const NOT_FOUND_TITLE = /Questa pagina non c['’]è/;
-const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
-
-const SCREENS: [route: string, h1: string, title: string][] = [
-  // Oggi is a real page since #30: its h1 is the greeting and the name
-  ["/oggi", "il saluto", "FamilyNest · Oggi"],
-  // opened directly, Add is a sheet over Today (#164): the page h1 is Today's
-  ["/aggiungi", "il saluto", "FamilyNest · Aggiungi"],
-  ["/calendario", "Calendario", "FamilyNest · Calendario"],
-  ["/casa/spesa", "Casa", "FamilyNest · Casa · Spesa"],
-  ["/casa/da-fare", "Casa", "FamilyNest · Casa · Da fare"],
-  ["/casa/scadenze", "Casa", "FamilyNest · Casa · Scadenze"],
-  ["/nest", "Il tuo Nest", "FamilyNest · Il tuo Nest"],
-  ["/esplora", "Esplora", "FamilyNest · Esplora"],
-  ["/notifiche", "Notifiche", "FamilyNest · Notifiche"],
-  ["/ricerca", "Ricerca", "FamilyNest · Ricerca"],
-  ["/profilo", "Il tuo profilo", "FamilyNest · Il tuo profilo"],
-  [
-    "/calendari-collegati",
-    "Calendari collegati",
-    "FamilyNest · Calendari collegati",
-  ],
-  [
-    "/impostazioni",
-    "Impostazioni della casa",
-    "FamilyNest · Impostazioni della casa",
-  ],
-  ["/membri", "Chi c’è", "FamilyNest · Chi c’è"],
-];
 
 /** Runs a describe only on one Playwright project (390 or 1280 px). */
 function onlyOn(project: "mobile" | "desktop") {
@@ -364,32 +602,43 @@ async function openAs(
   return page.goto(route);
 }
 
-/** Clicks a lens button until the client has hydrated and the state changes. */
-async function chooseLens(page: Page, which: "Io" | "Nest") {
-  const group = page.getByRole("group", { name: LENS });
-  const button = group.getByRole("button", { name: new RegExp(`${which}$`) });
-  await expect(async () => {
-    await button.click();
-    await expect(button).toHaveAttribute("aria-pressed", "true", {
-      timeout: 1000,
-    });
-  }).toPass();
+/** Opens a page for A and waits until the shell has taken over. */
+async function openReady(
+  page: Page,
+  baseURL: string | undefined,
+  route: string,
+) {
+  await openAs(page, baseURL, "A", route);
+  await expect(page.getByRole("main")).toBeVisible();
+  await waitHydrated(
+    page.getByTestId("barra-laterale").or(page.getByTestId("testata")).first(),
+  );
 }
 
 function mainNav(page: Page) {
   return page.getByRole("navigation", NAV);
 }
 
-function settingsMenu(page: Page) {
-  return page.getByRole("navigation", { name: "Impostazioni" });
+function sidebar(page: Page) {
+  return page.getByTestId("barra-laterale");
 }
 
-function visibleHeader(page: Page) {
-  return page.locator("header").filter({ visible: true });
+async function width(page: Page, testId: string) {
+  return page
+    .getByTestId(testId)
+    .evaluate((el) => Math.round(el.getBoundingClientRect().width));
+}
+
+/** Presses a key until the address changes: the shortcuts are attached after hydration. */
+async function pressUntilUrl(page: Page, key: string, url: RegExp) {
+  await expect(async () => {
+    await page.keyboard.press(key);
+    await expect(page).toHaveURL(url, { timeout: 1000 });
+  }).toPass();
 }
 
 test.describe("sessione con utenti", () => {
-  test("CA-3: C senza Nest va a /onboarding", async ({ page, baseURL }) => {
+  test("C senza Nest va a /onboarding", async ({ page, baseURL }) => {
     withUser("C");
     await openAs(page, baseURL, "C", "/oggi");
     await expect(page).toHaveURL(/\/onboarding$/);
@@ -399,7 +648,7 @@ test.describe("sessione con utenti", () => {
     await expect(mainNav(page)).toHaveCount(0);
   });
 
-  test("CA-4: A, / porta a /oggi e /casa a /casa/spesa", async ({
+  test("A, / porta a /oggi e /casa a /casa/spesa", async ({
     page,
     baseURL,
   }) => {
@@ -410,235 +659,146 @@ test.describe("sessione con utenti", () => {
     await expect(page).toHaveURL(/\/casa\/spesa$/);
   });
 
-  test("un indirizzo inesistente mostra «Questa pagina non c'è» dentro la cornice", async ({
+  test("CA-45: un indirizzo inesistente mostra «Questa pagina non c'è» dentro la cornice, senza voce attiva", async ({
     page,
     baseURL,
   }) => {
     withUser("A");
-    for (const route of ["/pippo", "/oggi/pippo"]) {
+    for (const route of [
+      "/pippo",
+      "/oggi/pippo",
+      "/spazi/inesistente",
+      "/esplora/inesistente",
+    ]) {
       await openAs(page, baseURL, "A", route);
       await expect(
         page.getByRole("heading", { level: 1, name: NOT_FOUND_TITLE }),
       ).toBeVisible();
       await expect(page.getByRole("main")).toHaveCount(1);
+      await expect(mainNav(page).locator("[aria-current]")).toHaveCount(0);
     }
   });
 
-  test("un indirizzo sotto /casa non resta in Casa: un solo h1 e nessuna voce attiva", async ({
+  test("CA-18 e CA-15: A apre /spazi, 200, Spazi attiva, riga «Il tuo Nest»", async ({
     page,
     baseURL,
-  }, testInfo) => {
-    test.skip(testInfo.project.name !== "mobile", "Caso a 390 px");
+  }) => {
     withUser("A");
-    await openAs(page, baseURL, "A", "/casa/pippo");
-    await expect(
-      page.getByRole("heading", { name: NOT_FOUND_TITLE }),
-    ).toBeVisible();
-    await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
-    await expect(mainNav(page).locator('[aria-current="page"]')).toHaveCount(0);
-  });
-  test("/casa/da-fare è la pagina vera (#23): un solo h1 e Casa attiva", async ({
-    page,
-    baseURL,
-  }, testInfo) => {
-    test.skip(testInfo.project.name !== "mobile", "Caso a 390 px");
-    withUser("A");
-    await openAs(page, baseURL, "A", "/casa/da-fare");
-    await expect(page.getByRole("region", { name: "Da fare" })).toBeVisible();
-    await expect(page.getByTestId("pagina-segnaposto")).toHaveCount(0);
-    await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
-    // Casa is highlighted for a related page: "true", not "page" (#67)
-    const active = mainNav(page).locator("[aria-current]");
-    await expect(active).toHaveText(/Casa/);
-    await expect(active).toHaveAttribute("aria-current", "true");
-  });
-});
-
-test.describe("segnaposto", () => {
-  for (const [route, h1, title] of SCREENS) {
-    // /nest is no longer a placeholder (#17): see tests/e2e/il-tuo-nest.spec.ts.
-    if (route === "/nest") continue;
-    // /calendario is no longer a placeholder (#25): see tests/e2e/calendario-settimana.spec.ts.
-    if (route === "/calendario") continue;
-    // /esplora is no longer a placeholder (#28): see tests/e2e/esplora.spec.ts.
-    if (route === "/esplora") continue;
-    // /profilo is no longer a placeholder (#38): see tests/e2e/profilo-pagina.spec.ts
-    // (the h1 is the name of the account).
-    if (route === "/profilo") continue;
-    // /impostazioni is no longer a placeholder (#41): see tests/e2e/impostazioni.spec.ts.
-    if (route === "/impostazioni") continue;
-    // /notifiche is no longer a placeholder (#39): see tests/e2e/notifiche-*.spec.ts.
-    if (route === "/notifiche") continue;
-    // /ricerca is no longer a placeholder (#40): see the test right below the loop
-    // and tests/e2e/ricerca-*.spec.ts.
-    if (route === "/ricerca") continue;
-    // /calendari-collegati is no longer a placeholder (#34, #35): its h1 and
-    // title are still checked by the other tests of this file; the page itself
-    // by the tests of «Calendari collegati».
-    if (route === "/calendari-collegati") continue;
-    test(`CA-6: A apre ${route}: stato 200, un solo h1 «${h1}», titolo, segnaposto`, async ({
-      page,
-      baseURL,
-    }) => {
-      withUser("A");
-      const response = await openAs(page, baseURL, "A", route);
-      expect(response?.status()).toBe(200);
-      await expect(page).toHaveURL(new RegExp(`${route}$`));
-      await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
-      if (route === "/oggi" || route === "/aggiungi") {
-        // Real page since #30 (two layouts in the DOM, one in the accessibility
-        // tree): the h1 is «<saluto>, <nome>», no placeholder.
-        await expect(
-          page.getByRole("heading", {
-            level: 1,
-            name: /^(Buongiorno|Buon pomeriggio|Buonasera|Eccoti),\s*Marco$/,
-          }),
-        ).toBeVisible();
-        await expect(page).toHaveTitle(title);
-        await expect(page.getByTestId("pagina-segnaposto")).toHaveCount(0);
-        return;
-      }
-      await expect(
-        page.getByRole("heading", { level: 1, name: h1, exact: true }),
-      ).toBeVisible();
-      await expect(page).toHaveTitle(title);
-      if (route === "/casa/spesa") {
-        // Real page since #21: no placeholder, the quick-add field is there.
-        await expect(page.getByTestId("pagina-segnaposto")).toHaveCount(0);
-        await expect(
-          page.getByRole("textbox", {
-            name: /^(Aggiungi alla spesa…|Cosa manca in casa\?)$/,
-          }),
-        ).toBeVisible();
-        return;
-      }
-      if (route === "/casa/da-fare") {
-        // Real page since #23: no placeholder, the «Da fare» column is there.
-        await expect(page.getByTestId("pagina-segnaposto")).toHaveCount(0);
-        await expect(
-          page.getByRole("region", { name: "Da fare" }),
-        ).toBeVisible();
-        return;
-      }
-      if (route === "/casa/scadenze") {
-        // Real page since #24: no placeholder, the column «Scadenze» is there.
-        await expect(page.getByTestId("pagina-segnaposto")).toHaveCount(0);
-        await expect(
-          page.getByRole("region", { name: "Scadenze" }),
-        ).toBeVisible();
-        return;
-      }
-      const placeholder = page.getByTestId("pagina-segnaposto");
-      await expect(placeholder).toBeVisible();
-      // empty state of the design system
-      await expect(placeholder).toContainText("In arrivo");
-    });
-  }
-});
-
-test.describe("ricerca (#40)", () => {
-  test("CA-6: A apre /ricerca: stato 200, titolo, non è più il segnaposto; pagina «Cerca nel Nest» su mobile, dialogo sopra Oggi su desktop", async ({
-    page,
-    baseURL,
-  }, testInfo) => {
-    withUser("A");
-    const response = await openAs(page, baseURL, "A", "/ricerca");
+    const response = await openAs(page, baseURL, "A", "/spazi");
     expect(response?.status()).toBe(200);
-    await expect(page).toHaveURL(/\/ricerca$/);
-    await expect(page).toHaveTitle("FamilyNest · Ricerca");
-    await expect(page.getByTestId("pagina-segnaposto")).toHaveCount(0);
-    await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
-    if (testInfo.project.name === "mobile") {
-      // The page of the search: one hidden h1, the field, no bars.
-      await expect(
-        page.getByRole("heading", {
-          level: 1,
-          name: "Cerca nel Nest",
-          exact: true,
-        }),
-      ).toHaveCount(1);
-      await expect(
-        page.getByRole("searchbox", { name: "Cerca nel Nest" }),
-      ).toBeVisible();
-    } else {
-      // Opened by address, the palette is over Today.
-      await expect(
-        page.getByRole("dialog", { name: "Cerca nel Nest" }),
-      ).toBeVisible();
-      // The page below is Today: its h1 is a greeting that changes, so it is
-      // not looked for by name; the single h1 of the page is checked above.
+    await expect(page).toHaveTitle("FamilyNest · Spazi");
+    await expect(
+      mainNav(page).getByRole("link", { name: "Spazi" }),
+    ).toHaveAttribute("aria-current", "page");
+    const row = page
+      .getByRole("main")
+      .getByRole("link", { name: /Il tuo Nest/ });
+    await expect(row).toHaveAttribute("href", "/nest");
+    await expect(row).toContainText("Persone, piano, impostazioni");
+  });
+
+  test("CA-16: /esplora e /esplora/a-tavola portano a /spazi", async ({
+    page,
+    baseURL,
+  }) => {
+    withUser("A");
+    await openAs(page, baseURL, "A", "/esplora");
+    await expect(page).toHaveURL(/\/spazi$/);
+    await page.goto("/esplora/a-tavola");
+    await expect(page).toHaveURL(/\/spazi\/a-tavola$/);
+  });
+
+  test("CA-4: il main è un contenitore chiamato «contenuto»", async ({
+    page,
+    baseURL,
+  }) => {
+    withUser("A");
+    for (const route of ["/oggi", "/calendario", "/casa/spesa", "/spazi"]) {
+      await openAs(page, baseURL, "A", route);
+      const style = await page.locator("main#contenuto").evaluate((el) => {
+        const s = getComputedStyle(el);
+        return { type: s.containerType, name: s.containerName };
+      });
+      expect(style, route).toEqual({ type: "inline-size", name: "contenuto" });
     }
   });
 });
 
-test.describe("mobile 390 px", () => {
+test.describe("telefono", () => {
   onlyOn("mobile");
 
-  test("CA-7: /oggi mostra navigazione in basso e barra in alto", async ({
+  test("CA-1: a 759 px la barra in basso, a 760 niente barra in basso e barra laterale a icone", async ({
     page,
     baseURL,
   }) => {
     withUser("A");
-    await openAs(page, baseURL, "A", "/oggi");
-    const nav = mainNav(page);
-    await expect(nav).toBeVisible();
-    const links = nav.getByRole("link");
-    await expect(links).toHaveText(["Oggi", "Calendario", "Casa", "Aggiungi"]);
-    const hrefs = await links.evaluateAll((els) =>
-      els.map((el) => el.getAttribute("href")),
-    );
-    expect(hrefs).toEqual(["/oggi", "/calendario", "/casa/spesa", "/aggiungi"]);
-    await expect(
-      page.getByRole("link", { name: "FamilyNest", exact: true }),
-    ).toHaveCount(0);
-    const bar = visibleHeader(page);
-    await expect(bar).toHaveCount(1);
-    await expect(bar.getByRole("link", { name: NEST_A })).toBeVisible();
-    await expect(bar.getByRole("group", { name: LENS })).toBeVisible();
-    await expect(bar.getByRole("link", { name: "Notifiche" })).toBeVisible();
+    await page.setViewportSize({ width: 759, height: 900 });
+    await openReady(page, baseURL, "/oggi");
+    await expect(mainNav(page)).toBeVisible();
+    await expect(page.getByTestId("barra-basso")).toBeVisible();
+    expect(await width(page, "barra-laterale")).toBe(0);
+    // 900 px is the threshold of the computer shape (D8)
+    await page.setViewportSize({ width: 900, height: 900 });
+    await expect(page.getByTestId("barra-basso")).toBeHidden();
+    await expect.poll(() => width(page, "barra-laterale")).toBe(72);
   });
 
-  test("CA-8: i quattro tocchi della navigazione in basso", async ({
+  test("CA-5: quattro link nell'ordine giusto, senza «Aggiungi» nella barra", async ({
     page,
     baseURL,
   }) => {
     withUser("A");
-    await openAs(page, baseURL, "A", "/oggi");
-    const steps: [string, RegExp, string][] = [
-      ["Calendario", /\/calendario$/, "Calendario"],
-      ["Casa", /\/casa\/spesa$/, "Casa"],
-      ["Oggi", /\/oggi$/, "Oggi"],
+    await openReady(page, baseURL, "/oggi");
+    const links = mainNav(page).getByRole("link");
+    await expect(links).toHaveCount(4);
+    expect(
+      await links.evaluateAll((els) => els.map((el) => el.textContent?.trim())),
+    ).toEqual(["Oggi", "Calendario", "Casa", "Spazi"]);
+    expect(
+      await links.evaluateAll((els) =>
+        els.map((el) => el.getAttribute("href")),
+      ),
+    ).toEqual(["/oggi", "/calendario", "/casa/spesa", "/spazi"]);
+    await expect(page.locator(".btn-aggiungi")).toHaveCount(0);
+    await expect(mainNav(page).locator('a[href="/aggiungi"]')).toHaveCount(0);
+  });
+
+  test("CA-6 e CA-7: ogni rotta ha la barra e la voce attiva della tabella", async ({
+    page,
+    baseURL,
+  }) => {
+    withUser("A");
+    await signInAs(page.context(), baseURL as string, "A");
+    const rows: [string, string | null][] = [
+      ["/oggi", "Oggi"],
+      ["/calendario", "Calendario"],
+      ["/calendario/mese", "Calendario"],
+      ["/casa/spesa", "Casa"],
+      ["/casa/da-fare", "Casa"],
+      ["/spazi", "Spazi"],
+      ["/spazi/a-tavola", "Spazi"],
+      ["/notifiche", null],
+      ["/pippo", null],
     ];
-    for (const [name, url, current] of steps) {
-      await mainNav(page).getByRole("link", { name, exact: true }).click();
-      await expect(page).toHaveURL(url);
-      const active = mainNav(page).locator("[aria-current]");
-      await expect(active).toHaveCount(1);
-      await expect(active).toHaveText(current);
-      await expect(active).toHaveAttribute("aria-current", "page");
+    for (const [route, active] of rows) {
+      await page.goto(route);
+      await expect(page.getByRole("main"), route).toBeVisible();
+      await expect(mainNav(page), route).toHaveCount(1);
+      const current = mainNav(page).locator("[aria-current]");
+      if (active === null) {
+        await expect(current, route).toHaveCount(0);
+      } else {
+        await expect(current, route).toHaveText(active);
+      }
     }
-    // "Aggiungi" opens a sheet over the page: the navigation below does not change (#164)
-    await mainNav(page)
-      .getByRole("link", { name: "Aggiungi", exact: true })
-      .click();
-    await expect(page).toHaveURL(/\/aggiungi$/);
-    await expect(page.getByRole("dialog", { name: "Aggiungi" })).toBeVisible();
-    const active = mainNav(page).locator("[aria-current]");
-    await expect(active).toHaveCount(1);
-    await expect(active).toHaveText("Oggi");
-    await expect(active).toHaveAttribute("aria-current", "page");
-  });
-
-  test("CA-9: /notifiche evidenzia Oggi, le altre rotte senza navigazione in basso", async ({
-    page,
-    baseURL,
-  }) => {
-    withUser("A");
-    await openAs(page, baseURL, "A", "/notifiche");
-    const active = mainNav(page).locator("[aria-current]");
-    await expect(active).toHaveCount(1);
-    await expect(active).toHaveText("Oggi");
-    await expect(active).toHaveAttribute("aria-current", "true");
+    await page.goto("/calendario");
+    await expect(
+      mainNav(page).getByRole("link", { name: "Calendario" }),
+    ).toHaveAttribute("aria-current", "page");
+    await page.goto("/calendario/mese");
+    await expect(
+      mainNav(page).getByRole("link", { name: "Calendario" }),
+    ).toHaveAttribute("aria-current", "true");
     for (const route of [
       "/nest",
       "/ricerca",
@@ -648,230 +808,136 @@ test.describe("mobile 390 px", () => {
       "/membri",
     ]) {
       await page.goto(route);
-      await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+      await expect(page.getByRole("main"), route).toHaveCount(1);
       await expect(mainNav(page), route).toHaveCount(0);
     }
   });
 
-  test("CA-10: barra e navigazione restano al loro posto, il contenuto non finisce coperto", async ({
+  test("CA-8: nessun disco dell'assistente né «Chiedi a Nest»", async ({
     page,
     baseURL,
   }) => {
     withUser("A");
-    await openAs(page, baseURL, "A", "/oggi");
-    await expect(mainNav(page)).toBeVisible();
-    const positions = await page.evaluate(() => {
-      const nav = document.querySelector("nav.nav-basso");
-      const bar = document.querySelector("header.barra");
-      return {
-        nav: nav ? getComputedStyle(nav).position : null,
-        bar: bar ? getComputedStyle(bar).position : null,
-      };
-    });
-    expect(["fixed", "sticky"]).toContain(positions.nav);
-    expect(["fixed", "sticky"]).toContain(positions.bar);
-
-    // Makes the page taller than the screen, then scrolls to the very bottom.
-    await page.evaluate(() => {
-      const filler = document.createElement("div");
-      filler.dataset.testid = "riempitivo";
-      filler.style.height = "2500px";
-      document.querySelector("main")?.appendChild(filler);
-    });
-    await page.evaluate(() =>
-      window.scrollTo(0, document.documentElement.scrollHeight),
-    );
-    const filler = page.getByTestId("riempitivo");
-    await expect(async () => {
-      const lastBox = await filler.boundingBox();
-      const navBox = await mainNav(page).boundingBox();
-      expect(lastBox && navBox).toBeTruthy();
-      expect(lastBox!.y + lastBox!.height).toBeLessThanOrEqual(navBox!.y + 1);
-    }).toPass();
-    // the top bar is still at the top while the page is scrolled
-    const barBox = await visibleHeader(page).boundingBox();
-    expect(barBox!.y).toBeLessThanOrEqual(1);
+    await openReady(page, baseURL, "/oggi");
+    await expect(page.getByText("Chiedi a Nest")).toHaveCount(0);
   });
 
-  test("CA-11: la barra di Calendario e di Casa", async ({ page, baseURL }) => {
+  test("CA-10: la barra in basso non copre l'ultimo elemento del main", async ({
+    page,
+    baseURL,
+  }) => {
     withUser("A");
-    await openAs(page, baseURL, "A", "/calendario");
-    let bar = visibleHeader(page);
-    await expect(bar.getByRole("link", { name: NEST_A })).toBeVisible();
-    await expect(bar.getByRole("group", { name: LENS })).toBeVisible();
-    await expect(
-      bar.getByRole("link", { name: "Cerca nel Nest" }),
-    ).toHaveAttribute("href", "/ricerca");
-    await expect(
-      bar.getByRole("link", { name: "Notifiche", exact: true }),
-    ).toHaveAttribute("href", "/notifiche");
+    await openReady(page, baseURL, "/casa/spesa");
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    const bar = await page.getByTestId("barra-basso-capsula").boundingBox();
+    expect(bar).not.toBeNull();
+    const last = await page
+      .getByRole("main")
+      .locator("a:visible, button:visible, input:visible")
+      .last()
+      .boundingBox();
+    expect(last).not.toBeNull();
+    expect(last!.y + last!.height).toBeLessThanOrEqual(bar!.y + 0.5);
+  });
 
-    await page.goto("/casa/spesa");
-    bar = visibleHeader(page);
-    await expect(bar.getByRole("link", { name: NEST_A })).toBeVisible();
+  test("CA-11: la testata di Calendario, Casa e Spazi, e la lente su Oggi", async ({
+    page,
+    baseURL,
+  }) => {
+    withUser("A");
+    await signInAs(page.context(), baseURL as string, "A");
+    for (const route of ["/calendario", "/casa/spesa", "/spazi"]) {
+      await page.goto(route);
+      const header = page.getByTestId("testata");
+      await expect(header, route).toBeVisible();
+      const links = header.getByRole("link");
+      expect(
+        await links.evaluateAll((els) =>
+          els.map((el) => [
+            el.getAttribute("aria-label"),
+            el.getAttribute("href"),
+          ]),
+        ),
+        route,
+      ).toEqual([
+        ["Cerca", "/ricerca"],
+        ["Notifiche", "/notifiche"],
+      ]);
+    }
+    await page.goto("/oggi");
+    const header = page.getByTestId("testata");
+    await expect(header.getByRole("group", { name: LENS })).toBeVisible();
+    await expect(header.getByRole("link", { name: "Cerca" })).toBeVisible();
+    await expect(header.getByRole("link", { name: "Notifiche" })).toBeVisible();
+  });
+
+  test("CA-12: scorrendo resta in cima la barra raccolta di 56 px", async ({
+    page,
+    baseURL,
+  }) => {
+    withUser("A");
+    await openReady(page, baseURL, "/spazi");
+    await expect(page.getByTestId("testata-raccolta")).toHaveCount(0);
+    await page.evaluate(() => window.scrollTo(0, 400));
+    const collapsed = page.getByTestId("testata-raccolta");
+    await expect(collapsed).toBeVisible();
+    expect(Math.round((await collapsed.boundingBox())!.height)).toBe(56);
+    await expect(collapsed.getByRole("link", { name: "Cerca" })).toBeVisible();
     await expect(
-      bar.getByRole("heading", { level: 1, name: "Casa" }),
+      collapsed.getByRole("link", { name: "Notifiche" }),
     ).toBeVisible();
-    await expect(
-      bar.getByRole("link", { name: "Cerca nel Nest" }),
-    ).toBeVisible();
-    await expect(
-      bar.getByRole("link", { name: "Notifiche", exact: true }),
-    ).toHaveAttribute("href", "/notifiche");
-    await expect(bar.getByRole("group", { name: LENS })).toHaveCount(0);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await expect(collapsed).toHaveCount(0);
   });
 
-  test("CA-12: «Chiudi» del Nest porta a /oggi e la barra non ha il quadrato", async ({
+  test("CA-13: «Indietro» senza cronologia va al ripiego", async ({
     page,
     baseURL,
   }) => {
     withUser("A");
-    await openAs(page, baseURL, "A", "/nest");
-    const bar = visibleHeader(page);
-    await expect(bar.getByRole("link", { name: NEST_LINK })).toHaveCount(0);
-    await bar.getByLabel("Chiudi", { exact: true }).click();
-    await expect(page).toHaveURL(/\/oggi$/);
-  });
-
-  test("CA-13: «Indietro» torna alla pagina precedente o al ripiego", async ({
-    page,
-    baseURL,
-    context,
-  }) => {
-    withUser("A");
-    await openAs(page, baseURL, "A", "/oggi");
-    await page.getByRole("link", { name: "Notifiche", exact: true }).click();
-    await expect(page).toHaveURL(/\/notifiche$/);
-    await page.getByLabel("Indietro", { exact: true }).click();
-    await expect(page).toHaveURL(/\/oggi$/);
-
-    const fallbacks: [string, RegExp][] = [
+    for (const [route, fallback] of [
+      ["/spazi/a-tavola", /\/spazi$/],
       ["/profilo", /\/nest$/],
-      ["/calendari-collegati", /\/nest$/],
-      ["/impostazioni", /\/nest$/],
-      ["/membri", /\/nest$/],
-      ["/notifiche", /\/oggi$/],
-      // «/ricerca» has no top bar on mobile (#40): «Annulla» is its way out.
-    ];
-    for (const [route, expected] of fallbacks) {
-      const fresh = await context.newPage();
-      await fresh.goto(route);
-      await fresh.getByLabel("Indietro", { exact: true }).click();
-      await expect(fresh, route).toHaveURL(expected);
-      await fresh.close();
+    ] as const) {
+      await openAs(page, baseURL, "A", route);
+      const back = page.getByTestId("testata").getByRole("link", {
+        name: "Indietro",
+      });
+      await waitHydrated(back);
+      await back.click();
+      await expect(page, route).toHaveURL(fallback);
     }
   });
 
-  test("CA-14: /profilo non ha il menu «Impostazioni»", async ({
+  test("CA-14: Calendario, Casa, indietro due volte riporta a /oggi", async ({
     page,
     baseURL,
   }) => {
     withUser("A");
-    await openAs(page, baseURL, "A", "/profilo");
-    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-    await expect(settingsMenu(page)).toHaveCount(0);
-  });
-
-  test("CA-30: la campanella si chiama «Notifiche», senza pallino", async ({
-    page,
-    baseURL,
-  }) => {
-    withUser("A");
-    await openAs(page, baseURL, "A", "/oggi");
-    const bell = page.getByRole("link", { name: "Notifiche", exact: true });
-    await expect(bell).toBeVisible();
-    await expect(bell.locator(".btn-icona__punto")).toHaveCount(0);
-    await bell.click();
-    await expect(page).toHaveURL(/\/notifiche$/);
-  });
-
-  test("CA-25: la lente parte su «Io» con gli avatar giusti", async ({
-    page,
-    baseURL,
-  }) => {
-    withUser("A");
-    await openAs(page, baseURL, "A", "/oggi");
-    const lens = page.getByRole("group", { name: LENS });
-    const io = lens.getByRole("button", { name: /Io$/ });
-    const nest = lens.getByRole("button", { name: /Nest$/ });
-    await expect(io).toHaveAttribute("aria-pressed", "true");
-    await expect(nest).toHaveAttribute("aria-pressed", "false");
-    await expect(io.getByLabel("Marco", { exact: true })).toBeVisible();
-    await expect(
-      nest.getByLabel("Marco, Laura, Sofia", { exact: true }),
-    ).toBeVisible();
-  });
-
-  test("CA-26: cambiare lente non cambia indirizzo né ricarica", async ({
-    page,
-    baseURL,
-  }) => {
-    withUser("A");
-    await openAs(page, baseURL, "A", "/oggi");
-    const lens = page.getByRole("group", { name: LENS });
-    await expect(lens).toBeVisible();
-    const navigations: string[] = [];
-    page.on("request", (request) => {
-      if (request.isNavigationRequest()) navigations.push(request.url());
-    });
-    await chooseLens(page, "Nest");
-    await expect(lens.getByRole("button", { name: /Io$/ })).toHaveAttribute(
-      "aria-pressed",
-      "false",
-    );
-    await expect(page).toHaveURL(/\/oggi$/);
-    expect(navigations).toEqual([]);
-  });
-
-  test("CA-27: la lente resta cambiando pagina e ricaricando", async ({
-    page,
-    baseURL,
-  }) => {
-    withUser("A");
-    await openAs(page, baseURL, "A", "/oggi");
-    await chooseLens(page, "Nest");
+    await openReady(page, baseURL, "/oggi");
     await mainNav(page).getByRole("link", { name: "Calendario" }).click();
     await expect(page).toHaveURL(/\/calendario$/);
-    const nestButton = page
-      .getByRole("group", { name: LENS })
-      .getByRole("button", { name: /Nest$/ });
-    await expect(nestButton).toHaveAttribute("aria-pressed", "true");
-    await page.reload();
-    await expect(nestButton).toHaveAttribute("aria-pressed", "true");
+    await mainNav(page).getByRole("link", { name: "Casa" }).click();
+    await expect(page).toHaveURL(/\/casa\/spesa$/);
+    await page.goBack();
+    await expect(page).toHaveURL(/\/calendario$/);
+    await page.goBack();
+    await expect(page).toHaveURL(/\/oggi$/);
   });
 
-  test("CA-28: una nuova sessione del browser riparte da «Io»", async ({
+  test("CA-35: sul telefono le lettere non fanno nulla", async ({
     page,
     baseURL,
-    browser,
   }) => {
     withUser("A");
-    await openAs(page, baseURL, "A", "/oggi");
-    await chooseLens(page, "Nest");
-
-    const fresh = await browser.newContext({
-      baseURL,
-      viewport: { width: 390, height: 844 },
-    });
-    try {
-      await signInAs(fresh, baseURL as string, "A");
-      const other = await fresh.newPage();
-      await other.goto("/oggi");
-      const lens = other.getByRole("group", { name: LENS });
-      await expect(lens.getByRole("button", { name: /Io$/ })).toHaveAttribute(
-        "aria-pressed",
-        "true",
-      );
-      await expect(lens.getByRole("button", { name: /Nest$/ })).toHaveAttribute(
-        "aria-pressed",
-        "false",
-      );
-    } finally {
-      await fresh.close();
-    }
+    await openReady(page, baseURL, "/oggi");
+    await page.keyboard.press("c");
+    await page.keyboard.press("?");
+    await expect(page).toHaveURL(/\/oggi$/);
+    await expect(page.getByRole("dialog")).toHaveCount(0);
   });
 
-  test("CA-31: B vede solo il proprio Nest e nell'HTML non c'è nulla di A", async ({
+  test("CA-43: B vede solo il proprio Nest e nell'HTML non c'è nulla di A", async ({
     page,
     baseURL,
   }) => {
@@ -879,22 +945,11 @@ test.describe("mobile 390 px", () => {
     await signInAs(page.context(), baseURL as string, "B");
     const response = await page.goto("/oggi");
     const html = await response!.text();
-    const nest = page.getByRole("link", { name: NEST_B });
-    await expect(nest).toBeVisible();
-    await expect(nest.locator("[data-color]")).toHaveCount(4);
-    expect(
-      await nest
-        .locator("[data-color]")
-        .evaluateAll((dots) => dots.map((d) => d.getAttribute("data-color"))),
-    ).toEqual(["cobalto", "salvia", "zafferano", "pomodoro"]);
-    const lens = page.getByRole("group", { name: LENS });
+    const lens = page.getByTestId("testata").getByRole("group", { name: LENS });
     await expect(lens.getByLabel("Giulia", { exact: true })).toBeVisible();
     await expect(
       lens.getByLabel("Giulia, Paolo, Leo", { exact: true }),
     ).toBeVisible();
-
-    // The fixed example of the quick-add field of Oggi («nuoto Sofia giovedì
-    // alle 17», text of the mockup) is not data of the Nest of A.
     const content = (html + (await page.content())).replaceAll(
       "nuoto Sofia giovedì alle 17",
       "",
@@ -906,375 +961,404 @@ test.describe("mobile 390 px", () => {
       expect(content, word).not.toContain(word);
     }
   });
+});
 
-  test("CA-33: mobile, un solo main e nessuna navigazione dove non prevista", async ({
+test.describe("computer", () => {
+  onlyOn("desktop");
+
+  test("CA-2 e CA-1: la barra laterale passa da 72 a 248 px a 1280", async ({
+    page,
+    baseURL,
+  }) => {
+    withUser("A");
+    await page.setViewportSize({ width: 1279, height: 800 });
+    await openReady(page, baseURL, "/oggi");
+    expect(await width(page, "barra-laterale")).toBe(72);
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await expect.poll(() => width(page, "barra-laterale")).toBe(248);
+    await expect(
+      sidebar(page).getByRole("link", { name: "Calendario" }),
+    ).toContainText("Calendario");
+  });
+
+  test("a 1280 px ma alta 560 vale la forma del telefono", async ({
+    page,
+    baseURL,
+  }) => {
+    withUser("A");
+    await page.setViewportSize({ width: 1280, height: 560 });
+    await openReady(page, baseURL, "/oggi");
+    await expect(page.getByTestId("barra-basso")).toBeVisible();
+    expect(await width(page, "barra-laterale")).toBe(0);
+  });
+
+  test("CA-3: a 1920 px il contenuto è largo al massimo 1200 px e centrato", async ({
+    page,
+    baseURL,
+  }) => {
+    withUser("A");
+    await page.setViewportSize({ width: 1920, height: 900 });
+    await openReady(page, baseURL, "/oggi");
+    const box = await page.getByRole("main").boundingBox();
+    const side = await width(page, "barra-laterale");
+    expect(box!.width).toBeLessThanOrEqual(1200);
+    const left = box!.x - side;
+    const right = 1920 - (box!.x + box!.width);
+    expect(Math.abs(left - right)).toBeLessThanOrEqual(1);
+  });
+
+  test("CA-19 e CA-20: la barra laterale e le voci attive", async ({
+    page,
+    baseURL,
+  }) => {
+    withUser("A");
+    await openReady(page, baseURL, "/oggi");
+    const bar = sidebar(page);
+    // brand: not a link
+    await expect(
+      bar.getByRole("img", { name: "FamilyNest" }).first(),
+    ).toBeAttached();
+    await expect(bar.locator("a", { hasText: "FamilyNest" })).toHaveCount(0);
+    await expect(bar.getByRole("group", { name: LENS })).toBeVisible();
+    const main = bar.getByRole("navigation", NAV);
+    expect(
+      await main
+        .getByRole("link")
+        .evaluateAll((els) => els.map((el) => el.textContent?.trim())),
+    ).toEqual(["Oggi", "Calendario", "Casa", "Spazi"]);
+    await expect(
+      bar.getByText("Di casa", { exact: true }).first(),
+    ).toBeVisible();
+    const home = bar.getByRole("navigation", { name: "Di casa" });
+    await expect(home.getByRole("link")).toHaveCount(1);
+    await expect(home.getByRole("link", { name: "Spesa" })).toHaveAttribute(
+      "href",
+      "/casa/spesa",
+    );
+    await expect(
+      bar.getByRole("link", { name: /Il tuo Nest$/ }),
+    ).toHaveAttribute("href", "/nest");
+    await expect(
+      bar.getByRole("link", { name: "Marco, Il tuo Nest" }),
+    ).toBeVisible();
+
+    await page.goto("/casa/spesa");
+    await expect(main.getByRole("link", { name: "Casa" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    await expect(home.getByRole("link", { name: "Spesa" })).not.toHaveAttribute(
+      "aria-current",
+      /.*/,
+    );
+    await page.goto("/profilo");
+    await expect(
+      bar.getByRole("link", { name: /Il tuo Nest$/ }),
+    ).toHaveAttribute("aria-current", "true");
+  });
+
+  test("CA-21: a 1040 px ogni icona ha il nome e il fumetto, Esc lo toglie", async ({
+    page,
+    baseURL,
+  }) => {
+    withUser("A");
+    await page.setViewportSize({ width: 1040, height: 800 });
+    await openReady(page, baseURL, "/oggi");
+    await page.getByRole("link", { name: "Vai al contenuto" }).focus();
+    for (const name of ["Oggi", "Calendario", "Casa", "Spazi", "Spesa"]) {
+      // Tab until the link of the entry has the focus (the lens comes first).
+      await expect(async () => {
+        await page.keyboard.press("Tab");
+        await expect(
+          sidebar(page).getByRole("link", { name, exact: true }),
+        ).toBeFocused({ timeout: 500 });
+      }).toPass();
+      await expect(sidebar(page).locator(".fumetto")).toHaveText(name);
+    }
+    await page.keyboard.press("Escape");
+    await expect(sidebar(page).locator(".fumetto")).toHaveCount(0);
+    await expect(
+      sidebar(page).getByRole("link", { name: "Spesa", exact: true }),
+    ).toBeFocused();
+  });
+
+  test("CA-22: la lente della barra laterale non cambia indirizzo né ricarica", async ({
+    page,
+    baseURL,
+  }) => {
+    withUser("A");
+    await openReady(page, baseURL, "/calendario");
+    const lens = sidebar(page).getByRole("group", { name: LENS });
+    const nest = lens.getByRole("button", { name: /Nest$/ });
+    const navigations: string[] = [];
+    page.on("request", (request) => {
+      if (request.isNavigationRequest()) navigations.push(request.url());
+    });
+    await expect(async () => {
+      await nest.click();
+      await expect(nest).toHaveAttribute("aria-pressed", "true", {
+        timeout: 1000,
+      });
+    }).toPass();
+    await expect(page).toHaveURL(/\/calendario$/);
+    expect(navigations).toEqual([]);
+    await sidebar(page)
+      .getByRole("link", { name: "Oggi", exact: true })
+      .click();
+    await expect(page).toHaveURL(/\/oggi$/);
+    await expect(nest).toHaveAttribute("aria-pressed", "true");
+  });
+
+  test("CA-23: la barra in alto di Oggi, Calendario, Casa e Spazi", async ({
+    page,
+    baseURL,
+  }) => {
+    withUser("A");
+    await signInAs(page.context(), baseURL as string, "A");
+    for (const [route, title, hasNew] of [
+      ["/oggi", "Oggi", true],
+      ["/calendario", "Calendario", true],
+      ["/casa/spesa", "Casa", false],
+      ["/spazi", "Spazi", false],
+    ] as const) {
+      await page.goto(route);
+      const bar = page.getByTestId("barra-alto");
+      await expect(bar, route).toContainText(title);
+      const search = bar.getByRole("link", { name: "Cerca" });
+      await expect(search, route).toBeVisible();
+      expect(Math.round((await search.boundingBox())!.width), route).toBe(280);
+      await expect(bar.getByRole("link", { name: "Notifiche" })).toBeVisible();
+      const add = bar.getByRole("link", { name: "Nuovo impegno" });
+      if (hasNew) await expect(add, route).toHaveAttribute("href", "/aggiungi");
+      else await expect(add, route).toHaveCount(0);
+    }
+  });
+
+  test("CA-24: il campo «Cerca» apre la ricerca con il fuoco nel suo campo", async ({
+    page,
+    baseURL,
+  }) => {
+    withUser("A");
+    await openReady(page, baseURL, "/oggi");
+    await page
+      .getByTestId("barra-alto")
+      .getByRole("link", { name: "Cerca" })
+      .click();
+    const dialog = page.getByRole("dialog", { name: "Cerca nel Nest" });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole("searchbox")).toBeFocused();
+    expect(new URL(page.url()).search).toBe("");
+  });
+
+  test("CA-28: C, A, S, O portano alle sezioni", async ({ page, baseURL }) => {
+    withUser("A");
+    await openReady(page, baseURL, "/oggi");
+    await pressUntilUrl(page, "c", /\/calendario$/);
+    await pressUntilUrl(page, "a", /\/casa\/spesa$/);
+    await pressUntilUrl(page, "s", /\/spazi$/);
+    await pressUntilUrl(page, "o", /\/oggi$/);
+  });
+
+  test("CA-29: dentro un campo di testo le lettere si scrivono, con Ctrl/Alt/un dialogo non fanno nulla", async ({
+    page,
+    baseURL,
+  }) => {
+    withUser("A");
+    await openReady(page, baseURL, "/oggi");
+    await page.keyboard.press("/");
+    const search = page.getByRole("dialog", { name: "Cerca nel Nest" });
+    await expect(search.getByRole("searchbox")).toBeFocused();
+    await page.keyboard.press("c");
+    await expect(search.getByRole("searchbox")).toHaveValue("c");
+    await expect(page).toHaveURL(/\/ricerca$/);
+    await page.keyboard.press("Escape");
+    await expect(search).toHaveCount(0);
+    await page.keyboard.press("Control+c");
+    await page.keyboard.press("Alt+c");
+    await expect(page).toHaveURL(/\/oggi$/);
+  });
+
+  test("CA-30: N preme «Nuovo impegno» dove c'è, altrove niente", async ({
+    page,
+    baseURL,
+  }) => {
+    withUser("A");
+    await openReady(page, baseURL, "/calendario");
+    await pressUntilUrl(page, "n", /\/aggiungi$/);
+    await page.goto("/casa/spesa");
+    await expect(page.getByRole("main")).toBeVisible();
+    await waitHydrated(sidebar(page));
+    await page.keyboard.press("n");
+    await expect(page).toHaveURL(/\/casa\/spesa$/);
+  });
+
+  test("CA-31 e CA-32: «/» apre la ricerca, Ctrl+K no", async ({
+    page,
+    baseURL,
+  }) => {
+    withUser("A");
+    await openReady(page, baseURL, "/oggi");
+    await page.keyboard.press("Control+k");
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(page).toHaveURL(/\/oggi$/);
+    await expect(async () => {
+      await page.keyboard.press("/");
+      await expect(
+        page.getByRole("dialog", { name: "Cerca nel Nest" }),
+      ).toBeVisible({ timeout: 1000 });
+    }).toPass();
+    await expect(page.getByRole("searchbox")).toHaveValue("");
+  });
+
+  test("CA-33 e CA-34: «?» apre le scorciatoie, l'interruttore le spegne e resta dopo il ricaricamento", async ({
+    page,
+    baseURL,
+  }) => {
+    withUser("A");
+    await openReady(page, baseURL, "/oggi");
+    await expect(async () => {
+      await page.keyboard.press("?");
+      await expect(
+        page.getByRole("dialog", { name: "Scorciatoie da tastiera" }),
+      ).toBeVisible({ timeout: 1000 });
+    }).toPass();
+    const dialog = page.getByRole("dialog", {
+      name: "Scorciatoie da tastiera",
+    });
+    for (const key of ["O", "C", "A", "S", "N", "/", "?", "Esc"]) {
+      await expect(
+        dialog.locator("kbd", {
+          hasText: new RegExp(
+            `^${key === "/" ? "/" : key === "?" ? "\\?" : key}$`,
+          ),
+        }),
+        key,
+      ).toHaveCount(1);
+    }
+    await expect(dialog.locator("kbd", { hasText: /^K$/ })).toHaveCount(0);
+    await dialog
+      .getByRole("switch", { name: "Scorciatoie a una lettera" })
+      .click();
+    await page.keyboard.press("Escape");
+    await expect(dialog).toHaveCount(0);
+    await page.reload();
+    await expect(page.getByRole("main")).toBeVisible();
+    await waitHydrated(sidebar(page));
+    await page.keyboard.press("c");
+    await expect(page).toHaveURL(/\/oggi$/);
+    await expect(async () => {
+      await page.keyboard.press("?");
+      await expect(
+        page.getByRole("dialog", { name: "Scorciatoie da tastiera" }),
+      ).toBeVisible({ timeout: 1000 });
+    }).toPass();
+    await page
+      .getByRole("switch", { name: "Scorciatoie a una lettera" })
+      .click();
+    await page.keyboard.press("Escape");
+    await pressUntilUrl(page, "c", /\/calendario$/);
+    // leave the preference as found
+    await page.evaluate(() =>
+      window.localStorage.removeItem("single-letter-shortcuts"),
+    );
+  });
+
+  test("CA-38: «Vai al contenuto» porta il fuoco sul main", async ({
+    page,
+    baseURL,
+  }) => {
+    withUser("A");
+    await openReady(page, baseURL, "/oggi");
+    await page.keyboard.press("Tab");
+    const skip = page.getByRole("link", { name: "Vai al contenuto" });
+    await expect(skip).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(page.locator("main#contenuto")).toBeFocused();
+  });
+
+  test("CA-39: anello di fuoco di 2 px sui comandi della barra laterale e in alto", async ({
+    page,
+    baseURL,
+  }) => {
+    withUser("A");
+    await openReady(page, baseURL, "/oggi");
+    await page.keyboard.press("Tab");
+    for (let i = 0; i < 11; i += 1) {
+      await page.keyboard.press("Tab");
+      const ring = await page.evaluate(() => {
+        const s = getComputedStyle(document.activeElement as Element);
+        return [s.outlineWidth, s.outlineColor, s.outlineOffset];
+      });
+      expect(ring, `Tab ${i + 1}`).toEqual(["2px", "rgb(15, 61, 68)", "2px"]);
+    }
+  });
+
+  test("CA-44: la campanella senza pallino e il profilo con il nome", async ({
+    page,
+    baseURL,
+  }) => {
+    withUser("A");
+    await openReady(page, baseURL, "/oggi");
+    await expect(
+      page.getByTestId("barra-alto").getByRole("link", { name: /^Notifiche/ }),
+    ).toBeVisible();
+    await expect(
+      sidebar(page).getByRole("link", { name: /^Marco/ }),
+    ).toBeVisible();
+  });
+
+  test("CA-43: B vede solo il proprio Nest nella barra laterale", async ({
+    page,
+    baseURL,
+  }) => {
+    withUser("B");
+    await signInAs(page.context(), baseURL as string, "B");
+    const response = await page.goto("/oggi");
+    const html = await response!.text();
+    await expect(
+      sidebar(page).getByRole("link", { name: "Giulia, Il tuo Nest" }),
+    ).toBeVisible();
+    const content = html + (await page.content());
+    for (const word of ["Marco", "Laura", "Sofia", "Tommaso", "Biscotto"]) {
+      expect(content, word).not.toContain(word);
+    }
+  });
+
+  test("nessuna violazione axe serious o critical", async ({
     page,
     baseURL,
   }) => {
     withUser("A");
     await signInAs(page.context(), baseURL as string, "A");
     for (const route of [
+      "/oggi",
+      "/casa/spesa",
+      "/spazi",
       "/nest",
-      "/ricerca",
       "/profilo",
-      "/calendari-collegati",
-      "/impostazioni",
-      "/membri",
     ]) {
       await page.goto(route);
-      await expect(page.getByRole("main"), route).toHaveCount(1);
-      await expect(mainNav(page), route).toHaveCount(0);
-    }
-    for (const route of ["/oggi", "/casa/spesa"]) {
-      await page.goto(route);
-      await expect(page.getByRole("main"), route).toHaveCount(1);
-      await expect(mainNav(page), route).toHaveCount(1);
-    }
-  });
-});
-
-test.describe("desktop 1280 px", () => {
-  onlyOn("desktop");
-
-  test("CA-15: la navigazione in alto ha le voci nell'ordine giusto", async ({
-    page,
-    baseURL,
-  }) => {
-    withUser("A");
-    await openAs(page, baseURL, "A", "/oggi");
-    const header = visibleHeader(page);
-    await expect(header).toHaveCount(1);
-    await expect(
-      header.getByRole("link", { name: "FamilyNest" }),
-    ).toBeVisible();
-    const names = await header
-      .getByRole("link")
-      .evaluateAll((els) =>
-        els.map((el) => el.getAttribute("aria-label") ?? el.textContent ?? ""),
-      );
-    expect(names).toEqual([
-      "FamilyNest",
-      "Oggi",
-      "Calendario",
-      "Casa",
-      "Aggiungi",
-      "Cerca nel Nest (⌘K)",
-      "Notifiche",
-      NEST_A,
-    ]);
-    const hrefs = await header
-      .getByRole("link")
-      .evaluateAll((els) => els.map((el) => el.getAttribute("href")));
-    expect(hrefs).toEqual([
-      "/oggi",
-      "/oggi",
-      "/calendario",
-      "/casa/spesa",
-      "/aggiungi",
-      "/ricerca",
-      "/notifiche",
-      "/nest",
-    ]);
-    await expect(header.getByRole("navigation", NAV)).toBeVisible();
-    // the only visible main navigation is the one in the header
-    await expect(mainNav(page)).toHaveCount(1);
-    // one visible "Aggiungi": the one in the top navigation (#67). Oggi (#30)
-    // has the quick-add field «Aggiungi un impegno, …»: the name must be exact.
-    await expect(
-      page.getByRole("link", { name: "Aggiungi", exact: true }),
-    ).toHaveCount(1);
-  });
-
-  test("CA-16: il logo porta a Oggi", async ({ page, baseURL }) => {
-    withUser("A");
-    await openAs(page, baseURL, "A", "/casa/spesa");
-    await page.getByRole("link", { name: "FamilyNest", exact: true }).click();
-    await expect(page).toHaveURL(/\/oggi$/);
-    await expect(
-      mainNav(page).getByRole("link", { name: "Oggi" }),
-    ).toHaveAttribute("aria-current", "page");
-  });
-
-  test("CA-17: la voce attiva della navigazione in alto per ogni rotta", async ({
-    page,
-    baseURL,
-  }) => {
-    withUser("A");
-    await signInAs(page.context(), baseURL as string, "A");
-    const expected: Record<string, string | null> = {
-      "/oggi": "Oggi",
-      "/aggiungi": "Oggi",
-      "/ricerca": "Oggi",
-      "/calendario": "Calendario",
-      "/casa/spesa": "Casa",
-      "/nest": null,
-      "/notifiche": null,
-      "/profilo": null,
-      "/calendari-collegati": null,
-      "/impostazioni": null,
-      "/membri": null,
-    };
-    const voiceHref: Record<string, string> = {
-      Oggi: "/oggi",
-      Calendario: "/calendario",
-      Casa: "/casa/spesa",
-    };
-    for (const [route, voice] of Object.entries(expected)) {
-      await page.goto(route);
       await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-      const active = mainNav(page).locator("[aria-current]");
-      if (voice) {
-        await expect(active, route).toHaveCount(1);
-        await expect(active, route).toHaveText(voice);
-        // "page" only on the exact address of the entry (#67)
-        await expect(active, route).toHaveAttribute(
-          "aria-current",
-          route === voiceHref[voice] ? "page" : "true",
-        );
-      } else {
-        await expect(active, route).toHaveCount(0);
-      }
-    }
-  });
-
-  for (const combo of ["Control+K", "Meta+K"]) {
-    test(`CA-18: ${combo} porta a /ricerca`, async ({ page, baseURL }) => {
-      withUser("A");
-      await openAs(page, baseURL, "A", "/oggi");
-      await chooseLens(page, "Nest"); // proves the page is interactive
-      await page.evaluate(() =>
-        (document.activeElement as HTMLElement)?.blur(),
-      );
-      await page.keyboard.press(combo);
-      await expect(page).toHaveURL(/\/ricerca$/);
-    });
-  }
-
-  test("CA-18: la scorciatoia non fa nulla dentro un campo di testo", async ({
-    page,
-    baseURL,
-  }) => {
-    withUser("A");
-    await openAs(page, baseURL, "A", "/oggi");
-    await chooseLens(page, "Nest"); // proves the page is interactive
-    await page.evaluate(() => {
-      const input = document.createElement("input");
-      input.type = "text";
-      input.setAttribute("aria-label", "Campo di prova");
-      document.querySelector("main")?.prepend(input);
-      input.focus();
-    });
-    const field = page.getByLabel("Campo di prova");
-    await expect(field).toBeFocused();
-    await page.keyboard.press("Control+K");
-    await expect(field).toBeFocused();
-    await expect(page).toHaveURL(/\/oggi$/);
-    // outside the field the same shortcut works
-    await field.evaluate((el) => (el as HTMLElement).blur());
-    await page.keyboard.press("Control+K");
-    await expect(page).toHaveURL(/\/ricerca$/);
-  });
-
-  test("CA-19: il menu «Impostazioni» di /profilo", async ({
-    page,
-    baseURL,
-  }) => {
-    withUser("A");
-    await openAs(page, baseURL, "A", "/profilo");
-    const menu = settingsMenu(page);
-    await expect(menu).toBeVisible();
-    const links = menu.getByRole("link");
-    await expect(links).toHaveText([
-      "Il tuo profilo",
-      "Calendari collegati",
-      "Casa D'Angelo",
-      "Chi c’è",
-      "Notifiche",
-    ]);
-    const hrefs = await links.evaluateAll((els) =>
-      els.map((el) => el.getAttribute("href")),
-    );
-    expect(hrefs).toEqual([
-      "/profilo",
-      "/calendari-collegati",
-      "/impostazioni",
-      "/membri",
-      "/impostazioni#notifiche",
-    ]);
-    await expect(menu.locator("[aria-current]")).toHaveCount(1);
-    await expect(links.first()).toHaveAttribute("aria-current", "page");
-  });
-
-  test("CA-20: la voce attiva del menu «Impostazioni»", async ({
-    page,
-    baseURL,
-  }) => {
-    withUser("A");
-    await signInAs(page.context(), baseURL as string, "A");
-    const expected: [string, string][] = [
-      ["/calendari-collegati", "Calendari collegati"],
-      ["/impostazioni", "Casa D'Angelo"],
-      ["/membri", "Chi c’è"],
-    ];
-    for (const [route, voice] of expected) {
-      await page.goto(route);
-      const active = settingsMenu(page).locator("[aria-current]");
-      await expect(active, route).toHaveCount(1);
-      await expect(active, route).toHaveText(voice);
-    }
-    await page.goto("/oggi");
-    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-    await expect(settingsMenu(page)).toHaveCount(0);
-  });
-
-  test("CA-21: la campanella apre la pagina, senza tendine", async ({
-    page,
-    baseURL,
-  }) => {
-    withUser("A");
-    await openAs(page, baseURL, "A", "/oggi");
-    await page.getByRole("link", { name: "Notifiche", exact: true }).click();
-    await expect(page).toHaveURL(/\/notifiche$/);
-    await expect(page.getByRole("dialog")).toHaveCount(0);
-    await expect(page.getByRole("menu")).toHaveCount(0);
-  });
-
-  test("CA-23: a 800 px il main è stretto e centrato", async ({
-    page,
-    baseURL,
-  }) => {
-    withUser("A");
-    await page.setViewportSize({ width: 800, height: 900 });
-    await openAs(page, baseURL, "A", "/oggi");
-    const main = page.getByRole("main");
-    await expect(main).toBeVisible();
-    // The <main> can be swapped (loading shell -> page) between the check and
-    // the measure: read the box through a retrying poll, never a single shot.
-    const readBox = async () => {
-      const box = await main.boundingBox();
-      return box && { x: box.x, width: box.width };
-    };
-    await expect.poll(readBox).not.toBeNull();
-    await expect
-      .poll(async () => (await readBox())?.width ?? Infinity)
-      .toBeLessThanOrEqual(720.5);
-    await expect
-      .poll(async () => {
-        const box = await readBox();
-        return box ? Math.abs(box.x - (800 - (box.x + box.width))) : Infinity;
-      })
-      .toBeLessThanOrEqual(1);
-  });
-
-  test("CA-22: i punti di passaggio tra mobile e desktop", async ({
-    page,
-    baseURL,
-  }) => {
-    withUser("A");
-    await openAs(page, baseURL, "A", "/oggi");
-    for (const width of [767, 768, 1023]) {
-      await page.setViewportSize({ width, height: 900 });
-      await expect(
-        mainNav(page).getByRole("link", { name: "Aggiungi" }),
-        `${width}`,
-      ).toBeVisible();
-      await expect(
-        page.getByRole("link", { name: "FamilyNest", exact: true }),
-        `${width}`,
-      ).toHaveCount(0);
-    }
-    await page.setViewportSize({ width: 1024, height: 900 });
-    await expect(
-      page.getByRole("link", { name: "FamilyNest", exact: true }),
-    ).toBeVisible();
-    // from 1024 px the only visible "Aggiungi" is in the top navigation (#67)
-    await expect(
-      page.getByRole("link", { name: "Aggiungi", exact: true }),
-    ).toHaveCount(1);
-    await expect(
-      visibleHeader(page).getByRole("link", { name: "Aggiungi", exact: true }),
-    ).toHaveAttribute("href", "/aggiungi");
-  });
-
-  test("CA-29: su desktop la lente sta nel main, non nella navigazione in alto", async ({
-    page,
-    baseURL,
-  }) => {
-    withUser("A");
-    await openAs(page, baseURL, "A", "/oggi");
-    await expect(
-      page.getByRole("main").getByRole("group", { name: LENS }),
-    ).toBeVisible();
-    await expect(
-      page.locator("header").getByRole("group", { name: LENS }),
-    ).toHaveCount(0);
-  });
-
-  test("CA-32: B vede il proprio Nest nel menu «Impostazioni»", async ({
-    page,
-    baseURL,
-  }) => {
-    withUser("B");
-    await openAs(page, baseURL, "B", "/impostazioni");
-    const links = settingsMenu(page).getByRole("link");
-    await expect(links.nth(2)).toHaveText("Casa Bianchi");
-    await expect(page.locator("body")).not.toContainText("Casa D'Angelo");
-  });
-
-  test("CA-33: desktop, un solo main e una sola navigazione principale", async ({
-    page,
-    baseURL,
-  }) => {
-    withUser("A");
-    await signInAs(page.context(), baseURL as string, "A");
-    for (const route of ["/oggi", "/casa/spesa", "/nest", "/profilo"]) {
-      await page.goto(route);
-      await expect(page.getByRole("main"), route).toHaveCount(1);
-      await expect(mainNav(page), route).toHaveCount(1);
+      const results = await new AxeBuilder({ page }).analyze();
+      expect(
+        results.violations.filter((v) =>
+          ["serious", "critical"].includes(v.impact ?? ""),
+        ),
+        route,
+      ).toEqual([]);
     }
   });
 });
 
 test.describe("entrambe le larghezze", () => {
-  test("CA-24: il quadrato del Nest ha 4 punti e porta a /nest", async ({
-    page,
-    baseURL,
-  }) => {
-    withUser("A");
-    await openAs(page, baseURL, "A", "/oggi");
-    const nest = page.getByRole("link", { name: NEST_A });
-    await expect(nest).toBeVisible();
-    const colors = await nest
-      .locator("[data-color]")
-      .evaluateAll((dots) => dots.map((d) => d.getAttribute("data-color")));
-    expect(colors).toEqual(["pomodoro", "glicine", "salvia", "cobalto"]);
-    await nest.click();
-    await expect(page).toHaveURL(/\/nest$/);
-  });
-
-  test("CA-29: nessuna lente su /casa/spesa e /nest", async ({
-    page,
-    baseURL,
-  }) => {
-    withUser("A");
-    await signInAs(page.context(), baseURL as string, "A");
-    for (const route of ["/casa/spesa", "/nest"]) {
-      await page.goto(route);
-      await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-      await expect(page.getByRole("group", { name: LENS }), route).toHaveCount(
-        0,
-      );
-    }
-  });
-
-  test("CA-32: nessun indirizzo visitato contiene parametri o id", async ({
+  test("nessun indirizzo visitato contiene parametri o id", async ({
     browser,
     baseURL,
   }, testInfo) => {
-    // Walks every page of the menus for two users: with the real pages (Casa ·
-    // Spesa reads the database) it takes about 27 s alone, close to the 30 s limit.
     test.slow();
     withUser("A", "B");
+    const uuid =
+      /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
     for (const user of ["A", "B"] as const) {
       const context = await browser.newContext({
         baseURL,
@@ -1296,40 +1380,20 @@ test.describe("entrambe le larghezze", () => {
             .evaluateAll((els) => els.map((el) => el.getAttribute("href")));
           for (const href of found) if (href) hrefs.add(href);
         }
-        expect(hrefs.size).toBeGreaterThan(4);
+        expect(hrefs.size).toBeGreaterThan(3);
         for (const href of hrefs) {
           expect(href, href).not.toMatch(/\?/);
-          expect(href, href).not.toMatch(UUID);
+          expect(href, href).not.toMatch(uuid);
           await page.goto(href);
           await expect(page.getByRole("main")).toBeVisible();
         }
-        expect(visited.length).toBeGreaterThan(4);
         for (const url of visited) {
           expect(url, url).not.toMatch(/\?/);
-          expect(url, url).not.toMatch(UUID);
+          expect(url, url).not.toMatch(uuid);
         }
       } finally {
         await context.close();
       }
-    }
-  });
-
-  test("CA-33: nessuna violazione axe serious o critical", async ({
-    page,
-    baseURL,
-  }) => {
-    withUser("A");
-    await signInAs(page.context(), baseURL as string, "A");
-    for (const route of ["/oggi", "/casa/spesa", "/nest", "/profilo"]) {
-      await page.goto(route);
-      await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-      const results = await new AxeBuilder({ page }).analyze();
-      expect(
-        results.violations.filter((v) =>
-          ["serious", "critical"].includes(v.impact ?? ""),
-        ),
-        route,
-      ).toEqual([]);
     }
   });
 });

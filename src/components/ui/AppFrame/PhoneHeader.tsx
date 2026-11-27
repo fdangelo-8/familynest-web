@@ -61,6 +61,7 @@ export function PhoneHeader() {
       <>
         <header
           className="testata testata--sezione"
+          data-testid="testata"
           ref={setHeader}
           inert={collapsed}
         >
@@ -90,7 +91,7 @@ export function PhoneHeader() {
   }
 
   return (
-    <header className="testata testata--dettaglio">
+    <header className="testata testata--dettaglio" data-testid="testata">
       <BackLink fallback={config.fallback} />
       <div className="testata__centro">
         {config.title ? (

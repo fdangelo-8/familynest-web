@@ -26,8 +26,12 @@ export function BottomNavView({
 }) {
   const active = getActiveNavItem(pathname, "mobile");
   return (
-    <nav className="barra-basso" aria-label={it.shell.mainNav}>
-      <div className="barra-basso__voci">
+    <nav
+      className="barra-basso"
+      aria-label={it.shell.mainNav}
+      data-testid="barra-basso"
+    >
+      <div className="barra-basso__voci" data-testid="barra-basso-capsula">
         {NAV_ITEMS.map((item) => {
           const news = item.id === "spazi" && spacesNews;
           return (

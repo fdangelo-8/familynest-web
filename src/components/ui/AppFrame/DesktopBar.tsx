@@ -21,7 +21,7 @@ export function DesktopBar() {
   const { count } = useNotificationCount();
 
   return (
-    <div className="barra-alto">
+    <div className="barra-alto" data-testid="barra-alto">
       {config.back ? <BackLink fallback={config.back} /> : null}
       {config.title ? (
         <p className="barra-alto__titolo">{config.title}</p>
