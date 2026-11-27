@@ -35,7 +35,7 @@ Una riga per lezione: `errore → regola`. Le lezioni già imposte da hook, CI, 
 - Sezione attiva per prefisso (`/casa/...`) → rotte attive per elenco esplicito delle pagine esistenti.
 - Form con dati personali senza `method="post"` e `action`, o con `name` sul campo → `method="post"` e `action` verso rotta POST con 303; campo senza `name`.
 - `next` controllato sulla stringa grezza → normalizza con `new URL(raw, base)`, verifica l'origine, applica le regole al `pathname` e restituisci quello.
-- Cookie cancellati con `maxAge: 0` restano vuoti → cancella con `expires: new Date(0)` e lo stesso `path`; se il criterio chiede la scadenza, `maxAge` in secondi (almeno 1).
+- Cookie cancellati con `maxAge: 0` restano vuoti → `expires: new Date(0)` con lo stesso `path`; se il criterio chiede la scadenza, `maxAge` in secondi (almeno 1).
 - `redirect()` in server action rifiutato dal client o preso da un `try` → la action restituisce la destinazione; dove serve `redirect()`, il `catch` chiama `unstable_rethrow(error)` per primo.
 - Guardia di sessione che mostra il contenuto su errore tecnico → chiude con «Riprova».
 - Stessa parte di interfaccia in due disposizioni con lo stesso `id` → un `id` per disposizione, con prefisso `m-` o `d-`.
@@ -64,7 +64,7 @@ Una riga per lezione: `errore → regola`. Le lezioni già imposte da hook, CI, 
 - `main` rosso per ore dopo un merge → il coordinatore segue la CI di `main` fino all'esito, dopo ogni merge.
 - Job CodeQL `analyze` rosso al caricamento risultati con 500 delle API GitHub → non è della PR: si rilancia una volta.
 - Run annullata dalla concorrenza di `remote-test-data` → il coordinatore la rilancia a mano; mai un job fallito.
-- Suite più lunga del timeout del job, interrotta senza test rossi → misura le ultime run e alza il timeout prima di aggiungere pagine; una suite interrotta non è un esito.
+- Suite più lunga del timeout, interrotta senza test rossi → misura le ultime run, alza il timeout prima di aggiungere pagine; interrotta non è un esito.
 - Stack Supabase locale con cartella o project-id comuni → entrambi nel proprio worktree; si ferma con `supabase stop --workdir`.
 - Disco pieno per `node_modules`, `.next`, `test-results` → alla fine si cancellano quelli del proprio worktree.
 - Script o file temporanei in cartelle condivise tra agenti → ogni agente lavora nel proprio worktree, con file dal prefisso unico (numero di issue o PR).
@@ -74,7 +74,9 @@ Una riga per lezione: `errore → regola`. Le lezioni già imposte da hook, CI, 
 - Sviluppo senza criteri di accettazione numerati → l'analista li scrive prima; senza, la PR fa più giri di correzioni.
 - Controllo `db` obbligatorio rosso per un test con data passata, mentre la correzione aspetta un'altra PR → PR minima di sblocco, unita per prima.
 - Tester visivo sovrascrive il file del funzionale con una copia vecchia → `git pull --no-rebase` e `git diff --cached --stat` prima del commit; pathspec propri.
-- Edit bloccato da un hook, aggirato con `sed -i` (tester, commit 710eabe, 3 righe corrette: resta errore) → tester e sviluppatori usano solo Edit o Write; mai `sed -i`, script, `tee`, copie, nemmeno per annullare; altrimenti `BLOCCATO`. Dal 26/11 `sed -i`, `perl -i`, `ruby -i`, `awk -i inplace`, `ed`, `ex` e le redirezioni o `tee` verso file del repository sono **bloccati dal hook** `guard-bash` su qualsiasi percorso e per tutti gli agenti (dopo tre casi del 25-26/11 su test e documentazione).
+- Modifica di file da riga di comando (`sed -i`, `perl -i`, `tee`, redirezioni, script) → solo Edit o Write; dal 26/11 lo blocca il hook `guard-bash` (#627, limiti in #630); se Edit non basta, `BLOCCATO`.
+- Cambio di un valore predefinito nel database (#612) che rompe test di file diversi → prima di aprire la PR cerca i valori vecchi in tutta `tests/`, riferimenti visivi compresi (#629).
+- PR condivisa e PR database che dipendono l'una dall'altra → unisci una dopo l'altra e rilancia la suite della seconda (#629 prima di #612).
 - Proposta di design approvata in ritardo, o stato «da decidere» → un'issue per ogni punto approvato, subito; prima dello stato rileggi i commenti di Francesco.
 - Skill esterne → copia fissa, letta tutta, senza script né login; licenza in `LICENZE-TERZE-PARTI.md`.
 
@@ -100,14 +102,12 @@ Una riga per lezione: `errore → regola`. Le lezioni già imposte da hook, CI, 
 - Login su utenti condivisi in parallelo → ogni test crea e cancella il proprio utente nel `finally`.
 - axe `label-content-name-mismatch` → il nome accessibile comincia con il testo visibile; i dettagli in `aria-describedby`.
 - Clic o tasti prima dell'idratazione → `waitHydrated` (`tests/fixtures/esplora.ts`), mai attese a tempo; stati di caricamento e navigazione trattenuta con `tests/fixtures/held-navigation.ts`.
-- Errore simulato intercettando ogni richiesta alla tabella → intercetta solo la query dell'elenco; rispondi subito con 500 (il client riprova a 1, 2, 4 secondi).
+- `page.route` finto → intercetta solo la richiesta da simulare (query dell'elenco, non prefetch né navigazione vera), rispondi subito 500 (il client riprova a 1, 2, 4 secondi) e `page.unrouteAll()` nel `finally`.
 - Pagina che passa da segnaposto a contenuto → la PR elenca i riferimenti visivi che cambiano; il tester visivo li rigenera.
 - Misure o clic durante un'animazione, o `force: true` → `waitForAnimationsToEnd` (`tests/fixtures/animations.ts`).
-- Test che blocca tutte le richieste, prefetch di Next incluso → blocca solo la navigazione vera.
 - Didascalia nel font dei codici che va a capo → didascalie corte, su una riga.
 - Test con la data reale (anche pgTAP) → regex, `pauseAt` o periodo nel futuro; mai una data passata. Finestra del DB su `now()` (#587) → il test porta l'ora vera o una data relativa.
 - Fixture che scrivono con il ruolo amministrativo dove serve la sessione utente → la scrittura passa dalla sessione; il ruolo amministrativo solo per preparare, detto nel commento.
-- Dati finti di `page.route` che restano nel test successivo → `page.unrouteAll()` nel `finally`.
 - Privacy controllata solo sul DOM → registra le risposte di rete (documento, fetch, xhr) e cerca nomi, date e id.
 - Testo cercato in tutta la pagina con una palette aperta sopra → controlla solo la superficie in cui il test è aperto.
 - `boundingBox` letto una volta su un elemento che React sostituisce → `expect.poll` finché stabile.
@@ -118,9 +118,8 @@ Una riga per lezione: `errore → regola`. Le lezioni già imposte da hook, CI, 
 - Grafiche «fatte dall'AI» o testi generici → mockup alla lettera; testi di bottoni specifici («Aggiungi», non «Scrivi»).
 - Caricamento con lo stile del disabilitato → `aria-busy` e `aria-disabled`, ma stile di caricamento separato.
 - Frase sul comportamento nella guida scritta senza controllare il CSS → verificala su `components.css` prima di approvare.
-- Regole CSS nuove fuori dal blocco del designer → nel punto indicato dalla specifica; la descrizione lo dichiara dopo averlo controllato.
+- Regole CSS nuove → nel punto indicato dalla specifica, in fondo al blocco «STATI AGGIUNTI DAL DESIGNER», tra i segnaposti; dove un test vieta i `px`, solo token. La descrizione lo dichiara dopo averlo controllato.
 - Scorciatoia a una lettera senza spegnimento (WCAG 2.1.4) → la specifica prevede spegnimento o cambio; lo decide il designer.
-- Regole nuove dove un test vieta i `px` → solo token; in fondo al blocco «STATI AGGIUNTI DAL DESIGNER», tra i segnaposti.
 - Figlio di griglia senza colonne definite → `grid-template-columns: minmax(0, 1fr)` nel contenitore.
 - PR `shared/*` con prop nuove senza skill e galleria → aggiorna `componenti.md`, `registro.md` e `Gallery.tsx` con un esempio per prop.
 - Esempio di galleria diverso dall'uso della pagina → stessa struttura e testo; il tester visivo confronta con la pagina.
