@@ -96,7 +96,7 @@ Barra laterale che si stringe all'apertura del pannello 200 ms (`--durata-rapida
 
 ## Fuoco e mouse
 
-- **Anello di fuoco su computer:** `outline: var(--border-medio) solid var(--color-azione); outline-offset: var(--space-half)` (2 px, `#0F3D44`, 11,86:1 sul bianco, 11,01:1 sulla barra laterale); `--color-latte` o bianco sui fondi scuri. Sostituisce `--color-info` (domanda 4 di `telefono.md`): lo decide il lavoro `shared/*` per tutta l'app, non una pagina.
+- **Anello di fuoco su computer:** `outline: var(--border-medio) solid var(--color-fuoco); outline-offset: var(--space-half)` (2 px, `#0F3D44` sul chiaro, `#F2F7F5` nel tema scuro; 11,86:1 sul bianco, 11,01:1 sulla barra laterale); `--color-latte` o bianco sui fondi scuri. Ha sostituito `--color-info` (domanda 4 di `telefono.md`, risolta): il token è `--color-fuoco`, definito in `src/app/globals.css`.
 - Un solo elemento con il fuoco alla volta; l'errore di un campo non colora l'etichetta (correzione 6 del Passo 12).
 - Mouse sopra: `--color-riga-mouse` sulle righe, `--color-voce-mouse` sulle voci della barra, `--color-azione-mouse` sui pulsanti pieni, `--color-filo` sul quieto. Scelta come sul telefono.
 

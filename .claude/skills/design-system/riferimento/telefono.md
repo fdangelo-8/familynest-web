@@ -42,7 +42,7 @@ Valori mancanti nel passaggio di Fable (non si inventano: si misurano sul CSS de
 | `--color-ombra`              | `rgba(23,24,28,.06)` | `rgba(16, 38, 42, 0.12)`          | palette `--sh`               | base delle ombre                                                                    |
 | `--color-ombra-forte`        | `rgba(23,24,28,.3)`  | `rgba(16, 38, 42, 0.2)`           | palette `--sh2`              | ombre di fogli, menu, dischi                                                        |
 
-Restano com'erano (deciso in F2): `--color-notte*`, `--color-latte*`, `--color-occupato-*`, `--color-info` (anello di focus, riverificato sui nuovi fondi: 6,34:1 sul bianco, 5,84:1 su `--color-carta-2`), `--color-avviso`, `--color-allerta-scuro`, `--color-bianco`, `--color-marchio-*`, `--color-velo`, `--color-ombra-adesivo`, `--color-avatar-su-colore`. Nato con F2 fuori da questa tabella: `--color-corsia-vuota` `#EEF1EF` (barra vuota delle corsie, misurato; domanda 5 della specifica grafica di A4).
+Restano com'erano (deciso in F2): `--color-notte*`, `--color-latte*`, `--color-occupato-*`, `--color-info` (informazione, non più l'anello del fuoco, che è `--color-fuoco`; 6,34:1 sul bianco, 5,84:1 su `--color-carta-2`), `--color-avviso`, `--color-allerta-scuro`, `--color-bianco`, `--color-marchio-*`, `--color-velo`, `--color-ombra-adesivo`, `--color-avatar-su-colore`. Nato con F2 fuori da questa tabella: `--color-corsia-vuota` `#EEF1EF` (barra vuota delle corsie, misurato; domanda 5 della specifica grafica di A4).
 
 ### Colori delle persone e degli animali
 
@@ -163,6 +163,6 @@ Le domande sono chiuse dal requisito di F2 (#196, «Domande aperte», default ad
 1. ~~Bordo del campo vuoto.~~ **Risolto in F2:** `--color-filo-campo: #7F9092` (3,33:1 sul bianco, 3,07:1 su `--color-carta-2` e su `--color-fondo-app`), come già deciso per il vecchio campo (#52). `#AEB9B7` resta solo decorativo (`--color-filo-tenue`, 2,01:1).
 2. ~~Ardesia con iniziale bianca sotto 4,5:1.~~ **Deciso da Francesco il 25/11/2026:** ardesia `#68778D` (al posto di `#6B7A90` di Fable), iniziale bianca 4,55:1 a ogni misura del pallino; la corsia usa lo stesso colore (già sopra 3:1).
 3. ~~Tinte dei quattro colori per gli invitati e scala del corpo.~~ **Risolto in F2:** non si inventano. Sabbia, azzurro, rosa e ardesia usano `--color-membro-neutro-tinta` finché Fable non le dà; i `--text-corpo-*` restano 15/22. Resta da chiedere a Fable, non blocca nulla.
-4. ~~Anello di focus.~~ **Risolto in F2:** `--color-info` `#3355CC` resta (6,34:1 sul bianco, 5,84:1 sui grigi), disegnato fuori dall'elemento; sui fondi scuri resta `--color-latte`.
+4. ~~Anello di focus.~~ **Risolto:** l'anello è `--color-fuoco` (`#0F3D44` sul chiaro, `#F2F7F5` nel tema scuro), disegnato fuori dall'elemento; `--color-info` `#3355CC` non è più l'anello. Sui fondi scuri di marca resta `--color-latte`.
 
 Decisi in F2 insieme a queste (default della #196): margine di pagina `--grid-margine-mobile: 24px`; `--weight-forte` 600; barra vuota delle corsie `--color-corsia-vuota: #EEF1EF`; nomi accessibili dei colori uguali alle tinte. L'interruttore spento (pallino bianco su `--color-filo-2`, 1,64:1, era 1,54:1) resta sotto 3:1 e non peggiora: lo ridisegna F4a (#503), dove il designer propone come distinguere lo spento (per esempio bordo `--color-filo-campo`, 3,33:1).

@@ -4,7 +4,7 @@
 
 > **Dal 25/11/2026 (F2, #196):** sono i valori del design per telefono di Fable (`telefono.md`, colonna «Nuovo valore»), nel codice con la PR #585. I valori del vecchio mockup restano in `docs/mockup/tokens.css` (archivio) e, riga per riga, nella colonna «Attuale nel codice» di `telefono.md`.
 
-> **Dal 26/11/2026 (D7):** la tavolozza comune dei Passi 12–16, con il valore chiaro e quello scuro di 73 ruoli, la regola del pallino, le tinte delle barrette, la scena della notte e le regole del tema scuro, è in fondo a questo file («Tavolozza comune dei Passi 12–16»). Il tema scuro c'è al lancio. Non è ancora nel codice: dove dice altro rispetto alle tabelle qui sotto, per il lavoro nuovo vale la tavolozza, e i token li cambia una `richiesta-condivisa`.
+> **Dal 26/11/2026 (D7):** la tavolozza comune dei Passi 12–16, con il valore chiaro e quello scuro di 73 ruoli, la regola del pallino, le tinte delle barrette, la scena della notte e le regole del tema scuro, è in fondo a questo file («Tavolozza comune dei Passi 12–16»). Il tema scuro c'è al lancio. È nel codice (`src/app/globals.css`: `:root` chiaro, `:root[data-aspetto="scuro"]` e `@media (prefers-color-scheme: dark)`): dove questo file dice altro, vale `globals.css`, e i token li cambia una `richiesta-condivisa`.
 
 Tutti i valori del `:root` di `src/app/globals.css`, uguale a `docs/agenti/design/token.css` (lo confronta il test dei token: si cambiano insieme). Nome variabile → valore → uso. Gli esadecimali qui sono in maiuscolo; nel CSS Prettier li scrive in minuscolo e mette lo zero prima dei decimali: il valore è lo stesso. Dalla #313 dimensioni e interlinee del testo sono in rem (stesso valore a 16 px), vedi «Scala tipografica».
 
@@ -598,9 +598,9 @@ La barretta a sinistra di ogni impegno stacca dal fondo dell'impegno almeno 3 : 
 | «Liberi insieme», giallo | `#F6C945` | `#FCEFC0`    | `#A38009`          |              3,2 | `#3A3112`   | `#E2B93B`            |             6,9 |
 | di casa, di nessuno      | —         | `#EEF1EF`    | `#55686C` (testo2) |                — | `#1E2B2E`   | `#A9C0BF`            |             7,6 |
 
-- Rosa, azzurro, sabbia e ardesia sono i colori liberi per chi arriva dopo: le tinte chiare sono nella tavola «I valori» (`docs/design/computer/regole-e-valori-p12-16/01-i-valori.png`), **non hanno valori scuri** e non si inventano.
+- Rosa, azzurro, sabbia e ardesia sono i colori liberi per chi arriva dopo: le tinte chiare sono nella tavola «I valori» (`docs/design/computer/regole-e-valori-p12-16/01-i-valori.png`). Nel codice hanno anche il valore scuro di `-tinta` e `-corsia` (`src/app/globals.css`); non si inventano altri valori.
 - **Ardesia:** vale `#68778D`, decisione di Francesco del 25/11 (la tavola di Fable dice ancora `#6B7A90`); la barretta è il pieno.
-- Sostituiscono le corsie `-corsia` di F2 (per esempio corallo `#EF5839`, menta `#419A63`), calcolate sul bianco e su `--color-corsia-vuota`: la `richiesta-condivisa` porta i valori di questa tabella, uguali su telefono e computer.
+- Sostituiscono le corsie `-corsia` di F2 (per esempio corallo `#EF5839`, menta `#419A63`), calcolate sul bianco e su `--color-corsia-vuota`: i valori di questa tabella sono già in `src/app/globals.css`, uguali su telefono e computer.
 
 ### La scena della notte
 
