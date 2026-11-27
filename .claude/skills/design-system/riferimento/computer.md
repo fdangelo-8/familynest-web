@@ -12,11 +12,11 @@ Testo completo e scorciatoie in `docs/design/computer/regole.md`. Le regole che 
 
 | Larghezza        | Disposizione                                                                                                                   |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| fino a 759 px    | Disegno per telefono (barra in basso). Il web da telefono usa le pagine dell'app: cambia solo ciò che è in `web-da-telefono/`. |
-| da 760 a 1099 px | Barra laterale a icone (72 px), contenuto a una colonna (tavola `oggi/` a 1040 px).                                            |
-| da 1100 px       | Barra laterale intera (248 px), contenuto a 12 colonne, canalina 24 px, margini 32 px. Tavole a 1280 px.                       |
+| fino a 899 px    | Disegno per telefono (barra in basso). Il web da telefono usa le pagine dell'app: cambia solo ciò che è in `web-da-telefono/`. |
+| da 900 a 1279 px | Barra laterale a icone (72 px), contenuto a una colonna (tavola `oggi/` a 1040 px).                                            |
+| da 1280 px       | Barra laterale intera (248 px), contenuto a 12 colonne, canalina 24 px, margini 32 px. Tavole a 1280 px.                       |
 | da 1440 px       | Contenuto fermo a 1200 px, terza colonna dove serve (Oggi). Oltre crescono solo i margini.                                     |
-| tablet           | Non disegnato: fuori perimetro.                                                                                                |
+| tablet           | Il tablet non ha pagine sue: sotto 900 px il telefono, da 900 px il computer; sotto 600 px di altezza sempre il telefono (D8). |
 
 - **Il testo non si allarga:** colonne di lettura di 720 px al massimo (Impostazioni 600, «Chiedi a …» 680, pagine senza account 680 o 960 su due colonne, pagamento 1000). Lo spazio in più diventa una seconda colonna, non righe più lunghe.
 - **Barra laterale** al posto della barra in basso: le stesse quattro voci (Oggi, Calendario, Casa, Spazi), sopra il marchio e la lente «Io · Nest», sotto il gruppo fisso «Di casa» (Spesa, Ricette, Animali), in fondo «Chiedi a Nest» e il profilo. Il + diventa un pulsante scritto in alto a destra, sempre nello stesso posto («Nuovo impegno», «Nuova ricetta»…).

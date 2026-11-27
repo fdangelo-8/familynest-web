@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import {
   contrast,
   cssWithoutComments,
@@ -218,49 +218,57 @@ test.describe("valori dei token", () => {
 // -------------------------------------------------------------- accensione
 
 test.describe("accensione del tema", () => {
-  test("CA-6: data-aspetto scuro con il sistema chiaro", async ({ page }) => {
-    await page.emulateMedia({ colorScheme: "light" });
-    await setAspetto(page, "scuro");
-    expect((await rootValues(page, ["--color-carta"]))["--color-carta"]).toBe(
-      "#0f1819",
-    );
-    expect(
-      await page.evaluate(
-        () => getComputedStyle(document.documentElement).colorScheme,
-      ),
-    ).toBe("dark");
-  });
+  // The theme is plain CSS: no script of the page runs. The attribute is put
+  // with page.evaluate, which does not depend on the scripts of the page.
+  test.describe("senza JavaScript", () => {
+    test.use({ javaScriptEnabled: false });
 
-  test("CA-7: data-aspetto chiaro con il sistema scuro", async ({ page }) => {
-    await page.emulateMedia({ colorScheme: "dark" });
-    await setAspetto(page, "chiaro");
-    expect(
-      normalize((await rootValues(page, ["--color-carta"]))["--color-carta"]!),
-    ).toBe("#ffffff");
-    expect(
-      await page.evaluate(
-        () => getComputedStyle(document.documentElement).colorScheme,
-      ),
-    ).toBe("light");
-  });
-
-  for (const value of [null, "sistema", "blu"]) {
-    test(`CA-8/9: attributo ${value ?? "assente"}: segue il sistema`, async ({
-      page,
-    }) => {
-      await setAspetto(page, value);
-      await page.emulateMedia({ colorScheme: "dark" });
+    test("CA-6: data-aspetto scuro con il sistema chiaro", async ({ page }) => {
+      await page.emulateMedia({ colorScheme: "light" });
+      await setAspetto(page, "scuro");
       expect((await rootValues(page, ["--color-carta"]))["--color-carta"]).toBe(
         "#0f1819",
       );
-      await page.emulateMedia({ colorScheme: "light" });
+      expect(
+        await page.evaluate(
+          () => getComputedStyle(document.documentElement).colorScheme,
+        ),
+      ).toBe("dark");
+    });
+
+    test("CA-7: data-aspetto chiaro con il sistema scuro", async ({ page }) => {
+      await page.emulateMedia({ colorScheme: "dark" });
+      await setAspetto(page, "chiaro");
       expect(
         normalize(
           (await rootValues(page, ["--color-carta"]))["--color-carta"]!,
         ),
       ).toBe("#ffffff");
+      expect(
+        await page.evaluate(
+          () => getComputedStyle(document.documentElement).colorScheme,
+        ),
+      ).toBe("light");
     });
-  }
+
+    for (const value of [null, "sistema", "blu"]) {
+      test(`CA-8/9: attributo ${value ?? "assente"}: segue il sistema`, async ({
+        page,
+      }) => {
+        await setAspetto(page, value);
+        await page.emulateMedia({ colorScheme: "dark" });
+        expect(
+          (await rootValues(page, ["--color-carta"]))["--color-carta"],
+        ).toBe("#0f1819");
+        await page.emulateMedia({ colorScheme: "light" });
+        expect(
+          normalize(
+            (await rootValues(page, ["--color-carta"]))["--color-carta"]!,
+          ),
+        ).toBe("#ffffff");
+      });
+    }
+  });
 
   test("CA-10 e CA-11: il cambio è immediato e non tocca i dati del browser", async ({
     page,
@@ -361,6 +369,19 @@ test.describe("riempimenti", () => {
         expect(normalize(value.color), `${selector} testo`).toBe("#ffffff");
       }
     }
+    // Round tick: checked, the disc is green and the mark is white.
+    await page.getByTestId("tondo-vuoto").click();
+    await page.mouse.move(0, 0);
+    await settleTheme(page);
+    const tick = await read('.tondo-spunta[aria-checked="true"]');
+    expect(normalize(tick.background), "spunta fondo").toBe("#1f7d8a");
+    expect(normalize(tick.color), "spunta segno").toBe("#ffffff");
+    // Switch on: the knob (::after) is white, not the colour of the surface.
+    const knob = await page
+      .locator('.toggle[aria-checked="true"]')
+      .first()
+      .evaluate((el) => getComputedStyle(el, "::after").backgroundColor);
+    expect(normalize(knob), "pallino").toBe("#ffffff");
     const danger = await read(".btn-pericolo-pieno");
     expect(normalize(danger.background)).toBe("#c4483a");
     expect(normalize(danger.color)).toBe("#ffffff");
@@ -380,19 +401,43 @@ test.describe("riempimenti", () => {
     const field = page.locator("#campo .campo__input").first();
     const border = () => field.evaluate((el) => getComputedStyle(el).boxShadow);
     // The ring of a focused button: keyboard focus, so :focus-visible applies.
-    const ring = async () => {
-      await page.getByRole("button", { name: "Apri foglio" }).focus();
+    const ringOf = async (target: Locator) => {
+      await target.focus();
       await page.keyboard.press("Shift+Tab");
       await page.keyboard.press("Tab");
       return page.evaluate(
         () => getComputedStyle(document.activeElement!).outlineColor,
       );
     };
+    const ring = () =>
+      ringOf(page.getByRole("button", { name: "Apri foglio" }));
+    // On the brand ground (inside .tema-notte) the ring is --color-latte.
+    const brandRing = () => ringOf(page.getByTestId("btn-chiaro-predefinito"));
     expect(rgbHex(await border())).toBe("#869390");
     expect(rgbHex(await ring())).toBe("#0f3d44");
+    expect(rgbHex(await brandRing())).toBe("#ffffff");
     await setAspetto(page, "scuro");
     expect(rgbHex(await border())).toBe("#7e9496");
     expect(rgbHex(await ring())).toBe("#f2f7f5");
+    expect(rgbHex(await brandRing())).toBe("#ffffff");
+  });
+
+  test("CA-15: in chiaro il pulsante principale è #10262a con il testo #ffffff", async ({
+    page,
+  }) => {
+    // Values written from the palette (tavolozza.json, --c-pieno and --c-su),
+    // not read back from the CSS.
+    await page.mouse.move(0, 0);
+    await settleTheme(page);
+    const primary = await page
+      .locator(".btn-primary")
+      .first()
+      .evaluate((element) => {
+        const style = getComputedStyle(element);
+        return { background: style.backgroundColor, color: style.color };
+      });
+    expect(rgbHex(primary.background)).toBe("#10262a");
+    expect(rgbHex(primary.color)).toBe("#ffffff");
   });
 
   test("CA-16: al buio il testo sopra il verde è bianco", async ({ page }) => {
@@ -698,6 +743,8 @@ test.describe("contrasti", () => {
 // -------------------------------------------------------------------- gancio
 
 test.describe("solo-chiaro e solo-scuro", () => {
+  test.use({ javaScriptEnabled: false });
+
   const visible = (page: Page, id: string) => page.getByTestId(id).isVisible();
 
   test("CA-25: si vede solo l'immagine del tema in uso", async ({ page }) => {
