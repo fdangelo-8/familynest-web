@@ -50,7 +50,9 @@ const OPEN_STATES: {
     opener: "Togli Biscotto",
     after: async (page) => {
       await page.getByRole("button", { name: "Togli dal Nest" }).click();
-      await expect(page.getByRole("alert")).toBeVisible();
+      await expect(
+        page.getByRole("alertdialog").getByRole("alert"),
+      ).toBeVisible();
     },
   },
 ];
