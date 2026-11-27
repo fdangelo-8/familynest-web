@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { waitForAnimationsToEnd } from "../fixtures/animations";
@@ -800,6 +801,164 @@ test.describe("Testo al 200%", () => {
             .size,
       );
     expect(rows).toBeGreaterThan(1);
+  });
+});
+
+// ------------------------------------------------------------ CA-34, CA-35
+
+// The diff of the branch against origin/main. If the shared history is missing
+// the test fails, never returns early (LEZIONI).
+function gitOut(args: string[]): string | null {
+  try {
+    return execFileSync("git", ["-c", "safe.directory=*", ...args], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+      maxBuffer: 64 * 1024 * 1024,
+    });
+  } catch {
+    return null;
+  }
+}
+
+function onThisBranch(): boolean {
+  const branch =
+    process.env.GITHUB_HEAD_REF ||
+    process.env.GITHUB_REF_NAME ||
+    gitOut(["rev-parse", "--abbrev-ref", "HEAD"])?.trim() ||
+    "";
+  return /(^|\/)componenti-scelte-persone$/.test(branch);
+}
+
+function diffAgainstMain(flags: string[], paths: string[] = []): string {
+  const args = ["diff", ...flags, "origin/main...HEAD", "--", ...paths];
+  let out = gitOut(args);
+  if (out === null) {
+    gitOut([
+      "fetch",
+      "--no-tags",
+      "--deepen=200",
+      "origin",
+      "+main:refs/remotes/origin/main",
+    ]);
+    out = gitOut(args);
+  }
+  expect(
+    out,
+    "storia comune con origin/main non disponibile: CA-34/CA-35 non verificabili",
+  ).not.toBeNull();
+  return out ?? "";
+}
+
+test.describe("Diff, documenti e galleria", () => {
+  // One run only (the diff does not depend on the viewport), one after the
+  // other: two workers deepening the same clone would lock each other out.
+  test.describe.configure({ mode: "serial" });
+
+  test("CA-34: la PR non tocca supabase/, src/app/(app)/ né src/components/ fuori da ui/", ({}, info) => {
+    test.skip(
+      info.project.name !== "desktop",
+      "il diff non dipende dal viewport: gira una volta sola",
+    );
+    test.skip(!onThisBranch(), "vale solo sul branch di #504");
+    const files = diffAgainstMain(["--name-only"]).split("\n").filter(Boolean);
+    expect(files.length).toBeGreaterThan(0);
+    const forbidden = files.filter(
+      (file) =>
+        file.startsWith("supabase/") ||
+        file.startsWith("src/app/(app)/") ||
+        (file.startsWith("src/components/") &&
+          !file.startsWith("src/components/ui/")),
+    );
+    expect(forbidden).toEqual([]);
+  });
+
+  test("CA-35: componenti.md e registro.md descrivono i componenti, la galleria ha i data-testid, nessun nuovo skip o fixme", ({}, info) => {
+    test.skip(
+      info.project.name !== "desktop",
+      "il diff non dipende dal viewport: gira una volta sola",
+    );
+    const components = readFileSync(
+      ".claude/skills/design-system/riferimento/componenti.md",
+      "utf8",
+    );
+    const registry = readFileSync(
+      ".claude/skills/design-system/riferimento/registro.md",
+      "utf8",
+    );
+    // One entry for each component of §1, with the props that make it.
+    for (const [name, props] of [
+      ["ChoiceGroup", ["variant", "error"]],
+      ["PersonPicker", ["label"]],
+      ["FaceGrid", ["onSelect"]],
+      ["AvatarStack", ["people"]],
+      ["TileGrid", ["columns"]],
+      ["Tile", ["href", "variant"]],
+      ["Chip", ["scroll"]],
+      ["WeekdayPicker", ["7"]],
+      ["Checkbox", ["round"]],
+      ["Avatar", ["initials", "neutro"]],
+      ["Tag", ["allerta"]],
+    ] as const) {
+      const entry = components
+        .split("\n")
+        .filter((line) => line.includes(name))
+        .join("\n");
+      expect(entry, `componenti.md: voce di ${name}`).not.toBe("");
+      for (const prop of props) {
+        expect(entry, `componenti.md: ${name} e ${prop}`).toContain(prop);
+      }
+    }
+    expect(registry).toContain("27/11/2026");
+    expect(registry).toMatch(/F4b|scelte e persone/i);
+
+    // Every data-testid of the examples of the spec (§6) is in the gallery.
+    const gallery = readFileSync("src/app/design-system/Gallery.tsx", "utf8");
+    for (const id of [
+      "ds-scelte-schede",
+      "ds-scelte-schede-errore",
+      "ds-scelte-tessere",
+      "ds-pastiglie",
+      "ds-pastiglie-persone",
+      "ds-per-chi",
+      "ds-per-chi-dieci",
+      "ds-per-chi-caricamento",
+      "ds-giorni",
+      "ds-filtri",
+      "ds-spunta",
+      "ds-volti",
+      "ds-volti-vuoto",
+      "ds-foto-e-pila",
+      "ds-aiutante",
+      "ds-tessere-spazi",
+      "ds-tag-allerta",
+      "ds-tessere-nest",
+    ]) {
+      expect(gallery, id).toContain(`"${id}"`);
+    }
+  });
+
+  test("CA-35: la PR non aggiunge test.skip né test.fixme", ({}, info) => {
+    test.skip(
+      info.project.name !== "desktop",
+      "il diff non dipende dal viewport: gira una volta sola",
+    );
+    test.skip(!onThisBranch(), "vale solo sul branch di #504");
+    // This file is left out: it quotes the patterns it looks for.
+    const added = diffAgainstMain(
+      ["-U0"],
+      ["tests", ":(exclude)tests/e2e/componenti-scelte-persone.spec.ts"],
+    )
+      .split("\n")
+      .filter((line) => line.startsWith("+") && !line.startsWith("+++"));
+    // A conditional skip (condition first) is the project's way to guard a
+    // test; a bare skip or fixme is not.
+    const bare = added.filter(
+      (line) =>
+        /\btest\.fixme\s*\(/.test(line) ||
+        /\b(test|it)\.skip\s*\(\s*(["'`]|async|\(|function)/.test(line) ||
+        /\btest\.describe\.skip\s*\(/.test(line),
+    );
+    expect(bare).toEqual([]);
   });
 });
 
