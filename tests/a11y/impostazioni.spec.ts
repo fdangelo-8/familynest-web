@@ -301,7 +301,7 @@ test.describe("Impostazioni della casa: utente usa e getta", () => {
     }).toPass({ timeout: 30_000 });
   });
 
-  test("uscita non riuscita: avviso nel dialogo, fuoco su «Esci…», axe", async ({
+  test("uscita non riuscita: avviso nel dialogo, fuoco sull'avviso, axe", async ({
     page,
   }) => {
     user = await userWithNest(page);
@@ -318,7 +318,8 @@ test.describe("Impostazioni della casa: utente usa e getta", () => {
     await expect(dialog.getByRole("alert")).toContainText(
       "Non siamo riusciti a farti uscire dalla casa.",
     );
-    await expect(confirm).toBeFocused();
+    // #505: after a failure the focus goes to the notice, which is announced
+    await expect(dialog.getByRole("alert")).toBeFocused();
     expect(await seriousViolations(page)).toEqual([]);
     expect(await duplicateIds(page)).toEqual([]);
   });

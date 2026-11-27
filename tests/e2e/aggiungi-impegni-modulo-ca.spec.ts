@@ -1,5 +1,11 @@
 import AxeBuilder from "@axe-core/playwright";
 import { type Locator, type Page } from "@playwright/test";
+import {
+  dateField,
+  expectDay,
+  pickDay,
+  typeTime,
+} from "../fixtures/campi-data-ora";
 import { waitForAnimationsToEnd } from "../fixtures/animations";
 import {
   CORS,
@@ -266,7 +272,7 @@ test.describe("Aggiungi · Impegni · modulo · ingressi", () => {
     await field.fill("   ");
     await expect(dialog.getByText("Più dettagli")).toHaveCount(0);
     await field.fill("giovedì alle 17");
-    await expect(impegnoFields(page).day).toHaveValue("2026-10-22");
+    await expectDay(impegnoFields(page).day, "2026-10-22");
     await expect(dialog.getByText("Più dettagli")).toHaveCount(0);
 
     // Type «Spesa».
@@ -335,7 +341,7 @@ test.describe("Aggiungi · Impegni · modulo · ingressi", () => {
 
     // A phrase without a title: no entry.
     await fieldOf(page).fill("giovedì alle 17");
-    await expect(impegnoFields(page).day).toHaveValue("2026-10-22");
+    await expectDay(impegnoFields(page).day, "2026-10-22");
     await expect(dialog.getByText("Tutti i dettagli")).toHaveCount(0);
   });
 });
@@ -369,7 +375,7 @@ test.describe("Aggiungi · Impegni · modulo · già compilato", () => {
 
     await expect(form.getByLabel("Titolo")).toHaveValue("Nuoto Sofia");
     await expect(form.getByLabel("Titolo")).toBeFocused();
-    await expect(form.getByLabel("Giorno")).toHaveValue("2026-10-22");
+    await expectDay(form.getByLabel("Giorno"), "2026-10-22");
     await expect(form.getByLabel("Dalle", { exact: true })).toHaveValue(
       "17:00",
     );
@@ -467,14 +473,14 @@ test.describe("Aggiungi · Impegni · modulo · già compilato", () => {
   }) => {
     await openForm(page, baseURL, casa, "Marco", "Nuoto Sofia giovedì");
     const form = formOf(page);
-    await expect(form.getByLabel("Giorno")).toHaveValue("2026-10-22");
+    await expectDay(form.getByLabel("Giorno"), "2026-10-22");
     await expect(form.getByLabel("Dalle", { exact: true })).toHaveValue("");
     await expect(form.getByLabel("Alle", { exact: true })).toHaveValue("");
 
     await form.getByRole("button", { name: "Chiudi" }).click();
     await expect(addOf(page)).toBeVisible();
     await fillAndOpen(page, "calcetto alle 18");
-    await expect(form.getByLabel("Giorno")).toHaveValue("2026-10-20");
+    await expectDay(form.getByLabel("Giorno"), "2026-10-20");
     await expect(form.getByLabel("Dalle", { exact: true })).toHaveValue(
       "18:00",
     );
@@ -517,20 +523,20 @@ test.describe("Aggiungi · Impegni · modulo · già compilato", () => {
     casa,
   }) => {
     onlyOn("desktop");
-    await openForm(page, baseURL, casa, "Marco");
+    // A phrase with no day: the form opens with «Giorno» empty
+    await openForm(page, baseURL, casa, "Marco", "Riunione");
     const form = formOf(page);
     await expect(form.getByText("Anteprima")).toHaveCount(0);
     await expect(form.getByText("Esempi")).toHaveCount(0);
     await expect(form.getByRole("complementary")).toHaveCount(0);
 
-    await form.getByLabel("Giorno").fill("2026-11-07");
-    await expect(submitOf(page, "Metti in sabato 7 novembre")).toBeVisible();
-
-    await form.getByLabel("Giorno").fill("");
     const empty = submitOf(page, "Aggiungi");
     await expect(empty).toBeVisible();
     await expect(empty).toBeEnabled();
     await expect(empty).not.toHaveAttribute("aria-disabled", "true");
+
+    await pickDay(dateField(form, "Giorno"), "2026-11-07");
+    await expect(submitOf(page, "Metti in sabato 7 novembre")).toBeVisible();
   });
 });
 
@@ -594,9 +600,9 @@ test.describe("Aggiungi · Impegni · modulo · salvataggio", () => {
     const form = formOf(page);
 
     await form.getByLabel("Titolo").fill("  Nuoto  ");
-    await form.getByLabel("Giorno").fill("2026-10-29");
-    await form.getByLabel("Dalle", { exact: true }).fill("17:30");
-    await form.getByLabel("Alle", { exact: true }).fill("18:45");
+    await pickDay(dateField(form, "Giorno"), "2026-10-29");
+    await typeTime(form.getByLabel("Dalle", { exact: true }), "17:30");
+    await typeTime(form.getByLabel("Alle", { exact: true }), "18:45");
     await form.getByLabel("Dove").fill("Piscina comunale, Lissone");
     await chip(page, "Chi", "Tommaso").click();
     await form.getByLabel("Note").fill("Portare la merenda");
@@ -742,7 +748,7 @@ test.describe("Aggiungi · Impegni · modulo · chiusura", () => {
     await expect(fieldOf(page)).toHaveValue(PHRASE);
     // #333 (CA-7): the sheet keeps its fields, the choices made in the form are lost
     const f = impegnoFields(page);
-    await expect(f.day).toHaveValue("2026-10-22");
+    await expectDay(f.day, "2026-10-22");
     await expect(f.from).toHaveValue("17:00");
     await f.expectWho(["Sofia"]);
     await expect(entryOf(page)).toBeFocused();
@@ -860,7 +866,7 @@ test.describe("Aggiungi · Impegni · modulo · errori e caricamento", () => {
     expect(await savedBy(casa, "Marco")).toHaveLength(0);
   });
 
-  test("CA-18: fine uguale all'inizio e giorno vuoto danno l'errore sotto il campo e non salvano", async ({
+  test("CA-18: fine uguale all'inizio dà l'errore sotto il campo e non salva", async ({
     page,
     baseURL,
     casa,
@@ -877,8 +883,17 @@ test.describe("Aggiungi · Impegni · modulo · errori e caricamento", () => {
     );
     await expect(form.getByLabel("Alle", { exact: true })).toBeFocused();
     expect(await savedBy(casa, "Marco")).toHaveLength(0);
+  });
 
-    await form.getByLabel("Giorno").fill("");
+  test("CA-18: giorno vuoto dà «Scegli il giorno.» sotto il campo, fuoco sul campo, e non salva", async ({
+    page,
+    baseURL,
+    casa,
+  }) => {
+    onlyOn("desktop");
+    // A phrase with no day: the form opens with «Giorno» empty
+    await openForm(page, baseURL, casa, "Marco", "Riunione");
+    const form = formOf(page);
     await submitOf(page, "Aggiungi").click();
     await expect(form.getByLabel("Giorno")).toHaveAccessibleDescription(
       "Scegli il giorno.",
@@ -978,7 +993,7 @@ test.describe("Aggiungi · Impegni · modulo · errori e caricamento", () => {
     const dialog = addOf(page);
     await expect(alertsIn(dialog)).toContainText(MEMBERS_FAILED);
     await fieldOf(page).fill(PHRASE);
-    await expect(impegnoFields(page).day).toHaveValue("2026-10-22");
+    await expectDay(impegnoFields(page).day, "2026-10-22");
     await expect(dialog.getByText("Più dettagli")).toHaveCount(0);
     await expect(dialog.getByText("Tutti i dettagli")).toHaveCount(0);
 

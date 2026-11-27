@@ -1,4 +1,5 @@
 import { expect, test } from "../fixtures/casa";
+import { expectDay, expectNoDay } from "../fixtures/campi-data-ora";
 import {
   PRIVATE,
   SHARED,
@@ -37,7 +38,7 @@ test.describe("Aggiungi · Da fare · creazione", () => {
     await s.field.fill(PHRASE);
 
     // The day is in the field «Data» (#333), not in a label
-    await expect(s.date).toHaveValue("2026-10-23");
+    await expectDay(s.date, "2026-10-23");
     await s.expectVoice(SHARED);
     await expect(s.voice(PRIVATE)).toBeVisible();
     await expectNames(s.who, ["Tu", "Laura", "Sofia", "Tommaso"]);
@@ -287,7 +288,8 @@ test.describe("Aggiungi · Da fare · date riconosciute", () => {
     for (const [phrase, day] of cases) {
       await s.field.fill("");
       await s.field.fill(phrase);
-      await expect(s.date).toHaveValue(day);
+      if (day) await expectDay(s.date, day);
+      else await expectNoDay(s.date);
     }
   });
 
@@ -301,7 +303,7 @@ test.describe("Aggiungi · Da fare · date riconosciute", () => {
     await s.type("Da fare").click();
     await s.field.fill("x entro 31/11");
     await expect(s.button("Aggiungi ai da fare")).toBeVisible();
-    await expect(s.date).toHaveValue("");
+    await expectNoDay(s.date);
 
     await s.button("Aggiungi ai da fare").click();
     await expect(

@@ -25,7 +25,11 @@ export function useMediaQuery(query: string): boolean {
   );
 }
 
-/** True from 1024 px: the sheet becomes a centered modal. */
+/**
+ * True from 1024 px: the sheet becomes a centered modal. Sheets, calendars and
+ * pages all use this one threshold; F5 (#506) moves the whole app together to
+ * the one of D8 (900 px wide, 600 px tall).
+ */
 export function useIsDesktop(): boolean {
   return useMediaQuery("(min-width: 1024px)");
 }
@@ -33,8 +37,9 @@ export function useIsDesktop(): boolean {
 /** Open dialogs, last one on top. Only the top one handles Escape and Tab. */
 const overlayStack: symbol[] = [];
 
-function prefersReducedMotion(): boolean {
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+/** True while a sheet or a dialog is open: a new one opens above it. */
+export function hasOpenOverlay(): boolean {
+  return overlayStack.length > 0;
 }
 
 /**
@@ -50,15 +55,40 @@ export function useAnimatedClose(onClose: () => void) {
 
   useEffect(() => {
     if (!closing) return;
-    const id = window.setTimeout(
-      () => onCloseRef.current(),
-      prefersReducedMotion() ? 0 : EXIT_MS,
-    );
+    const id = window.setTimeout(() => onCloseRef.current(), EXIT_MS);
     return () => window.clearTimeout(id);
   }, [closing]);
 
   const requestClose = useCallback(() => setClosing(true), []);
   return { closing, requestClose };
+}
+
+/**
+ * A light layer, such as the calendar under a date field: while `active` it is
+ * the top of the stack, so Escape closes it and not the sheet it sits in.
+ */
+export function useEscapeLayer(active: boolean, onEscape: () => void) {
+  const onEscapeRef = useRef(onEscape);
+  useEffect(() => {
+    onEscapeRef.current = onEscape;
+  });
+  useEffect(() => {
+    if (!active) return;
+    const token = Symbol("layer");
+    overlayStack.push(token);
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (overlayStack[overlayStack.length - 1] !== token) return;
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      onEscapeRef.current();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      const index = overlayStack.indexOf(token);
+      if (index >= 0) overlayStack.splice(index, 1);
+    };
+  }, [active]);
 }
 
 /**
@@ -85,10 +115,11 @@ export function useDialogFocus(
     const focusables = () =>
       Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE));
 
-    let target: HTMLElement | null | undefined;
-    if (initialFocus === "marked") {
-      target = container.querySelector<HTMLElement>("[data-autofocus]");
-    } else {
+    // An element marked `data-autofocus` always wins (the confirm button, the
+    // day of a calendar); otherwise the first field.
+    let target: HTMLElement | null | undefined =
+      container.querySelector<HTMLElement>("[data-autofocus]");
+    if (!target && initialFocus === "field") {
       target = container.querySelector<HTMLElement>(
         "input:not([disabled]),select:not([disabled]),textarea:not([disabled])",
       );

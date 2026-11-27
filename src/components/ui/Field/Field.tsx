@@ -11,96 +11,11 @@ import {
 } from "react";
 import { cx } from "../cx";
 import { Icon } from "../Icon/Icon";
+import { FieldShell, useFieldIds, type FieldShellProps } from "./FieldShell";
 
-type FieldShellProps = {
-  /** Required visible label, linked to the control */
-  label: string;
-  /** Hint under the field (`.campo__aiuto`) */
-  help?: string;
-  /** Error text. The page decides when to show it (after submit, not while typing). */
-  error?: string;
-  className?: string;
-  /** Set by `FieldGroup`: the field loses its own box. Do not pass it by hand. */
-  grouped?: boolean;
-  /** Set by `FieldGroup`: id of the error text under the block. Do not pass it by hand. */
-  groupErrorId?: string;
-};
-
-type Described = { "aria-describedby"?: string; "aria-invalid"?: true };
-
-function useFieldIds(
-  id: string | undefined,
-  help?: string,
-  error?: string,
-  groupErrorId?: string,
-) {
-  const generated = useId();
-  const inputId = id ?? generated;
-  const helpId = help ? `${inputId}-aiuto` : undefined;
-  const errorId = error ? (groupErrorId ?? `${inputId}-errore`) : undefined;
-  const describedBy = [helpId, errorId].filter(Boolean).join(" ") || undefined;
-  const described: Described = {
-    "aria-describedby": describedBy,
-    "aria-invalid": error ? true : undefined,
-  };
-  return { inputId, helpId, errorId, described };
-}
-
-/**
- * Box with the label inside (`.campo__scatola`). The label sits on the value
- * when the field is empty and has no focus, and goes up when it has one
- * (`.campo--alto`: always up, for fields that always show something).
- */
-function FieldShell({
-  label,
-  help,
-  error,
-  className,
-  inputId,
-  helpId,
-  errorId,
-  always,
-  grouped,
-  groupErrorId,
-  children,
-}: FieldShellProps & {
-  inputId: string;
-  helpId?: string;
-  errorId?: string;
-  /** The label stays up (date, time, select, text area, own placeholder) */
-  always?: boolean;
-  children: ReactNode;
-}) {
-  return (
-    <div
-      className={cx(
-        "campo",
-        error && "campo--errore",
-        always && "campo--alto",
-        grouped && "campo--unito",
-        className,
-      )}
-    >
-      <div className="campo__scatola">
-        {children}
-        <label className="campo__etichetta" htmlFor={inputId}>
-          {label}
-        </label>
-      </div>
-      {help ? (
-        <p className="campo__aiuto" id={helpId}>
-          {help}
-        </p>
-      ) : null}
-      {error && !groupErrorId ? (
-        <p className="campo__errore" id={errorId}>
-          <Icon name="circle-alert" size="s" />
-          {error}
-        </p>
-      ) : null}
-    </div>
-  );
-}
+// The date and time fields are client components of their own file; the
+// pages keep importing them from here.
+export { DateField, TimeField, type DateFieldProps } from "./DateTimeFields";
 
 export type TextFieldProps = FieldShellProps &
   Omit<InputHTMLAttributes<HTMLInputElement>, "className" | "children"> & {
@@ -235,18 +150,6 @@ export function SelectField({
       </div>
     </FieldShell>
   );
-}
-
-export type DateFieldProps = Omit<TextFieldProps, "type" | "multiline">;
-
-/** `type="date"`. The value is `YYYY-MM-DD` (calendar day in Europe/Rome). */
-export function DateField(props: DateFieldProps) {
-  return <TextField {...props} type="date" />;
-}
-
-/** `type="time"`. The value is `HH:MM`, 24 h (Europe/Rome). */
-export function TimeField(props: DateFieldProps) {
-  return <TextField {...props} type="time" step={props.step ?? 60} />;
 }
 
 /** Two fields side by side (`.campo-doppio`). */
