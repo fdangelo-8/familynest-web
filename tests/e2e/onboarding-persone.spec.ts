@@ -2,6 +2,12 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import {
+  dateField as dayFieldOf,
+  expectDay,
+  expectNoDay,
+  pickDay,
+} from "../fixtures/campi-data-ora";
+import {
   signInAs,
   skipReason,
   usersConfigured,
@@ -159,8 +165,7 @@ const addButton = (page: Page) =>
 const dialog = (page: Page, name: string | RegExp) =>
   page.getByRole("dialog", { name });
 const nameField = (d: Locator) => d.getByLabel("Nome", { exact: true });
-const dateField = (d: Locator) =>
-  d.getByLabel("Data di nascita", { exact: true });
+const dateField = (d: Locator) => dayFieldOf(d, "Data di nascita");
 const kindButton = (d: Locator, kind: string) =>
   d
     .getByRole("group", { name: "Chi è" })
@@ -461,7 +466,7 @@ test.describe("aggiungere", () => {
           .getByRole("group", { name: "Chi è" })
           .getByRole("button", { pressed: true }),
       ).toHaveText("Figlio o figlia");
-      await expect(dateField(d)).toHaveValue("");
+      await expectNoDay(dateField(d));
       await expect(colorGroup(d).getByRole("radio")).toHaveCount(10);
       await expect(colorRadio(d, "Corallo (già di Ilaria)")).toBeDisabled();
       await expect(colorRadio(d, "Glicine")).toHaveAttribute(
@@ -497,7 +502,7 @@ test.describe("aggiungere", () => {
       const birth = romeMinus(9);
       await nameField(d).fill("  Sofia  ");
       await kindButton(d, "Figlio o figlia").click();
-      await dateField(d).fill(birth);
+      await pickDay(dateField(d), birth);
       await colorRadio(d, "Menta").click();
       await submit(d, "Aggiungi Sofia").click();
       await expect(d).toBeHidden();
@@ -569,11 +574,11 @@ test.describe("aggiungere", () => {
       const birth = romeMinus(5);
       await nameField(d).fill("Pia");
       await kindButton(d, "Figlio o figlia").click();
-      await dateField(d).fill(birth);
+      await pickDay(dateField(d), birth);
       await kindButton(d, "Adulto").click();
       await expect(dateField(d)).toHaveCount(0);
       await kindButton(d, "Figlio o figlia").click();
-      await expect(dateField(d)).toHaveValue(birth);
+      await expectDay(dateField(d), birth);
       await kindButton(d, "Adulto").click();
       await submit(d, "Aggiungi Pia").click();
       await expect(d).toBeHidden();
@@ -681,20 +686,34 @@ test.describe("errori del foglio", () => {
     });
   });
 
-  test("CA-21: una data nel futuro è rifiutata", async ({ page, baseURL }) => {
+  test("CA-21: una data nel futuro non si può scegliere", async ({
+    page,
+    baseURL,
+  }) => {
     await withNest("family_with_children", async (user) => {
       await openPage(page, user, baseURL);
       const d = await openAdd(page);
       await nameField(d).fill("Sofia");
       await kindButton(d, "Figlio o figlia").click();
-      await dateField(d).fill(romeDay(1));
-      await submit(d, "Aggiungi Sofia").click();
-      await expect(
-        d.getByText("Questa data è nel futuro: scegli un giorno fino a oggi.", {
-          exact: true,
-        }),
-      ).toBeVisible();
-      await expect(dateField(d)).toHaveAttribute("aria-invalid", "true");
+      await dateField(d).click();
+      const calendar = page.getByTestId("calendario");
+      const cell = calendar.locator(
+        `[role="gridcell"][data-day="${romeDay(1)}"]`,
+      );
+      if ((await cell.count()) > 0) {
+        // Tomorrow is in the grid: it is greyed out and a tap does nothing.
+        await expect(cell).toHaveAttribute("aria-disabled", "true");
+        await cell.dispatchEvent("click");
+        await expect(calendar).toBeVisible();
+      } else {
+        // Tomorrow is in the next month, and that month cannot be reached.
+        await expect(
+          calendar.getByRole("button", { name: "Mese successivo" }),
+        ).toHaveAttribute("aria-disabled", "true");
+      }
+      await page.keyboard.press("Escape");
+      await expect(calendar).toHaveCount(0);
+      await expectNoDay(dateField(d));
       await expect(d).toBeVisible();
       expect(await members(user)).toHaveLength(1);
     });
@@ -967,7 +986,7 @@ test.describe("modifica", () => {
       "aria-disabled",
       "true",
     );
-    await expect(dateField(d)).toHaveValue("2016-12-14");
+    await expectDay(dateField(d), "2016-12-14");
     const salvia = colorRadio(d, "Menta");
     await expect(salvia).toBeEnabled();
     await expect(salvia).toHaveAttribute("aria-checked", "true");
@@ -1243,7 +1262,7 @@ test.describe("isolamento e privacy", () => {
       const d = await openAdd(page);
       await nameField(d).fill("Sofia");
       await kindButton(d, "Figlio o figlia").click();
-      await dateField(d).fill(birth);
+      await pickDay(dateField(d), birth);
       await submit(d, "Aggiungi Sofia").click();
       expect(pathOf(page)).toBe(PATH);
       await expect(d).toBeHidden();

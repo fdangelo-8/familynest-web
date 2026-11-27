@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { dateField, expectDay } from "../fixtures/campi-data-ora";
 import { saveWithStoppedClock } from "../fixtures/aggiungi-fake";
 import {
   DEADLINE_ID,
@@ -147,9 +148,7 @@ test.describe("Da fare", () => {
     await expect(
       dialog.getByRole("button", { name: "Lo vede tutto il Nest" }),
     ).toHaveAttribute("aria-pressed", "true");
-    await expect(dialog.getByLabel("Entro", { exact: true })).toHaveValue(
-      "2026-10-23",
-    );
+    await expectDay(dateField(dialog, "Entro"), "2026-10-23");
     await shoot(page, "da-fare.png");
   });
 
@@ -261,9 +260,7 @@ test.describe("Modifica", () => {
     await expect(
       page.getByRole("button", { name: "Togli Per Sofia" }),
     ).toBeVisible();
-    await expect(page.getByLabel("Entro", { exact: true })).toHaveValue(
-      "2026-10-23",
-    );
+    await expectDay(dateField(page, "Entro"), "2026-10-23");
     await shoot(page, "modifica-da-fare.png");
   });
 

@@ -1,4 +1,5 @@
 import type { Locator, Page } from "@playwright/test";
+import { pickDay } from "../fixtures/campi-data-ora";
 import { isMobileProject, romeDay } from "../fixtures/casa";
 import {
   card,
@@ -247,7 +248,7 @@ test("sopra la pagina (dettaglio impegno): dopo un salvataggio, aprire e chiuder
   // 1. Save a new title and a new day (the address changes in place).
   const dialog = await openForm(page);
   await fieldOf(dialog, "Titolo").fill(newTitle);
-  await fieldOf(dialog, "Giorno").fill(newDay);
+  await pickDay(fieldOf(dialog, "Giorno"), newDay);
   await pressSave(page);
   await expect(editDialog(page)).toBeHidden();
   await expect(toastOf(page, "Modifiche salvate")).toBeVisible();

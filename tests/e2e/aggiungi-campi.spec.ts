@@ -1,5 +1,11 @@
 import { expect, test } from "../fixtures/casa";
 import {
+  expectDay,
+  expectNoDay,
+  pickDay,
+  typeTime,
+} from "../fixtures/campi-data-ora";
+import {
   assigneesOf,
   deadlinesOf,
   holdRpc,
@@ -44,7 +50,7 @@ test.describe("Aggiungi · Impegno · campi", () => {
     await s.field.fill(PHRASE);
 
     const f = impegnoFields(page);
-    await expect(f.day).toHaveValue("2026-10-22");
+    await expectDay(f.day, "2026-10-22");
     await expect(f.from).toHaveValue("17:00");
     await expect(f.to).toHaveValue("18:00");
     await f.expectWho(["Sofia"]);
@@ -71,7 +77,7 @@ test.describe("Aggiungi · Impegno · campi", () => {
     }
     await expect(f.who).toHaveAccessibleDescription("Preso dalla frase");
 
-    await f.day.fill("2026-10-23");
+    await pickDay(f.day, "2026-10-23");
     await expect(f.day).not.toHaveAccessibleDescription("Preso dalla frase");
     await f.person("Tu").click();
     await expect(f.who).not.toHaveAccessibleDescription("Preso dalla frase");
@@ -109,7 +115,7 @@ test.describe("Aggiungi · Impegno · campi", () => {
     const s = sheet(page);
     await s.field.fill("dentista");
     const f = impegnoFields(page);
-    await f.day.fill("2026-10-23");
+    await pickDay(f.day, "2026-10-23");
     await f.from.fill("16:00");
     await f.to.fill("17:00");
     await expect(s.button("Metti in venerdì 23")).toBeVisible();
@@ -142,17 +148,17 @@ test.describe("Aggiungi · Impegno · campi", () => {
     const s = sheet(page);
     const f = impegnoFields(page);
     await s.field.fill("nuoto giovedì alle 17");
-    await expect(f.day).toHaveValue("2026-10-22");
-    await f.day.fill("2026-10-23");
+    await expectDay(f.day, "2026-10-22");
+    await pickDay(f.day, "2026-10-23");
 
     await s.field.focus();
     await s.field.press("End");
     await s.field.pressSequentially(" in piscina");
     await expect(s.field).toHaveValue("nuoto giovedì alle 17 in piscina");
-    await expect(f.day).toHaveValue("2026-10-23");
+    await expectDay(f.day, "2026-10-23");
 
     await s.field.fill("nuoto sabato alle 17 in piscina");
-    await expect(f.day).toHaveValue("2026-10-24");
+    await expectDay(f.day, "2026-10-24");
   });
 
   test("CA-7: «Più dettagli» e «Tutti i dettagli» aprono il modulo con i valori dei campi; chiudendolo il foglio ha gli stessi valori e il fuoco è sul bottone", async ({
@@ -164,7 +170,7 @@ test.describe("Aggiungi · Impegno · campi", () => {
     const s = sheet(page);
     const f = impegnoFields(page);
     await s.field.fill(PHRASE);
-    await f.day.fill("2026-10-23");
+    await pickDay(f.day, "2026-10-23");
     await f.person("Tu").click();
     await f.expectWho(["Tu", "Sofia"]);
 
@@ -172,7 +178,7 @@ test.describe("Aggiungi · Impegno · campi", () => {
     await entry.click();
     const form = page.getByRole("dialog", { name: "Nuovo impegno" });
     await expect(form).toBeVisible();
-    await expect(form.getByLabel("Giorno")).toHaveValue("2026-10-23");
+    await expectDay(form.getByLabel("Giorno"), "2026-10-23");
     const who = form.getByRole("group", { name: "Chi", exact: true });
     await expect(who.locator('[aria-pressed="true"]')).toHaveCount(2);
     await expect(
@@ -188,7 +194,7 @@ test.describe("Aggiungi · Impegno · campi", () => {
 
     await form.getByRole("button", { name: "Chiudi" }).click();
     await expect(sheet(page).dialog).toBeVisible();
-    await expect(f.day).toHaveValue("2026-10-23");
+    await expectDay(f.day, "2026-10-23");
     await f.expectWho(["Tu", "Sofia"]);
     await expect(
       sheet(page).dialog.getByTestId("aggiungi-ingresso-details"),
@@ -256,8 +262,8 @@ test.describe("Aggiungi · Impegno · campi", () => {
     await expect(f.from).toHaveAccessibleDescription("Scegli l'ora d'inizio.");
     expect(await eventsOf(casa)).toHaveLength(0);
 
-    await f.day.fill("2026-10-23");
-    await f.from.fill("16:00");
+    await pickDay(f.day, "2026-10-23");
+    await typeTime(f.from, "16:00");
     await s.button("Metti in venerdì 23").click();
     await expect(f.to).toHaveAccessibleDescription("Scegli l'ora di fine.");
     await expect(f.to).toBeFocused();
@@ -295,9 +301,9 @@ test.describe("Aggiungi · Da fare e Scadenza · «Data»", () => {
     const s = sheet(page);
     await s.type("Da fare").click();
     await s.field.fill("comprare il regalo");
-    await expect(s.date).toHaveValue("");
+    await expectNoDay(s.date);
 
-    await s.date.fill("2026-10-27");
+    await pickDay(s.date, "2026-10-27");
     await s.button("Aggiungi ai da fare").click();
     await expect(toastWith(page, "Aggiunto ai da fare:")).toBeVisible();
     const rows = await todosOf(casa, "Marco");
@@ -316,8 +322,8 @@ test.describe("Aggiungi · Da fare e Scadenza · «Data»", () => {
     await openAddFromNav(page, baseURL, casa, "Marco");
     const s = sheet(page);
     await s.field.fill("Laura deve chiamare la nonna entro venerdì");
-    await expect(s.date).toHaveValue("2026-10-23");
-    await s.date.fill("2026-10-26");
+    await expectDay(s.date, "2026-10-23");
+    await pickDay(s.date, "2026-10-26");
     await s.button("Dai a Laura").click();
 
     await expect(
@@ -340,20 +346,20 @@ test.describe("Aggiungi · Da fare e Scadenza · «Data»", () => {
     const s = sheet(page);
     await s.type("Da fare").click();
     await s.field.fill("chiamare la nonna entro venerdì");
-    await expect(s.date).toHaveValue("2026-10-23");
-    await s.date.fill("2026-10-26");
+    await expectDay(s.date, "2026-10-23");
+    await pickDay(s.date, "2026-10-26");
 
     await s.field.focus();
     await s.field.press("End");
     await s.field.pressSequentially(" subito");
-    await expect(s.date).toHaveValue("2026-10-26");
+    await expectDay(s.date, "2026-10-26");
 
     await s.field.fill("chiamare la nonna entro giovedì subito");
-    await expect(s.date).toHaveValue("2026-10-22");
+    await expectDay(s.date, "2026-10-22");
 
-    await s.date.fill("2026-10-26");
+    await pickDay(s.date, "2026-10-26");
     await s.field.fill("chiamare la nonna subito");
-    await expect(s.date).toHaveValue("");
+    await expectNoDay(s.date);
   });
 
   test("CA-13: Scadenza senza data: «Manca la data» nell'anteprima e sotto «Data», fuoco sul campo, niente salvato; scegliendo la data si salva", async ({
@@ -365,7 +371,7 @@ test.describe("Aggiungi · Da fare e Scadenza · «Data»", () => {
     const s = sheet(page);
     await s.type("Scadenza").click();
     await s.field.fill("Compleanno Filippo – sld");
-    await expect(s.date).toHaveValue("");
+    await expectNoDay(s.date);
     await expect(
       s.card.getByText("Manca la data", { exact: true }),
     ).toBeVisible();
@@ -374,7 +380,7 @@ test.describe("Aggiungi · Da fare e Scadenza · «Data»", () => {
     await s.expectDateError("Manca la data: sceglila o scrivila nella frase.");
     expect(await deadlinesOf(casa, "Marco")).toHaveLength(0);
 
-    await s.date.fill("2026-12-07");
+    await pickDay(s.date, "2026-12-07");
     await expect(s.card.locator(".riga-scadenza__numero")).toHaveText(/^48$/);
     await expect(s.card.locator(".riga-scadenza__unita")).toHaveText("giorni");
     await expect(s.card.locator(".riga-lista__titolo")).toHaveText(
@@ -402,13 +408,13 @@ test.describe("Aggiungi · Da fare e Scadenza · «Data»", () => {
       await s.field.fill("pagare il condominio");
       const submit = s.button(/^(Aggiungi ai da fare|Aggiungi alle scadenze)$/);
 
-      await s.date.fill("2026-10-19");
+      await pickDay(s.date, "2026-10-19");
       await submit.click();
       await s.expectDateError(
         "Questa data è già passata: scegli una data da oggi in poi.",
       );
 
-      await s.date.fill("2101-01-01");
+      await pickDay(s.date, "2101-01-01");
       await submit.click();
       await s.expectDateError("Scegli una data entro il 2100.");
     }
@@ -425,13 +431,92 @@ test.describe("Aggiungi · Da fare e Scadenza · «Data»", () => {
     const s = sheet(page);
     await s.type("Da fare").click();
     await s.field.fill("comprare il regalo");
-    await s.date.fill("2026-10-27");
+    await pickDay(s.date, "2026-10-27");
 
     await s.type("Scadenza").click();
-    await expect(s.date).toHaveValue("2026-10-27");
+    await expectDay(s.date, "2026-10-27");
     await s.type("Impegno").click();
     await s.type("Da fare").click();
-    await expect(s.date).toHaveValue("");
+    await expectNoDay(s.date);
+  });
+});
+
+test.describe("Aggiungi · isolamento tra Nest e campi data (F4c)", () => {
+  test("CA-34: Paolo (Nest B) apre «Nuovo impegno»: nel foglio non c'è nessun nome del Nest A", async ({
+    page,
+    baseURL,
+    bianchi,
+  }) => {
+    await openAddFromNav(page, baseURL, bianchi, "Paolo");
+    const f = impegnoFields(page);
+    // The people of the Nest B must be loaded and visible before an absence
+    // is checked, or the test would pass even with a broken isolation.
+    await f.expectWho(["Tu"]);
+    await pickDay(f.day, "2026-10-23");
+    await typeTime(f.from, "17:00");
+    const dialog = page.getByTestId("aggiungi-foglio");
+    await expect(dialog).toBeVisible();
+    for (const nameOfA of ["Marco", "Laura", "Sofia", "Tommaso", "Biscotto"]) {
+      await expect(dialog.getByText(nameOfA, { exact: false })).toHaveCount(0);
+    }
+  });
+
+  test("CA-42: «Togli la data» c'è in «Entro» di Da fare e non in «Scade il» né in «Giorno»", async ({
+    page,
+    baseURL,
+    casa,
+  }) => {
+    await openAddFromNav(page, baseURL, casa, "Marco");
+    const s = sheet(page);
+    const clear = page.getByTestId("calendario-togli");
+
+    await s.type("Da fare").click();
+    await s.field.fill("comprare il regalo");
+    await pickDay(s.date, "2026-10-27");
+    await s.date.click();
+    await expect(clear).toHaveCount(1);
+    await clear.click();
+    await expectNoDay(s.date);
+    await s.date.click();
+    await expect(clear).toHaveCount(0);
+    await page.keyboard.press("Escape");
+
+    await s.type("Scadenza").click();
+    await pickDay(s.date, "2026-10-27");
+    await s.date.click();
+    await expect(page.getByTestId("calendario")).toBeVisible();
+    await expect(clear).toHaveCount(0);
+    await page.keyboard.press("Escape");
+
+    await s.type("Impegno").click();
+    const f = impegnoFields(page);
+    await pickDay(f.day, "2026-10-23");
+    await f.day.click();
+    await expect(page.getByTestId("calendario")).toBeVisible();
+    await expect(clear).toHaveCount(0);
+  });
+
+  test("CA-43: «Togli la data» su «Entro» salva la cosa da fare senza data", async ({
+    page,
+    baseURL,
+    casa,
+  }) => {
+    await openAddFromNav(page, baseURL, casa, "Marco");
+    const s = sheet(page);
+    await s.type("Da fare").click();
+    await s.field.fill("comprare il regalo");
+    await pickDay(s.date, "2026-10-27");
+    await s.date.click();
+    await page.getByTestId("calendario-togli").click();
+    await expectNoDay(s.date);
+    await s.button("Aggiungi ai da fare").click();
+    await expect(toastWith(page, "Aggiunto ai da fare:")).toBeVisible();
+    const rows = await todosOf(casa, "Marco");
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      title: "Comprare il regalo",
+      due_date: null,
+    });
   });
 });
 
@@ -515,7 +600,7 @@ test.describe("Aggiungi · Da fare e Scadenza · «Chi se ne occupa» e visibili
     const s = sheet(page);
     await s.type("Da fare").click();
     await s.field.fill("comprare il regalo");
-    await s.date.fill("2026-10-27");
+    await pickDay(s.date, "2026-10-27");
     await s.person("Laura").click();
     await s.person("Sofia").click();
     await refuseRpc(page, "create_todo");
@@ -525,7 +610,7 @@ test.describe("Aggiungi · Da fare e Scadenza · «Chi se ne occupa» e visibili
       s.dialog.getByRole("alert").filter({ hasText: SAVE_FAILED_ALERT }),
     ).toBeVisible();
     await expect(s.field).toHaveValue("comprare il regalo");
-    await expect(s.date).toHaveValue("2026-10-27");
+    await expectDay(s.date, "2026-10-27");
     await expect(s.person("Laura")).toHaveAttribute("aria-pressed", "true");
     await expect(s.person("Sofia")).toHaveAttribute("aria-pressed", "true");
     await expect(toastOf(page)).toHaveCount(0);
@@ -634,7 +719,7 @@ test.describe("Aggiungi · privacy", () => {
     await s.type("Da fare").click();
     await s.field.fill("Laura deve chiamare la nonna entro venerdì");
     seen.push(page.url());
-    await s.date.fill("2026-10-26");
+    await pickDay(s.date, "2026-10-26");
     seen.push(page.url());
     await s.person("Sofia").click();
     seen.push(page.url());
@@ -659,14 +744,14 @@ test.describe("Aggiungi · valori iniziali e persone", () => {
     const s = sheet(page);
     const f = impegnoFields(page);
     await expect(s.type("Impegno")).toHaveAttribute("aria-pressed", "true");
-    await expect(f.day).toHaveValue("");
+    await expectNoDay(f.day);
     await expect(f.from).toHaveValue("");
     await expect(f.to).toHaveValue("");
     await f.expectWho(["Tu"]);
     await expect(s.button("Aggiungi")).toBeDisabled();
 
     await s.type("Scadenza").click();
-    await expect(s.date).toHaveValue("");
+    await expectNoDay(s.date);
     await expect(s.button("Aggiungi")).toBeDisabled();
   });
 

@@ -1801,6 +1801,10 @@ button.riga-lista {
   font-weight: var(--weight-semi);
   padding: var(--space-0) var(--space-5);
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 .is-caricamento {
   pointer-events: none;
@@ -2241,13 +2245,13 @@ button.riga-lista {
   background: var(--color-velo);
   z-index: var(--z-velo);
 }
+/* Foglio nuovo (F4c, #505): testata con la X a sinistra, il titolo al centro e
+   l'azione scritta a destra, corpo che scorre, piede fisso. Nessuna maniglia:
+   il trascinamento parte dalla testata. */
 .foglio {
   transition: transform var(--durata-normale) var(--curva);
   transform: translateY(var(--trascinamento, 0));
-  max-height: calc(100dvh - var(--size-barra));
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  grid-template-columns: minmax(0, 1fr);
+  max-height: calc(100dvh - env(safe-area-inset-top) - var(--space-6));
   position: fixed;
   left: var(--space-0);
   right: var(--space-0);
@@ -2255,34 +2259,48 @@ button.riga-lista {
   z-index: var(--z-foglio);
   background: var(--color-superficie);
   border-radius: var(--radius-xl) var(--radius-xl) var(--space-0) var(--space-0);
-  padding: var(--space-2) var(--grid-margine-mobile)
-    calc(var(--space-6) + env(safe-area-inset-bottom));
-  display: grid;
-  gap: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   box-shadow: var(--shadow-foglio);
-  align-content: start;
 }
 .foglio--alto {
-  top: var(--size-barra);
-}
-.foglio__maniglia {
-  width: var(--size-maniglia-l);
-  height: var(--size-maniglia-a);
-  border-radius: var(--radius-tondo);
-  background: var(--color-filo-2);
-  justify-self: center;
+  height: calc(100dvh - env(safe-area-inset-top));
+  max-height: calc(100dvh - env(safe-area-inset-top));
 }
 .foglio__testa {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns:
+    minmax(var(--size-tocco), 1fr) auto
+    minmax(var(--size-tocco), 1fr);
   align-items: center;
-  min-height: var(--size-bottone-s);
+  min-height: var(--size-tocco);
 }
 .foglio__titolo {
-  font-size: var(--text-sezione-size);
-  font-weight: var(--weight-forte);
+  grid-column: 2;
+  grid-row: 1;
+  min-width: var(--space-0);
+  text-align: center;
+  font-size: var(--text-titolo-barra-size);
+  line-height: var(--text-titolo-barra-line);
+  font-weight: var(--weight-pieno);
+}
+.foglio__chiudi {
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: start;
+}
+.foglio__azione {
+  grid-column: 3;
+  grid-row: 1;
+  justify-self: end;
+  min-width: var(--size-tocco);
 }
 .foglio__info {
+  grid-column: 3;
+  grid-row: 1;
+  justify-self: end;
+  text-align: right;
   font-size: var(--text-nota-size);
   color: var(--color-inchiostro-2);
 }
@@ -2379,10 +2397,15 @@ button.riga-lista {
 
 .dialogo {
   position: fixed;
-  left: var(--grid-margine-mobile);
-  right: var(--grid-margine-mobile);
+  /* Al centro a ogni larghezza: lo schermo meno 24 px per lato, al massimo
+     420 px (F4c, #505; 420 = --size-dialogo + --space-5). */
+  left: 50%;
+  width: min(
+    calc(var(--size-dialogo) + var(--space-5)),
+    calc(100% - 2 * var(--space-6))
+  );
   top: 50%;
-  transform: translateY(-50%);
+  transform: translate(-50%, -50%);
   z-index: var(--z-foglio);
   border-radius: var(--radius-xl);
   background: var(--color-superficie);
@@ -2393,10 +2416,9 @@ button.riga-lista {
 }
 .dialogo__titolo {
   font-family: var(--font-titoli);
-  font-weight: var(--weight-normale);
-  font-size: var(--text-titolo-scheda-size);
-  line-height: var(--text-titolo-scheda-line);
-  letter-spacing: var(--text-titolo-scheda-tracking);
+  font-weight: var(--weight-pieno);
+  font-size: var(--text-sottotitolo-size);
+  line-height: var(--text-sottotitolo-line);
 }
 .dialogo__testo {
   font-size: var(--text-corpo-size);
@@ -2407,6 +2429,10 @@ button.riga-lista {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--space-2);
+}
+/* Dentro il dialogo di conferma i bottoni stanno a 12 px (k3-03) */
+.dialogo .dialogo__azioni {
+  gap: var(--space-3);
 }
 
 .toast {
@@ -4482,15 +4508,115 @@ div.blocco-orario {
   pointer-events: none;
 }
 
-/* Foglio: contenuto nello stesso contenitore della modale */
+/* Foglio: contenuto nello stesso contenitore della modale. Il corpo scorre, la
+   testata e il piede restano attaccati (F4c, #505). Nella modale il corpo è
+   quello di prima (`.modale__corpo`). */
 .foglio__corpo {
+  flex: 1 1 auto;
+  min-height: var(--space-0);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* The head and the foot are sticky inside this scroller: a field that takes
+     the focus (keyboard open) must stop above the foot and below the head. */
+  scroll-padding-block-start: calc(
+    2 * var(--space-2) + var(--size-tocco) + var(--space-2)
+  );
+  /* The foot may hold two buttons one above the other (save and delete). */
+  scroll-padding-block-end: calc(
+    2 * var(--space-4) + 2 * var(--size-azione) + 2 * var(--space-3) +
+      env(safe-area-inset-bottom)
+  );
+}
+.foglio__contenuto {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--space-4);
   align-content: start;
+  min-width: var(--space-0);
+}
+.foglio .foglio__testa {
+  position: sticky;
+  top: var(--space-0);
+  z-index: var(--z-base);
+  flex: none;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-superficie);
+  touch-action: none;
+}
+.foglio .foglio__contenuto {
+  flex: 1 0 auto;
+  padding: var(--space-2) var(--space-6)
+    calc(var(--space-6) + env(safe-area-inset-bottom));
+}
+.foglio--con-piede .foglio__contenuto {
+  padding-bottom: var(--space-4);
+}
+/* Tavola k3-02: con il piede, un filo sottile separa anche la testata (stesso
+   filo del piede). Il foglio senza piede (k3-01) non lo ha. */
+.foglio--con-piede .foglio__testa {
+  border-bottom: var(--border-sottile) solid var(--color-filo-barra);
 }
 .foglio__piede {
-  display: contents;
+  position: sticky;
+  bottom: var(--space-0);
+  z-index: var(--z-base);
+  flex: none;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-6)
+    calc(var(--space-4) + env(safe-area-inset-bottom));
+  background: var(--color-superficie);
+  border-top: var(--border-sottile) solid var(--color-filo-barra);
+}
+.foglio__piede-riga {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-width: var(--space-0);
+}
+.modale__piede > .foglio__piede-riga {
+  flex: 1 1 auto;
+}
+/* Azione scritta della testata: mentre salva, la rotella sta nello stesso punto */
+.foglio__azione {
+  position: relative;
+}
+.foglio__azione-testo {
+  visibility: hidden;
+}
+.foglio__azione .spinner {
+  position: absolute;
+  inset: var(--space-0);
+  margin: auto;
+}
+/* Titolo a sinistra, dopo la X, che va a capo (frasi lunghe) */
+.foglio--titolo-inizio .foglio__testa {
+  grid-template-columns: var(--size-tocco) minmax(0, 1fr) auto;
+  align-items: start;
+}
+.foglio--titolo-inizio .foglio__titolo {
+  text-align: left;
+  padding-block: calc((var(--size-tocco) - var(--text-titolo-barra-line)) / 2);
+}
+.foglio--titolo-inizio .foglio__azione,
+.foglio--titolo-inizio .foglio__info {
+  align-self: start;
+}
+/* Nessuna maniglia (F4c): la classe resta definita perché il mockup la ha,
+   ma il foglio non la disegna */
+.foglio__maniglia {
+  display: none;
+}
+/* La X è un'area di 44 px senza riquadro: il segno è quello di sempre */
+.foglio__chiudi {
+  background: transparent;
+  box-shadow: none;
+  width: var(--size-tocco);
+  height: var(--size-tocco);
 }
 
 /* Modulo dentro un foglio (#85, #20, #166): il modulo sta dentro il corpo del
@@ -4568,7 +4694,7 @@ textarea.campo__input {
   resize: vertical;
 }
 
-/* Foglio, modale, dialogo: entrata, uscita e trascinamento della maniglia */
+/* Foglio, modale, dialogo: entrata, uscita e trascinamento della testata */
 .foglio {
   animation: foglio-entra var(--durata-normale) var(--curva);
 }
@@ -4581,19 +4707,8 @@ textarea.campo__input {
 .foglio.is-rientro {
   transition-duration: var(--durata-rapida);
 }
-.foglio__maniglia {
-  position: relative;
-  touch-action: none;
+.foglio .foglio__testa {
   cursor: grab;
-}
-.foglio__maniglia::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: var(--size-cta-aggiungi);
-  height: var(--size-tocco);
-  transform: translate(-50%, -50%);
 }
 .modale,
 .dialogo,
@@ -4623,6 +4738,23 @@ textarea.campo__input {
 @keyframes sparisce {
   to {
     opacity: 0;
+  }
+}
+/* Movimento ridotto (F4c): fogli, finestre, dialoghi e velo hanno solo una
+   dissolvenza breve, nessuno spostamento */
+@media (prefers-reduced-motion: reduce) {
+  .foglio,
+  .modale,
+  .dialogo,
+  .velo {
+    animation: appare var(--durata-rapida) var(--curva);
+    transition: none;
+  }
+  .foglio.is-uscita,
+  .modale.is-uscita,
+  .dialogo.is-uscita,
+  .velo.is-uscita {
+    animation: sparisce var(--durata-rapida) var(--curva) forwards;
   }
 }
 
@@ -4771,22 +4903,18 @@ button.riga-lista {
   }
 }
 
-/* Movimento ridotto: niente animazioni né transizioni, ovunque */
+/* Movimento ridotto: niente animazioni né transizioni, ovunque. Fanno
+   eccezione i fogli, le finestre, i dialoghi e il velo (F4c, #505): hanno una
+   breve dissolvenza e nessuno spostamento, regolata più sotto. */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *:not(.foglio, .modale, .dialogo, .velo),
+  *:not(.foglio, .modale, .dialogo, .velo)::before,
+  *:not(.foglio, .modale, .dialogo, .velo)::after {
     animation: none !important;
     transition: none !important;
   }
 }
 
-/* Testa del foglio con informazione e X a destra (#20, #164) */
-.foglio__testa-fine {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-3);
-}
 /* Etichette riconosciute ancora vuote: la regione live resta nel DOM ma non occupa il gap (#20, #164) */
 .gruppo-chip[aria-live]:empty {
   position: absolute;
@@ -5890,12 +6018,6 @@ body {
     grid-template-columns: 1fr 1fr;
     gap: var(--space-3);
   }
-  .dialogo {
-    left: 50%;
-    right: auto;
-    width: var(--size-dialogo);
-    transform: translate(-50%, -50%);
-  }
   .toast {
     left: auto;
     right: var(--grid-margine-desktop);
@@ -6831,5 +6953,272 @@ body {
   .volti__voce,
   a.tessera {
     transition: none;
+  }
+}
+
+/* =========================================================
+   FOGLI, CONFERME E SELETTORE DI DATA (F4c, #505)
+   Il foglio e il dialogo sono più sopra, nei blocchi che già c'erano. Qui:
+   la riga «Collega», il campo data, il calendario del mese.
+   Ogni colore è un ruolo (`--color-*`): chiaro e scuro cambiano da soli.
+   ========================================================= */
+
+/* Riga «Collega», forma 1: segno e nome a sinistra, pillola a destra. La
+   pillola è l'unico pulsante e il suo ::after copre tutta la riga. */
+.elenco-collega {
+  display: grid;
+  gap: var(--space-3);
+}
+.elenco-collega__righe {
+  margin: var(--space-0);
+  padding: var(--space-0);
+  list-style: none;
+}
+.riga-collega {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--size-riga-alta);
+  padding-block: var(--space-riga);
+  color: var(--color-inchiostro);
+}
+.riga-collega + .riga-collega {
+  box-shadow: inset 0 var(--border-sottile) 0 var(--color-filo);
+}
+.riga-collega__testo {
+  display: grid;
+  min-width: var(--space-0);
+}
+.riga-collega__nome {
+  font-size: var(--text-controllo-size);
+  line-height: var(--text-controllo-line);
+  font-weight: var(--weight-semi);
+}
+.riga-collega__riga {
+  font-size: var(--text-corpo-size);
+  line-height: var(--text-corpo-line);
+  color: var(--color-inchiostro-2);
+}
+.pillola-collega {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: static;
+  min-height: var(--size-chip);
+  padding-inline: var(--space-4);
+  border: var(--border-medio) solid var(--color-inchiostro);
+  border-radius: var(--radius-capsula);
+  background: transparent;
+  color: var(--color-inchiostro);
+  font-size: var(--text-controllo-size);
+  line-height: var(--text-controllo-line);
+  font-weight: var(--weight-semi);
+  cursor: pointer;
+}
+.pillola-collega::before {
+  content: "";
+  position: absolute;
+  inset: var(--space-0);
+}
+.pillola-collega:focus-visible {
+  outline: none;
+}
+.pillola-collega:focus-visible::before {
+  outline: var(--border-medio) solid var(--color-info);
+  outline-offset: calc(-1 * var(--space-half));
+  border-radius: var(--radius-m);
+}
+.pillola-collega__testo {
+  visibility: hidden;
+}
+.pillola-collega__rotella {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin: calc(-1 * var(--size-icona-s) / 2) var(--space-0) var(--space-0)
+    calc(-1 * var(--size-icona-s) / 2);
+}
+/* Mentre collega: la rotella sta nella pillola e la riga non risponde */
+.pillola-collega[aria-busy="true"] {
+  position: relative;
+  cursor: default;
+}
+.pillola-collega[aria-busy="true"]::before {
+  display: none;
+}
+.riga-collega__stato {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: var(--size-chip);
+  color: var(--color-ok);
+  font-size: var(--text-controllo-size);
+  line-height: var(--text-controllo-line);
+  font-weight: var(--weight-semi);
+}
+.riga-collega__stato .icona {
+  animation: spunta-entra var(--durata-rapida) var(--curva);
+}
+@keyframes spunta-entra {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}
+@media (hover: hover) {
+  .pillola-collega {
+    transition: background var(--durata-rapida) var(--curva);
+  }
+  .riga-collega:has(.pillola-collega:hover:not([aria-busy="true"]))
+    .pillola-collega {
+    background: var(--color-premuto);
+  }
+}
+.pillola-collega:active:not([aria-busy="true"]) {
+  background: var(--color-premuto);
+}
+
+/* Campo data: un pulsante con l'aspetto del campo (l'etichetta sta dentro) */
+.campo__input--data {
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  color: var(--color-inchiostro);
+  cursor: pointer;
+}
+.campo__input--data:disabled {
+  cursor: not-allowed;
+}
+.campo__input--data[aria-disabled="true"] {
+  cursor: default;
+}
+.campo__valore {
+  display: block;
+  min-height: var(--text-controllo-line);
+}
+/* Un errore dell'ora scritto dentro un blocco di campi uniti */
+.campo--unito .campo__errore {
+  padding: var(--space-0) var(--space-4) var(--space-2);
+}
+
+/* Calendario del mese: nel foglio sul telefono, nel riquadro in una finestra */
+.calendario-riquadro {
+  position: fixed;
+  left: var(--riquadro-x, var(--space-0));
+  top: var(--riquadro-top, auto);
+  bottom: var(--riquadro-bottom, auto);
+  margin-block: var(--space-2);
+  z-index: var(--z-foglio);
+  width: calc(var(--size-pannello-desktop) + var(--space-10));
+  max-width: calc(100% - 2 * var(--space-2));
+  padding: var(--space-4);
+  background: var(--color-superficie);
+  border-radius: var(--radius-l);
+  box-shadow: var(--shadow-menu);
+}
+/* «Togli la data», sotto la griglia, a sinistra (solo con `clearable`) */
+.calendario-scelta__togli {
+  display: flex;
+  width: fit-content;
+  margin-top: var(--space-4);
+}
+.calendario-scelta {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-2);
+}
+.calendario-scelta__testa {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr) var(--size-tocco)
+    var(--size-tocco);
+  align-items: center;
+}
+.calendario-scelta__titolo {
+  margin: var(--space-0);
+  font-size: var(--text-titolo-sezione-size);
+  line-height: var(--text-titolo-sezione-line);
+  letter-spacing: var(--text-titolo-sezione-tracking);
+}
+.calendario-scelta__mese {
+  font-weight: var(--weight-pieno);
+}
+.calendario-scelta__anno {
+  font-weight: var(--weight-normale);
+  color: var(--color-inchiostro-2);
+}
+.calendario-scelta__freccia {
+  display: grid;
+  place-items: center;
+  width: var(--size-tocco);
+  height: var(--size-tocco);
+  padding: var(--space-0);
+  border: 0;
+  border-radius: var(--radius-tondo);
+  background: transparent;
+  color: var(--color-inchiostro);
+  cursor: pointer;
+}
+.calendario-scelta__freccia[aria-disabled="true"] {
+  opacity: var(--opacity-disabilitato);
+  cursor: not-allowed;
+}
+.calendario-scelta__riga {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  justify-items: center;
+}
+.calendario-scelta__intestazione {
+  padding-block: var(--space-2);
+  font-size: var(--text-nota-size);
+  line-height: var(--text-nota-line);
+  color: var(--color-inchiostro-2);
+}
+.calendario-scelta__giorno {
+  display: grid;
+  place-items: center;
+  width: var(--size-tocco);
+  min-height: var(--size-tocco);
+  border-radius: var(--radius-tondo);
+  color: var(--color-inchiostro);
+  font-size: var(--text-controllo-size);
+  line-height: var(--text-controllo-line);
+  font-weight: var(--weight-normale);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  user-select: none;
+}
+.calendario-scelta__giorno.is-altro-mese {
+  color: var(--color-inchiostro-2);
+}
+.calendario-scelta__giorno.is-oggi {
+  font-weight: var(--weight-pieno);
+  box-shadow: inset 0 0 0 var(--border-medio) var(--color-inchiostro);
+}
+.calendario-scelta__giorno.is-scelto {
+  background: var(--color-pieno);
+  color: var(--color-latte);
+  font-weight: var(--weight-semi);
+}
+.calendario-scelta__giorno.is-scelto.is-oggi {
+  box-shadow: none;
+}
+.calendario-scelta__giorno.is-fuori {
+  color: var(--color-inchiostro-3);
+  cursor: not-allowed;
+}
+.calendario-scelta__giorno:active:not([aria-disabled="true"], .is-scelto) {
+  background: var(--color-premuto);
+}
+@media (hover: hover) {
+  .calendario-scelta__giorno,
+  .calendario-scelta__freccia {
+    transition: background var(--durata-rapida) var(--curva);
+  }
+  .calendario-scelta__giorno:hover:not([aria-disabled="true"], .is-scelto),
+  .calendario-scelta__freccia:hover:not([aria-disabled="true"]) {
+    background: var(--color-premuto);
   }
 }

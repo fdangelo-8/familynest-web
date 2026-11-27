@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { dateField, expectDay, typeTime } from "../fixtures/campi-data-ora";
 import { installFakes } from "../fixtures/aggiungi-fake";
 import { hasTestUser } from "../fixtures/visual-login";
 import { signInAsCached } from "../fixtures/visual-login-cached";
@@ -155,7 +156,8 @@ test("modulo con fine in un altro giorno", async ({ page }) => {
   const { entry } = await openWithPhrase(page, "Cena da Marta venerdì alle 22");
   await entry.click();
   const form = formOf(page);
-  await form.getByLabel("Alle", { exact: true }).fill("01:00");
+  // F4c (#505): the time field reads what is written when it is left.
+  await typeTime(form.getByLabel("Alle", { exact: true }), "01:00");
   await expect(form.getByText(/^Finisce /)).toBeVisible();
   await form.getByLabel("Titolo").focus();
   await shoot(page, "modulo-fine-altro-giorno.png");
@@ -176,9 +178,7 @@ test("foglio con i campi dell'impegno compilati dalla frase", async ({
 }) => {
   await installFakes(page);
   const { dialog } = await openWithPhrase(page);
-  await expect(dialog.getByLabel("Giorno", { exact: true })).toHaveValue(
-    "2026-10-22",
-  );
+  await expectDay(dateField(dialog, "Giorno"), "2026-10-22");
   await expect(
     dialog.getByRole("group", { name: "Chi lo vede", exact: true }),
   ).toBeVisible();

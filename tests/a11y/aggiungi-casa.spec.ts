@@ -16,6 +16,7 @@ import {
   installCasaFakes,
   type CasaOptions,
 } from "../fixtures/aggiungi-casa-fake";
+import { waitForAnimationsToEnd } from "../fixtures/animations";
 import { hasTestUser } from "../fixtures/visual-login";
 import { signInAsCached } from "../fixtures/visual-login-cached";
 
@@ -104,6 +105,9 @@ async function confirmOpen(page: Page, dialog: Locator, name: string) {
   await dialog.getByRole("button", { name }).click();
   const confirm = page.getByRole("alertdialog");
   await expect(confirm).toBeVisible();
+  // The dialog fades in: wait for the end of every finite animation, so the
+  // contrast is measured on the final colors.
+  await waitForAnimationsToEnd(page);
   return confirm;
 }
 
@@ -113,19 +117,24 @@ async function tabOrder(page: Page, stops: number) {
   const rings: boolean[] = [];
   for (let i = 0; i < stops; i += 1) {
     await page.keyboard.press("Tab");
-    order.push(await focused(page));
+    // A date button is named «<label>, <day>» once it has a day: the day is
+    // not written in the test (it depends on the clock).
+    order.push(
+      (await focused(page)).replace(/^(Scade il|Entro|Giorno|Data), .+$/, "$1"),
+    );
     rings.push(
       await page.evaluate(() => {
         const el = document.activeElement as HTMLElement;
         const style = getComputedStyle(el);
         const outline =
           style.outlineStyle !== "none" && parseFloat(style.outlineWidth) > 0;
-        // The fields have their own ring: inset shadow, no outline (as in the mockup)
-        return (
-          outline ||
-          ((el.tagName === "TEXTAREA" || el.tagName === "INPUT") &&
-            style.boxShadow !== "none")
-        );
+        // The fields have their own ring: inset shadow, no outline (as in the
+        // mockup). The date field is a button with the same field class.
+        const isField =
+          el.tagName === "TEXTAREA" ||
+          el.tagName === "INPUT" ||
+          (el.tagName === "BUTTON" && el.classList.contains("campo__input"));
+        return outline || (isField && style.boxShadow !== "none");
       }),
     );
   }

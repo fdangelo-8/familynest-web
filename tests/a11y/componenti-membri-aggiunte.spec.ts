@@ -6,6 +6,7 @@ import {
   usersConfigured,
   type TestUserKey,
 } from "../fixtures/auth";
+import { pickDay } from "../fixtures/campi-data-ora";
 
 // Added by the functional tester for #85 (PR #94): more states of the shared
 // parts, the page of /esplora, focus ring and touch targets.
@@ -83,7 +84,7 @@ test("a11y: foglio con «Animale» e data compilata", async ({ page }) => {
     .click();
   const dialog = page.getByRole("dialog");
   await dialog.getByRole("button", { name: "Animale" }).click();
-  await dialog.getByLabel("Data di nascita").fill("2020-04-02");
+  await pickDay(dialog.getByLabel("Data di nascita"), "2020-04-02");
   expect(await seriousViolations(page)).toEqual([]);
 });
 

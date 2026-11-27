@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { pickDay } from "../fixtures/campi-data-ora";
 import { hasTestUser, signInAs } from "../fixtures/visual-login";
 
 // PR #94 (#85): references of the shared member components (colour choice
@@ -69,7 +70,7 @@ test("#85: scelta del colore con il fuoco da tastiera", async ({ page }) => {
 test("#85: foglio «Aggiungi una persona», compilato", async ({ page }) => {
   const dialog = await open(page, ADD);
   await dialog.getByLabel("Nome").fill("Sofia");
-  await dialog.getByLabel("Data di nascita").fill("2017-03-14");
+  await pickDay(dialog.getByLabel("Data di nascita"), "2017-03-14");
   await rest(page, dialog.getByLabel("Data di nascita"));
   await expect(page.getByRole("dialog")).toHaveScreenshot(
     "foglio-aggiungi.png",
@@ -88,17 +89,16 @@ test("#85: foglio «Aggiungi una persona», nome vuoto", async ({ page }) => {
   );
 });
 
-test("#85: foglio «Aggiungi una persona», data nel futuro", async ({
+test("#85: foglio «Aggiungi una persona», calendario con i giorni dopo oggi spenti", async ({
   page,
 }) => {
   const dialog = await open(page, ADD);
   await dialog.getByLabel("Nome").fill("Sofia");
-  await dialog.getByLabel("Data di nascita").fill("2999-01-01");
-  await dialog.getByRole("button", { name: "Aggiungi Sofia" }).click();
-  await expect(dialog.getByText(/nel futuro/)).toBeVisible();
+  await dialog.getByLabel("Data di nascita").click();
+  await expect(page.getByTestId("calendario")).toBeVisible();
   await rest(page);
-  await expect(page.getByRole("dialog")).toHaveScreenshot(
-    "foglio-aggiungi-data-futura.png",
+  await expect(page.getByTestId("calendario")).toHaveScreenshot(
+    "calendario-data-limite.png",
   );
 });
 

@@ -1,4 +1,5 @@
 import { expect, isMobileProject, test } from "../fixtures/casa";
+import { dateField, expectNoDay } from "../fixtures/campi-data-ora";
 import {
   SAVE_FAILED_ALERT,
   SHARED,
@@ -371,9 +372,7 @@ test.describe("Aggiungi · testo d'esempio del campo", () => {
 
     await expect(s.type("Impegno")).toHaveAttribute("aria-pressed", "true");
     await expect(s.button("Aggiungi")).toBeDisabled();
-    await expect(s.dialog.getByLabel("Giorno", { exact: true })).toHaveValue(
-      "",
-    );
+    await expectNoDay(dateField(s.dialog, "Giorno"));
     await expect(s.dialog.getByLabel("Dalle", { exact: true })).toHaveValue("");
     await expect(s.dialog.getByLabel("Alle", { exact: true })).toHaveValue("");
     const chi = s.dialog.getByRole("group", { name: "Chi", exact: true });
@@ -384,7 +383,7 @@ test.describe("Aggiungi · testo d'esempio del campo", () => {
 
     await s.type("Da fare").click();
     await expect(s.button("Aggiungi")).toBeDisabled();
-    await expect(s.date).toHaveValue("");
+    await expectNoDay(s.date);
     await expectNobody(s.who);
     await s.expectVoice(SHARED);
     await expect(s.remind).toHaveCount(0);
@@ -398,7 +397,7 @@ test.describe("Aggiungi · testo d'esempio del campo", () => {
 
     await s.type("Scadenza").click();
     await expect(s.button("Aggiungi")).toBeDisabled();
-    await expect(s.date).toHaveValue("");
+    await expectNoDay(s.date);
     await expect(s.person("Tu")).toHaveAttribute("aria-pressed", "true");
     await s.expectVoice(SHARED);
     await expect(s.remind).toBeVisible();

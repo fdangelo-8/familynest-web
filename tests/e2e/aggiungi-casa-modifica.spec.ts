@@ -1,4 +1,5 @@
 import { type Page } from "@playwright/test";
+import { clearDay, expectDay, pickDay } from "../fixtures/campi-data-ora";
 import { expect, test, type CasaNest } from "../fixtures/casa";
 import {
   GONE_ALERT,
@@ -88,7 +89,7 @@ test.describe("Aggiungi · modifica · Da fare", () => {
     ).toBeVisible();
     await expect(s.types).toHaveCount(0);
     await expect(s.field).toHaveValue(GITA);
-    await expect(s.date).toHaveValue("2026-10-23");
+    await expectDay(s.date, "2026-10-23");
     await expect(labelText(page, /Per Sofia$/)).toBeVisible();
     await expect(s.person("Tu")).toHaveAttribute("aria-pressed", "true");
     await s.expectVoice(SHARED);
@@ -104,8 +105,8 @@ test.describe("Aggiungi · modifica · Da fare", () => {
     await seedGita(casa);
     await openEditFromRow(page, baseURL, casa, "Marco", GITA);
     const s = sheet(page, "edit");
-    await expect(s.date).toHaveValue("2026-10-23");
-    await s.date.fill("");
+    await expectDay(s.date, "2026-10-23");
+    await clearDay(s.date);
     await s.button("Salva").click();
 
     await expect(toastWith(page, "Modifiche salvate.")).toBeVisible();
@@ -189,7 +190,7 @@ test.describe("Aggiungi · modifica · Da fare", () => {
     await seedGita(casa);
     await openEditFromRow(page, baseURL, casa, "Marco", GITA);
     const s = sheet(page, "edit");
-    await s.date.fill("");
+    await clearDay(s.date);
     await s.button("Togli Per Sofia").click();
     await s.button("Salva").click();
 
@@ -364,9 +365,9 @@ test.describe("Aggiungi · modifica · Da fare", () => {
     await s.field.focus();
     await s.field.press("Control+End");
     await s.field.pressSequentially(" entro lunedì");
-    await expect(s.date).toHaveValue("2026-10-26");
+    await expectDay(s.date, "2026-10-26");
     await expect(s.date).toHaveAccessibleDescription("Preso dalla frase");
-    await s.date.fill("2026-10-27");
+    await pickDay(s.date, "2026-10-27");
     await expect(s.dialog.getByText("Preso dalla frase")).toHaveCount(0);
   });
 

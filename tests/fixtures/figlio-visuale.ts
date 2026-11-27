@@ -200,14 +200,14 @@ export async function answerProfileReads(
 }
 
 /**
- * Fills the sheet so that every kind of error shows at once: no name, a birth
- * date in the future, an exit before the entrance, a second teacher without
- * name and with a phone that is not a phone. Presses «Salva le modifiche».
+ * Fills the sheet so that every kind of error shows at once: no name, an exit
+ * before the entrance, a second teacher without name and with a phone that is
+ * not a phone. Presses «Salva le modifiche». (A birth date in the future is
+ * not here: the calendar does not let it be chosen.)
  */
 export async function provokeErrors(page: Page) {
   const dialog = editDialog(page);
   await dialog.getByLabel("Nome", { exact: true }).fill("");
-  await dialog.getByLabel("Data di nascita").fill("2030-01-01");
   await dialog.getByLabel("Entra alle").fill("17:00");
   await dialog.getByRole("button", { name: "Aggiungi una maestra" }).click();
   const second = dialog.getByRole("group", { name: "Maestra 2" });

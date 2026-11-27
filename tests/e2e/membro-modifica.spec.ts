@@ -1,6 +1,12 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { signInAs, skipReason, usersConfigured } from "../fixtures/auth";
 import {
+  dateField,
+  expectDay,
+  expectNoDay,
+  pickDay,
+} from "../fixtures/campi-data-ora";
+import {
   IDS,
   NOT_FOUND,
   adminClient,
@@ -324,7 +330,7 @@ test.describe("il foglio in modifica", () => {
       await openMember(page, biscotto, "Biscotto");
 
       const dialog = await openSheet(page, "Biscotto");
-      await expect(dialog.getByLabel("Data di nascita")).toHaveValue(birthDate);
+      await expectDay(dateField(dialog, "Data di nascita"), birthDate);
       const kind = dialog.getByRole("group", { name: "Chi è" });
       await expect(kind.getByRole("button", { name: "Animale" })).toBeEnabled();
       await expect(kind.getByRole("button", { name: "Adulto" })).toBeDisabled();
@@ -484,7 +490,7 @@ test.describe("salvataggio con modifiche", () => {
       const dialog = await openSheet(page, "Biscotto");
       await nameField(dialog).fill("Briciola");
       await colorRadio(dialog, "Azzurro").click();
-      await dialog.getByLabel("Data di nascita").fill(yearsAgo(5));
+      await pickDay(dateField(dialog, "Data di nascita"), yearsAgo(5));
       await saveButton(dialog).click();
 
       await expect(dialog).toBeHidden();
@@ -515,7 +521,7 @@ test.describe("salvataggio con modifiche", () => {
       await expect(subtitle(page)).toHaveText("Animale");
 
       const dialog = await openSheet(page, "Biscotto");
-      await expect(dialog.getByLabel("Data di nascita")).toHaveValue("");
+      await expectNoDay(dateField(dialog, "Data di nascita"));
       await nameField(dialog).fill("Briciola");
       await saveButton(dialog).click();
 
@@ -663,7 +669,7 @@ test.describe("«Annulla» del toast", () => {
 
       const dialog = await openSheet(page, "Biscotto");
       await nameField(dialog).fill("Briciola");
-      await dialog.getByLabel("Data di nascita").fill(yearsAgo(6));
+      await pickDay(dateField(dialog, "Data di nascita"), yearsAgo(6));
       await saveButton(dialog).click();
       await expect(subtitle(page)).toHaveText("Animale · 6 anni");
 
@@ -1001,15 +1007,17 @@ test.describe("privacy della data di nascita", () => {
 
       // Sheet: the date is in the field (value), not in the text.
       const dialog = await openSheet(page, "Fido");
-      await expect(dialog.getByLabel("Data di nascita")).toHaveValue(birthDate);
+      await expectDay(dateField(dialog, "Data di nascita"), birthDate);
       await page.keyboard.press("Escape");
       await expect(dialog).toBeHidden();
       await visible();
 
       // After a save and after «Annulla» the date is still not in the text.
       const again = await openSheet(page, "Fido");
-      await again.getByLabel("Data di nascita").fill(yearsAgo(4));
+      await pickDay(dateField(again, "Data di nascita"), yearsAgo(4));
       await saveButton(again).click();
+      // The sheet is gone first: its date field shows the day as text.
+      await expect(again).toBeHidden();
       await expect(subtitle(page)).toHaveText("Animale · 4 anni");
       await visible();
       for (const form of dateForms(yearsAgo(4))) {

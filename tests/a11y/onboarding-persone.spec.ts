@@ -468,7 +468,7 @@ test.describe("onboarding · chi c'è nel Nest · accessibilità", () => {
       );
     });
 
-    test("errore della data: aria-invalid, descrizione, fuoco, axe", async ({
+    test("data di nascita: il calendario non lascia scegliere dopo oggi, axe", async ({
       page,
       baseURL,
     }) => {
@@ -480,14 +480,13 @@ test.describe("onboarding · chi c'è nel Nest · accessibilità", () => {
         async () => {
           const dialog = await openAddSheet(page);
           await dialog.getByLabel("Nome").fill("Sofia");
-          const date = dialog.getByLabel("Data di nascita");
-          await date.fill("2030-01-01");
-          await dialog.getByRole("button", { name: "Aggiungi Sofia" }).click();
-          await expect(date).toBeFocused();
-          await expect(date).toHaveAttribute("aria-invalid", "true");
-          await expect(date).toHaveAccessibleDescription(
-            /Questa data è nel futuro: scegli un giorno fino a oggi\./,
-          );
+          await dialog.getByLabel("Data di nascita").click();
+          const calendar = page.getByTestId("calendario");
+          await expect(calendar).toBeVisible();
+          // «Mese successivo» is inactive: nothing after today can be chosen
+          await expect(
+            calendar.getByRole("button", { name: "Mese successivo" }),
+          ).toHaveAttribute("aria-disabled", "true");
           await expectNoBlocking(page);
         },
       );
