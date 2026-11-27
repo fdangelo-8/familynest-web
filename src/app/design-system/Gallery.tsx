@@ -984,7 +984,7 @@ function ChoicesPeopleSection() {
           data-testid="ds-volti-vuoto"
         />
       </Example>
-      <Example caption="AvatarStack · Avatar con foto e con due lettere">
+      <Example caption="AvatarStack · foto e due lettere">
         <div className={styles.riga} data-testid="ds-foto-e-pila">
           <span data-testid="ds-pila-quattro">
             <AvatarStack people={stackFour} />
