@@ -269,11 +269,7 @@ test.describe("Aggiungi · Impegni: fuoco", () => {
   }) => {
     await installFakes(page);
     await open(page);
-    // With the phrase read, the date button's name carries the day:
-    // «Giorno, <day>». The day itself is not written here.
-    const stops = (await tabStops(page)).map((name) =>
-      name.startsWith("Giorno, ") ? "Giorno" : name,
-    );
+    const stops = await tabStops(page);
     expect(stops.slice(0, 9)).toEqual([
       "Chiudi",
       "Cosa vuoi aggiungere?",
@@ -301,7 +297,11 @@ test.describe("Aggiungi · Impegni: fuoco", () => {
     await expect(
       page.getByRole("status").filter({ hasText: "chi accompagna Sofia?" }),
     ).toHaveCount(1);
-    const stops = await tabStops(page);
+    // With the phrase read, the date button's name carries the day:
+    // «Giorno, <day>». The day itself is not written here.
+    const stops = (await tabStops(page)).map((name) =>
+      name.startsWith("Giorno, ") ? "Giorno" : name,
+    );
     expect(stops.slice(0, 9)).toEqual([
       "Chiudi",
       "Cosa vuoi aggiungere?",
