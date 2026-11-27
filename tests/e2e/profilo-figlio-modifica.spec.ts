@@ -538,6 +538,11 @@ test.describe("errori di compilazione", () => {
       // 21/10/2026 is the day after «today» (the clock is fixed at 20/10):
       // the calendar does not let it be chosen (`max` is today in Rome).
       await dateField(dialog, "Data di nascita").click();
+      // The calendar opens on the month of the birth (December 2016): a year
+      // at a time forward stops at today, October 2026.
+      for (let year = 0; year < 11; year += 1) {
+        await page.keyboard.press("Shift+PageDown");
+      }
       const tomorrow = page
         .getByTestId("calendario")
         .locator('[role="gridcell"][data-day="2026-10-21"]');
