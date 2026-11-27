@@ -95,13 +95,15 @@ export async function openStep(
 }
 
 /**
- * Waits for the end of the server action `clearLinkResult` (#590). After the
- * hydration, the effect of CalendarStep.tsx:248-251 calls it when the page was
- * opened with a result cookie (a notice, or the return from the provider). The
- * action changes a cookie, so Next redraws the current page on the server and
- * the <title> (metadata, page.tsx:22-23) leaves the <head> and comes back.
- * The response that deletes the cookie is the one that carries the redraw: when
- * the cookie is gone the new page is there. With no cookie it returns at once.
+ * Waits for the end of the call to the route `/api/calendar-sync/link-result`
+ * (#590). After the hydration, the effect of CalendarStep.tsx:246-254 calls it
+ * when the page was opened with a result cookie (a notice, or the return from
+ * the provider), and so does CalendarsView.tsx. The route only deletes the
+ * cookie: it does not redraw the page, so the <title> (metadata,
+ * page.tsx:22-23) stays in the <head>. Before, a server action did it and the
+ * redraw made the title leave the head for a moment. Here the poll waits for
+ * the cookie to be gone, so the check on the title starts after the call. With
+ * no cookie it returns at once.
  */
 async function linkResultCleared(page: Page) {
   await expect
