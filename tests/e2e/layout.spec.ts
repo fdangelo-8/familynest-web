@@ -1089,8 +1089,11 @@ test.describe("computer", () => {
       // Not clipped by the scrolling sidebar: inside the window and on top
       // of whatever is under its centre.
       const box = (await balloon.boundingBox())!;
-      const links = (await sidebar(page).boundingBox())!;
-      expect(box.x, name).toBeGreaterThanOrEqual(links.x + links.width);
+      const link = (await sidebar(page)
+        .getByRole("link", { name, exact: true })
+        .boundingBox())!;
+      // Beside the icon, not over it; it may stick out of the 72 px bar.
+      expect(box.x, name).toBeGreaterThanOrEqual(link.x + link.width);
       expect(box.x + box.width, name).toBeLessThanOrEqual(1040);
       // It is a child of the body, so no scrolling ancestor can clip it.
       expect(
