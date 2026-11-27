@@ -221,8 +221,10 @@ test.describe("Aggiungi · Impegni · modulo: fuoco e tastiera", () => {
     }
     // Titolo → Giorno → Dalle → Alle → Si ripete → Dove → Chi → La porta → Chi lo vede → Note → submit
     const expected = ["Titolo", "Giorno", "Dalle", "Alle", "Si ripete", "Dove"];
-    // The native date and time fields have one stop per part: same name in a row
-    const stops = order.filter((name, i) => name !== order[i - 1]);
+    // The date field is one stop (its name has the day: «Giorno, Giovedì 22 ottobre»)
+    const stops = order
+      .map((name) => name.replace(/^Giorno, .*/, "Giorno"))
+      .filter((name, i, names) => name !== names[i - 1]);
     expect(stops.slice(0, expected.length)).toEqual(expected);
     expect(stops.at(-2)).toBe("Note");
     expect(stops.at(-1)).toBe(submitName);
@@ -253,8 +255,10 @@ test.describe("Aggiungi · Impegni · modulo: fuoco e tastiera", () => {
       ).toBe(true);
       if (entryName.test(name)) break;
     }
-    // The native date and time fields have one stop per part: same name in a row
-    const stops = order.filter((name, i) => name !== order[i - 1]);
+    // The date field is one stop (its name has the day: «Giorno, Giovedì 22 ottobre»)
+    const stops = order
+      .map((name) => name.replace(/^Giorno, .*/, "Giorno"))
+      .filter((name, i, names) => name !== names[i - 1]);
     const types = ["Impegno", "Da fare", "Spesa", "Scadenza"];
     const fields = ["Giorno", "Dalle", "Alle"];
     expect(stops.slice(0, 1 + types.length + fields.length)).toEqual([

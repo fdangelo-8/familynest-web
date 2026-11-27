@@ -1,4 +1,5 @@
 import type { Locator, Page } from "@playwright/test";
+import { pickDay } from "../fixtures/campi-data-ora";
 import {
   GOOGLE,
   OUTLOOK,
@@ -122,7 +123,7 @@ async function openModule(page: Page, phrase = NUOTO, read?: Promise<unknown>) {
 /** The «Impegno di prova»: tomorrow 17:00 - 18:00, with place and notes. */
 async function fillTrial(form: Locator, repeat?: "weekly") {
   await fieldOf(form, "Titolo").fill(NUOTO);
-  await fieldOf(form, "Giorno").fill(tomorrow());
+  await pickDay(fieldOf(form, "Giorno"), tomorrow());
   await fieldOf(form, "Dalle").fill("17:00");
   await fieldOf(form, "Alle").fill("18:00");
   await fieldOf(form, "Dove").fill("Piscina comunale");
@@ -961,7 +962,7 @@ test.describe("rete e privacy", () => {
       await withGoogle(browser, u);
       await u.rita.signInContext(page.context(), baseURL as string);
       const form = await openModule(page, "Visita di Rita");
-      await fieldOf(form, "Giorno").fill(tomorrow());
+      await pickDay(fieldOf(form, "Giorno"), tomorrow());
       await fieldOf(form, "Dalle").fill("17:00");
       await fieldOf(form, "Alle").fill("18:00");
       await submitOf(form).click();

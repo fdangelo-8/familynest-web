@@ -1,4 +1,5 @@
 import type { Page } from "@playwright/test";
+import { pickDay } from "../fixtures/campi-data-ora";
 import {
   buttonOf,
   card,
@@ -143,7 +144,7 @@ test.describe("salvare tutti i prossimi", () => {
   }) => {
     const id = await openNuoto(page, baseURL, casa, "2026-10-20");
     const dialog = await openForm(page);
-    await fieldOf(dialog, "Giorno").fill("2026-10-21");
+    await pickDay(fieldOf(dialog, "Giorno"), "2026-10-21");
     await pressSave(page);
     const saved = await savedAs(page, () =>
       buttonOf(confirmDialog(page), ALL).click(),
@@ -178,7 +179,7 @@ test.describe("salvare tutti i prossimi", () => {
   }) => {
     const id = await openNuoto(page, baseURL, casa, "2026-10-20");
     const dialog = await openForm(page);
-    await fieldOf(dialog, "Giorno").fill("2026-10-21");
+    await pickDay(fieldOf(dialog, "Giorno"), "2026-10-21");
     await pressSave(page);
     await buttonOf(confirmDialog(page), ONLY).click();
 
@@ -523,7 +524,7 @@ test.describe("il dialogo del salvataggio", () => {
     const id = await openNuoto(page, baseURL, casa, "2026-10-20");
     const before = await eventRow(casa, id);
     const dialog = await openForm(page);
-    await fieldOf(dialog, "Giorno").fill("2026-10-22");
+    await pickDay(fieldOf(dialog, "Giorno"), "2026-10-22");
     await pressSave(page);
     await buttonOf(confirmDialog(page), ONLY).click();
 

@@ -118,27 +118,31 @@ test.describe("scollega e cancellazione", () => {
     baseURL,
   }) => {
     needsFake();
-    await withLinkerRita(baseURL, async (u) => {
-      await u.prepare(GOOGLE);
-      await linkInBackground(browser, u, "google");
-      await u.setCalendar("Personale", { visibility: "household" });
-      await u.provide(GOOGLE, "personale", [visita]);
-      await u.fake.sync(u.user.id);
-      await u.waitForEvents(VISITA, 1);
-      const before = await snapshot(u);
+    await withLinkerRita(
+      baseURL,
+      async (u) => {
+        await u.prepare(GOOGLE);
+        await linkInBackground(browser, u, "google");
+        await u.setCalendar("Personale", { visibility: "household" });
+        await u.provide(GOOGLE, "personale", [visita]);
+        await u.fake.sync(u.user.id);
+        await u.waitForEvents(VISITA, 1);
+        const before = await snapshot(u);
 
-      await ritaRemovesU(u, page);
+        await ritaRemovesU(u, page);
 
-      await expect
-        .poll(async () => await revokedTokens(u), { timeout: 30_000 })
-        .toEqual(expect.arrayContaining(before.tokens));
-      expect(await leftovers(u, before)).toEqual({
-        accounts: 0,
-        calendars: 0,
-        links: 0,
-        events: 0,
-        queue: 0,
-      });
-    });
+        await expect
+          .poll(async () => await revokedTokens(u), { timeout: 30_000 })
+          .toEqual(expect.arrayContaining(before.tokens));
+        expect(await leftovers(u, before)).toEqual({
+          accounts: 0,
+          calendars: 0,
+          links: 0,
+          events: 0,
+          queue: 0,
+        });
+      },
+      { notCouple: true },
+    );
   });
 });

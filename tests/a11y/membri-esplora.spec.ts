@@ -97,12 +97,11 @@ test.describe("fogli: ogni stato senza violazioni serious o critical", () => {
     });
   }
 
-  test("a11y: data nel futuro", async ({ page }) => {
+  test("a11y: data di nascita, calendario aperto", async ({ page }) => {
     const dialog = await openSheet(page, ADD);
     await dialog.getByLabel("Nome").fill("Rita");
-    await dialog.getByLabel("Data di nascita").fill("2999-01-01");
-    await dialog.getByRole("button", { name: "Aggiungi Rita" }).click();
-    await expect(dialog.getByText(/nel futuro/)).toBeVisible();
+    await dialog.getByLabel("Data di nascita").click();
+    await expect(page.getByTestId("calendario")).toBeVisible();
     expect(await seriousViolations(page)).toEqual([]);
   });
 

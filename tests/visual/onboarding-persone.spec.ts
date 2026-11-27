@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { pickDay } from "../fixtures/campi-data-ora";
 import {
   throwawayConfigured,
   throwawaySkipReason,
@@ -184,7 +185,7 @@ test.describe("onboarding · chi c'è nel Nest", () => {
         const dialog = await openAddSheet(page);
         await dialog.getByLabel("Nome").fill("Sofia");
         await dialog.getByRole("button", { name: "Figlio o figlia" }).click();
-        await dialog.getByLabel("Data di nascita").fill("2017-05-12");
+        await pickDay(dialog.getByLabel("Data di nascita"), "2017-05-12");
         await dialog.getByRole("radio", { name: /^Menta/ }).click();
         await expect(
           dialog.getByRole("button", { name: "Aggiungi Sofia" }),
@@ -250,7 +251,10 @@ test.describe("onboarding · chi c'è nel Nest", () => {
       );
     });
 
-    test("data nel futuro", async ({ page, baseURL }) => {
+    test("calendario della data di nascita, giorni dopo oggi spenti", async ({
+      page,
+      baseURL,
+    }) => {
       await withNest(
         "family_with_children",
         FAMILY.slice(0, 1),
@@ -259,15 +263,12 @@ test.describe("onboarding · chi c'è nel Nest", () => {
         async () => {
           const dialog = await openAddSheet(page);
           await dialog.getByLabel("Nome").fill("Sofia");
-          await dialog.getByLabel("Data di nascita").fill("2030-01-01");
-          await dialog.getByRole("button", { name: "Aggiungi Sofia" }).click();
-          await expect(
-            dialog.getByText(
-              "Questa data è nel futuro: scegli un giorno fino a oggi.",
-            ),
-          ).toBeVisible();
+          await dialog.getByLabel("Data di nascita").click();
+          await expect(page.getByTestId("calendario")).toBeVisible();
           await settle(page);
-          await sheetShot(page, "errore-data-futuro.png");
+          await expect(page.getByTestId("calendario")).toHaveScreenshot(
+            "calendario-data-limite.png",
+          );
         },
       );
     });

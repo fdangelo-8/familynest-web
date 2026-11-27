@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { waitForAnimationsToEnd } from "../fixtures/animations";
 
 // #165 (PR #170): confirm dialog above a sheet (`aboveSheet`) and the look of
 // the buttons while an action is running (inactive buttons keep their look).
@@ -42,6 +43,8 @@ test("#165: dialogo con azione in corso, bottoni inattivi con lo stesso aspetto"
         };
       }),
     );
+  // F4c (#505): the dialog fades in (also with reduced motion): wait for it.
+  await waitForAnimationsToEnd(page);
   const before = await dialog.screenshot();
   const lookBefore = await look();
 

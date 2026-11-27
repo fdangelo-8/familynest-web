@@ -316,6 +316,15 @@ function eventFieldErrors(fields: EventFields): FieldErrors {
   return errors;
 }
 
+/**
+ * The footer of the sheet is fixed (it sticks over the body), so the alert of
+ * a failed save at the end of the body can be out of sight or under the
+ * footer: when it appears it is scrolled to the middle of the body.
+ */
+function showSaveAlert(element: HTMLDivElement | null): void {
+  element?.scrollIntoView({ block: "center" });
+}
+
 /** Moves the focus to a field of the sheet by its id (a group takes it on its pressed voice). */
 function focusById(id: string): void {
   const element = document.getElementById(id);
@@ -1878,6 +1887,7 @@ export function AddSheet({
       id={dateId}
       label={type === "scadenza" ? "Scade il" : "Entro"}
       value={dueDate}
+      clearable={type === "da-fare"}
       readOnly={saving}
       help={
         dateManual === undefined && phraseDate !== null
@@ -2241,7 +2251,7 @@ export function AddSheet({
         ) : null}
 
         {saveFailed ? (
-          <Alert variant="errore">
+          <Alert variant="errore" alertRef={showSaveAlert}>
             {isImpegno ? SAVE_FAILED_TEXT : SAVE_FAILED_THING_TEXT}
           </Alert>
         ) : null}

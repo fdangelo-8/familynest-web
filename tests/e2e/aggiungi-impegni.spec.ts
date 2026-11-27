@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { dateField, expectDay } from "../fixtures/campi-data-ora";
 import { signInAs, skipReason, usersConfigured } from "../fixtures/auth";
 
 // Add · Impegni, phase 1 (#20): the main flow in the browser. Needs test user A
@@ -84,9 +85,7 @@ test.describe("Aggiungi · Impegni", () => {
     await field.pressSequentially(PHRASE);
 
     // #333: the fields show the day and the time (no chips under the field)
-    await expect(dialog.getByLabel("Giorno", { exact: true })).toHaveValue(
-      "2030-11-03",
-    );
+    await expectDay(dateField(dialog, "Giorno"), "2030-11-03");
     await expect(dialog.getByLabel("Dalle", { exact: true })).toHaveValue(
       "17:00",
     );

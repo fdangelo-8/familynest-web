@@ -13,6 +13,7 @@ import {
   type CasaNest,
   type Day,
 } from "./casa";
+import { dateField } from "./campi-data-ora";
 
 // Helpers of the tests of Dettaglio impegno (#19). Data: every test builds its
 // own throwaway Nests (tests/fixtures/casa.ts) and creates its events with the
@@ -385,7 +386,7 @@ export const buttonOf = (dialog: Locator, name: string) =>
 
 /** The field of the form with that label. */
 export const fieldOf = (dialog: Locator, label: string) =>
-  dialog.getByLabel(label, { exact: true });
+  dateField(dialog, label);
 export const groupOf = (dialog: Locator, name: string) =>
   dialog.getByRole("group", { name, exact: true });
 export const chipOf = (dialog: Locator, group: string, person: string) =>

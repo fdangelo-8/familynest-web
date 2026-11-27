@@ -481,6 +481,7 @@ function ChildSheetOpen({ onClose, focusOn, data, onSave }: ChildSheetProps) {
           label={MEMBER_BIRTH_LABEL}
           help={MEMBER_BIRTH_HELP}
           max={toDateFieldValue(new Date())}
+          clearable
           value={form.birthDate}
           error={errors["birth"]}
           onChange={(event) => update("birthDate", event.target.value)}

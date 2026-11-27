@@ -7,6 +7,7 @@ import {
   type CasaNest,
   type Day,
 } from "./casa";
+import { dateField } from "./campi-data-ora";
 
 // Helpers for the tests of Aggiungi · Impegni (#20, phase 1).
 //
@@ -57,7 +58,7 @@ export const impegnoFields = (page: Page) => {
     exact: true,
   });
   return {
-    day: dialog.getByLabel("Giorno", { exact: true }),
+    day: dateField(dialog, "Giorno"),
     from: dialog.getByLabel("Dalle", { exact: true }),
     to: dialog.getByLabel("Alle", { exact: true }),
     who,

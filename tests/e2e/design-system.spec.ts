@@ -388,13 +388,21 @@ test.describe("campi e controlli", () => {
   test("CA-19: data e ora", async ({ page }) => {
     const date = page.getByTestId("campo-data");
     const time = page.getByTestId("campo-ora");
-    await expect(date).toHaveAttribute("type", "date");
-    await expect(time).toHaveAttribute("type", "time");
-    await expect(date).toHaveValue("2026-10-20");
+    // F4c (#505): the date is a button that opens a calendar and the time a
+    // text field with the numeric keypad, never the native controls.
+    await expect(date).toHaveAttribute("aria-haspopup", "dialog");
+    await expect(date).toHaveText(/Martedì 20 ottobre/);
+    await expect(time).toHaveAttribute("type", "text");
+    await expect(time).toHaveAttribute("inputmode", "numeric");
     await expect(time).toHaveValue("17:00");
     for (const field of [date, time, page.getByTestId("campo-predefinito")]) {
-      // #503: --size-campo, the label sits inside the box.
-      await expect(field).toHaveCSS("height", "56px");
+      // #503: --size-campo, the label sits inside the box. F4c (#505): the
+      // date is a button whose text may wrap in a narrow pair, so it is the
+      // minimum height that holds for it.
+      await expect(field).toHaveCSS(
+        field === date ? "min-height" : "height",
+        "56px",
+      );
       await expect(field).toHaveCSS("border-top-left-radius", "12px");
     }
   });
@@ -557,14 +565,15 @@ test.describe("sovrapposizioni", () => {
     await expect(opener).toBeFocused();
   });
 
-  test("CA-30: il foglio si chiude trascinando la maniglia", async ({
+  test("CA-30: il foglio si chiude trascinando la testata", async ({
     page,
   }) => {
     test.skip((page.viewportSize()?.width ?? 0) >= 1024, "solo mobile");
     const opener = page.getByRole("button", { name: "Apri foglio" });
     const dialog = page.getByRole("dialog", { name: "Aggiungi" });
     const drag = async (distance: number) => {
-      const handle = page.getByTestId("sheet-maniglia");
+      // F4c (#505): no visible handle, the drag starts from the head.
+      const handle = page.getByTestId("sheet-testa");
       const box = (await handle.boundingBox())!;
       const x = box.x + box.width / 2;
       const y = box.y + box.height / 2;
@@ -1016,7 +1025,9 @@ test.describe("CA-11: stessi stili del mockup", () => {
           id: "foglio",
           selector: ".foglio",
           ours: ".foglio",
-          skip: ["height"],
+          // F4c (#505): the sheet has no padding of its own (the head, the
+          // body and the foot have theirs) and no handle: approved difference.
+          skip: ["height", "padding"],
         },
       ],
       async () => {

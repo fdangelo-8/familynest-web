@@ -359,6 +359,7 @@ function MemberSheetOpen({
             label={MEMBER_BIRTH_LABEL}
             help={MEMBER_BIRTH_HELP}
             max={toDateFieldValue(new Date())}
+            clearable
             value={birthDate}
             error={dateError}
             onChange={(event) => setBirthDate(event.target.value)}

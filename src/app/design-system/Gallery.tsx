@@ -52,9 +52,15 @@ import { PageError } from "@/components/ui/PageError/PageError";
 import { QuickAddField } from "@/components/ui/QuickAddField/QuickAddField";
 import { SectionSwitcher } from "@/components/ui/SegmentedControl/SectionSwitcher";
 import { SegmentedControl } from "@/components/ui/SegmentedControl/SegmentedControl";
-import { Sheet } from "@/components/ui/Sheet/Sheet";
+import { Sheet, SheetFooter } from "@/components/ui/Sheet/Sheet";
+import {
+  ConnectList,
+  ConnectRow,
+  type ConnectStatus,
+} from "@/components/ui/ConnectRow/ConnectRow";
 import { Skeleton, SkeletonGroup } from "@/components/ui/Skeleton/Skeleton";
 import { Spinner } from "@/components/ui/Spinner/Spinner";
+import { todayKeyInRome } from "@/lib/datetime";
 import { Tag } from "@/components/ui/Tag/Tag";
 import { Toggle } from "@/components/ui/Toggle/Toggle";
 import { useToast } from "@/components/ui/Toast/ToastProvider";
@@ -1104,6 +1110,398 @@ function ChoicesPeopleSection() {
   );
 }
 
+/** Waits `ms` and resolves, or rejects with `fail` (the examples of F4c). */
+function pause(ms: number, fail = false): Promise<void> {
+  return new Promise((resolve, reject) => {
+    window.setTimeout(
+      () => (fail ? reject(new Error("pause")) : resolve()),
+      ms,
+    );
+  });
+}
+
+// F4c (#505): sheets with the written action or the fixed foot, the red
+// confirmation dialog, the «Collega» row and the date and time fields. Fixed
+// data: the tests stop the clock on Wednesday 18 November 2026, 10:00 in Rome.
+function SheetsDialogsDatesSection() {
+  const [actionOpen, setActionOpen] = useState(false);
+  const [actionTitle, setActionTitle] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [leaveNow, setLeaveNow] = useState(false);
+  const [footOpen, setFootOpen] = useState(false);
+  const [longOpen, setLongOpen] = useState(false);
+  const [aboveOpen, setAboveOpen] = useState(false);
+  const [repeatOpen, setRepeatOpen] = useState(false);
+  const [startOpen, setStartOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [failingOpen, setFailingOpen] = useState(false);
+  const [removed, setRemoved] = useState(0);
+  const [google, setGoogle] = useState<ConnectStatus>("idle");
+  const [outlook, setOutlook] = useState<ConnectStatus>("idle");
+  const [day, setDay] = useState("2026-11-18");
+  const [dayYear, setDayYear] = useState("2027-01-04");
+  const [dayLimits, setDayLimits] = useState("2026-11-24");
+  const [dayEmpty, setDayEmpty] = useState("");
+  const [dayOptional, setDayOptional] = useState("2017-05-14");
+  // «Today» is read in the browser only (the server has no clock to show)
+  const todayInRome = useSyncExternalStore(
+    () => () => {},
+    () => todayKeyInRome(),
+    () => undefined,
+  );
+  const [timeDay, setTimeDay] = useState("2026-11-18");
+  const [from, setFrom] = useState("16:00");
+  const [lastTime, setLastTime] = useState("16:00");
+
+  const save = () => {
+    if (actionTitle.trim() === "") return;
+    setSaving(true);
+    void pause(1000).then(() => {
+      setSaving(false);
+      setLeaveNow(true);
+    });
+  };
+  const leaveAction = () => {
+    setActionOpen(false);
+    setLeaveNow(false);
+    setActionTitle("");
+  };
+  const connectGoogle = () => {
+    setGoogle("busy");
+    void pause(300).then(() => setGoogle("error"));
+  };
+  const connectOutlook = () => {
+    setOutlook("busy");
+    void pause(300).then(() => setOutlook("connected"));
+  };
+
+  const deadlineFields = (
+    <>
+      <TextField
+        label="Che cosa"
+        id="ds-scadenza-cosa"
+        defaultValue="Vaccino di Biscotto"
+      />
+      <DateField label="Quando" id="ds-scadenza-quando" value="2027-03-14" />
+    </>
+  );
+  const deadlineFoot = (onCancel: () => void) => (
+    <SheetFooter onCancel={onCancel} action={{ label: "Aggiungi" }} />
+  );
+
+  return (
+    <Section
+      id="fogli-conferme-data"
+      title="Fogli, conferme e data (F4c, #505)"
+    >
+      <Example caption="Sheet · azione scritta · «Salva»">
+        <div data-testid="ds-foglio-azione">
+          <Button variant="secondary" onClick={() => setActionOpen(true)}>
+            Apri Nuovo impegno
+          </Button>
+          <Sheet
+            open={actionOpen}
+            onClose={leaveAction}
+            closeRequested={leaveNow}
+            title="Nuovo impegno"
+            tall
+            action={{ label: "Salva", onClick: save, busy: saving }}
+          >
+            <TextField
+              label="Titolo"
+              id="ds-impegno-titolo"
+              value={actionTitle}
+              onChange={(event) => setActionTitle(event.target.value)}
+            />
+          </Sheet>
+        </div>
+      </Example>
+      <Example caption="Sheet · piede fisso · «Annulla» e «Aggiungi»">
+        <div data-testid="ds-foglio-piede">
+          <Button variant="secondary" onClick={() => setFootOpen(true)}>
+            Apri Nuova scadenza
+          </Button>
+          <Sheet
+            open={footOpen}
+            onClose={() => setFootOpen(false)}
+            title="Nuova scadenza"
+            footer={deadlineFoot(() => setFootOpen(false))}
+          >
+            {deadlineFields}
+            <List flush>
+              <ListRow title="Si ripete" value="Ogni anno" />
+            </List>
+          </Sheet>
+        </div>
+      </Example>
+      <Example caption="Sheet · corpo lungo, piede attaccato">
+        <div data-testid="ds-foglio-lungo">
+          <Button variant="secondary" onClick={() => setLongOpen(true)}>
+            Apri Nuova scadenza lunga
+          </Button>
+          <Sheet
+            open={longOpen}
+            onClose={() => setLongOpen(false)}
+            title="Nuova scadenza"
+            footer={deadlineFoot(() => setLongOpen(false))}
+          >
+            {deadlineFields}
+            {Array.from({ length: 40 }, (_, index) => (
+              <p className="t-corpo" key={index}>
+                Riga {index + 1} del corpo
+              </p>
+            ))}
+          </Sheet>
+        </div>
+      </Example>
+      <Example caption="Sheet sopra un altro foglio">
+        <div data-testid="ds-foglio-sopra">
+          <Button variant="secondary" onClick={() => setAboveOpen(true)}>
+            Apri Nuova scadenza sopra
+          </Button>
+          <Sheet
+            open={aboveOpen}
+            onClose={() => setAboveOpen(false)}
+            title="Nuova scadenza"
+            footer={deadlineFoot(() => setAboveOpen(false))}
+          >
+            {deadlineFields}
+            <List flush>
+              <ListRow
+                title="Si ripete"
+                value="Ogni anno"
+                arrow
+                onClick={() => setRepeatOpen(true)}
+              />
+            </List>
+          </Sheet>
+          <Sheet
+            open={repeatOpen}
+            onClose={() => setRepeatOpen(false)}
+            title="Si ripete"
+            footer={
+              <SheetFooter
+                onCancel={() => setRepeatOpen(false)}
+                action={{
+                  label: "Fatto",
+                  onClick: () => setRepeatOpen(false),
+                }}
+              />
+            }
+          >
+            <p className="t-corpo">Ogni anno, nello stesso giorno.</p>
+          </Sheet>
+        </div>
+      </Example>
+      <Example caption="Sheet · titolo a sinistra (titleAlign start)">
+        <div data-testid="ds-foglio-titolo-inizio">
+          <Button variant="secondary" onClick={() => setStartOpen(true)}>
+            Apri titolo lungo
+          </Button>
+          <Sheet
+            open={startOpen}
+            onClose={() => setStartOpen(false)}
+            title="Tommaso ha già un impegno alla stessa ora"
+            titleAlign="start"
+          >
+            <p className="t-corpo">Vuoi aggiungerlo lo stesso?</p>
+          </Sheet>
+        </div>
+      </Example>
+      <Example caption="ConfirmDialog · rosso pieno">
+        <div data-testid="ds-conferma">
+          <Button variant="pericolo" onClick={() => setConfirmOpen(true)}>
+            Togli Biscotto
+          </Button>
+          <span
+            className={styles.contatore}
+            data-testid="ds-conferma-conteggio"
+          >
+            Tolti: {removed}
+          </span>
+          <ConfirmDialog
+            open={confirmOpen}
+            onClose={() => setConfirmOpen(false)}
+            title={`Togliere Biscotto dal ${BRAND.short}?`}
+            text="Spariscono il suo profilo e la foto. Scadenze e cose da fare restano, senza il suo nome."
+            actions={[
+              {
+                label: `Togli dal ${BRAND.short}`,
+                variant: "pericolo-pieno",
+                onClick: () => setRemoved((n) => n + 1),
+              },
+            ]}
+          />
+        </div>
+      </Example>
+      <Example caption="ConfirmDialog · l'azione fallisce">
+        <div data-testid="ds-conferma-errore">
+          <Button variant="pericolo" onClick={() => setFailingOpen(true)}>
+            Togli Biscotto
+          </Button>
+          <ConfirmDialog
+            open={failingOpen}
+            onClose={() => setFailingOpen(false)}
+            title={`Togliere Biscotto dal ${BRAND.short}?`}
+            text="Spariscono il suo profilo e la foto. Scadenze e cose da fare restano, senza il suo nome."
+            actions={[
+              {
+                label: `Togli dal ${BRAND.short}`,
+                variant: "pericolo-pieno",
+                onClick: () => pause(300, true),
+              },
+            ]}
+          />
+        </div>
+      </Example>
+      <Example caption="ConnectRow · «Collega», forma 1" wide>
+        <div data-testid="ds-collega">
+          <ConnectList>
+            <ConnectRow
+              service="Google Calendar"
+              icon="calendar"
+              line="Calendario personale"
+              status={google}
+              onConnect={connectGoogle}
+            />
+            <ConnectRow
+              service="Outlook"
+              icon="calendar"
+              line="Lavoro e calendari condivisi"
+              status={outlook}
+              connectedLine="12 impegni nelle prossime quattro settimane"
+              onConnect={connectOutlook}
+            />
+          </ConnectList>
+        </div>
+      </Example>
+      <Example caption="DateField · giorno">
+        <div data-testid="ds-data">
+          <DateField
+            label="Giorno"
+            value={day}
+            onChange={(event) => setDay(event.target.value)}
+          />
+          <p
+            className="t-nota t-secondario"
+            role="status"
+            aria-live="polite"
+            data-testid="ds-data-stato"
+          >
+            Valore: {day}
+          </p>
+        </div>
+      </Example>
+      <Example caption="DateField · un altro anno">
+        <div data-testid="ds-data-anno">
+          <DateField
+            label="Giorno"
+            value={dayYear}
+            onChange={(event) => setDayYear(event.target.value)}
+          />
+          <p
+            className="t-nota t-secondario"
+            role="status"
+            aria-live="polite"
+            data-testid="ds-data-anno-stato"
+          >
+            Valore: {dayYear}
+          </p>
+        </div>
+      </Example>
+      <Example caption="DateField · con min e max">
+        <div data-testid="ds-data-limiti">
+          <DateField
+            label="Fino a"
+            value={dayLimits}
+            min="2026-11-10"
+            max="2026-12-20"
+            onChange={(event) => setDayLimits(event.target.value)}
+          />
+          <p
+            className="t-nota t-secondario"
+            role="status"
+            aria-live="polite"
+            data-testid="ds-data-limiti-stato"
+          >
+            Valore: {dayLimits}
+          </p>
+        </div>
+      </Example>
+      <Example caption="DateField · vuoto">
+        <div data-testid="ds-data-vuota">
+          <DateField
+            label="Quando"
+            value={dayEmpty}
+            onChange={(event) => setDayEmpty(event.target.value)}
+          />
+          <p
+            className="t-nota t-secondario"
+            role="status"
+            aria-live="polite"
+            data-testid="ds-data-vuota-stato"
+          >
+            Valore: {dayEmpty}
+          </p>
+        </div>
+      </Example>
+      <Example caption="DateField · facoltativo, con «Togli la data»">
+        <div data-testid="ds-data-facoltativa">
+          <DateField
+            label="Data di nascita"
+            value={dayOptional}
+            max={todayInRome}
+            clearable
+            onChange={(event) => setDayOptional(event.target.value)}
+          />
+          <p
+            className="t-nota t-secondario"
+            role="status"
+            aria-live="polite"
+            data-testid="ds-data-facoltativa-stato"
+          >
+            Valore: {dayOptional}
+          </p>
+        </div>
+      </Example>
+      <Example caption="DateField e TimeField · blocco unito">
+        <div data-testid="ds-ora">
+          <FieldGroup>
+            <DateField
+              label="Giorno"
+              value={timeDay}
+              onChange={(event) => setTimeDay(event.target.value)}
+            />
+            <FieldGroup columns>
+              <TimeField
+                label="Dalle"
+                value={from}
+                onChange={(event) => {
+                  setFrom(event.target.value);
+                  setLastTime(event.target.value);
+                }}
+              />
+              <TimeField
+                label="Alle"
+                defaultValue="17:00"
+                onChange={(event) => setLastTime(event.target.value)}
+              />
+            </FieldGroup>
+          </FieldGroup>
+          <p
+            className="t-nota t-secondario"
+            role="status"
+            aria-live="polite"
+            data-testid="ds-ora-stato"
+          >
+            Valore: {lastTime}
+          </p>
+        </div>
+      </Example>
+    </Section>
+  );
+}
+
 export function Gallery() {
   const rowCards = useQueryFlag("righe-scheda");
   const pageParts = useQueryFlag("pezzi-pagine");
@@ -1124,6 +1522,7 @@ export function Gallery() {
       <ListSection rowCards={rowCards} />
       <BaseComponentsSection />
       <OverlaysSection />
+      <SheetsDialogsDatesSection />
       <StatesSection />
       <DayViewSection />
       <EditableRowsSection />
