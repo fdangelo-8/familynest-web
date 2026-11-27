@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { waitForAnimationsToEnd } from "../fixtures/animations";
 import {
   CENA,
   NOW,
@@ -192,12 +193,13 @@ test.describe("axe", () => {
     await expect(alert).toHaveText(
       "Non riusciamo a salvare le modifiche. Controlla la connessione e riprova.",
     );
-    // The error does not take the focus away from the buttons.
+    // F4c (CA-14): after a failure the focus goes to the notice, which stays
+    // inside the dialog and is announced.
+    await expect(alert).toBeFocused();
     expect(
       await page.evaluate(
         () =>
-          document.activeElement?.closest('[role="alertdialog"]') !== null &&
-          document.activeElement?.getAttribute("role") !== "alert",
+          document.activeElement?.closest('[role="alertdialog"]') !== null,
       ),
     ).toBe(true);
     expect(await seriousViolations(page)).toEqual([]);
@@ -821,6 +823,8 @@ test.describe("contrasti", () => {
     await page.getByLabel("Titolo").fill("Nuoto");
     await saveButton(page).click();
     await expect(page.getByRole("alertdialog")).toBeVisible();
+    // The dialog fades in (F4c): contrast is read once it is fully drawn.
+    await waitForAnimationsToEnd(page);
     const dialogPairs: Pair[] = [];
     for (const selector of [
       ".dialogo__titolo",
@@ -839,6 +843,8 @@ test.describe("contrasti", () => {
     await page.getByRole("button", { name: "Elimina impegno" }).click();
     const dialog = page.getByRole("alertdialog");
     await expect(dialog).toBeVisible();
+    // The dialog fades in (F4c): contrast is read once it is fully drawn.
+    await waitForAnimationsToEnd(page);
     const pairs: Pair[] = [];
     for (const selector of [
       ".dialogo__titolo",
