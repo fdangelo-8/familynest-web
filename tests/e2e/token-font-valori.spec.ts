@@ -163,8 +163,11 @@ test.describe("token", () => {
       }
       return [...found];
     });
-    // Both directions: nothing missing, nothing extra.
-    expect(declared.sort()).toEqual([...names].sort());
+    // Both directions: nothing missing, nothing extra. #634: the CSS minifier
+    // turns `color-scheme` into two helper properties.
+    expect(
+      declared.filter((name) => !name.startsWith("--lightningcss-")).sort(),
+    ).toEqual([...names].sort());
 
     const actual = await rootValues(page, names);
     for (const name of names) {
@@ -527,6 +530,9 @@ test.describe("colori delle persone", () => {
           `${code}: corsia su ${ground}`,
         ).toBeGreaterThanOrEqual(3);
       }
+      // #634: the bar of "di casa" is the secondary ink (#55686C), no longer
+      // a darker shade of the dot: the hue only holds for the ten colours.
+      if (code === "neutro") continue;
       const gap = Math.abs(hueOf(colour!) - hueOf(lane!));
       expect(Math.min(gap, 360 - gap), `${code}: tonalità`).toBeLessThanOrEqual(
         2,

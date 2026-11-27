@@ -110,7 +110,10 @@ test.describe("token e base", () => {
       }
       return [...found];
     });
-    const extra = declared.filter((name) => !names.includes(name));
+    // #634: the CSS minifier turns `color-scheme` into two helper properties.
+    const extra = declared.filter(
+      (name) => !names.includes(name) && !name.startsWith("--lightningcss-"),
+    );
     expect(extra.sort()).toEqual([]);
   });
 
@@ -447,7 +450,8 @@ test.describe("campi e controlli", () => {
       );
     }
     await chips.nth(0).hover();
-    await expect(chips.nth(0)).toHaveCSS("background-color", "rgb(42, 41, 37)");
+    // #634: the mouse over a full control is --color-azione.
+    await expect(chips.nth(0)).toHaveCSS("background-color", "rgb(15, 61, 68)");
     const statico = page.getByTestId("chip-statico");
     expect(await statico.evaluate((node) => node.tagName)).not.toBe("BUTTON");
     await expect(statico).not.toHaveAttribute("aria-pressed", /.*/);
@@ -838,7 +842,13 @@ test.describe("CA-11: stessi stili del mockup", () => {
     { id: "stato-vuoto", selector: ".stato-vuoto__titolo", skip: ["height"] },
     // The first skeletons of the mockup are on the dark frame: the large one
     // is on paper in both.
-    { id: "skeleton", selector: ".skeleton--grande" },
+    // #634: the skeleton takes --color-scheletro (#DCE2DF), not carta-2: at
+    // night carta-2 on the page would be invisible.
+    {
+      id: "skeleton",
+      selector: ".skeleton--grande",
+      skip: ["background-color"],
+    },
     // One per variant; the height depends on how the text wraps.
     // The mockup shows the error one on the dark frame: the inherited text
     // color (and the border color that follows it) is context there.

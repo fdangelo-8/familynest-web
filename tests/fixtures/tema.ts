@@ -9,6 +9,11 @@ export type Theme = "chiaro" | "scuro";
 export function canonicalColor(value: string): string {
   return value
     .replace(
+      /#([0-9a-f])([0-9a-f])([0-9a-f])([0-9a-f])\b/g,
+      (_, r: string, g: string, b: string, a: string) =>
+        `#${r}${r}${g}${g}${b}${b}${a}${a}`,
+    )
+    .replace(
       /#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})\b/g,
       (_, r: string, g: string, b: string, a: string) =>
         `rgba(${parseInt(r, 16)},${parseInt(g, 16)},${parseInt(b, 16)},${(parseInt(a, 16) / 255).toFixed(2)})`,
@@ -49,6 +54,12 @@ export function rgbOf(value: string): [number, number, number] {
     ];
   const fn = /^rgba?\(\s*([\d.]+)[ ,]+([\d.]+)[ ,]+([\d.]+)/.exec(text);
   if (fn) return [Number(fn[1]), Number(fn[2]), Number(fn[3])];
+  // color-mix() comes back from the browser as color(srgb r g b), 0 to 1.
+  const srgb = /^color\(srgb\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)/.exec(text);
+  if (srgb)
+    return [srgb[1]!, srgb[2]!, srgb[3]!].map((channel) =>
+      Math.round(Number(channel) * 255),
+    ) as [number, number, number];
   throw new Error(`Colore non riconosciuto: ${value}`);
 }
 
@@ -66,6 +77,24 @@ export function contrast(a: string, b: string): number {
   return (hi! + 0.05) / (lo! + 0.05);
 }
 
+/**
+ * Waits for the colour transitions that a change of theme starts on the
+ * components (hover and press have `transition: background-color`). Looping
+ * animations (skeletons, spinners) are not transitions and are left alone.
+ */
+export async function settleTheme(page: Page) {
+  await page.evaluate(async () => {
+    // Force the style recalculation, so the transitions exist.
+    void getComputedStyle(document.body).backgroundColor;
+    await Promise.all(
+      document
+        .getAnimations()
+        .filter((animation) => animation instanceof CSSTransition)
+        .map((animation) => animation.finished.catch(() => undefined)),
+    );
+  });
+}
+
 /** Puts the page in a theme with the attribute, which wins over the system. */
 export async function setAspetto(page: Page, value: string | null) {
   await page.evaluate((aspetto) => {
@@ -73,6 +102,7 @@ export async function setAspetto(page: Page, value: string | null) {
       document.documentElement.removeAttribute("data-aspetto");
     else document.documentElement.setAttribute("data-aspetto", aspetto);
   }, value);
+  await settleTheme(page);
 }
 
 /** Computed value of custom properties on <html>. */

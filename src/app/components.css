@@ -6396,6 +6396,12 @@ body {
 .toggle[aria-checked="true"] {
   box-shadow: none;
 }
+/* #634: l'adesivo «Liberi insieme» ha il fondo del tema (--color-insieme), non
+   un colore fisso: il testo segue il tema, non --color-adesso-testo */
+.adesivo--insieme,
+.adesivo--insieme .adesivo__nota {
+  color: var(--color-inchiostro);
+}
 /* #634: il pallino dell'interruttore acceso sta sopra il pieno: --color-latte */
 .toggle[aria-checked="true"]::after {
   background: var(--color-latte);

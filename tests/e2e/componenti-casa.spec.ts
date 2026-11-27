@@ -698,9 +698,16 @@ test.describe("Accessibilità e regole CSS", () => {
         // Approved difference (#313, text up to 200%): .selettore has
         // min-height instead of height, so a larger text does not overflow it.
         const enlargedText = rule.replace(";height:", ";min-height:");
+        // Approved difference (#634, dark theme): a full ground is
+        // --color-pieno, not --color-inchiostro (spec 634, §3 A).
+        const fullGround = rule.replace(
+          "background:var(--color-inchiostro)",
+          "background:var(--color-pieno)",
+        );
         return !(
           (rule.startsWith(".campo-rapido|") && copied.has(approved)) ||
-          (rule.startsWith(".selettore|") && copied.has(enlargedText))
+          (rule.startsWith(".selettore|") && copied.has(enlargedText)) ||
+          copied.has(fullGround)
         );
       });
     expect(missing).toEqual([]);
