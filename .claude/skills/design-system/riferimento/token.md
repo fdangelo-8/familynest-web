@@ -4,7 +4,7 @@
 
 > **Dal 25/11/2026 (F2, #196):** sono i valori del design per telefono di Fable (`telefono.md`, colonna «Nuovo valore»), nel codice con la PR #585. I valori del vecchio mockup restano in `docs/mockup/tokens.css` (archivio) e, riga per riga, nella colonna «Attuale nel codice» di `telefono.md`.
 
-> **Dal 26/11/2026 (D7):** la tavolozza comune dei Passi 12–16, con il valore chiaro e quello scuro di 73 ruoli, la regola del pallino, le tinte delle barrette, la scena della notte e le regole del tema scuro, è in fondo a questo file («Tavolozza comune dei Passi 12–16»). Il tema scuro c'è al lancio. Non è ancora nel codice: dove dice altro rispetto alle tabelle qui sotto, per il lavoro nuovo vale la tavolozza, e i token li cambia una `richiesta-condivisa`.
+> **Dal 26/11/2026 (D7):** la tavolozza comune dei Passi 12–16, con il valore chiaro e quello scuro di 73 ruoli, la regola del pallino, le tinte delle barrette, la scena della notte e le regole del tema scuro, è in fondo a questo file («Tavolozza comune dei Passi 12–16»). Il tema scuro c'è al lancio. È nel codice (`src/app/globals.css`: `:root` chiaro, `:root[data-aspetto="scuro"]` e `@media (prefers-color-scheme: dark)`): dove questo file dice altro, vale `globals.css`, e i token li cambia una `richiesta-condivisa`.
 
 Tutti i valori del `:root` di `src/app/globals.css`, uguale a `docs/agenti/design/token.css` (lo confronta il test dei token: si cambiano insieme). Nome variabile → valore → uso. Gli esadecimali qui sono in maiuscolo; nel CSS Prettier li scrive in minuscolo e mette lo zero prima dei decimali: il valore è lo stesso. Dalla #313 dimensioni e interlinee del testo sono in rem (stesso valore a 16 px), vedi «Scala tipografica».
 
@@ -15,34 +15,36 @@ Tutti i valori del `:root` di `src/app/globals.css`, uguale a `docs/agenti/desig
 | `--color-carta`              | `#FFFFFF`               | sfondo delle pagine: le pagine sono bianche                                    |
 | `--color-carta-2`            | `#F4F6F4`               | fondi quieti: avvisi, pulsante quieto, scheletri, segnaposto delle foto        |
 | `--color-superficie`         | `#FFFFFF`               | fogli, campi, dischi sopra le foto                                             |
-| `--color-fondo-app`          | `#F5F6F4`               | fondo sotto Oggi e dietro la barra                                             |
+| `--color-fondo-app`          | `#F5F6F4`               | superato (#634): nessun uso                                                    |
 | `--color-premuto`            | `#ECEFEC`               | riga premuta, da bordo a bordo                                                 |
 | `--color-scelta-tenue`       | `#E2E9E5`               | voce scelta del selettore a segmenti, scheda di scelta premuta                 |
-| `--color-anello-scelta`      | `#B5CBCB`               | anello decorativo attorno a una scelta (mai unico segno: c'è sempre la spunta) |
-| `--color-inchiostro`         | `#10262A`               | testo principale, interruttore acceso, scelte piene                            |
+| `--color-anello-scelta`      | `#B5CBCB`               | superato (#634): nessun uso                                                    |
+| `--color-inchiostro`         | `#10262A`               | testo principale (i fondi pieni sono `--color-pieno`)                          |
 | `--color-inchiostro-2`       | `#55686C`               | testo secondario sulle pagine bianche                                          |
-| `--color-inchiostro-2-fondo` | `#4A5F63`               | testo secondario su `--color-fondo-app`                                        |
+| `--color-inchiostro-2-fondo` | `#4A5F63`               | superato (#634): nessun uso                                                    |
 | `--color-inchiostro-3`       | `#8A989A`               | solo segni non testuali (freccia sottile, segnaposto): 2,98:1, mai testo       |
-| `--color-azione`             | `#0F3D44`               | pulsante primario, voce scelta della barra                                     |
-| `--color-azione-premuto`     | `#0A2D33`               | primario premuto e al passaggio del mouse                                      |
+| `--color-pieno`              | `#10262A`               | fondo dei controlli pieni; sopra va `--color-latte` (scuro: `#1F7D8A`)         |
+| `--color-azione`             | `#0F3D44`               | passaggio del mouse e premuto dei pieni, voce scelta della barra               |
+| `--color-azione-premuto`     | `#0A2D33`               | superato (#634): nessun uso                                                    |
+| `--color-fuoco`              | `#0F3D44`               | anello del fuoco da tastiera (scuro: `#F2F7F5`)                                |
 | `--color-filo`               | `#E4E8E5`               | divisori delle righe a filo                                                    |
-| `--color-filo-2`             | `#C3CCC9`               | bordo di tessere e schede di scelta a riposo, cerchio tratteggiato «Aggiungi»  |
-| `--color-filo-tenue`         | `#AEB9B7`               | solo decorazione (2,01:1), mai unico bordo di un campo                         |
+| `--color-filo-2`             | `#C3CCC9`               | bordo di tessere e schede di scelta a riposo, cerchio tratteggiato «Aggiungi». |
+| `--color-filo-tenue`         | `#AEB9B7`               | superato (#634): nessun uso                                                    |
 | `--color-filo-barra`         | `rgba(16, 38, 42, 0.1)` | filo sopra la barra in basso e sopra il piede dei fogli                        |
-| `--color-filo-campo`         | `#7F9092`               | bordo del campo a riposo: 3,33:1 sul bianco (#52, «Da chiarire» 1)             |
-| `--color-corsia-vuota`       | `#EEF1EF`               | barra vuota delle corsie del calendario (misurato, A4)                         |
-| `--color-notte`              | `#1B1A17`               | blocchi scuri: porte, piano, onboarding                                        |
-| `--color-notte-2`            | `#2A2925`               | elementi sopra notte                                                           |
-| `--color-latte`              | `#F4F2EC`               | testo e superfici chiare su inchiostro e notte                                 |
-| `--color-latte-2`            | `#B9B5AC`               | testo secondario su notte                                                      |
+| `--color-filo-campo`         | `#869390`               | bordo del campo a riposo: 3,19:1 sul bianco (#634)                             |
+| `--color-corsia-vuota`       | `#EEF1EF`               | superato (#634): nessun uso                                                    |
+| `--color-notte`              | `#0B2A31`               | fondo di marca: porte, piano, onboarding, accesso                              |
+| `--color-notte-2`            | `#2A2925`               | elementi sopra notte (bruno, domanda aperta)                                   |
+| `--color-latte`              | `#FFFFFF`               | testo e segni sopra i fondi pieni e sopra notte, in entrambi i temi            |
+| `--color-latte-2`            | `#D5DEDC`               | testo secondario sopra fumetto e notte, mai sopra `--color-pieno`              |
 
 ### Colori: Liberi insieme
 
 | Variabile               | Valore    | Uso   |
 | ----------------------- | --------- | ----- |
-| `--color-insieme`       | `#FBEAAB` | fondo |
-| `--color-insieme-bordo` | `#E0BE52` | bordo |
-| `--color-insieme-testo` | `#4A3906` | testo |
+| `--color-insieme`       | `#FCEFC0` | fondo |
+| `--color-insieme-bordo` | `#A38009` | bordo |
+| `--color-insieme-testo` | `#4A4630` | testo |
 
 ### Colori: adesso
 
@@ -66,10 +68,10 @@ Tutti i valori del `:root` di `src/app/globals.css`, uguale a `docs/agenti/desig
 | `--color-avviso`        | `#A15C07` |                                                                  |
 | `--color-allerta`       | `#B3261E` | errori, rosso pieno del dialogo di conferma, link «Elimina»      |
 | `--color-allerta-fondo` | `#FCEEEA` | fondo dell'avviso d'errore e del campo sbagliato                 |
-| `--color-scaduto`       | `#A8321F` | scadenza passata                                                 |
+| `--color-scaduto`       | `#A8321F` | superato (#634): nessun uso                                      |
 | `--color-allerta-scuro` | `#A82A27` | passaggio e premuto di `.btn-pericolo-pieno` (**aggiunto**, #52) |
-| `--color-info`          | `#3355CC` | anello di focus («Da chiarire» 4: resta)                         |
-| `--color-bianco`        | `#FFFFFF` | testo su azione, rosso pieno, blu e ardesia                      |
+| `--color-info`          | `#3355CC` | informazione (non più l'anello del fuoco: è `--color-fuoco`)     |
+| `--color-bianco`        | `#FFFFFF` | testo sul blu e sull'ardesia; sui pieni va `--color-latte`       |
 
 ### Colori: persone e animali
 
@@ -79,24 +81,24 @@ Dove vivono: pallino con l'iniziale, punti del mese, adesivi, filo attorno alla 
 
 Ogni tinta ha tre token: `--color-membro-<tinta>` (pieno), `-tinta` (fondo tenue), `-corsia` (barra delle corsie).
 
-| Codice (database)    | Tinta    | Pieno     | `-tinta`                | `-corsia`            | Iniziale (`--c-iniziale`) | Contrasto iniziale | Nome accessibile |
-| -------------------- | -------- | --------- | ----------------------- | -------------------- | ------------------------- | ------------------ | ---------------- |
-| `pomodoro`           | corallo  | `#F2765C` | `#FDEAE5`               | `#EF5839`            | inchiostro                | 5,64:1             | Corallo          |
-| `glicine`            | glicine  | `#B9A2EC` | `#F2ECFC`               | `#9978E3`            | inchiostro                | 7,08:1             | Glicine          |
-| `salvia`             | menta    | `#8FD0A8` | `#E7F5EC`               | `#419A63`            | inchiostro                | 8,82:1             | Menta            |
-| `cobalto`            | blu      | `#3F6FE0` | `#E5ECFC`               | `#3F6FE0` (il pieno) | **bianco**                | 4,60:1             | Blu              |
-| `zafferano`          | ambra    | `#E8A15C` | `#FCEEDD`               | `#CE741D`            | inchiostro                | 7,27:1             | Ambra            |
-| `lampone`            | sabbia   | `#D9B88F` | manca: tinta del neutro | `#B5803D`            | inchiostro                | 8,41:1             | Sabbia           |
-| `ceruleo`            | azzurro  | `#7CC7E0` | manca: tinta del neutro | `#2C95B8`            | inchiostro                | 8,33:1             | Azzurro          |
-| `peonia`             | rosa     | `#F0A3C0` | manca: tinta del neutro | `#E4588D`            | inchiostro                | 8,03:1             | Rosa             |
-| `basilico`           | ardesia  | `#68778D` | manca: tinta del neutro | `#68778D` (il pieno) | **bianco**                | 4,55:1             | Ardesia          |
-| `cannella`           | cannella | `#AF8273` | `#F5ECE8`               | `#AD7F70`            | inchiostro                | 4,70:1             | Cannella         |
-| — (solo interfaccia) | neutro   | `#B4BFBC` | `#F1F4F2`               | `#7C8F8A`            | inchiostro                | 8,34:1             | —                |
+| Codice (database)    | Tinta    | Pieno     | `-tinta`  | `-corsia`            | Iniziale (`--c-iniziale`) | Contrasto iniziale | Nome accessibile |
+| -------------------- | -------- | --------- | --------- | -------------------- | ------------------------- | ------------------ | ---------------- |
+| `pomodoro`           | corallo  | `#F2765C` | `#FDEAE5` | `#D75E45`            | inchiostro                | 5,64:1             | Corallo          |
+| `glicine`            | glicine  | `#B9A2EC` | `#F2ECFC` | `#8F78BF`            | inchiostro                | 7,08:1             | Glicine          |
+| `salvia`             | menta    | `#8FD0A8` | `#E7F5EC` | `#54936E`            | inchiostro                | 8,82:1             | Menta            |
+| `cobalto`            | blu      | `#3F6FE0` | `#E5ECFC` | `#3F6FE0` (il pieno) | **bianco**                | 4,60:1             | Blu              |
+| `zafferano`          | ambra    | `#E8A15C` | `#FCEEDD` | `#B9762E`            | inchiostro                | 7,27:1             | Ambra            |
+| `lampone`            | sabbia   | `#D9B88F` | `#FAF5EF` | `#A3845D`            | inchiostro                | 8,41:1             | Sabbia           |
+| `ceruleo`            | azzurro  | `#7CC7E0` | `#EDF7FB` | `#4792AA`            | inchiostro                | 8,33:1             | Azzurro          |
+| `peonia`             | rosa     | `#F0A3C0` | `#FDF2F6` | `#BC7390`            | inchiostro                | 8,03:1             | Rosa             |
+| `basilico`           | ardesia  | `#68778D` | `#EAECEF` | `#68778D` (il pieno) | **bianco**                | 4,55:1             | Ardesia          |
+| `cannella`           | cannella | `#AF8273` | `#F5ECE8` | `#A67A6B`            | inchiostro                | 4,70:1             | Cannella         |
+| — (solo interfaccia) | neutro   | `#B4BFBC` | `#EEF1EF` | `#55686C`            | inchiostro                | 8,34:1             | —                |
 
 - **Ardesia `#68778D`:** decisione di Francesco del 25/11/2026, al posto di `#6B7A90` di Fable (con il bianco solo 4,36:1). Con `#68778D` l'iniziale bianca arriva a 4,55:1 a ogni misura del pallino.
-- **Tinte che mancano** (sabbia, azzurro, rosa, ardesia): Fable non le ha date e non si inventano. Non esistono i token `-tinta` di questi quattro: le loro classi usano `--color-membro-neutro-tinta`.
+- **Tinte dei colori liberi** (sabbia, azzurro, rosa, ardesia): dal #634 hanno i valori della tavolozza chiara (nella tabella sopra) e i loro token `-tinta`. Al buio valgono tutte `#1E2B2E` (il fondo «di casa», domanda aperta).
 - **Neutro:** per chi non ha un colore (per esempio un ex componente). Esiste solo nell'interfaccia, non è un codice del database.
-- **Corsie** (decisione di Francesco del 25/11/2026, verificata dal designer il 25/11): stessa tonalità e saturazione del pieno (HSL), luminosità abbassata a passi di 0,5% finché il contrasto è almeno 3:1 sia sul bianco sia su `--color-corsia-vuota` (il più scuro dei fondi delle corsie, quindi vale anche su `--color-carta-2`). Se il pieno arriva già a 3:1 (blu, ardesia), la corsia è il pieno. Risultati: da 3,00:1 a 3,06:1 su `--color-corsia-vuota`, da 3,14:1 a 3,21:1 su `--color-carta-2`, da 3,41:1 a 3,48:1 sul bianco; tonalità spostata al massimo di 0,57 gradi (neutro). Chi cambia una corsia la tiene sopra 3:1 (CA-22 della #196).
+- **Corsie** (dal #634 i valori sono quelli della tavolozza di Fable, in chiaro e al buio; sostituiscono quelli calcolati il 25/11): la barretta di ogni persona sta almeno a 3:1 sul fondo dell'impegno e sul bianco. Se il pieno arriva già a 3:1 (blu, ardesia), la corsia è il pieno. Al buio la barretta torna al colore pieno della persona. Chi cambia una corsia la tiene sopra 3:1 (CA-22 della #196).
 - Il giallo non è più un colore di persona: vuol dire «adesso». Con la stessa iniziale chi arriva dopo prende due lettere («Mi» per Miele; domanda 178 aperta per il telefono). Il colore non è mai l'unica informazione: c'è sempre l'iniziale o il nome.
 - Spariti con F2: `--color-membro-pomodoro`, `-salvia`, `-cobalto`, `-zafferano`, `-lampone`, `-ceruleo`, `-peonia`, `-basilico` (i token, non i codici). `--color-membro-glicine` e `--color-membro-cannella` restano con il valore nuovo.
 
@@ -445,7 +447,7 @@ Riferimenti dei mockup: 390 × 844 px (`--size-frame-mobile`) e 1280 × 800 px (
 
 ## Tavolozza comune dei Passi 12–16: chiaro e scuro (26/11/2026, D7)
 
-> **Non è ancora nel codice.** Le tabelle sopra descrivono il `:root` di oggi. Questa sezione è la tavolozza approvata con i Passi 12–16 (fonte: `docs/design/tavolozza.md` e `.json`, dal foglio di stile del canvas di Fable, righe `.v2` e `.v2.th-d`), comune a telefono, web da telefono e computer. **Il tema scuro c'è al lancio** (decisione di Francesco del 26/11). I token del CSS li cambia una `richiesta-condivisa` successiva su un branch `shared/*`, insieme a `docs/agenti/design/token.css`: lì si decide come i ruoli `--c-…` di Fable si legano ai nomi `--color-…` dell'app (un nome per ruolo, uguale nei due temi) e si tolgono i valori superati. Fino ad allora nessuna pagina scrive questi valori a mano.
+> **Dal 27/11/2026 è nel codice (#634, `shared/tema-scuro`).** `globals.css` e `docs/agenti/design/token.css` hanno tre blocchi con gli stessi nomi: `:root` (chiaro), `:root[data-aspetto="scuro"]` e, dentro `@media (prefers-color-scheme: dark)`, `:root:not([data-aspetto="chiaro"])` (lo stesso scuro, un test controlla che i due blocchi siano identici). Solo CSS, senza script e senza `light-dark()`. **Un `--color-*` per ruolo**, non i `--c-*` di Fable (la tabella A sotto), e i valori chiari seguono la tavolozza. Riempimenti: ogni fondo pieno è `--color-pieno` con sopra `--color-latte`; toast e fumetto `--color-fumetto`; rosso pieno `--color-allerta-pieno`; anello del fuoco `--color-fuoco`; passaggio del mouse dei pieni `--color-azione`; testo scuro sopra un fondo chiaro fisso `--color-adesso-testo`. **`--color-latte-2` mai sopra `--color-pieno`** (3,5 : 1 al buio): lì il testo secondario è `--color-latte`. Pallino non scelto: `--c-spento` (30% del pieno sopra `--color-carta`) con l'iniziale `--color-inchiostro`. `.solo-chiaro` e `.solo-scuro` scambiano un'immagine tra i due temi. Superati e senza usi (restano in `:root`, si tolgono in una PR successiva): `--color-fondo-app`, `--color-anello-scelta`, `--color-filo-tenue`, `--color-inchiostro-2-fondo`, `--color-corsia-vuota`, `--color-scaduto`, `--color-azione-premuto`. Le tabelle di colori in alto sono allineate ai valori chiari nuovi; i token superati sono segnati come tali. Questa sezione è la tavolozza approvata con i Passi 12–16 (fonte: `docs/design/tavolozza.md` e `.json`, dal foglio di stile del canvas di Fable, righe `.v2` e `.v2.th-d`), comune a telefono, web da telefono e computer. **Il tema scuro c'è al lancio** (decisione di Francesco del 26/11).
 
 **Come funziona.** Ogni colore dell'interfaccia passa da un ruolo. Il tema scuro cambia solo i valori: un blocco di variabili per il chiaro e uno per lo scuro, con gli stessi nomi; nessuna pagina è ridisegnata e nessun componente ha un colore scritto a mano. Il tema segue `prefers-color-scheme`; in Impostazioni › Aspetto la scelta «Chiaro / Scuro / Come il sistema» vince sul sistema. `prefers-color-scheme` è una caratteristica di media nuova rispetto alle tre media query ammesse in «Breakpoint»: la ammette la stessa `richiesta-condivisa`. «uguale» vuol dire stesso valore nei due temi.
 
@@ -596,9 +598,9 @@ La barretta a sinistra di ogni impegno stacca dal fondo dell'impegno almeno 3 : 
 | «Liberi insieme», giallo | `#F6C945` | `#FCEFC0`    | `#A38009`          |              3,2 | `#3A3112`   | `#E2B93B`            |             6,9 |
 | di casa, di nessuno      | —         | `#EEF1EF`    | `#55686C` (testo2) |                — | `#1E2B2E`   | `#A9C0BF`            |             7,6 |
 
-- Rosa, azzurro, sabbia e ardesia sono i colori liberi per chi arriva dopo: le tinte chiare sono nella tavola «I valori» (`docs/design/computer/regole-e-valori-p12-16/01-i-valori.png`), **non hanno valori scuri** e non si inventano.
+- Rosa, azzurro, sabbia e ardesia sono i colori liberi per chi arriva dopo: le tinte chiare sono nella tavola «I valori» (`docs/design/computer/regole-e-valori-p12-16/01-i-valori.png`). Nel codice hanno anche il valore scuro di `-tinta` e `-corsia` (`src/app/globals.css`); non si inventano altri valori.
 - **Ardesia:** vale `#68778D`, decisione di Francesco del 25/11 (la tavola di Fable dice ancora `#6B7A90`); la barretta è il pieno.
-- Sostituiscono le corsie `-corsia` di F2 (per esempio corallo `#EF5839`, menta `#419A63`), calcolate sul bianco e su `--color-corsia-vuota`: la `richiesta-condivisa` porta i valori di questa tabella, uguali su telefono e computer.
+- Sostituiscono le corsie `-corsia` di F2 (per esempio corallo `#EF5839`, menta `#419A63`), calcolate sul bianco e su `--color-corsia-vuota`: i valori di questa tabella sono già in `src/app/globals.css`, uguali su telefono e computer.
 
 ### La scena della notte
 
@@ -633,8 +635,33 @@ Testo completo: `docs/design/passi-12-16/regole-tema-scuro.md`.
 
 Contrasti al buio dalla tavola di Fable: testo sul fondo 15,8; testo secondario sul fondo 9,4 e sulla superficie alzata 8,0; testo spento sul fondo 6,0 (mai da solo); collegamento sul fondo 10,5; «Liberi insieme», barretta sul suo fondo 6,9.
 
+### Ruolo → token dell'app (tabella A, #634)
+
+Un nome `--color-*` per ogni ruolo; `*` = token nuovo. Valori in `docs/design/tavolozza.json` (75 ruoli: 73 più `piano-icona-1` e `-2` del Passo 17).
+
+| Gruppo            | Ruolo → token                                                                                                                                                                                                                                                                                                                                                                                       |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Fondo e superfici | fondo → `carta` · sup → `superficie` · basso → `carta-2` · premuto → `premuto` · scheletro → `scheletro`\* · velo → `velo` · ombra → `ombra` · ombra2 → `ombra-forte` · barra → `barra`\* · cielo → `cielo`\* · cielo-mezzo → `cielo-mezzo`\* · segnaposto(-testo) → `segnaposto`\*(`-testo`) · idea-1/2/3 → `idea-1/2/3`\* · scena → `scena-fondo`\*                                               |
+| Fili              | filo → `filo` · filo2 → `filo-2` · campo → `filo-campo` · fuoco → `fuoco`\*                                                                                                                                                                                                                                                                                                                         |
+| Testo             | testo → `inchiostro` · testo-m → `inchiostro-medio`\* · testo2 → `inchiostro-2` · testo3 → `inchiostro-3` · su → `latte` · su2 → `latte-2` · link → `link`\*                                                                                                                                                                                                                                        |
+| Accento           | pieno → `pieno`\* · accento → `azione` · notte → `notte` · logo-a/b → `logo-a`\*/`logo-b`\* · logo-a/b-notte → `logo-a-notte`\*/`logo-b-notte`\* · fumetto → `fumetto`\* · assistente → `assistente`\*                                                                                                                                                                                              |
+| Stati             | errore → `allerta` · errore-pieno → `allerta-pieno`\* · errore-fondo → `allerta-fondo` · errore-bordo → `allerta-bordo`\* · adesso → `adesso` · adesso-testo → `adesso-testo`\* · liberi → `insieme` · liberi-barra → `insieme-bordo` · liberi-testo → `insieme-testo`                                                                                                                              |
+| Persone           | marco/laura/sofia/tommaso/biscotto/miele (+ `-barra`, `-fondo`) → `membro-corallo/glicine/menta/blu/ambra/cannella` (+ `-corsia`, `-tinta`) · casa-barra/fondo → `membro-neutro-corsia/-tinta` · rosa → `membro-rosa` · nessuno → `nessuno`\* · iniziale(-blu) → `iniziale`\*(`-blu`) · conferma(-fondo) → `conferma`\*(`-fondo`) · aiutante → `aiutante`\* · piano-icona-1/2 → `piano-icona-1/2`\* |
+
+### Token senza ruolo (tabella B, #634)
+
+| Token                                                                       | Chiaro                                           | Scuro                                           |
+| --------------------------------------------------------------------------- | ------------------------------------------------ | ----------------------------------------------- |
+| `scelta-tenue`                                                              | #E2E9E5                                          | #263639                                         |
+| `azione-premuto` · `allerta-scuro`                                          | invariati                                        | #1F7D8A · #C4483A (al buio il mouse non cambia) |
+| `filo-barra` · `adesso-tinta` · `occupato-1` · `occupato-2`                 | rgba(16,38,42,.1) · #FCEFC0 · invariati          | #2B3A3C · #3A3112 · #172224 · #263639           |
+| `ok` · `info` · `avviso`                                                    | #1B6B45 · invariati                              | #8FD0CB · #EAF2EE · #EAF2EE                     |
+| `membro-neutro`, `notte-2`, `bianco`, `avatar-su-colore`, `marchio-*`       | invariati                                        | uguale                                          |
+| `membro-sabbia/azzurro/rosa/ardesia-corsia`                                 | #A3845D · #4792AA · #BC7390 · #68778D (Passo 12) | il pieno: #D9B88F · #7CC7E0 · #F0A3C0 · #68778D |
+| `membro-sabbia/azzurro/rosa/ardesia-tinta` (nuovi, prima usavano il neutro) | #FAF5EF · #EDF7FB · #FDF2F6 · #EAECEF            | #1E2B2E (quello «di casa»)                      |
+
 ### Da chiarire
 
-- **Barretta di Tommaso al buio.** La tavola della tavolozza dà `--c-tommaso-barra` = **#4E7BE2** (3,5 : 1 sul fondo dell'impegno #1B2D49); il foglio di stile del canvas dà alla barretta di Tommaso (`pT`) il ruolo `--c-tommaso`, che resta **#3F6FE0** e al buio arriva solo a 3,0 : 1, al limite della soglia. **Valore proposto: #4E7BE2**, che rispetta la tavola con margine. Va confermato con Fable nel Passo 17; chi sviluppa usa `--c-tommaso-barra` e non sceglie da sé un altro valore.
-- Pagina «Piani» (Passo 17): #BFE5E1 va portato nella tavolozza come ruolo; al buio le due icone almeno a 3 : 1. Fino ad allora non si aggiunge un ruolo inventato.
-- Colori liberi (rosa, azzurro, sabbia, ardesia) senza valori scuri: da chiedere a Fable prima di dare a una persona uno di questi colori al buio.
+- **`--color-notte-2`** (#2A2925, bruno) sopra il nuovo fondo di marca verde scuro fa 1,04 : 1: resta com'è nei due temi, decorativo; il valore giusto lo deve dare Fable.
+- **Fondo scuro dei quattro colori liberi** (#1E2B2E) e passaggio del mouse dei pieni al buio (nessun cambio): default dell'analista, da far confermare a Francesco.
+- **Bordo dei campi in chiaro su `--color-carta-2`:** 2,93 : 1. Nessun campo con `--color-filo-campo` sta sopra quel fondo.
