@@ -60,6 +60,8 @@ async function duplicatedIds(page: Page) {
 }
 
 async function expectClean(page: Page) {
+  // Same reason as the lens transition below (#590).
+  await waitForAnimationsToEnd(page);
   expect(await violations(page)).toEqual([]);
   expect(await duplicatedIds(page)).toEqual([]);
 }

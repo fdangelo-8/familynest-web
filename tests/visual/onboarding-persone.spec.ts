@@ -148,6 +148,10 @@ test.describe("onboarding · chi c'è nel Nest", () => {
         await expect(
           page.getByText("Caricamento in corso").first(),
         ).toBeAttached();
+        // Attached is not painted (#590): wait for a skeleton on screen.
+        await expect(
+          page.locator(".skeleton").filter({ visible: true }).first(),
+        ).toBeVisible();
         // No scripts, so no page.evaluate: just take the pointer away.
         await page.mouse.move(0, 0);
         await expect(page).toHaveScreenshot("caricamento.png", {

@@ -751,6 +751,11 @@ test.describe("Aggiungi · modifica della Spesa · permessi", () => {
     await s.button("Salva").click();
     await expect(toastWith(page, "Modifiche salvate.")).toBeVisible();
     await expect(titlesOf(toTake(page))).toHaveText(["Mele verdi"]);
+    // The first sheet must be gone (and its slide over) before the row is
+    // tapped again: otherwise `tapRow` sees the closing sheet as the new one
+    // and the next click lands on it halfway (#590).
+    await expect(s.dialog).toHaveCount(0);
+    await waitForAnimationsToEnd(page);
 
     await tapRow(page, "Mele verdi");
     await s.button("Elimina dalla spesa").click();
