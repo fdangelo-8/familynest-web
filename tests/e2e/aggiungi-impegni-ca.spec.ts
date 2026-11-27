@@ -384,13 +384,19 @@ test.describe("Aggiungi · Impegni · «chi accompagna?» e anteprima", () => {
       visibilityBox!.y + visibilityBox!.height - 1,
     );
     if (isMobileProject()) {
-      const buttonBox = await submitButton(
-        page,
-        "Metti in giovedì 22",
-      ).boundingBox();
-      expect(noticeBox!.y + noticeBox!.height).toBeLessThanOrEqual(
-        buttonBox!.y + 1,
-      );
+      // The footer of the sheet is fixed (F4c): it sticks over the end of the
+      // body, so «above the button» is the order in the page, not the pixels.
+      const noticeBeforeButton = await notice.evaluate((element) => {
+        const button = element
+          .closest('[role="dialog"]')
+          ?.querySelector<HTMLElement>(".foglio__piede button");
+        return Boolean(
+          button &&
+          element.compareDocumentPosition(button) &
+            Node.DOCUMENT_POSITION_FOLLOWING,
+        );
+      });
+      expect(noticeBeforeButton).toBe(true);
     }
     await expect(dialogOf(page).getByText("Anteprima")).toHaveCount(0);
     await expect(sideOf(page)).toHaveCount(0);
