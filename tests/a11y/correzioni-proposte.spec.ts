@@ -426,7 +426,8 @@ test.describe("con l'utente A", () => {
           "",
       );
       expect(
-        label.startsWith(name),
+        // The lens buttons carry the initials of the avatars before the word.
+        label.includes(name),
         `atteso «${name}», trovato «${label}»`,
       ).toBe(true);
     }
