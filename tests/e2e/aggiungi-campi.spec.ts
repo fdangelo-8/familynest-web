@@ -465,7 +465,7 @@ test.describe("Aggiungi · isolamento tra Nest e campi data (F4c)", () => {
   }) => {
     await openAddFromNav(page, baseURL, casa, "Marco");
     const s = sheet(page);
-    const clear = page.getByRole("button", { name: "Togli la data" });
+    const clear = page.getByTestId("calendario-togli");
 
     await s.type("Da fare").click();
     await s.field.fill("comprare il regalo");

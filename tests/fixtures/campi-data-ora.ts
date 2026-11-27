@@ -41,7 +41,7 @@ export async function expectNoDay(field: Locator) {
 /** Opens the calendar and taps «Togli la data» (optional fields only). */
 export async function clearDay(field: Locator): Promise<void> {
   await field.click();
-  await field.page().getByRole("button", { name: "Togli la data" }).click();
+  await field.page().getByTestId("calendario-togli").click();
 }
 
 // F4c (#505): the date field is a button that opens a month calendar and the

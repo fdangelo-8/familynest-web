@@ -235,7 +235,7 @@ test.describe("MemberSheet: aggiunta, regole dei campi", () => {
       calendar.getByRole("button", { name: "Mese successivo" }),
     ).toHaveAttribute("aria-disabled", "true");
     // A tap on a day after today does not close the calendar and chooses nothing
-    await tomorrow.click();
+    await tomorrow.click({ force: true });
     await expect(calendar).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(calendar).toHaveCount(0);
@@ -445,9 +445,7 @@ test.describe("MemberSheet: modifica", () => {
     const dialog = await openSheet(page, ADD);
     await dialog.getByLabel("Data di nascita").click();
     await expect(page.getByTestId("calendario")).toBeVisible();
-    await expect(
-      page.getByRole("button", { name: "Togli la data" }),
-    ).toHaveCount(0);
+    await expect(page.getByTestId("calendario-togli")).toHaveCount(0);
   });
 });
 

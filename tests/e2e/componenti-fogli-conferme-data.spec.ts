@@ -885,8 +885,10 @@ test.describe("Togli la data", () => {
         "Data di nascita, Domenica 14 maggio 2017",
       );
       await field.click();
-      const clear = page.getByRole("button", { name: "Togli la data" });
+      // (the gallery has a drawn chip with the same name: use the test id)
+      const clear = page.getByTestId("calendario-togli");
       await expect(clear).toHaveCount(1);
+      await expect(clear).toHaveAccessibleName("Togli la data");
       // It comes after the grid: Tab from the chosen day reaches it.
       await page.keyboard.press("Tab");
       await expect(clear).toBeFocused();
@@ -912,7 +914,7 @@ test.describe("Togli la data", () => {
   }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await open(page);
-    const clear = page.getByRole("button", { name: "Togli la data" });
+    const clear = page.getByTestId("calendario-togli");
     // Not clearable, with a value.
     await tid(page, "ds-data")
       .getByRole("button", { name: /^Giorno/ })
