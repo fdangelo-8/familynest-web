@@ -1,17 +1,23 @@
 import { useId, type Ref } from "react";
+import { it } from "@/lib/i18n/messages/it";
 import { cx } from "../cx";
 import { Chip, ChipGroup } from "../Chip/Chip";
 import { Icon } from "../Icon/Icon";
 
-/** Weekdays from Monday: ISO number (1 = Monday … 7 = Sunday), short and full name. */
+const names = it.choicesPeople.weekdays;
+
+/**
+ * Weekdays from Monday: ISO number (1 = Monday … 7 = Sunday), short and full
+ * name. The texts come from `it.ts` (F4b, #504).
+ */
 export const WEEKDAYS = [
-  { day: 1, short: "Lun", full: "lunedì" },
-  { day: 2, short: "Mar", full: "martedì" },
-  { day: 3, short: "Mer", full: "mercoledì" },
-  { day: 4, short: "Gio", full: "giovedì" },
-  { day: 5, short: "Ven", full: "venerdì" },
-  { day: 6, short: "Sab", full: "sabato" },
-  { day: 7, short: "Dom", full: "domenica" },
+  { day: 1, ...names.mon },
+  { day: 2, ...names.tue },
+  { day: 3, ...names.wed },
+  { day: 4, ...names.thu },
+  { day: 5, ...names.fri },
+  { day: 6, ...names.sat },
+  { day: 7, ...names.sun },
 ] as const;
 
 export type WeekdayPickerProps = {
