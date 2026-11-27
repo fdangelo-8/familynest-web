@@ -55,6 +55,14 @@ Le lezioni unite in una regola di `LEZIONI.md` durante la compattazione sono nel
   > Imposta da: `.claude/hooks/guard-bash.mjs` (#627, limiti in #630).
 - `git checkout` nella copia principale che cambia il branch agli altri → si lavora solo nel proprio worktree; per leggere un altro commit (revisore) usa `git show <ref>:<file>`.
   > Imposta da: ARCHITETTURA §5 (un git worktree per agente) e skill `flusso-git`.
+- `main` rosso per ore dopo un merge → il coordinatore segue la CI di `main` fino all'esito, dopo ogni merge.
+  > Imposta da: ARCHITETTURA §5 (se `main` diventa rosso, la correzione viene prima di tutto).
+- Script o file temporanei in cartelle condivise tra agenti → ogni agente lavora nel proprio worktree, con file dal prefisso unico (numero di issue o PR).
+  > Imposta da: ARCHITETTURA §5 (un git worktree isolato per agente).
+- Sviluppo senza criteri di accettazione numerati → l'analista li scrive prima; senza, la PR fa più giri di correzioni.
+  > Imposta da: ARCHITETTURA §4 (l'analista consegna requisito e criteri prima dello sviluppo).
+- Skill esterne → copia fissa, letta tutta, senza script né login; licenza in `LICENZE-TERZE-PARTI.md`.
+  > Imposta da: ARCHITETTURA §2 (nessun pacchetto o skill senza approvazione) e `.claude/skills/LICENZE-TERZE-PARTI.md`.
 
 ## Test
 

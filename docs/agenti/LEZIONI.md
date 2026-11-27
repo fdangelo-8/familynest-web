@@ -25,6 +25,7 @@ Una riga per lezione: `errore → regola`. Le lezioni già imposte da hook, CI, 
 - Regole di visibilità copiate in due funzioni → una sola fonte in `private`, o test di equivalenza.
 - PR `db/*` che tocca trigger o funzioni unita con la sola `check` verde → prima del merge, etichetta `suite-completa`.
 - Ruolo e chiamata a `private` in una sola espressione `security invoker` → `service_role` bloccata: il ruolo in un'istruzione a sé; pgTAP con la chiave amministrativa.
+- «Chi ha creato il Nest» → `joined_at = created_at`: solo `create_household` crea un adulto con account in un passo. Mai `is_admin` (con #652 organizza anche chi entra). Nuove funzioni con membri con account: stesso invariante.
 
 ## Sviluppo
 
@@ -41,6 +42,8 @@ Una riga per lezione: `errore → regola`. Le lezioni già imposte da hook, CI, 
 - Stessa parte di interfaccia in due disposizioni con lo stesso `id` → un `id` per disposizione, con prefisso `m-` o `d-`.
 - «Vai al contenuto» con `next/link` che non sposta il focus → `<a href="#contenuto">` con `focus()` sul `main` (`tabIndex={-1}`).
 - CSS module o `<style>` in `(app)` → niente, né in `(app)` né nelle pagine; le classi di disposizione vanno in `components.css` via `richiesta-condivisa`.
+- Classe condivisa di `components.css` cambiata → cerca prima tutti gli usi nel repository (F4b e F4c hanno rotto `.scelta__radio`, `.dialogo__azioni`).
+- «Nest» scritto a mano in un componente → `BRAND.short` o `BRAND` da `src/lib/brand.ts`; lo blocca `brand-static`.
 - Dati personali letti o restituiti oltre il necessario → si legge e si restituisce solo ciò che la pagina mostra.
 - Lettura in più parti che su errore parziale dà `ok: true` con un pezzo mancante → `{ ok: false, reason }` e «Riprova».
 - Componente condiviso che riceve un elemento già pronto → il componente possiede avviso, azioni e caricamento; la pagina passa dati e callback.
@@ -61,24 +64,18 @@ Una riga per lezione: `errore → regola`. Le lezioni già imposte da hook, CI, 
 
 - Lista di issue o PR vuota per un istante → ricontrolla prima di creare issue nuove.
 - «CI verde» dichiarato su un commit precedente, o `--watch` letto prima dei run del nuovo SHA → l'esito si dà solo sul commit pushato, con i run completati.
-- `main` rosso per ore dopo un merge → il coordinatore segue la CI di `main` fino all'esito, dopo ogni merge.
 - Job CodeQL `analyze` rosso al caricamento risultati con 500 delle API GitHub → non è della PR: si rilancia una volta.
-- Run annullata dalla concorrenza di `remote-test-data` → il coordinatore la rilancia a mano; mai un job fallito.
+- Run annullata (concorrenza di `remote-test-data`, o «cancelled» dopo un nuovo push o un allineamento a main) → non è un fallimento: il coordinatore rilancia l'ultimo commit.
 - Suite più lunga del timeout, interrotta senza test rossi → misura le ultime run, alza il timeout prima di aggiungere pagine; interrotta non è un esito.
 - Stack Supabase locale con cartella o project-id comuni → entrambi nel proprio worktree; si ferma con `supabase stop --workdir`.
 - Disco pieno per `node_modules`, `.next`, `test-results` → alla fine si cancellano quelli del proprio worktree.
-- Script o file temporanei in cartelle condivise tra agenti → ogni agente lavora nel proprio worktree, con file dal prefisso unico (numero di issue o PR).
 - Requisito di un'issue perso nel riepilogo del coordinatore → il revisore confronta la PR con l'issue originale; ogni elemento perso si decide per iscritto prima del test.
 - Scostamento dal criterio deciso in PR → il coordinatore aggiorna il criterio nell'issue prima del test.
 - Criterio con valori oltre i limiti del database → l'analista controlla lunghezze e vincoli.
-- Sviluppo senza criteri di accettazione numerati → l'analista li scrive prima; senza, la PR fa più giri di correzioni.
 - Controllo `db` obbligatorio rosso per un test con data passata, mentre la correzione aspetta un'altra PR → PR minima di sblocco, unita per prima.
-- Tester visivo sovrascrive il file del funzionale con una copia vecchia → `git pull --no-rebase` e `git diff --cached --stat` prima del commit; pathspec propri.
-- Modifica di file da riga di comando (`sed -i`, `perl -i`, `tee`, redirezioni, script) → solo Edit o Write; dal 26/11 lo blocca il hook `guard-bash` (#627, limiti in #630); se Edit non basta, `BLOCCATO`.
 - Cambio di un valore predefinito nel database (#612) che rompe test di file diversi → prima di aprire la PR cerca i valori vecchi in tutta `tests/`, riferimenti visivi compresi (#629).
-- PR condivisa e PR database che dipendono l'una dall'altra → unisci una dopo l'altra e rilancia la suite della seconda (#629 prima di #612).
+- PR condivisa e PR database dipendenti → unisci in sequenza e rilancia la suite della seconda (#629 prima di #612). Su `db/*` non si tocca `tests/`: se una migrazione cambia test esistenti, prima una `fix/` valida con entrambi i database (#646, #654).
 - Proposta di design approvata in ritardo, o stato «da decidere» → un'issue per ogni punto approvato, subito; prima dello stato rileggi i commenti di Francesco.
-- Skill esterne → copia fissa, letta tutta, senza script né login; licenza in `LICENZE-TERZE-PARTI.md`.
 
 ## Test
 
@@ -112,6 +109,7 @@ Una riga per lezione: `errore → regola`. Le lezioni già imposte da hook, CI, 
 - Testo cercato in tutta la pagina con una palette aperta sopra → controlla solo la superficie in cui il test è aperto.
 - `boundingBox` letto una volta su un elemento che React sostituisce → `expect.poll` finché stabile.
 - Commenti CSS con «#numero» letti come colori → togli i commenti `/* … */` prima di cercare i colori.
+- Adulti con account nelle fixture → `joined_at` dall'orologio del test precede `created_at` del database: in `tests/fixtures/casa.ts` (riga ~329) risultano «creatori»; dai un `joined_at` successivo.
 
 ## Design
 
