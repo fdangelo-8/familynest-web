@@ -2571,6 +2571,10 @@ export type Database = {
           title: string;
         }[];
       };
+      has_consent_evidence_key: {
+        Args: Record<PropertyKey, never>;
+        Returns: boolean;
+      };
       household_member_calendars: {
         Args: Record<PropertyKey, never>;
         Returns: {
