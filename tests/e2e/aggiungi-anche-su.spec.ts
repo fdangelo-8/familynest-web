@@ -330,6 +330,9 @@ test.describe("la riga", () => {
       await expect(addDialog(page)).toBeVisible();
       await addDialog(page).getByRole("button", { name: "Chiudi" }).click();
       await expect(addDialog(page)).toHaveCount(0);
+      // Closing a sheet opened by address loads /oggi (a full page load) after
+      // the dialog is gone: let it land, or it cuts the next goto short (#590).
+      await page.waitForURL(/\/oggi$/);
 
       const again = await openModule(page);
       await expect(switchOf(again)).toHaveAttribute("aria-checked", "false");

@@ -90,6 +90,28 @@ export async function openStep(
   // one that counts.
   await hydrated(page);
   await expect(page).toHaveTitle("FamilyNest · Porta qui il tuo calendario");
+  await titleStays(page);
+}
+
+/**
+ * «Present once» is not «stays»: the title was seen leaving the <head> again
+ * after the check (run 45662068376, #590). Waits until it has been there for
+ * 30 frames in a row, counted in the page (no fixed wait), so that the axe
+ * check that follows is not the one that falls in the gap.
+ */
+async function titleStays(page: Page) {
+  await page.evaluate(
+    () =>
+      new Promise<void>((done) => {
+        let frames = 0;
+        const step = () => {
+          frames = document.title === "" ? 0 : frames + 1;
+          if (frames >= 30) done();
+          else requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+      }),
+  );
 }
 
 /** The answer cookie the route leaves when the user comes back. */
@@ -140,6 +162,7 @@ export async function linkAccount(
   // page over (see openStep). Axe's «document-title» must not run in that gap.
   await hydrated(page);
   await expect(page).toHaveTitle("FamilyNest · Porta qui il tuo calendario");
+  await titleStays(page);
 }
 
 /** Forgets what the fake knows about the user. Call it in the `finally`. */
