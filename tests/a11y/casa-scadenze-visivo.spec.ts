@@ -227,10 +227,10 @@ test("aree di tocco di almeno 44 px (mobile)", async ({ page }, testInfo) => {
     const voice = group.getByRole(role, { name });
     expect(await hasTouchArea(voice), `voce ${name}`).toBe(true);
   }
-  for (const label of ["Cerca nel Nest", "Notifiche"]) {
+  for (const label of ["Cerca", "Notifiche"]) {
     const control = page
       .getByRole("banner")
-      .getByRole("link", { name: new RegExp(label) });
+      .getByRole("link", { name: new RegExp(`^${label}`) });
     const box = (await control.first().boundingBox())!;
     expect(box.width, label).toBeGreaterThanOrEqual(40);
     expect(await hasTouchArea(control.first()), label).toBe(true);

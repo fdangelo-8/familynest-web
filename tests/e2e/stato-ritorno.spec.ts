@@ -382,8 +382,7 @@ test("CA-1 (Ricerca, telefono): riaperta ha il fuoco nel campo; il testo rimasto
   });
   await casa.signIn(page, baseURL, "Marco");
   await startAtCalendar(page);
-  const lens = () =>
-    page.getByRole("link", { name: "Cerca nel Nest", exact: true });
+  const lens = () => page.getByRole("link", { name: "Cerca", exact: true });
 
   // 1. Open the search and write a text with results.
   await tap(lens());

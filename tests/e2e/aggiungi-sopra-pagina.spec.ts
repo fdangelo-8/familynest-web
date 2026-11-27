@@ -17,7 +17,7 @@ function dialogOf(page: Page) {
 
 /** The only visible "Aggiungi" link: bottom navigation on mobile, top navigation on desktop. */
 function addLink(page: Page) {
-  return page.getByRole("link", { name: "Aggiungi", exact: true });
+  return page.locator('a[href^="/aggiungi"]:visible').first();
 }
 
 async function openPage(
@@ -130,9 +130,9 @@ test.describe("Aggiungi sopra la pagina", () => {
     await expect(active).toHaveText("Calendario");
     await expect(active).toHaveAttribute("aria-current", "page");
     if (testInfo.project.name === "mobile") {
-      // the mobile bar of Calendario keeps "Cerca nel Nest"
+      // the mobile header of Calendario keeps «Cerca»
       await expect(
-        page.getByRole("link", { name: /^Cerca nel Nest/ }),
+        page.getByRole("link", { name: "Cerca", exact: true }),
       ).toHaveCount(1);
     }
   });

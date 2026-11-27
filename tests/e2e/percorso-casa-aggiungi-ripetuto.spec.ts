@@ -18,7 +18,7 @@ import { showColumn } from "../fixtures/percorso-casa";
 test.use({ locale: "it-IT", timezoneId: "Europe/Rome" });
 
 async function openAddFromBar(page: Page): Promise<void> {
-  await page.getByRole("link", { name: "Aggiungi", exact: true }).click();
+  await page.locator('a[href^="/aggiungi"]:visible').first().click();
   await waitForSheet(page, "add");
 }
 
@@ -53,7 +53,7 @@ test.describe("Aggiungi più volte di seguito", () => {
       page.getByRole("heading", { level: 1, name: greeting }),
     ).toBeVisible({ timeout: 20_000 });
     await expect(async () => {
-      await page.getByRole("link", { name: "Aggiungi", exact: true }).click();
+      await page.locator('a[href^="/aggiungi"]:visible').first().click();
       await expect(dialogOf(page)).toBeVisible({ timeout: 2000 });
     }).toPass();
     await waitForSheet(page, "add");
@@ -81,7 +81,7 @@ test.describe("Aggiungi più volte di seguito", () => {
       page.getByRole("heading", { level: 1, name: greeting }),
     ).toBeVisible({ timeout: 20_000 });
     await expect(async () => {
-      await page.getByRole("link", { name: "Aggiungi", exact: true }).click();
+      await page.locator('a[href^="/aggiungi"]:visible').first().click();
       await expect(dialogOf(page)).toBeVisible({ timeout: 2000 });
     }).toPass();
     await waitForSheet(page, "add");

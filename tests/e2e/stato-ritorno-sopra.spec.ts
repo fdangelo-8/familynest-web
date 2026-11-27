@@ -161,7 +161,7 @@ test("sopra la pagina (Oggi): aprire Aggiungi e chiudere con Esc non riparte la 
   // On the phone the quick field sits under the floating bar once scrolled:
   // the opener is the «Aggiungi» of the bar.
   const opener = isMobileProject()
-    ? page.getByRole("link", { name: "Aggiungi", exact: true })
+    ? page.locator('a[href^="/aggiungi"]:visible').first()
     : page.getByRole("main").locator("a.campo-rapido");
   await openAndEscape(page, opener, scroll);
 });
@@ -221,7 +221,7 @@ test("sopra la pagina (Calendario giorno, con impegni): aprire Aggiungi e chiude
   });
   await markNode(page);
   const scroll = await scrollDown(page);
-  const opener = page.getByRole("link", { name: "Aggiungi", exact: true });
+  const opener = page.locator('a[href^="/aggiungi"]:visible').first();
   await openAndEscape(page, opener, scroll);
 });
 
@@ -256,7 +256,7 @@ test("sopra la pagina (dettaglio impegno): dopo un salvataggio, aprire e chiuder
   await expect(page).toHaveURL(new RegExp(`giorno=${newDay}`));
 
   // 2. Open Add from the navigation and close it.
-  const opener = page.getByRole("link", { name: "Aggiungi", exact: true });
+  const opener = page.locator('a[href^="/aggiungi"]:visible').first();
   await waitHydrated(opener);
   await markNode(page);
   await watchFlashes(page);

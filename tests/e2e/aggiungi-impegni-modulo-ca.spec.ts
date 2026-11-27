@@ -145,7 +145,7 @@ async function openAddFrom(
     timeout: 20_000,
   });
   await expect(async () => {
-    await page.getByRole("link", { name: "Aggiungi", exact: true }).click();
+    await page.locator('a[href^="/aggiungi"]:visible').first().click();
     await expect(addOf(page)).toBeVisible({ timeout: 2000 });
   }).toPass();
   await expect(fieldOf(page)).toBeFocused();

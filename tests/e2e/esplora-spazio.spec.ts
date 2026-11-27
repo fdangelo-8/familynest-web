@@ -204,7 +204,7 @@ test.describe("puntina e disposizione", () => {
       bar.getByRole("button", { name: "Fissa A tavola in Oggi", exact: true }),
     ).toBeVisible();
     await expect(
-      page.getByRole("link", { name: "Cerca nel Nest" }),
+      page.getByRole("link", { name: "Cerca", exact: true }),
     ).toHaveCount(0);
     await expect(toast(page)).toHaveCount(0);
   });

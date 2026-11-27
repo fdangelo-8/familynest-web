@@ -20,7 +20,7 @@ function dialogOf(page: Page) {
 }
 
 function addLink(page: Page) {
-  return page.getByRole("link", { name: "Aggiungi", exact: true });
+  return page.locator('a[href^="/aggiungi"]:visible').first();
 }
 
 async function blocking(page: Page) {

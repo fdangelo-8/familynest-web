@@ -339,15 +339,17 @@ test.describe("con l'utente A", () => {
     });
   }
 
-  test("l'aspetto dei controlli non cambia: icone e quadrato restano 40 px", async ({
+  // F5 (#506): the icon controls of the phone header are bare and 44 px; on a
+  // computer the bell is 40 px (44 with the finger).
+  test("l'aspetto dei controlli: icone nude da 44 px sul telefono, da 40 sul computer", async ({
     page,
-  }) => {
+  }, testInfo) => {
     await page.goto("/oggi");
     await expect(page.getByRole("main")).toBeVisible();
     const sizes = await page.evaluate(() =>
       Array.from(
         document.querySelectorAll<HTMLElement>(
-          ".barra .btn-icona:not(.btn-icona--carta), .barra .quadrato-nest, .nav-alto .btn-icona, .nav-alto .quadrato-nest",
+          ".testata .btn-icona, .barra-alto .btn-icona",
         ),
       )
         .filter((el) => el.getBoundingClientRect().width > 0)
@@ -357,20 +359,22 @@ test.describe("con l'utente A", () => {
         }),
     );
     expect(sizes.length).toBeGreaterThan(0);
+    const side = testInfo.project.name === "desktop" ? 40 : 44;
     for (const [w, h] of sizes) {
-      expect(w).toBe(40);
-      expect(h).toBe(40);
+      expect(w).toBe(side);
+      expect(h).toBe(side);
     }
   });
 
-  test("desktop: le aree di Cerca e Notifiche non si sovrappongono", async ({
+  test("desktop: le aree di Cerca, Notifiche e «Nuovo impegno» non si sovrappongono", async ({
     page,
   }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop", "solo desktop");
     await page.goto("/oggi");
-    const search = page.getByRole("link", { name: /Cerca nel Nest/ });
-    const bell = page.getByRole("link", { name: "Notifiche" });
-    const add = page.getByRole("link", { name: "Aggiungi", exact: true });
+    const bar = page.getByTestId("barra-alto");
+    const search = bar.getByRole("link", { name: "Cerca" });
+    const bell = bar.getByRole("link", { name: "Notifiche" });
+    const add = bar.getByRole("link", { name: "Nuovo impegno" });
     const a = await search.boundingBox();
     const b = await bell.boundingBox();
     const c = await add.boundingBox();
@@ -378,7 +382,7 @@ test.describe("con l'utente A", () => {
     // Midway between two neighbours belongs to neither.
     for (const [left, right, label] of [
       [a!, b!, "Cerca/Notifiche"],
-      [c!, a!, "Aggiungi/Cerca"],
+      [b!, c!, "Notifiche/Nuovo impegno"],
     ] as const) {
       const mx = (left.x + left.width + right.x) / 2;
       const my = left.y + left.height / 2;
@@ -393,22 +397,25 @@ test.describe("con l'utente A", () => {
     }
   });
 
-  test("desktop: ordine del focus con «Aggiungi» e «Vai al contenuto»", async ({
+  test("desktop: ordine del focus con «Nuovo impegno» e «Vai al contenuto»", async ({
     page,
   }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop", "solo desktop");
-    await page.goto("/casa/spesa");
+    await page.goto("/calendario");
     await expect(page.getByRole("main")).toBeVisible();
     const order = [
       "Vai al contenuto",
-      "FamilyNest",
+      "Io",
+      "Nest",
       "Oggi",
       "Calendario",
       "Casa",
-      "Aggiungi",
-      "Cerca nel Nest",
+      "Spazi",
+      "Spesa",
+      "Marco, Il tuo Nest",
+      "Cerca",
       "Notifiche",
-      "Apri Casa D'Angelo",
+      "Nuovo impegno",
     ];
     for (const name of order) {
       await page.keyboard.press("Tab");
@@ -423,10 +430,12 @@ test.describe("con l'utente A", () => {
         `atteso «${name}», trovato «${label}»`,
       ).toBe(true);
     }
-    // «Aggiungi» never carries aria-current, not even on /aggiungi.
+    // «Nuovo impegno» never carries aria-current, not even on /aggiungi.
     await page.goto("/aggiungi");
     await expect(
-      page.getByRole("link", { name: "Aggiungi", exact: true }),
+      page
+        .getByTestId("barra-alto")
+        .getByRole("link", { name: "Nuovo impegno", exact: true }),
     ).not.toHaveAttribute("aria-current", /.*/);
   });
 
@@ -455,29 +464,25 @@ test.describe("con l'utente A", () => {
       expect(cur[0]![0]).toContain(label);
       expect(cur[0]![1]).toBe("page");
     }
-    const notPage = mobile
-      ? ["/aggiungi", "/notifiche"]
-      : ["/aggiungi", "/ricerca"];
-    for (const route of notPage) {
+    // F5 (#506, §2): /aggiungi lights Oggi; /notifiche and /ricerca light nothing.
+    await page.goto("/aggiungi");
+    await expect(page.getByRole("main")).toBeVisible();
+    const cur = await current();
+    expect(cur).toHaveLength(1);
+    expect(cur[0]![0]).toContain("Oggi");
+    expect(cur[0]![1]).toBe("true");
+    // Same look as the page version: the item carries the active class.
+    await expect(nav().locator(".is-attiva")).toHaveCount(1);
+    for (const route of mobile
+      ? ["/notifiche"]
+      : ["/nest", "/notifiche", "/profilo", "/membri"]) {
       await page.goto(route);
       await expect(page.getByRole("main")).toBeVisible();
-      const cur = await current();
-      expect(cur).toHaveLength(1);
-      expect(cur[0]![0]).toContain("Oggi");
-      expect(cur[0]![1]).toBe("true");
-      // Same look as the page version: the item carries the active class.
-      await expect(nav().locator(".is-attiva")).toHaveCount(1);
-    }
-    if (!mobile) {
-      for (const route of ["/nest", "/notifiche", "/profilo", "/membri"]) {
-        await page.goto(route);
-        await expect(page.getByRole("main")).toBeVisible();
-        expect(await current()).toHaveLength(0);
-      }
+      expect(await current(), route).toHaveLength(0);
     }
   });
 
-  test("barra mobile di Calendario e Casa: azioni in ordine, senza sovrapposizioni né scorrimento", async ({
+  test("testata mobile di Calendario e Casa: azioni in ordine, senza sovrapposizioni né scorrimento", async ({
     page,
   }, testInfo) => {
     test.skip(testInfo.project.name !== "mobile", "solo mobile");
@@ -487,7 +492,7 @@ test.describe("con l'utente A", () => {
       const names = await page.evaluate(() =>
         Array.from(
           document.querySelectorAll<HTMLElement>(
-            ".barra a, .barra button, .barra h1",
+            ".testata a, .testata button, .testata h1",
           ),
         )
           .filter((e) => e.getBoundingClientRect().width > 0)
@@ -497,9 +502,7 @@ test.describe("con l'utente A", () => {
       );
       const bell = names.indexOf("Notifiche");
       expect(bell, route).toBeGreaterThan(0);
-      if (route !== "/oggi") {
-        expect(names.indexOf("Cerca nel Nest")).toBe(bell - 1);
-      }
+      expect(names.indexOf("Cerca"), route).toBe(bell - 1);
       expect(
         await page.evaluate(
           () =>
@@ -522,11 +525,10 @@ test.describe("con l'utente A", () => {
         await expect(page.getByRole("main")).toBeVisible();
         const rects = await page.evaluate(() => {
           const sel = [
-            ".barra .quadrato-nest",
-            ".barra h1",
-            ".barra .lente",
-            ".barra a[href='/ricerca']",
-            ".barra a[href='/notifiche']",
+            ".testata .testata__titolo",
+            ".testata .lente",
+            ".testata a[href='/ricerca']",
+            ".testata a[href='/notifiche']",
           ];
           return sel.flatMap((s) =>
             Array.from(document.querySelectorAll<HTMLElement>(s))
@@ -537,7 +539,8 @@ test.describe("con l'utente A", () => {
               }),
           );
         });
-        expect(rects.length).toBeGreaterThanOrEqual(4);
+        // Casa has no lens any more: title, «Cerca» and «Notifiche».
+        expect(rects.length).toBeGreaterThanOrEqual(3);
         for (const q of rects) {
           expect(q.x, `${route} ${q.s}`).toBeGreaterThanOrEqual(0);
           expect(q.r, `${route} ${q.s}`).toBeLessThanOrEqual(width);

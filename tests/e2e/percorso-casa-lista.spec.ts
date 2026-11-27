@@ -90,7 +90,7 @@ async function reloadCasa(page: Page): Promise<void> {
 async function openAddFromHere(page: Page): Promise<void> {
   await reloadCasa(page);
   await expect(async () => {
-    await page.getByRole("link", { name: "Aggiungi", exact: true }).click();
+    await page.locator('a[href^="/aggiungi"]:visible').first().click();
     await expect(dialogOf(page)).toBeVisible({ timeout: 2000 });
   }).toPass();
   await waitForSheet(page, "add");
