@@ -39,9 +39,24 @@ test.use({ locale: "it-IT", timezoneId: "Europe/Rome" });
 const NEST = "Casa D'Angelo";
 const SPACES_REGION = "I tuoi spazi";
 
-/** From Today to the page of the Nest, through the square of the bar. */
+/**
+ * From Today to the page of the Nest: through the profile of the sidebar on a
+ * computer, through Spazi and its row «Il tuo Nest» on a phone (F5 #506).
+ */
 async function openNest(page: Page): Promise<void> {
-  await page.getByRole("link", { name: new RegExp(`^Apri ${NEST}`) }).click();
+  const profile = page.getByRole("link", { name: /, Il tuo Nest$/ });
+  if (await profile.isVisible()) {
+    await profile.click();
+  } else {
+    await page
+      .getByRole("navigation", { name: "Navigazione principale" })
+      .getByRole("link", { name: "Spazi", exact: true })
+      .click();
+    await page
+      .getByRole("main")
+      .getByRole("link", { name: /^Il tuo Nest/ })
+      .click();
+  }
   await expect(page).toHaveURL(/\/nest$/);
   await expect(h1(page)).toHaveText(NEST);
 }

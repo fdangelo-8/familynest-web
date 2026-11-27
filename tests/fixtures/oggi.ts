@@ -176,8 +176,10 @@ export const todoRow = (page: Page, title: string) =>
     has: page.getByRole("checkbox", { name: `Segna come fatto: ${title}` }),
   });
 
+// From 1280 px there are two lenses with the same state: the one of the
+// sidebar (first in the page) and the one of the page. The first is used.
 export const lensGroup = (page: Page) =>
-  page.getByRole("group", { name: LENS });
+  page.getByRole("group", { name: LENS }).first();
 
 export const lensButton = (page: Page, which: "Io" | "Nest") =>
   lensGroup(page).getByRole("button", { name: new RegExp(`${which}$`) });

@@ -237,8 +237,11 @@ test.describe("Tasto N", () => {
       name: /^(Aggiungi alla spesa…|Cosa manca in casa\?)$/,
     });
     await expect(field).toBeVisible();
-    await openWithN(page);
-    await closeWithEscape(page, /\/casa\/spesa$/);
+    // F5 (#506, §8): «n» presses «Nuovo impegno» where the top bar has it;
+    // Casa has none, so «n» does nothing there.
+    await page.keyboard.press("n");
+    await expect(dialogOf(page)).toHaveCount(0);
+    await expect(page).toHaveURL(/\/casa\/spesa$/);
     await field.click();
     await expect(field).toBeFocused();
     expect(await shortcutTakesN(page, ":focus")).toBe(false);

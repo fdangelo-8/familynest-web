@@ -353,7 +353,8 @@ test.describe("punto 7: aree di tocco", () => {
           return [Math.round(r.width), Math.round(r.height)];
         }),
     );
-    expect(sizes.length).toBeGreaterThanOrEqual(2);
+    // Phone: «Cerca» and «Notifiche»; computer: the bell (the search is a field).
+    expect(sizes.length).toBeGreaterThanOrEqual(isDesktop(info) ? 1 : 2);
     const side = isDesktop(info) ? 40 : 44;
     for (const size of sizes) expect(size).toEqual([side, side]);
 
@@ -1243,7 +1244,8 @@ test.describe("isolamento tra nuclei", () => {
   async function expectNothingOfA(page: Page, route: string, withAdd: boolean) {
     await openFrame(page, route);
     // F5 (#506): the Nest of B shows in the profile of the sidebar, not in a square.
-    const profile = page.getByRole("link", { name: "Giulia, Il tuo Nest" });
+    // (Hidden on a phone, but always in the document.)
+    const profile = page.locator('a[aria-label="Giulia, Il tuo Nest"]');
     await expect(profile.first()).toBeAttached();
     // The fixed example of the quick-add field of Oggi («nuoto Sofia giovedì
     // alle 17», text of the mockup) is not data of the Nest of A.
