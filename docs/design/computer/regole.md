@@ -6,13 +6,15 @@ Principio: il disegno per telefono dei Passi 5–9 è il riferimento. Stessi Com
 
 ## 1. Larghezze di riferimento
 
+> **Superato dal Passo 17 (risposta 214, 26/11/2026):** le soglie sono una sola serie per tutta l'app. Sotto i 600 px di altezza sempre la forma del telefono; sotto i 900 px di larghezza il disegno per telefono; da 900 a 1279 px la barra laterale a icone; da 1280 px la barra intera. I valori «1100 px» e «760 px» qui sotto non valgono più. Tavola aggiornata: `regole/p17-01-dal-telefono-al-computer.png`; regole del tablet in `docs/design/tablet/`.
+
 | Schermo          | Larghezza     | Che cosa succede                                                                                                                                                     |
 | ---------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Telefono         | 390 px        | Una colonna, margini di 24 px, barra in basso. È l'app dei Passi 5–9.                                                                                                |
 | Computer         | 1280 px       | Barra laterale di 248 px e contenuto di 1032 px: margini di 32 px, 12 colonne, canalina di 24 px. È la misura delle tavole.                                          |
 | Computer largo   | 1440 px       | Stessa barra; il contenuto si ferma a 1200 px e guadagna una terza colonna dove serve. Oltre i 1440 crescono solo i margini.                                         |
 | Finestra stretta | sotto 1100 px | La barra laterale diventa a icone (72 px) e il contenuto torna a una colonna (tavola «Oggi · finestra stretta», 1040 px). Sotto 760 px vale il disegno per telefono. |
-| Tablet           | —             | Fuori da questo passo: arriva per ultimo.                                                                                                                            |
+| Tablet           | —             | Arrivato con i Passi 16 e 17: `docs/design/tablet/`.                                                                                                                 |
 
 ## 2. Griglia, colonne e misure
 

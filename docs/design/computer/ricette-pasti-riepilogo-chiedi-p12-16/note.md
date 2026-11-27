@@ -55,11 +55,32 @@ computer, 1280 × 800 px · Passo 14 · pagina «Passo 14 · Tema scuro · le al
 
 computer, 1280 × 800 px · Passo 16 · pagina «Passo 16 · Correzioni» (`project/D-CU1.dc.html`), sezione «3 · La lista dei desideri dal link, senza taglia; un solo segnaposto»
 
-- `08-pasti-chiaro.png`: chiaro, dal canvas
-- `08-pasti-scuro.png`: scuro, dal canvas: Passo 15, «Pasti, al buio» (`project/D-CV1.dc.html`)
+- ~~`08-pasti-chiaro.png`~~: tolta il 26/11/2026, sostituita da `p17-01-pasti-chiaro.png` (Passo 17, segnaposto sabbia con il piatto); resta nella storia git
+- `08-pasti-scuro.png`: scuro, dal canvas: Passo 15, «Pasti, al buio» (`project/D-CV1.dc.html`). Vale per i colori; le icone dei segnaposto sono quelle vecchie: vale il piatto di `p17-01`
 
 **Nota di Fable sulla tavola al buio**
 
 Pasti
 
 Le tessere senza foto usano i ruoli del segnaposto: non restano più bianche. Le foto vere non si toccano.
+
+---
+
+# Correzioni del Passo 17
+
+Aggiunte il 26/11/2026 dal passaggio del Passo 17 (`docs/design/tablet/LEGGIMI.md`). Fonte: pagina «Passo 17 · Correzioni piccole» (`project/D-CZ1.dc.html`) del secondo canvas, versione 1795711570-0525.
+
+## p17-01 · Pasti · computer
+
+computer, 1280 × 800 px · Passo 17 · sezione «2 · Ricette senza foto: sabbia con il piatto»
+
+- `p17-01-pasti-chiaro.png`: chiaro, dal canvas
+- Sostituisce: `08-pasti-chiaro.png` (Passo 16). Al buio vale `08-pasti-scuro.png` per i colori, con l'icona del piatto.
+
+**Nota di Fable**
+
+Il piatto
+
+Le ricette senza foto hanno il fondo sabbia e l'icona del piatto, sempre quella: non più la foglia, l'uovo, la zuppa. «Cena fuori» tiene la sua icona del calendario e il fondo grigio, perché non è una ricetta; il giorno vuoto tiene il «+».
+
+L'icona del piatto va ridisegnata nello stile della serie; se non si riesce, forchetta e coltello della serie, purché una sola dappertutto (risposta 219, `docs/design/tablet/decisioni.md`).

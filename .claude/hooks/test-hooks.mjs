@@ -21,16 +21,19 @@ const on = (b) => g("switch", "-q", "-C", b);
 
 let fail = 0,
   n = 0;
-function run(hook, input) {
+function run(hook, input, env) {
   const r = spawnSync("node", [path.join(here, hook)], {
     input: JSON.stringify({ cwd: repo, ...input }),
     encoding: "utf8",
+    // Empty TMPDIR by default, so that ${TMPDIR:-default} takes the default in
+    // every environment; `env` sets it for the cases that need it.
+    env: { ...process.env, TMPDIR: "", ...env },
   });
   return r.status;
 }
-function expect(label, hook, input, blocked) {
+function expect(label, hook, input, blocked, env) {
   n++;
-  const status = run(hook, input);
+  const status = run(hook, input, env);
   const ok = blocked ? status === 2 : status === 0;
   if (!ok) {
     fail++;
@@ -218,6 +221,160 @@ expect(
   true,
 );
 expect("sudo", B, bash("sudo apt install x"), true);
+
+// Files change only with Edit and Write: in-place editors on any path.
+const tmpFile = path.join(tmpdir(), "fn-hooks-out.log");
+const blocked = {
+  "sed -i su tests/": [
+    "sed -i 's/a/b/' tests/e2e/calendario.spec.ts",
+    "tester-funzionale",
+  ],
+  "sed -i su docs/": [
+    "sed -i 's/a/b/' docs/agenti/LEZIONI.md",
+    "documentalista",
+  ],
+  "sed -i su src/": ['sed -i "s/a/b/" src/app/page.tsx', "sviluppatore"],
+  "perl -pi -e": ["perl -pi -e 's/a/b/' src/app/page.tsx", "sviluppatore"],
+  "sed --in-place": ["sed --in-place 's/a/b/' tests/a.spec.ts"],
+  "sed -i''": ["sed -i'' 's/a/b/' tests/a.spec.ts"],
+  "sed -i.bak": ["sed -i.bak 's/a/b/' docs/x.md"],
+  "sed -Ei": ["sed -Ei 's/(a)/b/' src/x.ts"],
+  "sed -ni": ["sed -ni '1p' src/x.ts"],
+  "sed -e ... -i": ["sed -e 's/a/b/' -i src/x.ts"],
+  "sed -i dopo &&": ["git status && sed -i 's/a/b/' src/x.ts"],
+  "find -exec sed -i": ["find tests -name '*.ts' -exec sed -i 's/a/b/' {} +"],
+  "xargs sed -i": ["grep -rl x src | xargs sed -i 's/a/b/'"],
+  "/usr/bin/sed -i": ["/usr/bin/sed -i 's/a/b/' src/x.ts"],
+  "sed -i in bash -c": [`bash -c "sed -i 's/a/b/' src/x.ts"`],
+  "sed -i in $()": ['echo "$(sed -i s/a/b/ src/x.ts)"'],
+  "sed -i in heredoc per bash": ["bash <<'EOF'\nsed -i 's/a/b/' src/x.ts\nEOF"],
+  "sed -i fuori dal repo": [`sed -i 's/a/b/' ${tmpFile}`],
+  "perl -i -pe": ["perl -i -pe 's/a/b/' src/x.ts"],
+  "perl -0777 -pi": ["perl -0777 -pi -e 's/a/b/g' src/x.ts"],
+  "ruby -pi -e": ["ruby -pi -e 'gsub(/a/, \"b\")' src/x.ts"],
+  "awk -i inplace": ["awk -i inplace '{print}' src/x.ts"],
+  "gawk -i inplace": ["gawk -i inplace '{print}' src/x.ts"],
+  "ed su file": ["ed -s src/x.ts <<'EOF'\n1d\nw\nq\nEOF"],
+  "ex su file": ["printf '%s\\n' '1d' 'wq' | ex -s src/x.ts"],
+  "vim -es": ["vim -es -c '%s/a/b/' -c wq src/x.ts"],
+  // Redirections and tee into repository files.
+  "redirezione su src/": ["echo x > src/a.ts", "sviluppatore"],
+  "redirezione >> su tests/": ["npm test >> tests/log.txt"],
+  "heredoc su docs/": ["cat > docs/x.md <<'EOF'\n# x\nEOF", "documentalista"],
+  "redirezione percorso assoluto nel repo": [
+    `echo x > ${path.join(repo, "README.md")}`,
+  ],
+  "redirezione 2> su file del repo": ["npm test 2> errori.txt"],
+  "tee su tests/": ["echo x | tee tests/a.spec.ts"],
+  "tee -a su docs/": ["echo x | tee -a /dev/null docs/x.md"],
+  "redirezione su variabile sconosciuta": ['echo x > "$OUT"'],
+  "redirezione dentro bash -c": [`bash -c "echo x > src/a.ts"`],
+  "redirezione su variabile del repo": ["D=src && echo x > $D/a.ts"],
+  "redirezione >| su src/": ["echo x >| src/a.ts"],
+  "tee dopo una redirezione": ["echo x | tee >/dev/null src/a.ts"],
+  "tee -a su docs/": ["echo x | tee -a docs/x.md"],
+  "tee dopo 2>/dev/null": ["echo x | tee 2>/dev/null src/a.ts"],
+  "default di TMPDIR nel repo": ['echo x > "${TMPDIR:-src}/a.ts"'],
+  "[[ ]] seguito da redirezione": ["[[ a > b ]] && echo x > src/a.ts"],
+  // [[ ]] and arithmetic get no exception: strict on purpose (known limit).
+  "confronto in [[ ]]": ["[[ a > b ]] && echo si"],
+  "aritmetica $(( ))": ["echo $((3 > 1))"],
+  "aritmetica (( ))": ["(( 3 > 1 )) && echo si"],
+  "[[ come argomento": ["echo [[ && echo x > src/a.ts && echo ]]"],
+  "]] attaccato a una parola": ["[[ a ]]x; echo x > src/a.ts ]]"],
+  "[[ senza ]] nello stesso comando": ["[[ -n a; echo x > src/a.ts; ]]"],
+  "[[ con redirezione in $()": ["[[ $(echo x > src/a.ts) ]]"],
+  "$() dentro $(( ))": ["echo $(( $(echo x > src/a.ts) + 1 ))"],
+  "$() dentro (( ))": ["(( $(echo x > src/a.ts) ))"],
+  "sed -i dentro $(( ))": ["echo $(( $(sed -i s/a/b/ src/x.ts) ))"],
+  "(( )) che non è aritmetica": ["((echo x > src/a.ts))"],
+  // A temp variable set or unset in the command, with a file write: blocked.
+  "TMPDIR riassegnata": ["TMPDIR=src; echo x > $TMPDIR/a.ts"],
+  "TMPDIR=src prima di ${TMPDIR}": ["TMPDIR=src; echo x > ${TMPDIR}/a.ts"],
+  "export TMPDIR=src": ["export TMPDIR=src && echo x > ${TMPDIR}/a.ts"],
+  "TMPDIR esportata": ["export TMPDIR=docs && echo x > ${TMPDIR}/x.md"],
+  "TMPDIR riassegnata alla cartella temporanea": [
+    `TMPDIR=${tmpdir()}; npm test > $TMPDIR/fn-out.log`,
+  ],
+  "TMP cambiata dentro bash -c": [`TMP=src bash -c "echo x > ${tmpFile}"`],
+  "TMPDIR tolta, default nel repo": [
+    'unset TMPDIR; echo x > "${TMPDIR-src}/a.ts"',
+  ],
+  "TMPDIR vuota, default nel repo": [
+    'TMPDIR= ; echo x > "${TMPDIR:-src}/a.ts"',
+  ],
+};
+for (const [label, [command, agent]] of Object.entries(blocked))
+  expect(label, B, bash(command, agent), true);
+
+const allowed = {
+  "sed -n in sola lettura": ["sed -n '1,20p' src/app/page.tsx", "revisore"],
+  "sed in una pipe": ["git log --oneline | sed 's/a/b/' | head -5"],
+  "sed -e senza scrittura": ["sed -e 's/a/b/' src/x.ts"],
+  "grep di sed -i": ['grep -rn "sed -i" docs .claude'],
+  "commit che cita sed -i": ['git commit -m "blocca sed -i e tee"'],
+  "commit da heredoc": ["git commit -F - <<'EOF'\nsed -i -> Edit > tee\nEOF"],
+  "perl in lettura": ["perl -ne 'print if /x/' src/x.ts"],
+  "awk con confronto": ["awk '$1 > 5' src/x.ts"],
+  "node -e con >": ['node -e "console.log(2 > 1)"'],
+  "2>&1 e /dev/null": ["npm test 2>&1 >/dev/null"],
+  "&>/dev/null": ["npm run check &>/dev/null"],
+  "redirezione nella cartella temporanea": [`npm test > ${tmpFile} 2>&1`],
+  "redirezione su $TMPDIR": ['npm test > "$TMPDIR/fn-out.log"'],
+  "tee nella cartella temporanea": [`npm test | tee ${tmpFile}`],
+  "cd nella cartella temporanea": [`cd ${tmpdir()} && echo x > fn-hooks.txt`],
+  "body-file da stdin": [
+    "node scripts/agenti/gh.mjs comment 3 --body-file - <<'EOF'\nesito: a -> b > c\nEOF",
+  ],
+  "ed come parola": ['echo "test ed esempio"'],
+  "variabile verso la cartella temporanea": [
+    `S=${tmpdir()} && npx prettier x.ts > $S/x.ts`,
+  ],
+  "variabile da mktemp": ['out=$(mktemp) && npm test > "$out"'],
+  "${TMPDIR:-/tmp}": ['npm test > "${TMPDIR:-/tmp}/fn-out.log"'],
+  "tee con redirezione verso tmp": [`echo x | tee >/dev/null ${tmpFile}`],
+};
+for (const [label, [command, agent]] of Object.entries(allowed))
+  expect(label, B, bash(command, agent), false);
+
+// ${TMPDIR:-dir}: allowed only when both the environment value and dir are temp folders.
+const withTmp = { TMPDIR: tmpdir() };
+expect(
+  "TMPDIR impostata: ${TMPDIR:-src}",
+  B,
+  bash('echo x > "${TMPDIR:-src}/fn-out.log"'),
+  true,
+  withTmp,
+);
+expect(
+  "TMPDIR dell'ambiente nel repo",
+  B,
+  bash('echo x > "$TMPDIR/a.ts"'),
+  true,
+  { TMPDIR: path.join(repo, "src") },
+);
+expect(
+  "TMPDIR dell'ambiente nel repo con default temporaneo",
+  B,
+  bash('echo x > "${TMPDIR:-/tmp}/a.ts"'),
+  true,
+  { TMPDIR: path.join(repo, "src") },
+);
+expect(
+  "TMPDIR impostata: ${TMPDIR:-/tmp}",
+  B,
+  bash('npm test > "${TMPDIR:-/tmp}/fn-out.log"'),
+  false,
+  withTmp,
+);
+expect(
+  "TMPDIR impostata ma riassegnata nel comando",
+  B,
+  bash('TMPDIR=src; echo x > "${TMPDIR:-/tmp}/a.ts"'),
+  true,
+  withTmp,
+);
+
 on("main");
 expect("commit su main", B, bash("git commit -m x"), true);
 expect(
@@ -245,6 +402,13 @@ expect(
   bash("git push origin main"),
   true,
 );
+expect(
+  "admin: sed -i ancora vietato",
+  B,
+  bash("sed -i 's/a/b/' .claude/hooks/guard-bash.mjs"),
+  true,
+);
+expect("admin: redirezione ancora vietata", B, bash("echo x > a.txt"), true);
 
 // ---------- File ----------
 const F = "guard-files.mjs";

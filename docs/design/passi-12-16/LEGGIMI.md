@@ -8,13 +8,13 @@ Estratto il 26/11/2026 dal secondo canvas di Fable «FamilyNest: computer e web 
 
 ## I file
 
-| File                                  | Che cosa c'è                                                                                                                                                                                                            |
-| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `docs/design/tavolozza.md`, `.json`   | **La fonte di verità dei colori**, comune ai formati: 73 ruoli con il valore chiaro e quello scuro, colori delle persone, tinte delle barrette, regola del pallino, scena della notte, contrasti del tema scuro.        |
-| `regole-tema-scuro.md`                | Come si accende il tema scuro, scena della notte, foto, email, splash, pallino, verde petrolio #1F7D8A con il bianco, bordo dei campi #869390.                                                                          |
-| `decisioni.md`                        | Domande 177–211 con le risposte di Francesco e dove sono applicate; decisioni di Francesco fuori dalle domande; che cosa scrive il canvas e non è una domanda.                                                          |
-| `<formato>/<area>-p12-16/note.md`     | Per ogni tavola: nome dei PNG, didascalia, misura, passo, pagina del canvas, nota di Fable e, se c'è, la nota della tavola al buio. In cima le note delle pagine del canvas.                                            |
-| skill `design-system`, `riferimento/` | Traduzione per l'app: `token.md` (tavolozza comune in chiaro e al buio, pallino, barrette, notte, regole del tema scuro), `telefono.md` e `computer.md` (rimandi). I token nel CSS li cambia una `richiesta-condivisa`. |
+| File                                  | Che cosa c'è                                                                                                                                                                                                                       |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `docs/design/tavolozza.md`, `.json`   | **La fonte di verità dei colori**, comune ai formati: 73 ruoli (75 dal Passo 17) con il valore chiaro e quello scuro, colori delle persone, tinte delle barrette, regola del pallino, scena della notte, contrasti del tema scuro. |
+| `regole-tema-scuro.md`                | Come si accende il tema scuro, scena della notte, foto, email, splash, pallino, verde petrolio #1F7D8A con il bianco, bordo dei campi #869390.                                                                                     |
+| `decisioni.md`                        | Domande 177–211 con le risposte di Francesco e dove sono applicate; decisioni di Francesco fuori dalle domande; che cosa scrive il canvas e non è una domanda.                                                                     |
+| `<formato>/<area>-p12-16/note.md`     | Per ogni tavola: nome dei PNG, didascalia, misura, passo, pagina del canvas, nota di Fable e, se c'è, la nota della tavola al buio. In cima le note delle pagine del canvas.                                                       |
+| skill `design-system`, `riferimento/` | Traduzione per l'app: `token.md` (tavolozza comune in chiaro e al buio, pallino, barrette, notte, regole del tema scuro), `telefono.md` e `computer.md` (rimandi). I token nel CSS li cambia una `richiesta-condivisa`.            |
 
 ## Dove stanno le tavole
 
@@ -74,9 +74,9 @@ La versione dei Passi 12–16 ha preso il posto di queste tavole; la vecchia res
 | `computer/animali/01-animali-biscotto.png`                          | `computer/casa-e-animali-p12-16/01-animali-chiamare-dal-chiaro.png`                                    |
 | `computer/animali/03-una-scadenza-con-fatta.png`                    | `computer/casa-e-animali-p12-16/02-la-prossima-da-confermare-chiaro.png`                               |
 | `computer/oggi/01-oggi-1280-px.png`                                 | `computer/oggi-p12-16/01-oggi-il-viaggio-del-calcio-chiaro.png`                                        |
-| `computer/ricette-e-pasti/08-pasti-la-settimana.png`                | `computer/ricette-pasti-riepilogo-chiedi-p12-16/08-pasti-chiaro.png`                                   |
-| `computer/pagine-senza-account/05-computer-la-lista.png`            | `computer/web-da-telefono-e-senza-account-p12-16/05-la-lista-dal-link-chiaro.png`                      |
-| `computer/pagine-senza-account/01-telefono-la-lista.png`            | `telefono/web-da-telefono-e-senza-account-p12-16/03-la-lista-dei-desideri-web-chiaro.png`              |
+| `computer/ricette-e-pasti/08-pasti-la-settimana.png`                | `computer/ricette-pasti-riepilogo-chiedi-p12-16/p17-01-pasti-chiaro.png` (Passo 17)                    |
+| `computer/pagine-senza-account/05-computer-la-lista.png`            | `computer/web-da-telefono-e-senza-account-p12-16/p17-01-la-lista-dal-link-chiaro.png` (Passo 17)       |
+| `computer/pagine-senza-account/01-telefono-la-lista.png`            | `telefono/web-da-telefono-e-senza-account-p12-16/p17-01-la-lista-dal-link-web-chiaro.png` (Passo 17)   |
 | `computer/pagine-senza-account/04-telefono-link-spento.png`         | `telefono/web-da-telefono-e-senza-account-p12-16/04-aiutante-link-spento-o-scaduto-web-chiaro.png`     |
 | `telefono/calendario/giorno-insieme.png`                            | `telefono/calendario-p12-16/14-il-giorno-telefono-chiaro.png`                                          |
 | `telefono/ricette/rc1-14-una-ricetta-vostra-senza-foto.png`         | `telefono/ricette-pasti-riepilogo-chiedi-p12-16/07-una-ricetta-senza-foto-telefono-chiaro.png`         |
@@ -85,7 +85,9 @@ Le altre tavole nuove sono pagine o stati che prima non c'erano e si aggiungono.
 
 **Tavole già approvate corrette sul posto** nel canvas (barrette, «Mi», «Cena fuori», dati di prova, bordo dei campi, iniziali, regola del pallino, taglia, segnaposto): l'estrazione non le ha fotografate di nuovo. Le tavole in `docs/design/telefono/` e `docs/design/computer/` che non sono nella tabella qui sopra restano quelle di prima (per esempio con le barrette e il bordo dei campi vecchi): **per i colori vale la tavolozza**, per il resto le correzioni scritte in `decisioni.md`.
 
-## In attesa del Passo 17
+## Passo 17 (arrivato)
+
+> **Aggiornamento del 26/11/2026:** il Passo 17 è approvato (D8 in `docs/mockup/DECISIONI.md`). I cinque punti qui sotto sono disegnati: le tavole corrette sono nelle cartelle `*-p12-16/` con il prefisso `p17-`, il tablet è in `docs/design/tablet/`, le domande 212–219 e la barretta di Tommaso al buio (#4E7BE2, deciso) in `docs/design/tablet/decisioni.md`. Il testo che segue resta come memoria.
 
 Il Passo 17 è l'ultimo: chiude il tablet e qualche dettaglio. Fable non tocca più le tavole approvate di telefono, web da telefono e computer, salvo questi punti. **Fino ad allora valgono le correzioni qui sotto, non le tavole.**
 
@@ -99,7 +101,7 @@ Chi sviluppa applica già i punti 1–4 e la regola dell'altezza della risposta 
 
 ## Da chiarire
 
-- **Barretta di Tommaso al buio.** La tavola della tavolozza dice `--c-tommaso-barra` #4E7BE2 (3,5 : 1 sul fondo dell'impegno #1B2D49); il foglio di stile del canvas dà alla classe `pT` il ruolo `--c-tommaso`, #3F6FE0, che al buio arriva solo a 3,0 : 1. **Valore proposto: #4E7BE2**, registrato in `riferimento/token.md`. Va confermato con Fable nel Passo 17; chi sviluppa non sceglie da sé un terzo valore.
+- **Barretta di Tommaso al buio.** La tavola della tavolozza dice `--c-tommaso-barra` #4E7BE2 (3,5 : 1 sul fondo dell'impegno #1B2D49); il foglio di stile del canvas dà alla classe `pT` il ruolo `--c-tommaso`, #3F6FE0, che al buio arriva solo a 3,0 : 1. **Deciso nel Passo 17: #4E7BE2** (`docs/design/tablet/decisioni.md`).
 - I quattro colori liberi della tavolozza delle persone (rosa, azzurro, sabbia, ardesia) non hanno valori scuri; il rosa è diventato `--c-rosa` (chi è invitato), uguale nei due temi.
 - Fable non elenca uno per uno «gli ultimi cinque colori» portati nella tavolozza nel Passo 16: in `tavolozza.md` §6 c'è quello che dicono le note.
 

@@ -64,8 +64,7 @@ Solo nell'accesso dal browser, sotto la password, spenta in partenza. Se la acce
 
 web da telefono, 390 × 844 px · Passo 12 · pagina «Passo 12 · Correzioni» (`project/D-CX1.dc.html`), sezione «3 · Web da telefono e pagine senza account»
 
-- `03-la-lista-dei-desideri-web-chiaro.png`: chiaro, dal canvas
-- `scuro-derivato/03-la-lista-dei-desideri-web-scuro.png`: scuro **ottenuto da me** applicando la tavolozza scura (classe `th-d`) alla tavola chiara: il canvas non ha questa tavola al buio
+- ~~`03-la-lista-dei-desideri-web-chiaro.png`~~ e ~~`scuro-derivato/03-la-lista-dei-desideri-web-scuro.png`~~: tolte il 26/11/2026 perché mostravano ancora «N. 33»; sostituite da `p17-01-la-lista-dal-link-web-chiaro.png` e `scuro-derivato/p17-01-la-lista-dal-link-web-scuro.png`. Restano nella storia git
 
 **Nota di Fable**
 
@@ -87,3 +86,27 @@ web da telefono, 390 × 844 px · Passo 12 · pagina «Passo 12 · Correzioni» 
 Il link (risposta 182)
 
 I genitori possono spegnerlo in ogni momento; quando lo rinnovano il link diventa nuovo. Chi apre quello vecchio vede questa pagina, che non mostra niente della casa.
+
+---
+
+# Correzioni del Passo 17
+
+Aggiunte il 26/11/2026 dal passaggio del Passo 17 (`docs/design/tablet/LEGGIMI.md`). Fonte: pagina «Passo 17 · Correzioni piccole» (`project/D-CZ1.dc.html`) del secondo canvas, versione 1795711570-0525, sezione «3 · La lista dei desideri dal link, senza numero di scarpe»: fuori casa niente che lasci capire l'età, né taglia né numero.
+
+## p17-01 · La lista dal link · web da telefono
+
+web da telefono, 390 × 844 px · Passo 17
+
+- `p17-01-la-lista-dal-link-web-chiaro.png`: chiaro, dal canvas
+- `scuro-derivato/p17-01-la-lista-dal-link-web-scuro.png`: scuro **ottenuto da me** applicando la tavolozza scura (classe `th-d`) alla tavola chiara: il canvas non ha questa tavola al buio
+- Sostituisce: `03-la-lista-dei-desideri-web-chiaro.png` e il suo scuro
+
+## p17-02 · Telefono · la lista dal link
+
+telefono, 390 × 844 px · Passo 17
+
+- `p17-02-la-lista-dal-link-telefono-chiaro.png`: chiaro, dal canvas
+- `scuro-derivato/p17-02-la-lista-dal-link-telefono-scuro.png`: scuro **ottenuto da me** applicando la tavolozza scura (classe `th-d`) alla tavola chiara: il canvas non ha questa tavola al buio
+- Aggiorna la lista pubblica del telefono (`docs/design/telefono/liste/` e le tavole della lista dei desideri del Passo 5): «Pattini a rotelle» dice solo «Regolabili · circa 45 €».
+
+**Decisione (risposta 212):** taglia e numero di scarpe stanno nel campo «Solo per noi», che la pagina aperta da link non mostra mai; il resto della nota si vede. I prezzi dal link si vedono come «circa», uguali su tutti i formati (`docs/design/tablet/decisioni.md`).
