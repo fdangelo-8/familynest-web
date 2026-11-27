@@ -119,14 +119,16 @@ select ok(
   'the trigger and check functions run as the writer, with an empty search_path'
 );
 -- CA-L6: nothing else (public wish list, invitation preview, notifications, search) reads
--- the profile or the photo of a pet.
+-- the profile or the photo of a pet. #617: public.add_household_member() only writes the
+-- species of a new pet (one insert, nothing read), so it is the one other function allowed.
 select is_empty(
   $$ select n.nspname || '.' || p.proname
      from pg_proc p
      join pg_namespace n on n.oid = p.pronamespace
      where n.nspname in ('public', 'private')
        and p.prosrc ~ '(pet_profiles|pet_photos)'
-       and (n.nspname, p.proname) not in (('public', 'save_pet_profile'), ('private', 'pet_profiles_before_write')) $$,
+       and (n.nspname, p.proname) not in (('public', 'save_pet_profile'), ('private', 'pet_profiles_before_write'),
+                                          ('public', 'add_household_member')) $$,
   'no other function reads the profile or the photo of a pet'
 );
 select is_empty(
