@@ -18,11 +18,12 @@ import {
 import { ALSO_ON_READ_FAILED_TEXT, SAVE_FAILED_TEXT } from "./labels";
 
 /**
- * The footer of the sheet is fixed, so an alert at the end of the body can be
- * out of sight: when it appears, it is scrolled into view (once, no focus).
+ * The footer of the sheet is fixed (it sticks over the body), so an alert at
+ * the end of the body can be out of sight or under the footer: when it
+ * appears, it is scrolled to the middle of the body (once, no focus).
  */
 function showAlert(element: HTMLDivElement | null) {
-  element?.scrollIntoView({ block: "nearest" });
+  element?.scrollIntoView({ block: "center" });
 }
 
 /**
