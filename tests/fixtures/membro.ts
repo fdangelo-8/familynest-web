@@ -231,11 +231,19 @@ export type RitaNest = MemberNest & {
 
 /**
  * «U con Rita»: U with a Nest, an adult «Rita» (glicine) with an invitation,
- * and U2 who accepts it: Rita becomes an adult with account, not administrator.
+ * and U2 who accepts it: Rita becomes an adult with account.
+ *
+ * `notCouple`: adds a third member (the pet «Briciola», cannella) before Rita
+ * accepts, so the Nest is not just two adults and the rules for a couple do not
+ * apply. Only the specs that need Rita to stay a non-organizer pass it.
  */
-export async function withRita(body: (ctx: RitaNest) => Promise<void>) {
+export async function withRita(
+  body: (ctx: RitaNest) => Promise<void>,
+  options: { notCouple?: boolean } = {},
+) {
   await withMemberNest(async (ctx) => {
     const ritaId = await ctx.addAdult("Rita", "glicine");
+    if (options.notCouple) await ctx.addPet("Briciola", "cannella");
     const invitation = await ctx.invite(ritaId);
     const u2 = await createThrowawayUser("Rita Verdi");
     try {

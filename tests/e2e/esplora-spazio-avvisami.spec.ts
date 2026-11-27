@@ -471,6 +471,14 @@ test.describe("isolamento e privacy", () => {
 
   test("CA-32: chi esce dal Nest o cancella l'account perde i suoi avvisi", async () => {
     await withNest(SOLO, async (ctx) => {
+      // A child in the Nest: with two adults only, Rita would make a couple.
+      const child = await ctx.user.admin.from("household_members").insert({
+        household_id: ctx.nest.householdId,
+        kind: "child",
+        name: "Anna",
+        color: "salvia",
+      });
+      expect(child.error).toBeNull();
       const second = await joinWithInvitation(ctx, "Rita", "cannella");
       try {
         const { error } = await second.user.client.rpc("add_space_interest", {

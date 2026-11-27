@@ -14,6 +14,7 @@ import {
   PEOPLE_PATH,
   READY_PATH,
 } from "@/components/onboarding/invite-routes";
+import { nestSetupRole } from "@/components/onboarding/nest-setup";
 import { OnboardingError } from "@/components/onboarding/OnboardingError";
 import { requireUser } from "@/lib/auth/require-user";
 import { LINK_RESULT_COOKIE, parseLinkResult } from "@/lib/calendar-sync/oauth";
@@ -48,7 +49,7 @@ async function Calendar() {
   // Signed in but no Nest yet: back to step 1.
   if (!household.data) redirect("/onboarding");
 
-  const [nest, members, accounts, calendars, jar] = await Promise.all([
+  const [nest, members, role, accounts, calendars, jar] = await Promise.all([
     supabase
       .from("households")
       .select("household_type")
@@ -56,8 +57,9 @@ async function Calendar() {
       .maybeSingle(),
     supabase
       .from("household_members")
-      .select("kind, user_id, is_admin")
+      .select("kind, user_id")
       .eq("household_id", household.data),
+    nestSetupRole(supabase, userId, household.data),
     // The rules of the table show each adult only their own accounts.
     supabase
       .from("calendar_accounts")
@@ -71,6 +73,7 @@ async function Calendar() {
     nest.error ||
     !nest.data ||
     members.error ||
+    role === "error" ||
     accounts.error ||
     calendars.error
   ) {
@@ -78,9 +81,8 @@ async function Calendar() {
   }
 
   // The role is decided here, never by an address parameter: whoever is not
-  // the administrator joined with an invitation.
-  const me = members.data.find((member) => member.user_id === userId);
-  const isAdmin = me?.is_admin === true;
+  // the creator of the Nest joined with an invitation (never the role).
+  const isAdmin = role === "creator";
   const single = nest.data.household_type === "single";
   const hasAdultToInvite = members.data.some(
     (member) => member.kind === "adult" && member.user_id === null,

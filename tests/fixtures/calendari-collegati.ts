@@ -331,6 +331,7 @@ export type RitaLinker = Linker & {
 export async function withLinkerRita(
   baseURL: string | undefined,
   body: (ctx: RitaLinker) => Promise<void>,
+  options: { notCouple?: boolean } = {},
 ) {
   await withRita(async (nest: RitaNest) => {
     const ctx = linker(nest.user, nest, baseURL);
@@ -345,7 +346,7 @@ export async function withLinkerRita(
       await ctx.fake.reset(nest.user.id).catch(() => undefined);
       await ctx.fake.reset(nest.u2.id).catch(() => undefined);
     }
-  });
+  }, options);
 }
 
 // ------------------------------------------------------------------- locators
