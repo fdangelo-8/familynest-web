@@ -1801,6 +1801,10 @@ button.riga-lista {
   font-weight: var(--weight-semi);
   padding: var(--space-0) var(--space-5);
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 .is-caricamento {
   pointer-events: none;
@@ -4534,6 +4538,11 @@ div.blocco-orario {
 }
 .foglio--con-piede .foglio__contenuto {
   padding-bottom: var(--space-4);
+}
+/* Tavola k3-02: con il piede, un filo sottile separa anche la testata (stesso
+   filo del piede). Il foglio senza piede (k3-01) non lo ha. */
+.foglio--con-piede .foglio__testa {
+  border-bottom: var(--border-sottile) solid var(--color-filo-barra);
 }
 .foglio__piede {
   position: sticky;

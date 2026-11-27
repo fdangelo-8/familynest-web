@@ -89,6 +89,16 @@ for (const scheme of ["light", "dark"] as const) {
       await expect(page).toHaveScreenshot(`calendario-${scheme}.png`);
     });
 
+    test("#505: calendario con «Togli la data»", async ({ page }) => {
+      await tid(page, "ds-data-facoltativa")
+        .getByRole("button", { name: /^Data di nascita/ })
+        .click();
+      await expect(page.getByTestId("calendario-togli")).toBeVisible();
+      await waitForAnimationsToEnd(page);
+      await page.mouse.move(0, 0);
+      await expect(page).toHaveScreenshot(`calendario-togli-${scheme}.png`);
+    });
+
     for (const id of [
       "ds-collega",
       "ds-data",
