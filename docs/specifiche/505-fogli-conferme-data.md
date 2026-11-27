@@ -65,6 +65,8 @@ Il rosso pieno resta solo qui: in `src/components/ui/` la variante `pericolo-pie
 
 Solo lettura: niente «In due direzioni». Il nome del servizio è l'unico dato nell'avviso.
 
+**Tema scuro (#634 §3).** La pillola «Collega» è a filo, non piena: bordo e testo `--color-inchiostro`, nessun fondo. È l'unico punto di F4c che usa ancora l'inchiostro per un controllo, ed è ammesso perché è un filo (come il livello 2): al buio diventa chiaro sul fondo scuro. Per questo il test del tema (CA-36) ridefinisce anche `--color-inchiostro` e controlla che il bordo della pillola prenda il suo valore di prova, mentre il giorno scelto prende quello di `--color-pieno`. I valori di prova sono tutti diversi tra loro.
+
 ## §5 Selettore di data (`DateField` + `MonthCalendar`)
 
 **Campo.** Ha l'aspetto del campo di F4a con l'etichetta dentro; è un `button` con `aria-haspopup="dialog"` e nome «<etichetta>, <valore>» («Giorno, Mercoledì 18 novembre»), o solo l'etichetta se è vuoto. Valore mostrato con `formatFieldDay`: giorno della settimana con l'iniziale maiuscola, numero, mese («Mercoledì 18 novembre»); l'anno solo se diverso da quello di oggi a Roma («Lunedì 4 gennaio 2027»). Il valore nel codice è `AAAA-MM-GG`, un giorno di calendario a Roma (come oggi). Mai `<input type="date">`.
