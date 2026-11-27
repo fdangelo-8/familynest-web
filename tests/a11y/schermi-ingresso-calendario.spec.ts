@@ -316,10 +316,14 @@ async function textProblems(page: Page): Promise<Problems> {
       if (el.closest(".blocco-orario")) continue;
       // Clipped: a line leaves an ancestor that hides its overflow.
       let flagged = false;
+      // A line below the edge of a scrolling container is reached by scrolling
+      // it: the sheet scrolls in its body (#505), not in itself.
+      let scrollsY = false;
       for (let a = el; a && a !== document.body && !flagged; a = a.parentElement) {
         const s = getComputedStyle(a);
         const clipX = hiddenOverflow(s.overflowX);
-        const clipY = hiddenOverflow(s.overflowY);
+        const clipY = hiddenOverflow(s.overflowY) && !scrollsY;
+        if (s.overflowY === "auto" || s.overflowY === "scroll") scrollsY = true;
         if (!clipX && !clipY) continue;
         const ar = a.getBoundingClientRect();
         for (const l of lines) {

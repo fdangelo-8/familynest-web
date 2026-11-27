@@ -4523,8 +4523,9 @@ div.blocco-orario {
   scroll-padding-block-start: calc(
     2 * var(--space-2) + var(--size-tocco) + var(--space-2)
   );
+  /* The foot may hold two buttons one above the other (save and delete). */
   scroll-padding-block-end: calc(
-    2 * var(--space-4) + var(--size-azione) + var(--space-3) +
+    2 * var(--space-4) + 2 * var(--size-azione) + 2 * var(--space-3) +
       env(safe-area-inset-bottom)
   );
 }

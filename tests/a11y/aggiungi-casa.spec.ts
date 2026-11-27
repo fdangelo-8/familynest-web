@@ -117,7 +117,11 @@ async function tabOrder(page: Page, stops: number) {
   const rings: boolean[] = [];
   for (let i = 0; i < stops; i += 1) {
     await page.keyboard.press("Tab");
-    order.push(await focused(page));
+    // A date button is named «<label>, <day>» once it has a day: the day is
+    // not written in the test (it depends on the clock).
+    order.push(
+      (await focused(page)).replace(/^(Scade il|Entro|Giorno|Data), .+$/, "$1"),
+    );
     rings.push(
       await page.evaluate(() => {
         const el = document.activeElement as HTMLElement;
