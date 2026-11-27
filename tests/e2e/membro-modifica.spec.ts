@@ -223,21 +223,24 @@ test.describe("la riga: chi la vede e dove sta", () => {
     baseURL,
   }) => {
     needsThrowaway();
-    await withRita(async ({ u2, addAdult, addPet, adminMemberId }) => {
-      const laura = await addAdult("Laura", "salvia");
-      const fido = await addPet("Fido", "cobalto", yearsAgo(2));
-      await u2.signInContext(page.context(), baseURL as string);
+    await withRita(
+      async ({ u2, addAdult, addPet, adminMemberId }) => {
+        const laura = await addAdult("Laura", "salvia");
+        const fido = await addPet("Fido", "cobalto", yearsAgo(2));
+        await u2.signInContext(page.context(), baseURL as string);
 
-      await openMember(page, laura, "Laura");
-      await expect(editRow(page)).toHaveCount(0);
-      await expect(removeButton(page, "Laura")).toHaveCount(0);
-      await openMember(page, fido, "Fido");
-      await expect(editRow(page)).toHaveCount(0);
-      await openMember(page, adminMemberId, "Ilaria");
-      await expect(editRow(page)).toHaveCount(0);
-      // Without the row, nothing of the edit reaches the page.
-      expect(await htmlOf(page, memberPath(fido))).not.toContain(EDIT);
-    });
+        await openMember(page, laura, "Laura");
+        await expect(editRow(page)).toHaveCount(0);
+        await expect(removeButton(page, "Laura")).toHaveCount(0);
+        await openMember(page, fido, "Fido");
+        await expect(editRow(page)).toHaveCount(0);
+        await openMember(page, adminMemberId, "Ilaria");
+        await expect(editRow(page)).toHaveCount(0);
+        // Without the row, nothing of the edit reaches the page.
+        expect(await htmlOf(page, memberPath(fido))).not.toContain(EDIT);
+      },
+      { notCouple: true },
+    );
   });
 
   test("#144: ordine del fuoco con la tastiera, su Laura e su Biscotto", async ({
@@ -902,25 +905,28 @@ test.describe("privacy della data di nascita", () => {
     baseURL,
   }) => {
     needsThrowaway();
-    await withRita(async ({ u2, addPet }) => {
-      const birthDate = yearsAgo(3);
-      const fido = await addPet("Fido", "lampone", birthDate);
-      await u2.signInContext(page.context(), baseURL as string);
-      await openMember(page, fido, "Fido");
-      await expect(subtitle(page)).toHaveText("Animale · 3 anni");
+    await withRita(
+      async ({ u2, addPet }) => {
+        const birthDate = yearsAgo(3);
+        const fido = await addPet("Fido", "lampone", birthDate);
+        await u2.signInContext(page.context(), baseURL as string);
+        await openMember(page, fido, "Fido");
+        await expect(subtitle(page)).toHaveText("Animale · 3 anni");
 
-      const html = await htmlOf(page, memberPath(fido));
-      for (const form of dateForms(birthDate)) {
-        expect(html, `HTML contiene ${form}`).not.toContain(form);
-      }
-      expect(html).not.toContain(EDIT);
-      // The colours with the names of the others go to the administrator only.
-      expect(html).not.toContain("già di Ilaria");
-      const text = await pageText(page);
-      for (const form of dateForms(birthDate)) {
-        expect(text).not.toContain(form);
-      }
-    });
+        const html = await htmlOf(page, memberPath(fido));
+        for (const form of dateForms(birthDate)) {
+          expect(html, `HTML contiene ${form}`).not.toContain(form);
+        }
+        expect(html).not.toContain(EDIT);
+        // The colours with the names of the others go to the administrator only.
+        expect(html).not.toContain("già di Ilaria");
+        const text = await pageText(page);
+        for (const form of dateForms(birthDate)) {
+          expect(text).not.toContain(form);
+        }
+      },
+      { notCouple: true },
+    );
   });
 
   test("#144: le date di nascita dei figli non arrivano mai al browser, né all'amministratore né agli altri", async ({
@@ -928,51 +934,54 @@ test.describe("privacy della data di nascita", () => {
     baseURL,
   }) => {
     needsThrowaway();
-    await withRita(async ({ user, u2, householdId, addAdult, addPet }) => {
-      const childDate = yearsAgo(9);
-      const sofia = (
-        await adminClient()
-          .from("household_members")
-          .insert({
-            household_id: householdId,
-            kind: "child",
-            name: "Sofia",
-            color: "peonia",
-            birth_date: childDate,
-          })
-          .select("id")
-          .single()
-      ).data!.id as string;
-      const laura = await addAdult("Laura", "salvia");
-      const fido = await addPet("Fido", "lampone", yearsAgo(3));
+    await withRita(
+      async ({ user, u2, householdId, addAdult, addPet }) => {
+        const childDate = yearsAgo(9);
+        const sofia = (
+          await adminClient()
+            .from("household_members")
+            .insert({
+              household_id: householdId,
+              kind: "child",
+              name: "Sofia",
+              color: "peonia",
+              birth_date: childDate,
+            })
+            .select("id")
+            .single()
+        ).data!.id as string;
+        const laura = await addAdult("Laura", "salvia");
+        const fido = await addPet("Fido", "lampone", yearsAgo(3));
 
-      for (const who of [user, u2]) {
-        await page.context().clearCookies();
-        await who.signInContext(page.context(), baseURL as string);
-        for (const id of [laura, fido]) {
-          const html = await htmlOf(page, memberPath(id));
+        for (const who of [user, u2]) {
+          await page.context().clearCookies();
+          await who.signInContext(page.context(), baseURL as string);
+          for (const id of [laura, fido]) {
+            const html = await htmlOf(page, memberPath(id));
+            for (const form of dateForms(childDate)) {
+              expect(html, `HTML contiene ${form}`).not.toContain(form);
+            }
+          }
+          // The page of a child is not this page: no date there either.
+          const response = await page.request.get(memberPath(sofia));
+          const body = await response.text();
           for (const form of dateForms(childDate)) {
-            expect(html, `HTML contiene ${form}`).not.toContain(form);
+            expect(body).not.toContain(form);
           }
         }
-        // The page of a child is not this page: no date there either.
-        const response = await page.request.get(memberPath(sofia));
-        const body = await response.text();
-        for (const form of dateForms(childDate)) {
-          expect(body).not.toContain(form);
-        }
-      }
 
-      // Administrator: the sheet shows the colour of the child, never its date.
-      await page.context().clearCookies();
-      await user.signInContext(page.context(), baseURL as string);
-      await openMember(page, fido, "Fido");
-      const dialog = await openSheet(page, "Fido");
-      await expect(colorRadio(dialog, "Rosa (già di Sofia)")).toBeDisabled();
-      for (const form of dateForms(childDate)) {
-        expect(await pageText(page)).not.toContain(form);
-      }
-    });
+        // Administrator: the sheet shows the colour of the child, never its date.
+        await page.context().clearCookies();
+        await user.signInContext(page.context(), baseURL as string);
+        await openMember(page, fido, "Fido");
+        const dialog = await openSheet(page, "Fido");
+        await expect(colorRadio(dialog, "Rosa (già di Sofia)")).toBeDisabled();
+        for (const form of dateForms(childDate)) {
+          expect(await pageText(page)).not.toContain(form);
+        }
+      },
+      { notCouple: true },
+    );
   });
 
   test("#144: per l'amministratore la data dell'animale non compare nel testo visibile, solo nel campo del foglio", async ({

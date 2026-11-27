@@ -8,6 +8,7 @@ import {
   type InviteFailure,
 } from "@/components/onboarding/InviteStep";
 import { READY_PATH } from "@/components/onboarding/invite-routes";
+import { nestSetupRole } from "@/components/onboarding/nest-setup";
 import { OnboardingError } from "@/components/onboarding/OnboardingError";
 import { requireUser } from "@/lib/auth/require-user";
 import { formatLongDay, formatTime, toDayKey } from "@/lib/datetime";
@@ -147,17 +148,19 @@ async function Invite({
   // Signed in but no Nest yet: back to step 1.
   if (!household.data) redirect("/onboarding");
 
-  const members = await supabase
-    .from("household_members")
-    .select("id, name, kind, user_id, is_admin")
-    .eq("household_id", household.data)
-    .order("created_at", { ascending: true })
-    .order("id", { ascending: true });
-  if (members.error) return <OnboardingError />;
+  const [members, role] = await Promise.all([
+    supabase
+      .from("household_members")
+      .select("id, name, kind, user_id")
+      .eq("household_id", household.data)
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true }),
+    nestSetupRole(supabase, userId, household.data),
+  ]);
+  if (members.error || role === "error") return <OnboardingError />;
 
-  // Only the administrator invites.
-  const me = members.data.find((member) => member.user_id === userId);
-  if (!me?.is_admin) redirect("/oggi");
+  // Only the creator of the Nest invites.
+  if (role !== "creator") redirect("/oggi");
 
   // Adults added at step 2 who have no account yet.
   const adults = members.data.filter(

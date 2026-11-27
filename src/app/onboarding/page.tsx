@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { pageTitle } from "@/lib/brand";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
+import { nestSetupRole } from "@/components/onboarding/nest-setup";
 import { OnboardingError } from "@/components/onboarding/OnboardingError";
 import { LIVING_BY_TYPE } from "@/components/onboarding/choices";
 import { OnboardingStep } from "@/components/onboarding/OnboardingStep";
@@ -37,21 +38,16 @@ async function Onboarding({ searchParams }: { searchParams: SearchParams }) {
     // Someone who already has a Nest never sees this page, except its
     // administrator coming back from step 2 to change the answer.
     if (!change) redirect("/oggi");
-    const [member, nest] = await Promise.all([
-      supabase
-        .from("household_members")
-        .select("is_admin")
-        .eq("household_id", household.data)
-        .eq("user_id", userId)
-        .maybeSingle(),
+    const [role, nest] = await Promise.all([
+      nestSetupRole(supabase, userId, household.data),
       supabase
         .from("households")
         .select("household_type")
         .eq("id", household.data)
         .maybeSingle(),
     ]);
-    if (member.error || nest.error) return <OnboardingError />;
-    if (!member.data?.is_admin || !nest.data) redirect("/oggi");
+    if (role === "error" || nest.error) return <OnboardingError />;
+    if (role !== "creator" || !nest.data) redirect("/oggi");
     return (
       <OnboardingStep
         greeting={greeting(profile.data?.display_name)}
