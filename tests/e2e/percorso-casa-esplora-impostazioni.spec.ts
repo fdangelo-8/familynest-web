@@ -294,13 +294,17 @@ test.describe("percorso di Esplora e delle impostazioni", () => {
     }
     await giulia
       .from("notification_preferences")
-      .update({ shopping: false })
+      // The opposite of what Marco saved, so a leak would be visible
+      // whatever the default of «Spesa» is.
+      .update({ shopping: shoppingStart })
       .eq("member_id", casa.members["Marco"]!);
     await giulia
       .from("pinned_spaces")
       .delete()
       .eq("member_id", casa.members["Marco"]!);
-    await expect.poll(savedChoice).toBe(true);
+    // Giulia's update must not touch Marco's row: his choice is still the
+    // one he saved.
+    await expect.poll(savedChoice).toBe(!shoppingStart);
     expect(await pinned()).toEqual([keyOf("Crescere")]);
   });
 });
