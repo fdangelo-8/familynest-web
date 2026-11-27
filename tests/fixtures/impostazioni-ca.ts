@@ -1,4 +1,6 @@
 import { expect, type Locator, type Page, type Route } from "@playwright/test";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import type { TestUserKey } from "./auth";
 import { adminClient } from "./invito";
 
 // Shared by tests/e2e/impostazioni.spec.ts and tests/a11y/impostazioni.spec.ts
@@ -15,8 +17,47 @@ export const NOTIFICATIONS = [
   { column: "morning_digest", title: "Sintesi del mattino" },
 ] as const;
 
-/** Value of the five switches for someone who never chose (CA-12). */
-export const DEFAULT_STATES = ["true", "true", "false", "true", "true"];
+/**
+ * The five switches of someone as the database says they start (the defaults
+ * of `get_notification_preferences()`, or the saved choices), as the strings
+ * of `aria-checked`, in page order. The tests read the starting value from the
+ * database instead of writing it fixed, so they do not depend on the
+ * defaults (they changed with DB-2 part 2, #612).
+ */
+export async function startingStates(
+  client: SupabaseClient,
+): Promise<string[]> {
+  const { data, error } = await client.rpc("get_notification_preferences");
+  const row = data?.[0];
+  if (error || !row)
+    throw new Error("Lettura delle preferenze iniziali fallita");
+  return NOTIFICATIONS.map((n) => String(row[n.column]));
+}
+
+/** Starting value of one switch, as a boolean (see `startingStates`). */
+export async function startingOf(
+  client: SupabaseClient,
+  column: (typeof NOTIFICATIONS)[number]["column"],
+): Promise<boolean> {
+  const index = NOTIFICATIONS.findIndex((n) => n.column === column);
+  return (await startingStates(client))[index] === "true";
+}
+
+/** Client signed in as a seeded test user (reads go through RLS). */
+export async function seededClient(key: TestUserKey): Promise<SupabaseClient> {
+  const { email, password } = {
+    email: process.env[`TEST_USER_${key}_EMAIL`] ?? "",
+    password: process.env[`TEST_USER_${key}_PASSWORD`] ?? "",
+  };
+  const client = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    { auth: { persistSession: false, autoRefreshToken: false } },
+  );
+  const { error } = await client.auth.signInWithPassword({ email, password });
+  if (error) throw new Error("Accesso di prova fallito");
+  return client;
+}
 
 export const BLOCKED_NOTE =
   "Sei l'unica persona che gestisce la casa: prima di uscire, dai il ruolo di amministratore a un altro adulto in «Chi c’è».";

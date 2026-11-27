@@ -173,7 +173,7 @@ test.describe("pagina (utente A)", () => {
   }) => {
     await page.getByRole("button", { name: /^Sintesi del mattino/ }).click();
     const chips = page.getByRole("group", { name: "Ora della sintesi" });
-    await expect(chips.getByRole("button")).toHaveCount(9);
+    await expect(chips.getByRole("button")).toHaveCount(17);
     await expect(chips.locator('[aria-pressed="true"]')).toHaveCount(1);
     await waitForAnimationsToEnd(page);
     await axe(page);
@@ -368,11 +368,12 @@ test.describe("pagina (utente A)", () => {
     // The chips of the time sheet and the buttons of the dialogs.
     await page.getByRole("button", { name: /^Sintesi del mattino/ }).click();
     await waitForAnimationsToEnd(page);
-    const chip = page
+    const chips = page
       .getByRole("group", { name: "Ora della sintesi" })
-      .getByRole("button")
-      .first();
-    expect(await hasTouchArea(page, chip)).toBe(true);
+      .getByRole("button");
+    // 17 chips wrap on several rows: first and last must keep 44 px of touch.
+    expect(await hasTouchArea(page, chips.first())).toBe(true);
+    expect(await hasTouchArea(page, chips.last())).toBe(true);
     await page.keyboard.press("Escape");
     await page.getByRole("button", { name: "Esci", exact: true }).click();
     await waitForAnimationsToEnd(page);

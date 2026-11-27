@@ -26,8 +26,10 @@ select columns_are(
   'public', 'notifications',
   array['id', 'household_id', 'recipient_member_id', 'kind', 'actor_member_id', 'todo_id', 'deadline_id',
         'event_id', 'occurrence_date', 'days_before', 'evening_date', 'free_from', 'item_count', 'read_at',
-        'created_at', 'created_on', 'updated_at', 'wishlist_reservation_id'],
-  'notifications has exactly the planned columns (references and numbers, no free text; #259 adds the reservation)'
+        'created_at', 'created_on', 'updated_at', 'wishlist_reservation_id',
+        -- #511 part 2: the way of a ride, the other occurrence and the person of an overlap.
+        'ride_leg', 'other_event_id', 'other_occurrence_date', 'subject_member_id'],
+  'notifications has exactly the planned columns (references and numbers, no free text; #259 adds the reservation, #511 the rides and the overlaps)'
 );
 select is_empty(
   $$ select a.attname
@@ -40,13 +42,15 @@ select is_empty(
 );
 select enum_has_labels(
   'public', 'notification_kind',
-  array['todo_assigned', 'deadline_reminder', 'free_together', 'event_time_changed', 'shopping_added', 'gift_taken'],
-  'the five kinds of notification of #39, and gift_taken of #259'
+  array['todo_assigned', 'deadline_reminder', 'free_together', 'event_time_changed', 'shopping_added', 'gift_taken',
+        'member_joined', 'event_reminder', 'ride_reminder', 'overlap_tomorrow', 'ride_request'],
+  'the five kinds of notification of #39, gift_taken of #259 and the five of #511'
 );
 select enum_has_labels(
   'public', 'notification_job',
-  array['free_together', 'deadline_reminders', 'shopping_digest', 'purge'],
-  'the four jobs'
+  array['free_together', 'deadline_reminders', 'shopping_digest', 'purge',
+        'event_reminders', 'ride_reminders', 'overlaps', 'push_digests', 'push_purge'],
+  'the four jobs of #229 and the five of #511'
 );
 select fk_ok(
   'public', 'notifications', 'household_id', 'public', 'households', 'id',
@@ -81,8 +85,8 @@ select is(
   (select array_agg(k.confdeltype::text order by k.conname)
    from pg_constraint k
    where k.conrelid = 'public.notifications'::regclass and k.contype = 'f'),
-  array['c', 'c', 'c', 'c', 'c', 'c', 'c'],
-  'every foreign key of notifications is on delete cascade (household, recipient, who acted, element of origin)'
+  array['c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c'],
+  'every foreign key of notifications is on delete cascade (household, recipient, who acted, element of origin, other event and person of #511)'
 );
 select has_index('public', 'notifications', 'notifications_recipient_created_idx', 'index on recipient and time');
 select has_index('public', 'notifications', 'notifications_household_id_idx', 'index on household_id');
@@ -138,8 +142,8 @@ select has_trigger('public', 'shopping_items', 'shopping_items_record_addition',
 select has_trigger('public', 'notifications', 'notifications_set_updated_at', 'updated_at is kept by the database');
 select results_eq(
   $$ select j.schedule, j.command, j.active from cron.job j where j.jobname = 'notification-jobs' $$,
-  $$ values ('0 * * * *'::text, 'select private.run_scheduled_notification_jobs();'::text, true) $$,
-  'pg_cron runs the jobs at minute 0 of every hour (the hour of Rome decides)'
+  $$ values ('*/5 * * * *'::text, 'select private.run_scheduled_notification_jobs();'::text, true) $$,
+  'pg_cron runs the jobs every 5 minutes (#511; the hour of Rome decides the jobs of #229)'
 );
 
 -- ---------------------------------------------------------------------------

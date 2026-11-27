@@ -27,23 +27,34 @@ import {
 
 /* ---------- Time of the summary ---------- */
 
-/** The nine times of the morning summary: every half hour from 6:00 to 10:00. */
+/**
+ * The times of the morning summary: every quarter of an hour from 6:00 to
+ * 10:00 (17 values). The half hours saved before the quarters stay valid.
+ */
 export const DIGEST_TIMES = [
   "06:00",
+  "06:15",
   "06:30",
+  "06:45",
   "07:00",
+  "07:15",
   "07:30",
+  "07:45",
   "08:00",
+  "08:15",
   "08:30",
+  "08:45",
   "09:00",
+  "09:15",
   "09:30",
+  "09:45",
   "10:00",
 ] as const;
 export type DigestTime = (typeof DIGEST_TIMES)[number];
 
-export const DEFAULT_DIGEST_TIME: DigestTime = "07:30";
+export const DEFAULT_DIGEST_TIME: DigestTime = "07:15";
 
-/** `07:30:00` (the database) or `07:30` to the DIGEST_TIMES value; the default if unknown. */
+/** `07:15:00` (the database) or `07:15` to the DIGEST_TIMES value; the default if unknown. */
 export function toDigestTime(value: string | null | undefined): DigestTime {
   const short = (value ?? "").slice(0, 5);
   return DIGEST_TIMES.find((time) => time === short) ?? DEFAULT_DIGEST_TIME;

@@ -300,6 +300,55 @@ export type Database = {
           },
         ];
       };
+      consent_records: {
+        Row: {
+          created_at: string;
+          granted: boolean;
+          id: string;
+          kind: Database["public"]["Enums"]["consent_kind"];
+          privacy_version_id: string | null;
+          source: Database["public"]["Enums"]["consent_source"];
+          terms_version_id: string | null;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          granted: boolean;
+          id?: string;
+          kind: Database["public"]["Enums"]["consent_kind"];
+          privacy_version_id?: string | null;
+          source: Database["public"]["Enums"]["consent_source"];
+          terms_version_id?: string | null;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          granted?: boolean;
+          id?: string;
+          kind?: Database["public"]["Enums"]["consent_kind"];
+          privacy_version_id?: string | null;
+          source?: Database["public"]["Enums"]["consent_source"];
+          terms_version_id?: string | null;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "consent_records_privacy_version_id_fkey";
+            columns: ["privacy_version_id"];
+            isOneToOne: false;
+            referencedRelation: "legal_document_versions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "consent_records_terms_version_id_fkey";
+            columns: ["terms_version_id"];
+            isOneToOne: false;
+            referencedRelation: "legal_document_versions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       deadline_assignees: {
         Row: {
           created_at: string;
@@ -1002,20 +1051,54 @@ export type Database = {
           },
         ];
       };
+      legal_document_versions: {
+        Row: {
+          created_at: string;
+          document: Database["public"]["Enums"]["legal_document"];
+          effective_from: string;
+          id: string;
+          notify_users: boolean;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          document: Database["public"]["Enums"]["legal_document"];
+          effective_from: string;
+          id?: string;
+          notify_users?: boolean;
+        };
+        Update: {
+          created_at?: string;
+          document?: Database["public"]["Enums"]["legal_document"];
+          effective_from?: string;
+          id?: string;
+          notify_users?: boolean;
+        };
+        Relationships: [];
+      };
       notification_preferences: {
         Row: {
           assigned_todos: boolean;
           created_at: string;
+          deadlines: boolean;
           delivery_mode: Database["public"]["Enums"]["notification_delivery_mode"];
+          digest_deadlines: boolean;
+          digest_events: boolean;
+          digest_rides: boolean;
+          digest_shopping: boolean;
+          digest_thanks: boolean;
           evening_digest_time: string;
+          event_reminders: boolean;
           events: boolean;
           free_together: boolean;
+          gifts: boolean;
           hide_content: boolean;
           household_id: string;
           id: string;
           member_id: string;
           morning_digest: boolean;
           quiet_hours: boolean;
+          rides: boolean;
           shopping: boolean;
           updated_at: string;
         };
@@ -1023,32 +1106,50 @@ export type Database = {
         Insert: {
           assigned_todos?: boolean;
           created_at?: string;
+          deadlines?: boolean;
           delivery_mode?: Database["public"]["Enums"]["notification_delivery_mode"];
+          digest_deadlines?: boolean;
+          digest_events?: boolean;
+          digest_rides?: boolean;
+          digest_shopping?: boolean;
+          digest_thanks?: boolean;
           evening_digest_time?: string;
+          event_reminders?: boolean;
           events?: boolean;
           free_together?: boolean;
+          gifts?: boolean;
           hide_content?: boolean;
           household_id?: string;
           id?: string;
           member_id: string;
           morning_digest?: boolean;
           quiet_hours?: boolean;
+          rides?: boolean;
           shopping?: boolean;
           updated_at?: string;
         };
         Update: {
           assigned_todos?: boolean;
           created_at?: string;
+          deadlines?: boolean;
           delivery_mode?: Database["public"]["Enums"]["notification_delivery_mode"];
+          digest_deadlines?: boolean;
+          digest_events?: boolean;
+          digest_rides?: boolean;
+          digest_shopping?: boolean;
+          digest_thanks?: boolean;
           evening_digest_time?: string;
+          event_reminders?: boolean;
           events?: boolean;
           free_together?: boolean;
+          gifts?: boolean;
           hide_content?: boolean;
           household_id?: string;
           id?: string;
           member_id?: string;
           morning_digest?: boolean;
           quiet_hours?: boolean;
+          rides?: boolean;
           shopping?: boolean;
           updated_at?: string;
         };
@@ -1084,8 +1185,12 @@ export type Database = {
           item_count: number | null;
           kind: Database["public"]["Enums"]["notification_kind"];
           occurrence_date: string | null;
+          other_event_id: string | null;
+          other_occurrence_date: string | null;
           read_at: string | null;
           recipient_member_id: string;
+          ride_leg: Database["public"]["Enums"]["ride_leg"] | null;
+          subject_member_id: string | null;
           todo_id: string | null;
           updated_at: string;
           wishlist_reservation_id: string | null;
@@ -1105,8 +1210,12 @@ export type Database = {
           item_count?: number | null;
           kind: Database["public"]["Enums"]["notification_kind"];
           occurrence_date?: string | null;
+          other_event_id?: string | null;
+          other_occurrence_date?: string | null;
           read_at?: string | null;
           recipient_member_id: string;
+          ride_leg?: Database["public"]["Enums"]["ride_leg"] | null;
+          subject_member_id?: string | null;
           todo_id?: string | null;
           updated_at?: string;
           wishlist_reservation_id?: string | null;
@@ -1125,8 +1234,12 @@ export type Database = {
           item_count?: number | null;
           kind?: Database["public"]["Enums"]["notification_kind"];
           occurrence_date?: string | null;
+          other_event_id?: string | null;
+          other_occurrence_date?: string | null;
           read_at?: string | null;
           recipient_member_id?: string;
+          ride_leg?: Database["public"]["Enums"]["ride_leg"] | null;
+          subject_member_id?: string | null;
           todo_id?: string | null;
           updated_at?: string;
           wishlist_reservation_id?: string | null;
@@ -1161,8 +1274,22 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
+            foreignKeyName: "notifications_other_event_fkey";
+            columns: ["other_event_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "events";
+            referencedColumns: ["id", "household_id"];
+          },
+          {
             foreignKeyName: "notifications_recipient_fkey";
             columns: ["recipient_member_id", "household_id"];
+            isOneToOne: false;
+            referencedRelation: "household_members";
+            referencedColumns: ["id", "household_id"];
+          },
+          {
+            foreignKeyName: "notifications_subject_fkey";
+            columns: ["subject_member_id", "household_id"];
             isOneToOne: false;
             referencedRelation: "household_members";
             referencedColumns: ["id", "household_id"];
@@ -1344,33 +1471,42 @@ export type Database = {
       };
       profiles: {
         Row: {
+          appearance: Database["public"]["Enums"]["appearance_mode"];
           created_at: string;
           default_event_visibility: Database["public"]["Enums"]["event_visibility"];
           display_name: string | null;
           id: string;
+          morning_digest_intro_seen_at: string | null;
           morning_digest_time: string;
           morning_digest_weekdays: number[];
+          password_changed_at: string | null;
           start_lens: Database["public"]["Enums"]["lens"];
           updated_at: string;
         };
         ComputedFields: never;
         Insert: {
+          appearance?: Database["public"]["Enums"]["appearance_mode"];
           created_at?: string;
           default_event_visibility?: Database["public"]["Enums"]["event_visibility"];
           display_name?: string | null;
           id: string;
+          morning_digest_intro_seen_at?: string | null;
           morning_digest_time?: string;
           morning_digest_weekdays?: number[];
+          password_changed_at?: string | null;
           start_lens?: Database["public"]["Enums"]["lens"];
           updated_at?: string;
         };
         Update: {
+          appearance?: Database["public"]["Enums"]["appearance_mode"];
           created_at?: string;
           default_event_visibility?: Database["public"]["Enums"]["event_visibility"];
           display_name?: string | null;
           id?: string;
+          morning_digest_intro_seen_at?: string | null;
           morning_digest_time?: string;
           morning_digest_weekdays?: number[];
+          password_changed_at?: string | null;
           start_lens?: Database["public"]["Enums"]["lens"];
           updated_at?: string;
         };
@@ -1387,6 +1523,7 @@ export type Database = {
           member_id: string;
           p256dh: string | null;
           platform: Database["public"]["Enums"]["push_platform"];
+          session_id: string | null;
           token: string | null;
           updated_at: string;
         };
@@ -1401,6 +1538,7 @@ export type Database = {
           member_id: string;
           p256dh?: string | null;
           platform: Database["public"]["Enums"]["push_platform"];
+          session_id?: string | null;
           token?: string | null;
           updated_at?: string;
         };
@@ -1414,6 +1552,7 @@ export type Database = {
           member_id?: string;
           p256dh?: string | null;
           platform?: Database["public"]["Enums"]["push_platform"];
+          session_id?: string | null;
           token?: string | null;
           updated_at?: string;
         };
@@ -1955,6 +2094,14 @@ export type Database = {
         };
         Returns: string;
       };
+      accept_required_consents: {
+        Args: {
+          p_adult: boolean;
+          p_privacy_version_id: string;
+          p_terms_version_id: string;
+        };
+        Returns: undefined;
+      };
       add_shopping_items: {
         Args: { p_assignee_member_ids?: string[]; p_items: Json };
         Returns: string[];
@@ -2167,6 +2314,11 @@ export type Database = {
         Args: { p_member_id: string };
         Returns: undefined;
       };
+      end_my_other_sessions: {
+        Args: Record<PropertyKey, never>;
+        Returns: number;
+      };
+      end_my_session: { Args: { p_session_id: string }; Returns: undefined };
       fail_calendar_outbox_item: {
         Args: { p_claim_token?: string; p_id: string; p_retry_at: string };
         Returns: undefined;
@@ -2250,14 +2402,66 @@ export type Database = {
           visibility: Database["public"]["Enums"]["event_visibility"];
         }[];
       };
+      get_legal_versions: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          document: Database["public"]["Enums"]["legal_document"];
+          effective_from: string;
+          version_id: string;
+        }[];
+      };
+      get_morning_digest: {
+        Args: { p_day: string };
+        Returns: {
+          at: string;
+          count: number;
+          driver_member_id: string;
+          event_id: string;
+          leg: Database["public"]["Enums"]["ride_leg"];
+          line: Database["public"]["Enums"]["morning_digest_line"];
+          member_ids: string[];
+          title: string;
+        }[];
+      };
+      get_my_consents: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          decided_at: string;
+          granted: boolean;
+          kind: Database["public"]["Enums"]["consent_kind"];
+          privacy_effective_from: string;
+          required_ok: boolean;
+          terms_effective_from: string;
+        }[];
+      };
       get_notification_preferences: {
         Args: Record<PropertyKey, never>;
         Returns: {
           assigned_todos: boolean;
+          deadlines: boolean;
+          delivery_mode: Database["public"]["Enums"]["notification_delivery_mode"];
+          digest_deadlines: boolean;
+          digest_events: boolean;
+          digest_rides: boolean;
+          digest_shopping: boolean;
+          digest_thanks: boolean;
+          evening_digest_time: string;
+          event_reminders: boolean;
           events: boolean;
           free_together: boolean;
+          gifts: boolean;
+          hide_content: boolean;
           morning_digest: boolean;
+          quiet_hours: boolean;
+          rides: boolean;
           shopping: boolean;
+        }[];
+      };
+      get_privacy_update: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          effective_from: string;
+          privacy_version_id: string;
         }[];
       };
       get_public_wishlist: {
@@ -2376,6 +2580,15 @@ export type Database = {
           visibility: Database["public"]["Enums"]["event_visibility"];
         }[];
       };
+      list_my_sessions: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          device_kind: Database["public"]["Enums"]["session_device"];
+          is_current: boolean;
+          last_active_at: string;
+          session_id: string;
+        }[];
+      };
       list_push_targets: {
         Args: { p_claim_token: string; p_delivery_id: string };
         Returns: {
@@ -2391,8 +2604,20 @@ export type Database = {
         Args: { p_at?: string; p_calendar_id: string };
         Returns: undefined;
       };
+      mark_morning_digest_intro_seen: {
+        Args: Record<PropertyKey, never>;
+        Returns: undefined;
+      };
       mark_notifications_read: {
         Args: { p_ids: string[] };
+        Returns: undefined;
+      };
+      mark_password_changed: {
+        Args: Record<PropertyKey, never>;
+        Returns: undefined;
+      };
+      mark_privacy_version_read: {
+        Args: { p_privacy_version_id: string };
         Returns: undefined;
       };
       pin_space: {
@@ -2423,6 +2648,15 @@ export type Database = {
       };
       remove_space_interest: {
         Args: { p_space: Database["public"]["Enums"]["space_key"] };
+        Returns: undefined;
+      };
+      request_ride: {
+        Args: {
+          p_event_id: string;
+          p_leg: Database["public"]["Enums"]["ride_leg"];
+          p_member_id: string;
+          p_occurrence_date: string;
+        };
         Returns: undefined;
       };
       reserve_public_wishlist_item: {
@@ -2560,6 +2794,14 @@ export type Database = {
           title: string;
           visibility: Database["public"]["Enums"]["event_visibility"];
         }[];
+      };
+      set_consent: {
+        Args: {
+          p_granted: boolean;
+          p_kind: Database["public"]["Enums"]["consent_kind"];
+          p_source?: Database["public"]["Enums"]["consent_source"];
+        };
+        Returns: undefined;
       };
       set_event_also_on: {
         Args: { p_enabled: boolean; p_event_id: string };
@@ -2722,11 +2964,19 @@ export type Database = {
       };
     };
     Enums: {
+      appearance_mode: "light" | "dark" | "system";
       calendar_account_status: "active" | "reconnect" | "temporary_error";
       calendar_direction: "two_way" | "incoming";
       calendar_outbox_action: "create" | "update" | "delete";
       calendar_provider: "google" | "outlook";
       calendar_sync_outcome: "ok" | "auth_error" | "temporary_error";
+      consent_kind:
+        | "terms_and_privacy"
+        | "adult"
+        | "product_news_email"
+        | "usage_analytics"
+        | "assistant_questions";
+      consent_source: "signup" | "settings" | "first_use" | "update";
       deadline_recurrence:
         | "none"
         | "monthly"
@@ -2744,6 +2994,7 @@ export type Database = {
         "single" | "couple" | "family_with_children" | "roommates";
       invitation_preview_status: "valid" | "invalid";
       invitation_status: "pending" | "accepted" | "revoked";
+      legal_document: "terms" | "privacy";
       lens: "io" | "nest";
       member_color:
         | "pomodoro"
@@ -2767,14 +3018,27 @@ export type Database = {
         | "free_together";
       notification_delivery_mode: "each" | "mine_now" | "digest_only";
       notification_job:
-        "free_together" | "deadline_reminders" | "shopping_digest" | "purge";
+        | "free_together"
+        | "deadline_reminders"
+        | "shopping_digest"
+        | "purge"
+        | "event_reminders"
+        | "ride_reminders"
+        | "overlaps"
+        | "push_digests"
+        | "push_purge";
       notification_kind:
         | "todo_assigned"
         | "deadline_reminder"
         | "free_together"
         | "event_time_changed"
         | "shopping_added"
-        | "gift_taken";
+        | "gift_taken"
+        | "member_joined"
+        | "event_reminder"
+        | "ride_reminder"
+        | "overlap_tomorrow"
+        | "ride_request";
       notification_preference:
         | "events"
         | "assigned_todos"
@@ -2782,13 +3046,24 @@ export type Database = {
         | "free_together"
         | "morning_digest"
         | "quiet_hours"
-        | "hide_content";
+        | "hide_content"
+        | "rides"
+        | "event_reminders"
+        | "deadlines"
+        | "gifts"
+        | "digest_events"
+        | "digest_rides"
+        | "digest_deadlines"
+        | "digest_thanks"
+        | "digest_shopping";
       pet_date_kind: "birth" | "adoption";
       pet_date_precision: "day" | "year";
       pet_species: "dog" | "cat" | "other";
       push_delivery_kind: "single" | "evening_digest" | "morning_digest";
       push_platform: "web" | "apns" | "fcm";
+      ride_leg: "escort" | "pickup";
       search_result_kind: "event" | "deadline" | "todo" | "shopping_item";
+      session_device: "phone" | "tablet" | "computer" | "unknown";
       space_key:
         | "meals"
         | "couple"
@@ -2951,11 +3226,20 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      appearance_mode: ["light", "dark", "system"],
       calendar_account_status: ["active", "reconnect", "temporary_error"],
       calendar_direction: ["two_way", "incoming"],
       calendar_outbox_action: ["create", "update", "delete"],
       calendar_provider: ["google", "outlook"],
       calendar_sync_outcome: ["ok", "auth_error", "temporary_error"],
+      consent_kind: [
+        "terms_and_privacy",
+        "adult",
+        "product_news_email",
+        "usage_analytics",
+        "assistant_questions",
+      ],
+      consent_source: ["signup", "settings", "first_use", "update"],
       deadline_recurrence: [
         "none",
         "monthly",
@@ -2979,6 +3263,7 @@ export const Constants = {
       household_type: ["single", "couple", "family_with_children", "roommates"],
       invitation_preview_status: ["valid", "invalid"],
       invitation_status: ["pending", "accepted", "revoked"],
+      legal_document: ["terms", "privacy"],
       lens: ["io", "nest"],
       member_color: [
         "pomodoro",
@@ -3008,6 +3293,11 @@ export const Constants = {
         "deadline_reminders",
         "shopping_digest",
         "purge",
+        "event_reminders",
+        "ride_reminders",
+        "overlaps",
+        "push_digests",
+        "push_purge",
       ],
       notification_kind: [
         "todo_assigned",
@@ -3016,6 +3306,11 @@ export const Constants = {
         "event_time_changed",
         "shopping_added",
         "gift_taken",
+        "member_joined",
+        "event_reminder",
+        "ride_reminder",
+        "overlap_tomorrow",
+        "ride_request",
       ],
       notification_preference: [
         "events",
@@ -3025,13 +3320,24 @@ export const Constants = {
         "morning_digest",
         "quiet_hours",
         "hide_content",
+        "rides",
+        "event_reminders",
+        "deadlines",
+        "gifts",
+        "digest_events",
+        "digest_rides",
+        "digest_deadlines",
+        "digest_thanks",
+        "digest_shopping",
       ],
       pet_date_kind: ["birth", "adoption"],
       pet_date_precision: ["day", "year"],
       pet_species: ["dog", "cat", "other"],
       push_delivery_kind: ["single", "evening_digest", "morning_digest"],
       push_platform: ["web", "apns", "fcm"],
+      ride_leg: ["escort", "pickup"],
       search_result_kind: ["event", "deadline", "todo", "shopping_item"],
+      session_device: ["phone", "tablet", "computer", "unknown"],
       space_key: [
         "meals",
         "couple",
