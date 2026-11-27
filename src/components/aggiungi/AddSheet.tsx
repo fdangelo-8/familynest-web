@@ -317,6 +317,14 @@ function eventFieldErrors(fields: EventFields): FieldErrors {
 }
 
 /** Moves the focus to a field of the sheet by its id (a group takes it on its pressed voice). */
+/**
+ * The footer of the sheet is fixed, so the alert of a failed save at the end
+ * of the body can be out of sight: when it appears it is scrolled into view.
+ */
+function showSaveAlert(element: HTMLDivElement | null): void {
+  element?.scrollIntoView({ block: "nearest" });
+}
+
 function focusById(id: string): void {
   const element = document.getElementById(id);
   if (!element) return;
@@ -2242,7 +2250,7 @@ export function AddSheet({
         ) : null}
 
         {saveFailed ? (
-          <Alert variant="errore">
+          <Alert variant="errore" alertRef={showSaveAlert}>
             {isImpegno ? SAVE_FAILED_TEXT : SAVE_FAILED_THING_TEXT}
           </Alert>
         ) : null}

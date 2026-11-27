@@ -1007,6 +1007,8 @@ test.describe("privacy della data di nascita", () => {
       const again = await openSheet(page, "Fido");
       await pickDay(dateField(again, "Data di nascita"), yearsAgo(4));
       await saveButton(again).click();
+      // The sheet is gone first: its date field shows the day as text.
+      await expect(again).toBeHidden();
       await expect(subtitle(page)).toHaveText("Animale · 4 anni");
       await visible();
       for (const form of dateForms(yearsAgo(4))) {

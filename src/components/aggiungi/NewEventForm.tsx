@@ -18,6 +18,14 @@ import {
 import { ALSO_ON_READ_FAILED_TEXT, SAVE_FAILED_TEXT } from "./labels";
 
 /**
+ * The footer of the sheet is fixed, so an alert at the end of the body can be
+ * out of sight: when it appears, it is scrolled into view (once, no focus).
+ */
+function showAlert(element: HTMLDivElement | null) {
+  element?.scrollIntoView({ block: "nearest" });
+}
+
+/**
  * Body of the sheet while «Nuovo impegno» is open: the same fields as
  * «Modifica impegno», in the mode «new». Nothing leaves the browser until the
  * button is pressed. The person who creates is the author: nothing is locked.
@@ -103,7 +111,11 @@ export function NewEventForm({
           {ALSO_ON_READ_FAILED_TEXT}
         </Alert>
       ) : null}
-      {saveFailed ? <Alert variant="errore">{SAVE_FAILED_TEXT}</Alert> : null}
+      {saveFailed ? (
+        <Alert variant="errore" alertRef={showAlert}>
+          {SAVE_FAILED_TEXT}
+        </Alert>
+      ) : null}
     </form>
   );
 }
