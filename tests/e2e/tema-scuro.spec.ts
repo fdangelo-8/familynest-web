@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test, type Locator, type Page } from "@playwright/test";
@@ -762,5 +763,92 @@ test.describe("solo-chiaro e solo-scuro", () => {
     await setAspetto(page, "chiaro");
     expect(await visible(page, "solo-chiaro")).toBe(true);
     expect(await visible(page, "solo-scuro")).toBe(false);
+  });
+});
+
+// ------------------------------------------------------------ diff della PR
+
+// CA-27 and CA-28 read the diff of the branch against origin/main. Meaningful
+// only on the branch of #634 (elsewhere the list of changed files says nothing
+// about this issue). If the shared history is missing the test fails, never
+// returns early (LEZIONI).
+function gitOut(args: string[]): string | null {
+  try {
+    return execFileSync("git", ["-c", "safe.directory=*", ...args], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+      maxBuffer: 64 * 1024 * 1024,
+    });
+  } catch {
+    return null;
+  }
+}
+
+function onTemaScuroBranch(): boolean {
+  const branch =
+    process.env.GITHUB_HEAD_REF ||
+    process.env.GITHUB_REF_NAME ||
+    gitOut(["rev-parse", "--abbrev-ref", "HEAD"])?.trim() ||
+    "";
+  return /(^|\/)tema-scuro$/.test(branch);
+}
+
+function diffAgainstMain(flags: string[], paths: string[] = []): string {
+  const args = ["diff", ...flags, "origin/main...HEAD", "--", ...paths];
+  let out = gitOut(args);
+  if (out === null) {
+    gitOut([
+      "fetch",
+      "--no-tags",
+      "--deepen=200",
+      "origin",
+      "+main:refs/remotes/origin/main",
+    ]);
+    out = gitOut(args);
+  }
+  expect(
+    out,
+    "storia comune con origin/main non disponibile: CA-27/CA-28 non verificabili",
+  ).not.toBeNull();
+  return out ?? "";
+}
+
+test.describe("diff della PR", () => {
+  test("CA-27: la PR non aggiunge test.skip né test.fixme", () => {
+    test.skip(!onTemaScuroBranch(), "vale solo sul branch di #634");
+    // This file is left out: it quotes the patterns it looks for.
+    const added = diffAgainstMain(
+      ["-U0"],
+      ["tests", ":(exclude)tests/e2e/tema-scuro.spec.ts"],
+    )
+      .split("\n")
+      .filter((line) => line.startsWith("+") && !line.startsWith("+++"));
+    // A conditional skip (condition first) is the project's way to guard a
+    // test that needs seeded users; an unconditional skip (title first, or
+    // no argument) and every fixme are forbidden.
+    const forbidden = added.filter((line) =>
+      /\.fixme\b|\.skip\s*\(\s*(["'`]|\))|\.skip\s*;|\.describe\.skip\b/.test(
+        line,
+      ),
+    );
+    expect(forbidden).toEqual([]);
+  });
+
+  test("CA-28: la PR tocca solo i file ammessi, niente supabase né pagine", () => {
+    test.skip(!onTemaScuroBranch(), "vale solo sul branch di #634");
+    const files = diffAgainstMain(["--name-only"]).split("\n").filter(Boolean);
+    expect(files.length).toBeGreaterThan(0);
+    const allowed = [
+      /^src\/app\/globals\.css$/,
+      /^src\/app\/components\.css$/,
+      /^docs\/agenti\/design\/token\.css$/,
+      /^docs\/design\/tavolozza\.json$/,
+      /^\.claude\/skills\/design-system\//,
+      /^src\/app\/design-system\/Gallery\.tsx$/,
+      /^tests\//,
+    ];
+    const outside = files.filter((f) => !allowed.some((re) => re.test(f)));
+    expect(outside).toEqual([]);
+    expect(files.filter((f) => f.startsWith("supabase/"))).toEqual([]);
   });
 });
