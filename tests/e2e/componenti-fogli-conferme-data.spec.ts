@@ -1,4 +1,3 @@
-import { execFileSync } from "node:child_process";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test, type Locator, type Page } from "@playwright/test";
@@ -1066,99 +1065,10 @@ function sourceFiles(dir: string): string[] {
   });
 }
 
-function git(args: string[]): string | null {
-  try {
-    return execFileSync("git", ["-c", "safe.directory=*", ...args], {
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "ignore"],
-      maxBuffer: 64 * 1024 * 1024,
-    });
-  } catch {
-    return null;
-  }
-}
-
-/** Merge base with main; fetches more history if the checkout is shallow. */
-function mergeBase(): string | null {
-  let result = git(["merge-base", "origin/main", "HEAD"]);
-  if (result === null) {
-    git([
-      "fetch",
-      "--no-tags",
-      "--deepen=300",
-      "origin",
-      "+main:refs/remotes/origin/main",
-    ]);
-    result = git(["merge-base", "origin/main", "HEAD"]);
-  }
-  return result?.trim() || null;
-}
-
-// The only lines the PR may add or remove in the files outside
-// `src/components/ui` (CA-33 and the coordinator's decision of 27/11):
-// `clearable`, `max` and the scroll to the save alert.
-const ALLOWED_PAGE_LINES: RegExp[] = [
-  /^$/,
-  /^\/\*\*$/,
-  /^\*( .*)?$/,
-  /^\*\/$/,
-  /^}$/,
-  /^clearable(=\{.*\})?$/,
-  /^max=\{.*\}$/,
-  /^function show(Save)?Alert\(element: HTMLDivElement \| null\)(: void)? \{$/,
-  /^element\?\.scrollIntoView\(\{ block: "center" \}\);$/,
-  /^<Alert variant="errore"( alertRef=\{show(Save)?Alert\})?>$/,
-  /^\{saveFailed \? \($/,
-  /^\) : null\}$/,
-  /^\{SAVE_FAILED_TEXT\}$/,
-  /^<\/Alert>$/,
-  /^<Alert variant="errore" alertRef=\{show(Save)?Alert\}>$/,
-  /^\{saveFailed \? <Alert variant="errore">\{SAVE_FAILED_TEXT\}<\/Alert> : null\}$/,
-];
-
 test.describe("regole statiche", () => {
-  test("CA-33: fuori da `src/components/ui` cambiano solo ChildSheet, AddSheet e NewEventForm, e solo per `clearable`, `max` e lo scorrimento all'avviso; niente in `supabase/` né nelle pagine", () => {
-    const base = mergeBase();
-    expect(base, "il diff con main non si calcola").not.toBeNull();
-    const changed = (git(["diff", "--name-only", `${base}`, "HEAD"]) ?? "")
-      .split("\n")
-      .filter(Boolean);
-    expect(changed.length, "nessun file nel diff").toBeGreaterThan(0);
-
-    expect(
-      changed.filter(
-        (file) =>
-          file.startsWith("supabase/") || file.startsWith("src/app/(app)/"),
-      ),
-    ).toEqual([]);
-
-    const outsideUi = changed.filter(
-      (file) =>
-        file.startsWith("src/components/") &&
-        !file.startsWith("src/components/ui/"),
-    );
-    expect(outsideUi.sort()).toEqual([
-      "src/components/aggiungi/AddSheet.tsx",
-      "src/components/aggiungi/NewEventForm.tsx",
-      "src/components/figli/ChildSheet.tsx",
-    ]);
-
-    for (const file of [
-      ...outsideUi,
-      "src/components/ui/MemberSheet/MemberSheet.tsx",
-    ]) {
-      const patch = git(["diff", "--unified=0", `${base}`, "HEAD", "--", file]);
-      expect(patch, file).not.toBeNull();
-      const lines = (patch ?? "")
-        .split("\n")
-        .filter((line) => /^[+-]/.test(line) && !/^(\+\+\+|---)/.test(line))
-        .map((line) => line.slice(1).trim());
-      const notAllowed = lines.filter(
-        (line) => !ALLOWED_PAGE_LINES.some((rule) => rule.test(line)),
-      );
-      expect(notAllowed, file).toEqual([]);
-    }
-  });
+  // CA-33 (diff with main limited to the allowed files) is not tested here:
+  // it would break on main and on later PRs. It was verified by the reviewer;
+  // see the coordinator's decision in the last comment of issue #505.
 
   test("CA-40: nessun file di `src/` usa più `useIsWindow`", () => {
     const users = sourceFiles(join(ROOT, "src")).filter(
