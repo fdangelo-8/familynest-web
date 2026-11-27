@@ -751,6 +751,9 @@ test.describe("Aggiungi · modifica della Spesa · permessi", () => {
     await s.button("Salva").click();
     await expect(toastWith(page, "Modifiche salvate.")).toBeVisible();
     await expect(titlesOf(toTake(page))).toHaveText(["Mele verdi"]);
+    // The first sheet must be fully gone: a tap during its closing is
+    // swallowed by the pending close and the reopened sheet vanishes.
+    await expect(s.dialog).toBeHidden();
 
     await tapRow(page, "Mele verdi");
     await s.button("Elimina dalla spesa").click();
